@@ -30,9 +30,9 @@ define([
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(o, ellipsoid);
 
         this.origin = o;
-        this.xAxis = eastNorthUp.getColumn0().getXYZ();
-        this.yAxis = eastNorthUp.getColumn1().getXYZ();
-        this.normal = eastNorthUp.getColumn2().getXYZ();
+        this.xAxis = Cartesian3.fromCartesian4(eastNorthUp.getColumn0());
+        this.yAxis = Cartesian3.fromCartesian4(eastNorthUp.getColumn1());
+        this.normal = Cartesian3.fromCartesian4(eastNorthUp.getColumn2());
         this.d = -o.dot(o);
         this.ellipsoid = ellipsoid;
     };
@@ -103,8 +103,8 @@ define([
         var length = positions.length;
         for ( var i = 0; i < length; ++i) {
             var p = this.origin;
-            p = p.add(this.xAxis.multiplyWithScalar(positions[i].x));
-            p = p.add(this.yAxis.multiplyWithScalar(positions[i].y));
+            p = p.add(this.xAxis.multiplyByScalar(positions[i].x));
+            p = p.add(this.yAxis.multiplyByScalar(positions[i].y));
 
             positionsOnEllipsoid.push(this.ellipsoid.scaleToGeocentricSurface(p));
         }

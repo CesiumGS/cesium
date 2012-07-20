@@ -31,6 +31,6 @@ defineSuite([
     it('get point along ray', function() {
         var t = 5.0;
         var ray = new Ray(Cartesian3.ZERO, Cartesian3.UNIT_X);
-        expect(ray.getPoint(t).equals(Cartesian3.UNIT_X.multiplyWithScalar(t))).toEqual(true);
+        expect(ray.getPoint(t).equals(Cartesian3.UNIT_X.multiplyByScalar(t))).toEqual(true);
     });
 });

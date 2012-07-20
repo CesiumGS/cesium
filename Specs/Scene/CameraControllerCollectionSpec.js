@@ -3,14 +3,14 @@ defineSuite([
          'Scene/CameraControllerCollection',
          'Scene/Camera',
          'Scene/CameraFreeLookController',
-         'Core/Cartographic3',
+         'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/MercatorProjection'
      ], function(
          CameraControllerCollection,
          Camera,
          CameraFreeLookController,
-         Cartographic3,
+         Cartographic,
          Ellipsoid,
          MercatorProjection) {
     "use strict";
@@ -60,7 +60,7 @@ defineSuite([
     it('addFlight', function() {
         expect(function() {
             collection.addFlight({
-                destination : Ellipsoid.WGS84.cartographicDegreesToCartesian(new Cartographic3(-118.26, 34.19, 100000.0)), // Los Angeles
+                destination : Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-118.26, 34.19, 100000.0)), // Los Angeles
                 duration : 4.0
             });
         }).not.toThrow();
@@ -100,7 +100,7 @@ defineSuite([
 
     it('update removes expired controllers', function() {
         var flight = collection.addFlight({
-            destination : Ellipsoid.WGS84.cartographicDegreesToCartesian(new Cartographic3(-118.26, 34.19, 100000.0)), // Los Angeles
+            destination : Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-118.26, 34.19, 100000.0)), // Los Angeles
             duration : 4.0
         });
         flight._canceled = true;

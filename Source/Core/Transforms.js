@@ -4,6 +4,7 @@ define([
         './Math',
         './Matrix3',
         './Matrix4',
+        './Cartesian2',
         './Cartesian3',
         './Cartesian4',
         './TimeConstants',
@@ -14,6 +15,7 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         TimeConstants,
@@ -48,7 +50,7 @@ define([
          * @example
          * // Get the transform from local east-north-up at cartographic (0.0, 0.0) to Earth's fixed frame.
          * var ellipsoid = Ellipsoid.WGS84;
-         * var center = ellipsoid.cartographicDegreesToCartesian(Cartographic2.ZERO);
+         * var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
          * var transform = Transforms.eastNorthUpToFixedFrame(center);
          */
         eastNorthUpToFixedFrame : function(position, ellipsoid) {
@@ -102,7 +104,7 @@ define([
          * @example
          * // Get the transform from local north-east-down at cartographic (0.0, 0.0) to Earth's fixed frame.
          * var ellipsoid = Ellipsoid.WGS84;
-         * var center = ellipsoid.cartographicDegreesToCartesian(Cartographic2.ZERO);
+         * var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
          * var transform = Transforms.northEastDownToFixedFrame(center);
          */
         northEastDownToFixedFrame : function(position, ellipsoid) {
@@ -166,10 +168,10 @@ define([
             }
 
             var pnt = new Cartesian4(point.x, point.y, point.z, 1.0);
-            pnt = modelViewProjectionMatrix.multiplyWithVector(pnt);
-            pnt = pnt.multiplyWithScalar(1.0 / pnt.w);
-            pnt = viewportTransformation.multiplyWithVector(pnt);
-            return pnt.getXY();
+            pnt = modelViewProjectionMatrix.multiplyByVector(pnt);
+            pnt = pnt.multiplyByScalar(1.0 / pnt.w);
+            pnt = viewportTransformation.multiplyByVector(pnt);
+            return Cartesian2.fromCartesian4(pnt);
         }
     };
 

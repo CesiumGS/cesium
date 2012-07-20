@@ -2,419 +2,696 @@
 define([
         './DeveloperError',
         './Cartesian2'
-    ],
+       ],
     function(
         DeveloperError,
         Cartesian2) {
     "use strict";
 
-    var numberOfElements = 4;
-
     /**
-     * A 2x2 matrix, stored internally in column-major order.
-     *
-     * <p>
-     * When called with no arguments, the matrix elements are initialized to all zeros.
-     * When called with one numeric argument, f, the columns are initialized to [f, 0] [0, f].  Hence new Matrix2(1) creates the identity matrix.
-     * When called with four numeric arguments which define the matrix elements in row-major order; column0Row0, column1Row0, column0Row1, and column1Row1; the matrix is initialized to [column0Row0, column0Row1] [column1Row0, column1Row1].
-     * </p>
-     *
+     * A 2x2 matrix, indexable as a column-major order array.
+     * Constructor parameters are in row-major order for code readability.
      * @alias Matrix2
      * @constructor
-     * @immutable
      *
+     * @param {Number} [column0Row0=0.0] The value for column 0, row 0.
+     * @param {Number} [column1Row0=0.0] The value for column 1, row 0.
+     * @param {Number} [column0Row1=0.0] The value for column 0, row 1.
+     * @param {Number} [column1Row1=0.0] The value for column 1, row 1.
+     *
+     * @see Matrix2.fromColumnMajor
+     * @see Matrix2.fromRowMajorArray
      * @see Matrix3
      * @see Matrix4
      */
-    var Matrix2 = function() {
-        var values = this.values = []; // Column-major
-        values.length = numberOfElements;
+    var Matrix2 = function(column0Row0, column1Row0, column0Row1, column1Row1) {
+        this[0] = typeof column0Row0 === 'undefined' ? 0.0 : column0Row0;
+        this[1] = typeof column0Row1 === 'undefined' ? 0.0 : column0Row1;
+        this[2] = typeof column1Row0 === 'undefined' ? 0.0 : column1Row0;
+        this[3] = typeof column1Row1 === 'undefined' ? 0.0 : column1Row1;
+    };
 
-        if (arguments.length === 0) {
-            for ( var i = 0; i < numberOfElements; ++i) {
-                values[i] = 0;
-            }
-        } else if (arguments.length < numberOfElements) {
-            values[0] = arguments[0];
-            values[1] = 0;
-
-            values[2] = 0;
-            values[3] = arguments[0];
-        } else if (arguments.length >= numberOfElements) {
-
-            values[0] = arguments[0]; // Column 0, Row 0
-            values[1] = arguments[2]; // Column 1, Row 0
-
-            values[2] = arguments[1]; // Column 0, Row 0
-            values[3] = arguments[3]; // Column 1, Row 1
+    /**
+     * Duplicates a Matrix2 instance.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix to duplicate.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix2.clone = function(values, result) {
+        if (typeof values === 'undefined') {
+            throw new DeveloperError('values is required');
         }
-    };
-
-    /**
-     * Returns the element at column 0, row 0.
-     *
-     * @memberof Matrix2
-     * @return {Number} The element at column 0, row 0.
-     */
-    Matrix2.prototype.getColumn0Row0 = function() {
-        return this.values[0];
-    };
-
-    /**
-     * Returns the element at column 0, row 1.
-     *
-     * @memberof Matrix2
-     * @return {Number} The element at column 0, row 1.
-     */
-    Matrix2.prototype.getColumn0Row1 = function() {
-        return this.values[1];
-    };
-
-    /**
-     * Returns the element at column 1, row 0.
-     *
-     * @memberof Matrix2
-     * @return {Number} The element at column 1, row 0.
-     */
-    Matrix2.prototype.getColumn1Row0 = function() {
-        return this.values[2];
-    };
-
-    /**
-     * Returns the element at column 1, row 1.
-     *
-     * @memberof Matrix2
-     * @return {Number} The element at column 1, row 1.
-     */
-    Matrix2.prototype.getColumn1Row1 = function() {
-        return this.values[3];
-    };
-
-    /**
-     * Returns the element at the zero-based, column-major index.
-     *
-     * @memberof Matrix2
-     * @return {Number} The element at the zero-based, column-major index.
-     * @exception {DeveloperError} index must be between 0 and 3.
-     */
-    Matrix2.prototype.getColumnMajorValue = function(index) {
-        if (index < 0 || index > 3) {
-            throw new DeveloperError('index must be between 0 and 3.');
+        if (typeof result === 'undefined') {
+            return new Matrix2(values[0], values[2],
+                               values[1], values[3]);
         }
-
-        return this.values[index];
+        result[0] = values[0];
+        result[1] = values[1];
+        result[2] = values[2];
+        result[3] = values[3];
+        return result;
     };
 
     /**
-     * Creates a 2x2 uniform scale matrix.
+     * Creates a Matrix2 instance from a column-major order array.
+     * @memberof Matrix2
+     * @function
      *
+     * @param {Array} values The column-major order array.
+     * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix2 instance if none was provided.
+     *
+     * @exception {DeveloperError} values is required.
+     */
+    Matrix2.fromColumnMajorArray = Matrix2.clone;
+
+    /**
+     * Creates a Matrix2 instance from a row-major order array.
+     * The resulting matrix will be in column-major order.
      * @memberof Matrix2
      *
-     * @param {Number} scale The uniform scale in the x and y directions.
+     * @param {Array} values The row-major order array.
+     * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix2 instance if none was provided.
      *
-     * @see Matrix2.createNonUniformScale
-     *
-     * @example
-     * var m = Matrix2.createScale(2.0);
-     * var v = m.multiplyWithVector(new Cartesian2(1.0, 1.0));
-     * // v is (2.0, 2.0)
+     * @exception {DeveloperError} values is required.
      */
-    Matrix2.createScale = function(scale) {
-        if (scale) {
-            return new Matrix2(
-                    scale, 0.0,
-                    0.0,   scale);
+    Matrix2.fromRowMajorArray = function(values, result) {
+        if (typeof values === 'undefined') {
+            throw new DeveloperError('values is required.');
         }
-
-        return new Matrix2();
+        if (typeof result === 'undefined') {
+            return new Matrix2(values[0], values[1],
+                               values[2], values[3]);
+        }
+        result[0] = values[0];
+        result[1] = values[2];
+        result[2] = values[1];
+        result[3] = values[3];
+        return result;
     };
 
     /**
-     * Creates a 2x2 non-uniform scale matrix.
-     *
+     * Creates an Array from the provided Matrix2 instance.
+     * The array will be in column-major order.
      * @memberof Matrix2
      *
-     * @param {Cartesian3} scale The non-uniform scale in the x and y directions.
+     * @param {Matrix2} matrix The matrix to use..
+     * @param {Array} [result] The Array onto which to store the result.
+     * @return {Array} The modified Array parameter or a new Array instance if none was provided.
      *
-     * @see Matrix2.createScale
-     *
-     * @example
-     * var m = Matrix2.createNonUniformScale(new Cartesian2(1.0, 2.0));
-     * var v = m.multiplyWithVector(new Cartesian2(1.0, 1.0));
-     * // v is (1.0, 2.0)
+     * @exception {DeveloperError} matrix is required.
      */
-    Matrix2.createNonUniformScale = function(scale) {
-        if (scale) {
-            return new Matrix2(
-                    scale.x, 0.0,
-                    0.0,     scale.y);
+    Matrix2.toArray = function(matrix, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof result === 'undefined') {
+            return [matrix[0], matrix[1], matrix[2], matrix[3]];
+        }
+        result[0] = matrix[0];
+        result[1] = matrix[1];
+        result[2] = matrix[2];
+        result[3] = matrix[3];
+        return result;
+    };
+
+    /**
+     * Retrieves a copy of the matrix column at the provided index as a Cartesian2 instance.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix to use.
+     * @param {Number} index The zero-based index of the column to retrieve.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} index is required and must be 0 or 1.
+     *
+     * @see Cartesian2
+     */
+    Matrix2.getColumn = function(matrix, index, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required.');
         }
 
-        return new Matrix2();
-    };
-
-    /**
-     * Returns a copy of the first, i.e. left, column of this matrix.
-     *
-     * @memberof Matrix2
-     *
-     * @return {Cartesian2} The first column of this matrix.
-     *
-     * @see Matrix2#setColumn0
-     *
-     * @example
-     * var m = Matrix2.IDENTITY;
-     * var c = m.getColumn0(); // (x, y) == (1.0, 0.0)
-     */
-    Matrix2.prototype.getColumn0 = function() {
-        var values = this.values;
-        return new Cartesian2(values[0], values[1]);
-    };
-
-    /**
-     * Sets the first, i.e. left, column of this matrix.
-     *
-     * @memberof Matrix2
-     *
-     * @param {Cartesian2} column The first column of this matrix.
-     *
-     * @see Matrix2#getColumn0
-     *
-     * @example
-     * // Column will be (1.0, 2.0)
-     * m.setColumn0(new Cartesian2(1.0, 2.0));
-     */
-    Matrix2.prototype.setColumn0 = function(column) {
-        var values = this.values;
-        values[0] = column.x;
-        values[1] = column.y;
-    };
-
-    /**
-     * Returns a copy of the second, i.e. right, column of this matrix.
-     *
-     * @memberof Matrix2
-     *
-     * @return {Cartesian2} The second column of this matrix.
-     *
-     * @see Matrix2#setColumn1
-     *
-     * @example
-     * var m = Matrix2.IDENTITY;
-     * var c = m.getColumn1(); // (x, y) == (0.0, 1.0)
-     */
-    Matrix2.prototype.getColumn1 = function() {
-        var values = this.values;
-        return new Cartesian2(values[2], values[3]);
-    };
-
-    /**
-     * Sets the second, i.e. right, column of this matrix.
-     *
-     * @memberof Matrix2
-     *
-     * @param {Cartesian2} column The second column of this matrix.
-     *
-     * @see Matrix2#getColumn1
-     *
-     * @example
-     * // Column will be (1.0, 2.0)
-     * m.setColumn1(new Cartesian2(1.0, 2.0));
-     */
-    Matrix2.prototype.setColumn1 = function(column) {
-        var values = this.values;
-        values[2] = column.x;
-        values[3] = column.y;
-    };
-
-    /**
-     * Returns a copy of the first, i.e. top, row of this matrix.
-     *
-     * @memberof Matrix2
-     *
-     * @return {Cartesian2} The first row of this matrix.
-     *
-     * @see Matrix2#setRow0
-     *
-     * @example
-     * var m = Matrix2.IDENTITY;
-     * var c = m.getRow0(); // (x, y) == (1.0, 0.0)
-     */
-    Matrix2.prototype.getRow0 = function() {
-        var values = this.values;
-        return new Cartesian2(values[0], values[2]);
-    };
-
-    /**
-     * Sets the first, i.e. top, row of this matrix.
-     *
-     * @memberof Matrix2
-     *
-     * @param {Cartesian2} row The first row of this matrix.
-     *
-     * @see Matrix2#getRow0
-     *
-     * @example
-     * // Row will be (1.0, 2.0)
-     * m.setRow0(new Cartesian2(1.0, 2.0));
-     */
-    Matrix2.prototype.setRow0 = function(row) {
-        var values = this.values;
-        values[0] = row.x;
-        values[2] = row.y;
-    };
-
-    /**
-     * Returns a copy of the second, i.e. bottom, row of this matrix.
-     *
-     * @memberof Matrix2
-     *
-     * @return {Cartesian2} The second row of this matrix.
-     *
-     * @see Matrix2#setRow1
-     *
-     * @example
-     * var m = Matrix2.IDENTITY;
-     * var c = m.getRow1(); // (x, y) == (0.0, 1.0)
-     */
-    Matrix2.prototype.getRow1 = function() {
-        var values = this.values;
-        return new Cartesian2(values[1], values[3]);
-    };
-
-    /**
-     * Sets the second, i.e. bottom, row of this matrix.
-     *
-     * @memberof Matrix2
-     *
-     * @param {Cartesian2} row The second row of this matrix.
-     *
-     * @see Matrix2#getRow1
-     *
-     * @example
-     * // Row will be (1.0, 2.0)
-     * m.setRow1(new Cartesian2(1.0, 2.0));
-     */
-    Matrix2.prototype.setRow1 = function(row) {
-        var values = this.values;
-        values[1] = row.x;
-        values[3] = row.y;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Matrix2
-     *
-     * @exception {DeveloperError} columnMajorValues must have 4 elements.
-     */
-    Matrix2.fromColumnMajorArray = function(columnMajorValues) {
-        if (columnMajorValues) {
-            if (columnMajorValues.length === numberOfElements) {
-                return new Matrix2(
-                        columnMajorValues[0], columnMajorValues[2],
-                        columnMajorValues[1], columnMajorValues[3]);
-            }
-
-            throw new DeveloperError('columnMajorValues must have 4 elements.');
+        if (typeof index !== 'number' || index < 0 || index > 1) {
+            throw new DeveloperError('index is required and must be 0 or 1.');
         }
-        return new Matrix2();
+
+        var startIndex = index * 2;
+        var x = matrix[startIndex];
+        var y = matrix[startIndex + 1];
+
+        if (typeof result === 'undefined') {
+            return new Cartesian2(x, y);
+        }
+        result.x = x;
+        result.y = y;
+        return result;
+    };
+
+    /**
+     * Computes a new matrix that replaces the specified column in the provided matrix with the provided Cartesian2 instance.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix to use.
+     * @param {Number} index The zero-based index of the column to set.
+     * @param {Cartesian2} cartesian The Cartesian whose values will be assigned to the specified column.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} index is required and must be 0 or 1.
+     *
+     * @see Cartesian2
+     */
+    Matrix2.setColumn = function(matrix, index, cartesian, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (typeof index !== 'number' || index < 0 || index > 1) {
+            throw new DeveloperError('index is required and must be 0 or 1.');
+        }
+        result = Matrix2.clone(matrix, result);
+        var startIndex = index * 2;
+        result[startIndex] = cartesian.x;
+        result[startIndex + 1] = cartesian.y;
+        return result;
+    };
+
+    /**
+     * Retrieves a copy of the matrix row at the provided index as a Cartesian2 instance.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix to use.
+     * @param {Number} index The zero-based index of the row to retrieve.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} index is required and must be 0 or 1.
+     *
+     * @see Cartesian2
+     */
+    Matrix2.getRow = function(matrix, index, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required.');
+        }
+
+        if (typeof index !== 'number' || index < 0 || index > 1) {
+            throw new DeveloperError('index is required and must be 0 or 1.');
+        }
+
+        var x = matrix[index];
+        var y = matrix[index + 2];
+
+        if (typeof result === 'undefined') {
+            return new Cartesian2(x, y);
+        }
+        result.x = x;
+        result.y = y;
+        return result;
+    };
+
+    /**
+     * Computes a new matrix that replaces the specified row in the provided matrix with the provided Cartesian2 instance.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix to use.
+     * @param {Number} index The zero-based index of the row to set.
+     * @param {Cartesian2} cartesian The Cartesian whose values will be assigned to the specified row.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} index is required and must be 0 or 1.
+     *
+     * @see Cartesian2
+     */
+    Matrix2.setRow = function(matrix, index, cartesian, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (typeof index !== 'number' || index < 0 || index > 1) {
+            throw new DeveloperError('index is required and must be 0 or 1.');
+        }
+
+        result = Matrix2.clone(matrix, result);
+        result[index] = cartesian.x;
+        result[index + 2] = cartesian.y;
+        return result;
+    };
+
+    /**
+     * Computes the product of two matrices.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} left The first matrix.
+     * @param {Matrix2} right The second matrix.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Matrix2.multiply = function(left, right, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required');
+        }
+
+        var column0Row0 = left[0] * right[0] + left[2] * right[1];
+        var column1Row0 = left[0] * right[2] + left[2] * right[3];
+        var column0Row1 = left[1] * right[0] + left[3] * right[1];
+        var column1Row1 = left[1] * right[2] + left[3] * right[3];
+
+        if (typeof result === 'undefined') {
+            return new Matrix2(column0Row0, column1Row0,
+                               column0Row1, column1Row1);
+        }
+        result[0] = column0Row0;
+        result[1] = column0Row1;
+        result[2] = column1Row0;
+        result[3] = column1Row1;
+        return result;
+    };
+
+    /**
+     * Computes the product of a matrix and a column vector.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix.
+     * @param {Cartesian2} cartesian The column.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Matrix2.multiplyByVector = function(matrix, cartesian, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+
+        var x = matrix[0] * cartesian.x + matrix[2] * cartesian.y;
+        var y = matrix[1] * cartesian.x + matrix[3] * cartesian.y;
+
+        if (typeof result === 'undefined') {
+            return new Cartesian2(x, y);
+        }
+        result.x = x;
+        result.y = y;
+        return result;
+    };
+
+    /**
+     * Computes the product of a matrix and a scalar.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix.
+     * @param {Number} scalar The number to multiply by.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} scalar is required and must be a number.
+     */
+    Matrix2.multiplyByScalar = function(matrix, scalar, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof scalar !== 'number') {
+            throw new DeveloperError('scalar is required and must be a number');
+        }
+
+        if (typeof result === 'undefined') {
+            return new Matrix2(matrix[0] * scalar, matrix[2] * scalar,
+                               matrix[1] * scalar, matrix[3] * scalar);
+        }
+        result[0] = matrix[0] * scalar;
+        result[1] = matrix[1] * scalar;
+        result[2] = matrix[2] * scalar;
+        result[3] = matrix[3] * scalar;
+        return result;
+    };
+
+    /**
+     * Creates a negated copy of the provided matrix.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix to negate.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix2.negate = function(matrix, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+
+        if (typeof result === 'undefined') {
+            return new Matrix2(-matrix[0], -matrix[2],
+                               -matrix[1], -matrix[3]);
+        }
+        result[0] = -matrix[0];
+        result[1] = -matrix[1];
+        result[2] = -matrix[2];
+        result[3] = -matrix[3];
+        return result;
+    };
+
+    /**
+     * Computes the transpose of the provided matrix.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix to transpose.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix2.transpose = function(matrix, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+
+        var column0Row0 = matrix[0];
+        var column0Row1 = matrix[2];
+        var column1Row0 = matrix[1];
+        var column1Row1 = matrix[3];
+
+        if (typeof result === 'undefined') {
+            return new Matrix2(column0Row0, column1Row0,
+                               column0Row1, column1Row1);
+        }
+        result[0] = column0Row0;
+        result[1] = column0Row1;
+        result[2] = column1Row0;
+        result[3] = column1Row1;
+        return result;
+    };
+
+    /**
+     * Compares the provided matrices componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} [left] The first matrix.
+     * @param {Matrix2} [right] The second matrix.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    Matrix2.equals = function(left, right) {
+        return (left === right) ||
+               (typeof left !== 'undefined' &&
+                typeof right !== 'undefined' &&
+                left[0] === right[0] &&
+                left[1] === right[1] &&
+                left[2] === right[2] &&
+                left[3] === right[3]);
+    };
+
+    /**
+     * Compares the provided matrices componentwise and returns
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} [left] The first matrix.
+     * @param {Matrix2} [right] The second matrix.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} epsilon is required and must be a number.
+     */
+    Matrix2.equalsEpsilon = function(left, right, epsilon) {
+        if (typeof epsilon !== 'number') {
+            throw new DeveloperError('epsilon is required and must be a number');
+        }
+
+        return (left === right) ||
+                (typeof left !== 'undefined' &&
+                typeof right !== 'undefined' &&
+                Math.abs(left[0] - right[0]) <= epsilon &&
+                Math.abs(left[1] - right[1]) <= epsilon &&
+                Math.abs(left[2] - right[2]) <= epsilon &&
+                Math.abs(left[3] - right[3]) <= epsilon);
     };
 
     /**
      * An immutable Matrix2 instance initialized to the identity matrix.
-     *
      * @memberof Matrix2
      */
-    Matrix2.IDENTITY = Object.freeze(new Matrix2(1));
+    Matrix2.IDENTITY = Object.freeze(new Matrix2(1.0, 0.0, 0.0, 1.0));
 
     /**
-     * Returns 4, the number of elements in a Matrix2.
-     *
+     * The index into Matrix2 for column 0, row 0.
      * @memberof Matrix2
      *
-     * @return {Number} 4.
+     * @example
+     * var matrix = new Matrix2();
+     * matrix[Matrix2.COLUMN0ROW0] = 5.0; //set column 0, row 0 to 5.0
      */
-    Matrix2.getNumberOfElements = function() {
-        return numberOfElements;
+    Matrix2.COLUMN0ROW0 = 0;
+
+    /**
+     * The index into Matrix2 for column 0, row 1.
+     * @memberof Matrix2
+     *
+     * @example
+     * var matrix = new Matrix2();
+     * matrix[Matrix2.COLUMN0ROW1] = 5.0; //set column 0, row 1 to 5.0
+     */
+    Matrix2.COLUMN0ROW1 = 1;
+
+    /**
+     * The index into Matrix2 for column 1, row 0.
+     * @memberof Matrix2
+     *
+     * @example
+     * var matrix = new Matrix2();
+     * matrix[Matrix2.COLUMN1ROW0] = 5.0; //set column 1, row 0 to 5.0
+     */
+    Matrix2.COLUMN1ROW0 = 2;
+
+    /**
+     * The index into Matrix2 for column 1, row 1.
+     * @memberof Matrix2
+     *
+     * @example
+     * var matrix = new Matrix2();
+     * matrix[Matrix2.COLUMN1ROW1] = 5.0; //set column 1, row 1 to 5.0
+     */
+    Matrix2.COLUMN1ROW1 = 3;
+
+    /**
+     * Duplicates the provided Matrix2 instance.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     */
+    Matrix2.prototype.clone = function(result) {
+        return Matrix2.clone(this, result);
     };
 
     /**
-     * Returns the transpose of this matrix.
-     *
+     * Creates an Array from this Matrix2 instance.
      * @memberof Matrix2
      *
-     * @return {Matrix2} The transpose of this matrix.
+     * @param {Array} [result] The Array onto which to store the result.
+     * @return {Array} The modified Array parameter or a new Array instance if none was provided.
      */
-    Matrix2.prototype.transpose = function() {
-        return new Matrix2(
-                this.getColumn0Row0(), this.getColumn0Row1(),
-                this.getColumn1Row0(), this.getColumn1Row1());
+    Matrix2.prototype.toArray = function(result) {
+        return Matrix2.toArray(this, result);
     };
 
     /**
-     * Returns a duplicate of a Matrix3 instance.
-     *
+     * Retrieves a copy of the matrix column at the provided index as a Cartesian2 instance.
      * @memberof Matrix2
      *
-     * @return {Matrix2} A new copy of the Matrix3 instance.
+     * @param {Number} index The zero-based index of the column to retrieve.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} index is required and must be 0 or 1.
+     *
+     * @see Cartesian2
      */
-    Matrix2.prototype.clone = function() {
-        return new Matrix2(
-                this.getColumn0Row0(), this.getColumn1Row0(),
-                this.getColumn0Row1(), this.getColumn1Row1());
+    Matrix2.prototype.getColumn = function(index, result) {
+        return Matrix2.getColumn(this, index, result);
     };
 
     /**
-     * Returns <code>true</code> if this matrix equals other element-wise.
-     *
+     * Computes a new matrix that replaces the specified column in this matrix with the provided Cartesian2 instance.
      * @memberof Matrix2
-     * @param {Matrix2} other The matrix to compare for equality.
-     * @return {Boolean} <code>true</code> if the matrices are equal element-wise; otherwise, <code>false</code>.
+     *
+     * @param {Number} index The zero-based index of the column to set.
+     * @param {Cartesian2} cartesian The Cartesian whose values will be assigned to the specified column.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} index is required and must be 0 or 1.
+     *
+     * @see Cartesian2
      */
-    Matrix2.prototype.equals = function(other) {
-        var thisValues = this.values;
-        var otherValues = other.values;
-        for ( var i = 0, len = thisValues.length; i < len; i++) {
-            if (thisValues[i] !== otherValues[i]) {
-                return false;
-            }
-        }
-        return true;
+    Matrix2.prototype.setColumn = function(index, cartesian, result) {
+        return Matrix2.setColumn(this, index, cartesian, result);
     };
 
     /**
-     * Returns <code>true</code> if this matrix equals other element-wise within the specified epsilon.
-     *
+     * Retrieves a copy of the matrix row at the provided index as a Cartesian2 instance.
      * @memberof Matrix2
      *
-     * @param {Matrix2} other The matrix to compare for equality.
-     * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
+     * @param {Number} index The zero-based index of the row to retrieve.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
      *
-     * @return {Boolean} <code>true</code> if the matrices are equal element-wise within the specified epsilon; otherwise, <code>false</code>.
+     * @exception {DeveloperError} index is required and must be 0 or 1.
+     *
+     * @see Cartesian2
      */
-    Matrix2.prototype.equalsEpsilon = function(other, epsilon) {
-        epsilon = epsilon || 0.0;
-        var thisValues = this.values;
-        var otherValues = other.values;
-        for ( var i = 0, len = thisValues.length; i < len; i++) {
-            if (Math.abs(thisValues[i] - otherValues[i]) > epsilon) {
-                return false;
-            }
-        }
-        return true;
+    Matrix2.prototype.getRow = function(index, result) {
+        return Matrix2.getRow(this, index, result);
     };
 
     /**
-     * Returns a string representing this instance with one line per row in the matrix.
-     *
+     * Computes a new matrix that replaces the specified row in this matrix with the provided Cartesian2 instance.
      * @memberof Matrix2
      *
-     * @return {String} Returns a string representing this instance.
+     * @param {Number} index The zero-based index of the row to set.
+     * @param {Cartesian2} cartesian The Cartesian whose values will be assigned to the specified row.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} index is required and must be 0 or 1.
+     *
+     * @see Cartesian2
+     */
+    Matrix2.prototype.setRow = function(index, cartesian, result) {
+        return Matrix2.setRow(this, index, cartesian, result);
+    };
+
+    /**
+     * Computes the product of this matrix and the provided matrix.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} right The right hand side matrix.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     *
+     * @exception {DeveloperError} right is required.
+     */
+    Matrix2.prototype.multiply = function(right, result) {
+        return Matrix2.multiply(this, right, result);
+    };
+
+    /**
+     * Computes the product of this matrix and a column vector.
+     * @memberof Matrix2
+     *
+     * @param {Cartesian2} cartesian The column.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Matrix2.prototype.multiplyByVector = function(cartesian, result) {
+        return Matrix2.multiplyByVector(this, cartesian, result);
+    };
+
+    /**
+     * Computes the product of this matrix and a scalar.
+     * @memberof Matrix2
+     *
+     * @param {Number} scalar The number to multiply by.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     *
+     * @exception {DeveloperError} scalar is required and must be a number.
+     */
+    Matrix2.prototype.multiplyByScalar = function(scalar, result) {
+        return Matrix2.multiplyByScalar(this, scalar, result);
+    };
+    /**
+     * Creates a negated copy of this matrix.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix to negate.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix2.prototype.negate = function(result) {
+        return Matrix2.negate(this, result);
+    };
+
+    /**
+     * Computes the transpose of this matrix.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     */
+    Matrix2.prototype.transpose = function(result) {
+        return Matrix2.transpose(this, result);
+    };
+
+    /**
+     * Compares this matrix to the provided matrix componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} [right] The right hand side matrix.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     */
+    Matrix2.prototype.equals = function(right) {
+        return Matrix2.equals(this, right);
+    };
+
+    /**
+     * Compares this matrix to the provided matrix componentwise and returns
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} [right] The right hand side matrix.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @return {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} epsilon is required and must be a number.
+     */
+    Matrix2.prototype.equalsEpsilon = function(right, epsilon) {
+        return Matrix2.equalsEpsilon(this, right, epsilon);
+    };
+
+    /**
+     * Creates a string representing this Matrix with each row being
+     * on a separate line and in the format '(column1, column2)'.
+     * @memberof Matrix2
+     *
+     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column1, column2)'.
      */
     Matrix2.prototype.toString = function() {
-        return '(' + this.getColumn0Row0() + ', ' + this.getColumn1Row0() + ')\n' +
-               '(' + this.getColumn0Row1() + ', ' + this.getColumn1Row1() + ')';
+        return '(' + this[0] + ', ' + this[2] + ')\n' +
+               '(' + this[1] + ', ' + this[3] + ')';
     };
 
     return Matrix2;

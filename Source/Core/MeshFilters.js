@@ -464,7 +464,7 @@ define([
             var projectedPositions = [];
 
             for ( var i = 0; i < wgs84Positions.length; i += 3) {
-                var lonLat = ellipsoid.toCartographic2(new Cartesian3(wgs84Positions[i], wgs84Positions[i + 1], wgs84Positions[i + 2]));
+                var lonLat = ellipsoid.cartesianToCartographic(new Cartesian3(wgs84Positions[i], wgs84Positions[i + 1], wgs84Positions[i + 2]));
                 var projectedLonLat = projection.project(lonLat);
                 projectedPositions.push(projectedLonLat.x, projectedLonLat.y);
             }
