@@ -52,7 +52,8 @@ Beta Releases
    * `Ellipsoid.cartographicDegreesToCartesian` was removed.  Code that previously looked like `ellipsoid.cartographicDegreesToCartesian(new Cartographic(45, 50, 10))` should now look like `ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(45, 50, 10))`.
    * `Math.cartographic3ToRadians`, `Math.cartographic2ToRadians`, `Math.cartographic2ToDegrees`, and `Math.cartographic3ToDegrees` were removed.  These functions are no longer needed because Cartographic instances are always represented in radians. 
    * The `multiplyWithMatrix` function on each `Matrix` type was renamed to `multiply`. 
-   * All functions starting with `multiplyWith` now start with `multiplyBy` to be consistent with functions starting with `divideBy`. 
+   * All functions starting with `multiplyWith` now start with `multiplyBy` to be consistent with functions starting with `divideBy`.
+   * All materials are now created as `Material` objects with a JSON template.
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties.
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x`, `y`, and `z` properties.
 * All `Cartesian3` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
@@ -60,15 +61,16 @@ Beta Releases
 * Added `Cartographic.fromDegrees` make creating Cartographic instances from values in degrees easier. 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added new materials:
+    * `Material`
     * `AlphaMapMaterial`
     * `AsphaltMaterial`
     * `BrickMaterial`
     * `BumpMapMaterial`
     * `CementMaterial`
-    * `Material`
     * `EmissionMapMaterial`
     * `FresnelMaterial`
     * `GrassMaterial`
+    * `ImageMaterial`
     * `NormalMapMaterial`
     * `ReflectionMaterial`
     * `RefractionMaterial`

@@ -24,6 +24,7 @@ define([
         '../Shaders/Materials/FresnelMaterial',
         '../Shaders/Materials/GrassMaterial',
         '../Shaders/Materials/HorizontalStripeMaterial',
+        '../Shaders/Materials/ImageMaterial',
         '../Shaders/Materials/NormalMapMaterial',
         '../Shaders/Materials/ReflectionMaterial',
         '../Shaders/Materials/RefractionMaterial',
@@ -56,6 +57,7 @@ define([
         FresnelMaterial,
         GrassMaterial,
         HorizontalStripeMaterial,
+        ImageMaterial,
         NormalMapMaterial,
         ReflectionMaterial,
         RefractionMaterial,
@@ -126,11 +128,10 @@ define([
         }
 
         // Set up uniforms for the main material
-        this.uniforms = {};
         this._uniforms = {};
         var returnUniform = function (material, uniformID) {
             return function() {
-                return material.uniforms[uniformID];
+                return material[uniformID];
             };
         };
         for (var uniformID in this._materialUniforms) {
@@ -181,21 +182,20 @@ define([
                         }
                     }
                     // Set uniform value
-                    this.uniforms[uniformID] = uniformValue;
+                    this[uniformID] = uniformValue;
                     this._uniforms[newUniformID] = returnUniform(this, uniformID);
                 }
             }
         }
         // Create all sub-materials and combine source and uniforms together.
         var newShaderSource = '';
-        this.materials = {};
         for (var materialID in this._materialTemplates) {
             if (this._materialTemplates.hasOwnProperty(materialID)) {
                 // Construct the sub-material. Share texture names using extendObject.
                 var materialTemplate = this._materialTemplates[materialID];
                 var material = new Material({'context' : this._context, 'strict' : this._strict, 'template' : materialTemplate});
                 this._extendObject(this._uniforms, material._uniforms);
-                this.materials[materialID] = material;
+                this[materialID] = material;
 
                 // Make the material's agi_getMaterial unique by appending a guid.
                 var originalMethodName = 'agi_getMaterial';
@@ -368,7 +368,7 @@ define([
                 var materialContainer = materialContainers[i];
                 var material = materialContainer.material;
                 var property = materialContainer.property;
-                material.uniforms[property] = texture;
+                material[property] = texture;
             }
         },
         registerTextureToMaterial : function(material, property, textureInfo, textureType) {
@@ -445,7 +445,7 @@ define([
             return this._materials[materialID];
         }
     };
-    Material.prototype._getShaderSource = function() {
+    Material.prototype.getShaderSource = function() {
         return this._shaderSource;
     };
     Material.prototype.getID = function() {
@@ -453,6 +453,14 @@ define([
     };
 
     // Create basic material types
+    Material.createFromID = function(context, materialID) {
+        return new Material({
+            'context' : context,
+            'template' : {
+                'id' : materialID
+            }
+        });
+    };
 
     // Color Material
     Material.prototype._materialFactory.addMaterial('ColorMaterial', {
@@ -496,22 +504,20 @@ define([
         'source' : AlphaMapMaterial
     });
 
-    // Diffuse Alpha Map Material.
+    // Image Material.
     // Useful for textures with an alpha component.
-    Material.prototype._materialFactory.addMaterial('DiffuseAlphaMapMaterial', {
-        'id' : 'DiffuseAlphaMapMaterial',
-        'materials' : {
-            'diffuse' : {
-                'id' : 'DiffuseMapMaterial'
-            },
-            'alpha' : {
-                'id' : 'AlphaMapMaterial'
+    Material.prototype._materialFactory.addMaterial('ImageMaterial', {
+        'id' : 'ImageMaterial',
+        'uniforms' : {
+            'texture' : 'agi_defaultTexture',
+            'diffuseChannels' : 'rgb',
+            'alphaChannel' : 'a',
+            'repeat' : {
+                'x' : 1,
+                'y' : 1
             }
         },
-        'components' : {
-            'diffuse' : 'diffuse.diffuse',
-            'alpha' : 'alpha.alpha'
-        }
+        'source' : ImageMaterial
     });
 
     // Specular Map Material
@@ -562,6 +568,7 @@ define([
         'uniforms' : {
             'texture' : 'agi_defaultTexture',
             'normalMapChannels' : 'rgb',
+            'strength' : 0.8,
             'repeat' : {
                 'x' : 1,
                 'y' : 1

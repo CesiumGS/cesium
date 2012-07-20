@@ -59,11 +59,11 @@ define([
         }
 
         var properties = [];
-        var materialUniforms = material.uniforms;
-        for ( var property in materialUniforms) {
-            if (materialUniforms.hasOwnProperty(property) &&
-                typeof materialUniforms[property] !== 'undefined' &&
-                typeof materialUniforms[property].alpha !== 'undefined') {
+
+        for ( var property in material) {
+            if (material.hasOwnProperty(property) &&
+                typeof material[property] !== 'undefined' &&
+                typeof material[property].alpha !== 'undefined') {
                 properties.push(property);
             }
         }
@@ -93,7 +93,7 @@ define([
         tween.onUpdate(function() {
             var length = properties.length;
             for ( var i = 0; i < length; ++i) {
-                materialUniforms[properties[i]].alpha = value.alpha;
+                material[properties[i]].alpha = value.alpha;
             }
         });
         tween.onComplete(t.onComplete || null);

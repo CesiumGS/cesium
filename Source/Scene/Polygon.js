@@ -514,7 +514,7 @@ define([
                 '#line 0\n' +
                 Noise +
                 '#line 0\n' +
-                this._material._getShaderSource() +
+                this._material.getShaderSource() +
                 (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                 '#line 0\n' +
                 PolygonFS;

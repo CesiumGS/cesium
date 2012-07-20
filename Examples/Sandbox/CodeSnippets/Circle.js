@@ -31,12 +31,7 @@
                 ellipsoid, ellipsoid.cartographicToCartesian(
                         Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)), 300000.0));
             // Any polygon-compatible material can be used
-            polygon.material = new Cesium.Material({
-                'context' : scene.getContext(),
-                'template' : {
-                    'id' : 'TieDyeMaterial'
-                }
-            });
+            polygon.material = Cesium.Material.createFromID(scene.getContext(), 'TieDyeMaterial');
 
             primitives.add(polygon);
         };

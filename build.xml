@@ -4,11 +4,9 @@
 			<glslToJavascript destination="${shadersDirectory}" stripcomments="${build.minification}">
 				<fileset dir="${shadersDirectory}" includes="*.glsl" />
 			</glslToJavascript>
-			<!-- TODO: Figure out a better way of handling Materials subfolder later -->
 			<glslToJavascript destination="${shadersMaterialsDirectory}" stripcomments="${build.minification}">
 				<fileset dir="${shadersMaterialsDirectory}" includes="*.glsl" />
 			</glslToJavascript>
-			<!-- /////////////////////////////////////////////////////////////////// -->
 			<createCesiumJs output="${sourceDirectory}/Cesium.js">
 				<fileset dir="${sourceDirectory}">
 					<include name="**/*.js" />

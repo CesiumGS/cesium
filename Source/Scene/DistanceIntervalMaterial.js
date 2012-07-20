@@ -45,7 +45,7 @@ define([
         };
     };
 
-    DistanceIntervalMaterial.prototype._getShaderSource = function() {
+    DistanceIntervalMaterial.prototype.getShaderSource = function() {
         return '#define NUMBER_OF_DISTANCES ' + this.intervals.length.toString() + '\n' +
                '#line 0\n' +
                this._shaderSource;

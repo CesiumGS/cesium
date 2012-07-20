@@ -14,7 +14,7 @@ define(function() {
         var length = arguments.length;
         for ( var i = 0; i < length; ++i) {
             var material = arguments[i].material;
-            var materialSource = material._getShaderSource();
+            var materialSource = material.getShaderSource();
             var materialUniforms = material._uniforms;
 
             for ( var name in materialUniforms) {
@@ -48,7 +48,7 @@ define(function() {
 
         return {
             _uniforms : unforms,
-            _getShaderSource : function() {
+            getShaderSource : function() {
                 return concatenatedSource;
             }
         };

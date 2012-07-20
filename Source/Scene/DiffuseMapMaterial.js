@@ -64,7 +64,7 @@ define([
         };
     }
 
-    DiffuseMapMaterial.prototype._getShaderSource = function() {
+    DiffuseMapMaterial.prototype.getShaderSource = function() {
         return "#line 0\n" +
                this._shaderSource;
     };

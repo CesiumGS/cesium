@@ -337,7 +337,7 @@ define([
                     '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +
-                    this._material._getShaderSource() +
+                    this._material.getShaderSource() +
                     '#line 0\n' +
                     CustomSensorVolumeFS;
 

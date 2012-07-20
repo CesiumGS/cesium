@@ -15,8 +15,9 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     vec2 st = materialInput.st;
     
     vec2 position = st / brickSize;
-    if(fract(position.y * 0.5) > 0.5)
+    if(fract(position.y * 0.5) > 0.5) {
         position.x += 0.5;    
+    }
         
     //calculate whether to use brick or mortar (does AA)
     vec2 filterWidth = vec2(0.02);

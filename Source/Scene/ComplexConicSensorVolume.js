@@ -378,7 +378,7 @@ define([
                     '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +
-                    material._getShaderSource() +
+                    material.getShaderSource() +
                     '#line 0\n' +
                     ComplexConicSensorVolumeFS;
 

@@ -55,46 +55,13 @@
                         }
                     }
                 }
-             });
-
-            primitives.add(polygon);
-        };
-    };
-
-    Sandbox.CompositeMaterial1 = function (scene, ellipsoid, primitives) {
-        this.code = function() {
-            var polygon = new Cesium.Polygon(undefined);
-
-            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-100.0, 20.0),
-                Cesium.Cartographic.fromDegrees(-70.0, 20.0),
-                Cesium.Cartographic.fromDegrees(-70.0, 33.0),
-                Cesium.Cartographic.fromDegrees(-100.0, 33.0)
-            ]));
-
-            polygon.material = new Cesium.Material({
-                'context': scene.getContext(),
-                'template': {
-                    'uniforms': {
-                        'values': [0.0, 0.5, 1.0, 1.0],
-                        'moreValues': {
-                            'type': 'bvec3',
-                            'x': 0,
-                            'y': 1,
-                            'z': 0
-                        }
-                    },
-                    'components': {
-                        'diffuse': 'vec3(values[0].y, moreValues.y, 0.0)'
-                    }
-                }
             });
 
             primitives.add(polygon);
         };
     };
 
-    Sandbox.CompositeMaterial2 = function (scene, ellipsoid, primitives) {
+    Sandbox.CompositeMaterial1 = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
 
@@ -176,7 +143,7 @@
         };
     };
 
-    Sandbox.CompositeMaterial3 = function (scene, ellipsoid, primitives) {
+    Sandbox.CompositeMaterial2 = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
 
@@ -219,7 +186,7 @@
         };
     };
 
-    Sandbox.CompositeMaterial4 = function (scene, ellipsoid, primitives) {
+    Sandbox.CompositeMaterial3 = function (scene, ellipsoid, primitives) {
         this.code = function() {
             var polygon = new Cesium.Polygon(undefined);
 
@@ -286,25 +253,13 @@
             polygon.material = new Cesium.Material({
                'context' : scene.getContext(),
                'template' : {
-                   'id' : 'DiffuseAlphaMapMaterial',
-                   'materials' : {
-                       'diffuse' : {
-                           'uniforms' : {
-                               'texture' : '../../Images/Cesium_Logo_Color.jpg',
-                               'repeat' : {
-                                   'x' : 1,
-                                   'y' : 1
-                               }
-                           }
-                       },
-                       'alpha' : {
-                           'uniforms' : {
-                               'texture' : '../../Images/Cesium_Logo_Color.jpg',
-                               'repeat' : {
-                                   'x' : 1,
-                                   'y' : 1
-                               }
-                           }
+                   'id' : 'DiffuseMapMaterial',
+                   'uniforms' : {
+                       'texture' : '../../Images/Cesium_Logo_Color.jpg',
+                       'diffuseChannels' : 'rgb',
+                       'repeat' : {
+                           'x' : 1,
+                           'y' : 1
                        }
                    }
                }
@@ -344,6 +299,43 @@
                         }
                     }
                 }
+            });
+
+            primitives.add(polygon);
+        };
+    };
+
+    Sandbox.ImagePolygonMaterial = function (scene, ellipsoid, primitives) {
+        this.code = function() {
+            var polygon = new Cesium.Polygon(undefined);
+            polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 33.0),
+                Cesium.Cartographic.fromDegrees(-80.0, 33.0)
+            ]));
+
+            polygon.material.color = {
+                red: 1.0,
+                green: 1.0,
+                blue: 1.0,
+                alpha: 1.0
+            };
+
+            polygon.material = new Cesium.Material({
+               'context' : scene.getContext(),
+               'template' : {
+                   'id' : 'ImageMaterial',
+                   'uniforms' : {
+                       'texture' : '../../Images/Cesium_Logo_overlay.png',
+                       'diffuseChannels' : 'rgb',
+                       'alphaChannel' : 'a',
+                       'repeat' : {
+                           'x' : 1,
+                           'y' : 1
+                       }
+                   }
+               }
             });
 
             primitives.add(polygon);
@@ -493,6 +485,7 @@
                             'uniforms' : {
                                 'texture' : '../../Images/earthnormalmap.jpg',
                                 'normalMapChannels' : 'rgb',
+                                'strength' : 0.8,
                                 'repeat' : {
                                     'x' : 1,
                                     'y' : 1
@@ -1061,12 +1054,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
 
-            polygon.material = new Cesium.Material({
-                'context' : scene.getContext(),
-                'template' : {
-                    'id' : 'CheckerboardMaterial'
-                }
-            });
+            polygon.material = Cesium.Material.createFromID(scene.getContext(), 'CheckerboardMaterial');
 
             primitives.add(polygon);
 
@@ -1084,12 +1072,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
 
-            polygon.material = new Cesium.Material({
-                'context' : scene.getContext(),
-                'template' : {
-                    'id' : 'CheckerboardMaterial'
-                }
-            });
+            polygon.material = Cesium.Material.createFromID(scene.getContext(), 'CheckerboardMaterial');
 
             primitives.add(polygon);
 
@@ -1107,12 +1090,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
 
-            polygon.material = new Cesium.Material({
-                'context' : scene.getContext(),
-                'template' : {
-                    'id' : 'CheckerboardMaterial'
-                }
-            });
+            polygon.material = Cesium.Material.createFromID(scene.getContext(), 'CheckerboardMaterial');
 
             primitives.add(polygon);
 

@@ -13,7 +13,7 @@ defineSuite([
     /*global it,expect*/
 
     it('draws all basic material types', function() {
-        var materialTypes = ['ColorMaterial', 'DiffuseMapMaterial', 'AlphaMapMaterial', 'DiffuseAlphaMapMaterial',
+        var materialTypes = ['ColorMaterial', 'DiffuseMapMaterial', 'AlphaMapMaterial', 'ImageMaterial',
             'SpecularMapMaterial', 'EmissionMapMaterial', 'BumpMapMaterial', 'NormalMapMaterial','ReflectionMaterial',
             'RefractionMaterial', 'FresnelMaterial', 'BrickMaterial', 'WoodMaterial', 'AsphaltMaterial', 'CementMaterial',
             'GrassMaterial', 'HorizontalStripeMaterial', 'VerticalStripeMaterial', 'CheckerboardMaterial','DotMaterial',
@@ -23,6 +23,7 @@ defineSuite([
             var context = createContext();
             var material = new Material({
                 'context' : context,
+                'strict' : true,
                 'template' : {
                     'id' : materialID
                 }
@@ -33,7 +34,101 @@ defineSuite([
         }
     });
 
-    // make some composite materials
+    it('builds a material from an existing material', function() {
+        var context = createContext();
+        var material1 = new Material({
+            'context' : context,
+            'strict' : true,
+            'template' : {
+                'id' : 'NewMaterial',
+                'components' : {
+                    'diffuse' : 'vec3(0.0, 0.0, 0.0)'
+                }
+            }
+        });
+
+        var material2 = new Material({
+            'context' : context,
+            'strict' : true,
+            'template' : {
+                'materials' : {
+                    'first' : {
+                        'id' : 'NewMaterial'
+                    }
+                },
+                'components' : {
+                    'diffuse' : 'first.diffuse'
+                }
+            }
+        });
+
+        var pixel1 = renderMaterial(material1, context);
+        expect(pixel1).not.toEqualArray([0, 0, 0, 0]);
+        var pixel2 = renderMaterial(material2, context);
+        expect(pixel2).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
+    });
+
+    it('accesses material properties after construction', function() {
+        var context = createContext();
+        var material = new Material({
+            'context' : context,
+            'strict' : true,
+            'template' : {
+                'materials' : {
+                    'first' : {
+                        'id' : 'DiffuseMapMaterial'
+                    }
+                },
+                'uniforms' : {
+                    'value' : {
+                        'x' : 0.0,
+                        'y' : 0.0,
+                        'z' : 0.0
+                    }
+                },
+                'components' : {
+                    'diffuse' : 'value + first.diffuse'
+                }
+            }
+        });
+        material.value.x = 1.0;
+        material.first.repeat.x = 2.0;
+
+        var pixel = renderMaterial(material, context);
+        expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
+    });
+
+    it('creates a material inside a material inside a material', function () {
+        var context = createContext();
+        var material = new Material({
+            'context' : context,
+            'strict' : true,
+            'template' : {
+                'materials' : {
+                    'first' : {
+                        'materials' : {
+                            'second' : {
+                                'components' : {
+                                    'diffuse' : 'vec3(0.0, 0.0, 0.0)'
+                                }
+                            }
+                        },
+                        'components' : {
+                            'diffuse' : 'second.diffuse'
+                        }
+                    }
+                },
+                'components' : {
+                    'diffuse' : 'first.diffuse'
+                }
+            }
+        });
+        var pixel = renderMaterial(material, context);
+        expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
+    });
 
     it('throws without context', function() {
         expect(function() {
