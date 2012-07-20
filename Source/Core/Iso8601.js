@@ -1,15 +1,13 @@
 /*global define*/
 define(['./JulianDate',
-        './TimeInterval',
-        './TimeStandard'
+        './TimeInterval'
        ], function(
        JulianDate,
-       TimeInterval,
-       TimeStandard) {
+       TimeInterval) {
     "use strict";
 
-    var MINIMUM_VALUE = Object.freeze(TimeStandard.convertUtcToTai(JulianDate.fromDate(new Date(Date.UTC(-1, 0, 1, 0, 0, 0)))));
-    var MAXIMUM_VALUE = Object.freeze(TimeStandard.convertUtcToTai(JulianDate.fromDate(new Date(Date.UTC(10000, 0, 1, 0, 0, 0)))));
+    var MINIMUM_VALUE = Object.freeze(JulianDate.fromDate(new Date(Date.UTC(-1, 0, 1, 0, 0, 0))));
+    var MAXIMUM_VALUE = Object.freeze(JulianDate.fromDate(new Date(Date.UTC(10000, 0, 1, 0, 0, 0))));
 
     /**
      * Constants related to ISO8601 support.

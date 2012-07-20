@@ -3,14 +3,12 @@ define([
         './DeveloperError',
         './JulianDate',
         './ClockStep',
-        './ClockRange',
-        './TimeStandard'
+        './ClockRange'
        ], function(
          DeveloperError,
          JulianDate,
          ClockStep,
-         ClockRange,
-         TimeStandard) {
+         ClockRange) {
     "use strict";
 
     /**
@@ -51,23 +49,23 @@ define([
 
         if (startTimeUndefined && stopTimeUndefined && currentTimeUndefined) {
             currentTime = new JulianDate();
-            startTime = currentTime.addDays(-0.5);
-            stopTime = currentTime.addDays(0.5);
+            startTime = currentTime.clone();
+            stopTime = currentTime.addDays(1.0);
         } else if (startTimeUndefined && stopTimeUndefined) {
-            startTime = currentTime.addDays(-0.5);
-            stopTime = currentTime.addDays(0.5);
+            startTime = currentTime.clone();
+            stopTime = currentTime.addDays(1.0);
         } else if (startTimeUndefined && currentTimeUndefined) {
             startTime = stopTime.addDays(-1.0);
-            currentTime = stopTime.addDays(0.5);
+            currentTime = startTime.clone();
         } else if (currentTimeUndefined && stopTimeUndefined) {
-            currentTime = startTime.addDays(0.5);
+            currentTime = startTime.clone();
             stopTime = startTime.addDays(1.0);
         } else if (currentTimeUndefined) {
-            currentTime = startTime.addSeconds(startTime.secondsDifference(stopTime));
+            currentTime = startTime.clone();
         } else if (stopTimeUndefined) {
-            stopTime = currentTime.addDays(0.5);
+            stopTime = currentTime.addDays(1.0);
         } else if (startTimeUndefined) {
-            startTime = currentTime.addDays(-0.5);
+            startTime = currentTime.clone();
         }
 
         if (startTime.greaterThan(stopTime)) {
@@ -93,19 +91,19 @@ define([
          * The start time of the clock.
          * @type JulianDate
          */
-        this.startTime = TimeStandard.convertUtcToTai(startTime);
+        this.startTime = startTime;
 
         /**
          * The stop time of the clock.
          * @type JulianDate
          */
-        this.stopTime = TimeStandard.convertUtcToTai(stopTime);
+        this.stopTime = stopTime;
 
         /**
          * The current time.
          * @type JulianDate
          */
-        this.currentTime = TimeStandard.convertUtcToTai(currentTime);
+        this.currentTime = currentTime;
 
         /**
          * Determines how much time advances when tick is called, negative values allow for advancing backwards.

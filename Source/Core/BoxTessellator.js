@@ -41,7 +41,7 @@ define([
                     throw new DeveloperError('All dimensions components must be greater than or equal to zero.');
                 }
 
-                var corner = dimensions.multiplyWithScalar(0.5);
+                var corner = dimensions.multiplyByScalar(0.5);
                 minimumCorner = corner.negate();
                 maximumCorner = corner;
             }

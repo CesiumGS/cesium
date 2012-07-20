@@ -3,7 +3,7 @@ defineSuite([
          'Core/PolygonPipeline',
          'Core/Cartesian2',
          'Core/Cartesian3',
-         'Core/Cartographic3',
+         'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/EllipsoidTangentPlane',
          'Core/WindingOrder'
@@ -11,7 +11,7 @@ defineSuite([
          PolygonPipeline,
          Cartesian2,
          Cartesian3,
-         Cartographic3,
+         Cartographic,
          Ellipsoid,
          EllipsoidTangentPlane,
          WindingOrder) {
@@ -64,7 +64,7 @@ defineSuite([
 
     it('EllipsoidTangentPlane projects a point', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var p = ellipsoid.toCartesian(Cartographic3.ZERO);
+        var p = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
 
         var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
         var projectedP = tangentPlane.projectPointsOntoPlane([p]);
@@ -89,7 +89,7 @@ defineSuite([
 
     it('projectPointsOntoPlane throws without positions', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var p = ellipsoid.toCartesian(Cartographic3.ZERO);
+        var p = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
         var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
 
         expect(function() {

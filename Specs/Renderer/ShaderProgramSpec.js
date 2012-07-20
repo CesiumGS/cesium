@@ -299,8 +299,8 @@ defineSuite([
         expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_bvec2._getLocation())).toEqual([true, true]);
         expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_bvec3._getLocation())).toEqual([true, true, true]);
         expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_bvec4._getLocation())).toEqual([true, true, true, true]);
-        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat2._getLocation())).toEqualArray((new Matrix2(1.0, 2.0, 3.0, 4.0)).values);
-        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat3._getLocation())).toEqualArray((new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0)).values);
+        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat2._getLocation())).toEqualArray([1.0, 3.0, 2.0, 4.0]);
+        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat3._getLocation())).toEqualArray([1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0]);
         expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat4._getLocation())).toEqualArray((new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0)).values);
     });
 
@@ -369,7 +369,7 @@ defineSuite([
         sp.getAllUniforms().u_bvec3.value = [new Cartesian3(true, true, true), new Cartesian3(true, true, true)];
         sp.getAllUniforms().u_bvec4.value = [new Cartesian4(true, true, true, true), new Cartesian4(true, true, true, true)];
         sp.getAllUniforms().u_mat2.value = [new Matrix2(1.0, 2.0, 3.0, 4.0), new Matrix2(5.0, 6.0, 7.0, 8.0)];
-        sp.getAllUniforms().u_mat3.value = [new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0), new Matrix3(9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0)];
+        sp.getAllUniforms().u_mat3.value = [new Matrix3(1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0), new Matrix3(9.0, 6.0, 3.0, 8.0, 5.0, 2.0, 7.0, 4.0, 1.0)];
         sp.getAllUniforms().u_mat4.value = [new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0), new Matrix4(9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0)];
 
         sp._bind();
@@ -399,10 +399,10 @@ defineSuite([
         expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_bvec3._getLocations()[1])).toEqual([true, true, true]);
         expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_bvec4._getLocations()[0])).toEqual([true, true, true, true]);
         expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_bvec4._getLocations()[1])).toEqual([true, true, true, true]);
-        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat2._getLocations()[0])).toEqualArray((new Matrix2(1.0, 2.0, 3.0, 4.0)).values);
-        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat2._getLocations()[1])).toEqualArray((new Matrix2(5.0, 6.0, 7.0, 8.0)).values);
-        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat3._getLocations()[0])).toEqualArray((new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0)).values);
-        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat3._getLocations()[1])).toEqualArray((new Matrix3(9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0)).values);
+        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat2._getLocations()[0])).toEqualArray([1.0, 3.0, 2.0, 4.0]);
+        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat2._getLocations()[1])).toEqualArray([5.0, 7.0, 6.0, 8.0]);
+        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat3._getLocations()[0])).toEqualArray([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
+        expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat3._getLocations()[1])).toEqualArray([9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0]);
         expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat4._getLocations()[0])).toEqualArray((new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0)).values);
         expect(d._gl.getUniform(sp._getProgram(), sp.getAllUniforms().u_mat4._getLocations()[1])).toEqualArray((new Matrix4(9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0)).values);
     });

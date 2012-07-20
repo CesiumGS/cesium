@@ -121,7 +121,7 @@ define([
         var updateCV = function(value) {
             var interp = position.lerp(newPosition, value.time);
             var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
-            camera.position = camera.getInverseTransform().multiplyWithVector(pos).getXYZ();
+            camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(pos));
         };
 
         this._translateAnimation = this._animationCollection.add({
@@ -144,18 +144,18 @@ define([
         var endRay = camera.getPickRay(movement.endPosition);
 
         var position = new Cartesian4(startRay.origin.x, startRay.origin.y, startRay.origin.z, 1.0);
-        position = camera.getInverseTransform().multiplyWithVector(position).getXYZ();
+        position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(position));
         var direction = new Cartesian4(startRay.direction.x, startRay.direction.y, startRay.direction.z, 0.0);
-        direction = camera.getInverseTransform().multiplyWithVector(direction).getXYZ();
+        direction = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(direction));
         var scalar = sign * position.z / direction.z;
-        var startPlanePos = position.add(direction.multiplyWithScalar(scalar));
+        var startPlanePos = position.add(direction.multiplyByScalar(scalar));
 
         position = new Cartesian4(endRay.origin.x, endRay.origin.y, endRay.origin.z, 1.0);
-        position = camera.getInverseTransform().multiplyWithVector(position).getXYZ();
+        position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(position));
         direction = new Cartesian4(endRay.direction.x, endRay.direction.y, endRay.direction.z, 0.0);
-        direction = camera.getInverseTransform().multiplyWithVector(direction).getXYZ();
+        direction = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(direction));
         scalar = sign * position.z / direction.z;
-        var endPlanePos = position.add(direction.multiplyWithScalar(scalar));
+        var endPlanePos = position.add(direction.multiplyByScalar(scalar));
 
         var diff = startPlanePos.subtract(endPlanePos);
         camera.position = camera.position.add(diff);
@@ -166,6 +166,7 @@ define([
         var camera = this._camera;
         var position = camera.position;
         var direction = camera.direction;
+        var cameraPosition;
 
         var centerWC;
         var positionWC;
@@ -174,19 +175,19 @@ define([
             centerWC = Cartesian4.UNIT_W;
             this._transform.setColumn3(centerWC);
 
-            var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-            positionWC = camera.transform.multiplyWithVector(cameraPosition);
+            cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
+            positionWC = camera.transform.multiplyByVector(cameraPosition);
 
             camera.transform = this._transform.clone();
         } else {
             var scalar = -position.z / direction.z;
-            var center = position.add(direction.multiplyWithScalar(scalar));
+            var center = position.add(direction.multiplyByScalar(scalar));
             center = new Cartesian4(center.x, center.y, center.z, 1.0);
-            centerWC = camera.transform.multiplyWithVector(center);
+            centerWC = camera.transform.multiplyByVector(center);
             this._transform.setColumn3(centerWC);
 
-            var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-            positionWC = camera.transform.multiplyWithVector(cameraPosition);
+            cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
+            positionWC = camera.transform.multiplyByVector(cameraPosition);
             camera.transform = this._transform.clone();
         }
 
@@ -205,7 +206,7 @@ define([
                 var translateY = centerWC.z < -maxY || centerWC.z > maxY;
                 if ((translateX || translateY) && !this._lastInertiaTranslateMovement &&
                         !this._animationCollection.contains(this._translateAnimation)) {
-                    this._addCorrectTranslateAnimation(positionWC.getXYZ(), centerWC.getXYZ(), maxX, maxY);
+                    this._addCorrectTranslateAnimation(Cartesian3.fromCartesian4(positionWC), Cartesian3.fromCartesian4(centerWC), maxX, maxY);
                 }
             }
 
@@ -224,7 +225,7 @@ define([
             }
         }
 
-        camera.position = camera.getInverseTransform().multiplyWithVector(positionWC).getXYZ();
+        camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(positionWC));
     };
 
     /**

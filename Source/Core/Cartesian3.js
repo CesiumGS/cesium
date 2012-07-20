@@ -1,54 +1,38 @@
 /*global define*/
-define([
-        './Cartesian2'
+define(['./DeveloperError'
        ], function(
-         Cartesian2) {
+        DeveloperError) {
     "use strict";
 
     /**
      * A 3D Cartesian point.
-     * <br/>
-     * If either <code>x</code>, <code>y</code>, or <code>z</code> is undefined, then the corresponding
-     * component will be initialized to 0.0.
-     *
      * @alias Cartesian3
      * @constructor
      *
-     * @param {Number} x The x-coordinate for the Cartesian type.
-     * @param {Number} y The y-coordinate for the Cartesian type.
-     * @param {Number} z The z-coordinate for the Cartesian type.
+     * @param {Number} [x=0.0] The X component.
+     * @param {Number} [y=0.0] The Y component.
+     * @param {Number} [z=0.0] The Z component.
      *
      * @see Cartesian2
      * @see Cartesian4
      */
     var Cartesian3 = function(x, y, z) {
-       /**
-         * DOC_TBA
-         *
+
+        /**
+         * The X component.
          * @type Number
-         *
-         * @see Cartesian3.y
-         * @see Cartesian3.z
          */
         this.x = (typeof x !== 'undefined') ? x : 0.0;
 
         /**
-         * DOC_TBA
-         *
+         * The Y component.
          * @type Number
-         *
-         * @see Cartesian3.x
-         * @see Cartesian3.z
          */
         this.y = (typeof y !== 'undefined') ? y : 0.0;
 
         /**
-         * DOC_TBA
-         *
+         * The Z component.
          * @type Number
-         *
-         * @see Cartesian3.x
-         * @see Cartesian3.y
          */
         this.z = (typeof z !== 'undefined') ? z : 0.0;
     };
@@ -76,17 +60,24 @@ define([
     };
 
     /**
-     * Returns a duplicate of a Cartesian3.
+     * Duplicates a Cartesian3 instance.
      * @memberof Cartesian3
      *
-     * @param {Cartesian3} cartesian The Cartesian to clone.
-     * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
-     * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
+     * @param {Cartesian3} cartesian The Cartesian to duplicate.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
      */
     Cartesian3.clone = function(cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+
         if (typeof result === 'undefined') {
             return new Cartesian3(cartesian.x, cartesian.y, cartesian.z);
         }
+
         result.x = cartesian.x;
         result.y = cartesian.y;
         result.z = cartesian.z;
@@ -94,363 +85,718 @@ define([
     };
 
     /**
-     * An immutable Cartesian3 instance initialized to (0.0, 0.0, 0.0).
+     * Creates a Cartesian3 instance from an existing Cartesian4.  This simply takes the
+     * x, y, and z properties of the Cartesian4 and drops w.
+     * @function
      *
+     * @param {Cartesian4} cartesian The Cartesian4 instance to create a Cartesian3 instance from.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian3.fromCartesian4 = Cartesian3.clone;
+
+    /**
+     * Computes the value of the maximum component for the supplied Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} The cartesian to use.
+     * @return {Number} The value of the maximum component.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian3.getMaximumComponent = function(cartesian) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        return Math.max(cartesian.x, cartesian.y, cartesian.z);
+    };
+
+    /**
+     * Computes the value of the minimum component for the supplied Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} The cartesian to use.
+     * @return {Number} The value of the minimum component.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian3.getMinimumComponent = function(cartesian) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        return Math.min(cartesian.x, cartesian.y, cartesian.z);
+    };
+
+    /**
+     * Computes the provided Cartesian's squared magnitude.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} cartesian The Cartesian instance whose squared magnitude is to be computed.
+     * @return {Number} The squared magnitude.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian3.magnitudeSquared = function(cartesian) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        return cartesian.x * cartesian.x + cartesian.y * cartesian.y + cartesian.z * cartesian.z;
+    };
+
+    /**
+     * Computes the Cartesian's magnitude (length).
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} cartesian The Cartesian instance whose magnitude is to be computed.
+     * @return {Number} The magnitude.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian3.magnitude = function(cartesian) {
+        return Math.sqrt(Cartesian3.magnitudeSquared(cartesian));
+    };
+
+    /**
+     * Computes the normalized form of the supplied Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} cartesian The Cartesian to be normalized.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian3.normalize = function(cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        var magnitude = Cartesian3.magnitude(cartesian);
+        if (typeof result === 'undefined') {
+            return new Cartesian3(cartesian.x / magnitude, cartesian.y / magnitude, cartesian.z / magnitude);
+        }
+        result.x = cartesian.x / magnitude;
+        result.y = cartesian.y / magnitude;
+        result.z = cartesian.z / magnitude;
+        return result;
+    };
+
+    /**
+     * Computes the dot (scalar) product of two Cartesians.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} left The first Cartesian.
+     * @param {Cartesian3} right The second Cartesian.
+     * @return {Number} The dot product.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.dot = function(left, right) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required');
+        }
+        return left.x * right.x + left.y * right.y + left.z * right.z;
+    };
+
+    /**
+     * Computes the componentwise product of two Cartesians.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} left The first Cartesian.
+     * @param {Cartesian3} right The second Cartesian.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.multiplyComponents = function(left, right, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required');
+        }
+        if (typeof result === 'undefined') {
+            return new Cartesian3(left.x * right.x, left.y * right.y, left.z * right.z);
+        }
+        result.x = left.x * right.x;
+        result.y = left.y * right.y;
+        result.z = left.z * right.z;
+        return result;
+    };
+
+    /**
+     * Computes the componentwise sum of two Cartesians.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} left The first Cartesian.
+     * @param {Cartesian3} right The second Cartesian.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.add = function(left, right, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required');
+        }
+        if (typeof result === 'undefined') {
+            return new Cartesian3(left.x + right.x, left.y + right.y, left.z + right.z);
+        }
+        result.x = left.x + right.x;
+        result.y = left.y + right.y;
+        result.z = left.z + right.z;
+        return result;
+    };
+
+    /**
+     * Computes the componentwise difference of two Cartesians.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} left The first Cartesian.
+     * @param {Cartesian3} right The second Cartesian.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.subtract = function(left, right, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required');
+        }
+        if (typeof result === 'undefined') {
+            return new Cartesian3(left.x - right.x, left.y - right.y, left.z - right.z);
+        }
+        result.x = left.x - right.x;
+        result.y = left.y - right.y;
+        result.z = left.z - right.z;
+        return result;
+    };
+
+    /**
+     * Multiplies the provided Cartesian componentwise by the provided scalar.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} cartesian The Cartesian to be scaled.
+     * @param {Number} scalar The scalar to multiply with.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} scalar is required and must be a number.
+     */
+    Cartesian3.multiplyByScalar = function(cartesian, scalar, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (typeof scalar !== 'number') {
+            throw new DeveloperError('scalar is required and must be a number.');
+        }
+        if (typeof result === 'undefined') {
+            return new Cartesian3(cartesian.x * scalar,  cartesian.y * scalar,  cartesian.z * scalar);
+        }
+        result.x = cartesian.x * scalar;
+        result.y = cartesian.y * scalar;
+        result.z = cartesian.z * scalar;
+        return result;
+    };
+
+    /**
+     * Divides the provided Cartesian componentwise by the provided scalar.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} cartesian The Cartesian to be divided.
+     * @param {Number} scalar The scalar to divide by.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} scalar is required and must be a number.
+     */
+    Cartesian3.divideByScalar = function(cartesian, scalar, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (typeof scalar !== 'number') {
+            throw new DeveloperError('scalar is required and must be a number.');
+        }
+        if (typeof result === 'undefined') {
+            return new Cartesian3(cartesian.x / scalar, cartesian.y / scalar, cartesian.z / scalar);
+        }
+        result.x = cartesian.x / scalar;
+        result.y = cartesian.y / scalar;
+        result.z = cartesian.z / scalar;
+        return result;
+    };
+
+    /**
+     * Negates the provided Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} cartesian The Cartesian to be negated.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian3.negate = function(cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (typeof result === 'undefined') {
+            return new Cartesian3(-cartesian.x, -cartesian.y, -cartesian.z);
+        }
+        result.x = -cartesian.x;
+        result.y = -cartesian.y;
+        result.z = -cartesian.z;
+        return result;
+    };
+
+    /**
+     * Computes the absolute value of the provided Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} cartesian The Cartesian whose absolute value is to be computed.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian3.abs = function(cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (typeof result === 'undefined') {
+            return new Cartesian3(Math.abs(cartesian.x), Math.abs(cartesian.y), Math.abs(cartesian.z));
+        }
+        result.x = Math.abs(cartesian.x);
+        result.y = Math.abs(cartesian.y);
+        result.z = Math.abs(cartesian.z);
+        return result;
+    };
+
+    var lerpScratch = new Cartesian3();
+    /**
+     * Computes the linear interpolation or extrapolation at t using the provided cartesians.
+     * @memberof Cartesian3
+     *
+     * @param start The value corresponding to t at 0.0.
+     * @param end The value corresponding to t at 1.0.
+     * @param t The point along t at which to interpolate.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} start is required.
+     * @exception {DeveloperError} end is required.
+     * @exception {DeveloperError} t is required and must be a number.
+     */
+    Cartesian3.lerp = function(start, end, t, result) {
+        if (typeof start === 'undefined') {
+            throw new DeveloperError('start is required.');
+        }
+        if (typeof end === 'undefined') {
+            throw new DeveloperError('end is required.');
+        }
+        if (typeof t !== 'number') {
+            throw new DeveloperError('t is required and must be a number.');
+        }
+        Cartesian3.multiplyByScalar(end, t, lerpScratch);
+        result = Cartesian3.multiplyByScalar(start, 1.0 - t, result);
+        return Cartesian3.add(lerpScratch, result, result);
+    };
+
+    var angleBetweenScratch = new Cartesian3();
+    var angleBetweenScratch2 = new Cartesian3();
+    /**
+     * Returns the angle, in radians, between the provided Cartesians.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} left The first Cartesian.
+     * @param {Cartesian3} right The second Cartesian.
+     * @return {Number} The angle between the Cartesians.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.angleBetween = function(left, right) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required');
+        }
+        Cartesian3.normalize(left, angleBetweenScratch);
+        Cartesian3.normalize(right, angleBetweenScratch2);
+        return Math.acos(Cartesian3.dot(angleBetweenScratch, angleBetweenScratch2));
+    };
+
+    /**
+     * Compares the provided Cartesians componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} [left] The first Cartesian.
+     * @param {Cartesian3} [right] The second Cartesian.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    Cartesian3.equals = function(left, right) {
+        return (left === right) ||
+               ((typeof left !== 'undefined') &&
+                (typeof right !== 'undefined') &&
+                (left.x === right.x) &&
+                (left.y === right.y) &&
+                (left.z === right.z));
+    };
+
+    /**
+     * Compares the provided Cartesians componentwise and returns
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} [left] The first Cartesian.
+     * @param {Cartesian3} [right] The second Cartesian.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} epsilon is required and must be a number.
+     */
+    Cartesian3.equalsEpsilon = function(left, right, epsilon) {
+        if (typeof epsilon !== 'number') {
+            throw new DeveloperError('epsilon is required and must be a number.');
+        }
+        return (left === right) ||
+               ((typeof left !== 'undefined') &&
+                (typeof right !== 'undefined') &&
+                (Math.abs(left.x - right.x) <= epsilon) &&
+                (Math.abs(left.y - right.y) <= epsilon) &&
+                (Math.abs(left.z - right.z) <= epsilon));
+    };
+
+    /**
+     * Computes the cross (outer) product of two Cartesians.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} left The first Cartesian.
+     * @param {Cartesian3} right The second Cartesian.
+     * @return {Number} The cross product.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.cross = function(left, right, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required');
+        }
+
+        var leftX = left.x;
+        var leftY = left.y;
+        var leftZ = left.z;
+        var rightX = right.x;
+        var rightY = right.y;
+        var rightZ = right.z;
+
+        var x = leftY * rightZ - leftZ * rightY;
+        var y = leftZ * rightX - leftX * rightZ;
+        var z = leftX * rightY - leftY * rightX;
+
+        if (typeof result === 'undefined') {
+            return new Cartesian3(x, y, z);
+        }
+        result.x = x;
+        result.y = y;
+        result.z = z;
+        return result;
+    };
+
+    /**
+     * An immutable Cartesian3 instance initialized to (0.0, 0.0, 0.0).
      * @memberof Cartesian3
      */
     Cartesian3.ZERO = Object.freeze(new Cartesian3(0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (1.0, 0.0, 0.0).
-     *
-     * @memberof Cartesian3v
+     * @memberof Cartesian3
      */
     Cartesian3.UNIT_X = Object.freeze(new Cartesian3(1.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (0.0, 1.0, 0.0).
-     *
      * @memberof Cartesian3
      */
     Cartesian3.UNIT_Y = Object.freeze(new Cartesian3(0.0, 1.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (0.0, 0.0, 1.0).
-     *
      * @memberof Cartesian3
      */
     Cartesian3.UNIT_Z = Object.freeze(new Cartesian3(0.0, 0.0, 1.0));
 
     /**
-     * Returns a new array, where each {@link Cartesian3}
-     * element is flattened, that is, replaced with separate x, y,
-     * and z elements.
-     *
+     * Computes the value of the maximum component for this Cartesian.
      * @memberof Cartesian3
      *
-     * @param {Array} positions The array of Cartesian points to flatten.
-     *
-     * @return {Array} The flattened array.
-     */
-    Cartesian3.flatten = function(positions) {
-        var flat = [];
-        for ( var i = 0; i < positions.length; ++i) {
-            flat.push(positions[i].x);
-            flat.push(positions[i].y);
-            flat.push(positions[i].z);
-        }
-
-        return flat;
-    };
-
-    /**
-     * Returns the Cartesian's x and y components as a Cartesian2.
-     *
-     * @memberof Cartesian3
-     * @return {Cartesian2} The Cartesian's x and y components.
-     * @see Cartesian2
-     */
-    Cartesian3.prototype.getXY = function() {
-        return new Cartesian2(this.x, this.y);
-    };
-
-    /**
-     * Returns the Cartesian's squared magnitude (length).
-     *
-     * @memberof Cartesian3
-     * @return {Number} The squared magnitude.
-     */
-    Cartesian3.prototype.magnitudeSquared = function() {
-        return this.x * this.x + this.y * this.y + this.z * this.z;
-    };
-
-    /**
-     * Returns the Cartesian's magnitude (length).
-     *
-     * @memberof Cartesian3
-     * @return {Number} The magnitude.
-     */
-    Cartesian3.prototype.magnitude = function() {
-        return Math.sqrt(this.magnitudeSquared());
-    };
-
-    /**
-     * Returns this Cartesian normalized.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
-     * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
-     */
-    Cartesian3.prototype.normalize = function(result) {
-        if (typeof result === 'undefined') {
-            result = new Cartesian3();
-        }
-        var magnitude = this.magnitude();
-        if (magnitude > 0) {
-            result.x = this.x / magnitude;
-            result.y = this.y / magnitude;
-            result.z = this.z / magnitude;
-        } else {
-            result.x = result.y = result.z = 0;
-        }
-        return result;
-    };
-
-    /**
-     * Returns the cross (outer) product of two Cartesians.
-     *
-     * <p>
-     * v.cross(u) is v x u.
-     * </p>
-     *
-     * @memberof Cartesian3
-     * @param {Cartesian3} other The Cartesian to cross with this.
-     * @return {Cartesian3} The cross product.
-     */
-    Cartesian3.prototype.cross = function(other) {
-        return new Cartesian3(
-                this.y * other.z - this.z * other.y,
-                this.z * other.x - this.x * other.z,
-                this.x * other.y - this.y * other.x);
-    };
-
-    /**
-     * Returns the dot (scalar) product of two Cartesians.
-     *
-     * @memberof Cartesian3
-     * @param {Cartesian3} other The Cartesian to dot with this.
-     * @return {Number} The dot product.
-     */
-    Cartesian3.prototype.dot = function(other) {
-        return this.x * other.x + this.y * other.y + this.z * other.z;
-    };
-
-    /**
-     * Returns the componentwise sum of two Cartesians.
-     *
-     * @memberof Cartesian3
-     * @param {Cartesian3} other The Cartesian to sum with this.
-     * @return {Cartesian3} The sum of this and other.
-     */
-    Cartesian3.prototype.add = function(other) {
-        return new Cartesian3(this.x + other.x, this.y + other.y, this.z + other.z);
-    };
-
-    /**
-     * Returns the componentwise difference of two Cartesians.
-     *
-     * @memberof Cartesian3
-     * @param {Cartesian3} other The Cartesian to subtract from this.
-     * @return {Cartesian3} The difference of this and other.
-     */
-    Cartesian3.prototype.subtract = function(other) {
-        return new Cartesian3(this.x - other.x, this.y - other.y, this.z - other.z);
-    };
-
-    /**
-     * Returns this Cartesian scaled by a scalar.
-     *
-     * @memberof Cartesian3
-     * @param {Number} scalar The scalar that is multiplied with this.
-     * @return {Cartesian3} The scaled Cartesian.
-     */
-    Cartesian3.prototype.multiplyWithScalar = function(scalar) {
-        return new Cartesian3(this.x * scalar, this.y * scalar, this.z * scalar);
-    };
-
-    /**
-     * Returns this Cartesian scaled by another Cartesian componentwise.
-     *
-     * @memberof Cartesian3
-     * @param {Cartesian3} Cartesian The Cartesian that is multiplied with this componentwise.
-     * @return {Cartesian3} The scaled Cartesian.
-     */
-    Cartesian3.prototype.multiplyComponents = function(Cartesian) {
-        return new Cartesian3(this.x * Cartesian.x, this.y * Cartesian.y, this.z * Cartesian.z);
-    };
-
-    /**
-     * Returns this Cartesian divided by a scalar.
-     *
-     * @memberof Cartesian3
-     * @param {Number} scalar The scalar to use for division.
-     * @return {Cartesian3} This Cartesian after division.
-     */
-    Cartesian3.prototype.divideByScalar = function(scalar) {
-        return new Cartesian3(this.x / scalar, this.y / scalar, this.z / scalar);
-    };
-
-    /**
-     * Returns the value of the maximum component.
-     *
-     * @memberof Cartesian3
      * @return {Number} The value of the maximum component.
      */
     Cartesian3.prototype.getMaximumComponent = function() {
-        return Math.max(this.x, this.y, this.z);
+        return Cartesian3.getMaximumComponent(this);
     };
 
     /**
-     * Returns the value of the minimum component.
-     *
+     * Computes the value of the minimum component for this Cartesian.
      * @memberof Cartesian3
+     *
      * @return {Number} The value of the minimum component.
      */
     Cartesian3.prototype.getMinimumComponent = function() {
-        return Math.min(this.x, this.y, this.z);
+        return Cartesian3.getMinimumComponent(this);
     };
 
     /**
-     * Returns a unit Cartesian representing the most orthogonal axis to this Cartesian.
-     *
-     * @memberof Cartesian3
-     * @return {Cartesian3} The axis most orthogonal to this Cartesian.
-     */
-    Cartesian3.prototype.mostOrthogonalAxis = function() {
-        var x = Math.abs(this.x);
-        var y = Math.abs(this.y);
-        var z = Math.abs(this.z);
-
-        if ((x < y) && (x < z)) {
-            return Cartesian3.UNIT_X;
-        } else if ((y < x) && (y < z)) {
-            return Cartesian3.UNIT_Y;
-        } else {
-            return Cartesian3.UNIT_Z;
-        }
-    };
-
-    /**
-     * Returns the angle, in radians, between this Cartesian and the Cartesian passed in.
-     *
-     * @memberof Cartesian3
-     * @param {Cartesian3} cartesian The Cartesian used to compute the angle.
-     * @return {Number} The angle between the two Cartesians.
-     */
-    Cartesian3.prototype.angleBetween = function(cartesian) {
-        var c = Cartesian3.clone(cartesian);
-        return Math.acos(this.normalize().dot(c.normalize()));
-    };
-
-    /**
-     * Rotates this Cartesian counterclockwise around around the specified axis by the specified degrees.
-     *
-     * @memberof Cartesian3
-     * @param {Cartesian3} axis The axis to rotate around.
-     * @param {Number} theta The angle, in radians, to rotate around.
-     * @return {Cartesian3} The rotated Cartesian.
-     */
-    Cartesian3.prototype.rotateAroundAxis = function(axis, theta) {
-        var x = this.x;
-        var y = this.y;
-        var z = this.z;
-
-        var u = axis.x;
-        var v = axis.y;
-        var w = axis.z;
-
-        var cosTheta = Math.cos(theta);
-        var sinTheta = Math.sin(theta);
-
-        var a = Cartesian3.clone(axis);
-        var ms = a.magnitudeSquared();
-        var m = Math.sqrt(ms);
-
-        return new Cartesian3(
-            ((u * (u * x + v * y + w * z)) +
-            (((x * (v * v + w * w)) - (u * (v * y + w * z))) * cosTheta) +
-            (m * ((-w * y) + (v * z)) * sinTheta)) / ms,
-
-            ((v * (u * x + v * y + w * z)) +
-            (((y * (u * u + w * w)) - (v * (u * x + w * z))) * cosTheta) +
-            (m * ((w * x) - (u * z)) * sinTheta)) / ms,
-
-            ((w * (u * x + v * y + w * z)) +
-            (((z * (u * u + v * v)) - (w * (u * x + v * y))) * cosTheta) +
-            (m * (-(v * x) + (u * y)) * sinTheta)) / ms);
-    };
-
-    /**
-     * Returns this Cartesian negated.
-     *
-     * @memberof Cartesian3
-     * @return {Cartesian3} This Cartesian negated.
-     */
-    Cartesian3.prototype.negate = function() {
-        return new Cartesian3(-this.x, -this.y, -this.z);
-    };
-
-    /**
-     * Returns a version of this Cartesian containing the absolute value of each component.
-     *
-     * @memberof Cartesian3
-     * @return {Cartesian3} The absolute value of this Cartesian.
-     */
-    Cartesian3.prototype.abs = function() {
-        return new Cartesian3(Math.abs(this.x), Math.abs(this.y), Math.abs(this.z));
-    };
-
-    /**
-     * Returns the linear interpolation between this Cartesian and another Cartesian at value t.
-     *
-     * @memberof Cartesian3
-     * @param {Cartesian} Cartesian The value to interpolate with this.
-     * @param {Number} t A value in [0, 1] used to interpolate the two Cartesians.
-     * @returns {Cartesian} The interpolated Cartesian at t.
-     */
-    Cartesian3.prototype.lerp = function(Cartesian, t) {
-        var c = new Cartesian3(Cartesian.x, Cartesian.y, Cartesian.z);
-        return this.multiplyWithScalar(1.0 - t).add(c.multiplyWithScalar(t));
-    };
-
-    /**
-     * Returns a duplicate of a Cartesian3 instance.
+     * Duplicates this Cartesian3 instance.
      * @memberof Cartesian3
      *
-     * @param {Cartesian} [result] The object to store the result in, if undefined a new instance will be created.
-     * @return {Cartesian3} The modified result parameter or a new instance if result was undefined.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      */
     Cartesian3.prototype.clone = function(result) {
         return Cartesian3.clone(this, result);
     };
 
     /**
-     * Returns true if this Cartesian equals other componentwise.
+     * Computes this Cartesian's squared magnitude.
      * @memberof Cartesian3
      *
-     * @param {Cartesian3} other The Cartesian to compare for equality.
-     * @return {Boolean} <code>true</code> if the Cartesians are equal componentwise; otherwise, <code>false</code>.
+     * @return {Number} The squared magnitude.
      */
-    Cartesian3.prototype.equals = function(other) {
-        return (typeof other !== 'undefined') && (this.x === other.x) && (this.y === other.y) && (this.z === other.z);
+    Cartesian3.prototype.magnitudeSquared = function() {
+        return Cartesian3.magnitudeSquared(this);
     };
 
     /**
-     * Returns <code>true</code> if this Cartesian equals other componentwise within the specified epsilon.
-     *
+     * Computes this Cartesian's magnitude (length).
      * @memberof Cartesian3
      *
-     * @param {Cartesian3} other The Cartesian to compare for equality.
-     * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
-     *
-     * @return {Boolean} <code>true</code> if the Cartesians are equal within the specified epsilon; otherwise, <code>false</code>.
+     * @return {Number} The magnitude.
      */
-    Cartesian3.prototype.equalsEpsilon = function(other, epsilon) {
-        epsilon = epsilon || 0.0;
-        return (typeof other !== 'undefined') &&
-               (Math.abs(this.x - other.x) <= epsilon) &&
-               (Math.abs(this.y - other.y) <= epsilon) &&
-               (Math.abs(this.z - other.z) <= epsilon);
+    Cartesian3.prototype.magnitude = function() {
+        return Cartesian3.magnitude(this);
     };
 
     /**
-     * Returns a string representing this instance in the format (x, y, z).
-     *
+     * Computes the normalized form of this Cartesian.
      * @memberof Cartesian3
-     * @return {String} A string representing this instance.
+     *
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     */
+    Cartesian3.prototype.normalize = function(result) {
+        return Cartesian3.normalize(this, result);
+    };
+
+    /**
+     * Computes the dot (scalar) product of this Cartesian and a supplied cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} right The right hand side Cartesian.
+     * @return {Number} The dot product.
+     *
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.prototype.dot = function(right) {
+        return Cartesian3.dot(this, right);
+    };
+
+    /**
+     * Computes the componentwise product of this Cartesian and the provided Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} right The right hand side Cartesian.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.prototype.multiplyComponents = function(right, result) {
+        return Cartesian3.multiplyComponents(this, right, result);
+    };
+
+    /**
+     * Computes the componentwise sum of this Cartesian and the provided Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} right The right hand side Cartesian.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.prototype.add = function(right, result) {
+        return Cartesian3.add(this, right, result);
+    };
+
+    /**
+     * Computes the componentwise difference of this Cartesian and the provided Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} right The right hand side Cartesian.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.prototype.subtract = function(right, result) {
+        return Cartesian3.subtract(this, right, result);
+    };
+
+    /**
+     * Multiplies this Cartesian componentwise by the provided scalar.
+     * @memberof Cartesian3
+     *
+     * @param {Number} scalar The scalar to multiply with.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} scalar is required and must be a number.
+     */
+    Cartesian3.prototype.multiplyByScalar = function(scalar, result) {
+        return Cartesian3.multiplyByScalar(this, scalar, result);
+    };
+
+    /**
+     * Divides this Cartesian componentwise by the provided scalar.
+     * @memberof Cartesian3
+     *
+     * @param {Number} scalar The scalar to divide by.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} scalar is required and must be a number.
+     */
+    Cartesian3.prototype.divideByScalar = function(scalar, result) {
+        return Cartesian3.divideByScalar(this, scalar, result);
+    };
+
+    /**
+     * Negates this Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     */
+    Cartesian3.prototype.negate = function(result) {
+        return Cartesian3.negate(this, result);
+    };
+
+    /**
+     * Computes the absolute value of this Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     */
+    Cartesian3.prototype.abs = function(result) {
+        return Cartesian3.abs(this, result);
+    };
+
+    /**
+     * Computes the linear interpolation or extrapolation at t using this Cartesian
+     * and the provided cartesian.  This cartesian is assumed to be t at 0.0.
+     * @memberof Cartesian3
+     *
+     * @param end The value corresponding to t at 1.0.
+     * @param t The point along t at which to interpolate.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} end is required.
+     * @exception {DeveloperError} t is required and must be a number.
+     */
+    Cartesian3.prototype.lerp = function(end, t, result) {
+        return Cartesian3.lerp(this, end, t, result);
+    };
+
+    /**
+     * Returns the angle, in radians, between this Cartesian and the provided Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} right The right hand side Cartesian.
+     * @return {Number} The angle between the Cartesians.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.prototype.angleBetween = function(right) {
+        return Cartesian3.angleBetween(this, right);
+    };
+
+    /**
+     * Compares this Cartesian against the provided Cartesian componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} [right] The right hand side Cartesian.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     */
+    Cartesian3.prototype.equals = function(right) {
+        return Cartesian3.equals(this, right);
+    };
+
+    /**
+     * Compares this Cartesian against the provided Cartesian componentwise and returns
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} [right] The right hand side Cartesian.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @return {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} epsilon is required and must be a number.
+     */
+    Cartesian3.prototype.equalsEpsilon = function(right, epsilon) {
+        return Cartesian3.equalsEpsilon(this, right, epsilon);
+    };
+
+    /**
+     * Creates a string representing this Cartesian in the format '(x, y)'.
+     * @memberof Cartesian3
+     *
+     * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
      */
     Cartesian3.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
+    };
+
+    /**
+     * Computes the cross (outer) product of this and the provided Cartesian.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} right The right hand side Cartesian.
+     * @return {Number} The cross product.
+     *
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian3.prototype.cross = function(right, result) {
+        return Cartesian3.cross(this, right, result);
     };
 
     return Cartesian3;
