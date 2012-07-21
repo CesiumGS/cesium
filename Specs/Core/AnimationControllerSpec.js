@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/Clock',
-             'Core/AnimationController'
+             'Core/AnimationController',
+             'Core/Clock'
             ], function(
-              Clock,
-              AnimationController) {
+              AnimationController,
+              Clock) {
     "use strict";
     /*global it,expect*/
 
