@@ -11,8 +11,8 @@ require({
         name : 'Core',
         location : 'Source/Core'
     }, {
-        name : 'Widgets',
-        location : 'Source/Widgets'
+        name : 'Controls',
+        location : 'Source/Controls'
     }, {
         name : 'DojoWidgets',
         location : 'Source/DojoWidgets'

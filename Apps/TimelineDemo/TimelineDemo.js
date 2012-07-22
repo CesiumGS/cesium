@@ -5,7 +5,7 @@ define(['dojo',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
-        'Widgets/Timeline'
+        'Controls/Timeline'
     ], function(
          dojo,
          dijit,

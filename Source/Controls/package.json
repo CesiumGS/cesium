@@ -1,0 +1,6 @@
+{
+	"name": "Controls",
+	"description": "Cesium Controls",
+	"version": "0.6.0",
+	"dojoBuild": "Controls.profile.js"
+}

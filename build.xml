@@ -9,7 +9,7 @@
 				<fileset dir="${sourceDirectory}">
 					<include name="**/*.js" />
 					<exclude name="DojoWidgets/**" />
-					<exclude name="Widgets/**" />
+					<exclude name="Controls/**" />
 					<exclude name="Cesium.js" />
 					<exclude name="main.js" />
 					<exclude name="**/*.profile.js" />

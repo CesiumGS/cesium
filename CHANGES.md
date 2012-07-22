@@ -68,8 +68,8 @@ Beta Releases
 * Added `Spherical` coordinate type
 * Added a new DynamicScene layer for time-dynamic, data-driven visualization.  This include CZML processing.  For more details see https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture and https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-in-Cesium.
 * Added a new application, Cesium Viewer, for viewing CZML files and otherwise exploring the globe.
-* Added a new Widgets directory, to contain common re-usable Cesium related controls.
-* Added a new Timeline control to the widgets directory.
+* Added a new Controls directory, to contain common re-usable Cesium related controls.
+* Added a new Timeline control to the Controls directory.
 * Added a new DojoWidgets directory, to contain dojo-specific widgets.
 * Added new Timeline and Cesium dojo widgets.
 * Added `CameraCentralBodyController` as the new default controller to handle mouse input.
