@@ -9,7 +9,7 @@ define([
      * @alias AnimationController
      * @constructor
      *
-     * @param {Clock} [clock] The clock that will be controlled.
+     * @param {Clock} clock The clock that will be controlled.
      *
      * @see Clock
      */
