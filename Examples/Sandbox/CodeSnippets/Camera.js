@@ -80,12 +80,12 @@
 
     Sandbox.ViewExtent = function (scene, ellipsoid, primitives) {
         this.code = function() {
-            var west = Cesium.Math.toRadians(-77.0),
-                south = Cesium.Math.toRadians(38.0),
-                east = Cesium.Math.toRadians(-72.0),
-                north = Cesium.Math.toRadians(42.0);
+            var extent = new Cesium.Extent(Cesium.Math.toRadians(-77.0),
+                    Cesium.Math.toRadians(38.0),
+                    Cesium.Math.toRadians(-72.0),
+                    Cesium.Math.toRadians(42.0));
 
-            scene.getCamera().viewExtent(ellipsoid, west, south, east, north);
+            scene.viewExtent(extent, ellipsoid);
 
             var polyline = new Cesium.Polyline(undefined);
             polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([

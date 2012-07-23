@@ -24,7 +24,13 @@ Beta Releases
             var position = scene.pickEllipsoid(windowPosition, ellipsoid);
             
    * `Camera.getPickRay` now returns the new `Ray` type instead of an object with position and direction properties.
-   * Prefer `Scene.viewExtent` over `Camera.viewExtent`. `Scene.viewExtent` will work in any `SceneMode`.
+   * `Camera.viewExtent` now takes an `Extent` argument instead of west, south, east and north arguments. Prefer `Scene.viewExtent` over `Camera.viewExtent`. `Scene.viewExtent` will work in any `SceneMode`. For example, change
+   
+            camera.viewExtent(ellipsoid, west, south, east, north);
+      to:
+      
+            scene.viewExtent(extent, ellipsoid);
+            
    * `CameraSpindleController.mouseConstrainedZAxis` has been removed. Instead, use `CameraSpindleController.constrainedAxis`. Code that previously looked like:
             
             spindleController.mouseConstrainedZAxis = true;
