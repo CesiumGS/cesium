@@ -171,19 +171,16 @@ define([
         var imageryProvider = this.imageryProvider;
         var imageryCache = this._imageryCache;
         var hostname;
-        var postpone = false;
 
         when(imageryProvider.buildImageUrl(tileImagery.x, tileImagery.y, tileImagery.level), function(imageUrl) {
-            tileImagery.imageUrl = imageUrl;
-
             var texture = imageryCache.get(imageUrl);
-            if (texture !== 'undefined') {
+            if (typeof texture !== 'undefined') {
                 tileImagery.texture = texture;
                 tileImagery.state = TileState.READY;
+                return false;
             }
 
             hostname = getHostname(imageUrl);
-
             if (hostname !== '') {
                 var activeRequestsForHostname = defaultValue(activeTileImageRequests[hostname], 0);
 
@@ -193,20 +190,20 @@ define([
                 if (activeRequestsForHostname > 6) {
                     // postpone loading tile
                     tileImagery.state = TileState.UNLOADED;
-                    postpone = true;
-                    return;
+                    return false;
                 }
 
                 activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
             }
 
+            tileImagery.imageUrl = imageUrl;
             return imageryProvider.requestImage(imageUrl);
         }).then(function(image) {
-            activeTileImageRequests[hostname]--;
-
-            if (postpone) {
+            if (typeof image === 'boolean') {
                 return;
             }
+
+            activeTileImageRequests[hostname]--;
 
             tileImagery.image = image;
 
