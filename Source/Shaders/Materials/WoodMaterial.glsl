@@ -30,7 +30,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     color += lightWoodColor * r;
     
     color.a = 1.0;
-    
+
     material.diffuse = color.rgb;
     
     return material;

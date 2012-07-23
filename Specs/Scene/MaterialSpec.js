@@ -130,7 +130,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it('throws without context', function() {
+    it('throws without context for material that uses textures', function() {
         expect(function() {
             return new Material({
                 'context' : undefined,

@@ -8,6 +8,8 @@ define([
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Renderer/Texture',
+        '../Renderer/CubeMap',
         '../ThirdParty/Chain',
         '../Shaders/Materials/AlphaMapMaterial',
         '../Shaders/Materials/AsphaltMaterial',
@@ -42,6 +44,8 @@ define([
         Matrix2,
         Matrix3,
         Matrix4,
+        Texture,
+        CubeMap,
         Chain,
         AlphaMapMaterial,
         AsphaltMaterial,
@@ -76,6 +80,7 @@ define([
      */
 
     function Material(description) {
+        var that = this;
         this._description = description || {};
         this._context = this._description.context;
         this._strict = (typeof this._description.strict !== 'undefined') ? this._description.strict : true;
@@ -126,66 +131,141 @@ define([
             this._shaderSource += 'return material;\n}\n';
         }
 
+
         // Set up uniforms for the main material
         this._uniforms = {};
-        var returnUniform = function (material, uniformID) {
-            return function() {
-                return material[uniformID];
-            };
-        };
-        for (var uniformID in this._materialUniforms) {
-            if (this._materialUniforms.hasOwnProperty(uniformID)) {
-                var uniformValue = this._materialUniforms[uniformID];
-                var uniformType = this._getUniformType(uniformValue);
-                if (typeof uniformType === 'undefined') {
-                    throw new DeveloperError('Invalid uniform type for uniform \'' + uniformID + '\'.');
-                }
-                // When the uniform type is a string, replace all tokens with its value.
-                if (uniformType === 'string') {
-                    if (this._replaceToken(uniformID, uniformValue, false) === 0 && this._strict) {
-                        throw new DeveloperError('Shader source does not use string \'' + uniformID + '\'.');
+
+        // Determines the uniform type based on the uniform in the template.
+        var getUniformType = function(uniformValue) {
+            var uniformType = uniformValue.type;
+            if (typeof uniformType === 'undefined') {
+                var imageMatcher = new RegExp('^((data:)|((.)+\\.(gif|jpg|jpeg|tiff|png)$))', 'i');
+                var type = typeof uniformValue;
+                if (type === 'string') {
+                    if (uniformValue === 'agi_defaultCubeMap') {
+                        uniformType = 'samplerCube';
+                    }
+                    else if (imageMatcher.test(uniformValue) || uniformValue === 'agi_defaultTexture') {
+                        uniformType = 'sampler2D';
+                    }
+                    else {
+                        uniformType = 'string';
                     }
                 }
-                else {
-                    // Add uniform declaration to source code.
-                    var uniformPhrase = 'uniform ' + uniformType + ' ' + uniformID + ';\n';
-                    if (this._shaderSource.indexOf(uniformPhrase) === -1) {
-                        this._shaderSource = uniformPhrase + this._shaderSource;
-                    }
-                    // Replace uniform name with guid version.
-                    var newUniformID = uniformID + '_' + this._getNewGUID();
-                    if (this._replaceToken(uniformID, newUniformID, true) === 1 && this._strict) {
-                        throw new DeveloperError('Shader source does not use uniform \'' + uniformID + '\'.');
-                    }
-                    // If uniform is a texture, load it.
-                    if (uniformType.indexOf('sampler') !== -1) {
-                        uniformValue = this._texturePool.registerTextureToMaterial(this, uniformID, uniformValue, uniformType);
-                    }
-                    // If the uniform is a matrix, create the correct matrix type from the array.
-                    else if (uniformType.indexOf('mat') !== -1) {
-                        var dimension = uniformType.slice(uniformType.length - 1);
-                        if (dimension === '2') {
-                            uniformValue = new Matrix2(uniformValue[0], uniformValue[1],
-                                                       uniformValue[2], uniformValue[3]);
-                        }
-                        else if (dimension === '3') {
-                            uniformValue = new Matrix3(uniformValue[0], uniformValue[1], uniformValue[2],
-                                                       uniformValue[3], uniformValue[4], uniformValue[5],
-                                                       uniformValue[6], uniformValue[7], uniformValue[8]);
-                        }
-                        else if (dimension === '4') {
-                            uniformValue = new Matrix4(uniformValue[0], uniformValue[1], uniformValue[2], uniformValue[3],
-                                                       uniformValue[4], uniformValue[5], uniformValue[6], uniformValue[7],
-                                                       uniformValue[8], uniformValue[9], uniformValue[10], uniformValue[11],
-                                                       uniformValue[12], uniformValue[13], uniformValue[14], uniformValue[15]);
+                else if (type === 'number') {
+                    uniformType = 'float';
+                }
+                else if (type === 'object') {
+                    if (uniformValue instanceof Array) {
+                        if (uniformValue.length === 4 || uniformValue.length === 9 || uniformValue.length === 16) {
+                            var dimension = Math.sqrt(uniformValue.length);
+                            uniformType = 'mat' + dimension;
                         }
                     }
-                    // Set uniform value
-                    this[uniformID] = uniformValue;
-                    this._uniforms[newUniformID] = returnUniform(this, uniformID);
+                    else {
+                        var numAttributes = 0;
+                        for (var attribute in uniformValue) {
+                            if (uniformValue.hasOwnProperty(attribute)) {
+                                numAttributes += 1;
+                            }
+                        }
+                        if (numAttributes >= 2 && numAttributes <= 4) {
+                            uniformType = 'vec' + numAttributes;
+                        }
+                        else if (numAttributes === 6) {
+                            if (imageMatcher.test(uniformValue.positiveX) && imageMatcher.test(uniformValue.negativeX) &&
+                                imageMatcher.test(uniformValue.positiveY) && imageMatcher.test(uniformValue.negativeY) &&
+                                imageMatcher.test(uniformValue.positiveZ) && imageMatcher.test(uniformValue.negativeZ)) {
+                                uniformType = 'samplerCube';
+                            }
+                        }
+                    }
                 }
             }
+            return uniformType;
+        };
+
+        // Writes uniform declarations to the shader file and connects uniform values with
+        // corresponding material properties through the returnUniforms function.
+        var processUniform = function(uniformID) {
+            var uniformValue = that._materialUniforms[uniformID];
+            var uniformType = getUniformType(uniformValue);
+            if (typeof uniformType === 'undefined') {
+                throw new DeveloperError('Invalid uniform \'' + uniformID + '\'.');
+            }
+            else if (uniformType === 'string') {
+                if (that._replaceToken(uniformID, uniformValue, false) === 0 && that._strict) {
+                    throw new DeveloperError('Shader source does not use string \'' + uniformID + '\'.');
+                }
+            }
+            else {
+                // If uniform type is a texture, add texture dimension uniforms.
+                if (uniformType.indexOf('sampler') !== -1) {
+                    if (typeof that._context === 'undefined') {
+                        throw new DeveloperError('Context is not defined');
+                    }
+                    var textureDimensionsUniformName = uniformID + 'Dimensions';
+                    if (that._shaderSource.indexOf(textureDimensionsUniformName) !== -1) {
+                        that._materialUniforms[textureDimensionsUniformName] = {'type' : 'ivec2', 'x' : 1, 'y' : 1};
+                        processUniform(textureDimensionsUniformName);
+                    }
+                }
+                // Add uniform declaration to source code.
+                var uniformPhrase = 'uniform ' + uniformType + ' ' + uniformID + ';\n';
+                if (that._shaderSource.indexOf(uniformPhrase) === -1) {
+                    that._shaderSource = uniformPhrase + that._shaderSource;
+                }
+                // Replace uniform name with guid version.
+                var newUniformID = uniformID + '_' + that._getNewGUID();
+                if (that._replaceToken(uniformID, newUniformID, true) === 1 && that._strict) {
+                    throw new DeveloperError('Shader source does not use uniform \'' + uniformID + '\'.');
+                }
+                // Set uniform value
+                that[uniformID] = uniformValue;
+                that._uniforms[newUniformID] = returnUniform(uniformID, uniformType);
+            }
+        };
+        // Checks for updates to material values to refresh the uniforms.
+        var returnUniform = function (uniformID, uniformType) {
+            return function() {
+                var uniformValue = that[uniformID];
+                if (uniformType.indexOf('sampler') !== -1 && !(uniformValue instanceof Texture || uniformValue instanceof CubeMap)) {
+                    uniformValue = that._texturePool.registerTextureToMaterial(that, uniformID, uniformValue, uniformType);
+                }
+                else if (uniformType.indexOf('mat2') !== -1 && !(uniformValue instanceof Matrix2)) {
+                    uniformValue = new Matrix2(uniformValue);
+                }
+                else if (uniformType.indexOf('mat3') !== -1 && !(uniformValue instanceof Matrix3)) {
+                    uniformValue = new Matrix3(uniformValue);
+                }
+                else if (uniformType.indexOf('mat4') !== -1 && !(uniformValue instanceof Matrix4)) {
+                    uniformValue = new Matrix4(uniformValue);
+                }
+                else if (uniformType === 'ivec2') {
+                    var textureDimensionsIndex = uniformID.indexOf('Dimensions');
+                    var texture = that[uniformID.slice(0, textureDimensionsIndex)];
+                    if (textureDimensionsIndex !== -1 && typeof texture !== 'undefined') {
+                        if (texture instanceof Texture) {
+                            uniformValue.x = texture._width;
+                            uniformValue.y = texture._height;
+                        }
+                        else if (texture instanceof CubeMap) {
+                            uniformValue.x = texture._size;
+                            uniformValue.y = texture._size;
+                        }
+                    }
+                }
+                that[uniformID] = uniformValue;
+                return that[uniformID];
+            };
+        };
+        // Process all uniforms in the template
+        for (var uniformID in this._materialUniforms) {
+            if (this._materialUniforms.hasOwnProperty(uniformID)) {
+                processUniform(uniformID);
+            }
         }
+
         // Create all sub-materials and combine source and uniforms together.
         var newShaderSource = '';
         for (var materialID in this._materialTemplates) {
@@ -303,60 +383,6 @@ define([
         }
     };
 
-    Material.prototype._getUniformType = function(uniform) {
-        var uniformType = uniform.type;
-        if (typeof uniformType === 'undefined') {
-            var imageMatcher = new RegExp('^((data:)|((.)+\\.(gif|jpg|jpeg|tiff|png)$))', 'i');
-            var type = typeof uniform;
-            if (type === 'string') {
-                if (imageMatcher.test(uniform) || uniform === 'agi_defaultTexture') {
-                    uniformType = 'sampler2D';
-                }
-                else if (uniform === 'agi_defaultCubeMap') {
-                    uniformType = 'samplerCube';
-                }
-                else {
-                    uniformType = 'string';
-                }
-            }
-            else if (type === 'number') {
-                uniformType = 'float';
-            }
-            else if (type === 'object') {
-                if (uniform instanceof Array) {
-                    if (uniform.length === 4) {
-                        uniformType = 'mat2';
-                    }
-                    else if (uniform.length === 9) {
-                        uniformType = 'mat3';
-                    }
-                    else if (uniform.length === 16) {
-                        uniformType = 'mat4';
-                    }
-                }
-                else {
-                    var numAttributes = 0;
-                    for (var attribute in uniform) {
-                        if (uniform.hasOwnProperty(attribute)) {
-                            numAttributes += 1;
-                        }
-                    }
-                    if (numAttributes >= 2 && numAttributes <= 4) {
-                        uniformType = 'vec' + numAttributes;
-                    }
-                    else if (numAttributes === 6) {
-                        if (imageMatcher.test(uniform.positiveX) && imageMatcher.test(uniform.negativeX) &&
-                            imageMatcher.test(uniform.positiveY) && imageMatcher.test(uniform.negativeY) &&
-                            imageMatcher.test(uniform.positiveZ) && imageMatcher.test(uniform.negativeZ)) {
-                            uniformType = 'samplerCube';
-                        }
-                    }
-                }
-            }
-        }
-        return uniformType;
-    };
-
     Material.prototype._texturePool = {
         _pathsToMaterials : {},
         _pathsToTextures : {},
@@ -374,9 +400,6 @@ define([
             var that = this;
             var path;
             var texture;
-            if (typeof material._context === 'undefined') {
-                throw new DeveloperError('context is required.');
-            }
             if (textureType === 'sampler2D') {
                 path = textureInfo;
                 texture = this._pathsToTextures[path];
@@ -478,7 +501,7 @@ define([
         'id' : 'DiffuseMapMaterial',
         'uniforms' : {
             'texture' : 'agi_defaultTexture',
-            'diffuseChannels' : 'rgb',
+            'channels' : 'rgb',
             'repeat' : {
                 'x' : 1,
                 'y' : 1
@@ -492,7 +515,7 @@ define([
         'id' : 'AlphaMapMaterial',
         'uniforms' : {
             'texture' : 'agi_defaultTexture',
-            'alphaChannel' : 'a',
+            'channel' : 'a',
             'repeat' : {
                 'x' : 1,
                 'y' : 1
@@ -522,7 +545,7 @@ define([
         'id' : 'SpecularMapMaterial',
         'uniforms' : {
             'texture' : 'agi_defaultTexture',
-            'specularChannel' : 'r',
+            'channel' : 'r',
             'repeat' : {
                 'x' : 1,
                 'y' : 1
@@ -536,7 +559,7 @@ define([
         'id' : 'EmissionMapMaterial',
         'uniforms' : {
             'texture' : 'agi_defaultTexture',
-            'emissionChannels' : 'rgb',
+            'channels' : 'rgb',
             'repeat' : {
                 'x' : 1,
                 'y' : 1
@@ -550,7 +573,7 @@ define([
         'id' : 'BumpMapMaterial',
         'uniforms' : {
             'texture' : 'agi_defaultTexture',
-            'bumpMapChannel' : 'r',
+            'channel' : 'r',
             'repeat' : {
                 'x' : 1,
                 'y' : 1
@@ -564,7 +587,7 @@ define([
         'id' : 'NormalMapMaterial',
         'uniforms' : {
             'texture' : 'agi_defaultTexture',
-            'normalMapChannels' : 'rgb',
+            'channels' : 'rgb',
             'strength' : 0.8,
             'repeat' : {
                 'x' : 1,
@@ -579,7 +602,7 @@ define([
         'id' : 'ReflectionMaterial',
         'uniforms' : {
             'cubeMap' : 'agi_defaultCubeMap',
-            'reflectionChannels' : 'rgb'
+            'channels' : 'rgb'
         },
         'source' : ReflectionMaterial
     });
@@ -589,7 +612,7 @@ define([
         'id' : 'RefractionMaterial',
         'uniforms' : {
             'cubeMap' : 'agi_defaultCubeMap',
-            'refractionChannels' : 'rgb',
+            'channels' : 'rgb',
             'indexOfRefractionRatio' : 0.9
         },
         'source' : RefractionMaterial

@@ -256,7 +256,7 @@
                    'id' : 'DiffuseMapMaterial',
                    'uniforms' : {
                        'texture' : '../../Images/Cesium_Logo_Color.jpg',
-                       'diffuseChannels' : 'rgb',
+                       'channels' : 'rgb',
                        'repeat' : {
                            'x' : 1,
                            'y' : 1
@@ -292,7 +292,7 @@
                     'id' : 'AlphaMapMaterial',
                     'uniforms' : {
                         'texture' : '../../Images/alpha_map.png',
-                        'alphaChannel' : 'r',
+                        'channel' : 'r',
                         'repeat' : {
                             'x' : 1,
                             'y' : 1
@@ -365,7 +365,7 @@
                     'id' : 'SpecularMapMaterial',
                     'uniforms' : {
                         'texture' : '../../Images/alpha_map.png',
-                        'specularChannel' : 'r',
+                        'channel' : 'r',
                         'repeat' : {
                             'x' : 1,
                             'y' : 1
@@ -401,7 +401,7 @@
                     'id' : 'EmissionMapMaterial',
                     'uniforms' : {
                         'texture' : '../../Images/alpha_map.png',
-                        'emissionChannels' : 'rgb',
+                        'channels' : 'rgb',
                         'repeat' : {
                             'x' : 1,
                             'y' : 1
@@ -439,7 +439,7 @@
                             'id' : 'BumpMapMaterial',
                             'uniforms' : {
                                 'texture' : '../../Images/earthbump1k.jpg',
-                                'bumpMapChannel' : 'r',
+                                'channel' : 'r',
                                 'repeat' : {
                                     'x' : 1,
                                     'y' : 1
@@ -484,7 +484,7 @@
                             'id' : 'NormalMapMaterial',
                             'uniforms' : {
                                 'texture' : '../../Images/earthnormalmap.jpg',
-                                'normalMapChannels' : 'rgb',
+                                'channels' : 'rgb',
                                 'strength' : 0.8,
                                 'repeat' : {
                                     'x' : 1,
@@ -535,7 +535,7 @@
                             'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
                             'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
                         },
-                        'reflectionChannels' : 'rgb'
+                        'channels' : 'rgb'
                     }
                 }
             });
@@ -574,7 +574,7 @@
                             'positiveZ' : '../../Images/PalmTreesCubeMap/posz.jpg',
                             'negativeZ' : '../../Images/PalmTreesCubeMap/negz.jpg'
                         },
-                        'refractionChannels' : 'rgb',
+                        'channels' : 'rgb',
                         'indexOfRefractionRatio' : 0.9
                     }
                 }

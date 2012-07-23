@@ -8,9 +8,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     vec3 normalEC = material.normal;
     vec3 normalWC = normalize(vec3(agi_inverseView * vec4(normalEC, 0.0)));
     vec3 refractedWC = refract(materialInput.positionToEyeWC, -normalWC, indexOfRefractionRatio);
-    vec3 refractedValue = textureCube(cubeMap, refractedWC).refractionChannels;
+    material.diffuse = textureCube(cubeMap, refractedWC).channels;
 
-    material.diffuse = refractedValue;
-    
     return material;
 }
