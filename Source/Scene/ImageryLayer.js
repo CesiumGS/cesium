@@ -12,6 +12,7 @@ define([
         './Tile',
         './TileImagery',
         './TileState',
+        './TexturePool',
         './Projections',
         '../ThirdParty/when'
     ], function(
@@ -27,6 +28,7 @@ define([
         Tile,
         TileImagery,
         TileState,
+        TexturePool,
         Projections,
         when) {
     "use strict";
@@ -50,6 +52,7 @@ define([
         this.extent = extent;
 
         this._imageryCache = new ImageryCache();
+        this._texturePool = new TexturePool();
 
         this._tileFailCount = 0;
 
@@ -223,7 +226,7 @@ define([
     };
 
     ImageryLayer.prototype.createResources = function(context, tileImagery) {
-        this.imageryProvider.createResources(context, tileImagery);
+        this.imageryProvider.createResources(context, tileImagery, this._texturePool);
 
         if (tileImagery.state === TileState.READY) {
             tileImagery.texture = this._imageryCache.add(tileImagery.imageUrl, tileImagery.texture);
@@ -276,6 +279,8 @@ define([
      * imageryLayer = imageryLayer && imageryLayer.destroy();
      */
     ImageryLayer.prototype.destroy = function() {
+        this._texturePool = this._texturePool && this._texturePool.destroy();
+
         return destroyObject(this);
     };
 

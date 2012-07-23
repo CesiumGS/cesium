@@ -83,15 +83,16 @@ define([
      *
      * @param {Context} context The context to use to create resources.
      * @param {TileImagery} tileImagery The tile imagery to create resources for.
+     * @param {TexturePool} texturePool A texture pool to use to create textures.
      */
-    ImageryProvider.prototype.createResources = function(context, tileImagery) {
-        tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.transformedImage);
+    ImageryProvider.prototype.createResources = function(context, tileImagery, texturePool) {
+        tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.transformedImage, texturePool);
         tileImagery.transformedImage = undefined;
         tileImagery.state = TileState.READY;
     };
 
-    ImageryProvider.createTextureFromTransformedImage = function(context, transformedImage) {
-        var texture = context.createTexture2D({
+    ImageryProvider.createTextureFromTransformedImage = function(context, transformedImage, texturePool) {
+        var texture = texturePool.createTexture2D(context, {
             source : transformedImage
         });
 

@@ -33,7 +33,12 @@ define([
         if (typeof freeList === 'undefined') {
             freeList = this._pool._free[this._textureTypeKey] = [];
         }
-        freeList.push(this);
+
+        if (freeList.length >= 8) {
+            this._texture.destroy();
+        } else {
+            freeList.push(this);
+        }
     };
 
     /**

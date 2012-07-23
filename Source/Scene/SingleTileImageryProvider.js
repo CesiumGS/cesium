@@ -166,6 +166,7 @@ define([
      *
      * @param {Context} context The context to use to create resources.
      * @param {TileImagery} tileImagery The tile imagery to create resources for.
+     * @param {TexturePool} texturePool A texture pool to use to create textures.
      */
     SingleTileImageryProvider.prototype.createResources = ImageryProvider.prototype.createResources;
 
