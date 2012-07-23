@@ -132,7 +132,7 @@ define([
             this.scene.getCamera().frustum.aspectRatio = width / height;
         },
 
-        defaultOnObjectRightClickSelected : function(selectedObject) {
+        centerCameraOnObject : function(selectedObject) {
             if (selectedObject && selectedObject.dynamicObject) {
                 this.cameraCenteredObjectID = selectedObject.dynamicObject.id;
             } else {
@@ -333,7 +333,7 @@ define([
             //////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (typeof this.onObjectRightClickSelected === 'undefined') {
-                this.onObjectRightClickSelected = this.defaultOnObjectRightClickSelected;
+                this.onObjectRightClickSelected = this.centerCameraOnObject;
             }
 
             if (this.enableDragDrop) {
@@ -685,7 +685,7 @@ define([
             centralBody.bumpMapSource = this.bumpMapUrl;
         },
 
-        defaultRenderLoop : function() {
+        startRenderLoop : function() {
             var widget = this;
             var animationController = widget.animationController;
 
