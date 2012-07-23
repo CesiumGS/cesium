@@ -18,6 +18,7 @@ define([
         '../Core/Clock',
         '../Core/ClockStep',
         '../Core/ClockRange',
+        '../Core/AnimationController',
         '../Core/Ellipsoid',
         '../Core/Iso8601',
         '../Core/FullScreen',
@@ -60,6 +61,7 @@ define([
         Clock,
         ClockStep,
         ClockRange,
+        AnimationController,
         Ellipsoid,
         Iso8601,
         FullScreen,
@@ -338,6 +340,22 @@ define([
                 on(dropBox, 'dragenter', event.stop);
                 on(dropBox, 'dragover', event.stop);
                 on(dropBox, 'dragexit', event.stop);
+            }
+
+            var currentTime = new JulianDate();
+            if (typeof this.animationController === 'undefined') {
+                if (typeof this.clock === 'undefined') {
+                    this.clock = new Clock({
+                        startTime : currentTime.addDays(-0.5),
+                        stopTime : currentTime.addDays(0.5),
+                        currentTime : currentTime,
+                        clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
+                        multiplier : 1
+                    });
+                }
+                this.animationController = new AnimationController(this.clock);
+            } else {
+                this.clock = this.animationController.clock;
             }
 
             var animationController = this.animationController;

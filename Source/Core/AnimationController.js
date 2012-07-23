@@ -1,7 +1,11 @@
 /*global define*/
 define([
-        'Core/binarySearch'
-       ], function(binarySearch) {
+    './binarySearch',
+    './DeveloperError'
+], function(
+    binarySearch,
+    DeveloperError
+) {
     "use strict";
 
     /**
@@ -16,6 +20,9 @@ define([
     var AnimationController = function(clock) {
         this.clock = clock;
         this._animating = true;
+        if (typeof clock !== 'object') {
+            throw new DeveloperError('Clock parameter required to construct AnimationController.');
+        }
     };
 
     var typicalMultipliers = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0, 1800.0, 3600.0, 7200.0, 14400.0, 21600.0,

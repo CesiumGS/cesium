@@ -2,25 +2,15 @@
 define([
         'dojo/dom',
         'dojo/on',
-        'dojo/_base/event',
         'dojo/io-query',
-        'Core/JulianDate',
-        'Core/Clock',
-        'Core/ClockStep',
         'DojoWidgets/CesiumWidget',
-        'Core/requestAnimationFrame',
-        'Core/AnimationController'
+        'Core/requestAnimationFrame'
     ], function(
         dom,
         on,
-        event,
         ioQuery,
-        JulianDate,
-        Clock,
-        ClockStep,
         CesiumWidget,
-        requestAnimationFrame,
-        AnimationController) {
+        requestAnimationFrame) {
     "use strict";
     /*global console*/
 
@@ -29,19 +19,7 @@ define([
         endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
     }
 
-    var currentTime = new JulianDate();
-    var clock = new Clock({
-        startTime : currentTime.addDays(-0.5),
-        stopTime : currentTime.addDays(0.5),
-        currentTime : currentTime,
-        clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
-        multiplier : 1
-    });
-    var animationController = new AnimationController(clock);
-
     var cesium = new CesiumWidget({
-        clock : clock,
-        animationController : animationController,
         endUserOptions : endUserOptions,
         enableDragDrop : true,
 
@@ -50,6 +28,7 @@ define([
                 cesium.resize();
             });
 
+            var animationController = widget.animationController;
             function updateAndRender() {
                 var currentTime = animationController.update();
                 widget.update(currentTime);

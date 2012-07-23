@@ -14,6 +14,10 @@ defineSuite([
         expect(animationController.clock).toEqual(clock);
     });
 
+    it('construct throws if no clock', function() {
+        expect(function() { return new AnimationController(); }).toThrow();
+    });
+
     it('play, pause, playReverse, and reset affect isAnimating', function() {
         var clock = new Clock();
         var animationController = new AnimationController(clock);
