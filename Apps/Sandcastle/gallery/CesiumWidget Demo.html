@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Cesium Demo</title>
     <script>
+    var Sandcastle = {};
+    Sandcastle.declare = function () {};
+    Sandcastle.highlight = function () {};
+    Sandcastle.registered = [];
     if (window.location.protocol === 'file:') {
         if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
             window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
@@ -14,8 +18,10 @@
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/DojoWidgets/CesiumWidget.css" type="text/css">
 </head>
 <body class="claro">
+
 <style>
 body {
     background: #000;
@@ -41,9 +47,11 @@ body {
 #toolbar {
     background: rgba(0, 0, 0, 0.5);
     border: solid 1px rgba(0, 0, 0, 0.9);
-    margin: 5px;
     padding: 2px 5px;
     border-radius: 5px;
+    position: absolute;
+    top: 5px;
+    left: 5px;
 }
 </style>
 
@@ -72,29 +80,16 @@ require({
     'Source/Cesium',
     'DojoWidgets/CesiumWidget',
     'Core/JulianDate',
-    'Core/requestAnimationFrame',
     'dojo/on',
     'dojo/dom',
-    'dojo/parser',
-    'dijit/form/Button',
     'dijit/form/ToggleButton'
 ], function(
-    Cesium, CesiumWidget, JulianDate, requestAnimationFrame, on, dom, parser, Button, ToggleButton)
+    Cesium, CesiumWidget, JulianDate, on, dom, ToggleButton)
 {
     "use strict";
-    parser.parse();
-
-    //A real application should require only the subset of modules that
-    //are actually used, instead of requiring the Cesium module, which
-    //includes everything.
 
     var cesiumWidget = new CesiumWidget({
         postSetup : function(widget) {
-            function update() {
-                var currentTime = new JulianDate();
-                widget.render(currentTime);
-                requestAnimationFrame(update);
-            }
 
             ///////////////////////////////////////////////////////////////////////////
             // Demo buttons:
@@ -122,7 +117,7 @@ require({
                 }
             }).placeAt("toolbar");
 
-            update();
+            widget.defaultRenderLoop();
         },
         onSetupError : function(widget, error) {
             console.log(error);
