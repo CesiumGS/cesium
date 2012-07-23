@@ -283,7 +283,10 @@ define([
 
     BingMapsTileProvider.prototype._requestTemplate = function() {
         var that = this;
-        jsonp(this._getMetadataUrl(), function(data) {
+        jsonp(this._getMetadataUrl(), {
+            callbackParameterName : 'jsonp',
+            proxy: this._proxy
+        }).then(function(data) {
             var resource = data.resourceSets[0].resources[0];
 
             var url = resource.imageUrl;
@@ -300,9 +303,6 @@ define([
                 that._loadImage(element);
             });
             that._deferredQueue = [];
-        }, {
-            callbackParameterName : 'jsonp',
-            proxy: this._proxy
         });
     };
 
@@ -384,7 +384,14 @@ define([
         var validZoom = false;
         var loaded = false;
 
-        jsonp(this._getMetadataUrl(), function(data) {
+        jsonp(this._getMetadataUrl(), {
+            parameters : {
+                centerPoint : lat + ',' + lon,
+                zoomLevel : tile.zoom
+            },
+            callbackParameterName : 'jsonp',
+            proxy : this._proxy
+        }).then(function(data) {
             if (typeof data.resourceSets[0] === 'undefined') {
                 if (typeof element.onerror === 'function') {
                     element.onerror();
@@ -403,13 +410,6 @@ define([
             }
 
             zoomResponse = true;
-        }, {
-            parameters : {
-                centerPoint : lat + ',' + lon,
-                zoomLevel : tile.zoom
-            },
-            callbackParameterName : 'jsonp',
-            proxy : this._proxy
         });
 
         var image = element.image;

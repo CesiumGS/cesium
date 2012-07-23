@@ -2,11 +2,11 @@
 define([
         '../Core/Event',
         '../Core/DeveloperError',
-        '../Core/getImageFromUrl'
+        '../Core/loadImage'
        ], function(
          Event,
          DeveloperError,
-         getImageFromUrl) {
+         loadImage) {
     "use strict";
 
     function SourceHolder() {
@@ -57,7 +57,9 @@ define([
             throw new DeveloperError('textureAvailableCallback is required.');
         }
 
-        this.addTextureFromFunction(url, getImageFromUrl, textureAvailableCallback);
+        this.addTextureFromFunction(url, function(id, callback) {
+            loadImage(id).then(callback);
+        }, textureAvailableCallback);
     };
 
     /**

@@ -13,7 +13,7 @@ define([
      *
      * @exception {DeveloperError} Duplicate member.
      */
-    function combine() {
+    var combine = function() {
         var composite = {};
 
         for ( var i = 0, length = arguments.length; i < length; ++i) {
@@ -32,7 +32,7 @@ define([
         }
 
         return composite;
-    }
+    };
 
     return combine;
 });
