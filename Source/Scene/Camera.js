@@ -187,23 +187,11 @@ define([
         this.right = this.direction.cross(this.up);
     };
 
-    /**
-     * Zooms to a cartographic extent on the centralBody. The camera will be looking straight down at the extent, with the up vector pointing toward local north.
-     *
-     * @memberof Camera
-     * @param {Ellipsoid} ellipsoid The ellipsoid to view.
-     * @param {double} west The west longitude of the extent.
-     * @param {double} south The south latitude of the extent.
-     * @param {double} east The east longitude of the extent.
-     * @param {double} north The north latitude of the extent.
-     *
-     */
-    Camera.prototype.viewExtent = function(ellipsoid, west, south, east, north) {
-        //
-        // Ensure we go from -180 to 180
-        //
-        west = CesiumMath.negativePiToPi(west);
-        east = CesiumMath.negativePiToPi(east);
+    Camera.prototype._getViewExtentPositionPerspective = function(ellipsoid, extent) {
+        var north = extent.north;
+        var south = extent.south;
+        var east = extent.east;
+        var west = extent.west;
 
         // If we go across the International Date Line
         if (west > east) {
@@ -229,12 +217,112 @@ define([
             tempVec = northVector.subtract(centerVector);
             screenViewDistanceY = Math.sqrt(tempVec.dot(tempVec) * invTanHalfPerspectiveAngle);
         }
-        lla.height += Math.max(screenViewDistanceX, screenViewDistanceY);
+        lla.height = Math.max(screenViewDistanceX, screenViewDistanceY);
+
+        return lla;
+    };
+
+    /**
+     * Zooms to a cartographic extent on the central body. The camera will be looking straight down at the extent,
+     * with the up vector pointing toward local north.
+     *
+     * @memberof Camera
+     * @param {Ellipsoid} ellipsoid The ellipsoid to view.
+     * @param {Extent} extent The extent to view.
+     *
+     * @exception {DeveloperError} extent is required.
+     */
+    Camera.prototype.viewExtent = function(extent, ellipsoid) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        ellipsoid = (typeof ellipsoid === 'undefined') ? Ellipsoid.WGS84 : ellipsoid;
+        var lla = this._getViewExtentPositionPerspective(ellipsoid, extent);
 
         this.position = ellipsoid.cartographicToCartesian(lla);
-        this.direction = Cartesian3.ZERO.subtract(centerVector).normalize();
+        this.direction = this.position.negate().normalize();
         this.right = this.direction.cross(Cartesian3.UNIT_Z).normalize();
         this.up = this.right.cross(this.direction);
+    };
+
+    /**
+     * Zooms to a cartographic extent on the Columbus view map. The camera will be looking straight down at the extent,
+     * with the up vector pointing toward local north.
+     *
+     * @memberof Camera
+     * @param {Ellipsoid} ellipsoid The ellipsoid to view.
+     * @param {Extent} extent The extent to view.
+     *
+     * @exception {DeveloperError} extent is required.
+     * @exception {DeveloperError} projection is required.
+     */
+    Camera.prototype.viewExtentColumbusView = function(extent, projection) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        var ellipsoid = projection.getEllipsoid();
+        var lla = this._getViewExtentPositionPerspective(ellipsoid, extent);
+
+        var position = projection.project(lla);
+        var transform = this.transform.clone();
+        transform.setColumn3(Cartesian4.UNIT_W);
+        position = transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+        this.position = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(position));
+
+        this.direction = Cartesian3.UNIT_Z.negate();
+        this.up = Cartesian3.UNIT_Y;
+        this.right = Cartesian3.UNIT_X;
+    };
+
+    /**
+     * Zooms to a cartographic extent on the 2D map. The camera will be looking straight down at the extent,
+     * with the up vector pointing toward local north.
+     *
+     * @memberof Camera
+     * @param {Ellipsoid} ellipsoid The ellipsoid to view.
+     * @param {Extent} extent The extent to view.
+     *
+     * @exception {DeveloperError} extent is required.
+     * @exception {DeveloperError} projection is required.
+     */
+    Camera.prototype.viewExtent2D = function(extent, projection) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        var ellipsoid = projection.getEllipsoid();
+
+        var north = extent.north;
+        var south = extent.south;
+        var east = extent.east;
+        var west = extent.west;
+        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south), 0.0);
+
+        var eastVector = ellipsoid.cartographicToCartesian(new Cartographic(east, lla.latitude, 0.0));
+        var westVector = ellipsoid.cartographicToCartesian(new Cartographic(west, lla.latitude, 0.0));
+        var width = eastVector.subtract(westVector).magnitude();
+
+        var position = projection.project(lla);
+        this.position.x = position.x;
+        this.position.y = position.y;
+
+        var right = width * 0.5;
+
+        var ratio = this.frustum.top / this.frustum.right;
+        this.frustum.right = right;
+        this.frustum.left = right - width;
+        this.frustum.top = right * ratio;
+        this.frustum.bottom = -this.frustum.top;
     };
 
     Camera.prototype._updateViewMatrix = function() {
