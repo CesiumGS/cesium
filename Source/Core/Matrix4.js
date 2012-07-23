@@ -913,24 +913,22 @@ define([
     * @return {Matrix4} The inverse of this matrix.
     * @exception {RuntimeError} This matrix is not invertible because its determinate is zero.
     */
-    Matrix4.prototype.inverse = function() {
+    Matrix4.inverse = function(matrix, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+
         //
         // Ported from:
         //   ftp://download.intel.com/design/PentiumIII/sml/24504301.pdf
         //
 
-        var dst = [];
-        var tmp = [];
-        var src = [];
+        var dst = new Array(16);
+        var tmp = new Array(16);
+        var src = new Array(16);
         var det;
 
-        // transpose matrix
-        for ( var i = 0; i < 4; ++i) {
-            src[i] = this[i * 4];
-            src[i + 4] = this[i * 4 + 1];
-            src[i + 8] = this[i * 4 + 2];
-            src[i + 12] = this[i * 4 + 3];
-        }
+        Matrix4.transpose(matrix, src);
 
         // calculate pairs for first 8 elements (cofactors)
         tmp[0] = src[10] * src[15];
@@ -1009,10 +1007,30 @@ define([
             dst[j] *= det;
         }
 
-        return new Matrix4(dst[0], dst[4], dst[8], dst[12],
-                           dst[1], dst[5], dst[9], dst[13],
-                           dst[2], dst[6], dst[10], dst[14],
-                           dst[3], dst[7], dst[11], dst[15]);
+        if (typeof result === 'undefined') {
+            return new Matrix4(dst[0], dst[4], dst[8], dst[12],
+                               dst[1], dst[5], dst[9], dst[13],
+                               dst[2], dst[6], dst[10], dst[14],
+                               dst[3], dst[7], dst[11], dst[15]);
+        }
+
+        result[0] = dst[0];
+        result[1] = dst[1];
+        result[2] = dst[2];
+        result[3] = dst[3];
+        result[4] = dst[4];
+        result[5] = dst[5];
+        result[6] = dst[6];
+        result[7] = dst[7];
+        result[8] = dst[8];
+        result[9] = dst[9];
+        result[10] = dst[10];
+        result[11] = dst[11];
+        result[12] = dst[12];
+        result[13] = dst[13];
+        result[14] = dst[14];
+        result[15] = dst[15];
+        return result;
     };
 
     var invertTransformationScratch = new Cartesian3();
@@ -1377,6 +1395,10 @@ define([
 
     Matrix4.prototype.getTranslation = function(result) {
         return Matrix4.getTranslation(this, result);
+    };
+
+    Matrix4.prototype.inverse = function(result) {
+        return Matrix4.inverse(this, result);
     };
 
     Matrix4.prototype.inverseTransformation = function(result) {

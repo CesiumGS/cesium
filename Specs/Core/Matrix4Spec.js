@@ -203,31 +203,37 @@ defineSuite([
 
     it('getRow works without a result parameter', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
-        var expectedRow0 = new Cartesian4(1.0, 2.0, 3.0);
-        var expectedRow1 = new Cartesian4(4.0, 5.0, 6.0);
-        var expectedRow2 = new Cartesian4(7.0, 8.0, 9.0);
+        var expectedRow0 = new Cartesian4(1.0, 2.0, 3.0, 4.0);
+        var expectedRow1 = new Cartesian4(5.0, 6.0, 7.0, 8.0);
+        var expectedRow2 = new Cartesian4(9.0, 10.0, 11.0, 12.0);
+        var expectedRow3 = new Cartesian4(13.0, 14.0, 15.0, 16.0);
 
         var resultRow0 = matrix.getRow(0);
         var resultRow1 = matrix.getRow(1);
         var resultRow2 = matrix.getRow(2);
+        var resultRow3 = matrix.getRow(3);
 
         expect(resultRow0).toEqual(expectedRow0);
         expect(resultRow1).toEqual(expectedRow1);
         expect(resultRow2).toEqual(expectedRow2);
+        expect(resultRow3).toEqual(expectedRow3);
     });
 
     it('getRow works with a result parameter', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
-        var expectedRow0 = new Cartesian4(1.0, 2.0, 3.0);
-        var expectedRow1 = new Cartesian4(4.0, 5.0, 6.0);
-        var expectedRow2 = new Cartesian4(7.0, 8.0, 9.0);
+        var expectedRow0 = new Cartesian4(1.0, 2.0, 3.0, 4.0);
+        var expectedRow1 = new Cartesian4(5.0, 6.0, 7.0, 8.0);
+        var expectedRow2 = new Cartesian4(9.0, 10.0, 11.0, 12.0);
+        var expectedRow3 = new Cartesian4(13.0, 14.0, 15.0, 16.0);
 
         var resultRow0 = new Cartesian4();
         var resultRow1 = new Cartesian4();
         var resultRow2 = new Cartesian4();
+        var resultRow3 = new Cartesian4();
         var returnedResultRow0 = matrix.getRow(0, resultRow0);
         var returnedResultRow1 = matrix.getRow(1, resultRow1);
         var returnedResultRow2 = matrix.getRow(2, resultRow2);
+        var returnedResultRow3 = matrix.getRow(3, resultRow3);
 
         expect(resultRow0).toBe(returnedResultRow0);
         expect(resultRow0).toEqual(expectedRow0);
@@ -235,21 +241,27 @@ defineSuite([
         expect(resultRow1).toEqual(expectedRow1);
         expect(resultRow2).toBe(returnedResultRow2);
         expect(resultRow2).toEqual(expectedRow2);
+        expect(resultRow3).toBe(returnedResultRow3);
+        expect(resultRow3).toEqual(expectedRow3);
     });
 
     it('setRow works without a result parameter for each row', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
 
-        var expected = new Matrix4(10.0, 11.0, 12.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        var result = matrix.setRow(0, new Cartesian4(10.0, 11.0, 12.0));
+        var expected = new Matrix4(91.0, 92.0, 93.0, 94.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        var result = matrix.setRow(0, new Cartesian4(91.0, 92.0, 93.0, 94.0));
         expect(result).toEqual(expected);
 
-        expected = new Matrix4(1.0, 2.0, 3.0, 13.0, 14.0, 15.0, 7.0, 8.0, 9.0);
-        result = matrix.setRow(1, new Cartesian4(13.0, 14.0, 15.0));
+        expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 95.0, 96.0, 97.0, 98.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        result = matrix.setRow(1, new Cartesian4(95.0, 96.0, 97.0, 98.0));
         expect(result).toEqual(expected);
 
-        expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 16.0, 17.0, 18.0);
-        result = matrix.setRow(2, new Cartesian4(16.0, 17.0, 18.0));
+        expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 99.0, 910.0, 911.0, 912.0, 13.0, 14.0, 15.0, 16.0);
+        result = matrix.setRow(2, new Cartesian4(99.0, 910.0, 911.0, 912.0));
+        expect(result).toEqual(expected);
+
+        expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 913.0, 914.0, 915.0, 916.0);
+        result = matrix.setRow(3, new Cartesian4(913.0, 914.0, 915.0, 916.0));
         expect(result).toEqual(expected);
     });
 
@@ -257,34 +269,39 @@ defineSuite([
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var result = new Matrix4();
 
-        var expected = new Matrix4(10.0, 11.0, 12.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        var returnedResult = matrix.setRow(0, new Cartesian4(10.0, 11.0, 12.0), result);
+        var expected = new Matrix4(91.0, 92.0, 93.0, 94.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        var returnedResult = matrix.setRow(0, new Cartesian4(91.0, 92.0, 93.0, 94.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
-        expected = new Matrix4(1.0, 2.0, 3.0, 13.0, 14.0, 15.0, 7.0, 8.0, 9.0);
-        returnedResult = matrix.setRow(1, new Cartesian4(13.0, 14.0, 15.0), result);
+        expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 95.0, 96.0, 97.0, 98.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        returnedResult = matrix.setRow(1, new Cartesian4(95.0, 96.0, 97.0, 98.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
-        expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 16.0, 17.0, 18.0);
-        returnedResult = matrix.setRow(2, new Cartesian4(16.0, 17.0, 18.0), result);
+        expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 99.0, 910.0, 911.0, 912.0, 13.0, 14.0, 15.0, 16.0);
+        returnedResult = matrix.setRow(2, new Cartesian4(99.0, 910.0, 911.0, 912.0), result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expected);
+
+        expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 913.0, 914.0, 915.0, 916.0);
+        returnedResult = matrix.setRow(3, new Cartesian4(913.0, 914.0, 915.0, 916.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });
 
     it('multiply works without a result parameter', function() {
-        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        var right = new Matrix4(10, 11, 12, 13, 14, 15, 16, 17, 18);
-        var expected = new Matrix4(84, 90, 96, 201, 216, 231, 318, 342, 366);
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
+        var expected = new Matrix4(250, 260, 270, 280, 618, 644, 670, 696, 986, 1028, 1070, 1112, 1354, 1412, 1470, 1528);
         var result = left.multiply(right);
         expect(result).toEqual(expected);
     });
 
     it('multiply works with a result parameter', function() {
-        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        var right = new Matrix4(10, 11, 12, 13, 14, 15, 16, 17, 18);
-        var expected = new Matrix4(84, 90, 96, 201, 216, 231, 318, 342, 366);
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
+        var expected = new Matrix4(250, 260, 270, 280, 618, 644, 670, 696, 986, 1028, 1070, 1112, 1354, 1412, 1470, 1528);
         var result = new Matrix4();
         var returnedResult = left.multiply(right, result);
         expect(returnedResult).toBe(result);
@@ -292,9 +309,9 @@ defineSuite([
     });
 
     it('multiply works with "this" result parameter', function() {
-        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        var right = new Matrix4(10, 11, 12, 13, 14, 15, 16, 17, 18);
-        var expected = new Matrix4(84, 90, 96, 201, 216, 231, 318, 342, 366);
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
+        var expected = new Matrix4(250, 260, 270, 280, 618, 644, 670, 696, 986, 1028, 1070, 1112, 1354, 1412, 1470, 1528);
         var returnedResult = left.multiply(right, left);
         expect(returnedResult).toBe(left);
         expect(left).toEqual(expected);
@@ -309,9 +326,9 @@ defineSuite([
     });
 
     it('multiplyByVector works with a result parameter', function() {
-        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        var right = new Cartesian4(10, 11, 12);
-        var expected = new Cartesian4(68, 167, 266);
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        var right = new Cartesian4(17, 18, 19, 20);
+        var expected = new Cartesian4(190, 486, 782, 1078);
         var result = new Cartesian4();
         var returnedResult = left.multiplyByVector(right, result);
         expect(returnedResult).toBe(result);
@@ -319,17 +336,17 @@ defineSuite([
     });
 
     it('multiplyByScalar works without a result parameter', function() {
-        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = 2;
-        var expected = new Matrix4(2, 4, 6, 8, 10, 12, 14, 16, 18);
+        var expected = new Matrix4(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32);
         var result = left.multiplyByScalar(right);
         expect(result).toEqual(expected);
     });
 
     it('multiplyByScalar works with a result parameter', function() {
-        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9);
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = 2;
-        var expected = new Matrix4(2, 4, 6, 8, 10, 12, 14, 16, 18);
+        var expected = new Matrix4(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32);
         var result = new Matrix4();
         var returnedResult = left.multiplyByScalar(right, result);
         expect(returnedResult).toBe(result);
