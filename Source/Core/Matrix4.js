@@ -171,21 +171,19 @@ define([
                                rotation[2], rotation[5], rotation[8], translation.z,
                                        0.0,         0.0,         0.0,           1.0);
         }
+
         result[0] = rotation[0];
         result[1] = rotation[1];
         result[2] = rotation[2];
         result[3] = 0.0;
-
         result[4] = rotation[3];
         result[5] = rotation[4];
         result[6] = rotation[5];
         result[7] = 0.0;
-
         result[8] = rotation[6];
         result[9] = rotation[7];
         result[10] = rotation[8];
         result[11] = 0.0;
-
         result[12] = translation.x;
         result[13] = translation.y;
         result[14] = translation.z;
@@ -194,7 +192,7 @@ define([
     };
 
     Matrix4.fromTranslation = function(translation, result) {
-        return Matrix4.fromRotationTranslation(Matrix4.IDENTITY, translation, result);
+        return Matrix4.fromRotationTranslation(Matrix3.IDENTITY, translation, result);
     };
 
     /**
@@ -218,7 +216,7 @@ define([
     * @see Matrix4.fromInfinitePerspectiveOffCenter
     * @see Matrix4.fromOrthographicOffCenter
     */
-    Matrix4.fromPerspectiveFieldOfView = function(fovy, aspect, zNear, zFar) {
+    Matrix4.fromPerspectiveFieldOfView = function(fovy, aspect, zNear, zFar, result) {
         if (fovy <= 0.0 || fovy > Math.PI) {
             throw new DeveloperError('fovy must be in [0, PI).');
         }
@@ -236,12 +234,36 @@ define([
         }
 
         var bottom = Math.tan(fovy * 0.5);
-        var f = 1.0 / bottom;
 
-        return new Matrix4(f / aspect, 0.0, 0.0, 0.0,
-                           0.0, f, 0.0, 0.0, 0.0,
-                           0.0, (zFar + zNear) / (zNear - zFar), (2.0 * zFar * zNear) / (zNear - zFar),
-                           0.0, 0.0, -1.0, 0.0);
+        var column1Row1 = 1.0 / bottom;
+        var column0Row0 = column1Row1 / aspect;
+        var column2Row2 = (zFar + zNear) / (zNear - zFar);
+        var column3Row2 = (2.0 * zFar * zNear) / (zNear - zFar);
+
+        if (typeof result === 'undefined') {
+            return new Matrix4(column0Row0, 0.0,         0.0,         0.0,
+                               0.0,         column1Row1, 0.0,         0.0,
+                               0.0,         0.0,         column2Row2, column3Row2,
+                               0.0,         0.0,        -1.0,         0.0);
+        }
+
+        result[0] = column0Row0;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = 0.0;
+        result[5] = column1Row1;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = 0.0;
+        result[9] = 0.0;
+        result[10] = column2Row2;
+        result[11] = -1.0;
+        result[12] = 0.0;
+        result[13] = 0.0;
+        result[14] = column3Row2;
+        result[15] = 0.0;
+        return result;
     };
 
       /**
@@ -255,9 +277,18 @@ define([
       *
       * @return {Matrix4} The view vector.
       */
-    Matrix4.fromLookAt = function(eye, target, up) {
-        var t = Cartesian3.clone(target);
-        var f = t.subtract(eye).normalize();
+    Matrix4.fromLookAt = function(eye, target, up, result) {
+        if (typeof eye === 'undefined') {
+            throw new DeveloperError('eye is required.');
+        }
+        if (typeof target === 'undefined') {
+            throw new DeveloperError('target is required.');
+        }
+        if (typeof up === 'undefined') {
+            throw new DeveloperError('up is required.');
+        }
+
+        var f = Cartesian3.subtract(target, eye).normalize();
         var s = f.cross(up).normalize();
         var u = s.cross(f).normalize();
 
@@ -273,7 +304,7 @@ define([
             0.0, 0.0, 1.0, -eye.z,
             0.0, 0.0, 0.0, 1.0);
 
-        return rotation.multiply(translation);
+        return rotation.multiply(translation, result);
     };
 
     /**
@@ -294,7 +325,26 @@ define([
     * @see Matrix4.fromPerspectiveOffCenter
     * @see Matrix4.fromInfinitePerspectiveOffCenter
     */
-    Matrix4.fromOrthographicOffCenter = function(left, right, bottom, top, zNear, zFar) {
+    Matrix4.fromOrthographicOffCenter = function(left, right, bottom, top, zNear, zFar, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required.');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required.');
+        }
+        if (typeof bottom === 'undefined') {
+            throw new DeveloperError('bottom is required.');
+        }
+        if (typeof top === 'undefined') {
+            throw new DeveloperError('top is required.');
+        }
+        if (typeof zNear === 'undefined') {
+            throw new DeveloperError('zNear is required.');
+        }
+        if (typeof zFar === 'undefined') {
+            throw new DeveloperError('zFar is required.');
+        }
+
         var a = 1.0 / (right - left);
         var b = 1.0 / (top - bottom);
         var c = 1.0 / (zFar - zNear);
@@ -302,11 +352,34 @@ define([
         var tx = -(right + left) * a;
         var ty = -(top + bottom) * b;
         var tz = -(zFar + zNear) * c;
+        a *= 2.0;
+        b *= 2.0;
+        c *= -2.0;
 
-        return new Matrix4(2.0 * a, 0.0, 0.0, tx,
-                           0.0, 2.0 * b, 0.0, ty,
-                           0.0, 0.0, -2.0 * c, tz,
-                           0.0, 0.0, 0.0, 1.0);
+        if (typeof result === 'undefined') {
+            return new Matrix4(  a, 0.0, 0.0, tx,
+                               0.0,   b, 0.0, ty,
+                               0.0, 0.0,   c, tz,
+                               0.0, 0.0, 0.0, 1.0);
+        }
+
+        result[0] = a;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = 0.0;
+        result[5] = b;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = 0.0;
+        result[9] = 0.0;
+        result[10] = c;
+        result[11] = 0.0;
+        result[12] = tx;
+        result[13] = ty;
+        result[14] = tz;
+        result[15] = 1.0;
+        return result;
     };
 
     /**
@@ -335,7 +408,7 @@ define([
     * // Example 2.  Create viewport transformation using the context's viewport.
     * var m = Matrix4.fromViewportTransformation(context.getViewport());
     */
-    Matrix4.fromViewportTransformation = function(viewport, nearDepthRange, farDepthRange) {
+    Matrix4.fromViewportTransformation = function(viewport, nearDepthRange, farDepthRange, result) {
         var v = viewport || {};
         v.x = v.x || 0.0;
         v.y = v.y || 0.0;
@@ -348,36 +421,142 @@ define([
         var halfHeight = v.height * 0.5;
         var halfDepth = (farDepthRange - nearDepthRange) * 0.5;
 
-        return new Matrix4(
-                halfWidth, 0.0,        0.0,       v.x + halfWidth,
-                0.0,       halfHeight, 0.0,       v.y + halfHeight,
-                0.0,       0.0,        halfDepth, nearDepthRange + halfDepth,
-                0.0,       0.0,        0.0,       1.0);
+        var column0Row0 = halfWidth;
+        var column1Row1 = halfHeight;
+        var column2Row2 = halfDepth;
+        var column3Row0 = v.x + halfWidth;
+        var column3Row1 = v.y + halfHeight;
+        var column3Row2 = nearDepthRange + halfDepth;
+        var column3Row3 = 1.0;
+
+        if (typeof result === 'undefined') {
+            return new Matrix4(column0Row0, 0.0,         0.0,         column3Row0,
+                               0.0,         column1Row1, 0.0,         column3Row1,
+                               0.0,         0.0,         column2Row2, column3Row2,
+                               0.0,         0.0,         0.0,         column3Row3);
+        }
+        result[0] = column0Row0;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = 0.0;
+        result[5] = column1Row1;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = 0.0;
+        result[9] = 0.0;
+        result[10] = column2Row2;
+        result[11] = 0.0;
+        result[12] = column3Row0;
+        result[13] = column3Row1;
+        result[14] = column3Row2;
+        result[15] = column3Row3;
+        return result;
     };
 
-    Matrix4.fromPerspectiveOffCenter = function(left, right, bottom, top, zNear, zFar) {
-        var l = left;
-        var r = right;
-        var b = bottom;
-        var t = top;
-        var n = zNear;
-        var f = zFar;
-        return new Matrix4(2.0 * n / (r - l), 0.0, (r + l) / (r - l), 0.0,
-                           0.0, 2.0 * n / (t - b), (t + b) / (t - b), 0.0,
-                           0.0, 0.0, -(f + n) / (f - n), -2.0 * f * n / (f - n),
-                           0.0, 0.0, -1.0, 0.0);
+    Matrix4.fromPerspectiveOffCenter = function(left, right, bottom, top, zNear, zFar, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required.');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required.');
+        }
+        if (typeof bottom === 'undefined') {
+            throw new DeveloperError('bottom is required.');
+        }
+        if (typeof top === 'undefined') {
+            throw new DeveloperError('top is required.');
+        }
+        if (typeof zNear === 'undefined') {
+            throw new DeveloperError('zNear is required.');
+        }
+        if (typeof zFar === 'undefined') {
+            throw new DeveloperError('zFar is required.');
+        }
+
+        var column0Row0 = 2.0 * zNear / (right - left);
+        var column1Row1 = 2.0 * zNear / (top - bottom);
+        var column2Row0 = (right + left) / (right - left);
+        var column2Row1 = (top + bottom) / (top - bottom);
+        var column2Row2 = -(zFar + zNear) / (zFar - zNear);
+        var column2Row3 = -1.0;
+        var column3Row2 = -2.0 * zFar * zNear / (zFar - zNear);
+
+        if (typeof result === 'undefined') {
+            return new Matrix4(column0Row0, 0.0,         column2Row0, 0.0,
+                                       0.0, column1Row1, column2Row1, 0.0,
+                                       0.0, 0.0,         column2Row2, column3Row2,
+                                       0.0, 0.0,         column2Row3, 0.0);
+        }
+
+        result[0] = column0Row0;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = 0.0;
+        result[5] = column1Row1;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = column2Row0;
+        result[9] = column2Row1;
+        result[10] = column2Row2;
+        result[11] = column2Row3;
+        result[12] = 0.0;
+        result[13] = 0.0;
+        result[14] = column3Row2;
+        result[15] = 0.0;
+        return result;
     };
 
-    Matrix4.fromInfinitePerspectiveOffCenter = function(left, right, bottom, top, zNear) {
-        var l = left;
-        var r = right;
-        var b = bottom;
-        var t = top;
-        var n = zNear;
-        return new Matrix4(2.0 * n / (r - l), 0.0, (r + l) / (r - l), 0.0,
-                           0.0, 2.0 * n / (t - b), (t + b) / (t - b), 0.0,
-                           0.0, 0.0, -1.0, -2.0 * n,
-                           0.0, 0.0, -1.0, 0.0);
+    Matrix4.fromInfinitePerspectiveOffCenter = function(left, right, bottom, top, zNear, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required.');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required.');
+        }
+        if (typeof bottom === 'undefined') {
+            throw new DeveloperError('bottom is required.');
+        }
+        if (typeof top === 'undefined') {
+            throw new DeveloperError('top is required.');
+        }
+        if (typeof zNear === 'undefined') {
+            throw new DeveloperError('zNear is required.');
+        }
+
+        var column0Row0 = 2.0 * zNear / (right - left);
+        var column1Row1 = 2.0 * zNear / (top - bottom);
+        var column2Row0 = (right + left) / (right - left);
+        var column2Row1 = (top + bottom) / (top - bottom);
+        var column2Row2 = -1.0;
+        var column2Row3 = -1.0;
+        var column3Row2 = -2.0 * zNear;
+
+        if (typeof result === 'undefined') {
+            return new Matrix4(column0Row0, 0.0,         column2Row0, 0.0,
+                                       0.0, column1Row1, column2Row1, 0.0,
+                                       0.0, 0.0,         column2Row2, column3Row2,
+                                       0.0, 0.0,         column2Row3, 0.0);
+        }
+
+        result[0] = column0Row0;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = 0.0;
+        result[5] = column1Row1;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = column2Row0;
+        result[9] = column2Row1;
+        result[10] = column2Row2;
+        result[11] = column2Row3;
+        result[12] = 0.0;
+        result[13] = 0.0;
+        result[14] = column3Row2;
+        result[15] = 0.0;
+        return result;
     };
 
     /**

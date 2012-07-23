@@ -69,7 +69,7 @@ define([
         image.src = url;
 
         return deferred.promise;
-    }
+    };
 
     return loadImage;
 });

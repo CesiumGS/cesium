@@ -98,6 +98,142 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
+    it('fromRotationTranslation works without a result parameter', function() {
+        var expected = new Matrix4(1.0, 2.0, 3.0, 10.0, 4.0, 5.0, 6.0, 11.0, 7.0, 8.0, 9.0, 12.0, 0.0, 0.0, 0.0, 1.0);
+        var returnedResult = Matrix4.fromRotationTranslation(new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0), new Cartesian3(10.0, 11.0, 12.0));
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromRotationTranslation works with a result parameter', function() {
+        var expected = new Matrix4(1.0, 2.0, 3.0, 10.0, 4.0, 5.0, 6.0, 11.0, 7.0, 8.0, 9.0, 12.0, 0.0, 0.0, 0.0, 1.0);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromRotationTranslation(new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0), new Cartesian3(10.0, 11.0, 12.0), result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromTranslation works without a result parameter', function() {
+        var expected = new Matrix4(1.0, 0.0, 0.0, 10.0, 0.0, 1.0, 0.0, 11.0, 0.0, 0.0, 1.0, 12.0, 0.0, 0.0, 0.0, 1.0);
+        var returnedResult = Matrix4.fromTranslation(new Cartesian3(10.0, 11.0, 12.0));
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromTranslation works with a result parameter', function() {
+        var expected = new Matrix4(1.0, 0.0, 0.0, 10.0, 0.0, 1.0, 0.0, 11.0, 0.0, 0.0, 1.0, 12.0, 0.0, 0.0, 0.0, 1.0);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromTranslation(new Cartesian3(10.0, 11.0, 12.0), result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromPerspectiveFieldOfView works without a result parameter', function() {
+        var expected = new Matrix4(1, 0,                   0,                  0,
+                                   0, 1,                  0,                  0,
+                                   0, 0, -1.222222222222222, -2.222222222222222,
+                                   0, 0,                  -1,                 0);
+        var returnedResult = Matrix4.fromPerspectiveFieldOfView(CesiumMath.PI_OVER_TWO, 1, 1, 10);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+
+    it('fromPerspectiveFieldOfView works with a result parameter', function() {
+        var expected = new Matrix4(1, 0,                   0,                  0,
+                                   0, 1,                  0,                  0,
+                                   0, 0, -1.222222222222222, -2.222222222222222,
+                                   0, 0,                  -1,                 0);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromPerspectiveFieldOfView(CesiumMath.PI_OVER_TWO, 1, 1, 10, result);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromLookAt works without a result parameter', function() {
+        var expected = Matrix4.IDENTITY;
+        var returnedResult = Matrix4.fromLookAt(Cartesian3.ZERO, Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y);
+        expect(expected).toEqual(returnedResult);
+    });
+
+    it('fromLookAt works with a result parameter', function() {
+        var expected = Matrix4.IDENTITY;
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromLookAt(Cartesian3.ZERO, Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromOrthographicOffCenter works without a result parameter', function() {
+        var expected = new Matrix4(2, 0, 0, -1, 0, 2, 0, -5, 0, 0, -2, -1, 0, 0, 0, 1);
+        var returnedResult = Matrix4.fromOrthographicOffCenter(0, 1, 2, 3, 0, 1);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromOrthographicOffCenter works with a result parameter', function() {
+        var expected = new Matrix4(2, 0, 0, -1, 0, 2, 0, -5, 0, 0, -2, -1, 0, 0, 0, 1);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromOrthographicOffCenter(0, 1, 2, 3, 0, 1, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromViewportTransformation works without a result parameter', function() {
+        var expected = new Matrix4(2.0, 0.0, 0.0, 2.0,
+                                   0.0, 3.0, 0.0, 3.0,
+                                   0.0, 0.0, 1.0, 1.0,
+                                   0.0, 0.0, 0.0, 1.0);
+        var returnedResult = Matrix4.fromViewportTransformation({
+            x : 0,
+            y : 0,
+            width : 4.0,
+            height : 6.0
+        }, 0.0, 2.0);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromViewportTransformation works with a result parameter', function() {
+        var expected = new Matrix4(2.0, 0.0, 0.0, 2.0,
+                                   0.0, 3.0, 0.0, 3.0,
+                                   0.0, 0.0, 1.0, 1.0,
+                                   0.0, 0.0, 0.0, 1.0);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromViewportTransformation({
+            x : 0,
+            y : 0,
+            width : 4.0,
+            height : 6.0
+        }, 0.0, 2.0, result);
+        expect(returnedResult).toEqual(expected);
+        expect(returnedResult).toBe(result);
+    });
+
+    it('fromPerspectiveOffCenter works without a result parameter', function() {
+        var expected = new Matrix4(2, 0, 3, 0, 0, 2, 5, 0, 0, 0, -3, -4, 0, 0, -1, 0);
+        var returnedResult = Matrix4.fromPerspectiveOffCenter(1, 2, 2, 3, 1, 2);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromPerspectiveOffCenter works with a result parameter', function() {
+        var expected = new Matrix4(2, 0, 3, 0, 0, 2, 5, 0, 0, 0, -3, -4, 0, 0, -1, 0);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromPerspectiveOffCenter(1, 2, 2, 3, 1, 2, result);
+        expect(returnedResult).toEqual(expected);
+        expect(returnedResult).toBe(result);
+    });
+
+    it('fromInfinitePerspectiveOffCenter works without a result parameter', function() {
+        var expected = new Matrix4(2, 0, 3, 0, 0, 2, 5, 0, 0, 0, -1, -2, 0, 0, -1, 0);
+        var returnedResult = Matrix4.fromInfinitePerspectiveOffCenter(1, 2, 2, 3, 1);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromInfinitePerspectiveOffCenter works with a result parameter', function() {
+        var expected = new Matrix4(2, 0, 3, 0, 0, 2, 5, 0, 0, 0, -1, -2, 0, 0, -1, 0);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromInfinitePerspectiveOffCenter(1, 2, 2, 3, 1, result);
+        expect(returnedResult).toEqual(expected);
+    });
 
     it('toArray works without a result parameter', function() {
         var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0];
@@ -664,6 +800,184 @@ defineSuite([
         }).toThrow();
     });
 
+    it('fromRotationTranslation throws with rotation parameter', function() {
+        expect(function() {
+            Matrix4.fromRotationTranslation(undefined, new Cartesian3());
+        }).toThrow();
+    });
+
+    it('fromRotationTranslation throws with translation parameter', function() {
+        expect(function() {
+            Matrix4.fromRotationTranslation(new Matrix4(), undefined);
+        }).toThrow();
+    });
+
+    it('fromTranslation throws with translation parameter', function() {
+        expect(function() {
+            Matrix4.fromTranslation(undefined);
+        }).toThrow();
+    });
+
+    it('fromLookAt throws without eye', function() {
+        expect(function() {
+            Matrix4.fromLookAt(undefined, new Cartesian3(), new Cartesian3());
+        }).toThrow();
+    });
+
+    it('fromLookAt throws without target', function() {
+        expect(function() {
+            Matrix4.fromLookAt(new Cartesian3(), undefined, new Cartesian3());
+        }).toThrow();
+    });
+
+    it('fromLookAt throws without up', function() {
+        expect(function() {
+            Matrix4.fromLookAt(new Cartesian3(), new Cartesian3(), undefined);
+        }).toThrow();
+    });
+
+    it('fromOrthographicOffCenter throws without left', function() {
+        expect(function() {
+            var right = 0, bottom = 0, top = 0, near = 0, far = 0;
+            Matrix4.fromOrthographicOffCenter(undefined, right, bottom, top, near, far);
+        }).toThrow();
+    });
+
+    it('fromOrthographicOffCenter throws without right', function() {
+        expect(function() {
+            var left = 0, bottom = 0, top = 0, near = 0, far = 0;
+            Matrix4.fromOrthographicOffCenter(left, undefined, bottom, top, near, far);
+        }).toThrow();
+    });
+
+    it('fromOrthographicOffCenter throws without bottom', function() {
+        expect(function() {
+            var left = 0, right = 0, top = 0, near = 0, far = 0;
+            Matrix4.fromOrthographicOffCenter(left, right, undefined, top, near, far);
+        }).toThrow();
+    });
+
+    it('fromOrthographicOffCenter throws without top', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, near = 0, far = 0;
+            Matrix4.fromOrthographicOffCenter(left, right, bottom, undefined, near, far);
+        }).toThrow();
+    });
+
+    it('fromOrthographicOffCenter throws without near', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
+            Matrix4.fromOrthographicOffCenter(left, right, bottom, top, undefined, far);
+        }).toThrow();
+    });
+
+    it('fromOrthographicOffCenter throws without far', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, top = 0, near = 0;
+            Matrix4.fromOrthographicOffCenter(left, right, bottom, top, near, undefined);
+        }).toThrow();
+    });
+
+    it('fromPerspectiveOffCenter  throws without left', function() {
+        expect(function() {
+            var right = 0, bottom = 0, top = 0, near = 0, far = 0;
+            Matrix4.fromPerspectiveOffCenter (undefined, right, bottom, top, near, far);
+        }).toThrow();
+    });
+
+    it('fromPerspectiveOffCenter  throws without right', function() {
+        expect(function() {
+            var left = 0, bottom = 0, top = 0, near = 0, far = 0;
+            Matrix4.fromPerspectiveOffCenter (left, undefined, bottom, top, near, far);
+        }).toThrow();
+    });
+
+    it('fromPerspectiveOffCenter  throws without bottom', function() {
+        expect(function() {
+            var left = 0, right = 0, top = 0, near = 0, far = 0;
+            Matrix4.fromPerspectiveOffCenter (left, right, undefined, top, near, far);
+        }).toThrow();
+    });
+
+    it('fromPerspectiveOffCenter  throws without top', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, near = 0, far = 0;
+            Matrix4.fromPerspectiveOffCenter (left, right, bottom, undefined, near, far);
+        }).toThrow();
+    });
+
+    it('fromPerspectiveOffCenter  throws without near', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
+            Matrix4.fromPerspectiveOffCenter (left, right, bottom, top, undefined, far);
+        }).toThrow();
+    });
+
+    it('fromPerspectiveOffCenter  throws without far', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, top = 0, near = 0;
+            Matrix4.fromPerspectiveOffCenter (left, right, bottom, top, near, undefined);
+        }).toThrow();
+    });
+
+    it('fromInfinitePerspectiveOffCenter  throws without left', function() {
+        expect(function() {
+            var right = 0, bottom = 0, top = 0, near = 0, far = 0;
+            Matrix4.fromInfinitePerspectiveOffCenter (undefined, right, bottom, top, near, far);
+        }).toThrow();
+    });
+
+    it('fromInfinitePerspectiveOffCenter  throws without right', function() {
+        expect(function() {
+            var left = 0, bottom = 0, top = 0, near = 0, far = 0;
+            Matrix4.fromInfinitePerspectiveOffCenter (left, undefined, bottom, top, near, far);
+        }).toThrow();
+    });
+
+    it('fromInfinitePerspectiveOffCenter  throws without bottom', function() {
+        expect(function() {
+            var left = 0, right = 0, top = 0, near = 0, far = 0;
+            Matrix4.fromInfinitePerspectiveOffCenter (left, right, undefined, top, near, far);
+        }).toThrow();
+    });
+
+    it('fromInfinitePerspectiveOffCenter  throws without top', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, near = 0, far = 0;
+            Matrix4.fromInfinitePerspectiveOffCenter (left, right, bottom, undefined, near, far);
+        }).toThrow();
+    });
+
+    it('fromInfinitePerspectiveOffCenter  throws without near', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
+            Matrix4.fromInfinitePerspectiveOffCenter (left, right, bottom, top, undefined, far);
+        }).toThrow();
+    });
+    it('fromPerspectiveFieldOfView throws with out of range y field of view', function() {
+        expect(function() {
+            Matrix4.fromPerspectiveFieldOfView(0, 1, 2, 3);
+        }).toThrow();
+    });
+
+    it('fromPerspectiveFieldOfView throws with out of range aspect', function() {
+        expect(function() {
+            Matrix4.fromPerspectiveFieldOfView(1, 0, 2, 3);
+        }).toThrow();
+    });
+
+    it('fromPerspectiveFieldOfView throws with out of range near', function() {
+        expect(function() {
+            Matrix4.fromPerspectiveFieldOfView(1, 1, 0, 3);
+        }).toThrow();
+    });
+
+    it('fromPerspectiveFieldOfView throws with out of range far', function() {
+        expect(function() {
+            Matrix4.fromPerspectiveFieldOfView(1, 1, 2, 0);
+        }).toThrow();
+    });
+
     it('static clone throws without matrix parameter', function() {
         expect(function() {
             Matrix4.clone(undefined);
@@ -823,7 +1137,6 @@ defineSuite([
         }).toThrow();
     });
 
-
     it('static inverse throws with non-inversable matrix', function() {
         var matrix = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         expect(function() {
@@ -836,151 +1149,4 @@ defineSuite([
             Matrix4.inverseTransformation(undefined);
         }).toThrow();
     });
-
 });
-
-//    it('creates a translation matrix', function() {
-//        var t = new Cartesian3(1, 2, 3);
-//        var m = Matrix4.fromTranslation(t);
-//        expect(m.getColumn0Row0()).toEqual(1);
-//        expect(m.getColumn0Row1()).toEqual(0);
-//        expect(m.getColumn0Row2()).toEqual(0);
-//        expect(m.getColumn0Row3()).toEqual(0);
-//        expect(m.getColumn1Row0()).toEqual(0);
-//        expect(m.getColumn1Row1()).toEqual(1);
-//        expect(m.getColumn1Row2()).toEqual(0);
-//        expect(m.getColumn1Row3()).toEqual(0);
-//        expect(m.getColumn2Row0()).toEqual(0);
-//        expect(m.getColumn2Row1()).toEqual(0);
-//        expect(m.getColumn2Row2()).toEqual(1);
-//        expect(m.getColumn2Row3()).toEqual(0);
-//        expect(m.getColumn3Row0()).toEqual(t.x);
-//        expect(m.getColumn3Row1()).toEqual(t.y);
-//        expect(m.getColumn3Row2()).toEqual(t.z);
-//        expect(m.getColumn3Row3()).toEqual(1);
-//    });
-//
-//    it('inverseTransformation0', function() {
-//        var m = new Matrix4(Matrix3.IDENTITY, Cartesian3.ZERO);
-//        var mInverse = m.inverseTransformation();
-//
-//        var v = new Cartesian4(1, 2, 3, 1);
-//        var vPrime = m.multiplyByVector(v);
-//        var vv = mInverse.multiplyByVector(vPrime);
-//
-//        expect(v.equals(vv)).toEqual(true);
-//    });
-//
-//    it('inverseTransformation1', function() {
-//        var rotation = new Matrix3(1, 0, 0,
-//                                   0, 0, 1,
-//                                   0, 1, 0);
-//        var translation = new Cartesian3(10, 20, 30);
-//
-//        var m = new Matrix4(rotation, translation);
-//        var mInverse = m.inverseTransformation();
-//
-//        var v = new Cartesian4(1, 2, 3, 1);
-//        var vPrime = m.multiplyByVector(v);
-//        var vv = mInverse.multiplyByVector(vPrime);
-//
-//        expect(v.equals(vv)).toEqual(true);
-//    });
-//
-//    it('inverseTransformation2', function() {
-//        var rotation = new Matrix3(1, 0, 0,
-//                                   0, 0, 1,
-//                                   0, 1, 0);
-//        var translation = new Cartesian3(1, 2, 3);
-//
-//        var m = new Matrix4(rotation, translation);
-//        var mInverse = m.inverseTransformation();
-//
-//        expect(Matrix4.IDENTITY.equals(mInverse.multiply(m))).toEqual(true);
-//    });
-//
-//    it('createPerspectiveFieldOfView0', function() {
-//        expect(function() {
-//            Matrix4.fromPerspectiveFieldOfView(-1, 1, 1, 1);
-//        }).toThrow();
-//    });
-//
-//    it('createPerspectiveFieldOfView1', function() {
-//        expect(function() {
-//            Matrix4.fromPerspectiveFieldOfView(CesiumMath.PI_OVER_TWO, 0, 1, 1);
-//        }).toThrow();
-//    });
-//
-//    it('createPerspectiveFieldOfView2', function() {
-//        expect(function() {
-//            Matrix4.fromPerspectiveFieldOfView(CesiumMath.PI_OVER_TWO, 1, 0, 1);
-//        }).toThrow();
-//    });
-//
-//    it('createPerspectiveFieldOfView3', function() {
-//        expect(function() {
-//            Matrix4.fromPerspectiveFieldOfView(CesiumMath.PI_OVER_TWO, 1, 1, 0);
-//        }).toThrow();
-//    });
-//
-//    it('createPerspectiveFieldOfView4', function() {
-//        var mExpected = new Matrix4(1, 0,     0,     0,
-//                                    0, 1,     0,     0,
-//                                    0, 0, -1.22, -2.22,
-//                                    0, 0,    -1,     0);
-//        var m = Matrix4.fromPerspectiveFieldOfView(CesiumMath.PI_OVER_TWO, 1, 1, 10);
-//
-//        expect(mExpected.equalsEpsilon(m, CesiumMath.EPSILON2)).toEqual(true);
-//    });
-//
-//    it('createPerspectiveOffCenter', function() {
-//        var mExpected = new Matrix4(2, 0,  3,  0,
-//                                    0, 2,  5,  0,
-//                                    0, 0, -3, -4,
-//                                    0, 0, -1,  0);
-//        var m = Matrix4.fromPerspectiveOffCenter(1, 2, 2, 3, 1, 2);
-//
-//        expect(mExpected.equalsEpsilon(m, CesiumMath.EPSILON2)).toEqual(true);
-//    });
-//
-//    it('createInfinitePerspectiveOffCenter', function() {
-//        var mExpected = new Matrix4(2, 0,  3,  0,
-//                                    0, 2,  5,  0,
-//                                    0, 0, -1, -2,
-//                                    0, 0, -1,  0);
-//        var m = Matrix4.fromInfinitePerspectiveOffCenter(1, 2, 2, 3, 1);
-//
-//        expect(mExpected.equalsEpsilon(m, CesiumMath.EPSILON2)).toEqual(true);
-//    });
-//
-//    it('createOrthographicOffCenter', function() {
-//        var mExpected = new Matrix4(2, 0,  0, -1,
-//                                    0, 2,  0, -5,
-//                                    0, 0, -2, -1,
-//                                    0, 0,  0,  1);
-//        var m = Matrix4.fromOrthographicOffCenter(0, 1, 2, 3, 0, 1);
-//
-//        expect(mExpected.equals(m)).toEqual(true);
-//    });
-//
-//    it('creates a viewport transformation', function() {
-//        var mExpected = new Matrix4(2.0, 0.0, 0.0, 2.0,
-//                                    0.0, 3.0, 0.0, 3.0,
-//                                    0.0, 0.0, 1.0, 1.0,
-//                                    0.0, 0.0, 0.0, 1.0);
-//        var m = Matrix4.fromViewportTransformation({
-//            x : 0,
-//            y : 0,
-//            width : 4.0,
-//            height : 6.0
-//        }, 0.0, 2.0);
-//
-//        expect(mExpected.equals(m)).toEqual(true);
-//    });
-//
-//    it('createLookAt', function() {
-//        var mExpected = new Matrix4(1);
-//        var m = Matrix4.fromLookAt(Cartesian3.ZERO, Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y);
-//
-//        expect(mExpected.equals(m)).toEqual(true);
-//    });
