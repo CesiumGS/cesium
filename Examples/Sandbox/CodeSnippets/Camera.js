@@ -80,7 +80,8 @@
 
     Sandbox.ViewExtent = function (scene, ellipsoid, primitives) {
         this.code = function() {
-            var extent = new Cesium.Extent(Cesium.Math.toRadians(-77.0),
+            var extent = new Cesium.Extent(
+                    Cesium.Math.toRadians(-77.0),
                     Cesium.Math.toRadians(38.0),
                     Cesium.Math.toRadians(-72.0),
                     Cesium.Math.toRadians(42.0));
@@ -89,11 +90,11 @@
 
             var polyline = new Cesium.Polyline(undefined);
             polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-78, 38),
-                Cesium.Cartographic.fromDegrees(-78, 42),
+                Cesium.Cartographic.fromDegrees(-77, 38),
+                Cesium.Cartographic.fromDegrees(-77, 42),
                 Cesium.Cartographic.fromDegrees(-72, 42),
                 Cesium.Cartographic.fromDegrees(-72, 38),
-                Cesium.Cartographic.fromDegrees(-78, 38)
+                Cesium.Cartographic.fromDegrees(-77, 38)
             ]));
             primitives.add(polyline);
         };

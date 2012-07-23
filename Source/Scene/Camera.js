@@ -311,19 +311,31 @@ define([
 
         var eastVector = ellipsoid.cartographicToCartesian(new Cartographic(east, lla.latitude, 0.0));
         var westVector = ellipsoid.cartographicToCartesian(new Cartographic(west, lla.latitude, 0.0));
+        var northVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, north, 0.0));
+        var southVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, south, 0.0));
+
         var width = eastVector.subtract(westVector).magnitude();
+        var height = northVector.subtract(southVector).magnitude();
 
         var position = projection.project(lla);
         this.position.x = position.x;
         this.position.y = position.y;
 
-        var right = width * 0.5;
+        var right, top, ratio;
+        if (width > height) {
+            ratio = this.frustum.top / this.frustum.right;
+            right = width * 0.5;
+            top = right * ratio;
+        } else {
+            ratio = this.frustum.right / this.frustum.top;
+            top = height * 0.5;
+            right = top * ratio;
+        }
 
-        var ratio = this.frustum.top / this.frustum.right;
         this.frustum.right = right;
-        this.frustum.left = right - width;
-        this.frustum.top = right * ratio;
-        this.frustum.bottom = -this.frustum.top;
+        this.frustum.left = -right;
+        this.frustum.top = top;
+        this.frustum.bottom = -top;
     };
 
     Camera.prototype._updateViewMatrix = function() {
