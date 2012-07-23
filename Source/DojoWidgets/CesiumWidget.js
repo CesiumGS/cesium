@@ -301,6 +301,8 @@ define([
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
             centralBody.showSkyAtmosphere = true;
             centralBody.showGroundAtmosphere = true;
+            // This logo is replicated by the imagery selector button, so it's hidden here.
+            centralBody.logoOffset = new Cartesian2(-100, -100);
 
             this._configureCentralBodyImagery();
 

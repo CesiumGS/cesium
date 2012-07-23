@@ -1,5 +1,5 @@
-<div data-dojo-attach-point="cesiumNode" style="width: 100%; height: 100%;">
-    <canvas data-dojo-attach-point="canvas" style="width: 100%; height: 100%;"></canvas>
+<div data-dojo-attach-point="cesiumNode" class="cw-node">
+    <canvas data-dojo-attach-point="canvas" class="cw-canvas"></canvas>
     <div data-dojo-type="dijit.form.Button" data-dojo-attach-point="timeLabel"
         data-dojo-props="class: 'cw-timeLabel', showLabel: true, label:''"></div>
     <div class="cw-viewButtons">
@@ -29,7 +29,7 @@
         </div>
     </div>
     <div class="cw-timelineContainer">
-        <div data-dojo-attach-point="timelineWidget" data-dojo-type="Cesium.TimelineWidget"></div>
+        <div data-dojo-attach-point="timelineWidget" data-dojo-type="Cesium.TimelineWidget" data-dojo-props="class: 'cw-timeline'"></div>
     </div>
     <div class="cw-animButtons">
         <div data-dojo-attach-point="animReset" data-dojo-type="dijit.form.Button"
