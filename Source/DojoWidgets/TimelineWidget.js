@@ -3,12 +3,13 @@ define(['dojo/_base/declare',
         'dojo/ready',
         'dojo/dom-construct',
         'dijit/_WidgetBase',
-        '../Widgets/Timeline'
+        '../Controls/Timeline'
     ], function(
         declare,
         ready,
         domConstruct,
-        _WidgetBase, Timeline) {
+        _WidgetBase,
+        Timeline) {
     "use strict";
 
     return declare('Cesium.TimelineWidget', [_WidgetBase], {
@@ -17,7 +18,7 @@ define(['dojo/_base/declare',
         },
 
         postCreate : function() {
-            ready(this, '_setupTimeline');
+            ready(this, 'setupTimeline');
         },
 
         resize : function(size) {
@@ -28,7 +29,7 @@ define(['dojo/_base/declare',
             this._resizeTimeline();
         },
 
-        _setupTimeline : function() {
+        setupTimeline : function() {
             if (this.clock && (!this.timeline)) {
                 this.timeline = new Timeline(this.domNode, this.clock);
                 if (this.setupCallback) {

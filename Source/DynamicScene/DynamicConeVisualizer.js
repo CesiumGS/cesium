@@ -4,6 +4,7 @@ define([
         '../Core/destroyObject',
         '../Core/Color',
         '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/ComplexConicSensorVolume',
         '../Scene/ColorMaterial'
@@ -12,6 +13,7 @@ define([
          destroyObject,
          Color,
          CesiumMath,
+         Matrix3,
          Matrix4,
          ComplexConicSensorVolume,
          ColorMaterial) {
@@ -290,7 +292,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
-            cone.modelMatrix = new Matrix4(orientation.conjugate(orientation).toRotationMatrix(), position);
+            cone.modelMatrix = new Matrix4(Matrix3.fromQuaternion(orientation.conjugate(orientation)), position);
             position.clone(cone._visualizerPosition);
             orientation.clone(cone._visualizerOrientation);
         }

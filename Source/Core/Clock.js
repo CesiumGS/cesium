@@ -22,6 +22,7 @@ define([
      * @see ClockStep
      * @see ClockRange
      * @see JulianDate
+     * @see AnimationController
      *
      * @example
      * //Create a clock that loops on Christmas day 2012 and runs
@@ -49,23 +50,23 @@ define([
 
         if (startTimeUndefined && stopTimeUndefined && currentTimeUndefined) {
             currentTime = new JulianDate();
-            startTime = currentTime.addDays(-0.5);
-            stopTime = currentTime.addDays(0.5);
+            startTime = currentTime.clone();
+            stopTime = currentTime.addDays(1.0);
         } else if (startTimeUndefined && stopTimeUndefined) {
-            startTime = currentTime.addDays(-0.5);
-            stopTime = currentTime.addDays(0.5);
+            startTime = currentTime.clone();
+            stopTime = currentTime.addDays(1.0);
         } else if (startTimeUndefined && currentTimeUndefined) {
             startTime = stopTime.addDays(-1.0);
-            currentTime = stopTime.addDays(0.5);
+            currentTime = startTime.clone();
         } else if (currentTimeUndefined && stopTimeUndefined) {
-            currentTime = startTime.addDays(0.5);
+            currentTime = startTime.clone();
             stopTime = startTime.addDays(1.0);
         } else if (currentTimeUndefined) {
-            currentTime = startTime.addSeconds(startTime.secondsDifference(stopTime));
+            currentTime = startTime.clone();
         } else if (stopTimeUndefined) {
-            stopTime = currentTime.addDays(0.5);
+            stopTime = currentTime.addDays(1.0);
         } else if (startTimeUndefined) {
-            startTime = currentTime.addDays(-0.5);
+            startTime = currentTime.clone();
         }
 
         if (startTime.greaterThan(stopTime)) {
@@ -135,16 +136,16 @@ define([
      *
      * @param {Number} [secondsToTick] optional parameter to force the clock to tick the provided number of seconds,
      * regardless of the value of <code>clockStep</code> and <code>multiplier</code>.
-     * @returns {JulianDate} The new value of the <code>currentTime<code> property.
+     * @returns {JulianDate} The new value of the <code>currentTime</code> property.
      */
     Clock.prototype.tick = function(secondsToTick) {
         return this._tick(secondsToTick, this.multiplier);
     };
 
     /**
-     * Advances the clock in the opposite direction of the current <code>multiplier<code>.
-     * If <code>multiplier<code> is positive this will advance the clock backwards one tick.
-     * If <code>multiplier<code> is negative this will advance the clock forward one tick.
+     * Advances the clock in the opposite direction of the current <code>multiplier</code>.
+     * If <code>multiplier</code> is positive this will advance the clock backwards one tick.
+     * If <code>multiplier</code> is negative this will advance the clock forward one tick.
      * @memberof Clock
      *
      * @returns {JulianDate} The new value of Clock.currentTime

@@ -82,7 +82,7 @@ defineSuite([
 
         points[0].tangent = crs.getStartTangent();
         for ( var i = 1; i < points.length - 1; ++i) {
-            points[i].tangent = points[i + 1].point.subtract(points[i - 1].point).multiplyWithScalar(0.5);
+            points[i].tangent = points[i + 1].point.subtract(points[i - 1].point).multiplyByScalar(0.5);
         }
         points[points.length - 1].tangent = crs.getEndTangent();
 

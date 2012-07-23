@@ -4,8 +4,7 @@ define([
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
-        '../Core/Cartographic3',
-        '../Core/Math',
+        '../Core/Cartographic',
         '../Core/Iso8601',
         '../Core/Ellipsoid',
         './ReferenceProperty',
@@ -15,8 +14,7 @@ define([
         TimeInterval,
         TimeIntervalCollection,
         Cartesian3,
-        Cartographic3,
-        CesiumMath,
+        Cartographic,
         Iso8601,
         Ellipsoid,
         ReferenceProperty,
@@ -38,14 +36,14 @@ define([
             tmp = czmlInterval.cartographicRadians;
             if (typeof tmp !== 'undefined') {
                 for (i = 0, len = tmp.length; i < len; i += 3) {
-                    values.push(new Cartographic3(tmp[i], tmp[i + 1], tmp[i + 2]));
+                    values.push(new Cartographic(tmp[i], tmp[i + 1], tmp[i + 2]));
                 }
                 this.cartographic = values;
             } else {
                 tmp = czmlInterval.cartographicDegrees;
                 if (typeof tmp !== 'undefined') {
                     for (i = 0, len = tmp.length; i < len; i += 3) {
-                        values.push(new Cartographic3(CesiumMath.toRadians(tmp[i]), CesiumMath.toRadians(tmp[i + 1]), tmp[i + 2]));
+                        values.push(Cartographic.fromDegrees(tmp[i], tmp[i + 1], tmp[i + 2]));
                     }
                     this.cartographic = values;
                 }
@@ -55,14 +53,14 @@ define([
 
     ValueHolder.prototype.getValueCartographic = function() {
         if (typeof this.cartographic === 'undefined') {
-            this.cartographic = wgs84.toCartographic3s(this.cartesian);
+            this.cartographic = wgs84.cartesianArrayToCartographicArray(this.cartesian);
         }
         return this.cartographic;
     };
 
     ValueHolder.prototype.getValueCartesian = function() {
         if (typeof this.cartesian === 'undefined') {
-            this.cartesian = wgs84.toCartesians(this.cartographic);
+            this.cartesian = wgs84.cartographicArrayToCartesianArray(this.cartographic);
         }
         return this.cartesian;
     };

@@ -68,19 +68,19 @@ define([
             var rotation = arguments[0];
             var translation = arguments[1];
 
-            values[0] = rotation.getColumn0Row0();
-            values[1] = rotation.getColumn0Row1();
-            values[2] = rotation.getColumn0Row2();
+            values[0] = rotation[0];
+            values[1] = rotation[1];
+            values[2] = rotation[2];
             values[3] = 0;
 
-            values[4] = rotation.getColumn1Row0();
-            values[5] = rotation.getColumn1Row1();
-            values[6] = rotation.getColumn1Row2();
+            values[4] = rotation[3];
+            values[5] = rotation[4];
+            values[6] = rotation[5];
             values[7] = 0;
 
-            values[8] = rotation.getColumn2Row0();
-            values[9] = rotation.getColumn2Row1();
-            values[10] = rotation.getColumn2Row2();
+            values[8] = rotation[6];
+            values[9] = rotation[7];
+            values[10] = rotation[8];
             values[11] = 0;
 
             values[12] = translation.x;
@@ -647,7 +647,7 @@ define([
      *
      * @example
      * var m = Matrix4.createScale(2.0);
-     * var v = m.multiplyWithVector(new Cartesian4(1.0, 1.0, 1.0, 1.0));
+     * var v = m.multiplyByVector(new Cartesian4(1.0, 1.0, 1.0, 1.0));
      * // v is (2.0, 2.0, 2.0, 1.0)
      */
     Matrix4.createScale = function(scale) {
@@ -673,7 +673,7 @@ define([
      *
      * @example
      * var m = Matrix4.createNonUniformScale(new Cartesian3(1.0, 2.0, 3.0));
-     * var v = m.multiplyWithVector(new Cartesian4(1.0, 1.0, 1.0, 1.0));
+     * var v = m.multiplyByVector(new Cartesian4(1.0, 1.0, 1.0, 1.0));
      * // v is (1.0, 2.0, 3.0, 1.0)
      */
     Matrix4.createNonUniformScale = function(scale) {
@@ -905,7 +905,7 @@ define([
             0.0, 1.0, 0.0, -eye.y,
             0.0, 0.0, 1.0, -eye.z,
             0.0, 0.0, 0.0, 1.0);
-        return rotation.multiplyWithMatrix(translation);
+        return rotation.multiply(translation);
     };
 
     /**
@@ -987,15 +987,15 @@ define([
         var rT = this.getRotationTranspose();
 
         // T = translation, rTT = (-rT)(T)
-        var rTT = rT.negate().multiplyWithVector(this.getTranslation());
+        var rTT = rT.negate().multiplyByVector(this.getTranslation());
 
         // [ rT, rTT ]
         // [  0,  1  ]
         return new Matrix4(
-                rT.getColumn0Row0(), rT.getColumn1Row0(), rT.getColumn2Row0(), rTT.x,
-                rT.getColumn0Row1(), rT.getColumn1Row1(), rT.getColumn2Row1(), rTT.y,
-                rT.getColumn0Row2(), rT.getColumn1Row2(), rT.getColumn2Row2(), rTT.z,
-                0, 0, 0, 1);
+                rT[0], rT[3], rT[6], rTT.x,
+                rT[1], rT[4], rT[7], rTT.y,
+                rT[2], rT[5], rT[8], rTT.z,
+                  0.0,   0.0, 0.0,   1.0);
     };
 
     /**
@@ -1140,7 +1140,7 @@ define([
      * @param {Cartesian4} vector The vector that is multiplied with this.
      * @return {Cartesian4} The transformed vector.
      */
-    Matrix4.prototype.multiplyWithVector = function(vector) {
+    Matrix4.prototype.multiplyByVector = function(vector) {
         var vX = vector.x;
         var vY = vector.y;
         var vZ = vector.z;
@@ -1181,7 +1181,7 @@ define([
      * @param {Matrix4} matrix The matrix that is on the right hand side of the multiplication.
      * @return {Matrix4} The multipled matrix.
      */
-    Matrix4.prototype.multiplyWithMatrix = function(matrix) {
+    Matrix4.prototype.multiply = function(matrix) {
         var l = this.values;
         var r = matrix.values;
 

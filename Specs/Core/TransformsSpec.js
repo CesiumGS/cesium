@@ -142,8 +142,8 @@ defineSuite([
         var width = 1024.0;
         var height = 768.0;
         var perspective = Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
-        var view = Matrix4.createLookAt(Cartesian3.UNIT_X.multiplyWithScalar(2.0), Cartesian3.ZERO, Cartesian3.UNIT_Z);
-        var mvpMatrix = perspective.multiplyWithMatrix(view);
+        var view = Matrix4.createLookAt(Cartesian3.UNIT_X.multiplyByScalar(2.0), Cartesian3.ZERO, Cartesian3.UNIT_Z);
+        var mvpMatrix = perspective.multiply(view);
         var vpTransform = Matrix4.createViewportTransformation(
             {
                 width : width,

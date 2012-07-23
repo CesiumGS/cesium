@@ -2,762 +2,852 @@
 define([
         './DeveloperError',
         './Cartesian3'
-    ],
+       ],
     function(
         DeveloperError,
         Cartesian3) {
     "use strict";
 
-    var numberOfElements = 9;
-
     /**
-     * A 3x3 matrix, stored internally in column-major order.
-     *
-     * <p>
-     * When called with no arguments, the matrix elements are initialized to all zeros.
-     * When called with one numeric argument, f, the columns are initialized to [f, 0, 0] [0, f, 0] [0, 0, f].  Hence new Matrix3(1) creates the identity matrix.
-     * When called with nine numeric arguments in row-major order, these arguments define the elements of the matrix.
-     * </p>
-     *
+     * A 3x3 matrix, indexable as a column-major order array.
+     * Constructor parameters are in row-major order for code readability.
      * @alias Matrix3
      * @constructor
-     * @immutable
      *
-     * @see Matrix3.fromColumnMajorArray
+     * @param {Number} [column0Row0=0.0] The value for column 0, row 0.
+     * @param {Number} [column1Row0=0.0] The value for column 1, row 1.
+     * @param {Number} [column2Row0=0.0] The value for column 2, row 2.
+     * @param {Number} [column0Row1=0.0] The value for column 0, row 0.
+     * @param {Number} [column1Row1=0.0] The value for column 1, row 1.
+     * @param {Number} [column2Row1=0.0] The value for column 2, row 2.
+     * @param {Number} [column0Row2=0.0] The value for column 0, row 0.
+     * @param {Number} [column1Row2=0.0] The value for column 1, row 1.
+     * @param {Number} [column2Row2=0.0] The value for column 2, row 2.
+     *
+     * @see Matrix3.fromColumnMajor
+     * @see Matrix3.fromRowMajorArray
      * @see Matrix2
      * @see Matrix4
-     * @see Quaternion
      */
-    var Matrix3 = function() {
-        var values = this.values = []; // Column-major
-        values.length = numberOfElements;
+    var Matrix3 = function(column0Row0, column1Row0, column2Row0,
+                           column0Row1, column1Row1, column2Row1,
+                           column0Row2, column1Row2, column2Row2) {
+        this[0] = typeof column0Row0 === 'undefined' ? 0.0 : column0Row0;
+        this[1] = typeof column0Row1 === 'undefined' ? 0.0 : column0Row1;
+        this[2] = typeof column0Row2 === 'undefined' ? 0.0 : column0Row2;
+        this[3] = typeof column1Row0 === 'undefined' ? 0.0 : column1Row0;
+        this[4] = typeof column1Row1 === 'undefined' ? 0.0 : column1Row1;
+        this[5] = typeof column1Row2 === 'undefined' ? 0.0 : column1Row2;
+        this[6] = typeof column2Row0 === 'undefined' ? 0.0 : column2Row0;
+        this[7] = typeof column2Row1 === 'undefined' ? 0.0 : column2Row1;
+        this[8] = typeof column2Row2 === 'undefined' ? 0.0 : column2Row2;
+    };
 
-        if (arguments.length === 0) {
-            for ( var i = 0; i < numberOfElements; ++i) {
-                values[i] = 0;
-            }
-        } else if (arguments.length < numberOfElements) {
-            values[0] = arguments[0];
-            values[1] = 0;
-            values[2] = 0;
-
-            values[3] = 0;
-            values[4] = arguments[0];
-            values[5] = 0;
-
-            values[6] = 0;
-            values[7] = 0;
-            values[8] = arguments[0];
-        } else if (arguments.length >= 9) {
-            values[0] = arguments[0]; // Column 0, Row 0
-            values[1] = arguments[3]; // Column 0, Row 1
-            values[2] = arguments[6]; // Column 0, Row 2
-
-            values[3] = arguments[1]; // Column 1, Row 0
-            values[4] = arguments[4]; // Column 1, Row 1
-            values[5] = arguments[7]; // Column 1, Row 2
-
-            values[6] = arguments[2]; // Column 2, Row 0
-            values[7] = arguments[5]; // Column 2, Row 1
-            values[8] = arguments[8]; // Column 2, Row 2
+    /**
+     * Duplicates a Matrix3 instance.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix to duplicate.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix3.clone = function(values, result) {
+        if (typeof values === 'undefined') {
+            throw new DeveloperError('values is required');
         }
+        if (typeof result === 'undefined') {
+            return new Matrix3(values[0], values[3], values[6],
+                               values[1], values[4], values[7],
+                               values[2], values[5], values[8]);
+        }
+        result[0] = values[0];
+        result[1] = values[1];
+        result[2] = values[2];
+        result[3] = values[3];
+        result[4] = values[4];
+        result[5] = values[5];
+        result[6] = values[6];
+        result[7] = values[7];
+        result[8] = values[8];
+        return result;
     };
 
     /**
-     * Returns the element at column 0, row 0.
-     *
+     * Creates a Matrix3 instance from a column-major order array.
      * @memberof Matrix3
-     * @return {Number} The element at column 0, row 0.
+     * @function
+     *
+     * @param {Array} values The column-major order array.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix3 instance if none was provided.
+     *
+     * @exception {DeveloperError} values is required.
      */
-    Matrix3.prototype.getColumn0Row0 = function() {
-        return this.values[0];
+    Matrix3.fromColumnMajorArray = Matrix3.clone;
+
+    /**
+     * Creates a Matrix3 instance from a row-major order array.
+     * The resulting matrix will be in column-major order.
+     * @memberof Matrix3
+     *
+     * @param {Array} values The row-major order array.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix3 instance if none was provided.
+     *
+     * @exception {DeveloperError} values is required.
+     */
+    Matrix3.fromRowMajorArray = function(values, result) {
+        if (typeof values === 'undefined') {
+            throw new DeveloperError('values is required.');
+        }
+        if (typeof result === 'undefined') {
+            return new Matrix3(values[0], values[1], values[2],
+                               values[3], values[4], values[5],
+                               values[6], values[7], values[8]);
+        }
+        result[0] = values[0];
+        result[1] = values[3];
+        result[2] = values[6];
+        result[3] = values[1];
+        result[4] = values[4];
+        result[5] = values[7];
+        result[6] = values[2];
+        result[7] = values[5];
+        result[8] = values[8];
+        return result;
     };
 
     /**
-     * Returns the element at column 0, row 1.
-     *
+     * Computes a 3x3 rotation matrix from the provided quaternion.
      * @memberof Matrix3
-     * @return {Number} The element at column 0, row 1.
+     *
+     * @param {Quaternion} quaternion the quaternion to use.
+     *
+     * @return {Matrix3} The 3x3 rotation matrix from this quaternion.
      */
-    Matrix3.prototype.getColumn0Row1 = function() {
-        return this.values[1];
+    Matrix3.fromQuaternion = function(quaternion, result) {
+        if (typeof quaternion === 'undefined') {
+            throw new DeveloperError('quaternion is required');
+        }
+        var x2 = quaternion.x * quaternion.x;
+        var xy = quaternion.x * quaternion.y;
+        var xz = quaternion.x * quaternion.z;
+        var xw = quaternion.x * quaternion.w;
+        var y2 = quaternion.y * quaternion.y;
+        var yz = quaternion.y * quaternion.z;
+        var yw = quaternion.y * quaternion.w;
+        var z2 = quaternion.z * quaternion.z;
+        var zw = quaternion.z * quaternion.w;
+        var w2 = quaternion.w * quaternion.w;
+
+        var m00 = x2 - y2 - z2 + w2;
+        var m01 = 2.0 * (xy + zw);
+        var m02 = 2.0 * (xz - yw);
+
+        var m10 = 2.0 * (xy - zw);
+        var m11 = -x2 + y2 - z2 + w2;
+        var m12 = 2.0 * (yz + xw);
+
+        var m20 = 2.0 * (xz + yw);
+        var m21 = 2.0 * (yz - xw);
+        var m22 = -x2 - y2 + z2 + w2;
+
+        if (typeof result === 'undefined') {
+            return new Matrix3(m00, m10, m20,
+                               m01, m11, m21,
+                               m02, m12, m22);
+        }
+        result[0] = m00;
+        result[1] = m01;
+        result[2] = m02;
+        result[3] = m10;
+        result[4] = m11;
+        result[5] = m12;
+        result[6] = m20;
+        result[7] = m21;
+        result[8] = m22;
+        return result;
     };
 
     /**
-     * Returns the element at column 0, row 2.
-     *
+     * Creates an Array from the provided Matrix3 instance.
+     * The array will be in column-major order.
      * @memberof Matrix3
-     * @return {Number} The element at column 0, row 2.
+     *
+     * @param {Matrix3} matrix The matrix to use..
+     * @param {Array} [result] The Array onto which to store the result.
+     * @return {Array} The modified Array parameter or a new Array instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
      */
-    Matrix3.prototype.getColumn0Row2 = function() {
-        return this.values[2];
+    Matrix3.toArray = function(matrix, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof result === 'undefined') {
+            return [matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5], matrix[6], matrix[7], matrix[8]];
+        }
+        result[0] = matrix[0];
+        result[1] = matrix[1];
+        result[2] = matrix[2];
+        result[3] = matrix[3];
+        result[4] = matrix[4];
+        result[5] = matrix[5];
+        result[6] = matrix[6];
+        result[7] = matrix[7];
+        result[8] = matrix[8];
+        return result;
     };
 
     /**
-     * Returns the element at column 1, row 0.
-     *
+     * Retrieves a copy of the matrix column at the provided index as a Cartesian3 instance.
      * @memberof Matrix3
-     * @return {Number} The element at column 1, row 0.
-     */
-    Matrix3.prototype.getColumn1Row0 = function() {
-        return this.values[3];
-    };
-
-    /**
-     * Returns the element at column 1, row 1.
      *
-     * @memberof Matrix3
-     * @return {Number} The element at column 1, row 1.
-     */
-    Matrix3.prototype.getColumn1Row1 = function() {
-        return this.values[4];
-    };
-
-    /**
-     * Returns the element at column 1, row 2.
+     * @param {Matrix3} matrix The matrix to use.
+     * @param {Number} index The zero-based index of the column to retrieve.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
-     * @memberof Matrix3
-     * @return {Number} The element at column 1, row 2.
-     */
-    Matrix3.prototype.getColumn1Row2 = function() {
-        return this.values[5];
-    };
-
-    /**
-     * Returns the element at column 2, row 0.
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} index is required and must be 0 or 2.
      *
-     * @memberof Matrix3
-     * @return {Number} The element at column 2, row 0.
+     * @see Cartesian3
      */
-    Matrix3.prototype.getColumn2Row0 = function() {
-        return this.values[6];
-    };
-
-    /**
-     * Returns the element at column 2, row 1.
-     *
-     * @memberof Matrix3
-     * @return {Number} The element at column 2, row 1.
-     */
-    Matrix3.prototype.getColumn2Row1 = function() {
-        return this.values[7];
-    };
-
-    /**
-     * Returns the element at column 2, row 1.
-     *
-     * @memberof Matrix3
-     * @return {Number} The element at column 2, row 1.
-     */
-    Matrix3.prototype.getColumn2Row2 = function() {
-        return this.values[8];
-    };
-
-    /**
-     * Returns the element at the zero-based, column-major index.
-     *
-     * @memberof Matrix3
-     * @return {Number} The element at the zero-based, column-major index.
-     * @exception {DeveloperError} index must be between 0 and 8.
-     */
-    Matrix3.prototype.getColumnMajorValue = function(index) {
-        if (index < 0 || index > 8) {
-            throw new DeveloperError('index must be between 0 and 8.');
+    Matrix3.getColumn = function(matrix, index, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required.');
         }
 
-        return this.values[index];
-    };
-
-    /**
-     * Creates a 3x3 uniform scale matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @param {Number} scale The uniform scale in the x, y, and z directions.
-     *
-     * @see Matrix3.createNonUniformScale
-     *
-     * @example
-     * var m = Matrix3.createScale(2.0);
-     * var v = m.multiplyWithVector(new Cartesian3(1.0, 1.0, 1.0));
-     * // v is (2.0, 2.0, 2.0)
-     */
-    Matrix3.createScale = function(scale) {
-        if (scale) {
-            return new Matrix3(
-                    scale, 0.0,   0.0,
-                    0.0,   scale, 0.0,
-                    0.0,   0.0,   scale);
+        if (typeof index !== 'number' || index < 0 || index > 2) {
+            throw new DeveloperError('index is required and must be 0 or 2.');
         }
 
-        return new Matrix3();
+        var startIndex = index * 3;
+        var x = matrix[startIndex];
+        var y = matrix[startIndex + 1];
+        var z = matrix[startIndex + 2];
+
+        if (typeof result === 'undefined') {
+            return new Cartesian3(x, y, z);
+        }
+        result.x = x;
+        result.y = y;
+        result.z = z;
+        return result;
     };
 
     /**
-     * Creates a 3x3 non-uniform scale matrix.
-     *
+     * Computes a new matrix that replaces the specified column in the provided matrix with the provided Cartesian3 instance.
      * @memberof Matrix3
      *
-     * @param {Cartesian3} scale The non-uniform scale in the x, y, and z directions.
+     * @param {Matrix3} matrix The matrix to use.
+     * @param {Number} index The zero-based index of the column to set.
+     * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified column.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
      *
-     * @see Matrix3.createScale
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} index is required and must be 0 or 2.
      *
-     * @example
-     * var m = Matrix3.createNonUniformScale(new Cartesian3(1.0, 2.0, 3.0));
-     * var v = m.multiplyWithVector(new Cartesian3(1.0, 1.0, 1.0));
-     * // v is (1.0, 2.0, 3.0)
+     * @see Cartesian3
      */
-    Matrix3.createNonUniformScale = function(scale) {
-        if (scale) {
-            return new Matrix3(
-                    scale.x, 0.0,     0.0,
-                    0.0,     scale.y, 0.0,
-                    0.0,     0.0,     scale.z);
+    Matrix3.setColumn = function(matrix, index, cartesian, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (typeof index !== 'number' || index < 0 || index > 2) {
+            throw new DeveloperError('index is required and must be 0 or 2.');
+        }
+        result = Matrix3.clone(matrix, result);
+        var startIndex = index * 3;
+        result[startIndex] = cartesian.x;
+        result[startIndex + 1] = cartesian.y;
+        result[startIndex + 2] = cartesian.z;
+        return result;
+    };
+
+    /**
+     * Retrieves a copy of the matrix row at the provided index as a Cartesian3 instance.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix to use.
+     * @param {Number} index The zero-based index of the row to retrieve.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} index is required and must be 0 or 2.
+     *
+     * @see Cartesian3
+     */
+    Matrix3.getRow = function(matrix, index, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required.');
         }
 
-        return new Matrix3();
-    };
-
-    /**
-     * Returns a copy of the first, i.e. leftmost, column of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @return {Cartesian3} The first column of this matrix.
-     *
-     * @see Matrix3#setColumn0
-     *
-     * @example
-     * var m = Matrix3.IDENTITY;
-     * var c = m.getColumn0(); // (x, y, z) == (1.0, 0.0, 0.0)
-     */
-    Matrix3.prototype.getColumn0 = function() {
-        var values = this.values;
-        return new Cartesian3(values[0], values[1], values[2]);
-    };
-
-    /**
-     * Sets the first, i.e. leftmost, column of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @param {Cartesian3} column The first column of this matrix.
-     *
-     * @see Matrix3#getColumn0
-     *
-     * @example
-     * // Column will be (1.0, 2.0, 3.0)
-     * m.setColumn0(new Cartesian3(1.0, 2.0, 3.0));
-     */
-    Matrix3.prototype.setColumn0 = function(column) {
-        var values = this.values;
-        values[0] = column.x;
-        values[1] = column.y;
-        values[2] = column.z;
-    };
-
-    /**
-     * Returns a copy of the second column of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @return {Cartesian3} The second column of this matrix.
-     *
-     * @see Matrix3#setColumn1
-     *
-     * @example
-     * var m = Matrix3.IDENTITY;
-     * var c = m.getColumn1(); // (x, y, z) == (0.0, 1.0, 0.0)
-     */
-    Matrix3.prototype.getColumn1 = function() {
-        var values = this.values;
-        return new Cartesian3(values[3], values[4], values[5]);
-    };
-
-    /**
-     * Sets the second column of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @param {Cartesian3} column The second column of this matrix.
-     *
-     * @see Matrix3#getColumn1
-     *
-     * @example
-     * // Column will be (1.0, 2.0, 3.0)
-     * m.setColumn1(new Cartesian3(1.0, 2.0, 3.0));
-     */
-    Matrix3.prototype.setColumn1 = function(column) {
-        var values = this.values;
-        values[3] = column.x;
-        values[4] = column.y;
-        values[5] = column.z;
-    };
-
-    /**
-     * Returns a copy of the third, i.e. rightmost, column of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @return {Cartesian3} The third column of this matrix.
-     *
-     * @see Matrix3#setColumn2
-     *
-     * @example
-     * var m = Matrix3.IDENTITY;
-     * var c = m.getColumn2(); // (x, y, z) == (0.0, 0.0, 1.0)
-     */
-    Matrix3.prototype.getColumn2 = function() {
-        var values = this.values;
-        return new Cartesian3(values[6], values[7], values[8]);
-    };
-
-    /**
-     * Sets the third, i.e. rightmost, column of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @param {Cartesian3} column The third column of this matrix.
-     *
-     * @see Matrix3#getColumn2
-     *
-     * @example
-     * // Column will be (1.0, 2.0, 3.0)
-     * m.setColumn1(new Cartesian3(1.0, 2.0, 3.0));
-     */
-    Matrix3.prototype.setColumn2 = function(column) {
-        var values = this.values;
-        values[6] = column.x;
-        values[7] = column.y;
-        values[8] = column.z;
-    };
-
-    /**
-     * Returns a copy of the first, i.e. top, row of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @return {Cartesian3} The first row of this matrix.
-     *
-     * @see Matrix3#setRow0
-     *
-     * @example
-     * var m = Matrix3.IDENTITY;
-     * var c = m.getRow0(); // (x, y, z) == (1.0, 0.0, 0.0)
-     */
-    Matrix3.prototype.getRow0 = function() {
-        var values = this.values;
-        return new Cartesian3(values[0], values[3], values[6]);
-    };
-
-    /**
-     * Sets the first, i.e. top, row of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @param {Cartesian3} row The first row of this matrix.
-     *
-     * @see Matrix3#getRow0
-     *
-     * @example
-     * // Row will be (1.0, 2.0, 3.0)
-     * m.setRow0(new Cartesian3(1.0, 2.0, 3.0));
-     */
-    Matrix3.prototype.setRow0 = function(row) {
-        var values = this.values;
-        values[0] = row.x;
-        values[3] = row.y;
-        values[6] = row.z;
-    };
-
-    /**
-     * Returns a copy of the second, e.g. middle, row of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @return {Cartesian3} The second row of this matrix.
-     *
-     * @see Matrix3#setRow1
-     *
-     * @example
-     * var m = Matrix3.IDENTITY;
-     * var c = m.getRow1(); // (x, y, z) == (0.0, 1.0, 0.0)
-     */
-    Matrix3.prototype.getRow1 = function() {
-        var values = this.values;
-        return new Cartesian3(values[1], values[4], values[7]);
-    };
-
-    /**
-     * Sets the second, i.e. middle, row of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @param {Cartesian3} row The second row of this matrix.
-     *
-     * @see Matrix3#getRow1
-     *
-     * @example
-     * // Row will be (1.0, 2.0, 3.0)
-     * m.setRow1(new Cartesian3(1.0, 2.0, 3.0));
-     */
-    Matrix3.prototype.setRow1 = function(row) {
-        var values = this.values;
-        values[1] = row.x;
-        values[4] = row.y;
-        values[7] = row.z;
-    };
-
-    /**
-     * Returns a copy of the third, i.e. bottom, row of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @return {Cartesian3} The third row of this matrix.
-     *
-     * @see Matrix3#setRow2
-     *
-     * @example
-     * var m = Matrix3.IDENTITY;
-     * var c = m.getRow2(); // (x, y, z) == (0.0, 0.0, 1.0)
-     */
-    Matrix3.prototype.getRow2 = function() {
-        var values = this.values;
-        return new Cartesian3(values[2], values[5], values[8]);
-    };
-
-    /**
-     * Sets the third, i.e. bottom, row of this matrix.
-     *
-     * @memberof Matrix3
-     *
-     * @param {Cartesian3} row The third row of this matrix.
-     *
-     * @see Matrix3#getRow2
-     *
-     * @example
-     * // Row will be (1.0, 2.0, 3.0)
-     * m.setRow2(new Cartesian3(1.0, 2.0, 3.0));
-     */
-    Matrix3.prototype.setRow2 = function(row) {
-        var values = this.values;
-        values[2] = row.x;
-        values[5] = row.y;
-        values[8] = row.z;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Matrix3
-     *
-     * @exception {DeveloperError} columnMajorValues must have 9 elements.
-     */
-    Matrix3.fromColumnMajorArray = function(columnMajorValues) {
-        if (columnMajorValues) {
-            if (columnMajorValues.length === numberOfElements) {
-                return new Matrix3(
-                        columnMajorValues[0], columnMajorValues[3], columnMajorValues[6],
-                        columnMajorValues[1], columnMajorValues[4], columnMajorValues[7],
-                        columnMajorValues[2], columnMajorValues[5], columnMajorValues[8]);
-            }
-
-            throw new DeveloperError('columnMajorValues must have 9 elements.');
+        if (typeof index !== 'number' || index < 0 || index > 2) {
+            throw new DeveloperError('index is required and must be 0 or 2.');
         }
-        return new Matrix3();
+
+        var x = matrix[index];
+        var y = matrix[index + 3];
+        var z = matrix[index + 6];
+
+        if (typeof result === 'undefined') {
+            return new Cartesian3(x, y, z);
+        }
+        result.x = x;
+        result.y = y;
+        result.z = z;
+        return result;
+    };
+
+    /**
+     * Computes a new matrix that replaces the specified row in the provided matrix with the provided Cartesian3 instance.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix to use.
+     * @param {Number} index The zero-based index of the row to set.
+     * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified row.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} index is required and must be 0 or 2.
+     *
+     * @see Cartesian3
+     */
+    Matrix3.setRow = function(matrix, index, cartesian, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (typeof index !== 'number' || index < 0 || index > 2) {
+            throw new DeveloperError('index is required and must be 0 or 2.');
+        }
+
+        result = Matrix3.clone(matrix, result);
+        result[index] = cartesian.x;
+        result[index + 3] = cartesian.y;
+        result[index + 6] = cartesian.z;
+        return result;
+    };
+
+    /**
+     * Computes the product of two matrices.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} left The first matrix.
+     * @param {Matrix3} right The second matrix.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    Matrix3.multiply = function(left, right, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required');
+        }
+
+        var column0Row0 = left[0] * right[0] + left[3] * right[1] + left[6] * right[2];
+        var column0Row1 = left[1] * right[0] + left[4] * right[1] + left[7] * right[2];
+        var column0Row2 = left[2] * right[0] + left[5] * right[1] + left[8] * right[2];
+
+        var column1Row0 = left[0] * right[3] + left[3] * right[4] + left[6] * right[5];
+        var column1Row1 = left[1] * right[3] + left[4] * right[4] + left[7] * right[5];
+        var column1Row2 = left[2] * right[3] + left[5] * right[4] + left[8] * right[5];
+
+        var column2Row0 = left[0] * right[6] + left[3] * right[7] + left[6] * right[8];
+        var column2Row1 = left[1] * right[6] + left[4] * right[7] + left[7] * right[8];
+        var column2Row2 = left[2] * right[6] + left[5] * right[7] + left[8] * right[8];
+
+        if (typeof result === 'undefined') {
+            return new Matrix3(column0Row0, column1Row0, column2Row0,
+                               column0Row1, column1Row1, column2Row1,
+                               column0Row2, column1Row2, column2Row2);
+        }
+        result[0] = column0Row0;
+        result[1] = column0Row1;
+        result[2] = column0Row2;
+        result[3] = column1Row0;
+        result[4] = column1Row1;
+        result[5] = column1Row2;
+        result[6] = column2Row0;
+        result[7] = column2Row1;
+        result[8] = column2Row2;
+        return result;
+    };
+
+    /**
+     * Computes the product of a matrix and a column vector.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix.
+     * @param {Cartesian3} cartesian The column.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Matrix3.multiplyByVector = function(matrix, cartesian, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+
+        var vX = cartesian.x;
+        var vY = cartesian.y;
+        var vZ = cartesian.z;
+
+        var x = matrix[0] * vX + matrix[3] * vY + matrix[6] * vZ;
+        var y = matrix[1] * vX + matrix[4] * vY + matrix[7] * vZ;
+        var z = matrix[2] * vX + matrix[5] * vY + matrix[8] * vZ;
+
+        if (typeof result === 'undefined') {
+            return new Cartesian3(x, y, z);
+        }
+        result.x = x;
+        result.y = y;
+        result.z = z;
+        return result;
+    };
+
+    /**
+     * Computes the product of a matrix and a scalar.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix.
+     * @param {Number} scalar The number to multiply by.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} scalar is required and must be a number.
+     */
+    Matrix3.multiplyByScalar = function(matrix, scalar, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+        if (typeof scalar !== 'number') {
+            throw new DeveloperError('scalar is required and must be a number');
+        }
+
+        if (typeof result === 'undefined') {
+            return new Matrix3(matrix[0] * scalar, matrix[3] * scalar, matrix[6] * scalar,
+                               matrix[1] * scalar, matrix[4] * scalar, matrix[7] * scalar,
+                               matrix[2] * scalar, matrix[5] * scalar, matrix[8] * scalar);
+        }
+        result[0] = matrix[0] * scalar;
+        result[1] = matrix[1] * scalar;
+        result[2] = matrix[2] * scalar;
+        result[3] = matrix[3] * scalar;
+        result[4] = matrix[4] * scalar;
+        result[5] = matrix[5] * scalar;
+        result[6] = matrix[6] * scalar;
+        result[7] = matrix[7] * scalar;
+        result[8] = matrix[8] * scalar;
+        return result;
+    };
+
+    /**
+     * Creates a negated copy of the provided matrix.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix to negate.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix3.negate = function(matrix, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+
+        if (typeof result === 'undefined') {
+            return new Matrix3(-matrix[0], -matrix[3], -matrix[6],
+                               -matrix[1], -matrix[4], -matrix[7],
+                               -matrix[2], -matrix[5], -matrix[8]);
+        }
+        result[0] = -matrix[0];
+        result[1] = -matrix[1];
+        result[2] = -matrix[2];
+        result[3] = -matrix[3];
+        result[4] = -matrix[4];
+        result[5] = -matrix[5];
+        result[6] = -matrix[6];
+        result[7] = -matrix[7];
+        result[8] = -matrix[8];
+        return result;
+    };
+
+    /**
+     * Computes the transpose of the provided matrix.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix to transpose.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix3.transpose = function(matrix, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required');
+        }
+
+        var column0Row0 = matrix[0];
+        var column0Row1 = matrix[3];
+        var column0Row2 = matrix[6];
+        var column1Row0 = matrix[1];
+        var column1Row1 = matrix[4];
+        var column1Row2 = matrix[7];
+        var column2Row0 = matrix[2];
+        var column2Row1 = matrix[5];
+        var column2Row2 = matrix[8];
+
+        if (typeof result === 'undefined') {
+            return new Matrix3(column0Row0, column1Row0, column2Row0,
+                               column0Row1, column1Row1, column2Row1,
+                               column0Row2, column1Row2, column2Row2);
+        }
+        result[0] = column0Row0;
+        result[1] = column0Row1;
+        result[2] = column0Row2;
+        result[3] = column1Row0;
+        result[4] = column1Row1;
+        result[5] = column1Row2;
+        result[6] = column2Row0;
+        result[7] = column2Row1;
+        result[8] = column2Row2;
+        return result;
+    };
+
+    /**
+     * Compares the provided matrices componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} [left] The first matrix.
+     * @param {Matrix3} [right] The second matrix.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    Matrix3.equals = function(left, right) {
+        return (left === right) ||
+               (typeof left !== 'undefined' &&
+                typeof right !== 'undefined' &&
+                left[0] === right[0] &&
+                left[1] === right[1] &&
+                left[2] === right[2] &&
+                left[3] === right[3] &&
+                left[4] === right[4] &&
+                left[5] === right[5] &&
+                left[6] === right[6] &&
+                left[7] === right[7] &&
+                left[8] === right[8]);
+    };
+
+    /**
+     * Compares the provided matrices componentwise and returns
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} [left] The first matrix.
+     * @param {Matrix3} [right] The second matrix.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} epsilon is required and must be a number.
+     */
+    Matrix3.equalsEpsilon = function(left, right, epsilon) {
+        if (typeof epsilon !== 'number') {
+            throw new DeveloperError('epsilon is required and must be a number');
+        }
+
+        return (left === right) ||
+                (typeof left !== 'undefined' &&
+                typeof right !== 'undefined' &&
+                Math.abs(left[0] - right[0]) <= epsilon &&
+                Math.abs(left[1] - right[1]) <= epsilon &&
+                Math.abs(left[2] - right[2]) <= epsilon &&
+                Math.abs(left[3] - right[3]) <= epsilon &&
+                Math.abs(left[4] - right[4]) <= epsilon &&
+                Math.abs(left[5] - right[5]) <= epsilon &&
+                Math.abs(left[6] - right[6]) <= epsilon &&
+                Math.abs(left[7] - right[7]) <= epsilon &&
+                Math.abs(left[8] - right[8]) <= epsilon);
     };
 
     /**
      * An immutable Matrix3 instance initialized to the identity matrix.
-     *
      * @memberof Matrix3
      */
-    Matrix3.IDENTITY = Object.freeze(new Matrix3(1));
+    Matrix3.IDENTITY = Object.freeze(new Matrix3(1.0, 0.0, 0.0,
+                                                 0.0, 1.0, 0.0,
+                                                 0.0, 0.0, 1.0));
 
     /**
-     * Returns 9, the number of elements in a Matrix3.
-     *
+     * The index into Matrix3 for column 0, row 0.
+     * @memberof Matrix3
+     */
+    Matrix3.COLUMN0ROW0 = 0;
+
+    /**
+     * The index into Matrix3 for column 0, row 1.
+     * @memberof Matrix3
+     */
+    Matrix3.COLUMN0ROW1 = 1;
+
+    /**
+     * The index into Matrix3 for column 0, row 2.
+     * @memberof Matrix3
+     */
+    Matrix3.COLUMN0ROW2 = 2;
+
+    /**
+     * The index into Matrix3 for column 1, row 0.
+     * @memberof Matrix3
+     */
+    Matrix3.COLUMN1ROW0 = 3;
+
+    /**
+     * The index into Matrix3 for column 1, row 1.
+     * @memberof Matrix3
+     */
+    Matrix3.COLUMN1ROW1 = 4;
+
+    /**
+     * The index into Matrix3 for column 1, row 2.
+     * @memberof Matrix3
+     */
+    Matrix3.COLUMN1ROW2 = 5;
+
+    /**
+     * The index into Matrix3 for column 2, row 0.
+     * @memberof Matrix3
+     */
+    Matrix3.COLUMN2ROW0 = 6;
+
+    /**
+     * The index into Matrix3 for column 2, row 1.
+     * @memberof Matrix3
+     */
+    Matrix3.COLUMN2ROW1 = 7;
+
+    /**
+     * The index into Matrix3 for column 2, row 2.
+     * @memberof Matrix3
+     */
+    Matrix3.COLUMN2ROW2 = 8;
+
+    /**
+     * Duplicates the provided Matrix3 instance.
      * @memberof Matrix3
      *
-     * @return {Number} 9.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
      */
-    Matrix3.getNumberOfElements = function() {
-        return numberOfElements;
+    Matrix3.prototype.clone = function(result) {
+        return Matrix3.clone(this, result);
     };
 
     /**
-     * Returns the transpose of this matrix.
-     *
+     * Creates an Array from this Matrix3 instance.
      * @memberof Matrix3
      *
-     * @return {Matrix3} The transpose of this matrix.
+     * @param {Array} [result] The Array onto which to store the result.
+     * @return {Array} The modified Array parameter or a new Array instance if none was provided.
      */
-    Matrix3.prototype.transpose = function() {
-        return new Matrix3(
-                this.getColumn0Row0(), this.getColumn0Row1(), this.getColumn0Row2(),
-                this.getColumn1Row0(), this.getColumn1Row1(), this.getColumn1Row2(),
-                this.getColumn2Row0(), this.getColumn2Row1(), this.getColumn2Row2());
+    Matrix3.prototype.toArray = function(result) {
+        return Matrix3.toArray(this, result);
     };
 
     /**
-     * Multiplies a vector by this matrix, that is, v' = Mv, where M is this, v is the vector argument, and v' is returned.
-     *
+     * Retrieves a copy of the matrix column at the provided index as a Cartesian3 instance.
      * @memberof Matrix3
-     * @param {Cartesian3} vector The vector that is multiplied with this.
-     * @return {Cartesian3} The transformed vector.
+     *
+     * @param {Number} index The zero-based index of the column to retrieve.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} index is required and must be 0 or 2.
+     *
+     * @see Cartesian3
      */
-    Matrix3.prototype.multiplyWithVector = function(vector) {
-        var vX = vector.x;
-        var vY = vector.y;
-        var vZ = vector.z;
-
-        var x = this.getColumnMajorValue(0) * vX +
-                this.getColumnMajorValue(3) * vY +
-                this.getColumnMajorValue(6) * vZ;
-
-        var y = this.getColumnMajorValue(1) * vX +
-                this.getColumnMajorValue(4) * vY +
-                this.getColumnMajorValue(7) * vZ;
-
-        var z = this.getColumnMajorValue(2) * vX +
-                this.getColumnMajorValue(5) * vY +
-                this.getColumnMajorValue(8) * vZ;
-
-        return new Cartesian3(x, y, z);
+    Matrix3.prototype.getColumn = function(index, result) {
+        return Matrix3.getColumn(this, index, result);
     };
 
     /**
-     * Multiplies a matrix by this matrix.
-     *
+     * Computes a new matrix that replaces the specified column in this matrix with the provided Cartesian3 instance.
      * @memberof Matrix3
-     * @param {Matrix3} matrix The matrix that is on the right hand side of the multiplication.
-     * @return {Matrix3} The multipled matrix.
+     *
+     * @param {Number} index The zero-based index of the column to set.
+     * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified column.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} index is required and must be 0 or 2.
+     *
+     * @see Cartesian3
      */
-    Matrix3.prototype.multiplyWithMatrix = function(matrix) {
-        var col0row0 =
-            this.getColumnMajorValue(0) * matrix.getColumnMajorValue(0) +
-            this.getColumnMajorValue(3) * matrix.getColumnMajorValue(1) +
-            this.getColumnMajorValue(6) * matrix.getColumnMajorValue(2);
-        var col0row1 =
-            this.getColumnMajorValue(1) * matrix.getColumnMajorValue(0) +
-            this.getColumnMajorValue(4) * matrix.getColumnMajorValue(1) +
-            this.getColumnMajorValue(7) * matrix.getColumnMajorValue(2);
-        var col0row2 =
-            this.getColumnMajorValue(2) * matrix.getColumnMajorValue(0) +
-            this.getColumnMajorValue(5) * matrix.getColumnMajorValue(1) +
-            this.getColumnMajorValue(8) * matrix.getColumnMajorValue(2);
-
-        var col1row0 =
-            this.getColumnMajorValue(0) * matrix.getColumnMajorValue(3) +
-            this.getColumnMajorValue(3) * matrix.getColumnMajorValue(4) +
-            this.getColumnMajorValue(6) * matrix.getColumnMajorValue(5);
-        var col1row1 =
-            this.getColumnMajorValue(1) * matrix.getColumnMajorValue(3) +
-            this.getColumnMajorValue(4) * matrix.getColumnMajorValue(4) +
-            this.getColumnMajorValue(7) * matrix.getColumnMajorValue(5);
-        var col1row2 =
-            this.getColumnMajorValue(2) * matrix.getColumnMajorValue(3) +
-            this.getColumnMajorValue(5) * matrix.getColumnMajorValue(4) +
-            this.getColumnMajorValue(8) * matrix.getColumnMajorValue(5);
-
-        var col2row0 =
-            this.getColumnMajorValue(0) * matrix.getColumnMajorValue(6) +
-            this.getColumnMajorValue(3) * matrix.getColumnMajorValue(7) +
-            this.getColumnMajorValue(6) * matrix.getColumnMajorValue(8);
-        var col2row1 =
-            this.getColumnMajorValue(1) * matrix.getColumnMajorValue(6) +
-            this.getColumnMajorValue(4) * matrix.getColumnMajorValue(7) +
-            this.getColumnMajorValue(6) * matrix.getColumnMajorValue(8);
-        var col2row2 =
-            this.getColumnMajorValue(2) * matrix.getColumnMajorValue(6) +
-            this.getColumnMajorValue(5) * matrix.getColumnMajorValue(7) +
-            this.getColumnMajorValue(8) * matrix.getColumnMajorValue(8);
-
-        return new Matrix3(
-                col0row0, col1row0, col2row0,
-                col0row1, col1row1, col2row1,
-                col0row2, col1row2, col2row2);
+    Matrix3.prototype.setColumn = function(index, cartesian, result) {
+        return Matrix3.setColumn(this, index, cartesian, result);
     };
 
     /**
-     * Returns a copy of this matrix with each element negated.
-     *
+     * Retrieves a copy of the matrix row at the provided index as a Cartesian3 instance.
      * @memberof Matrix3
      *
-     * @return {Matrix3} A copy of this matrix with each element negated.
+     * @param {Number} index The zero-based index of the row to retrieve.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} index is required and must be 0 or 2.
+     *
+     * @see Cartesian3
      */
-    Matrix3.prototype.negate = function() {
-        return new Matrix3(
-                -this.getColumn0Row0(), -this.getColumn1Row0(), -this.getColumn2Row0(),
-                -this.getColumn0Row1(), -this.getColumn1Row1(), -this.getColumn2Row1(),
-                -this.getColumn0Row2(), -this.getColumn1Row2(), -this.getColumn2Row2());
+    Matrix3.prototype.getRow = function(index, result) {
+        return Matrix3.getRow(this, index, result);
     };
 
     /**
-     * Returns a duplicate of a Matrix3 instance.
-     *
+     * Computes a new matrix that replaces the specified row in this matrix with the provided Cartesian3 instance.
      * @memberof Matrix3
      *
-     * @return {Matrix3} A new copy of the Matrix3 instance.
+     * @param {Number} index The zero-based index of the row to set.
+     * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified row.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} index is required and must be 0 or 2.
+     *
+     * @see Cartesian3
      */
-    Matrix3.prototype.clone = function() {
-        return new Matrix3(
-                this.getColumn0Row0(), this.getColumn1Row0(), this.getColumn2Row0(),
-                this.getColumn0Row1(), this.getColumn1Row1(), this.getColumn2Row1(),
-                this.getColumn0Row2(), this.getColumn1Row2(), this.getColumn2Row2());
+    Matrix3.prototype.setRow = function(index, cartesian, result) {
+        return Matrix3.setRow(this, index, cartesian, result);
     };
 
     /**
-     * Returns <code>true</code> if this matrix equals other element-wise.
-     *
+     * Computes the product of this matrix and the provided matrix.
      * @memberof Matrix3
-     * @param {Matrix3} other The matrix to compare for equality.
-     * @return {Boolean} <code>true</code> if the matrices are equal element-wise; otherwise, <code>false</code>.
+     *
+     * @param {Matrix3} right The right hand side matrix.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     *
+     * @exception {DeveloperError} right is required.
      */
-    Matrix3.prototype.equals = function(other) {
-        var thisValues = this.values;
-        var otherValues = other.values;
-        for ( var i = 0, len = thisValues.length; i < len; i++) {
-            if (thisValues[i] !== otherValues[i]) {
-                return false;
-            }
-        }
-        return true;
+    Matrix3.prototype.multiply = function(right, result) {
+        return Matrix3.multiply(this, right, result);
     };
 
     /**
-     * Returns <code>true</code> if this matrix equals other element-wise within the specified epsilon.
+     * Computes the product of this matrix and a column vector.
+     * @memberof Matrix3
      *
-     * @param {Matrix3} other The matrix to compare for equality.
-     * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
-     * @return {Boolean} <code>true</code> if the matrices are equal element-wise within the specified epsilon; otherwise, <code>false</code>.
+     * @param {Cartesian3} cartesian The column.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
      */
-    Matrix3.prototype.equalsEpsilon = function(other, epsilon) {
-        epsilon = epsilon || 0.0;
-        var thisValues = this.values;
-        var otherValues = other.values;
-        for ( var i = 0, len = thisValues.length; i < len; i++) {
-            if (Math.abs(thisValues[i] - otherValues[i]) > epsilon) {
-                return false;
-            }
-        }
-        return true;
+    Matrix3.prototype.multiplyByVector = function(cartesian, result) {
+        return Matrix3.multiplyByVector(this, cartesian, result);
     };
 
     /**
-     * Returns a string representing this instance with one line per row in the matrix.
-     *
+     * Computes the product of this matrix and a scalar.
      * @memberof Matrix3
      *
-     * @return {String} Returns a string representing this instance.
+     * @param {Number} scalar The number to multiply by.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} scalar is required and must be a number.
+     */
+    Matrix3.prototype.multiplyByScalar = function(scalar, result) {
+        return Matrix3.multiplyByScalar(this, scalar, result);
+    };
+    /**
+     * Creates a negated copy of this matrix.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix to negate.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix3.prototype.negate = function(result) {
+        return Matrix3.negate(this, result);
+    };
+
+    /**
+     * Computes the transpose of this matrix.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     */
+    Matrix3.prototype.transpose = function(result) {
+        return Matrix3.transpose(this, result);
+    };
+
+    /**
+     * Compares this matrix to the provided matrix componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} [right] The right hand side matrix.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     */
+    Matrix3.prototype.equals = function(right) {
+        return Matrix3.equals(this, right);
+    };
+
+    /**
+     * Compares this matrix to the provided matrix componentwise and returns
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} [right] The right hand side matrix.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @return {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} epsilon is required and must be a number.
+     */
+    Matrix3.prototype.equalsEpsilon = function(right, epsilon) {
+        return Matrix3.equalsEpsilon(this, right, epsilon);
+    };
+
+    /**
+     * Creates a string representing this Matrix with each row being
+     * on a separate line and in the format '(column1, column2)'.
+     * @memberof Matrix3
+     *
+     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column1, column2)'.
      */
     Matrix3.prototype.toString = function() {
-        return '(' + this.getColumn0Row0() + ', ' + this.getColumn1Row0() + ', ' + this.getColumn2Row0() + ')\n' +
-               '(' + this.getColumn0Row1() + ', ' + this.getColumn1Row1() + ', ' + this.getColumn2Row1() + ')\n' +
-               '(' + this.getColumn0Row2() + ', ' + this.getColumn1Row2() + ', ' + this.getColumn2Row2() + ')';
-    };
-
-    /**
-     * Returns a matrix that rotates a vector <code>theta</code> radians around the z-axis.
-     *
-     * @memberof Matrix3
-     *
-     * @param {Number} theta The rotation angle, in radians.
-     *
-     * @returns {Matrix3} The rotation matrix.
-     *
-     * @see Matrix3.rotationAroundY
-     * @see Matrix3.rotationAroundX
-     */
-    Matrix3.rotationAroundZ = function(theta) {
-        var c = Math.cos(theta);
-        var s = Math.sin(theta);
-        return new Matrix3(
-                  c,  -s, 0.0,
-                  s,   c, 0.0,
-                0.0, 0.0, 1.0);
-    };
-
-    /**
-     * Returns a matrix that rotates a vector <code>theta</code> radians around the y-axis.
-     *
-     * @memberof Matrix3
-     *
-     * @param {Number} theta The rotation angle, in radians.
-     *
-     * @returns {Matrix3} The rotation matrix.
-     *
-     * @see Matrix3.rotationAroundZ
-     * @see Matrix3.rotationAroundX
-     */
-    Matrix3.rotationAroundY = function(theta) {
-        var c = Math.cos(theta);
-        var s = Math.sin(theta);
-        return new Matrix3(
-                  c, 0.0,   s,
-                0.0, 1.0, 0.0,
-                 -s, 0.0,   c);
-    };
-
-    /**
-     * Returns a matrix that rotates a vector <code>theta</code> radians around the x-axis.
-     *
-     * @param {Number} theta The rotation angle, in radians.
-     *
-     * @returns {Matrix3} The rotation matrix.
-     *
-     * @see Matrix3.rotationAroundZ
-     * @see Matrix3.rotationAroundY
-     */
-    Matrix3.rotationAroundX = function(theta) {
-        var c = Math.cos(theta);
-        var s = Math.sin(theta);
-        return new Matrix3(
-                1.0, 0.0, 0.0,
-                0.0,   c,  -s,
-                0.0,   s,   c);
-    };
-
-    /**
-     * Returns a matrix that rotates a vector <code>theta</code> radians around <code>axis</code>.
-     *
-     * @memberof Matrix3
-     *
-     * @param {Cartesian3} axis The axis to rotate around.
-     * @param {Number} theta The rotation angle, in radians.
-     *
-     * @returns {Matrix3} The rotation matrix.
-     *
-     * @see Quaternion.fromAxisAngle
-     */
-    Matrix3.fromAxisAngle = function(axis, theta) {
-        var a = Cartesian3.clone(axis);
-        var nAxis = a.normalize();
-
-        var cosTheta = Math.cos(theta);
-        var sinTheta = Math.sin(theta);
-        var oneMinusCosTheta = 1.0 - cosTheta;
-
-        var xy = nAxis.x * nAxis.y;
-        var xz = nAxis.x * nAxis.z;
-        var yz = nAxis.y * nAxis.z;
-
-        var m00 = cosTheta + oneMinusCosTheta * nAxis.x * nAxis.x;
-        var m01 = oneMinusCosTheta * xy + nAxis.z * sinTheta;
-        var m02 = oneMinusCosTheta * xz - nAxis.y * sinTheta;
-
-        var m10 = oneMinusCosTheta * xy - nAxis.z * sinTheta;
-        var m11 = cosTheta + oneMinusCosTheta * nAxis.y * nAxis.y;
-        var m12 = oneMinusCosTheta * yz + nAxis.x * sinTheta;
-
-        var m20 = oneMinusCosTheta * xz + nAxis.y * sinTheta;
-        var m21 = oneMinusCosTheta * yz - nAxis.x * sinTheta;
-        var m22 = cosTheta + oneMinusCosTheta * nAxis.z * nAxis.z;
-
-        return new Matrix3(
-                m00, m10, m20,
-                m01, m11, m21,
-                m02, m12, m22);
+        return '(' + this[0] + ', ' + this[3] + ', ' + this[6] + ')\n' +
+               '(' + this[1] + ', ' + this[4] + ', ' + this[7] + ')\n' +
+               '(' + this[2] + ', ' + this[5] + ', ' + this[8] + ')';
     };
 
     return Matrix3;

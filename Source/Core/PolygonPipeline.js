@@ -298,6 +298,7 @@ define([
             // Used to make sure shared edges are not split more than once.
             var edges = {};
 
+            var i;
             while (triangles.length > 0) {
                 var triangle = triangles.dequeue();
 
@@ -311,7 +312,6 @@ define([
 
                 var max = Math.max(g0, Math.max(g1, g2));
                 var edge;
-                var i;
 
                 if (max > granularity) {
                     if (g0 === max) {
@@ -319,7 +319,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v0.add(v1).multiplyWithScalar(0.5));
+                            subdividedPositions.push(v0.add(v1).multiplyByScalar(0.5));
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
@@ -339,7 +339,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v1.add(v2).multiplyWithScalar(0.5));
+                            subdividedPositions.push(v1.add(v2).multiplyByScalar(0.5));
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
@@ -359,7 +359,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v2.add(v0).multiplyWithScalar(0.5));
+                            subdividedPositions.push(v2.add(v0).multiplyByScalar(0.5));
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
@@ -382,12 +382,25 @@ define([
                 }
             }
 
+            // PERFORMANCE_IDEA Rather that waste time re-iterating the entire set of positions
+            // here, all of the above code can be refactored to flatten as values are added
+            // Removing the need for this for loop.
+            var length = subdividedPositions.length;
+            var flattenedPositions = new Array(length * 3);
+            var q = 0;
+            for (i = 0; i < length; i++) {
+                var item = subdividedPositions[i];
+                flattenedPositions[q++] = item.x;
+                flattenedPositions[q++] = item.y;
+                flattenedPositions[q++] = item.z;
+            }
+
             return {
                 attributes : {
                     position : {
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
-                        values : Cartesian3.flatten(subdividedPositions)
+                        values : flattenedPositions
                     }
                 },
 
@@ -419,7 +432,7 @@ define([
                     p = ellipsoid.scaleToGeodeticSurface(p);
 
                     var n = ellipsoid.geodeticSurfaceNormal(p);
-                    n = n.multiplyWithScalar(height);
+                    n = n.multiplyByScalar(height);
 
                     // Translate from surface to height.
                     p = p.add(n);
