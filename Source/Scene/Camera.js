@@ -275,9 +275,10 @@ define([
         position = transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
         this.position = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(position));
 
-        this.direction = Cartesian3.UNIT_Z.negate();
-        this.up = Cartesian3.UNIT_Y;
+        // Not exactly -z direction because that would lock the camera in place with a constrained z axis.
+        this.direction = new Cartesian3(0.0, 0.0001, -0.999);
         this.right = Cartesian3.UNIT_X;
+        this.up = this.right.cross(this.direction);
     };
 
     /**
