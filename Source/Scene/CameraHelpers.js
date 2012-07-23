@@ -102,6 +102,10 @@ define([
             return;
         }
 
+        if (distanceMeasure - dist < maxHeight) {
+            dist = distanceMeasure - maxHeight - 1.0;
+        }
+
         if (dist > 0.0) {
             object.zoomIn(dist);
         } else {
