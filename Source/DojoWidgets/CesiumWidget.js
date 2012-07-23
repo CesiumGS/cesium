@@ -384,7 +384,8 @@ define([
                 widget.enableStatistics(true);
             }
 
-            this.lastTimeLabelUpdate = clock.currentTime;
+            this._lastTimeLabelClock = clock.currentTime;
+            this._lastTimeLabelDate = Date.now();
             this.timeLabelElement = this.timeLabel.containerNode;
             this.timeLabelElement.innerHTML = clock.currentTime.toDate().toUTCString();
 
@@ -625,9 +626,11 @@ define([
             this.scene.setSunPosition(SunPosition.compute(currentTime).position);
             this.visualizers.update(currentTime);
 
-            if (Math.abs(currentTime.getSecondsDifference(this.lastTimeLabelUpdate)) >= 1.0) {
+            if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||
+                    ((Date.now() - this._lastTimeLabelDate) > 200)) {
                 this.timeLabelElement.innerHTML = currentTime.toDate().toUTCString();
-                this.lastTimeLabelUpdate = currentTime;
+                this._lastTimeLabelClock = currentTime;
+                this._lastTimeLabelDate = Date.now();
             }
 
             // Update the camera to stay centered on the selected object, if any.
