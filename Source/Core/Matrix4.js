@@ -898,6 +898,34 @@ define([
     };
 
     /**
+     * Returns the upper left 3x3 rotation matrix, assuming the matrix is a affine transformation matrix.
+     *
+     * @memberof Matrix4
+     *
+     * @return {Matrix3} The upper left 3x3 matrix from this 4x4 matrix.
+     */
+     Matrix4.getRotation = function(matrix, result) {
+         if (typeof matrix === 'undefined') {
+             throw new DeveloperError('matrix is required');
+         }
+         if (typeof result === 'undefined') {
+             return new Matrix3(matrix[0], matrix[4], matrix[8],
+                                matrix[1], matrix[5], matrix[9],
+                                matrix[2], matrix[6], matrix[10]);
+         }
+         result[0] = matrix[0];
+         result[1] = matrix[1];
+         result[2] = matrix[2];
+         result[3] = matrix[4];
+         result[4] = matrix[5];
+         result[5] = matrix[6];
+         result[6] = matrix[8];
+         result[7] = matrix[9];
+         result[8] = matrix[10];
+         return result;
+     };
+
+    /**
     * Computes and returns the inverse of this general 4x4 matrix.
     * <p>
     * The matrix is inverted using Cramer's Rule.  If the determinant
@@ -1056,42 +1084,21 @@ define([
         if (typeof matrix === 'undefined') {
             throw new DeveloperError('matrix is required');
         }
+
         // rT = negated rotational transpose
-        var rT = [-matrix[0], -matrix[1], -matrix[2],
+        var rTN = [-matrix[0], -matrix[1], -matrix[2],
                   -matrix[4], -matrix[5], -matrix[6],
                   -matrix[8], -matrix[9], -matrix[10]];
 
+        // rTN = negated rotational transpose
+        var rT = [matrix[0], matrix[1], matrix[2],
+                   matrix[4], matrix[5], matrix[6],
+                   matrix[8], matrix[9], matrix[10]];
+
         // T = translation, rTT = (rT)(T)
         var translation = Matrix4.getTranslation(matrix, invertTransformationScratch);
-        var rTT = Matrix3.multiplyByVector(rT, translation, invertTransformationScratch);
+        var rTT = Matrix3.multiplyByVector(rTN, translation, invertTransformationScratch);
         return Matrix4.fromRotationTranslation(rT, rTT, result);
-    };
-
-    /**
-    * Returns the upper left 3x3 rotation matrix, assuming the matrix is a affine transformation matrix.
-    *
-    * @memberof Matrix4
-    *
-    * @return {Matrix3} The upper left 3x3 matrix from this 4x4 matrix.
-    */
-    Matrix4.getRotation = function(matrix, result) {
-        if (typeof matrix === 'undefined') {
-            throw new DeveloperError('matrix is required');
-        }
-        if (typeof result === 'undefined') {
-            return new Matrix3(matrix[0], matrix[4], matrix[8],
-                               matrix[1], matrix[5], matrix[9],
-                               matrix[2], matrix[6], matrix[10]);
-        }
-        result[0] = matrix[0];
-        result[1] = matrix[1];
-        result[2] = matrix[2];
-        result[3] = matrix[4];
-        result[4] = matrix[5];
-        result[5] = matrix[6];
-        result[6] = matrix[8];
-        result[7] = matrix[9];
-        result[8] = matrix[10];
     };
 
     /**
@@ -1397,16 +1404,16 @@ define([
         return Matrix4.getTranslation(this, result);
     };
 
+    Matrix4.prototype.getRotation = function(result) {
+        return Matrix4.getRotation(this, result);
+    };
+
     Matrix4.prototype.inverse = function(result) {
         return Matrix4.inverse(this, result);
     };
 
     Matrix4.prototype.inverseTransformation = function(result) {
         return Matrix4.inverseTransformation(this, result);
-    };
-
-    Matrix4.prototype.getRotation = function(result) {
-        return Matrix4.getRotation(this, result);
     };
 
     return Matrix4;

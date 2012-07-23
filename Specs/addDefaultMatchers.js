@@ -3,11 +3,20 @@ define(function() {
     "use strict";
 
     function isEqual(a, b) {
-        if (typeof a !== 'undefined' && typeof a.equals !== 'undefined') {
+        if (a === b) {
+            return true;
+        }
+        if (a !== null && typeof a !== 'undefined' && typeof a.equals !== 'undefined') {
             return a.equals(b);
         }
+        if (b !== null && typeof b !== 'undefined' && typeof b.equals !== 'undefined') {
+            return b.equals(a);
+        }
 
-        return a === b;
+        if (a !== null && b !== null && typeof a !== 'undefined' && typeof b !== 'undefined') {
+            return a.toString() === b.toString();
+        }
+        return false;
     }
 
     function isEqualEpsilon(a, b, epsilon) {
@@ -72,6 +81,10 @@ define(function() {
 
             toBeLessThanOrEqualTo : function(value, epsilon) {
                 return this.actual <= value;
+            },
+
+            toEqual : function(expected) {
+                return isEqual(this.actual, expected);
             },
 
             toEqualArray : function(expected) {
