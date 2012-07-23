@@ -18,6 +18,7 @@
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/DojoWidgets/CesiumWidget.css" type="text/css">
 </head>
 <body class="claro">
 <style>
@@ -68,14 +69,12 @@ require({
     'Source/Cesium',
     'DojoWidgets/CesiumWidget',
     'Core/JulianDate',
-    'Core/requestAnimationFrame',
     'dojo/on',
     'dojo/dom'
 ], function(
     Cesium,
     CesiumWidget,
     JulianDate,
-    requestAnimationFrame,
     on,
     dom)
 {
@@ -91,24 +90,24 @@ require({
         var circle = new Cesium.Polygon();
         Sandcastle.declare(circle);
         circle.setPositions(Cesium.Shapes.computeCircleBoundary(
-            ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                new Cesium.Cartographic2(-75.0, 40.0)), 300000.0));
+            ellipsoid, ellipsoid.cartographicToCartesian(
+                new Cesium.Cartographic.fromDegrees(-75.0, 40.0)), 300000.0));
         primitives.add(circle);
 
         // Outline circle
         var outline = new Cesium.Polyline();
         Sandcastle.declare(outline);
         outline.setPositions(Cesium.Shapes.computeCircleBoundary(
-            ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                new Cesium.Cartographic2(-82.0, 37.0)), 300000.0));
+            ellipsoid, ellipsoid.cartographicToCartesian(
+                new Cesium.Cartographic.fromDegrees(-82.0, 37.0)), 300000.0));
         primitives.add(outline);
 
         // Apply a material to a filled circle
         var circle2 = new Cesium.Polygon();
         Sandcastle.declare(circle2);
         circle2.setPositions(Cesium.Shapes.computeCircleBoundary(
-            ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                new Cesium.Cartographic2(-90.0, 35.0)), 400000.0));
+            ellipsoid, ellipsoid.cartographicToCartesian(
+                new Cesium.Cartographic.fromDegrees(-90.0, 35.0)), 400000.0));
         // Any polygon-compatible material can be used
         circle2.material = new Cesium.TieDyeMaterial();
         primitives.add(circle2);
@@ -117,8 +116,8 @@ require({
         var ellipse = new Cesium.Polygon();
         Sandcastle.declare(ellipse);
         ellipse.setPositions(Cesium.Shapes.computeEllipseBoundary(
-            ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                new Cesium.Cartographic2(-78.0, 32.5)), 500000.0,
+            ellipsoid, ellipsoid.cartographicToCartesian(
+                new Cesium.Cartographic.fromDegrees(-78.0, 32.5)), 500000.0,
                     250000.0, Cesium.Math.toRadians(60)));
         primitives.add(ellipse);
 
@@ -126,17 +125,8 @@ require({
     
     var cesiumWidget = new CesiumWidget({
         postSetup : function(widget) {
-            function update() {
-                var currentTime = new JulianDate();
-                widget.render(currentTime);
-                requestAnimationFrame(update);
-            }
             createPrimitives(widget);
-
-            update();
-        },
-        onSetupError : function(widget, error) {
-            console.log(error);
+            widget.defaultRenderLoop();
         }
     });
     cesiumWidget.placeAt(dom.byId("cesiumContainer"));
@@ -144,8 +134,6 @@ require({
     on(window, 'resize', function() {
         cesiumWidget.resize();
     });
-
-    console.log('Cesium started.');
 });
 
 </script>
