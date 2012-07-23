@@ -500,6 +500,8 @@ define([
             var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
             var bingHtml = imagery.containerNode.innerHTML;
 
+            imagery.startup();
+
             function createImageryClickFunction(control, style) {
                 return function() {
                     if (style) {
