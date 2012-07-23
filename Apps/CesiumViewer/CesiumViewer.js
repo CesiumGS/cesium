@@ -1,16 +1,15 @@
 /*global define*/
 define([
-        'dojo/dom',
-        'dojo/on',
-        'dojo/io-query',
-        'DojoWidgets/CesiumWidget',
-        'Core/requestAnimationFrame'
-    ], function(
-        dom,
-        on,
-        ioQuery,
-        CesiumWidget,
-        requestAnimationFrame) {
+    'dojo/dom',
+    'dojo/on',
+    'dojo/io-query',
+    'DojoWidgets/CesiumWidget'
+], function(
+    dom,
+    on,
+    ioQuery,
+    CesiumWidget
+) {
     "use strict";
     /*global console*/
 
@@ -28,14 +27,7 @@ define([
                 cesium.resize();
             });
 
-            var animationController = widget.animationController;
-            function updateAndRender() {
-                var currentTime = animationController.update();
-                widget.update(currentTime);
-                widget.render();
-                requestAnimationFrame(updateAndRender);
-            }
-            updateAndRender();
+            widget.defaultRenderLoop();
         },
 
         onSetupError : function(widget, error) {

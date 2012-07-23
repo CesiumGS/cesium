@@ -31,6 +31,7 @@ define([
         '../Core/JulianDate',
         '../Core/DefaultProxy',
         '../Core/Transforms',
+        '../Core/requestAnimationFrame',
         '../Scene/Scene',
         '../Scene/CentralBody',
         '../Scene/BingMapsTileProvider',
@@ -74,6 +75,7 @@ define([
         JulianDate,
         DefaultProxy,
         Transforms,
+        requestAnimationFrame,
         Scene,
         CentralBody,
         BingMapsTileProvider,
@@ -678,6 +680,22 @@ define([
             centralBody.specularMapSource = this.specularMapUrl;
             centralBody.cloudsMapSource = this.cloudsMapUrl;
             centralBody.bumpMapSource = this.bumpMapUrl;
+        },
+
+        defaultRenderLoop : function() {
+            var widget = this;
+            var animationController = widget.animationController;
+
+            // Note that clients are permitted to use their own custom render loop.
+            // At a minimum it should include lines similar to the following:
+
+            function updateAndRender() {
+                var currentTime = animationController.update();
+                widget.update(currentTime);
+                widget.render();
+                requestAnimationFrame(updateAndRender);
+            }
+            updateAndRender();
         }
     });
 });
