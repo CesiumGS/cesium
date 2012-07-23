@@ -66,11 +66,11 @@ define([
         pushQueryParameter(queryParts, callbackParameterName, functionName);
 
         var parameters = defaultValue(options.parameters, {});
-            for ( var name in parameters) {
-                if (parameters.hasOwnProperty(name)) {
-                    pushQueryParameter(queryParts, name, parameters[name]);
-                }
+        for ( var name in parameters) {
+            if (parameters.hasOwnProperty(name)) {
+                pushQueryParameter(queryParts, name, parameters[name]);
             }
+        }
 
         if (queryParts.length > 0) {
             if (url.indexOf('?') === -1) {
