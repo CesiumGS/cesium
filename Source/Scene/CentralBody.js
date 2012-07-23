@@ -2082,7 +2082,7 @@ define([
                 }
                 var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
                 var mvrtc = mv.clone();
-                mvrtc.setColumn3(centerEye);
+                mvrtc.setColumn(3, centerEye, mvrtc);
                 tile.modelView = mvrtc;
 
                 context.continueDraw({

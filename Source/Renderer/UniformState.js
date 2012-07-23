@@ -75,8 +75,8 @@ define([
             current.width = v.width;
             current.height = v.height;
 
-            this._viewportOrthographicMatrix = Matrix4.createOrthographicOffCenter(v.x, v.x + v.width, v.y, v.y + v.height, 0.0, 1.0);
-            this._viewportTransformation = Matrix4.createViewportTransformation(v);
+            this._viewportOrthographicMatrix = Matrix4.fromOrthographicOffCenter(v.x, v.x + v.width, v.y, v.y + v.height, 0.0, 1.0);
+            this._viewportTransformation = Matrix4.fromViewportTransformation(v);
         }
     };
 

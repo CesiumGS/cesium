@@ -127,8 +127,8 @@ define([
         var n = this.near;
         var f = this.far;
 
-        this._perspectiveMatrix = Matrix4.createPerspectiveOffCenter(l, r, b, t, n, f);
-        this._infinitePerspective = Matrix4.createInfinitePerspectiveOffCenter(l, r, b, t, n);
+        this._perspectiveMatrix = Matrix4.fromPerspectiveOffCenter(l, r, b, t, n, f);
+        this._infinitePerspective = Matrix4.fromInfinitePerspectiveOffCenter(l, r, b, t, n);
     };
 
     /**

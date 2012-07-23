@@ -15,13 +15,13 @@ define([
      * @constructor
      *
      * @param {Number} [column0Row0=0.0] The value for column 0, row 0.
-     * @param {Number} [column1Row0=0.0] The value for column 1, row 1.
-     * @param {Number} [column2Row0=0.0] The value for column 2, row 2.
-     * @param {Number} [column0Row1=0.0] The value for column 0, row 0.
+     * @param {Number} [column1Row0=0.0] The value for column 1, row 0.
+     * @param {Number} [column2Row0=0.0] The value for column 2, row 0.
+     * @param {Number} [column0Row1=0.0] The value for column 0, row 1.
      * @param {Number} [column1Row1=0.0] The value for column 1, row 1.
-     * @param {Number} [column2Row1=0.0] The value for column 2, row 2.
-     * @param {Number} [column0Row2=0.0] The value for column 0, row 0.
-     * @param {Number} [column1Row2=0.0] The value for column 1, row 1.
+     * @param {Number} [column2Row1=0.0] The value for column 2, row 1.
+     * @param {Number} [column0Row2=0.0] The value for column 0, row 2.
+     * @param {Number} [column1Row2=0.0] The value for column 1, row 2.
      * @param {Number} [column2Row2=0.0] The value for column 2, row 2.
      *
      * @see Matrix3.fromColumnMajor
@@ -211,7 +211,7 @@ define([
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -221,7 +221,7 @@ define([
         }
 
         if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index is required and must be 0 or 2.');
+            throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
 
         var startIndex = index * 3;
@@ -250,7 +250,7 @@ define([
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -262,7 +262,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index is required and must be 0 or 2.');
+            throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
         result = Matrix3.clone(matrix, result);
         var startIndex = index * 3;
@@ -282,7 +282,7 @@ define([
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -292,7 +292,7 @@ define([
         }
 
         if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index is required and must be 0 or 2.');
+            throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
 
         var x = matrix[index];
@@ -320,7 +320,7 @@ define([
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -332,7 +332,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index is required and must be 0 or 2.');
+            throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
 
         result = Matrix3.clone(matrix, result);
@@ -687,7 +687,7 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -703,7 +703,7 @@ define([
      * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified column.
      *
      * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -719,7 +719,7 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -735,7 +735,7 @@ define([
      * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified row.
      *
      * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -839,10 +839,10 @@ define([
 
     /**
      * Creates a string representing this Matrix with each row being
-     * on a separate line and in the format '(column1, column2)'.
+     * on a separate line and in the format '(column0, column1, column2)'.
      * @memberof Matrix3
      *
-     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column1, column2)'.
+     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1, column2)'.
      */
     Matrix3.prototype.toString = function() {
         return '(' + this[0] + ', ' + this[3] + ', ' + this[6] + ')\n' +
