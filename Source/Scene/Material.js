@@ -84,7 +84,7 @@ define([
         this._description = description || {};
         this._context = this._description.context;
         this._strict = (typeof this._description.strict !== 'undefined') ? this._description.strict : true;
-        this._template = this._description.template || {};
+        this._template = this._description.fabric || {};
         this._materialID = this._template.id;
 
         // If the factory contains this material ID, build the material template off of the stored template.
@@ -272,7 +272,7 @@ define([
             if (this._materialTemplates.hasOwnProperty(materialID)) {
                 // Construct the sub-material. Share texture names using extendObject.
                 var materialTemplate = this._materialTemplates[materialID];
-                var material = new Material({'context' : this._context, 'strict' : this._strict, 'template' : materialTemplate});
+                var material = new Material({'context' : this._context, 'strict' : this._strict, 'fabric' : materialTemplate});
                 this._extendObject(this._uniforms, material._uniforms);
                 this[materialID] = material;
 
@@ -404,7 +404,7 @@ define([
                 path = textureInfo;
                 texture = this._pathsToTextures[path];
                 if (typeof texture === 'undefined') {
-                    texture = material._context.getDefaultTexture();
+                    texture = (material[property] instanceof Texture) ? material[property] : material._context.getDefaultTexture();
                     if (textureInfo !== 'agi_defaultTexture') {
                         this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
                         this._pathsToMaterials[path].push({'material' : material, 'property' : property});
@@ -425,7 +425,7 @@ define([
                        textureInfo.positiveZ + textureInfo.negativeZ;
                 texture = this._pathsToTextures[path];
                 if (typeof texture === 'undefined') {
-                    texture = material._context.getDefaultCubeMap();
+                    texture = (material[property] instanceof CubeMap) ? material[property] : material._context.getDefaultCubeMap();
                     if (textureInfo !== 'agi_defaultCubeMap') {
                         this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
                         this._pathsToMaterials[path].push({'material' : material, 'property' : property});
@@ -481,7 +481,7 @@ define([
     Material.createFromID = function(context, materialID) {
         return new Material({
             'context' : context,
-            'template' : {
+            'fabric' : {
                 'id' : materialID
             }
         });

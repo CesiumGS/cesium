@@ -370,7 +370,7 @@
                 radius: 20000000.0,
                 outerMaterial : new Cesium.Material({
                     'context' : scene.getContext(),
-                    'template' : {
+                    'fabric' : {
                         'id' : 'TieDyeMaterial',
                         'uniforms' : {
                             'lightColor' : lightColor,
@@ -380,7 +380,7 @@
                 }),
                 innerMaterial : new Cesium.Material({
                     'context' : scene.getContext(),
-                    'template' : {
+                    'fabric' : {
                         'id' : 'DotMaterial',
                         'uniforms' : {
                             'lightColor' : lightColor,
@@ -390,7 +390,7 @@
                 }),
                 capMaterial : new Cesium.Material({
                     'context' : scene.getContext(),
-                    'template' : {
+                    'fabric' : {
                         'id' : 'ColorMaterial',
                         'uniforms' : {
                             'color' : new Cesium.Color(1.0, 1.0, 0.0, 0.75)
@@ -399,7 +399,7 @@
                 }),
                 silhouetteMaterial: new Cesium.Material({
                     'context' : scene.getContext(),
-                    'template' : {
+                    'fabric' : {
                         'id' : 'ColorMaterial',
                         'uniforms' : {
                             'color' : new Cesium.Color(0.5, 0.5, 0.5, 0.75)

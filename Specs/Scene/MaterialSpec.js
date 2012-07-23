@@ -24,7 +24,7 @@ defineSuite([
             var material = new Material({
                 'context' : context,
                 'strict' : true,
-                'template' : {
+                'fabric' : {
                     'id' : materialID
                 }
             });
@@ -39,7 +39,7 @@ defineSuite([
         var material1 = new Material({
             'context' : context,
             'strict' : true,
-            'template' : {
+            'fabric' : {
                 'id' : 'NewMaterial',
                 'components' : {
                     'diffuse' : 'vec3(0.0, 0.0, 0.0)'
@@ -50,7 +50,7 @@ defineSuite([
         var material2 = new Material({
             'context' : context,
             'strict' : true,
-            'template' : {
+            'fabric' : {
                 'materials' : {
                     'first' : {
                         'id' : 'NewMaterial'
@@ -74,7 +74,7 @@ defineSuite([
         var material = new Material({
             'context' : context,
             'strict' : true,
-            'template' : {
+            'fabric' : {
                 'materials' : {
                     'first' : {
                         'id' : 'DiffuseMapMaterial'
@@ -105,7 +105,7 @@ defineSuite([
         var material = new Material({
             'context' : context,
             'strict' : true,
-            'template' : {
+            'fabric' : {
                 'materials' : {
                     'first' : {
                         'materials' : {
@@ -134,7 +134,7 @@ defineSuite([
         expect(function() {
             return new Material({
                 'context' : undefined,
-                'template' : {
+                'fabric' : {
                     'id' : 'DiffuseMapMaterial'
                 }
             });
@@ -147,7 +147,7 @@ defineSuite([
             return new Material({
                 'context' : context,
                 'strict' : true,
-                'template' : {
+                'fabric' : {
                     'components' : {
                         'diffuse' : 'vec3(0.0, 0.0, 0.0)'
                     },
@@ -163,7 +163,7 @@ defineSuite([
             return new Material({
                 'context' : context,
                 'strict' : true,
-                'template' : {
+                'fabric' : {
                     'id' : 'DiffuseMapMaterial',
                     'components' : {
                         'diffuse' : 'vec3(0.0, 0.0, 0.0)'
@@ -179,7 +179,7 @@ defineSuite([
             return new Material({
                 'context' : context,
                 'strict' : true,
-                'template' : {
+                'fabric' : {
                     'uniforms' : {
                         'first' : 0.0,
                         'second' : 0.0
@@ -198,7 +198,7 @@ defineSuite([
             return new Material({
                 'context' : context,
                 'strict' : true,
-                'template' : {
+                'fabric' : {
                     'components' : {
                         'difuse' : 'vec3(0.0, 0.0, 0.0)'
                     }
@@ -213,7 +213,7 @@ defineSuite([
             return new Material({
                 'context' : context,
                 'strict' : true,
-                'template' : {
+                'fabric' : {
                     'uniforms' : {
                         'uniform' : {
                             'x' : 0.0,
@@ -232,7 +232,7 @@ defineSuite([
             return new Material({
                 'context' : context,
                 'strict' : true,
-                'template' : {
+                'fabric' : {
                     'uniforms' : {
                         'uniform' : [0.0, 0.0, 0.0, 0.0, 0.0]
                     }
@@ -245,7 +245,7 @@ defineSuite([
             return new Material({
                 'context' : context,
                 'strict' : true,
-                'template' : {
+                'fabric' : {
                     'uniforms' : {
                         'uniform' : {
                             'img1' : 'badpath',
@@ -267,7 +267,7 @@ defineSuite([
             return new Material({
                 'context' : context,
                 'strict' : true,
-                'template' : {
+                'fabric' : {
                     'uniforms' : {
                         'texture' : 'agi_defaultTexture',
                         'channels' : 'rgb'
@@ -284,7 +284,7 @@ defineSuite([
         var material = new Material({
             'context' : context,
             'strict' : false,
-            'template' : {
+            'fabric' : {
                 'uniforms' : {
                     'texture' : 'agi_defaultTexture',
                     'channels' : 'rgb'
@@ -305,7 +305,7 @@ defineSuite([
             return new Material({
                 'context' : context,
                 'strict' : true,
-                'template' : {
+                'fabric' : {
                     'uniforms' : {
                         'first' : {
                             'x' : 0.0,
@@ -322,7 +322,7 @@ defineSuite([
         var material = new Material({
             'context' : context,
             'strict' : false,
-            'template' : {
+            'fabric' : {
                 'uniforms' : {
                     'first' : {
                         'x' : 0.0,
@@ -343,7 +343,7 @@ defineSuite([
             return new Material({
                 'context' : context,
                 'strict' : true,
-                'template' : {
+                'fabric' : {
                     'materials' : {
                         'first' : {
                             'id' : 'DiffuseMapMaterial'
@@ -358,7 +358,7 @@ defineSuite([
         var material = new Material({
             'context' : context,
             'strict' : false,
-            'template' : {
+            'fabric' : {
                 'materials' : {
                     'first' : {
                         'id' : 'DiffuseMapMaterial'

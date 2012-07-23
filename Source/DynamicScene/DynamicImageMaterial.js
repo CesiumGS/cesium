@@ -71,16 +71,16 @@ define([
     };
 
     /**
-     * Get's a DiffuseMapMaterial that represents this dynamic material at the provided time.
+     * Get's an ImageMaterial that represents this dynamic material at the provided time.
      *
      * @param {JulianDate} time The desired time.
      * @param {Context} context The context in which this material exists.
-     * @param {Material} [existingMaterial] An existing material to be modified.  If the material is undefined or not a DiffuseMapMaterial, a new instance is created.
-     * @returns The modified existingMaterial parameter or a new DiffuseMapMaterial instance if existingMaterial was undefined or not a DiffuseMapMaterial.
+     * @param {Material} [existingMaterial] An existing material to be modified.  If the material is undefined or not an ImageMapMaterial, a new instance is created.
+     * @returns The modified existingMaterial parameter or a new ImageMapMaterial instance if existingMaterial was undefined or not a ImageMapMaterial.
      */
     DynamicImageMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (typeof existingMaterial === 'undefined' || (existingMaterial.getID() !== 'DiffuseMapMaterial')) {
-            existingMaterial = Material.createFromID(context, 'DiffuseMapMaterial');
+        if (typeof existingMaterial === 'undefined' || (existingMaterial.getID() !== 'ImageMapMaterial')) {
+            existingMaterial = Material.createFromID(context, 'ImageMapMaterial');
         }
 
         var tRepeat;
@@ -106,15 +106,7 @@ define([
             var url = this.image.getValue(time);
             if (typeof url !== 'undefined' && existingMaterial.currentUrl !== url) {
                 existingMaterial.currentUrl = url;
-                var image = new Image();
-                image.onload = function() {
-                    if (existingMaterial.currentUrl === url) {
-                        existingMaterial.texture = context.createTexture2D({
-                            source : image
-                        });
-                    }
-                };
-                image.src = url;
+                existingMaterial.texture = url;
             }
         }
         return existingMaterial;

@@ -44,7 +44,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'ColorMaterial',
                     'uniforms' : {
                         'color' : {
@@ -80,7 +80,7 @@
 
             polygon.material = new Cesium.Material({
                 'context': scene.getContext(),
-                'template': {
+                'fabric': {
                     'uniforms': {
                         'texture': '../../Images/earthspec1k.jpg'
                     },
@@ -163,7 +163,7 @@
 
             polygon.material = new Cesium.Material({
                 'context': scene.getContext(),
-                'template': {
+                'fabric': {
                     'materials' : {
                         'diffuse' : {
                             'id' : 'DiffuseMapMaterial',
@@ -206,7 +206,7 @@
 
             polygon.material = new Cesium.Material({
                 'context': scene.getContext(),
-                'template': {
+                'fabric': {
                     'materials' : {
                         'grass' : {
                             'id' : 'GrassMaterial'
@@ -252,7 +252,7 @@
 
             polygon.material = new Cesium.Material({
                'context' : scene.getContext(),
-               'template' : {
+               'fabric' : {
                    'id' : 'DiffuseMapMaterial',
                    'uniforms' : {
                        'texture' : '../../Images/Cesium_Logo_Color.jpg',
@@ -288,7 +288,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'AlphaMapMaterial',
                     'uniforms' : {
                         'texture' : '../../Images/alpha_map.png',
@@ -324,7 +324,7 @@
 
             polygon.material = new Cesium.Material({
                'context' : scene.getContext(),
-               'template' : {
+               'fabric' : {
                    'id' : 'ImageMaterial',
                    'uniforms' : {
                        'texture' : '../../Images/Cesium_Logo_overlay.png',
@@ -361,7 +361,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'SpecularMapMaterial',
                     'uniforms' : {
                         'texture' : '../../Images/alpha_map.png',
@@ -397,7 +397,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'EmissionMapMaterial',
                     'uniforms' : {
                         'texture' : '../../Images/alpha_map.png',
@@ -433,7 +433,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'materials' : {
                         'bumpMap' : {
                             'id' : 'BumpMapMaterial',
@@ -478,7 +478,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'materials' : {
                         'normalMap' : {
                             'id' : 'NormalMapMaterial',
@@ -524,7 +524,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'ReflectionMaterial',
                     'uniforms' : {
                         'cubeMap' : {
@@ -563,7 +563,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'RefractionMaterial',
                     'uniforms' : {
                         'cubeMap' : {
@@ -603,7 +603,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'FresnelMaterial',
                     'materials' : {
                         'reflection' : {
@@ -650,7 +650,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'BrickMaterial',
                     'uniforms' : {
                         'brickColor' : {
@@ -695,7 +695,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'WoodMaterial',
                     'uniforms' : {
                         'lightWoodColor' : {
@@ -735,7 +735,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'AsphaltMaterial',
                     'uniforms' : {
                         'asphaltColor' : {
@@ -765,7 +765,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'CementMaterial',
                     'uniforms' : {
                         'cementColor' : {
@@ -796,7 +796,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'GrassMaterial',
                     'uniforms' : {
                         'grassColor' : {
@@ -832,7 +832,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'VerticalStripeMaterial',
                     'uniforms' : {
                         'lightColor' : {
@@ -869,7 +869,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'CheckerboardMaterial',
                     'uniforms' : {
                         'lightColor' : {
@@ -909,7 +909,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'DotMaterial',
                     'uniforms' : {
                         'lightColor' : {
@@ -948,7 +948,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'TieDyeMaterial',
                     'uniforms' : {
                         'lightColor' : {
@@ -984,7 +984,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'FacetMaterial',
                     'uniforms' : {
                         'lightColor' : {
@@ -1020,7 +1020,7 @@
 
             polygon.material = new Cesium.Material({
                 'context' : scene.getContext(),
-                'template' : {
+                'fabric' : {
                     'id' : 'BlobMaterial',
                     'uniforms' : {
                         'lightColor' : {
