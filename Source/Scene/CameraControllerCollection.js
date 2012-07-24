@@ -31,7 +31,7 @@ define([
      *
      * @see Camera#getControllers
      */
-    function CameraControllerCollection(camera, canvas) {
+    var CameraControllerCollection = function(camera, canvas) {
         this._controllers = [];
         this._canvas = canvas;
         this._camera = camera;
