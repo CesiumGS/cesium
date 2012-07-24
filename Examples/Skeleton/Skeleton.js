@@ -12,7 +12,7 @@ require({
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
-    Cesium.TerrainProvider.wireframe = true;
+    //Cesium.TerrainProvider.wireframe = true;
 
 //    var terrainProvider = new Cesium.EllipsoidTerrainProvider(new Cesium.WebMercatorTilingScheme({
 //        ellipsoid : ellipsoid,
