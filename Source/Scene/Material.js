@@ -477,7 +477,7 @@ define([
     Material.prototype._materialFactory.addMaterial('Color', {
         "id" : "Color",
         "uniforms" : {
-            "color" : new Color(1.0, 0.0, 0.0, 1.0)
+            "color" : new Color(1.0, 0.0, 0.0, 0.5)
         },
         "source" : ColorMaterial
     });
@@ -730,7 +730,7 @@ define([
     Material.prototype._materialFactory.addMaterial('Stripe', {
         "id" : "Stripe",
         "uniforms" : {
-            "direction" : "x",
+            "direction" : "y",
             "lightColor" : {
                 "red" : 1.0,
                 "green" : 1.0,
