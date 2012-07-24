@@ -56,7 +56,7 @@ define(['./DeveloperError'
         }
         var clock = spherical.clock;
         var cone = spherical.cone;
-        var magnitude = spherical.magnitude;
+        var magnitude = typeof spherical.magnitude === 'undefined' ? 1.0 : spherical.magnitude;
         var radial = magnitude * Math.sin(cone);
         result.x = radial * Math.cos(clock);
         result.y = radial * Math.sin(clock);
