@@ -122,6 +122,12 @@ defineSuite([
         expect(viewMatrix.equals(expected)).toEqual(true);
     });
 
+    it('viewExtent throws without extent', function() {
+        expect(function () {
+            camera.viewExtent();
+        }).toThrow();
+    });
+
     it('viewExtent', function() {
         var extent = new Extent(
                 -CesiumMath.PI_OVER_TWO,
@@ -133,6 +139,18 @@ defineSuite([
         expect(camera.direction.equalsEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
         expect(camera.up.equalsEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON10)).toEqual(true);
         expect(camera.right.equalsEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
+    });
+
+    it('viewExtent2D throws without extent', function() {
+        expect(function () {
+            camera.viewExtent2D();
+        }).toThrow();
+    });
+
+    it('viewExtent2D throws without projection', function() {
+        expect(function () {
+            camera.viewExtent2D(new Extent(-1.0, -1.0, 1.0, 1.0));
+        }).toThrow();
     });
 
     it('viewExtent2D', function() {
@@ -162,6 +180,18 @@ defineSuite([
         expect(frustum.left + maxRadii <= CesiumMath.EPSILON14).toEqual(true);
         expect(frustum.top - maxRadii <= CesiumMath.EPSILON14).toEqual(true);
         expect(frustum.bottom + maxRadii <= CesiumMath.EPSILON14).toEqual(true);
+    });
+
+    it('viewExtentColumbusView throws without extent', function() {
+        expect(function () {
+            camera.viewExtentColumbusView();
+        }).toThrow();
+    });
+
+    it('viewExtentColumbusView throws without projection', function() {
+        expect(function () {
+            camera.viewExtentColumbusView(new Extent(-1.0, -1.0, 1.0, 1.0));
+        }).toThrow();
     });
 
     it('viewExtentColumbusView', function() {

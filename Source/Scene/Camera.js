@@ -307,12 +307,12 @@ define([
         var south = extent.south;
         var east = extent.east;
         var west = extent.west;
-        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south), 0.0);
+        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south));
 
-        var eastVector = ellipsoid.cartographicToCartesian(new Cartographic(east, lla.latitude, 0.0));
-        var westVector = ellipsoid.cartographicToCartesian(new Cartographic(west, lla.latitude, 0.0));
-        var northVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, north, 0.0));
-        var southVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, south, 0.0));
+        var eastVector = ellipsoid.cartographicToCartesian(new Cartographic(east, lla.latitude));
+        var westVector = ellipsoid.cartographicToCartesian(new Cartographic(west, lla.latitude));
+        var northVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, north));
+        var southVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, south));
 
         var width = eastVector.subtract(westVector).magnitude();
         var height = northVector.subtract(southVector).magnitude();
