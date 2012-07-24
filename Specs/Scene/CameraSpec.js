@@ -8,6 +8,7 @@ defineSuite([
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/EquidistantCylindricalProjection',
+         'Core/Extent',
          'Core/Intersect',
          'Core/Math',
          'Core/Matrix4',
@@ -23,6 +24,7 @@ defineSuite([
          Cartographic,
          Ellipsoid,
          EquidistantCylindricalProjection,
+         Extent,
          Intersect,
          CesiumMath,
          Matrix4,
@@ -121,15 +123,59 @@ defineSuite([
     });
 
     it('viewExtent', function() {
-        var west = -CesiumMath.PI_OVER_TWO;
-        var south = -CesiumMath.PI_OVER_TWO;
-        var east = CesiumMath.PI_OVER_TWO;
-        var north = CesiumMath.PI_OVER_TWO;
-        camera.viewExtent(Ellipsoid.WGS84, west, south, east, north);
-        expect(camera.position.equalsEpsilon(new Cartesian3(24078036.74383515, 0, 0.0), CesiumMath.EPSILON10));
-        expect(camera.direction.equalsEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON10));
-        expect(camera.up.equalsEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON10));
-        expect(camera.right.equalsEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON10));
+        var extent = new Extent(
+                -CesiumMath.PI_OVER_TWO,
+                -CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_TWO);
+        camera.viewExtent(extent, Ellipsoid.WGS84);
+        expect(camera.position.equalsEpsilon(new Cartesian3(20062685.43586336, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.up.equalsEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.right.equalsEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
+    });
+
+    it('viewExtent2D', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.left = -10.0;
+        frustum.right = 10.0;
+        frustum.bottom = -10.0;
+        frustum.top = 10.0;
+        frustum.near = 1.0;
+        frustum.far = 21.0;
+        camera.frustum = frustum;
+
+        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+        camera.position = new Cartesian3(0.0, 0.0, maxRadii * 2.0);
+
+        var extent = new Extent(
+                -CesiumMath.PI_OVER_TWO,
+                -CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_TWO);
+        var projection = new EquidistantCylindricalProjection();
+
+        camera.viewExtent2D(extent, projection);
+        expect(camera.position.equalsEpsilon(new Cartesian3(0.0, 0.0, maxRadii * 2.0), CesiumMath.EPSILON10)).toEqual(true);
+
+        expect(frustum.right - maxRadii <= CesiumMath.EPSILON14).toEqual(true);
+        expect(frustum.left + maxRadii <= CesiumMath.EPSILON14).toEqual(true);
+        expect(frustum.top - maxRadii <= CesiumMath.EPSILON14).toEqual(true);
+        expect(frustum.bottom + maxRadii <= CesiumMath.EPSILON14).toEqual(true);
+    });
+
+    it('viewExtentColumbusView', function() {
+        var extent = new Extent(
+                -CesiumMath.PI_OVER_TWO,
+                -CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_TWO);
+        var projection = new EquidistantCylindricalProjection();
+        camera.viewExtentColumbusView(extent, projection);
+        expect(camera.position.equalsEpsilon(new Cartesian3(0.0, 0.0, 13684548.43586336), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.direction.equalsEpsilon(new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON2)).toEqual(true);
+        expect(camera.up.equalsEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON2)).toEqual(true);
+        expect(camera.right.equalsEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
     });
 
     it('get inverse view matrix', function() {
