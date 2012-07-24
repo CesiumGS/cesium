@@ -216,6 +216,9 @@ define([
         u_cameraInsideBoundingSphere : function() {
             return this.cameraInsideBoundingSphere;
         },
+        u_level : function() {
+            return this.level;
+        },
 
         center3D : undefined,
         modifiedModelView : undefined,
@@ -224,7 +227,8 @@ define([
         dayTextures : new Array(8),
         dayTextureTranslation : new Array(8),
         dayTextureScale : new Array(8),
-        cameraInsideBoundingSphere : false
+        cameraInsideBoundingSphere : false,
+        level : 0
     };
 
     EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, drawArguments) {
@@ -242,6 +246,7 @@ define([
 
         for (var i = 0, len = renderList.length; i < len; i++) {
             var tile = renderList[i];
+            uniformMap.level = tile.level;
 
             var rtc = tile.center;
             uniformMap.center3D = rtc;
@@ -257,17 +262,19 @@ define([
             // TODO: clear out uniformMap.dayTextures?
 
             var numberOfDayTextures = 0;
-            for (var imageryIndex = 0, imageryLen = imageryCollection.length; imageryIndex < imageryLen; ++imageryIndex) {
-                var imagery = imageryCollection[imageryIndex];
-                if (!imagery || imagery.state !== TileState.READY) {
-                    continue;
+            if (!tile.culled) {
+                for (var imageryIndex = 0, imageryLen = imageryCollection.length; imageryIndex < imageryLen; ++imageryIndex) {
+                    var imagery = imageryCollection[imageryIndex];
+                    if (!imagery || imagery.state !== TileState.READY) {
+                        continue;
+                    }
+
+                    uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
+                    uniformMap.dayTextureTranslation[numberOfDayTextures] = imagery.textureTranslation;
+                    uniformMap.dayTextureScale[numberOfDayTextures] = imagery.textureScale;
+
+                    ++numberOfDayTextures;
                 }
-
-                uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
-                uniformMap.dayTextureTranslation[numberOfDayTextures] = imagery.textureTranslation;
-                uniformMap.dayTextureScale[numberOfDayTextures] = imagery.textureScale;
-
-                ++numberOfDayTextures;
             }
 
             if (typeof tile.parent !== 'undefined' &&
@@ -385,8 +392,12 @@ define([
 
         if (!isTileVisible(surface, sceneState, tile)) {
             ++tilesCulled;
+            tile.culled = true;
+            surface._renderList.push(tile);
             return;
         }
+
+        tile.culled = false;
 
         if (tile.level > maxDepth) {
             maxDepth = tile.level;
