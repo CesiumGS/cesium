@@ -141,10 +141,14 @@ defineSuite([
     it('transform point to window coordinates center', function() {
         var width = 1024.0;
         var height = 768.0;
-        var perspective = Matrix4.fromPerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
-        var view = Matrix4.fromLookAt(Cartesian3.UNIT_X.multiplyByScalar(2.0), Cartesian3.ZERO, Cartesian3.UNIT_Z);
+        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
+        var view = Matrix4.fromCamera({
+            eye : Cartesian3.UNIT_X.multiplyByScalar(2.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
+        });
         var mvpMatrix = perspective.multiply(view);
-        var vpTransform = Matrix4.fromViewportTransformation(
+        var vpTransform = Matrix4.computeViewportTransformation(
             {
                 width : width,
                 height : height
@@ -156,8 +160,8 @@ defineSuite([
     it('transform point to window coordinates lower left', function() {
         var width = 1024.0;
         var height = 768.0;
-        var perspective = Matrix4.fromPerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
-        var vpTransform = Matrix4.fromViewportTransformation(
+        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
+        var vpTransform = Matrix4.computeViewportTransformation(
             {
                 width : width,
                 height : height
@@ -176,8 +180,8 @@ defineSuite([
     it('transform point to window coordinates upper right', function() {
         var width = 1024.0;
         var height = 768.0;
-        var perspective = Matrix4.fromPerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
-        var vpTransform = Matrix4.fromViewportTransformation(
+        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
+        var vpTransform = Matrix4.computeViewportTransformation(
             {
                 width : width,
                 height : height

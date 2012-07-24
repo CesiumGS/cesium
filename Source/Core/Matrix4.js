@@ -106,7 +106,7 @@ define([
     };
 
     /**
-     * Creates a Matrix4 instance from a column-major order array.
+     * Computes a Matrix4 instance from a column-major order array.
      * @memberof Matrix4
      * @function
      *
@@ -119,7 +119,7 @@ define([
     Matrix4.fromColumnMajorArray = Matrix4.clone;
 
     /**
-     * Creates a Matrix4 instance from a row-major order array.
+     * Computes a Matrix4 instance from a row-major order array.
      * The resulting matrix will be in column-major order.
      * @memberof Matrix4
      *
@@ -158,6 +158,19 @@ define([
         return result;
     };
 
+    /**
+     * Computes a Matrix4 instance from a Matrix3 representing the rotation
+     * and a Cartesian3 representing the translation.
+     * @memberof Matrix4
+     *
+     * @param {Matrix3} rotation The upper left portion of the matrix representing the rotation.
+     * @param {Cartesian3} translation The upper right portion of the matrix representing the translation.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if none was provided.
+     *
+     * @exception {DeveloperError} rotation is required.
+     * @exception {DeveloperError} translation is required.
+     */
     Matrix4.fromRotationTranslation = function(rotation, translation, result) {
         if (typeof rotation === 'undefined') {
             throw new DeveloperError('rotation is required.');
@@ -191,141 +204,201 @@ define([
         return result;
     };
 
+    /**
+     * Computes a Matrix4 instance from a Cartesian3 representing the translation.
+     * @memberof Matrix4
+     *
+     * @param {Cartesian3} translation The upper right portion of the matrix representing the translation.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if none was provided.
+     *
+     * @exception {DeveloperError} translation is required.
+     */
     Matrix4.fromTranslation = function(translation, result) {
         return Matrix4.fromRotationTranslation(Matrix3.IDENTITY, translation, result);
     };
 
+    var fromCameraF = new Cartesian3();
+    var fromCameraS = new Cartesian3();
+    var fromCameraU = new Cartesian3();
     /**
-    * Creates a Matrix4 representing a perspective transformation matrix.
-    *
-    * @memberof Matrix4
-    *
-    * @param {Number} fovy The field of view in radians.
-    * @param {Number} aspect The aspect ratio.
-    * @param {Number} zNear The distance to the near plane.
-    * @param {Number} zFar The distance to the far plane.
-    *
-    * @return {Matrix4} The perspective transformation matrix.
-    *
-    * @exception {DeveloperError} fovy must be in [0, PI).
-    * @exception {DeveloperError} aspect must be greater than zero.
-    * @exception {DeveloperError} zNear must be greater than zero.
-    * @exception {DeveloperError} zFar must be greater than zero.
-    *
-    * @see Matrix4.fromPerspectiveOffCenter
-    * @see Matrix4.fromInfinitePerspectiveOffCenter
-    * @see Matrix4.fromOrthographicOffCenter
-    */
-    Matrix4.fromPerspectiveFieldOfView = function(fovy, aspect, zNear, zFar, result) {
-        if (fovy <= 0.0 || fovy > Math.PI) {
-            throw new DeveloperError('fovy must be in [0, PI).');
+     * Computes a Matrix4 instance from a Camera.
+     * @memberof Matrix4
+     *
+     * @param {Camera} camera The camera to use.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if none was provided.
+     *
+     * @exception {DeveloperError} camera is required.
+     * @exception {DeveloperError} camera.eye is required.
+     * @exception {DeveloperError} camera.target is required.
+     * @exception {DeveloperError} camera.up is required.
+     */
+    Matrix4.fromCamera = function(camera, result) {
+        if (typeof camera === 'undefined') {
+            throw new DeveloperError('camera is required.');
         }
 
-        if (aspect <= 0.0) {
-            throw new DeveloperError('aspect must be greater than zero.');
-        }
+        var eye = camera.eye;
+        var target = camera.target;
+        var up = camera.up;
 
-        if (zNear <= 0.0) {
-            throw new DeveloperError('zNear must be greater than zero.');
-        }
-
-        if (zFar <= 0.0) {
-            throw new DeveloperError('zFar must be greater than zero.');
-        }
-
-        var bottom = Math.tan(fovy * 0.5);
-
-        var column1Row1 = 1.0 / bottom;
-        var column0Row0 = column1Row1 / aspect;
-        var column2Row2 = (zFar + zNear) / (zNear - zFar);
-        var column3Row2 = (2.0 * zFar * zNear) / (zNear - zFar);
-
-        if (typeof result === 'undefined') {
-            return new Matrix4(column0Row0, 0.0,         0.0,         0.0,
-                               0.0,         column1Row1, 0.0,         0.0,
-                               0.0,         0.0,         column2Row2, column3Row2,
-                               0.0,         0.0,        -1.0,         0.0);
-        }
-
-        result[0] = column0Row0;
-        result[1] = 0.0;
-        result[2] = 0.0;
-        result[3] = 0.0;
-        result[4] = 0.0;
-        result[5] = column1Row1;
-        result[6] = 0.0;
-        result[7] = 0.0;
-        result[8] = 0.0;
-        result[9] = 0.0;
-        result[10] = column2Row2;
-        result[11] = -1.0;
-        result[12] = 0.0;
-        result[13] = 0.0;
-        result[14] = column3Row2;
-        result[15] = 0.0;
-        return result;
-    };
-
-      /**
-      * Creates a Matrix4 representing a view matrix.
-      *
-      * @memberof Matrix4
-      *
-      * @param {Cartesian3} eye The position of the viewer.
-      * @param {Cartesian3} target The point that the viewer is looking at.
-      * @param {Cartesian3} up The up vector, i.e., how the viewer is tilted.
-      *
-      * @return {Matrix4} The view vector.
-      */
-    Matrix4.fromLookAt = function(eye, target, up, result) {
         if (typeof eye === 'undefined') {
-            throw new DeveloperError('eye is required.');
+            throw new DeveloperError('camera.eye is required.');
         }
         if (typeof target === 'undefined') {
-            throw new DeveloperError('target is required.');
+            throw new DeveloperError('camera.target is required.');
         }
         if (typeof up === 'undefined') {
-            throw new DeveloperError('up is required.');
+            throw new DeveloperError('camera.up is required.');
         }
 
-        var f = Cartesian3.subtract(target, eye).normalize();
-        var s = f.cross(up).normalize();
-        var u = s.cross(f).normalize();
+        Cartesian3.subtract(target, eye, fromCameraF).normalize(fromCameraF);
+        Cartesian3.cross(fromCameraF, up, fromCameraS).normalize(fromCameraS);
+        Cartesian3.cross(fromCameraS, fromCameraF, fromCameraU).normalize(fromCameraU);
 
-        var rotation = new Matrix4(
-            s.x,  s.y,  s.z, 0.0,
-            u.x,  u.y,  u.z, 0.0,
-           -f.x, -f.y, -f.z, 0.0,
-            0.0,  0.0,  0.0, 1.0);
+        var sX = fromCameraS.x;
+        var sY = fromCameraS.y;
+        var sZ = fromCameraS.z;
+        var fX = fromCameraF.x;
+        var fY = fromCameraF.y;
+        var fZ = fromCameraF.z;
+        var uX = fromCameraU.x;
+        var uY = fromCameraU.y;
+        var uZ = fromCameraU.z;
+        var eyeX = eye.x;
+        var eyeY = eye.y;
+        var eyeZ = eye.z;
 
-        var translation = new Matrix4(
-            1.0, 0.0, 0.0, -eye.x,
-            0.0, 1.0, 0.0, -eye.y,
-            0.0, 0.0, 1.0, -eye.z,
-            0.0, 0.0, 0.0, 1.0);
+        //The code below this comment is an optimized
+        //version of the commented out lines.
+        //Rather that create two matrices and then multiply,
+        //we just bake in the multiplcation as part of creation.
+        //var rotation = new Matrix4(
+        //                sX,  sY,  sZ, 0.0,
+        //                uX,  uY,  uZ, 0.0,
+        //               -fX, -fY, -fZ, 0.0,
+        //                0.0,  0.0,  0.0, 1.0);
+        //var translation = new Matrix4(
+        //                1.0, 0.0, 0.0, -eye.x,
+        //                0.0, 1.0, 0.0, -eye.y,
+        //                0.0, 0.0, 1.0, -eye.z,
+        //                0.0, 0.0, 0.0, 1.0);
+        //return rotation.multiply(translation);
+        if (typeof result === 'undefined') {
+            return new Matrix4(
+                    sX,   sY,  sZ, sX * -eyeX + sY * -eyeY+ sZ * -eyeZ,
+                    uX,   uY,  uZ, uX * -eyeX + uY * -eyeY+ uZ * -eyeZ,
+                   -fX,  -fY, -fZ, fX * eyeX + fY * eyeY + fZ * eyeZ,
+                    0.0, 0.0, 0.0, 1.0);
+        }
+        result[0] = sX;
+        result[1] = uX;
+        result[2] = -fX;
+        result[3] = 0.0;
+        result[4] = sY;
+        result[5] = uY;
+        result[6] = -fY;
+        result[7] = 0.0;
+        result[8] = sZ;
+        result[9] = uZ;
+        result[10] = -fZ;
+        result[11] = 0.0;
+        result[12] = sX * -eyeX + sY * -eyeY+ sZ * -eyeZ;
+        result[13] = uX * -eyeX + uY * -eyeY+ uZ * -eyeZ;
+        result[14] = fX * eyeX + fY * eyeY + fZ * eyeZ;
+        result[15] = 1.0;
+        return result;
 
-        return rotation.multiply(translation, result);
     };
 
+     /**
+      * Computes a Matrix4 instance representing a perspective transformation matrix.
+      * @memberof Matrix4
+      *
+      * @param {Number} fovY The field of view along the Y axis in radians.
+      * @param {Number} aspectRatio The aspect ratio.
+      * @param {Number} near The distance to the near plane in meters.
+      * @param {Number} far The distance to the far plane in meters.
+      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+      * @returns The modified result parameter, or a new Matrix4 instance if none was provided.
+      *
+      * @exception {DeveloperError} fovY must be in [0, PI).
+      * @exception {DeveloperError} aspectRatio must be greater than zero.
+      * @exception {DeveloperError} near must be greater than zero.
+      * @exception {DeveloperError} far must be greater than zero.
+      */
+     Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, result) {
+         if (fovY <= 0.0 || fovY > Math.PI) {
+             throw new DeveloperError('fovY must be in [0, PI).');
+         }
+
+         if (aspectRatio <= 0.0) {
+             throw new DeveloperError('aspectRatio must be greater than zero.');
+         }
+
+         if (near <= 0.0) {
+             throw new DeveloperError('near must be greater than zero.');
+         }
+
+         if (far <= 0.0) {
+             throw new DeveloperError('far must be greater than zero.');
+         }
+
+         var bottom = Math.tan(fovY * 0.5);
+
+         var column1Row1 = 1.0 / bottom;
+         var column0Row0 = column1Row1 / aspectRatio;
+         var column2Row2 = (far + near) / (near - far);
+         var column3Row2 = (2.0 * far * near) / (near - far);
+
+         if (typeof result === 'undefined') {
+             return new Matrix4(column0Row0, 0.0,         0.0,         0.0,
+                                0.0,         column1Row1, 0.0,         0.0,
+                                0.0,         0.0,         column2Row2, column3Row2,
+                                0.0,         0.0,        -1.0,         0.0);
+         }
+
+         result[0] = column0Row0;
+         result[1] = 0.0;
+         result[2] = 0.0;
+         result[3] = 0.0;
+         result[4] = 0.0;
+         result[5] = column1Row1;
+         result[6] = 0.0;
+         result[7] = 0.0;
+         result[8] = 0.0;
+         result[9] = 0.0;
+         result[10] = column2Row2;
+         result[11] = -1.0;
+         result[12] = 0.0;
+         result[13] = 0.0;
+         result[14] = column3Row2;
+         result[15] = 0.0;
+         return result;
+     };
+
     /**
-    * Creates a Matrix4 representing an orthographic transformation matrix.
-    *
+    * Computes a Matrix4 instance representing an orthographic transformation matrix.
     * @memberof Matrix4
     *
-    * @param {Number} left
-    * @param {Number} right
-    * @param {Number} bottom
-    * @param {Number} top
-    * @param {Number} zNear The distance to the near plane.
-    * @param {Number} zFar The distance to the far plane.
+    * @param {Number} left The number of meters to the left of the camera that will be in view.
+    * @param {Number} right The number of meters to the right of the camera that will be in view.
+    * @param {Number} bottom The number of meters below of the camera that will be in view.
+    * @param {Number} top The number of meters above of the camera that will be in view.
+    * @param {Number} near The distance to the near plane in meters.
+    * @param {Number} far The distance to the far plane in meters.
+    * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+    * @returns The modified result parameter, or a new Matrix4 instance if none was provided.
     *
-    * @return {Matrix4} The orthographic transformation matrix.
-    *
-    * @see Matrix4.fromPerspectiveFieldOfView
-    * @see Matrix4.fromPerspectiveOffCenter
-    * @see Matrix4.fromInfinitePerspectiveOffCenter
+    * @exception {DeveloperError} left is required.
+    * @exception {DeveloperError} right is required.
+    * @exception {DeveloperError} bottom is required.
+    * @exception {DeveloperError} top is required.
+    * @exception {DeveloperError} near is required.
+    * @exception {DeveloperError} far is required.
     */
-    Matrix4.fromOrthographicOffCenter = function(left, right, bottom, top, zNear, zFar, result) {
+    Matrix4.computeOrthographicOffCenter = function(left, right, bottom, top, near, far, result) {
         if (typeof left === 'undefined') {
             throw new DeveloperError('left is required.');
         }
@@ -338,20 +411,20 @@ define([
         if (typeof top === 'undefined') {
             throw new DeveloperError('top is required.');
         }
-        if (typeof zNear === 'undefined') {
-            throw new DeveloperError('zNear is required.');
+        if (typeof near === 'undefined') {
+            throw new DeveloperError('near is required.');
         }
-        if (typeof zFar === 'undefined') {
-            throw new DeveloperError('zFar is required.');
+        if (typeof far === 'undefined') {
+            throw new DeveloperError('far is required.');
         }
 
         var a = 1.0 / (right - left);
         var b = 1.0 / (top - bottom);
-        var c = 1.0 / (zFar - zNear);
+        var c = 1.0 / (far - near);
 
         var tx = -(right + left) * a;
         var ty = -(top + bottom) * b;
-        var tz = -(zFar + zNear) * c;
+        var tz = -(far + near) * c;
         a *= 2.0;
         b *= 2.0;
         c *= -2.0;
@@ -383,32 +456,175 @@ define([
     };
 
     /**
-    * Creates a matrix that transforms from normalized device coordinates to window coordinates.
-    *
-    * @memberof Matrix4
-    *
-    * @param {Object}[viewport = { x : 0.0, y : 0.0, width : 0.0, height : 0.0 }] The viewport's corners as shown in Example 1.
-    * @param {Number}[nearDepthRange = 0.0] The near plane distance in window coordinates.
-    * @param {Number}[farDepthRange = 1.0] The far plane distance in window coordinates.
-    *
-    * @return {Matrix4} The viewport transformation matrix.
-    *
-    * @see agi_viewportTransformation
-    * @see Context#getViewport
-    *
-    * @example
-    * // Example 1.  Create viewport transformation using an explicit viewport and depth range.
-    * var m = Matrix4.fromViewportTransformation({
-    *     x : 0.0,
-    *     y : 0.0,
-    *     width : 1024.0,
-    *     height : 768.0
-    * }, 0.0, 1.0);
-    *
-    * // Example 2.  Create viewport transformation using the context's viewport.
-    * var m = Matrix4.fromViewportTransformation(context.getViewport());
-    */
-    Matrix4.fromViewportTransformation = function(viewport, nearDepthRange, farDepthRange, result) {
+     * Computes a Matrix4 instance representing an off center perspective transformation.
+     * @memberof Matrix4
+     *
+     * @param {Number} left The number of meters to the left of the camera that will be in view.
+     * @param {Number} right The number of meters to the right of the camera that will be in view.
+     * @param {Number} bottom The number of meters below of the camera that will be in view.
+     * @param {Number} top The number of meters above of the camera that will be in view.
+     * @param {Number} near The distance to the near plane in meters.
+     * @param {Number} far The distance to the far plane in meters.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if none was provided.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     * @exception {DeveloperError} bottom is required.
+     * @exception {DeveloperError} top is required.
+     * @exception {DeveloperError} near is required.
+     * @exception {DeveloperError} far is required.
+     */
+    Matrix4.computePerspectiveOffCenter = function(left, right, bottom, top, near, far, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required.');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required.');
+        }
+        if (typeof bottom === 'undefined') {
+            throw new DeveloperError('bottom is required.');
+        }
+        if (typeof top === 'undefined') {
+            throw new DeveloperError('top is required.');
+        }
+        if (typeof near === 'undefined') {
+            throw new DeveloperError('near is required.');
+        }
+        if (typeof far === 'undefined') {
+            throw new DeveloperError('far is required.');
+        }
+
+        var column0Row0 = 2.0 * near / (right - left);
+        var column1Row1 = 2.0 * near / (top - bottom);
+        var column2Row0 = (right + left) / (right - left);
+        var column2Row1 = (top + bottom) / (top - bottom);
+        var column2Row2 = -(far + near) / (far - near);
+        var column2Row3 = -1.0;
+        var column3Row2 = -2.0 * far * near / (far - near);
+
+        if (typeof result === 'undefined') {
+            return new Matrix4(column0Row0, 0.0,         column2Row0, 0.0,
+                                       0.0, column1Row1, column2Row1, 0.0,
+                                       0.0, 0.0,         column2Row2, column3Row2,
+                                       0.0, 0.0,         column2Row3, 0.0);
+        }
+
+        result[0] = column0Row0;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = 0.0;
+        result[5] = column1Row1;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = column2Row0;
+        result[9] = column2Row1;
+        result[10] = column2Row2;
+        result[11] = column2Row3;
+        result[12] = 0.0;
+        result[13] = 0.0;
+        result[14] = column3Row2;
+        result[15] = 0.0;
+        return result;
+    };
+
+    /**
+     * Computes a Matrix4 instance representing an infinite off center perspective transformation.
+     * @memberof Matrix4
+     *
+     * @param {Number} left The number of meters to the left of the camera that will be in view.
+     * @param {Number} right The number of meters to the right of the camera that will be in view.
+     * @param {Number} bottom The number of meters below of the camera that will be in view.
+     * @param {Number} top The number of meters above of the camera that will be in view.
+     * @param {Number} near The distance to the near plane in meters.
+     * @param {Number} far The distance to the far plane in meters.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if none was provided.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     * @exception {DeveloperError} bottom is required.
+     * @exception {DeveloperError} top is required.
+     * @exception {DeveloperError} near is required.
+     */
+    Matrix4.computeInfinitePerspectiveOffCenter = function(left, right, bottom, top, near, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required.');
+        }
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required.');
+        }
+        if (typeof bottom === 'undefined') {
+            throw new DeveloperError('bottom is required.');
+        }
+        if (typeof top === 'undefined') {
+            throw new DeveloperError('top is required.');
+        }
+        if (typeof near === 'undefined') {
+            throw new DeveloperError('near is required.');
+        }
+
+        var column0Row0 = 2.0 * near / (right - left);
+        var column1Row1 = 2.0 * near / (top - bottom);
+        var column2Row0 = (right + left) / (right - left);
+        var column2Row1 = (top + bottom) / (top - bottom);
+        var column2Row2 = -1.0;
+        var column2Row3 = -1.0;
+        var column3Row2 = -2.0 * near;
+
+        if (typeof result === 'undefined') {
+            return new Matrix4(column0Row0, 0.0,         column2Row0, 0.0,
+                                       0.0, column1Row1, column2Row1, 0.0,
+                                       0.0, 0.0,         column2Row2, column3Row2,
+                                       0.0, 0.0,         column2Row3, 0.0);
+        }
+
+        result[0] = column0Row0;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = 0.0;
+        result[5] = column1Row1;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = column2Row0;
+        result[9] = column2Row1;
+        result[10] = column2Row2;
+        result[11] = column2Row3;
+        result[12] = 0.0;
+        result[13] = 0.0;
+        result[14] = column3Row2;
+        result[15] = 0.0;
+        return result;
+    };
+
+    /**
+     * Computes a Matrix4 instance that transforms from normalized device coordinates to window coordinates.
+     * @memberof Matrix4
+     *
+     * @param {Object}[viewport = { x : 0.0, y : 0.0, width : 0.0, height : 0.0 }] The viewport's corners as shown in Example 1.
+     * @param {Number}[nearDepthRange = 0.0] The near plane distance in window coordinates.
+     * @param {Number}[farDepthRange = 1.0] The far plane distance in window coordinates.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if none was provided.
+     *
+     * @see agi_viewportTransformation
+     * @see Context#getViewport
+     *
+     * @example
+     * // Example 1.  Create viewport transformation using an explicit viewport and depth range.
+     * var m = Matrix4.computeViewportTransformation({
+     *     x : 0.0,
+     *     y : 0.0,
+     *     width : 1024.0,
+     *     height : 768.0
+     * }, 0.0, 1.0);
+     *
+     * // Example 2.  Create viewport transformation using the context's viewport.
+     * var m = Matrix4.computeViewportTransformation(context.getViewport());
+     */
+    Matrix4.computeViewportTransformation = function(viewport, nearDepthRange, farDepthRange, result) {
         var v = viewport || {};
         v.x = v.x || 0.0;
         v.y = v.y || 0.0;
@@ -454,113 +670,8 @@ define([
         return result;
     };
 
-    Matrix4.fromPerspectiveOffCenter = function(left, right, bottom, top, zNear, zFar, result) {
-        if (typeof left === 'undefined') {
-            throw new DeveloperError('left is required.');
-        }
-        if (typeof right === 'undefined') {
-            throw new DeveloperError('right is required.');
-        }
-        if (typeof bottom === 'undefined') {
-            throw new DeveloperError('bottom is required.');
-        }
-        if (typeof top === 'undefined') {
-            throw new DeveloperError('top is required.');
-        }
-        if (typeof zNear === 'undefined') {
-            throw new DeveloperError('zNear is required.');
-        }
-        if (typeof zFar === 'undefined') {
-            throw new DeveloperError('zFar is required.');
-        }
-
-        var column0Row0 = 2.0 * zNear / (right - left);
-        var column1Row1 = 2.0 * zNear / (top - bottom);
-        var column2Row0 = (right + left) / (right - left);
-        var column2Row1 = (top + bottom) / (top - bottom);
-        var column2Row2 = -(zFar + zNear) / (zFar - zNear);
-        var column2Row3 = -1.0;
-        var column3Row2 = -2.0 * zFar * zNear / (zFar - zNear);
-
-        if (typeof result === 'undefined') {
-            return new Matrix4(column0Row0, 0.0,         column2Row0, 0.0,
-                                       0.0, column1Row1, column2Row1, 0.0,
-                                       0.0, 0.0,         column2Row2, column3Row2,
-                                       0.0, 0.0,         column2Row3, 0.0);
-        }
-
-        result[0] = column0Row0;
-        result[1] = 0.0;
-        result[2] = 0.0;
-        result[3] = 0.0;
-        result[4] = 0.0;
-        result[5] = column1Row1;
-        result[6] = 0.0;
-        result[7] = 0.0;
-        result[8] = column2Row0;
-        result[9] = column2Row1;
-        result[10] = column2Row2;
-        result[11] = column2Row3;
-        result[12] = 0.0;
-        result[13] = 0.0;
-        result[14] = column3Row2;
-        result[15] = 0.0;
-        return result;
-    };
-
-    Matrix4.fromInfinitePerspectiveOffCenter = function(left, right, bottom, top, zNear, result) {
-        if (typeof left === 'undefined') {
-            throw new DeveloperError('left is required.');
-        }
-        if (typeof right === 'undefined') {
-            throw new DeveloperError('right is required.');
-        }
-        if (typeof bottom === 'undefined') {
-            throw new DeveloperError('bottom is required.');
-        }
-        if (typeof top === 'undefined') {
-            throw new DeveloperError('top is required.');
-        }
-        if (typeof zNear === 'undefined') {
-            throw new DeveloperError('zNear is required.');
-        }
-
-        var column0Row0 = 2.0 * zNear / (right - left);
-        var column1Row1 = 2.0 * zNear / (top - bottom);
-        var column2Row0 = (right + left) / (right - left);
-        var column2Row1 = (top + bottom) / (top - bottom);
-        var column2Row2 = -1.0;
-        var column2Row3 = -1.0;
-        var column3Row2 = -2.0 * zNear;
-
-        if (typeof result === 'undefined') {
-            return new Matrix4(column0Row0, 0.0,         column2Row0, 0.0,
-                                       0.0, column1Row1, column2Row1, 0.0,
-                                       0.0, 0.0,         column2Row2, column3Row2,
-                                       0.0, 0.0,         column2Row3, 0.0);
-        }
-
-        result[0] = column0Row0;
-        result[1] = 0.0;
-        result[2] = 0.0;
-        result[3] = 0.0;
-        result[4] = 0.0;
-        result[5] = column1Row1;
-        result[6] = 0.0;
-        result[7] = 0.0;
-        result[8] = column2Row0;
-        result[9] = column2Row1;
-        result[10] = column2Row2;
-        result[11] = column2Row3;
-        result[12] = 0.0;
-        result[13] = 0.0;
-        result[14] = column3Row2;
-        result[15] = 0.0;
-        return result;
-    };
-
     /**
-     * Creates an Array from the provided Matrix4 instance.
+     * Computes an Array from the provided Matrix4 instance.
      * The array will be in column-major order.
      * @memberof Matrix4
      *
@@ -897,7 +1008,7 @@ define([
     };
 
     /**
-     * Creates a negated copy of the provided matrix.
+     * Computes a negated copy of the provided matrix.
      * @memberof Matrix4
      *
      * @param {Matrix4} matrix The matrix to negate.
@@ -1129,80 +1240,73 @@ define([
         // Ported from:
         //   ftp://download.intel.com/design/PentiumIII/sml/24504301.pdf
         //
-
-        var dst = new Array(16);
-        var tmp = new Array(16);
-        var src = new Array(16);
-        var det;
-
-        Matrix4.transpose(matrix, src);
+        var src0 = matrix[0];
+        var src1 = matrix[4];
+        var src2 = matrix[8];
+        var src3 = matrix[12];
+        var src4 = matrix[1];
+        var src5 = matrix[5];
+        var src6 = matrix[9];
+        var src7 = matrix[13];
+        var src8 = matrix[2];
+        var src9 = matrix[6];
+        var src10 = matrix[10];
+        var src11 = matrix[14];
+        var src12 = matrix[3];
+        var src13 = matrix[7];
+        var src14 = matrix[11];
+        var src15 = matrix[15];
 
         // calculate pairs for first 8 elements (cofactors)
-        tmp[0] = src[10] * src[15];
-        tmp[1] = src[11] * src[14];
-        tmp[2] = src[9] * src[15];
-        tmp[3] = src[11] * src[13];
-        tmp[4] = src[9] * src[14];
-        tmp[5] = src[10] * src[13];
-        tmp[6] = src[8] * src[15];
-        tmp[7] = src[11] * src[12];
-        tmp[8] = src[8] * src[14];
-        tmp[9] = src[10] * src[12];
-        tmp[10] = src[8] * src[13];
-        tmp[11] = src[9] * src[12];
+        var tmp0 = src10 * src15;
+        var tmp1 = src11 * src14;
+        var tmp2 = src9 * src15;
+        var tmp3 = src11 * src13;
+        var tmp4 = src9 * src14;
+        var tmp5 = src10 * src13;
+        var tmp6 = src8 * src15;
+        var tmp7 = src11 * src12;
+        var tmp8 = src8 * src14;
+        var tmp9 = src10 * src12;
+        var tmp10 = src8 * src13;
+        var tmp11 = src9 * src12;
 
         // calculate first 8 elements (cofactors)
-        dst[0] = tmp[0] * src[5] + tmp[3] * src[6] + tmp[4] * src[7];
-        dst[0] -= tmp[1] * src[5] + tmp[2] * src[6] + tmp[5] * src[7];
-        dst[1] = tmp[1] * src[4] + tmp[6] * src[6] + tmp[9] * src[7];
-        dst[1] -= tmp[0] * src[4] + tmp[7] * src[6] + tmp[8] * src[7];
-        dst[2] = tmp[2] * src[4] + tmp[7] * src[5] + tmp[10] * src[7];
-        dst[2] -= tmp[3] * src[4] + tmp[6] * src[5] + tmp[11] * src[7];
-        dst[3] = tmp[5] * src[4] + tmp[8] * src[5] + tmp[11] * src[6];
-        dst[3] -= tmp[4] * src[4] + tmp[9] * src[5] + tmp[10] * src[6];
-        dst[4] = tmp[1] * src[1] + tmp[2] * src[2] + tmp[5] * src[3];
-        dst[4] -= tmp[0] * src[1] + tmp[3] * src[2] + tmp[4] * src[3];
-        dst[5] = tmp[0] * src[0] + tmp[7] * src[2] + tmp[8] * src[3];
-        dst[5] -= tmp[1] * src[0] + tmp[6] * src[2] + tmp[9] * src[3];
-        dst[6] = tmp[3] * src[0] + tmp[6] * src[1] + tmp[11] * src[3];
-        dst[6] -= tmp[2] * src[0] + tmp[7] * src[1] + tmp[10] * src[3];
-        dst[7] = tmp[4] * src[0] + tmp[9] * src[1] + tmp[10] * src[2];
-        dst[7] -= tmp[5] * src[0] + tmp[8] * src[1] + tmp[11] * src[2];
+        var dst0 = (tmp0 * src5 + tmp3 * src6 + tmp4 * src7) - (tmp1 * src5 + tmp2 * src6 + tmp5 * src7);
+        var dst1 = (tmp1 * src4 + tmp6 * src6 + tmp9 * src7) - (tmp0 * src4 + tmp7 * src6 + tmp8 * src7);
+        var dst2 = (tmp2 * src4 + tmp7 * src5 + tmp10 * src7) - (tmp3 * src4 + tmp6 * src5 + tmp11 * src7);
+        var dst3 = (tmp5 * src4 + tmp8 * src5 + tmp11 * src6) - (tmp4 * src4 + tmp9 * src5 + tmp10 * src6);
+        var dst4 = (tmp1 * src1 + tmp2 * src2 + tmp5 * src3) - (tmp0 * src1 + tmp3 * src2 + tmp4 * src3);
+        var dst5 = (tmp0 * src0 + tmp7 * src2 + tmp8 * src3) - (tmp1 * src0 + tmp6 * src2 + tmp9 * src3);
+        var dst6 = (tmp3 * src0 + tmp6 * src1 + tmp11 * src3) - (tmp2 * src0 + tmp7 * src1 + tmp10 * src3);
+        var dst7 = (tmp4 * src0 + tmp9 * src1 + tmp10 * src2) - (tmp5 * src0 + tmp8 * src1 + tmp11 * src2);
 
         // calculate pairs for second 8 elements (cofactors)
-        tmp[0] = src[2] * src[7];
-        tmp[1] = src[3] * src[6];
-        tmp[2] = src[1] * src[7];
-        tmp[3] = src[3] * src[5];
-        tmp[4] = src[1] * src[6];
-        tmp[5] = src[2] * src[5];
-        tmp[6] = src[0] * src[7];
-        tmp[7] = src[3] * src[4];
-        tmp[8] = src[0] * src[6];
-        tmp[9] = src[2] * src[4];
-        tmp[10] = src[0] * src[5];
-        tmp[11] = src[1] * src[4];
+        tmp0 = src2 * src7;
+        tmp1 = src3 * src6;
+        tmp2 = src1 * src7;
+        tmp3 = src3 * src5;
+        tmp4 = src1 * src6;
+        tmp5 = src2 * src5;
+        tmp6 = src0 * src7;
+        tmp7 = src3 * src4;
+        tmp8 = src0 * src6;
+        tmp9 = src2 * src4;
+        tmp10 = src0 * src5;
+        tmp11 = src1 * src4;
 
         // calculate second 8 elements (cofactors)
-        dst[8] = tmp[0] * src[13] + tmp[3] * src[14] + tmp[4] * src[15];
-        dst[8] -= tmp[1] * src[13] + tmp[2] * src[14] + tmp[5] * src[15];
-        dst[9] = tmp[1] * src[12] + tmp[6] * src[14] + tmp[9] * src[15];
-        dst[9] -= tmp[0] * src[12] + tmp[7] * src[14] + tmp[8] * src[15];
-        dst[10] = tmp[2] * src[12] + tmp[7] * src[13] + tmp[10] * src[15];
-        dst[10] -= tmp[3] * src[12] + tmp[6] * src[13] + tmp[11] * src[15];
-        dst[11] = tmp[5] * src[12] + tmp[8] * src[13] + tmp[11] * src[14];
-        dst[11] -= tmp[4] * src[12] + tmp[9] * src[13] + tmp[10] * src[14];
-        dst[12] = tmp[2] * src[10] + tmp[5] * src[11] + tmp[1] * src[9];
-        dst[12] -= tmp[4] * src[11] + tmp[0] * src[9] + tmp[3] * src[10];
-        dst[13] = tmp[8] * src[11] + tmp[0] * src[8] + tmp[7] * src[10];
-        dst[13] -= tmp[6] * src[10] + tmp[9] * src[11] + tmp[1] * src[8];
-        dst[14] = tmp[6] * src[9] + tmp[11] * src[11] + tmp[3] * src[8];
-        dst[14] -= tmp[10] * src[11] + tmp[2] * src[8] + tmp[7] * src[9];
-        dst[15] = tmp[10] * src[10] + tmp[4] * src[8] + tmp[9] * src[9];
-        dst[15] -= tmp[8] * src[9] + tmp[11] * src[10] + tmp[5] * src[8];
+        var dst8 = (tmp0 * src13 + tmp3 * src14 + tmp4 * src15) - (tmp1 * src13 + tmp2 * src14 + tmp5 * src15);
+        var dst9 = (tmp1 * src12 + tmp6 * src14 + tmp9 * src15) - (tmp0 * src12 + tmp7 * src14 + tmp8 * src15);
+        var dst10 = (tmp2 * src12 + tmp7 * src13 + tmp10 * src15) - (tmp3 * src12 + tmp6 * src13 + tmp11 * src15);
+        var dst11 = (tmp5 * src12 + tmp8 * src13 + tmp11 * src14) - (tmp4 * src12 + tmp9 * src13 + tmp10 * src14);
+        var dst12 = (tmp2 * src10 + tmp5 * src11 + tmp1 * src9) - (tmp4 * src11 + tmp0 * src9 + tmp3 * src10);
+        var dst13 = (tmp8 * src11 + tmp0 * src8 + tmp7 * src10) - (tmp6 * src10 + tmp9 * src11 + tmp1 * src8);
+        var dst14 = (tmp6 * src9 + tmp11 * src11 + tmp3 * src8) - (tmp10 * src11 + tmp2 * src8 + tmp7 * src9);
+        var dst15 = (tmp10 * src10 + tmp4 * src8 + tmp9 * src9) - (tmp8 * src9 + tmp11 * src10 + tmp5 * src8);
 
         // calculate determinant
-        det = src[0] * dst[0] + src[1] * dst[1] + src[2] * dst[2] + src[3] * dst[3];
+        var det = src0 * dst0 + src1 * dst1 + src2 * dst2 + src3 * dst3;
 
         if (Math.abs(det) < CesiumMath.EPSILON20) {
             throw new RuntimeError('This matrix is not invertible because its determinate is zero.');
@@ -1210,33 +1314,29 @@ define([
 
         // calculate matrix inverse
         det = 1.0 / det;
-        for ( var j = 0; j < 16; ++j) {
-            dst[j] *= det;
-        }
-
         if (typeof result === 'undefined') {
-            return new Matrix4(dst[0], dst[4], dst[8], dst[12],
-                               dst[1], dst[5], dst[9], dst[13],
-                               dst[2], dst[6], dst[10], dst[14],
-                               dst[3], dst[7], dst[11], dst[15]);
+            return new Matrix4(dst0 * det, dst4 * det, dst8 * det, dst12 * det,
+                               dst1 * det, dst5 * det, dst9 * det, dst13 * det,
+                               dst2 * det, dst6 * det, dst10 * det, dst14 * det,
+                               dst3 * det, dst7 * det, dst11 * det, dst15 * det);
         }
 
-        result[0] = dst[0];
-        result[1] = dst[1];
-        result[2] = dst[2];
-        result[3] = dst[3];
-        result[4] = dst[4];
-        result[5] = dst[5];
-        result[6] = dst[6];
-        result[7] = dst[7];
-        result[8] = dst[8];
-        result[9] = dst[9];
-        result[10] = dst[10];
-        result[11] = dst[11];
-        result[12] = dst[12];
-        result[13] = dst[13];
-        result[14] = dst[14];
-        result[15] = dst[15];
+        result[0] = dst0 * det;
+        result[1] = dst1 * det;
+        result[2] = dst2 * det;
+        result[3] = dst3 * det;
+        result[4] = dst4 * det;
+        result[5] = dst5 * det;
+        result[6] = dst6 * det;
+        result[7] = dst7 * det;
+        result[8] = dst8 * det;
+        result[9] = dst9 * det;
+        result[10] = dst10 * det;
+        result[11] = dst11 * det;
+        result[12] = dst12 * det;
+        result[13] = dst13 * det;
+        result[14] = dst14 * det;
+        result[15] = dst15 * det;
         return result;
     };
 
@@ -1427,7 +1527,7 @@ define([
     };
 
     /**
-     * Creates an Array from this Matrix4 instance.
+     * Computes an Array from this Matrix4 instance.
      * @memberof Matrix4
      *
      * @param {Array} [result] The Array onto which to store the result.
@@ -1543,7 +1643,7 @@ define([
         return Matrix4.multiplyByScalar(this, scalar, result);
     };
     /**
-     * Creates a negated copy of this matrix.
+     * Computes a negated copy of this matrix.
      * @memberof Matrix4
      *
      * @param {Matrix4} matrix The matrix to negate.
@@ -1596,7 +1696,7 @@ define([
     };
 
     /**
-     * Creates a string representing this Matrix with each row being
+     * Computes a string representing this Matrix with each row being
      * on a separate line and in the format '(column0, column1, column2, column3)'.
      * @memberof Matrix4
      *

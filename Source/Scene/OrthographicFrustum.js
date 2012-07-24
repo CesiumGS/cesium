@@ -129,7 +129,7 @@ define([
     };
 
     OrthographicFrustum.prototype._updateProjectionMatrices = function() {
-        this._orthographicMatrix = Matrix4.fromOrthographicOffCenter(this.left, this.right, this.bottom, this.top, this.near, this.far);
+        this._orthographicMatrix = Matrix4.computeOrthographicOffCenter(this.left, this.right, this.bottom, this.top, this.near, this.far);
     };
 
     /**

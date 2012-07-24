@@ -64,8 +64,8 @@ defineSuite([
             up : Cartesian3.UNIT_Z
         };
         us = context.getUniformState();
-        us.setView(Matrix4.fromLookAt(camera.eye, camera.target, camera.up));
-        us.setProjection(Matrix4.fromPerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
+        us.setView(Matrix4.fromCamera(camera));
+        us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
     });
 
     afterEach(function() {
