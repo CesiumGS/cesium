@@ -492,11 +492,11 @@ define([
     function distanceSquaredToTile(cameraCartesianPosition, cameraCartographicPosition, tile) {
         var vectorFromSouthwestCorner = cameraCartesianPosition.subtract(tile.southwestCornerCartesian);
         var distanceToWestPlane = vectorFromSouthwestCorner.dot(tile.westNormal);
-        var distanceToSouthPlane = vectorFromSouthwestCorner.dot(Cartesian3.UNIT_Z.negate());
+        var distanceToSouthPlane = vectorFromSouthwestCorner.dot(tile.southNormal);
 
         var vectorFromNortheastCorner = cameraCartesianPosition.subtract(tile.northeastCornerCartesian);
         var distanceToEastPlane = vectorFromNortheastCorner.dot(tile.eastNormal);
-        var distanceToNorthPlane = vectorFromNortheastCorner.dot(Cartesian3.UNIT_Z);
+        var distanceToNorthPlane = vectorFromNortheastCorner.dot(tile.northNormal);
 
         var distanceFromTop = cameraCartographicPosition.height - tile.maxHeight;
 
