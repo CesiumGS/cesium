@@ -1169,30 +1169,32 @@ define([
         return new ShaderProgram(this._gl, this._logShaderCompilation, ShadersBuiltinFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations);
     };
 
-    Context.prototype._createBuffer = function(gl, bufferTarget, arrayViewOrSizeInBytes, usage) {
+    function createBuffer(gl, bufferTarget, typedArrayOrSizeInBytes, usage) {
         var sizeInBytes;
 
-        if (typeof arrayViewOrSizeInBytes === 'object') {
-            sizeInBytes = arrayViewOrSizeInBytes.byteLength;
+        if (typeof typedArrayOrSizeInBytes === 'number') {
+            sizeInBytes = typedArrayOrSizeInBytes;
+        } else if (typeof typedArrayOrSizeInBytes === 'object' && typeof typedArrayOrSizeInBytes.byteLength !== 'undefined') {
+            sizeInBytes = typedArrayOrSizeInBytes.byteLength;
         } else {
-            sizeInBytes = arrayViewOrSizeInBytes;
+            throw new DeveloperError('typedArrayOrSizeInBytes must be either a typed array or a number.');
         }
 
         if (sizeInBytes <= 0) {
-            throw new DeveloperError('arrayViewOrSizeInBytes must be greater than zero.');
+            throw new DeveloperError('typedArrayOrSizeInBytes must be greater than zero.');
         }
 
         if (!BufferUsage.validate(usage)) {
-            throw new DeveloperError('usage is invalid');
+            throw new DeveloperError('usage is invalid.');
         }
 
         var buffer = gl.createBuffer();
         gl.bindBuffer(bufferTarget, buffer);
-        gl.bufferData(bufferTarget, arrayViewOrSizeInBytes, usage);
+        gl.bufferData(bufferTarget, typedArrayOrSizeInBytes, usage);
         gl.bindBuffer(bufferTarget, null);
 
         return new Buffer(gl, bufferTarget, sizeInBytes, usage, buffer);
-    };
+    }
 
     /**
      * Creates a vertex buffer, which contains untyped vertex data in GPU-controlled memory.
@@ -1202,7 +1204,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {} arrayViewOrSizeInBytes An <code>ArrayBuffer</code> containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
+     * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
      *
      * @return {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
@@ -1228,8 +1230,8 @@ define([
      * var positionBuffer = context.createVertexBuffer(new Float32Array([0, 0, 0]),
      *     BufferUsage.STATIC_DRAW);
      */
-    Context.prototype.createVertexBuffer = function(arrayViewOrSizeInBytes, usage) {
-        return this._createBuffer(this._gl, this._gl.ARRAY_BUFFER, arrayViewOrSizeInBytes, usage);
+    Context.prototype.createVertexBuffer = function(typedArrayOrSizeInBytes, usage) {
+        return createBuffer(this._gl, this._gl.ARRAY_BUFFER, typedArrayOrSizeInBytes, usage);
     };
 
     /**
@@ -1241,7 +1243,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {} arrayViewOrSizeInBytes An <code>ArrayBuffer</code> containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
+     * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
      * @param {IndexDatatype} indexDatatype The datatype of indices in the buffer.
      *
@@ -1271,8 +1273,7 @@ define([
      * var buffer = context.createIndexBuffer(new Uint16Array([0, 1, 2]),
      *     BufferUsage.STATIC_DRAW, IndexType.unsignedShort)
      */
-    Context.prototype.createIndexBuffer = function(arrayViewOrSizeInBytes, usage, indexDatatype) {
-        var gl = this._gl;
+    Context.prototype.createIndexBuffer = function(typedArrayOrSizeInBytes, usage, indexDatatype) {
         var bytesPerIndex;
 
         if (indexDatatype === IndexDatatype.UNSIGNED_BYTE) {
@@ -1283,7 +1284,8 @@ define([
             throw new DeveloperError('Invalid indexDatatype.');
         }
 
-        var buffer = this._createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, arrayViewOrSizeInBytes, usage);
+        var gl = this._gl;
+        var buffer = createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, typedArrayOrSizeInBytes, usage);
         var numberOfIndices = buffer.getSizeInBytes() / bytesPerIndex;
 
         buffer.getIndexDatatype = function() {

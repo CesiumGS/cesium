@@ -34,6 +34,9 @@ Beta Releases
    
    * The free look feature has been removed from `CameraColumbusViewController` in favor of rotating about the point clicked on the map with the middle mouse button.
    * The `Camera2DController` constructor and `CameraControllerCollection.add2D` now require a projection instead of an ellipsoid.
+   * `Chain` has been removed.  `when` is now included as a more complete CommonJS Promises/A implementation.
+   * `Jobs.downloadImage` was replaced with `loadImage` to provide a promise that will asynchronously load an image.
+   * `jsonp` now returns a promise for the requested data, removing the need for a callback parameter.
    * JulianDate.getTimeStandard() has been removed, dates are now always stored internally as TAI.
    * LeapSeconds.setLeapSeconds now takes an array of LeapSecond instances instead of JSON.
    * TimeStandard.convertUtcToTai and TimeStandard.convertTaiToUtc have been removed as they are no longer needed. 

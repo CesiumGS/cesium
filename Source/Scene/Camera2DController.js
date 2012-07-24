@@ -5,6 +5,7 @@ define([
         '../Core/FAR',
         '../Core/Math',
         '../Core/Quaternion',
+        '../Core/Matrix3',
         '../Core/Cartesian2',
         '../Core/Cartographic',
         './CameraEventHandler',
@@ -18,6 +19,7 @@ define([
         FAR,
         CesiumMath,
         Quaternion,
+        Matrix3,
         Cartesian2,
         Cartographic,
         CameraEventHandler,
@@ -462,7 +464,7 @@ define([
        var theta = endTheta - startTheta;
 
        var camera = this._camera;
-       var rotation = Quaternion.fromAxisAngle(camera.direction, theta).toRotationMatrix();
+       var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(camera.direction, theta));
        camera.up = rotation.multiplyByVector(camera.up);
        camera.right = camera.direction.cross(camera.up);
    };

@@ -612,12 +612,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('static toString throws with no cartesian parameter', function() {
-        expect(function() {
-            Cartesian3.toString(undefined);
-        }).toThrow();
-    });
-
     it('static cross throw with no left paramater', function() {
         var right = new Cartesian3(4, 3, 6);
         expect(function() {

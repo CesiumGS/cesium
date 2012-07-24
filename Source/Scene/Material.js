@@ -1,8 +1,9 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
+        '../Core/loadImage',
         '../Core/DeveloperError',
         '../Core/createGuid',
-        '../Core/Jobs',
         '../Core/clone',
         '../Core/Color',
         '../Core/Matrix2',
@@ -10,7 +11,6 @@ define([
         '../Core/Matrix4',
         '../Renderer/Texture',
         '../Renderer/CubeMap',
-        '../ThirdParty/Chain',
         '../Shaders/Materials/AlphaMapMaterial',
         '../Shaders/Materials/AsphaltMaterial',
         '../Shaders/Materials/BlobMaterial',
@@ -36,9 +36,10 @@ define([
         '../Shaders/Materials/VerticalStripeMaterial',
         '../Shaders/Materials/WoodMaterial'
     ], function(
+        when,
+        loadImage,
         DeveloperError,
         createGuid,
-        Jobs,
         clone,
         Color,
         Matrix2,
@@ -46,7 +47,6 @@ define([
         Matrix4,
         Texture,
         CubeMap,
-        Chain,
         AlphaMapMaterial,
         AsphaltMaterial,
         BlobMaterial,
@@ -409,11 +409,11 @@ define([
                         this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
                         this._pathsToMaterials[path].push({'material' : material, 'property' : property});
                         if (this._pathsToMaterials[path].length === 1) {
-                            Chain.run(
-                                Jobs.downloadImage(path)
-                            ).thenRun(function() {
-                                texture = material._context.createTexture2D({source : this.images[path]});
+                            when(loadImage(path), function(image) {
+                                texture = material._context.createTexture2D({source : image});
                                 that._updateMaterialsOnTextureLoad(texture, path);
+                            }, function() {
+                                throw new DeveloperError('Texture image not found \'' + path + '\'.');
                             });
                         }
                     }
@@ -430,22 +430,15 @@ define([
                         this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
                         this._pathsToMaterials[path].push({'material' : material, 'property' : property});
                         if (this._pathsToMaterials[path].length === 1) {
-                            Chain.run(
-                                Jobs.downloadImage(textureInfo.positiveX),
-                                Jobs.downloadImage(textureInfo.negativeX),
-                                Jobs.downloadImage(textureInfo.positiveY),
-                                Jobs.downloadImage(textureInfo.negativeY),
-                                Jobs.downloadImage(textureInfo.positiveZ),
-                                Jobs.downloadImage(textureInfo.negativeZ)
-                            ).thenRun(function() {
+                            when.all([loadImage(textureInfo.positiveX), loadImage(textureInfo.negativeX),
+                                      loadImage(textureInfo.positiveY), loadImage(textureInfo.negativeY),
+                                      loadImage(textureInfo.positiveZ), loadImage(textureInfo.negativeZ)])
+                                      .then(function(images) {
                                 texture = material._context.createCubeMap({
                                     source : {
-                                        positiveX : this.images[textureInfo.positiveX],
-                                        negativeX : this.images[textureInfo.negativeX],
-                                        positiveY : this.images[textureInfo.positiveY],
-                                        negativeY : this.images[textureInfo.negativeY],
-                                        positiveZ : this.images[textureInfo.positiveZ],
-                                        negativeZ : this.images[textureInfo.negativeZ]
+                                        positiveX : images[0], negativeX : images[1],
+                                        positiveY : images[2], negativeY : images[3],
+                                        positiveZ : images[4], negativeZ : images[5]
                                     }
                                 });
                                 that._updateMaterialsOnTextureLoad(texture, path);
