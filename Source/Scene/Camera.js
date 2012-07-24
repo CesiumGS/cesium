@@ -219,16 +219,21 @@ define([
         var diagonal = northEast.subtract(southWest);
         var center = southWest.add(diagonal.normalize().multiplyByScalar(diagonal.magnitude() * 0.5));
 
+        var northWest = ellipsoid.cartographicToCartesian(new Cartographic(west, north)).subtract(center);
+        var southEast = ellipsoid.cartographicToCartesian(new Cartographic(east, south)).subtract(center);
+        northEast = northEast.subtract(center);
+        southWest = southWest.subtract(center);
+
         this.direction = center.negate().normalize();
         this.right = this.direction.cross(Cartesian3.UNIT_Z).normalize();
         this.up = this.right.cross(this.direction);
 
-        var height = this.up.multiplyByScalar(this.up.dot(diagonal)).magnitude();
-        var width = this.right.multiplyByScalar(this.right.dot(diagonal)).magnitude();
+        var height = Math.max(Math.abs(this.up.dot(northWest)), Math.abs(this.up.dot(southEast)), Math.abs(this.up.dot(northEast)), Math.abs(this.up.dot(southWest)));
+        var width = Math.max(Math.abs(this.right.dot(northWest)), Math.abs(this.right.dot(southEast)), Math.abs(this.right.dot(northEast)), Math.abs(this.right.dot(southWest)));
 
         var tanPhi = Math.tan(this.frustum.fovy * 0.5);
         var tanTheta = this.frustum.aspectRatio * tanPhi;
-        var d = Math.max(width / tanTheta, height / tanPhi) * 0.5;
+        var d = Math.max(width / tanTheta, height / tanPhi);
 
         this.position = center.normalize().multiplyByScalar(center.magnitude() + d);
     };
