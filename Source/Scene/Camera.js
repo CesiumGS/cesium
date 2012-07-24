@@ -187,7 +187,23 @@ define([
         this.right = this.direction.cross(this.up);
     };
 
-    Camera.prototype._getViewExtentPositionPerspective = function(ellipsoid, extent) {
+    /**
+     * Zooms to a cartographic extent on the central body. The camera will be looking straight down at the extent,
+     * with the up vector pointing toward local north.
+     *
+     * @memberof Camera
+     * @param {Ellipsoid} ellipsoid The ellipsoid to view.
+     * @param {Extent} extent The extent to view.
+     *
+     * @exception {DeveloperError} extent is required.
+     */
+    Camera.prototype.viewExtent = function(extent, ellipsoid) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        ellipsoid = (typeof ellipsoid === 'undefined') ? Ellipsoid.WGS84 : ellipsoid;
+
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
@@ -199,6 +215,7 @@ define([
         }
 
         var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south), 0.0);
+
         var northVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, north, 0.0));
         var eastVector = ellipsoid.cartographicToCartesian(new Cartographic(east, lla.latitude, 0.0));
         var centerVector = ellipsoid.cartographicToCartesian(lla);
@@ -218,27 +235,6 @@ define([
             screenViewDistanceY = Math.sqrt(tempVec.dot(tempVec) * invTanHalfPerspectiveAngle);
         }
         lla.height = Math.max(screenViewDistanceX, screenViewDistanceY);
-
-        return lla;
-    };
-
-    /**
-     * Zooms to a cartographic extent on the central body. The camera will be looking straight down at the extent,
-     * with the up vector pointing toward local north.
-     *
-     * @memberof Camera
-     * @param {Ellipsoid} ellipsoid The ellipsoid to view.
-     * @param {Extent} extent The extent to view.
-     *
-     * @exception {DeveloperError} extent is required.
-     */
-    Camera.prototype.viewExtent = function(extent, ellipsoid) {
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
-
-        ellipsoid = (typeof ellipsoid === 'undefined') ? Ellipsoid.WGS84 : ellipsoid;
-        var lla = this._getViewExtentPositionPerspective(ellipsoid, extent);
 
         this.position = ellipsoid.cartographicToCartesian(lla);
         this.direction = this.position.negate().normalize();
@@ -266,12 +262,27 @@ define([
             throw new DeveloperError('projection is required.');
         }
 
-        var ellipsoid = projection.getEllipsoid();
-        var lla = this._getViewExtentPositionPerspective(ellipsoid, extent);
+        var north = extent.north;
+        var south = extent.south;
+        var east = extent.east;
+        var west = extent.west;
 
-        var position = projection.project(lla);
         var transform = this.transform.clone();
         transform.setColumn3(Cartesian4.UNIT_W);
+
+        var northEast = projection.project(new Cartographic(east, north, 0.0));
+        northEast = transform.multiplyByVector(new Cartesian4(northEast.x, northEast.y, northEast.z, 1.0));
+        northEast = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(northEast));
+
+        var southWest = projection.project(new Cartographic(west, south, 0.0));
+        southWest = transform.multiplyByVector(new Cartesian4(southWest.x, southWest.y, southWest.z, 1.0));
+        southWest = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(southWest));
+
+        var tanPhi = Math.tan(this.frustum.fovy * 0.5);
+        var tanTheta = this.frustum.aspectRatio * tanPhi;
+        var d = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
+
+        var position = projection.project(new Cartographic(0.5 * (west + east), 0.5 * (north + south), d));
         position = transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
         this.position = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(position));
 
