@@ -32,6 +32,8 @@ define([
         '../Core/DefaultProxy',
         '../Core/Transforms',
         '../Core/requestAnimationFrame',
+        '../Core/Color',
+        '../Scene/ColorMaterial',
         '../Scene/Scene',
         '../Scene/CentralBody',
         '../Scene/BingMapsTileProvider',
@@ -76,6 +78,8 @@ define([
         DefaultProxy,
         Transforms,
         requestAnimationFrame,
+        Color,
+        ColorMaterial,
         Scene,
         CentralBody,
         BingMapsTileProvider,
@@ -331,6 +335,15 @@ define([
             handler.setMouseAction(lang.hitch(this, '_handleRightUp'), MouseEventType.RIGHT_UP);
 
             //////////////////////////////////////////////////////////////////////////////////////////////////
+
+            if (typeof this.highlightColor === 'undefined') {
+                this.highlightColor = new Color(0.0, 1.0, 0.0);
+            }
+
+            if (typeof this.highlightMaterial === 'undefined') {
+                this.highlightMaterial = new ColorMaterial();
+                this.highlightMaterial.color = this.highlightColor;
+            }
 
             if (typeof this.onObjectRightClickSelected === 'undefined') {
                 this.onObjectRightClickSelected = this.centerCameraOnObject;
@@ -613,6 +626,28 @@ define([
             var logoOffset = this.centralBody.logoOffset;
             if ((logoOffsetX !== logoOffset.x) || (logoOffsetY !== logoOffset.y)) {
                 this.centralBody.logoOffset = new Cartesian2(logoOffsetX, logoOffsetY);
+            }
+        },
+
+        highlightObject : function(selectedObject) {
+            if (this.highlightedObject !== selectedObject) {
+                if (typeof this.highlightedObject !== 'undefined') {
+                    if (typeof this.highlightedObject.material !== 'undefined') {
+                        this.highlightedObject.material = this._originalMaterial;
+                    } else {
+                        this.highlightedObject.color = this._originalColor;
+                    }
+                }
+                this.highlightedObject = selectedObject;
+                if (typeof selectedObject !== 'undefined') {
+                    if (typeof selectedObject.material !== 'undefined') {
+                        this._originalMaterial = selectedObject.material;
+                        selectedObject.material = this.highlightedMaterial;
+                    } else {
+                        this._originalColor = selectedObject.color;
+                        selectedObject.color = this.highlightedColor;
+                    }
+                }
             }
         },
 
