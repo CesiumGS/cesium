@@ -75,9 +75,12 @@
 .cw-cesiumLogo {
     display: block;
     position: absolute;
-    bottom: 66px;
+    bottom: 68px;
     left: 5px;
     text-decoration: none;
+    background-image: url(../../Images/Cesium_Logo_overlay.png);
+    width: 118px;
+    height: 26px;
 }
 
 .cw-cesiumLogo img {

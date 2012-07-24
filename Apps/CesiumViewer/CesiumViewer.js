@@ -27,7 +27,7 @@ define([
                 cesium.resize();
             });
 
-            widget.defaultRenderLoop();
+            widget.startRenderLoop();
         },
 
         onSetupError : function(widget, error) {
