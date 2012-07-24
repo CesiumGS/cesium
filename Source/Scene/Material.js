@@ -341,46 +341,45 @@ define([
         if (this._hasSourceSection && this._hasComponentsSection) {
             throw new DeveloperError('Cannot have source and components in the same template.');
         }
-        // Make sure there are no duplicate names
-        var duplicateNames = {};
-        var groups = {'uniforms' : this._materialUniforms, 'materials' : this._materialTemplates};
-        for (var groupID in groups) {
-            if (groups.hasOwnProperty(groupID)) {
-                var groupValue = groups[groupID];
-                for (var id in groupValue) {
-                    if (groupValue.hasOwnProperty(id)) {
-                        var existingGroupID = duplicateNames[id];
-                        if (typeof existingGroupID !== 'undefined') {
-                            throw new DeveloperError('Duplicate identifier \'' + id + '\' found in \'' + groupID + '\' and \'' + existingGroupID + '\'.');
+
+        var checkForValidProperties = function(object, properties, result, throwNotFound) {
+            if (typeof object !== 'undefined') {
+                for (var property in object) {
+                    if (object.hasOwnProperty(property)) {
+                        if (throwNotFound * (properties.indexOf(property) === -1)) {
+                            result(property, properties);
                         }
-                        duplicateNames[id] = groupID;
                     }
                 }
             }
-        }
-        //Make sure all the component types are valid
-        if (this._hasComponentsSection) {
-            duplicateNames = {};
-            var validComponentTypes = ['diffuse', 'specular', 'normal', 'emission', 'alpha'];
-            for (var component in this._materialComponents) {
-                if (this._materialComponents.hasOwnProperty(component)) {
-                    var validComponent = false;
-                    for (var i = 0; i < validComponentTypes.length; i++) {
-                        if (component === validComponentTypes[i]) {
-                            if (typeof duplicateNames[component] !== 'undefined') {
-                                throw new DeveloperError('Duplicate component name \'' + component + '\'.');
-                            }
-                            duplicateNames[component] = true;
-                            validComponent = true;
-                            break;
-                        }
-                    }
-                    if (validComponent === false) {
-                        throw new DeveloperError('Component name \'' + component + '\' is not valid.');
-                    }
-                }
+        };
+
+        // Make sure all template and components properties are valid.
+        var invalidNameError = function(property, properties) {
+            var errorString = 'Property name \'' + property + '\' is not valid. It should be ';
+            for (var i = 0; i < properties.length; i++) {
+                var lastCharacter = i === properties.length - 1;
+                errorString += lastCharacter ? 'or ' : '';
+                errorString += '\'' + properties[i] + '\'';
+                errorString += lastCharacter ? '.' : ', ';
+            }
+            throw new DeveloperError(errorString);
+        };
+        checkForValidProperties(this._template, ['id', 'materials', 'uniforms', 'components', 'source'], invalidNameError, true);
+        checkForValidProperties(this._materialComponents,  ['diffuse', 'specular', 'normal', 'emission', 'alpha'], invalidNameError, true);
+
+        // Make sure uniforms and materials do not share any of the same names.
+        var duplicateNameError = function(property, properties) {
+            var errorString = 'Uniforms and materials should not share the same property \'' + property + '\'';
+            throw new DeveloperError(errorString);
+        };
+        var materialNames = [];
+        for (var property in this._materialTemplates) {
+            if (this._materialTemplates.hasOwnProperty(property)) {
+                materialNames.push(property);
             }
         }
+        checkForValidProperties(this._materialUniforms, materialNames, duplicateNameError, false);
     };
 
     Material.prototype._texturePool = {

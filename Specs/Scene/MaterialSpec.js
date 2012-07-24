@@ -192,6 +192,19 @@ defineSuite([
         }).toThrow();
     });
 
+    it('throws with invalid template type', function() {
+        expect(function() {
+            var context = createContext();
+            return new Material({
+                'context' : context,
+                'strict' : true,
+                'fabric' : {
+                    'invalid' : 3
+                }
+            });
+        }).toThrow();
+    });
+
     it('throws with invalid component type', function () {
         expect(function() {
             var context = createContext();
