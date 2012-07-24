@@ -56,14 +56,12 @@ require({
 //
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
-    var cesiumLogo = new Cesium.SingleTileImageryProvider(
-            '../../Images/TestLayer.png',
-            new Cesium.Extent(
-                    Cesium.Math.toRadians(-120),
-                    Cesium.Math.toRadians(37),
-                    Cesium.Math.toRadians(-119),
-                    Cesium.Math.toRadians(38)));
-    imageryLayerCollection.addImageryProvider(cesiumLogo);
+    var testLayer = imageryLayerCollection.addImageryProvider(
+            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png',
+                                                 new Cesium.Extent(Cesium.Math.toRadians(-120),
+                                                                   Cesium.Math.toRadians(37),
+                                                                   Cesium.Math.toRadians(-119),
+                                                                   Cesium.Math.toRadians(38))));
 
     var cb = new Cesium.CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
 
@@ -167,6 +165,14 @@ require({
             break;
         case 'D'.charCodeAt(0):
             imageryLayerCollection.lower(esriLayer);
+            break;
+        case 109: // numpad -
+            imageryLayerCollection.remove(testLayer, false);
+            break;
+        case 107: // numpad +
+            if (!imageryLayerCollection.contains(testLayer)) {
+                imageryLayerCollection.add(testLayer);
+            }
             break;
         case "3".charCodeAt(0): // "3" -> 3D globe
             cb.showSkyAtmosphere = true;

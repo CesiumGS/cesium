@@ -61,8 +61,12 @@ define([
         }
 
         this.terrainProvider = description.terrainProvider;
-        this.imageryLayerCollection = description.imageryLayerCollection;
+        this._imageryLayerCollection = description.imageryLayerCollection;
         this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 2);
+
+        this._imageryLayerCollection.layerAdded.addEventListener(EllipsoidSurface.prototype._onLayerAdded, this);
+        this._imageryLayerCollection.layerRemoved.addEventListener(EllipsoidSurface.prototype._onLayerRemoved, this);
+        this._imageryLayerCollection.layerMoved.addEventListener(EllipsoidSurface.prototype._onLayerMoved, this);
 
         this._levelZeroTiles = undefined;
         this._renderList = [];
@@ -82,6 +86,106 @@ define([
             that._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, that.terrainProvider.tilingScheme.ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
         });
     };
+
+    EllipsoidSurface.prototype._onLayerAdded = function(layer, index) {
+        if (typeof this._levelZeroTiles === 'undefined') {
+            return;
+        }
+
+        var newNextLayer = this._imageryLayerCollection.get(index + 1);
+
+        // create TileImagerys for this layer for all previously loaded tiles
+        var terrainProviderTilingScheme = this.terrainProvider.tilingScheme;
+        var tile = this._tileReplacementQueue.head;
+        while (typeof tile !== 'undefined') {
+            if (layer.createTileImagerySkeletons(tile, terrainProviderTilingScheme)) {
+                tile.doneLoading = false;
+            }
+
+            if (typeof newNextLayer !== 'undefined') {
+                moveTileImageryObjects(tile.imagery, layer, newNextLayer);
+            }
+            tile = tile._replacementNext;
+        }
+    };
+
+    EllipsoidSurface.prototype._onLayerRemoved = function(layer, index) {
+        if (typeof this._levelZeroTiles === 'undefined') {
+            return;
+        }
+
+        // destroy TileImagerys for this layer for all previously loaded tiles
+        var tile = this._tileReplacementQueue.head;
+        while (typeof tile !== 'undefined') {
+            var tileImageryCollection = tile.imagery;
+            var startIndex = -1;
+            var numDestroyed = 0;
+            for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+                var tileImagery = tileImageryCollection[i];
+                if (tileImagery.imageryLayer === layer) {
+                    if (startIndex === -1) {
+                        startIndex = i;
+                    }
+
+                    tileImagery.destroy();
+                    ++numDestroyed;
+                } else if (startIndex !== -1) {
+                    // iterated past the section of TileImagerys belonging to this layer, no need to continue.
+                    break;
+                }
+            }
+
+            if (startIndex !== -1) {
+                tileImageryCollection.splice(startIndex, numDestroyed);
+            }
+            tile = tile._replacementNext;
+        }
+    };
+
+    EllipsoidSurface.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
+        if (typeof this._levelZeroTiles === 'undefined') {
+            return;
+        }
+
+        var newNextLayer = this._imageryLayerCollection.get(newIndex + 1);
+        var tile = this._tileReplacementQueue.head;
+        while (typeof tile !== 'undefined') {
+            moveTileImageryObjects(tile.imagery, layer, newNextLayer);
+            tile = tile._replacementNext;
+        }
+    };
+
+    function moveTileImageryObjects(tileImageryCollection, layer, newNextLayer) {
+        var oldTileImageryIndex = -1;
+        var newTileImageryIndex = -1;
+        var numTileImagery = 0;
+        for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+            var tileImagery = tileImageryCollection[i];
+            var tileImageryLayer = tileImagery.imageryLayer;
+
+            if (newTileImageryIndex === -1 && tileImageryLayer === newNextLayer) {
+                newTileImageryIndex = i;
+            } else if (tileImageryLayer === layer) {
+                ++numTileImagery;
+                if (oldTileImageryIndex === -1) {
+                    oldTileImageryIndex = i;
+                }
+            } else if (newTileImageryIndex !== -1 && oldTileImageryIndex !== -1) {
+                // we have all the info we need, don't need to continue iterating
+                break;
+            }
+        }
+
+        // splice out TileImagerys from old location
+        var tileImageryObjects = tileImageryCollection.splice(oldTileImageryIndex, numTileImagery);
+
+        // splice them back into the new location using tileImagerys as the args array with apply
+        if (newTileImageryIndex === -1) {
+            newTileImageryIndex = tileImageryCollection.length;
+        }
+        tileImageryObjects.unshift(newTileImageryIndex, 0);
+        Array.prototype.splice.apply(tileImageryCollection, tileImageryObjects);
+    }
 
     function countTileStats(tile, counters) {
         ++counters.tiles;
@@ -132,9 +236,9 @@ define([
         }
 
         var i, len;
-        for (i = 0, len = this.imageryLayerCollection.getLength(); i < len; i++) {
-            var imageryLayer = this.imageryLayerCollection.get(i);
-            if (!imageryLayer.imageryProvider.ready) {
+        var imageryLayerCollection = this._imageryLayerCollection;
+        for (i = 0, len = imageryLayerCollection.getLength(); i < len; i++) {
+            if (!imageryLayerCollection.get(i).imageryProvider.ready) {
                 return;
             }
         }
@@ -240,7 +344,7 @@ define([
 
         var uniformMap = combine(uniformMapTemplate, centralBodyUniformMap);
 
-        for (var i = 0, len = renderList.length; i < len; i++) {
+        for ( var i = 0, len = renderList.length; i < len; i++) {
             var tile = renderList[i];
 
             var rtc = tile.center;
@@ -252,26 +356,25 @@ define([
             mvrtc.setColumn3(centerEye);
             uniformMap.modifiedModelView = mvrtc;
 
-            var imageryCollection = tile.imagery;
+            var tileImageryCollection = tile.imagery;
 
             // TODO: clear out uniformMap.dayTextures?
 
             var numberOfDayTextures = 0;
-            for (var imageryIndex = 0, imageryLen = imageryCollection.length; imageryIndex < imageryLen; ++imageryIndex) {
-                var imagery = imageryCollection[imageryIndex];
-                if (!imagery || imagery.state !== TileState.READY) {
+            for ( var imageryIndex = 0, imageryLen = tileImageryCollection.length; imageryIndex < imageryLen; ++imageryIndex) {
+                var tileImagery = tileImageryCollection[imageryIndex];
+                if (typeof tileImagery === 'undefined' || tileImagery.state !== TileState.READY) {
                     continue;
                 }
 
-                uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
-                uniformMap.dayTextureTranslation[numberOfDayTextures] = imagery.textureTranslation;
-                uniformMap.dayTextureScale[numberOfDayTextures] = imagery.textureScale;
+                uniformMap.dayTextures[numberOfDayTextures] = tileImagery.texture;
+                uniformMap.dayTextureTranslation[numberOfDayTextures] = tileImagery.textureTranslation;
+                uniformMap.dayTextureScale[numberOfDayTextures] = tileImagery.textureScale;
 
                 ++numberOfDayTextures;
             }
 
-            if (typeof tile.parent !== 'undefined' &&
-                tile.parent.cameraInsideBoundingSphere) {
+            if (typeof tile.parent !== 'undefined' && tile.parent.cameraInsideBoundingSphere) {
                 uniformMap.cameraInsideBoundingSphere = true;
             } else {
                 uniformMap.cameraInsideBoundingSphere = false;
@@ -586,6 +689,8 @@ define([
 
     function processTileLoadQueue(surface, context, sceneState) {
         var tileLoadQueue = surface._tileLoadQueue;
+        var terrainProvider = surface.terrainProvider;
+
         var tile = tileLoadQueue.head;
 
         var startTime = Date.now();
@@ -598,7 +703,7 @@ define([
             // Transition terrain states.
             if (tile.state === TileState.UNLOADED) {
                 tile.state = TileState.TRANSITIONING;
-                surface.terrainProvider.requestTileGeometry(tile);
+                terrainProvider.requestTileGeometry(tile);
 
                 // If we've made it past the UNLOADED state, add this tile to the replacement queue
                 // (replacing another tile if necessary), and create skeletons for the imagery.
@@ -609,19 +714,22 @@ define([
                     // the amount of memory available, or something else?
                     surface._tileReplacementQueue.trimTiles(100);
 
-                    for (i = 0, len = surface.imageryLayerCollection.getLength(); i < len; ++i) {
-                        var imageryLayer = surface.imageryLayerCollection.get(i);
-                        imageryLayer.createTileImagerySkeletons(tile, surface.terrainProvider.tilingScheme);
+                    var imageryLayerCollection = surface._imageryLayerCollection;
+                    var terrainProviderTilingScheme = terrainProvider.tilingScheme;
+                    for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+                        imageryLayerCollection.get(i).createTileImagerySkeletons(tile, terrainProviderTilingScheme);
                     }
                 }
             }
+
             if (tile.state === TileState.RECEIVED) {
                 tile.state = TileState.TRANSITIONING;
-                surface.terrainProvider.transformGeometry(context, tile);
+                terrainProvider.transformGeometry(context, tile);
             }
+
             if (tile.state === TileState.TRANSFORMED) {
                 tile.state = TileState.TRANSITIONING;
-                surface.terrainProvider.createResources(context, tile);
+                terrainProvider.createResources(context, tile);
             }
             // TODO: what about the FAILED and INVALID states?
 
@@ -637,18 +745,19 @@ define([
                     tileImagery.state = TileState.TRANSITIONING;
                     imageryLayer.requestImagery(tileImagery);
                 }
+
                 if (tileImagery.state === TileState.RECEIVED) {
                     tileImagery.state = TileState.TRANSITIONING;
                     imageryLayer.transformImagery(context, tileImagery);
                 }
+
                 if (tileImagery.state === TileState.TRANSFORMED) {
                     tileImagery.state = TileState.TRANSITIONING;
                     imageryLayer.createResources(context, tileImagery);
                 }
+
                 doneLoading = doneLoading && tileImagery.state === TileState.READY;
             }
-
-            var next = tile._next;
 
             // The tile becomes renderable when the terrain and all imagery data are loaded.
             if (i === len && doneLoading) {
@@ -657,7 +766,7 @@ define([
                 tileLoadQueue.remove(tile);
             }
 
-            tile = next;
+            tile = tile._next;
         }
     }
 
