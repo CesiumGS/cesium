@@ -135,7 +135,7 @@ defineSuite([
                 CesiumMath.PI_OVER_TWO,
                 CesiumMath.PI_OVER_TWO);
         camera.viewExtent(extent, Ellipsoid.WGS84);
-        expect(camera.position.equalsEpsilon(new Cartesian3(20062685.43586336, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.position.equalsEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
         expect(camera.direction.equalsEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
         expect(camera.up.equalsEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON10)).toEqual(true);
         expect(camera.right.equalsEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
@@ -204,7 +204,7 @@ defineSuite([
                 CesiumMath.PI_OVER_TWO);
         var projection = new EquidistantCylindricalProjection();
         camera.viewExtentColumbusView(extent, projection);
-        expect(camera.position.equalsEpsilon(new Cartesian3(0.0, 0.0, 13684548.43586336), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.position.equalsEpsilon(new Cartesian3(0.0, 0.0, 17352991.253398113), CesiumMath.EPSILON10)).toEqual(true);
         expect(camera.direction.equalsEpsilon(new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON2)).toEqual(true);
         expect(camera.up.equalsEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON2)).toEqual(true);
         expect(camera.right.equalsEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
