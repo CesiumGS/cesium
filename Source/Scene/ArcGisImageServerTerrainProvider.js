@@ -193,7 +193,7 @@ define([
 
         var extent = this.tilingScheme.tileXYToExtent(tile.x, tile.y, tile.level);
         var bbox = CesiumMath.toDegrees(extent.west) + '%2C' + CesiumMath.toDegrees(extent.south) + '%2C' + CesiumMath.toDegrees(extent.east) + '%2C' + CesiumMath.toDegrees(extent.north);
-        var url = this.url + '/exportImage?format=tiff&f=image&size=256%2C256&bboxSR=4326&imageSR=3857&bbox=' + bbox;
+        var url = this.url + '/exportImage?format=tiff&f=image&size=128%2C128&bboxSR=4326&imageSR=3857&bbox=' + bbox;
         if (this.token) {
             url += '&token=' + this.token;
         }
