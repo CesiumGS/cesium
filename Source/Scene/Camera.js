@@ -214,32 +214,23 @@ define([
             east += CesiumMath.TWO_PI;
         }
 
-        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south), 0.0);
+        var northEast = ellipsoid.cartographicToCartesian(new Cartographic(east, north, 0.0));
+        var southWest = ellipsoid.cartographicToCartesian(new Cartographic(west, south, 0.0));
+        var diagonal = northEast.subtract(southWest);
+        var center = southWest.add(diagonal.normalize().multiplyByScalar(diagonal.magnitude() * 0.5));
 
-        var northVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, north, 0.0));
-        var eastVector = ellipsoid.cartographicToCartesian(new Cartographic(east, lla.latitude, 0.0));
-        var centerVector = ellipsoid.cartographicToCartesian(lla);
-        var invTanHalfPerspectiveAngle = 1.0 / Math.tan(0.5 * this.frustum.fovy);
-        var screenViewDistanceX;
-        var screenViewDistanceY;
-        var tempVec;
-        if (this._canvas.clientWidth >= this._canvas.clientHeight) {
-            tempVec = eastVector.subtract(centerVector);
-            screenViewDistanceX = Math.sqrt(tempVec.dot(tempVec) * invTanHalfPerspectiveAngle);
-            tempVec = northVector.subtract(centerVector);
-            screenViewDistanceY = Math.sqrt(tempVec.dot(tempVec) * invTanHalfPerspectiveAngle * this._canvas.clientWidth / this._canvas.clientHeight);
-        } else {
-            tempVec = eastVector.subtract(centerVector);
-            screenViewDistanceX = Math.sqrt(tempVec.dot(tempVec) * invTanHalfPerspectiveAngle * this._canvas.clientWidth / this._canvas.clientHeight);
-            tempVec = northVector.subtract(centerVector);
-            screenViewDistanceY = Math.sqrt(tempVec.dot(tempVec) * invTanHalfPerspectiveAngle);
-        }
-        lla.height = Math.max(screenViewDistanceX, screenViewDistanceY);
-
-        this.position = ellipsoid.cartographicToCartesian(lla);
-        this.direction = this.position.negate().normalize();
+        this.direction = center.negate().normalize();
         this.right = this.direction.cross(Cartesian3.UNIT_Z).normalize();
         this.up = this.right.cross(this.direction);
+
+        var height = this.up.multiplyByScalar(this.up.dot(diagonal)).magnitude();
+        var width = this.right.multiplyByScalar(this.right.dot(diagonal)).magnitude();
+
+        var tanPhi = Math.tan(this.frustum.fovy * 0.5);
+        var tanTheta = this.frustum.aspectRatio * tanPhi;
+        var d = Math.max(width / tanTheta, height / tanPhi) * 0.5;
+
+        this.position = center.normalize().multiplyByScalar(center.magnitude() + d);
     };
 
     /**
