@@ -94,6 +94,9 @@ define([
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
 
+        var minHeight = 65536.0;
+        var maxHeight = -65536.0;
+
         for ( var row = 0; row < height; ++row) {
             var y = extent.north - granularityY * row;
             var latitude = piOverTwo - (2.0 * atan(exp(-y * oneOverCentralBodySemimajorAxis)));
@@ -121,6 +124,9 @@ define([
                 }
 
                 heightSample = heightSample / heightScale - heightOffset;
+
+                maxHeight = Math.max(maxHeight, heightSample);
+                minHeight = Math.min(minHeight, heightSample);
 
                 //heightSample = 10000 * sin(CesiumMath.toDegrees(longitude) * 10) + 10000 * cos(CesiumMath.toDegrees(latitude) * 10);
 
@@ -179,6 +185,11 @@ define([
                 ++index;
             }
         }
+
+        return {
+            maxHeight : maxHeight,
+            minHeight : minHeight
+        };
     };
 
     /**

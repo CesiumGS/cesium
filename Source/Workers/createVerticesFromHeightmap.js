@@ -22,11 +22,14 @@ require({
         parameters.generateTextureCoordinates = true;
         parameters.interleaveTextureCoordinates = true;
 
-        HeightmapTessellator.computeVertices(parameters);
+        var statistics = HeightmapTessellator.computeVertices(parameters);
 
         postMessage({
             id : id,
-            result : vertices
+            result : {
+                vertices : vertices,
+                statistics : statistics
+            }
         }, [vertices.buffer]);
     };
 });

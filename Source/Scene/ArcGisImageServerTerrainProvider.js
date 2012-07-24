@@ -264,7 +264,7 @@ define([
             return;
         }
 
-        return when(verticesPromise, function(vertices) {
+        return when(verticesPromise, function(result) {
             ++transformed;
             if ((transformed % 10) === 0) {
                 console.log('transformed: ' + transformed);
@@ -272,7 +272,8 @@ define([
 
             tile.geometry = undefined;
             tile.transformedGeometry = {
-                vertices : vertices,
+                vertices : result.vertices,
+                statistics : result.statistics,
                 indices : TerrainProvider.getRegularGridIndices(width, height)
             };
             tile.state = TileState.TRANSFORMED;
@@ -297,6 +298,7 @@ define([
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
+        tile.maxHeight = buffers.statistics.maxHeight;
         tile.state = TileState.READY;
         ++ready;
         if ((ready % 10) === 0) {

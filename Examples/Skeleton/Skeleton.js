@@ -12,7 +12,7 @@ require({
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
-    Cesium.TerrainProvider.wireframe = true;
+    //Cesium.TerrainProvider.wireframe = true;
 
 //    var terrainProvider = new Cesium.EllipsoidTerrainProvider(new Cesium.WebMercatorTilingScheme({
 //        ellipsoid : ellipsoid,
@@ -22,7 +22,7 @@ require({
 
     var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'BOYnN62oRWrK_9EGaqz8yi9OnF5vlVdymcTDXB11glKd3Ex8Bzp0VS5QCiJN6nFssS5R1_fFXZiCeML_44JCUA..',
+        token : '26O_pElUyvrFnCGbKrMm4oftiInNfIebGgcPt4TT9eZL8kfg4yt1ywYCW2uRH22Dz4jI3rgbTmHmlAHnE3nR9A..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
@@ -80,7 +80,7 @@ require({
     primitives.setCentralBody(cb);
 
     scene.getCamera().frustum.near = 100.0;
-    scene.getCamera().frustum.far = 10000000.0;
+    scene.getCamera().frustum.far = 20000000.0;
     scene.getCamera().getControllers().addCentralBody();
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
@@ -104,6 +104,49 @@ require({
 
     ///////////////////////////////////////////////////////////////////////////
     // Example mouse & keyboard handlers
+
+    var mouseX;
+    var mouseY;
+    function mouseMoveHandler(e) {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+    }
+
+    function ellipsoidIntersections(ellipsoid, ray) {
+        var position = ray.origin;
+        var direction = ray.direction;
+        var oneOverRadii = ellipsoid.getOneOverRadii();
+
+        var scaledPosition = position.multiplyComponents(oneOverRadii);
+        var scaledDirection = direction.multiplyComponents(oneOverRadii);
+
+        var a = scaledDirection.magnitudeSquared();
+        var b = 2.0 * scaledPosition.dot(scaledDirection);
+        var c = scaledPosition.magnitudeSquared() - 1.0;
+
+        var b2 = b * b;
+        var four_ac = 4.0 * a * c;
+        var radicand = b2 - four_ac;
+
+        if (radicand < 0.0) {
+            return undefined;
+        }
+
+        var q = -0.5 * (b + sign(b) * Math.sqrt(radicand));
+        if (b > 0.0) {
+            return [q / a, c / q];
+        }
+        return [c / q, q / a];
+    }
+
+    function sign(x) {
+        if (x < 0.0) {
+            return -1.0;
+        } else if (x > 0.0) {
+            return 1.0;
+        }
+        return 0.0;
+    }
 
     function keydownHandler(e) {
         switch (e.keyCode) {
@@ -143,10 +186,20 @@ require({
         case 'F'.charCodeAt(0):
             cb._surface.toggleLodUpdate();
             break;
+        case 'B'.charCodeAt(0):
+            var camera = scene.getCamera();
+            var pickRay = camera._getPickRayPerspective({x: mouseX, y: mouseY});
+            var intersectionDistance = ellipsoidIntersections(ellipsoid, pickRay)[0];
+            var intersectionPoint = pickRay.getPoint(intersectionDistance);
+            var cartographicPick = ellipsoid.cartesianToCartographic(intersectionPoint);
+            cb._surface.showBoundingSphereOfTileAt(cartographicPick);
+            break;
         }
     }
 
     document.addEventListener('keydown', keydownHandler, false);
+
+    document.addEventListener('mousemove', mouseMoveHandler, false);
 
     canvas.oncontextmenu = function() {
         return false;

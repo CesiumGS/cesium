@@ -310,6 +310,13 @@ define([
         return new Cartographic(this.east, this.south);
     };
 
+    Extent.prototype.contains = function(cartographicPosition) {
+        return cartographicPosition.longitude >= this.west &&
+               cartographicPosition.longitude <= this.east &&
+               cartographicPosition.latitude >= this.south &&
+               cartographicPosition.latitude <= this.north;
+    };
+
     /**
      * The largest possible extent.
      */

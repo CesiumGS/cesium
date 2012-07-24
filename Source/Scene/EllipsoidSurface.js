@@ -8,10 +8,13 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/DeveloperError',
+        '../Core/Ellipsoid',
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Occluder',
         '../Core/PrimitiveType',
+        '../Core/CubeMapEllipsoidTessellator',
+        '../Core/MeshFilters',
         './ImageryLayerCollection',
         './TerrainProvider',
         './TileState',
@@ -28,10 +31,13 @@ define([
         Cartesian3,
         Cartesian4,
         DeveloperError,
+        Ellipsoid,
         Intersect,
         CesiumMath,
         Occluder,
         PrimitiveType,
+        CubeMapEllipsoidTessellator,
+        MeshFilters,
         ImageryLayerCollection,
         TerrainProvider,
         TileState,
@@ -56,7 +62,7 @@ define([
 
         this.terrainProvider = description.terrainProvider;
         this.imageryLayerCollection = description.imageryLayerCollection;
-        this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 64);
+        this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 2);
 
         this._levelZeroTiles = undefined;
         this._renderList = [];
@@ -66,6 +72,8 @@ define([
         this._occluder = undefined;
         this._doLodUpdate = true;
         this._frozenLodCameraPosition = undefined;
+        this._boundingSphereTile = undefined;
+        this._boundingSphereVA = undefined;
 
         var that = this;
         when(this.terrainProvider.tilingScheme, function(tilingScheme) {
@@ -113,6 +121,12 @@ define([
     var lastMinimumTilesNeeded = -1;
 
     EllipsoidSurface.prototype.update = function(context, sceneState) {
+        if (!this._doLodUpdate) {
+            return;
+        }
+
+        this._renderList.length = 0;
+
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
@@ -272,9 +286,35 @@ define([
             });
         }
 
-        context.endDraw();
+        if (this._boundingSphereTile) {
+            if (!this._boundingSphereVA) {
+                var radius = this._boundingSphereTile.get3DBoundingSphere().radius;
+                var sphere = CubeMapEllipsoidTessellator.compute(new Ellipsoid({x:radius, y:radius, z:radius}), 10);
+                MeshFilters.toWireframeInPlace(sphere);
+                this._boundingSphereVA = context.createVertexArrayFromMesh({
+                    mesh : sphere,
+                    attributeIndices : MeshFilters.createAttributeIndices(sphere)
+                });
+            }
 
-        renderList.length = 0;
+            var rtc2 = this._boundingSphereTile.get3DBoundingSphere().center;
+            uniformMap.center3D = rtc2;
+
+            var centerEye2 = mv.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
+            // PERFORMANCE_TODO: use a scratch matrix instead of cloning for every tile.
+            var mvrtc2 = mv.clone();
+            mvrtc2.setColumn3(centerEye2);
+            uniformMap.modifiedModelView = mvrtc2;
+
+            context.continueDraw({
+                primitiveType : PrimitiveType.LINES,
+                vertexArray : this._boundingSphereVA,
+                uniformMap : uniformMap
+            });
+
+        }
+
+        context.endDraw();
     };
 
     /**
@@ -316,6 +356,26 @@ define([
             }
         });
         return destroyObject(this);
+    };
+
+    EllipsoidSurface.prototype.showBoundingSphereOfTileAt = function(cartographicPick) {
+        // Find the tile in the render list that overlaps this extent
+        var renderList = this._renderList;
+        var tile;
+        for (var i = 0, len = renderList.length; i < len; ++i) {
+            tile = renderList[i];
+            if (tile.extent.contains(cartographicPick)) {
+                break;
+            }
+        }
+
+        if (typeof tile !== 'undefined') {
+            console.log('x: ' + tile.x + ' y: ' + tile.y + ' level: ' + tile.level);
+        }
+
+
+        this._boundingSphereTile = tile;
+        this._boundingSphereVA = undefined;
     };
 
     function addBestAvailableTilesToRenderList(surface, context, sceneState, tile) {
@@ -429,12 +489,23 @@ define([
         }
 
         var toCenter = boundingVolume.center.subtract(cameraPosition);
-        var distance = toCenter.magnitude() - boundingVolume.radius;
+        var distanceToBoundingSphere = toCenter.magnitude() - boundingVolume.radius;
 
-        if (distance < 0.0) {
-            // The camera is inside the bounding sphere, so the screen-space error could be enormous, but
-            // we don't really have any way to calculate it.  So return positive infinity, which will
-            // force a refine.
+        var ellipsoid = surface.terrainProvider.tilingScheme.ellipsoid;
+        var heightAboveEllipsoid = ellipsoid.cartesianToCartographic(cameraPosition).height;
+        var distanceToTerrainHeight = heightAboveEllipsoid - tile.maxHeight;
+
+        var distance;
+        if (typeof distanceToBoundingSphere !== 'undefined' && distanceToBoundingSphere > 0.0 && typeof distanceToTerrainHeight !== 'undefined' && distanceToTerrainHeight > 0.0) {
+            distance = Math.max(distanceToBoundingSphere, distanceToTerrainHeight);
+        } else if (typeof distanceToBoundingSphere !== 'undefined' && distanceToBoundingSphere > 0.0) {
+            distance = distanceToBoundingSphere;
+        } else if (typeof distanceToTerrainHeight !== 'undefined' && distanceToTerrainHeight > 0.0) {
+            distance = distanceToTerrainHeight;
+        } else {
+            // The camera is inside the bounding sphere and below the maximum terrain height,
+            // so the screen-space error could be enormous, but we don't really have any way
+            // to calculate it.  So return positive infinity, which will force a refine.
             tile.cameraInsideBoundingSphere = true;
             return 1.0/0.0;
         }

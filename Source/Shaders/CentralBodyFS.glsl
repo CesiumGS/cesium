@@ -19,7 +19,7 @@ void main()
     vec3 normalEC = normalize(agi_normal * normalMC);                                           // normalized surface normal in eye coordiantes
     
 #ifdef SHOW_DAY
-    vec3 startDayColor = vec3(0.0, 0.0, 0.0);
+    vec3 startDayColor = vec3(0.0, 0.0, 255.0);
     for (int i = 0; i < 8; ++i)
     {
         if (i >= u_numberOfDayTextures)
