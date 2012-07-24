@@ -17,9 +17,30 @@
     }
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript">
+    require({
+        baseUrl : '../../..',
+        packages: [
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Source', location: 'Source' },
+            { name: 'Core', location: 'Source/Core' },
+            { name: 'Controls', location: 'Source/Controls' },
+            { name: 'DojoWidgets', location: 'Source/DojoWidgets' },
+            { name: 'DynamicScene', location: 'Source/DynamicScene' },
+            { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Scene', location: 'Source/Scene' },
+            { name: 'Shaders', location: 'Source/Shaders' },
+            { name: 'ThirdParty', location: 'Source/ThirdParty' }
+        ]
+    });
+    </script>
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/DojoWidgets/CesiumWidget.css" type="text/css">
 </head>
 <body class="claro">
+
 <style>
 body {
     background: #000;
@@ -44,54 +65,47 @@ body {
 }
 </style>
 
-<div id="cesiumContainer" class="fullSize">
-    <canvas id="glCanvas" class="fullSize" width="100" height="100"></canvas>
-</div>
+<div id="cesiumContainer" class="fullSize"></div>
 
 <script id="cesium_sandcastle_script">
 /*global require,document,window,console,Sandcastle*/
-require({
-    baseUrl : '../../../Source'
-}, [
-    'Cesium'
-], function (
-    Cesium
-) {
+require([
+    'Source/Cesium', 'DojoWidgets/CesiumWidget',
+    'Core/JulianDate', 'dojo/on', 'dojo/dom'
+], function(
+    Cesium, CesiumWidget,
+    JulianDate, on, dom)
+{
     "use strict";
 
-    var canvas = document.getElementById('glCanvas');
-    var ellipsoid = Cesium.Ellipsoid.WGS84;
-    var scene = new Cesium.Scene(canvas);
-    var primitives = scene.getPrimitives();
-    var cb = new Cesium.CentralBody(ellipsoid);
+    function createPrimitives(widget) {
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Circles & Ellipses examples
-
-    function createPrimitives() {
+        var scene = widget.scene;
+        var ellipsoid = widget.ellipsoid;
+        var primitives = scene.getPrimitives();
 
         // Fill circle
         var circle = new Cesium.Polygon();
         Sandcastle.declare(circle);
         circle.setPositions(Cesium.Shapes.computeCircleBoundary(
-            ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                new Cesium.Cartographic2(-75.0, 40.0)), 300000.0));
+            ellipsoid, ellipsoid.cartographicToCartesian(
+                new Cesium.Cartographic.fromDegrees(-75.0, 40.0)), 300000.0));
         primitives.add(circle);
 
         // Outline circle
         var outline = new Cesium.Polyline();
         Sandcastle.declare(outline);
         outline.setPositions(Cesium.Shapes.computeCircleBoundary(
-            ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                new Cesium.Cartographic2(-82.0, 37.0)), 300000.0));
+            ellipsoid, ellipsoid.cartographicToCartesian(
+                new Cesium.Cartographic.fromDegrees(-82.0, 37.0)), 300000.0));
         primitives.add(outline);
 
         // Apply a material to a filled circle
         var circle2 = new Cesium.Polygon();
         Sandcastle.declare(circle2);
         circle2.setPositions(Cesium.Shapes.computeCircleBoundary(
-            ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                new Cesium.Cartographic2(-90.0, 35.0)), 400000.0));
+            ellipsoid, ellipsoid.cartographicToCartesian(
+                new Cesium.Cartographic.fromDegrees(-90.0, 35.0)), 400000.0));
         // Any polygon-compatible material can be used
         circle2.material = new Cesium.TieDyeMaterial();
         primitives.add(circle2);
@@ -100,120 +114,28 @@ require({
         var ellipse = new Cesium.Polygon();
         Sandcastle.declare(ellipse);
         ellipse.setPositions(Cesium.Shapes.computeEllipseBoundary(
-            ellipsoid, ellipsoid.cartographicDegreesToCartesian(
-                new Cesium.Cartographic2(-78.0, 32.5)), 500000.0,
+            ellipsoid, ellipsoid.cartographicToCartesian(
+                new Cesium.Cartographic.fromDegrees(-78.0, 32.5)), 500000.0,
                     250000.0, Cesium.Math.toRadians(60)));
         primitives.add(ellipse);
 
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Everything below is boilerplate example code.
-
-    // Bing Maps
-    var bing = new Cesium.BingMapsTileProvider({
-        server : 'dev.virtualearth.net',
-        mapStyle : Cesium.BingMapsStyle.AERIAL,
-        // Some versions of Safari support WebGL, but don't correctly implement
-        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-    });
-
-    cb.dayTileProvider = bing;
-    cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
-    cb.specularMapSource = '../../../Images/earthspec1k.jpg';
-    cb.showSkyAtmosphere = true;
-    cb.showGroundAtmosphere = true;
-    primitives.setCentralBody(cb);
-
-    scene.getCamera().getControllers().addCentralBody();
-
-    createPrimitives();
-
-    scene.setAnimation(function() {
-        scene.setSunPosition(Cesium.SunPosition.compute().position);
-
-        // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
-    });
-
-    (function tick() {
-        scene.render();
-        Cesium.requestAnimationFrame(tick);
-    }());
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Example pick handler
-
-    var handler = new Cesium.EventHandler(canvas);
-    var mousedOverObject;
-    var originalColor;
-    var originalMaterial;
-    var selectedColor = new Cesium.Color(0.0, 1.0, 0.0);
-    var selectedMaterial = new Cesium.ColorMaterial();
-    selectedMaterial.color = selectedColor;
-
-    function onObjectHover(obj) {
-        if (typeof obj.material !== 'undefined') {
-            originalMaterial = obj.material;
-            obj.material = selectedMaterial;
-        } else {
-            originalColor = obj.color;
-            obj.color = selectedColor;
-        }
-    }
-
-    function onObjectExit(obj) {
-        if (typeof obj.material !== 'undefined') {
-            obj.material = originalMaterial;
-        } else {
-            obj.color = originalColor;
-        }
-    }
-
-    handler.setMouseAction(function (movement) {
-        var pickedObject = scene.pick(movement.endPosition);
-        if (mousedOverObject !== pickedObject) {
-            if (typeof mousedOverObject !== 'undefined') {
-                onObjectExit(mousedOverObject);
-            }
-            mousedOverObject = pickedObject;
-            if (typeof mousedOverObject !== 'undefined') {
-                onObjectHover(mousedOverObject);
-            }
+    var cesiumWidget = new CesiumWidget({
+        onObjectMousedOver : function(mousedOverObject) {
+            cesiumWidget.highlightObject(mousedOverObject);
             Sandcastle.highlight(mousedOverObject);
+        },
+        postSetup : function(widget) {
+            createPrimitives(widget);
+            widget.startRenderLoop();
         }
-    }, Cesium.MouseEventType.MOVE);
+    });
+    cesiumWidget.placeAt(dom.byId("cesiumContainer"));
 
-    // Prevent right-click from opening a context menu.
-    canvas.oncontextmenu = function() {
-        return false;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Example resize handler
-
-    var onResize = function () {
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
-
-        if (canvas.width === width && canvas.height === height) {
-            return;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        scene.getContext().setViewport({
-            x: 0,
-            y: 0,
-            width: width,
-            height: height
-        });
-
-        scene.getCamera().frustum.aspectRatio = width / height;
-    };
-    window.addEventListener('resize', onResize, false);
-    onResize();
+    on(window, 'resize', function() {
+        cesiumWidget.resize();
+    });
 });
 
 </script>
