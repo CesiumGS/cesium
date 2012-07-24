@@ -6,8 +6,10 @@ define([
         '../Core/getImagePixels',
         '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/Extent',
         '../Core/TaskProcessor',
         './Projections',
@@ -23,8 +25,10 @@ define([
         getImagePixels,
         DeveloperError,
         CesiumMath,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Cartographic,
         Extent,
         TaskProcessor,
         Projections,
@@ -246,6 +250,8 @@ define([
                 north : northeast.y
         };
 
+        tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
+
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : pixels,
             heightScale : 1000.0,
@@ -255,7 +261,7 @@ define([
             width : width,
             height : height,
             extent : webMercatorExtent,
-            relativeToCenter : tile.get3DBoundingSphere().center,
+            relativeToCenter : tile.center,
             radiiSquared : this.tilingScheme.ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x
         });
@@ -301,6 +307,7 @@ define([
         tile.transformedGeometry = undefined;
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = buffers.statistics.maxHeight;
+        tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
 
         var ellipsoid = this.tilingScheme.ellipsoid;
         tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSouthwest());

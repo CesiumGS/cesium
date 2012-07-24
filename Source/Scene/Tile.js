@@ -129,6 +129,7 @@ define([
             this.extent = tilingScheme.tileXYToExtent(this.x, this.y, this.level);
         }
 
+        this.center = undefined;
         this._boundingSphere3D = undefined;
         this._occludeePoint = undefined;
 

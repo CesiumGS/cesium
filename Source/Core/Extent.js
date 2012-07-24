@@ -310,6 +310,13 @@ define([
         return new Cartographic(this.east, this.south);
     };
 
+    /**
+     * Gets a {@link Cartographic} containing the center of this extent.
+     */
+    Extent.prototype.getCenter = function() {
+        return new Cartographic((this.west + this.east) / 2.0, (this.south + this.north) / 2.0);
+    };
+
     Extent.prototype.contains = function(cartographicPosition) {
         return cartographicPosition.longitude >= this.west &&
                cartographicPosition.longitude <= this.east &&

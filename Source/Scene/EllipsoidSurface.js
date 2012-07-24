@@ -243,7 +243,7 @@ define([
         for (var i = 0, len = renderList.length; i < len; i++) {
             var tile = renderList[i];
 
-            var rtc = tile.get3DBoundingSphere().center;
+            var rtc = tile.center;
             uniformMap.center3D = rtc;
 
             var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
@@ -513,7 +513,7 @@ define([
     function screenSpaceError(surface, context, sceneState, tile) {
         var maxGeometricError = surface._tilingScheme.getLevelMaximumGeometricError(tile.level);
 
-        var boundingVolume = tile.get3DBoundingSphere();
+        //var boundingVolume = tile.get3DBoundingSphere();
         var camera = sceneState.camera;
         var cameraPosition = camera.getPositionWC();
         if (!surface._doLodUpdate) {
@@ -545,7 +545,7 @@ define([
 
         var distance = Math.sqrt(distanceSquaredToTile(cameraPosition, cameraPositionCartographic, tile));
 
-        tile.cameraInsideBoundingSphere = false;
+        tile.cameraInsideBoundingSphere = distance === 0.0;
 
         var viewport = context.getViewport();
         var viewportHeight = viewport.height;

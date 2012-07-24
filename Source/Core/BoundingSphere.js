@@ -181,6 +181,140 @@ define([
         }
     };
 
+    BoundingSphere.fromFlatArray = function(positions, center, stride) {
+        var boundingSphere = new BoundingSphere(new Cartesian3(0.0, 0.0, 0.0), 0.0);
+        var x = positions[0] + center.x;
+        var y = positions[1] + center.y;
+        var z = positions[2] + center.z;
+
+        var xMin = new Cartesian3(x, y, z);
+        var yMin = new Cartesian3(x, y, z);
+        var zMin = new Cartesian3(x, y, z);
+
+        var xMax = new Cartesian3(x, y, z);
+        var yMax = new Cartesian3(x, y, z);
+        var zMax = new Cartesian3(x, y, z);
+
+        var numElements = positions.length;
+        for (var i = 0; i < numElements; i += stride) {
+            x = positions[i] + center.x;
+            y = positions[i + 1] + center.y;
+            z = positions[i + 2] + center.z;
+
+            // Store points containing the the smallest and largest components
+            if (x < xMin.x) {
+                xMin.x = x;
+                xMin.y = y;
+                xMin.z = z;
+            }
+
+            if (x > xMax.x) {
+                xMax.x = x;
+                xMax.y = y;
+                xMax.z = z;
+            }
+
+            if (y < yMin.y) {
+                yMin.x = x;
+                yMin.y = y;
+                yMin.z = z;
+            }
+
+            if (y > yMax.y) {
+                yMax.x = x;
+                yMax.y = y;
+                yMax.z = z;
+            }
+
+            if (z < zMin.z) {
+                zMin.x = x;
+                zMin.y = y;
+                zMin.z = z;
+            }
+
+            if (z > zMax.z) {
+                zMax.x = x;
+                zMax.y = y;
+                zMax.z = z;
+            }
+        }
+
+        // Compute x-, y-, and z-spans (Squared distances b/n each component's min. and max.).
+        var xSpan = (xMax.subtract(xMin)).magnitudeSquared();
+        var ySpan = (yMax.subtract(yMin)).magnitudeSquared();
+        var zSpan = (zMax.subtract(zMin)).magnitudeSquared();
+
+        // Set the diameter endpoints to the largest span.
+        var diameter1 = xMin;
+        var diameter2 = xMax;
+        var maxSpan = xSpan;
+        if (ySpan > maxSpan) {
+            maxSpan = ySpan;
+            diameter1 = yMin;
+            diameter2 = yMax;
+        }
+        if (zSpan > maxSpan) {
+            maxSpan = zSpan;
+            diameter1 = zMin;
+            diameter2 = zMax;
+        }
+
+        // Calculate the center of the initial sphere found by Ritter's algorithm
+        var ritterCenter = new Cartesian3(
+                (diameter1.x + diameter2.x) * 0.5,
+                (diameter1.y + diameter2.y) * 0.5,
+                (diameter1.z + diameter2.z) * 0.5);
+
+        // Calculate the radius of the initial sphere found by Ritter's algorithm
+        var ritterRadiusSquared = (diameter2.subtract(ritterCenter)).magnitudeSquared();
+        var ritterRadius = Math.sqrt(ritterRadiusSquared);
+
+        // Find the center of the sphere found using the Naive method.
+        var minBoxPt = new Cartesian3(xMin.x, yMin.y, zMin.z);
+        var maxBoxPt = new Cartesian3(xMax.x, yMax.y, zMax.z);
+        var naiveCenter = (minBoxPt.add(maxBoxPt)).multiplyByScalar(0.5);
+
+        // Begin 2nd pass to find naive radius and modify the ritter sphere.
+        var naiveRadiusSquared = 0;
+        var currentPos = new Cartesian3(0.0, 0.0, 0.0);
+        for (i = 0; i < numElements; i += stride) {
+            currentPos.x = positions[i] + center.x;
+            currentPos.y = positions[i + 1] + center.y;
+            currentPos.z = positions[i + 2] + center.z;
+
+            // Find the furthest point from the naive center to calculate the naive radius.
+            var rSquared = (currentPos.subtract(naiveCenter)).magnitudeSquared();
+            if (rSquared > naiveRadiusSquared) {
+                naiveRadiusSquared = rSquared;
+            }
+
+            // Make adjustments to the Ritter Sphere to include all points.
+            var oldCenterToPointSquared = (currentPos.subtract(ritterCenter)).magnitudeSquared();
+            if (oldCenterToPointSquared > ritterRadiusSquared) {
+                var oldCenterToPoint = Math.sqrt(oldCenterToPointSquared);
+                // Calculate new radius to include the point that lies outside
+                ritterRadius = (ritterRadius + oldCenterToPoint) * 0.5;
+                ritterRadiusSquared = ritterRadius * ritterRadius;
+                // Calculate center of new Ritter sphere
+                var oldToNew = oldCenterToPoint - ritterRadius;
+                ritterCenter = new Cartesian3(
+                        (ritterRadius * ritterCenter.x + oldToNew * currentPos.x) / oldCenterToPoint,
+                        (ritterRadius * ritterCenter.y + oldToNew * currentPos.y) / oldCenterToPoint,
+                        (ritterRadius * ritterCenter.z + oldToNew * currentPos.z) / oldCenterToPoint);
+            }
+        }
+
+        if (ritterRadiusSquared < naiveRadiusSquared) {
+            boundingSphere.center = ritterCenter;
+            boundingSphere.radius = ritterRadius;
+        } else {
+            boundingSphere.center = naiveCenter;
+            boundingSphere.radius = Math.sqrt(naiveRadiusSquared);
+        }
+
+        return boundingSphere;
+    };
+
     /**
      * DOC_TBA
      * @memberof BoundingSphere
