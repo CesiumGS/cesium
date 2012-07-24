@@ -125,6 +125,7 @@ require({
     
     var cesiumWidget = new CesiumWidget({
         onObjectMousedOver : function(mousedOverObject) {
+            cesiumWidget.highlightObject(mousedOverObject);
             Sandcastle.highlight(mousedOverObject);
         },
         postSetup : function(widget) {
