@@ -23,7 +23,17 @@ define([
      * @param {String} [options.callbackParameterName='callback'] The callback parameter name that the server expects.
      * @param {Object} [options.proxy] A proxy to use for the request. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
-     * @returns {Promise} a promise that will resolve to the requested data when loaded.
+     * @returns {Object} a promise that will resolve to the requested data when loaded.
+     *
+     * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
+     *
+     * @example
+     * // load a data asynchronously
+     * jsonp('some/webservice').then(function(data) {
+     *     // use the loaded data
+     * }, function() {
+     *     // an error occurred
+     * });
      */
     var jsonp = function(url, options) {
         if (typeof url === 'undefined') {

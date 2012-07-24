@@ -8,9 +8,11 @@ define([
         '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/PlaneTessellator',
+        './ImageryCache',
         './Tile',
         './TileImagery',
         './TileState',
+        './TexturePool',
         './Projections',
         '../ThirdParty/when'
     ], function(
@@ -22,9 +24,11 @@ define([
         Cartesian2,
         Extent,
         PlaneTessellator,
+        ImageryCache,
         Tile,
         TileImagery,
         TileState,
+        TexturePool,
         Projections,
         when) {
     "use strict";
@@ -46,6 +50,9 @@ define([
         this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 1);
 
         this.extent = extent;
+
+        this._imageryCache = new ImageryCache();
+        this._texturePool = new TexturePool();
 
         this._tileFailCount = 0;
 
@@ -165,12 +172,18 @@ define([
 
     ImageryLayer.prototype.requestImagery = function(tileImagery) {
         var imageryProvider = this.imageryProvider;
+        var imageryCache = this._imageryCache;
         var hostname;
-        var postpone = false;
 
-        when(imageryProvider.buildImageUrl(tileImagery.x, tileImagery.y, tileImagery.level), function(url) {
-            hostname = getHostname(url);
+        when(imageryProvider.buildImageUrl(tileImagery.x, tileImagery.y, tileImagery.level), function(imageUrl) {
+            var texture = imageryCache.get(imageUrl);
+            if (typeof texture !== 'undefined') {
+                tileImagery.texture = texture;
+                tileImagery.state = TileState.READY;
+                return false;
+            }
 
+            hostname = getHostname(imageUrl);
             if (hostname !== '') {
                 var activeRequestsForHostname = defaultValue(activeTileImageRequests[hostname], 0);
 
@@ -180,20 +193,20 @@ define([
                 if (activeRequestsForHostname > 6) {
                     // postpone loading tile
                     tileImagery.state = TileState.UNLOADED;
-                    postpone = true;
-                    return;
+                    return false;
                 }
 
                 activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
             }
 
-            return imageryProvider.requestImage(url);
+            tileImagery.imageUrl = imageUrl;
+            return imageryProvider.requestImage(imageUrl);
         }).then(function(image) {
-            activeTileImageRequests[hostname]--;
-
-            if (postpone) {
+            if (typeof image === 'boolean') {
                 return;
             }
+
+            activeTileImageRequests[hostname]--;
 
             tileImagery.image = image;
 
@@ -213,7 +226,12 @@ define([
     };
 
     ImageryLayer.prototype.createResources = function(context, tileImagery) {
-        this.imageryProvider.createResources(context, tileImagery);
+        this.imageryProvider.createResources(context, tileImagery, this._texturePool);
+
+        if (tileImagery.state === TileState.READY) {
+            tileImagery.texture = this._imageryCache.add(tileImagery.imageUrl, tileImagery.texture);
+            tileImagery.imageUrl = undefined;
+        }
     };
 
     var anchor;
@@ -261,6 +279,8 @@ define([
      * imageryLayer = imageryLayer && imageryLayer.destroy();
      */
     ImageryLayer.prototype.destroy = function() {
+        this._texturePool = this._texturePool && this._texturePool.destroy();
+
         return destroyObject(this);
     };
 

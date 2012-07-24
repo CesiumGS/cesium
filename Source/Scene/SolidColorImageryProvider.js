@@ -170,6 +170,8 @@ define([
      * @param {TileImagery} tileImagery The tile imagery to transform.
      */
     SolidColorImageryProvider.prototype.transformImagery = function(context, tileImagery) {
+        tileImagery.transformedImage = tileImagery.image;
+        tileImagery.image = undefined;
         tileImagery.state = TileState.TRANSFORMED;
     };
 
@@ -181,12 +183,9 @@ define([
      *
      * @param {Context} context The context to use to create resources.
      * @param {TileImagery} tileImagery The tile imagery to create resources for.
+     * @param {TexturePool} texturePool A texture pool to use to create textures.
      */
-    SolidColorImageryProvider.prototype.createResources = function(context, tileImagery) {
-        tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.image);
-        tileImagery.image = undefined;
-        tileImagery.state = TileState.READY;
-    };
+    SolidColorImageryProvider.prototype.createResources = ImageryProvider.prototype.createResources;
 
     return SolidColorImageryProvider;
 });

@@ -29,6 +29,7 @@ define([
         this.extent = imageryLayer.imageryProvider.tilingScheme.tileXYToExtent(x, y, level);
 
         this.state = TileState.UNLOADED;
+        this.imageUrl = undefined;
         this.image = undefined;
         this.transformedImage = undefined;
         this.texture = undefined;
@@ -73,23 +74,11 @@ define([
         if (typeof this.image !== 'undefined' && typeof this.image.destroy !== 'undefined') {
             this.image.destroy();
         }
-        this.image = undefined;
-
         if (typeof this.transformedImage !== 'undefined' && typeof this.transformedImage.destroy !== 'undefined') {
             this.transformedImage.destroy();
         }
-        this.transformedImage = undefined;
-
-        if (typeof this.texture !== 'undefined') {
-            if (typeof this.texture.referenceCount !== 'undefined') {
-                --this.texture.referenceCount;
-                if (this.texture.referenceCount === 0) {
-                    this.texture.destroy();
-                }
-            } else if (typeof this.texture.destroy !== 'undefined') {
-                this.texture.destroy();
-            }
-            this.texture = undefined;
+        if (typeof this.texture !== 'undefined' && typeof this.texture.destroy !== 'undefined') {
+            this.texture.destroy();
         }
 
         return destroyObject(this);

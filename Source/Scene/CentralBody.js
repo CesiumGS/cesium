@@ -38,7 +38,6 @@ define([
         './Tile',
         './TileState',
         './SceneMode',
-        './TexturePool',
         './ViewportQuad',
         './EllipsoidSurface',
         '../Shaders/CentralBodyVS',
@@ -92,7 +91,6 @@ define([
         Tile,
         TileState,
         SceneMode,
-        TexturePool,
         ViewportQuad,
         EllipsoidSurface,
         CentralBodyVS,
@@ -131,8 +129,6 @@ define([
             terrainProvider : terrainProvider,
             imageryLayerCollection : this._imageryLayerCollection
         });
-
-        this._texturePool = new TexturePool();
 
         this._spWithoutAtmosphere = undefined;
         this._spGroundFromSpace = undefined;
@@ -1513,8 +1509,6 @@ define([
      * centralBody = centralBody && centralBody.destroy();
      */
     CentralBody.prototype.destroy = function() {
-        this._texturePool = this._texturePool && this._texturePool.destroy();
-
         this._fb = this._fb && this._fb.destroy();
         this._quadV = this._quadV && this._quadV.destroy();
         this._quadH = this._quadH && this._quadH.destroy();
