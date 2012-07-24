@@ -83,7 +83,7 @@ define([
         var that = this;
         this._description = description || {};
         this._context = this._description.context;
-        this._strict = (typeof this._description.strict !== 'undefined') ? this._description.strict : true;
+        this._strict = (typeof this._description.strict !== 'undefined') ? this._description.strict : false;
         this._template = this._description.fabric || {};
         this._materialID = this._template.id;
 
@@ -471,11 +471,11 @@ define([
     };
 
     // Create basic material types
-    Material.createFromID = function(context, materialID) {
+    Material.fromID = function(context, materialID) {
         return new Material({
-            'context' : context,
-            'fabric' : {
-                'id' : materialID
+            context : context,
+            fabric : {
+                "id" : materialID
             }
         });
     };
@@ -487,6 +487,20 @@ define([
             'color' : new Color(1.0, 0.0, 0.0, 1.0)
         },
         'source' : ColorMaterial
+    });
+
+    // Image Material.
+    // Useful for textures with an alpha component.
+    Material.prototype._materialFactory.addMaterial('ImageMaterial', {
+        'id' : 'ImageMaterial',
+        'uniforms' : {
+            'texture' : 'agi_defaultTexture',
+            'repeat' : {
+                'x' : 1,
+                'y' : 1
+            }
+        },
+        'source' : ImageMaterial
     });
 
     // Diffuse Map Material
@@ -515,22 +529,6 @@ define([
             }
         },
         'source' : AlphaMapMaterial
-    });
-
-    // Image Material.
-    // Useful for textures with an alpha component.
-    Material.prototype._materialFactory.addMaterial('ImageMaterial', {
-        'id' : 'ImageMaterial',
-        'uniforms' : {
-            'texture' : 'agi_defaultTexture',
-            'diffuseChannels' : 'rgb',
-            'alphaChannel' : 'a',
-            'repeat' : {
-                'x' : 1,
-                'y' : 1
-            }
-        },
-        'source' : ImageMaterial
     });
 
     // Specular Map Material
@@ -567,6 +565,7 @@ define([
         'uniforms' : {
             'texture' : 'agi_defaultTexture',
             'channel' : 'r',
+            'strength' : 0.8,
             'repeat' : {
                 'x' : 1,
                 'y' : 1

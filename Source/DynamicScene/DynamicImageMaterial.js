@@ -80,7 +80,7 @@ define([
      */
     DynamicImageMaterial.prototype.getValue = function(time, context, existingMaterial) {
         if (typeof existingMaterial === 'undefined' || (existingMaterial.getID() !== 'ImageMapMaterial')) {
-            existingMaterial = Material.createFromID(context, 'ImageMapMaterial');
+            existingMaterial = Material.fromID(context, 'ImageMapMaterial');
         }
 
         var tRepeat;

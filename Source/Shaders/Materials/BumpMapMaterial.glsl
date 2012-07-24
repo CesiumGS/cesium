@@ -1,5 +1,6 @@
 uniform sampler2D texture;
 uniform ivec2 textureDimensions;
+uniform float strength;
 uniform vec2 repeat;
 
 agi_material agi_getMaterial(agi_materialInput materialInput)
@@ -19,7 +20,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     vec2 leftPixel = fract(repeat * (st + vec2(0.0, 1.0 / textureHeight)));
     float topBump = texture2D(texture, leftPixel).channel;
     
-    vec3 normalTangentSpace = normalize(vec3(centerBump - rightBump, centerBump - topBump, 0.2));
+    vec3 normalTangentSpace = normalize(vec3(centerBump - rightBump, centerBump - topBump, clamp(1.0 - strength, 0.1, 1.0)));
     vec3 normalEC = materialInput.tangentToEyeMatrix * normalTangentSpace;
  
     material.normal = normalEC;

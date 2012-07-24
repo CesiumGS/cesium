@@ -57,7 +57,7 @@ define([
      */
     DynamicColorMaterial.prototype.getValue = function(time, context, existingMaterial) {
         if (typeof existingMaterial === 'undefined' || (existingMaterial.getID() !== 'ColorMaterial')) {
-            existingMaterial = Material.createFromID(context, 'ColorMaterial');
+            existingMaterial = Material.fromID(context, 'ColorMaterial');
         }
         existingMaterial.color = this.color.getValue(time, existingMaterial.color);
         return existingMaterial;

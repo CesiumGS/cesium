@@ -5,7 +5,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
 {
     agi_material material = agi_getDefaultMaterial(materialInput);
     vec4 textureValue = texture2D(texture, fract(repeat * materialInput.st));
-    material.diffuse = textureValue.diffuseChannels;
-    material.alpha = textureValue.alphaChannel;
+    material.diffuse = textureValue.rgb;
+    material.alpha = textureValue.a;
     return material;
 }

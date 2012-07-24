@@ -118,7 +118,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = t.material || Material.createFromID(undefined, 'ColorMaterial');
+        this.material = t.material || Material.fromID(undefined, 'ColorMaterial');
 
         /**
          * DOC_TBA
