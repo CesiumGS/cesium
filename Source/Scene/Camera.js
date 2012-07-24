@@ -214,8 +214,8 @@ define([
             east += CesiumMath.TWO_PI;
         }
 
-        var northEast = ellipsoid.cartographicToCartesian(new Cartographic(east, north, 0.0));
-        var southWest = ellipsoid.cartographicToCartesian(new Cartographic(west, south, 0.0));
+        var northEast = ellipsoid.cartographicToCartesian(new Cartographic(east, north));
+        var southWest = ellipsoid.cartographicToCartesian(new Cartographic(west, south));
         var diagonal = northEast.subtract(southWest);
         var center = southWest.add(diagonal.normalize().multiplyByScalar(diagonal.magnitude() * 0.5));
 
@@ -261,11 +261,11 @@ define([
         var transform = this.transform.clone();
         transform.setColumn3(Cartesian4.UNIT_W);
 
-        var northEast = projection.project(new Cartographic(east, north, 0.0));
+        var northEast = projection.project(new Cartographic(east, north));
         northEast = transform.multiplyByVector(new Cartesian4(northEast.x, northEast.y, northEast.z, 1.0));
         northEast = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(northEast));
 
-        var southWest = projection.project(new Cartographic(west, south, 0.0));
+        var southWest = projection.project(new Cartographic(west, south));
         southWest = transform.multiplyByVector(new Cartesian4(southWest.x, southWest.y, southWest.z, 1.0));
         southWest = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(southWest));
 
@@ -312,22 +312,22 @@ define([
         var northEast = projection.project(new Cartographic(east, north));
         var southWest = projection.project(new Cartographic(west, south));
 
-        var width = Math.abs(northEast.x - southWest.x);
-        var height = Math.abs(northEast.y - southWest.y);
+        var width = Math.abs(northEast.x - southWest.x) * 0.5;
+        var height = Math.abs(northEast.y - southWest.y) * 0.5;
 
         var position = projection.project(lla);
         this.position.x = position.x;
         this.position.y = position.y;
 
-        var right, top, ratio;
-        if (width > height) {
-            ratio = this.frustum.top / this.frustum.right;
-            right = width * 0.5;
-            top = right * ratio;
+        var right, top;
+        var ratio = this.frustum.right / this.frustum.top;
+        var heightRatio = height * ratio;
+        if (width > heightRatio) {
+            right = width;
+            top = right / ratio;
         } else {
-            ratio = this.frustum.right / this.frustum.top;
-            top = height * 0.5;
-            right = top * ratio;
+            top = height;
+            right = heightRatio;
         }
 
         this.frustum.right = right;
