@@ -642,10 +642,10 @@ define([
                 if (typeof selectedObject !== 'undefined') {
                     if (typeof selectedObject.material !== 'undefined') {
                         this._originalMaterial = selectedObject.material;
-                        selectedObject.material = this.highlightedMaterial;
+                        selectedObject.material = this.highlightMaterial;
                     } else {
                         this._originalColor = selectedObject.color;
-                        selectedObject.color = this.highlightedColor;
+                        selectedObject.color = this.highlightColor;
                     }
                 }
             }
