@@ -12,7 +12,7 @@ require({
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
-    //Cesium.TerrainProvider.wireframe = true;
+    Cesium.TerrainProvider.wireframe = true;
 
 //    var terrainProvider = new Cesium.EllipsoidTerrainProvider(new Cesium.WebMercatorTilingScheme({
 //        ellipsoid : ellipsoid,
@@ -22,7 +22,7 @@ require({
 
     var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : '26O_pElUyvrFnCGbKrMm4oftiInNfIebGgcPt4TT9eZL8kfg4yt1ywYCW2uRH22Dz4jI3rgbTmHmlAHnE3nR9A..',
+        token : 'OjBxR9CwkxJQgZB8aLHV3Z3t7CoN3Vsi8ilW1CgNkaiiWD3B9mBsG7Rinq3hhKfPbJollxhvpknHSHaQ0PULtw..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
