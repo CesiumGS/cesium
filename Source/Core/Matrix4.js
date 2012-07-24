@@ -1240,8 +1240,6 @@ define([
         return result;
     };
 
-    var invertTransformationScratch = new Cartesian3();
-
     /**
     * Computes and returns the inverse of this matrix, assuming it is
     * an affine transformation matrix, where the upper left 3x3 elements
@@ -1254,7 +1252,6 @@ define([
     * <p>
     * The matrix is not verified to be in the proper form.
     * </ p>
-    *
     * @memberof Matrix4
     *
     * @return {Matrix4} The inverse of this affine transformation matrix.
@@ -1264,20 +1261,53 @@ define([
             throw new DeveloperError('matrix is required');
         }
 
-        // rT = negated rotational transpose
-        var rTN = [-matrix[0], -matrix[1], -matrix[2],
-                  -matrix[4], -matrix[5], -matrix[6],
-                  -matrix[8], -matrix[9], -matrix[10]];
+        //This function is an optimized version of the below 4 lines.
+        //var rT = Matrix3.transpose(Matrix4.getRotation(matrix));
+        //var rTN = Matrix3.negate(rT);
+        //var rTT = Matrix3.multiplyByVector(rTN, Matrix4.getTranslation(matrix));
+        //return Matrix4.fromRotationTranslation(rT, rTT, result);
 
-        // rTN = negated rotational transpose
-        var rT = [matrix[0], matrix[1], matrix[2],
-                   matrix[4], matrix[5], matrix[6],
-                   matrix[8], matrix[9], matrix[10]];
+        var matrix0 = matrix[0];
+        var matrix1 = matrix[1];
+        var matrix2 = matrix[2];
+        var matrix4 = matrix[4];
+        var matrix5 = matrix[5];
+        var matrix6 = matrix[6];
+        var matrix8 = matrix[8];
+        var matrix9 = matrix[9];
+        var matrix10 = matrix[10];
 
-        // T = translation, rTT = (rT)(T)
-        var translation = Matrix4.getTranslation(matrix, invertTransformationScratch);
-        var rTT = Matrix3.multiplyByVector(rTN, translation, invertTransformationScratch);
-        return Matrix4.fromRotationTranslation(rT, rTT, result);
+        var vX = matrix[12];
+        var vY = matrix[13];
+        var vZ = matrix[14];
+
+        var x = -matrix0 * vX - matrix1 * vY - matrix2 * vZ;
+        var y = -matrix4 * vX - matrix5 * vY - matrix6 * vZ;
+        var z = -matrix8 * vX - matrix9 * vY - matrix10 * vZ;
+
+        if (typeof result === 'undefined') {
+            return new Matrix4(matrix0, matrix1, matrix2,  x,
+                               matrix4, matrix5, matrix6,  y,
+                               matrix8, matrix9, matrix10, z,
+                               0.0,         0.0,      0.0, 1.0);
+        }
+        result[0] = matrix0;
+        result[1] = matrix4;
+        result[2] = matrix8;
+        result[3] = 0.0;
+        result[4] = matrix1;
+        result[5] = matrix5;
+        result[6] = matrix9;
+        result[7] = 0.0;
+        result[8] = matrix2;
+        result[9] = matrix6;
+        result[10] = matrix10;
+        result[11] = 0.0;
+        result[12] = x;
+        result[13] = y;
+        result[14] = z;
+        result[15] = 1.0;
+        return result;
     };
 
     /**

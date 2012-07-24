@@ -44,8 +44,13 @@ define(['./DeveloperError'
      * @param {Spherical} spherical The Spherical to be converted to Cartesian3.
      * @param {Cartesian3} [cartesian3] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new instance if none was provided.
+     *
+     * @exception {DeveloperError} spherical is required.
      */
     Cartesian3.fromSpherical = function(spherical, result) {
+        if (typeof spherical === 'undefined') {
+            throw new DeveloperError('spherical is required');
+        }
         if (typeof result === 'undefined') {
             result = new Cartesian3();
         }
