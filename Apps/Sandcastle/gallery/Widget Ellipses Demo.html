@@ -129,7 +129,7 @@ require({
         },
         postSetup : function(widget) {
             createPrimitives(widget);
-            widget.defaultRenderLoop();
+            widget.startRenderLoop();
         }
     });
     cesiumWidget.placeAt(dom.byId("cesiumContainer"));
