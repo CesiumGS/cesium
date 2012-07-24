@@ -478,6 +478,38 @@ define([
         return (!occludeePoint || occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) && occluder.isVisible(boundingVolume);
     }
 
+    function distanceSquaredToTile(cameraCartesianPosition, cameraCartographicPosition, tile) {
+        var vectorFromSouthwestCorner = cameraCartesianPosition.subtract(tile.southwestCornerCartesian);
+        var distanceToWestPlane = vectorFromSouthwestCorner.dot(tile.westNormal);
+        var distanceToSouthPlane = vectorFromSouthwestCorner.dot(Cartesian3.UNIT_Z.negate());
+
+        var vectorFromNortheastCorner = cameraCartesianPosition.subtract(tile.northeastCornerCartesian);
+        var distanceToEastPlane = vectorFromNortheastCorner.dot(tile.eastNormal);
+        var distanceToNorthPlane = vectorFromNortheastCorner.dot(Cartesian3.UNIT_Z);
+
+        var distanceFromTop = cameraCartographicPosition.height - tile.maxHeight;
+
+        var result = 0.0;
+
+        if (distanceToWestPlane > 0.0) {
+            result += distanceToWestPlane * distanceToWestPlane;
+        } else if (distanceToEastPlane > 0.0) {
+            result += distanceToEastPlane * distanceToEastPlane;
+        }
+
+        if (distanceToSouthPlane > 0.0) {
+            result += distanceToSouthPlane * distanceToSouthPlane;
+        } else if (distanceToNorthPlane > 0.0) {
+            result += distanceToNorthPlane * distanceToNorthPlane;
+        }
+
+        if (distanceFromTop > 0.0) {
+            result += distanceFromTop * distanceFromTop;
+        }
+
+        return result;
+    }
+
     function screenSpaceError(surface, context, sceneState, tile) {
         var maxGeometricError = surface._tilingScheme.getLevelMaximumGeometricError(tile.level);
 
@@ -488,14 +520,15 @@ define([
             cameraPosition = surface._frozenLodCameraPosition;
         }
 
-        var toCenter = boundingVolume.center.subtract(cameraPosition);
-        var distanceToBoundingSphere = toCenter.magnitude() - boundingVolume.radius;
+        //var toCenter = boundingVolume.center.subtract(cameraPosition);
+        //var distanceToBoundingSphere = toCenter.magnitude() - boundingVolume.radius;
 
         var ellipsoid = surface.terrainProvider.tilingScheme.ellipsoid;
-        var heightAboveEllipsoid = ellipsoid.cartesianToCartographic(cameraPosition).height;
-        var distanceToTerrainHeight = heightAboveEllipsoid - tile.maxHeight;
+        var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition);
+        //var heightAboveEllipsoid = cameraPositionCartographic.height;
+        //var distanceToTerrainHeight = heightAboveEllipsoid - tile.maxHeight;
 
-        var distance;
+        /*var distance;
         if (typeof distanceToBoundingSphere !== 'undefined' && distanceToBoundingSphere > 0.0 && typeof distanceToTerrainHeight !== 'undefined' && distanceToTerrainHeight > 0.0) {
             distance = Math.max(distanceToBoundingSphere, distanceToTerrainHeight);
         } else if (typeof distanceToBoundingSphere !== 'undefined' && distanceToBoundingSphere > 0.0) {
@@ -508,7 +541,9 @@ define([
             // to calculate it.  So return positive infinity, which will force a refine.
             tile.cameraInsideBoundingSphere = true;
             return 1.0/0.0;
-        }
+        }*/
+
+        var distance = Math.sqrt(distanceSquaredToTile(cameraPosition, cameraPositionCartographic, tile));
 
         tile.cameraInsideBoundingSphere = false;
 

@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/Extent',
         '../Core/TaskProcessor',
         './Projections',
@@ -23,6 +24,7 @@ define([
         DeveloperError,
         CesiumMath,
         Cartesian2,
+        Cartesian3,
         Extent,
         TaskProcessor,
         Projections,
@@ -299,6 +301,16 @@ define([
         tile.transformedGeometry = undefined;
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = buffers.statistics.maxHeight;
+
+        var ellipsoid = this.tilingScheme.ellipsoid;
+        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSouthwest());
+        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getNortheast());
+
+        var scratch = new Cartesian3();
+        tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(scratch), scratch).normalize();
+        tile.eastNormal = tile.northeastCornerCartesian.negate(scratch).cross(Cartesian3.UNIT_Z, scratch).normalize(scratch);
+        // The south normal is always negative Z and the north is always positive Z.
+
         tile.state = TileState.READY;
         ++ready;
         if ((ready % 10) === 0) {
