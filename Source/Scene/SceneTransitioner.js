@@ -221,13 +221,12 @@ define([
             this._destroyMorphHandler();
 
             var camera = scene.getCamera();
-            var controllers = camera.getControllers();
-            controllers.removeAll();
-
-            controllers.addColumbusView();
-
             camera.frustum = this._cameraCV.frustum.clone();
             camera.transform = this._cameraCV.transform.clone();
+
+            var controllers = camera.getControllers();
+            controllers.removeAll();
+            controllers.addColumbusView();
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
                 this._morphCancelled = false;
