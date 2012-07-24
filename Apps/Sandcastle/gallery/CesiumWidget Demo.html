@@ -17,10 +17,30 @@
     }
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript">
+    require({
+        baseUrl : '../../..',
+        packages: [
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Source', location: 'Source' },
+            { name: 'Core', location: 'Source/Core' },
+            { name: 'Controls', location: 'Source/Controls' },
+            { name: 'DojoWidgets', location: 'Source/DojoWidgets' },
+            { name: 'DynamicScene', location: 'Source/DynamicScene' },
+            { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Scene', location: 'Source/Scene' },
+            { name: 'Shaders', location: 'Source/Shaders' },
+            { name: 'ThirdParty', location: 'Source/ThirdParty' }
+        ]
+    });
+    </script>
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
     <link rel="Stylesheet" href="../../../Source/DojoWidgets/CesiumWidget.css" type="text/css">
 </head>
 <body class="claro">
+
 
 <style>
 body {
@@ -56,67 +76,20 @@ body {
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
-<div id="toolbar">Loading, please wait...</div>
 
 <script id="cesium_sandcastle_script">
 /*global require,document,window,console*/
-require({
-    baseUrl : '../../..',
-    packages: [
-        { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
-        { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
-        { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
-        { name: 'Source', location: 'Source' },
-        { name: 'Core', location: 'Source/Core' },
-        { name: 'Controls', location: 'Source/Controls' },
-        { name: 'DojoWidgets', location: 'Source/DojoWidgets' },
-        { name: 'DynamicScene', location: 'Source/DynamicScene' },
-        { name: 'Renderer', location: 'Source/Renderer' },
-        { name: 'Scene', location: 'Source/Scene' },
-        { name: 'Shaders', location: 'Source/Shaders' },
-        { name: 'ThirdParty', location: 'Source/ThirdParty' }
-    ]
-}, [
-    'Source/Cesium',
-    'DojoWidgets/CesiumWidget',
-    'Core/JulianDate',
-    'dojo/on',
-    'dojo/dom',
-    'dijit/form/ToggleButton'
+require([
+    'Source/Cesium', 'DojoWidgets/CesiumWidget',
+    'Core/JulianDate', 'dojo/on', 'dojo/dom'
 ], function(
-    Cesium, CesiumWidget, JulianDate, on, dom, ToggleButton)
+    Cesium, CesiumWidget,
+    JulianDate, on, dom)
 {
     "use strict";
 
     var cesiumWidget = new CesiumWidget({
         postSetup : function(widget) {
-
-            ///////////////////////////////////////////////////////////////////////////
-            // Demo buttons:
-
-            var cb = widget.centralBody;
-            dom.byId("toolbar").innerHTML = "Demo buttons: ";
-
-            var button1 = new ToggleButton({
-                label: "Ground Atmosphere",
-                iconClass: 'dijitCheckBoxIcon',
-                checked: cb.showGroundAtmosphere,
-                onChange: function (newValue) {
-                    cb.showGroundAtmosphere = newValue;
-                    console.log('Show ground atmosphere: ' + newValue);
-                }
-            }).placeAt("toolbar");
-
-            var button2 = new ToggleButton({
-                label: "Sky Atmosphere",
-                iconClass: 'dijitCheckBoxIcon',
-                checked: cb.showSkyAtmosphere,
-                onChange: function (newValue) {
-                    cb.showSkyAtmosphere = newValue;
-                    console.log('Show sky atmosphere: ' + newValue);
-                }
-            }).placeAt("toolbar");
-
             widget.startRenderLoop();
         },
         onSetupError : function(widget, error) {
