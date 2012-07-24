@@ -5,7 +5,7 @@ define([
         './CzmlCartesian2',
         './CzmlCartesian3',
         './CzmlNumber',
-        './CzmlString',
+        './CzmlImage',
         './CzmlHorizontalOrigin',
         './CzmlVerticalOrigin',
         './CzmlColor',
@@ -16,7 +16,7 @@ define([
         CzmlCartesian2,
         CzmlCartesian3,
         CzmlNumber,
-        CzmlString,
+        CzmlImage,
         CzmlHorizontalOrigin,
         CzmlVerticalOrigin,
         CzmlColor,
@@ -41,7 +41,7 @@ define([
      */
     var DynamicBillboard = function() {
         /**
-         * A DynamicProperty of type CzmlString which determines the billboard's texture.
+         * A DynamicProperty of type CzmlImage which determines the billboard's texture.
          */
         this.image = undefined;
         /**
@@ -90,7 +90,7 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicBillboard.processCzmlPacket = function(dynamicObject, packet) {
+    DynamicBillboard.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var billboardData = packet.billboard;
         if (typeof billboardData === 'undefined') {
             return false;
@@ -138,10 +138,10 @@ define([
         if (typeof billboardData.image !== 'undefined') {
             var image = billboard.image;
             if (typeof image === 'undefined') {
-                billboard.image = image = new DynamicProperty(CzmlString);
+                billboard.image = image = new DynamicProperty(CzmlImage);
                 billboardUpdated = true;
             }
-            image.processCzmlIntervals(billboardData.image, interval);
+            image.processCzmlIntervals(billboardData.image, interval, sourceUri);
         }
 
         if (typeof billboardData.pixelOffset !== 'undefined') {
