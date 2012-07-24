@@ -301,21 +301,17 @@ define([
             throw new DeveloperError('projection is required.');
         }
 
-        var ellipsoid = projection.getEllipsoid();
-
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
         var west = extent.west;
         var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south));
 
-        var eastVector = ellipsoid.cartographicToCartesian(new Cartographic(east, lla.latitude));
-        var westVector = ellipsoid.cartographicToCartesian(new Cartographic(west, lla.latitude));
-        var northVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, north));
-        var southVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, south));
+        var northEast = projection.project(new Cartographic(east, north));
+        var southWest = projection.project(new Cartographic(west, south));
 
-        var width = eastVector.subtract(westVector).magnitude();
-        var height = northVector.subtract(southVector).magnitude();
+        var width = Math.abs(northEast.x - southWest.x);
+        var height = Math.abs(northEast.y - southWest.y);
 
         var position = projection.project(lla);
         this.position.x = position.x;

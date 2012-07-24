@@ -172,14 +172,16 @@ defineSuite([
                 CesiumMath.PI_OVER_TWO,
                 CesiumMath.PI_OVER_TWO);
         var projection = new EquidistantCylindricalProjection();
+        var edge = projection.project(new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO));
+        var expected = Math.max(edge.x, edge.y);
 
         camera.viewExtent2D(extent, projection);
         expect(camera.position.equalsEpsilon(new Cartesian3(0.0, 0.0, maxRadii * 2.0), CesiumMath.EPSILON10)).toEqual(true);
 
-        expect(frustum.right - maxRadii <= CesiumMath.EPSILON14).toEqual(true);
-        expect(frustum.left + maxRadii <= CesiumMath.EPSILON14).toEqual(true);
-        expect(frustum.top - maxRadii <= CesiumMath.EPSILON14).toEqual(true);
-        expect(frustum.bottom + maxRadii <= CesiumMath.EPSILON14).toEqual(true);
+        expect(frustum.right - expected <= CesiumMath.EPSILON14).toEqual(true);
+        expect(frustum.left + expected <= CesiumMath.EPSILON14).toEqual(true);
+        expect(frustum.top - expected <= CesiumMath.EPSILON14).toEqual(true);
+        expect(frustum.bottom + expected <= CesiumMath.EPSILON14).toEqual(true);
     });
 
     it('viewExtentColumbusView throws without extent', function() {
