@@ -826,6 +826,12 @@ defineSuite([
         }).toThrow();
     });
 
+    it('fromCamera throws without camera', function() {
+        expect(function() {
+            Matrix4.fromCamera(undefined);
+        }).toThrow();
+    });
+
     it('fromCamera throws without eye', function() {
         expect(function() {
             Matrix4.fromCamera({
