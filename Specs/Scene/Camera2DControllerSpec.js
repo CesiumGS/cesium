@@ -140,19 +140,6 @@ defineSuite([
         expect(camera.position.equalsEpsilon(new Cartesian3(-3.9, 2.6, 0.0), CesiumMath.EPSILON2)).toEqual(true);
     });
 
-    it('zoom', function() {
-        var offset = 0.5 * Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
-        var ratio = frustum.top / frustum.right;
-        controller._zoom({
-            startPosition : new Cartesian2(0.0, 0.0),
-            endPosition : new Cartesian2(0.0, 1.0)
-        });
-        expect(frustum.right).toEqualEpsilon(offset, CesiumMath.EPSILON1);
-        expect(frustum.left).toEqualEpsilon(-offset, CesiumMath.EPSILON1);
-        expect(frustum.top).toEqualEpsilon(ratio * offset, CesiumMath.EPSILON1);
-        expect(frustum.bottom).toEqualEpsilon(-ratio * offset, CesiumMath.EPSILON1);
-    });
-
     it('zoomOut', function() {
         controller.zoomOut(zoomrate);
         expect(frustum.right).toEqualEpsilon(3.0, CesiumMath.EPSILON10);
