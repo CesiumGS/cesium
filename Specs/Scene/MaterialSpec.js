@@ -13,19 +13,17 @@ defineSuite([
     /*global it,expect*/
 
     it('draws all basic material types', function() {
-        var materialTypes = ['ColorMaterial', 'DiffuseMapMaterial', 'AlphaMapMaterial', 'ImageMaterial',
-            'SpecularMapMaterial', 'EmissionMapMaterial', 'BumpMapMaterial', 'NormalMapMaterial','ReflectionMaterial',
-            'RefractionMaterial', 'FresnelMaterial', 'BrickMaterial', 'WoodMaterial', 'AsphaltMaterial', 'CementMaterial',
-            'GrassMaterial', 'HorizontalStripeMaterial', 'VerticalStripeMaterial', 'CheckerboardMaterial','DotMaterial',
-            'TieDyeMaterial', 'FacetMaterial', 'BlobMaterial'];
+        var materialTypes = ['Color', 'Image', 'DiffuseMap', 'AlphaMap', 'SpecularMap', 'EmissionMap',
+            'BumpMap', 'NormalMap','Reflection', 'Refraction', 'Fresnel', 'Brick', 'Wood', 'Asphalt',
+            'Cement', 'Grass', 'Stripe', 'Checkerboard','Dot','TieDye', 'Facet', 'Blob'];
         for (var i = 0; i < materialTypes.length; i++) {
             var materialID = materialTypes[i];
             var context = createContext();
             var material = new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'id' : materialID
+                context : context,
+                strict : true,
+                fabric : {
+                    "id" : materialID
                 }
             });
             var pixel = renderMaterial(material, context);
@@ -37,27 +35,27 @@ defineSuite([
     it('builds a material from an existing material', function() {
         var context = createContext();
         var material1 = new Material({
-            'context' : context,
-            'strict' : true,
-            'fabric' : {
-                'id' : 'NewMaterial',
-                'components' : {
-                    'diffuse' : 'vec3(0.0, 0.0, 0.0)'
+            context : context,
+            strict : true,
+            fabric : {
+                "id" : "New",
+                "components" : {
+                    "diffuse" : "vec3(0.0, 0.0, 0.0)"
                 }
             }
         });
 
         var material2 = new Material({
-            'context' : context,
-            'strict' : true,
-            'fabric' : {
-                'materials' : {
-                    'first' : {
-                        'id' : 'NewMaterial'
+            context : context,
+            strict : true,
+            fabric : {
+                "materials" : {
+                    "first" : {
+                        "id" : "New"
                     }
                 },
-                'components' : {
-                    'diffuse' : 'first.diffuse'
+                "components" : {
+                    "diffuse" : "first.diffuse"
                 }
             }
         });
@@ -72,23 +70,23 @@ defineSuite([
     it('accesses material properties after construction', function() {
         var context = createContext();
         var material = new Material({
-            'context' : context,
-            'strict' : true,
-            'fabric' : {
-                'materials' : {
-                    'first' : {
-                        'id' : 'DiffuseMapMaterial'
+            context : context,
+            strict : true,
+            fabric : {
+                "materials" : {
+                    "first" : {
+                        "id" : "DiffuseMap"
                     }
                 },
-                'uniforms' : {
-                    'value' : {
-                        'x' : 0.0,
-                        'y' : 0.0,
-                        'z' : 0.0
+                "uniforms" : {
+                    "value" : {
+                        "x" : 0.0,
+                        "y" : 0.0,
+                        "z" : 0.0
                     }
                 },
-                'components' : {
-                    'diffuse' : 'value + first.diffuse'
+                "components" : {
+                    "diffuse" : "value + first.diffuse"
                 }
             }
         });
@@ -103,25 +101,25 @@ defineSuite([
     it('creates a material inside a material inside a material', function () {
         var context = createContext();
         var material = new Material({
-            'context' : context,
-            'strict' : true,
-            'fabric' : {
-                'materials' : {
-                    'first' : {
-                        'materials' : {
-                            'second' : {
-                                'components' : {
-                                    'diffuse' : 'vec3(0.0, 0.0, 0.0)'
+            context : context,
+            strict : true,
+            fabric : {
+                "materials" : {
+                    "first" : {
+                        "materials" : {
+                            "second" : {
+                                "components" : {
+                                    "diffuse" : "vec3(0.0, 0.0, 0.0)"
                                 }
                             }
                         },
-                        'components' : {
-                            'diffuse' : 'second.diffuse'
+                        "components" : {
+                            "diffuse" : "second.diffuse"
                         }
                     }
                 },
-                'components' : {
-                    'diffuse' : 'first.diffuse'
+                "components" : {
+                    "diffuse" : "first.diffuse"
                 }
             }
         });
@@ -130,12 +128,20 @@ defineSuite([
         destroyContext(context);
     });
 
+    it('create a material using fromID', function () {
+        var context = createContext();
+        var material = Material.fromID(context, 'Color');
+        var pixel = renderMaterial(material, context);
+        expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        destroyContext(context);
+    });
+
     it('throws without context for material that uses textures', function() {
         expect(function() {
             return new Material({
-                'context' : undefined,
-                'fabric' : {
-                    'id' : 'DiffuseMapMaterial'
+                context : undefined,
+                fabric : {
+                    "id" : "DiffuseMap"
                 }
             });
         }).toThrow();
@@ -145,15 +151,15 @@ defineSuite([
         expect(function() {
             var context = createContext();
             return new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'components' : {
-                        'diffuse' : 'vec3(0.0, 0.0, 0.0)'
+                context : context,
+                strict : true,
+                fabric : {
+                    "components" : {
+                        "diffuse" : "vec3(0.0, 0.0, 0.0)"
                     },
-                    'source' : 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n' +
-                               'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
-                               'return material;\n}\n'
+                    "source" : "agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n" +
+                               "agi_material material = agi_getDefaultMaterial(materialInput);\n" +
+                               "return material;\n}\n"
                 }
             });
         }).toThrow();
@@ -161,12 +167,12 @@ defineSuite([
         expect(function() {
             var context = createContext();
             return new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'id' : 'DiffuseMapMaterial',
-                    'components' : {
-                        'diffuse' : 'vec3(0.0, 0.0, 0.0)'
+                context : context,
+                strict : true,
+                fabric : {
+                    "id" : "DiffuseMap",
+                    "components" : {
+                        "diffuse" : "vec3(0.0, 0.0, 0.0)"
                     }
                 }
             });
@@ -177,15 +183,15 @@ defineSuite([
         expect(function() {
             var context = createContext();
             return new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'uniforms' : {
-                        'first' : 0.0,
-                        'second' : 0.0
+                context : context,
+                strict : true,
+                fabric : {
+                    "uniforms" : {
+                        "first" : 0.0,
+                        "second" : 0.0
                     },
-                    'materials' : {
-                        'second' : {}
+                    "materials" : {
+                        "second" : {}
                     }
                 }
             });
@@ -196,10 +202,10 @@ defineSuite([
         expect(function() {
             var context = createContext();
             return new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'invalid' : 3
+                context : context,
+                strict : true,
+                fabric : {
+                    "invalid" : 3
                 }
             });
         }).toThrow();
@@ -209,11 +215,11 @@ defineSuite([
         expect(function() {
             var context = createContext();
             return new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'components' : {
-                        'difuse' : 'vec3(0.0, 0.0, 0.0)'
+                context : context,
+                strict : true,
+                fabric : {
+                    "components" : {
+                        "difuse" : "vec3(0.0, 0.0, 0.0)"
                     }
                 }
             });
@@ -224,16 +230,16 @@ defineSuite([
         expect(function() {
             var context = createContext();
             return new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'uniforms' : {
-                        'uniform' : {
-                            'x' : 0.0,
-                            'y' : 0.0,
-                            'z' : 0.0,
-                            'w' : 0.0,
-                            't' : 0.0
+                context : context,
+                strict : true,
+                fabric : {
+                    "uniforms" : {
+                        "value" : {
+                            "x" : 0.0,
+                            "y" : 0.0,
+                            "z" : 0.0,
+                            "w" : 0.0,
+                            "t" : 0.0
                         }
                     }
                 }
@@ -243,31 +249,11 @@ defineSuite([
         expect(function() {
             var context = createContext();
             return new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'uniforms' : {
-                        'uniform' : [0.0, 0.0, 0.0, 0.0, 0.0]
-                    }
-                }
-            });
-        }).toThrow();
-
-        expect(function() {
-            var context = createContext();
-            return new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'uniforms' : {
-                        'uniform' : {
-                            'img1' : 'badpath',
-                            'img2' : 'badpath',
-                            'img3' : 'badpath',
-                            'img4' : 'badpath',
-                            'img5' : 'badpath',
-                            'img6' : 'badpath'
-                        }
+                context : context,
+                strict : true,
+                fabric : {
+                    "uniforms" : {
+                        "value" : [0.0, 0.0, 0.0, 0.0, 0.0]
                     }
                 }
             });
@@ -278,16 +264,16 @@ defineSuite([
         expect(function() {
             var context = createContext();
             return new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'uniforms' : {
-                        'texture' : 'agi_defaultTexture',
-                        'channels' : 'rgb'
+                context : context,
+                strict : true,
+                fabric : {
+                    "uniforms" : {
+                        "texture" : "agi_defaultTexture",
+                        "channels" : "rgb"
                     }
                 },
-                'components' : {
-                    'diffuse' : 'texture2D(texture, materialInput.st).rgb'
+                "components" : {
+                    "diffuse" : "texture2D(texture, materialInput.st).rgb"
                 }
             });
         }).toThrow();
@@ -295,15 +281,15 @@ defineSuite([
         // If strict is false, unused uniform strings are ignored.
         var context = createContext();
         var material = new Material({
-            'context' : context,
-            'strict' : false,
-            'fabric' : {
-                'uniforms' : {
-                    'texture' : 'agi_defaultTexture',
-                    'channels' : 'rgb'
+            context : context,
+            strict : false,
+            fabric : {
+                "uniforms" : {
+                    "texture" : "agi_defaultTexture",
+                    "channels" : "rgb"
                 },
-                'components' : {
-                    'diffuse' : 'texture2D(texture, materialInput.st).rgb'
+                "components" : {
+                    "diffuse" : "texture2D(texture, materialInput.st).rgb"
                 }
             }
         });
@@ -316,14 +302,14 @@ defineSuite([
         expect(function() {
             var context = createContext();
             return new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'uniforms' : {
-                        'first' : {
-                            'x' : 0.0,
-                            'y' : 0.0,
-                            'z' : 0.0
+                context : context,
+                strict : true,
+                fabric : {
+                    "uniforms" : {
+                        "first" : {
+                            "x" : 0.0,
+                            "y" : 0.0,
+                            "z" : 0.0
                         }
                     }
                 }
@@ -333,14 +319,14 @@ defineSuite([
         // If strict is false, unused uniforms are ignored.
         var context = createContext();
         var material = new Material({
-            'context' : context,
-            'strict' : false,
-            'fabric' : {
-                'uniforms' : {
-                    'first' : {
-                        'x' : 0.0,
-                        'y' : 0.0,
-                        'z' : 0.0
+            context : context,
+            strict : false,
+            fabric : {
+                "uniforms" : {
+                    "first" : {
+                        "x" : 0.0,
+                        "y" : 0.0,
+                        "z" : 0.0
                     }
                 }
             }
@@ -354,12 +340,12 @@ defineSuite([
         expect(function() {
             var context = createContext();
             return new Material({
-                'context' : context,
-                'strict' : true,
-                'fabric' : {
-                    'materials' : {
-                        'first' : {
-                            'id' : 'DiffuseMapMaterial'
+                context : context,
+                strict : true,
+                fabric : {
+                    "materials" : {
+                        "first" : {
+                            "id" : "DiffuseMap"
                         }
                     }
                 }
@@ -369,12 +355,12 @@ defineSuite([
         // If strict is false, unused materials are ignored.
         var context = createContext();
         var material = new Material({
-            'context' : context,
-            'strict' : false,
-            'fabric' : {
-                'materials' : {
-                    'first' : {
-                        'id' : 'DiffuseMapMaterial'
+            context : context,
+            strict : false,
+            fabric : {
+                "materials" : {
+                    "first" : {
+                        "id" : "DiffuseMap"
                     }
                 }
             }

@@ -26,14 +26,13 @@ define([
         '../Shaders/Materials/FacetMaterial',
         '../Shaders/Materials/FresnelMaterial',
         '../Shaders/Materials/GrassMaterial',
-        '../Shaders/Materials/HorizontalStripeMaterial',
         '../Shaders/Materials/ImageMaterial',
         '../Shaders/Materials/NormalMapMaterial',
         '../Shaders/Materials/ReflectionMaterial',
         '../Shaders/Materials/RefractionMaterial',
         '../Shaders/Materials/SpecularMapMaterial',
+        '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/TieDyeMaterial',
-        '../Shaders/Materials/VerticalStripeMaterial',
         '../Shaders/Materials/WoodMaterial'
     ], function(
         when,
@@ -62,14 +61,13 @@ define([
         FacetMaterial,
         FresnelMaterial,
         GrassMaterial,
-        HorizontalStripeMaterial,
         ImageMaterial,
         NormalMapMaterial,
         ReflectionMaterial,
         RefractionMaterial,
         SpecularMapMaterial,
+        StripeMaterial,
         TieDyeMaterial,
-        VerticalStripeMaterial,
         WoodMaterial) {
     "use strict";
 
@@ -229,8 +227,16 @@ define([
         var returnUniform = function (uniformID, uniformType) {
             return function() {
                 var uniformValue = that[uniformID];
-                if (uniformType.indexOf('sampler') !== -1 && !(uniformValue instanceof Texture || uniformValue instanceof CubeMap)) {
-                    uniformValue = that._texturePool.registerTextureToMaterial(that, uniformID, uniformValue, uniformType);
+                if (uniformType.indexOf('sampler') !== -1) {
+                    if(!(uniformValue instanceof Texture || uniformValue instanceof CubeMap)) {
+                        uniformValue = that._texturePool.registerTextureToMaterial(that, uniformID, uniformValue, uniformType);
+                    }
+                    var uniformDimensionsName = uniformID + 'Dimensions';
+                    if(that.hasOwnProperty(uniformDimensionsName)) {
+                        var uniformDimensions = that[uniformDimensionsName];
+                        uniformDimensions.x = (uniformValue instanceof Texture) ? uniformValue._width : uniformValue._size;
+                        uniformDimensions.y = (uniformValue instanceof Texture) ? uniformValue._height : uniformValue._size;
+                    }
                 }
                 else if (uniformType.indexOf('mat2') !== -1 && !(uniformValue instanceof Matrix2)) {
                     uniformValue = new Matrix2(uniformValue);
@@ -240,20 +246,6 @@ define([
                 }
                 else if (uniformType.indexOf('mat4') !== -1 && !(uniformValue instanceof Matrix4)) {
                     uniformValue = new Matrix4(uniformValue);
-                }
-                else if (uniformType === 'ivec2') {
-                    var textureDimensionsIndex = uniformID.indexOf('Dimensions');
-                    var texture = that[uniformID.slice(0, textureDimensionsIndex)];
-                    if (textureDimensionsIndex !== -1 && typeof texture !== 'undefined') {
-                        if (texture instanceof Texture) {
-                            uniformValue.x = texture._width;
-                            uniformValue.y = texture._height;
-                        }
-                        else if (texture instanceof CubeMap) {
-                            uniformValue.x = texture._size;
-                            uniformValue.y = texture._size;
-                        }
-                    }
                 }
                 that[uniformID] = uniformValue;
                 return that[uniformID];
@@ -272,7 +264,7 @@ define([
             if (this._materialTemplates.hasOwnProperty(materialID)) {
                 // Construct the sub-material. Share texture names using extendObject.
                 var materialTemplate = this._materialTemplates[materialID];
-                var material = new Material({'context' : this._context, 'strict' : this._strict, 'fabric' : materialTemplate});
+                var material = new Material({context : this._context, strict : this._strict, fabric : materialTemplate});
                 this._extendObject(this._uniforms, material._uniforms);
                 this[materialID] = material;
 
@@ -441,6 +433,8 @@ define([
                                     }
                                 });
                                 that._updateMaterialsOnTextureLoad(texture, path);
+                            }, function() {
+                                throw new DeveloperError('Cube map has an invalid image path.');
                             });
                         }
                     }
@@ -480,411 +474,390 @@ define([
     };
 
     // Color Material
-    Material.prototype._materialFactory.addMaterial('ColorMaterial', {
-        'id' : 'ColorMaterial',
-        'uniforms' : {
-            'color' : new Color(1.0, 0.0, 0.0, 1.0)
+    Material.prototype._materialFactory.addMaterial('Color', {
+        "id" : "Color",
+        "uniforms" : {
+            "color" : new Color(1.0, 0.0, 0.0, 1.0)
         },
-        'source' : ColorMaterial
+        "source" : ColorMaterial
     });
 
     // Image Material.
     // Useful for textures with an alpha component.
-    Material.prototype._materialFactory.addMaterial('ImageMaterial', {
-        'id' : 'ImageMaterial',
-        'uniforms' : {
-            'texture' : 'agi_defaultTexture',
-            'repeat' : {
-                'x' : 1,
-                'y' : 1
+    Material.prototype._materialFactory.addMaterial('Image', {
+        "id" : "Image",
+        "uniforms" : {
+            "texture" : "agi_defaultTexture",
+            "repeat" : {
+                "x" : 1,
+                "y" : 1
             }
         },
-        'source' : ImageMaterial
+        "source" : ImageMaterial
     });
 
     // Diffuse Map Material
-    Material.prototype._materialFactory.addMaterial('DiffuseMapMaterial', {
-        'id' : 'DiffuseMapMaterial',
-        'uniforms' : {
-            'texture' : 'agi_defaultTexture',
-            'channels' : 'rgb',
-            'repeat' : {
-                'x' : 1,
-                'y' : 1
+    Material.prototype._materialFactory.addMaterial('DiffuseMap', {
+        "id" : "DiffuseMap",
+        "uniforms" : {
+            "texture" : "agi_defaultTexture",
+            "channels" : "rgb",
+            "repeat" : {
+                "x" : 1,
+                "y" : 1
             }
         },
-        'source' : DiffuseMapMaterial
+        "source" : DiffuseMapMaterial
     });
 
     // Alpha Map Material
-    Material.prototype._materialFactory.addMaterial('AlphaMapMaterial', {
-        'id' : 'AlphaMapMaterial',
-        'uniforms' : {
-            'texture' : 'agi_defaultTexture',
-            'channel' : 'a',
-            'repeat' : {
-                'x' : 1,
-                'y' : 1
+    Material.prototype._materialFactory.addMaterial('AlphaMap', {
+        "id" : "AlphaMap",
+        "uniforms" : {
+            "texture" : "agi_defaultTexture",
+            "channel" : "a",
+            "repeat" : {
+                "x" : 1,
+                "y" : 1
             }
         },
-        'source' : AlphaMapMaterial
+        "source" : AlphaMapMaterial
     });
 
     // Specular Map Material
-    Material.prototype._materialFactory.addMaterial('SpecularMapMaterial' , {
-        'id' : 'SpecularMapMaterial',
-        'uniforms' : {
-            'texture' : 'agi_defaultTexture',
-            'channel' : 'r',
-            'repeat' : {
-                'x' : 1,
-                'y' : 1
+    Material.prototype._materialFactory.addMaterial('SpecularMap' , {
+        "id" : "SpecularMap",
+        "uniforms" : {
+            "texture" : "agi_defaultTexture",
+            "channel" : "r",
+            "repeat" : {
+                "x" : 1,
+                "y" : 1
             }
         },
-        'source' : SpecularMapMaterial
+        "source" : SpecularMapMaterial
     });
 
     // Emission Map Material
-    Material.prototype._materialFactory.addMaterial('EmissionMapMaterial' , {
-        'id' : 'EmissionMapMaterial',
-        'uniforms' : {
-            'texture' : 'agi_defaultTexture',
-            'channels' : 'rgb',
-            'repeat' : {
-                'x' : 1,
-                'y' : 1
+    Material.prototype._materialFactory.addMaterial('EmissionMap' , {
+        "id" : "EmissionMap",
+        "uniforms" : {
+            "texture" : "agi_defaultTexture",
+            "channels" : "rgb",
+            "repeat" : {
+                "x" : 1,
+                "y" : 1
             }
         },
-        'source' : EmissionMapMaterial
+        "source" : EmissionMapMaterial
     });
 
     // Bump Map Material
-    Material.prototype._materialFactory.addMaterial('BumpMapMaterial' , {
-        'id' : 'BumpMapMaterial',
-        'uniforms' : {
-            'texture' : 'agi_defaultTexture',
-            'channel' : 'r',
-            'strength' : 0.8,
-            'repeat' : {
-                'x' : 1,
-                'y' : 1
+    Material.prototype._materialFactory.addMaterial('BumpMap' , {
+        "id" : "BumpMap",
+        "uniforms" : {
+            "texture" : "agi_defaultTexture",
+            "channel" : "r",
+            "strength" : 0.8,
+            "repeat" : {
+                "x" : 1,
+                "y" : 1
             }
         },
-        'source' : BumpMapMaterial
+        "source" : BumpMapMaterial
     });
 
     // Normal Map Material
-    Material.prototype._materialFactory.addMaterial('NormalMapMaterial', {
-        'id' : 'NormalMapMaterial',
-        'uniforms' : {
-            'texture' : 'agi_defaultTexture',
-            'channels' : 'rgb',
-            'strength' : 0.8,
-            'repeat' : {
-                'x' : 1,
-                'y' : 1
+    Material.prototype._materialFactory.addMaterial('NormalMap', {
+        "id" : "NormalMap",
+        "uniforms" : {
+            "texture" : "agi_defaultTexture",
+            "channels" : "rgb",
+            "strength" : 0.8,
+            "repeat" : {
+                "x" : 1,
+                "y" : 1
             }
         },
-        'source' : NormalMapMaterial
+        "source" : NormalMapMaterial
     });
 
     // Reflection Material
-    Material.prototype._materialFactory.addMaterial('ReflectionMaterial', {
-        'id' : 'ReflectionMaterial',
-        'uniforms' : {
-            'cubeMap' : 'agi_defaultCubeMap',
-            'channels' : 'rgb'
+    Material.prototype._materialFactory.addMaterial('Reflection', {
+        "id" : "Reflection",
+        "uniforms" : {
+            "cubeMap" : "agi_defaultCubeMap",
+            "channels" : "rgb"
         },
-        'source' : ReflectionMaterial
+        "source" : ReflectionMaterial
     });
 
     // Refraction Material
-    Material.prototype._materialFactory.addMaterial('RefractionMaterial', {
-        'id' : 'RefractionMaterial',
-        'uniforms' : {
-            'cubeMap' : 'agi_defaultCubeMap',
-            'channels' : 'rgb',
-            'indexOfRefractionRatio' : 0.9
+    Material.prototype._materialFactory.addMaterial('Refraction', {
+        "id" : "Refraction",
+        "uniforms" : {
+            "cubeMap" : "agi_defaultCubeMap",
+            "channels" : "rgb",
+            "indexOfRefractionRatio" : 0.9
         },
-        'source' : RefractionMaterial
+        "source" : RefractionMaterial
     });
 
     // Fresnel Material
-    Material.prototype._materialFactory.addMaterial('FresnelMaterial' , {
-        'id' : 'FresnelMaterial',
-        'materials' : {
-            'reflection' : {
-                'id' : 'ReflectionMaterial'
+    Material.prototype._materialFactory.addMaterial('Fresnel' , {
+        "id" : "Fresnel",
+        "materials" : {
+            "reflection" : {
+                "id" : "Reflection"
             },
-            'refraction' : {
-                'id' : 'RefractionMaterial'
+            "refraction" : {
+                "id" : "Refraction"
             }
         },
-        'source' : FresnelMaterial
+        "source" : FresnelMaterial
     });
 
     // Brick Material
-    Material.prototype._materialFactory.addMaterial('BrickMaterial', {
-        'id' : 'BrickMaterial',
-        'uniforms' : {
-            'brickColor' : {
-                'red': 0.6,
-                'green': 0.3,
-                'blue': 0.1,
-                'alpha': 1.0
+    Material.prototype._materialFactory.addMaterial('Brick', {
+        "id" : "Brick",
+        "uniforms" : {
+            "brickColor" : {
+                "red": 0.6,
+                "green": 0.3,
+                "blue": 0.1,
+                "alpha": 1.0
             },
-            'mortarColor' : {
-                'red' : 0.8,
-                'green' : 0.8,
-                'blue' : 0.7,
-                'alpha' : 1.0
+            "mortarColor" : {
+                "red" : 0.8,
+                "green" : 0.8,
+                "blue" : 0.7,
+                "alpha" : 1.0
             },
-            'brickSize' : {
-                'x' : 0.30,
-                'y' : 0.15
+            "brickSize" : {
+                "x" : 0.30,
+                "y" : 0.15
             },
-            'brickPct' : {
-                'x' : 0.90,
-                'y' : 0.85
+            "brickPct" : {
+                "x" : 0.90,
+                "y" : 0.85
             },
-            'brickRoughness' : 0.2,
-            'mortarRoughness' : 0.1
+            "brickRoughness" : 0.2,
+            "mortarRoughness" : 0.1
         },
-        'source' : BrickMaterial
+        "source" : BrickMaterial
     });
 
     // Wood Material
-    Material.prototype._materialFactory.addMaterial('WoodMaterial', {
-        'id' : 'WoodMaterial',
-        'uniforms' : {
-            'lightWoodColor' : {
-                'red' : 0.6,
-                'green' : 0.3,
-                'blue' : 0.1,
-                'alpha' : 1.0
+    Material.prototype._materialFactory.addMaterial('Wood', {
+        "id" : "Wood",
+        "uniforms" : {
+            "lightWoodColor" : {
+                "red" : 0.6,
+                "green" : 0.3,
+                "blue" : 0.1,
+                "alpha" : 1.0
             },
-            'darkWoodColor' : {
-                'red' : 0.4,
-                'green' : 0.2,
-                'blue' : 0.07,
-                'alpha' : 1.0
+            "darkWoodColor" : {
+                "red" : 0.4,
+                "green" : 0.2,
+                "blue" : 0.07,
+                "alpha" : 1.0
             },
-            'ringFrequency' : 3.0,
-            'noiseScale' : {
-                'x' : 0.7,
-                'y' : 0.5
+            "ringFrequency" : 3.0,
+            "noiseScale" : {
+                "x" : 0.7,
+                "y" : 0.5
             },
-            'grainFrequency' : 27.0
+            "grainFrequency" : 27.0
         },
-        'source' : WoodMaterial
+        "source" : WoodMaterial
     });
 
     // Asphalt Material
-    Material.prototype._materialFactory.addMaterial('AsphaltMaterial', {
-        'id' : 'AsphaltMaterial',
-        'uniforms' : {
-            'asphaltColor' : {
-                'red' : 0.15,
-                'green' : 0.15,
-                'blue' : 0.15,
-                'alpha' : 1.0
+    Material.prototype._materialFactory.addMaterial('Asphalt', {
+        "id" : "Asphalt",
+        "uniforms" : {
+            "asphaltColor" : {
+                "red" : 0.15,
+                "green" : 0.15,
+                "blue" : 0.15,
+                "alpha" : 1.0
             },
-            'bumpSize' : 0.02,
-            'roughness' : 0.2
+            "bumpSize" : 0.02,
+            "roughness" : 0.2
         },
-        'source' : AsphaltMaterial
+        "source" : AsphaltMaterial
     });
 
     // Cement Material
-    Material.prototype._materialFactory.addMaterial('CementMaterial', {
-        'id' : 'CementMaterial',
-        'uniforms' : {
-            'cementColor' : {
-                'red' : 0.95,
-                'green' : 0.95,
-                'blue' : 0.85,
-                'alpha' : 1.0
+    Material.prototype._materialFactory.addMaterial('Cement', {
+        "id" : "Cement",
+        "uniforms" : {
+            "cementColor" : {
+                "red" : 0.95,
+                "green" : 0.95,
+                "blue" : 0.85,
+                "alpha" : 1.0
             },
-            'grainScale' : 0.01,
-            'roughness' : 0.3
+            "grainScale" : 0.01,
+            "roughness" : 0.3
         },
-        'source' : CementMaterial
+        "source" : CementMaterial
     });
 
     // Grass Material
-    Material.prototype._materialFactory.addMaterial('GrassMaterial', {
-        'id' : 'GrassMaterial',
-        'uniforms' : {
-            'grassColor' : {
-                'red' : 0.25,
-                'green' : 0.4,
-                'blue' : 0.1,
-                'alpha' : 1.0
+    Material.prototype._materialFactory.addMaterial('Grass', {
+        "id" : "Grass",
+        "uniforms" : {
+            "grassColor" : {
+                "red" : 0.25,
+                "green" : 0.4,
+                "blue" : 0.1,
+                "alpha" : 1.0
             },
-            'dirtColor' : {
-                'red' : 0.1,
-                'green' : 0.1,
-                'blue' : 0.1,
-                'alpha' : 1.0
+            "dirtColor" : {
+                "red" : 0.1,
+                "green" : 0.1,
+                "blue" : 0.1,
+                "alpha" : 1.0
             },
-            'patchiness' : 1.5
+            "patchiness" : 1.5
         },
-        'source' : GrassMaterial
+        "source" : GrassMaterial
     });
 
-    // Horizontal Stripe Material
-    Material.prototype._materialFactory.addMaterial('HorizontalStripeMaterial', {
-        'id' : 'HorizontalStripeMaterial',
-        'uniforms' : {
-            'lightColor' : {
-                'red' : 1.0,
-                'green' : 1.0,
-                'blue' : 1.0,
-                'alpha' : 0.5
+    // Stripe Material
+    Material.prototype._materialFactory.addMaterial('Stripe', {
+        "id" : "Stripe",
+        "uniforms" : {
+            "direction" : "x",
+            "lightColor" : {
+                "red" : 1.0,
+                "green" : 1.0,
+                "blue" : 1.0,
+                "alpha" : 0.5
             },
-            'darkColor' : {
-                'red' : 0.0,
-                'green' : 0.0,
-                'blue' : 1.0,
-                'alpha' : 0.5
+            "darkColor" : {
+                "red" : 0.0,
+                "green" : 0.0,
+                "blue" : 1.0,
+                "alpha" : 0.5
             },
-            'offset' : 0.0,
-            'repeat' : 5.0
+            "offset" : 0.0,
+            "repeat" : 5.0
         },
-        'source' : HorizontalStripeMaterial
-    });
-
-    // Vertical Stripe Material
-    Material.prototype._materialFactory.addMaterial('VerticalStripeMaterial', {
-        'id' : 'VerticalStripeMaterial',
-        'uniforms' : {
-            'lightColor' : {
-                'red' : 1.0,
-                'green' : 1.0,
-                'blue' : 1.0,
-                'alpha' : 0.5
-            },
-            'darkColor' : {
-                'red' : 0.0,
-                'green' : 0.0,
-                'blue' : 1.0,
-                'alpha' : 0.5
-            },
-            'offset' : 0.0,
-            'repeat' : 5.0
-        },
-        'source' : VerticalStripeMaterial
+        "source" : StripeMaterial
     });
 
     // Checkerboard Material
-    Material.prototype._materialFactory.addMaterial('CheckerboardMaterial', {
-        'id' : 'CheckerboardMaterial',
-        'uniforms' : {
-            'lightColor' : {
-                'red' : 1.0,
-                'green' : 1.0,
-                'blue' : 1.0,
-                'alpha' : 0.5
+    Material.prototype._materialFactory.addMaterial('Checkerboard', {
+        "id" : "Checkerboard",
+        "uniforms" : {
+            "lightColor" : {
+                "red" : 1.0,
+                "green" : 1.0,
+                "blue" : 1.0,
+                "alpha" : 0.5
             },
-            'darkColor' : {
-                'red' : 0.0,
-                'green' : 0.0,
-                'blue' : 0.0,
-                'alpha' : 0.5
+            "darkColor" : {
+                "red" : 0.0,
+                "green" : 0.0,
+                "blue" : 0.0,
+                "alpha" : 0.5
             },
-            'repeat' : {
-                'x' : 5.0,
-                'y' : 5.0
+            "repeat" : {
+                "x" : 5.0,
+                "y" : 5.0
             }
         },
-        'source' : CheckerboardMaterial
+        "source" : CheckerboardMaterial
     });
 
     // Dot Material
-    Material.prototype._materialFactory.addMaterial('DotMaterial', {
-        'id' : 'DotMaterial',
-        'uniforms' : {
-            'lightColor' : {
-                'red' : 1.0,
-                'green' : 1.0,
-                'blue' : 0.0,
-                'alpha' : 0.75
+    Material.prototype._materialFactory.addMaterial('Dot', {
+        "id" : "DotMaterial",
+        "uniforms" : {
+            "lightColor" : {
+                "red" : 1.0,
+                "green" : 1.0,
+                "blue" : 0.0,
+                "alpha" : 0.75
             },
-            'darkColor' : {
-                'red' : 0.0,
-                'green' : 1.0,
-                'blue' : 1.0,
-                'alpha' : 0.75
+            "darkColor" : {
+                "red" : 0.0,
+                "green" : 1.0,
+                "blue" : 1.0,
+                "alpha" : 0.75
             },
-            'repeat' : {
-                'x' : 5.0,
-                'y' : 5.0
+            "repeat" : {
+                "x" : 5.0,
+                "y" : 5.0
             }
         },
-        'source' : DotMaterial
+        "source" : DotMaterial
     });
 
     // Tie-Dye Material
-    Material.prototype._materialFactory.addMaterial('TieDyeMaterial', {
-        'id' : 'TieDyeMaterial',
-        'uniforms' : {
-            'lightColor' : {
-                'red' : 1.0,
-                'green' : 1.0,
-                'blue' : 0.0,
-                'alpha' : 0.75
+    Material.prototype._materialFactory.addMaterial('TieDye', {
+        "id" : "TieDye",
+        "uniforms" : {
+            "lightColor" : {
+                "red" : 1.0,
+                "green" : 1.0,
+                "blue" : 0.0,
+                "alpha" : 0.75
             },
-            'darkColor' : {
-                'red' : 1.0,
-                'green' : 0.0,
-                'blue' : 0.0,
-                'alpha' : 0.75
+            "darkColor" : {
+                "red" : 1.0,
+                "green" : 0.0,
+                "blue" : 0.0,
+                "alpha" : 0.75
             },
-            'frequency' : 5.0
+            "frequency" : 5.0
         },
-        'source' : TieDyeMaterial
+        "source" : TieDyeMaterial
     });
 
     // Facet Material
-    Material.prototype._materialFactory.addMaterial('FacetMaterial', {
-        'id' : 'FacetMaterial',
-        'uniforms' : {
-            'lightColor' : {
-                'red' : 0.25,
-                'green' : 0.25,
-                'blue' : 0.25,
-                'alpha' : 0.75
+    Material.prototype._materialFactory.addMaterial('Facet', {
+        "id" : "Facet",
+        "uniforms" : {
+            "lightColor" : {
+                "red" : 0.25,
+                "green" : 0.25,
+                "blue" : 0.25,
+                "alpha" : 0.75
             },
-            'darkColor' : {
-                'red' : 0.75,
-                'green' : 0.75,
-                'blue' : 0.75,
-                'alpha' : 0.75
+            "darkColor" : {
+                "red" : 0.75,
+                "green" : 0.75,
+                "blue" : 0.75,
+                "alpha" : 0.75
             },
-            'frequency' : 10.0
+            "frequency" : 10.0
         },
-        'source' : FacetMaterial
+        "source" : FacetMaterial
     });
 
     // Blob Material
-    Material.prototype._materialFactory.addMaterial('BlobMaterial', {
-        'id' : 'BlobMaterial',
-        'uniforms' : {
-            'lightColor' : {
-                'red' : 1.0,
-                'green' : 1.0,
-                'blue' : 1.0,
-                'alpha' : 0.5
+    Material.prototype._materialFactory.addMaterial('Blob', {
+        "id" : "Blob",
+        "uniforms" : {
+            "lightColor" : {
+                "red" : 1.0,
+                "green" : 1.0,
+                "blue" : 1.0,
+                "alpha" : 0.5
             },
-            'darkColor' : {
-                'red' : 0.0,
-                'green' : 0.0,
-                'blue' : 1.0,
-                'alpha' : 0.5
+            "darkColor" : {
+                "red" : 0.0,
+                "green" : 0.0,
+                "blue" : 1.0,
+                "alpha" : 0.5
             },
-            'frequency' : 10.0
+            "frequency" : 10.0
         },
-        'source' : BlobMaterial
+        "source" : BlobMaterial
     });
 
     return Material;

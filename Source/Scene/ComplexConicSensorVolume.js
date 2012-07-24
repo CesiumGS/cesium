@@ -174,25 +174,25 @@ define([
         /**
          * DOC_TBA
          */
-        this.outerMaterial = t.outerMaterial || Material.fromID(undefined, 'ColorMaterial');
+        this.outerMaterial = t.outerMaterial || Material.fromID(undefined, 'Color');
         this._outerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.innerMaterial = t.innerMaterial || Material.fromID(undefined, 'ColorMaterial');
+        this.innerMaterial = t.innerMaterial || Material.fromID(undefined, 'Color');
         this._innerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.capMaterial = t.capMaterial || Material.fromID(undefined, 'ColorMaterial');
+        this.capMaterial = t.capMaterial || Material.fromID(undefined, 'Color');
         this._capMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.silhouetteMaterial = t.silhouetteMaterial || Material.fromID(undefined, 'ColorMaterial');
+        this.silhouetteMaterial = t.silhouetteMaterial || Material.fromID(undefined, 'Color');
         this._silhouetteMaterial = undefined;
 
         /**
@@ -360,10 +360,10 @@ define([
                 (!this._capMaterial || (this._capMaterial !== this.capMaterial)) ||
                 (!this._silhouetteMaterial || (this._silhouetteMaterial !== this.silhouetteMaterial))) {
 
-                this._outerMaterial = this.outerMaterial || Material.fromID(undefined, 'ColorMaterial');
-                this._innerMaterial = this.innerMaterial || Material.fromID(undefined, 'ColorMaterial');
-                this._capMaterial = this.capMaterial || Material.fromID(undefined, 'ColorMaterial');
-                this._silhouetteMaterial = this.silhouetteMaterial || Material.fromID(undefined, 'ColorMaterial');
+                this._outerMaterial = this.outerMaterial || Material.fromID(undefined, 'Color');
+                this._innerMaterial = this.innerMaterial || Material.fromID(undefined, 'Color');
+                this._capMaterial = this.capMaterial || Material.fromID(undefined, 'Color');
+                this._silhouetteMaterial = this.silhouetteMaterial || Material.fromID(undefined, 'Color');
 
                 var material = this._combineMaterials();
                 this._drawUniforms = combine(this._uniforms, material._uniforms);

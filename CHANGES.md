@@ -57,6 +57,7 @@ Beta Releases
    * The `multiplyWithMatrix` function on each `Matrix` type was renamed to `multiply`. 
    * All functions starting with `multiplyWith` now start with `multiplyBy` to be consistent with functions starting with `divideBy`.
    * All materials are now created as `Material` objects with a JSON template.
+   * HorizontalStripeMaterial and VerticalStripeMaterial are now merged into StripeMaterial and the direction can be set with `direction` = `x` or `y` in the uniforms section of `Material`.
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties.
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x`, `y`, and `z` properties.
 * All `Cartesian3` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
@@ -64,21 +65,20 @@ Beta Releases
 * Added `Cartographic.fromDegrees` make creating Cartographic instances from values in degrees easier. 
 * Added `addImage` to `TextureAtlas` so images can be added to a texture atlas after it is constructed.
 * Added new materials:
-    * `Material`
-    * `AlphaMapMaterial`
-    * `AsphaltMaterial`
-    * `BrickMaterial`
-    * `BumpMapMaterial`
-    * `CementMaterial`
-    * `EmissionMapMaterial`
-    * `FresnelMaterial`
-    * `GrassMaterial`
-    * `ImageMaterial`
-    * `NormalMapMaterial`
-    * `ReflectionMaterial`
-    * `RefractionMaterial`
-    * `SpecularMapMaterial`
-    * `WoodMaterial`
+    * `AlphaMap`
+    * `Asphalt`
+    * `Brick`
+    * `BumpMap`
+    * `Cement`
+    * `EmissionMap`
+    * `Fresnel`
+    * `Grass`
+    * `Image`
+    * `NormalMap`
+    * `Reflection`
+    * `Refraction`
+    * `SpecularMap`
+    * `Wood`
 * Added `Scene.pickEllipsoid`, which picks either the ellipsoid or the map depending on the current `SceneMode`.
 * Added `Event`, a new utility class which makes it easy for objects to expose event properties.
 * Added `TextureAtlasBuilder`,a new utility class which makes it easy to build a TextureAtlas asynchronously.
@@ -103,7 +103,7 @@ Beta Releases
     * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
     * `CentralBody` no longer requires a camera as the first parameter.
 * Added new materials:
-    * `DiffuseMapMaterial`
+    * `DiffuseMap`
 * Added `CentralBody.northPoleColor` and `CentralBody.southPoleColor` to fill in the poles if they are not covered by a texture.
 * Added `Polygon.configureExtent` to create a polygon defined by west, south, east, and north values.
 * Added functions to `Camera` to provide position and directions in world coordinates.

@@ -132,7 +132,7 @@ defineSuite([
         pyramid.showIntersection = new MockProperty(true);
         pyramid.radius = new MockProperty(123.5);
         pyramid.show = new MockProperty(true);
-        var redMaterial = Material.fromID(undefined, 'ColorMaterial');
+        var redMaterial = Material.fromID(undefined, 'Color');
         redMaterial.color = Color.RED;
         pyramid.material = new MockProperty(redMaterial);
         visualizer.update(time);

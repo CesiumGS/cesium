@@ -1,5 +1,4 @@
 uniform sampler2D texture;
-uniform ivec2 textureDimensions;
 uniform float strength;
 uniform vec2 repeat;
 

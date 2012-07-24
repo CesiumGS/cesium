@@ -71,16 +71,16 @@ define([
     };
 
     /**
-     * Get's an ImageMaterial that represents this dynamic material at the provided time.
+     * Get's an Image Material that represents this dynamic material at the provided time.
      *
      * @param {JulianDate} time The desired time.
      * @param {Context} context The context in which this material exists.
-     * @param {Material} [existingMaterial] An existing material to be modified.  If the material is undefined or not an ImageMapMaterial, a new instance is created.
-     * @returns The modified existingMaterial parameter or a new ImageMapMaterial instance if existingMaterial was undefined or not a ImageMapMaterial.
+     * @param {Material} [existingMaterial] An existing material to be modified.  If the material is undefined or not an Image Material, a new instance is created.
+     * @returns The modified existingMaterial parameter or a new Image Material instance if existingMaterial was undefined or not a Image Material.
      */
     DynamicImageMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (typeof existingMaterial === 'undefined' || (existingMaterial.getID() !== 'ImageMapMaterial')) {
-            existingMaterial = Material.fromID(context, 'ImageMapMaterial');
+        if (typeof existingMaterial === 'undefined' || (existingMaterial.getID() !== 'Image')) {
+            existingMaterial = Material.fromID(context, 'Image');
         }
 
         var tRepeat;

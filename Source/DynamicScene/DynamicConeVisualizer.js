@@ -226,17 +226,17 @@ define([
             cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            cone.capMaterial = Material.fromID(context, 'ColorMaterial');
+            cone.capMaterial = Material.fromID(context, 'Color');
             cone.innerHalfAngle = 0;
             cone.outerHalfAngle = Math.PI;
-            cone.innerMaterial = Material.fromID(context, 'ColorMaterial');
+            cone.innerMaterial = Material.fromID(context, 'Color');
             cone.intersectionColor = Color.YELLOW;
             cone.maximumClockAngle =  CesiumMath.TWO_PI;
             cone.minimumClockAngle = -CesiumMath.TWO_PI;
-            cone.outerMaterial = Material.fromID(context, 'ColorMaterial');
+            cone.outerMaterial = Material.fromID(context, 'Color');
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
-            cone.silhouetteMaterial = Material.fromID(context, 'ColorMaterial');
+            cone.silhouetteMaterial = Material.fromID(context, 'Color');
         } else {
             cone = this._coneCollection[coneVisualizerIndex];
         }
