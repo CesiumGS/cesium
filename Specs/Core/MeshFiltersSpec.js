@@ -303,10 +303,10 @@ defineSuite([
         expect(meshes.length).toEqual(1);
         expect(meshes[0].attributes.time.componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(meshes[0].attributes.time.componentsPerAttribute).toEqual(1);
-        expect(meshes[0].attributes.time.values).toEqualArray([0, sixtyFourK]);
+        expect(meshes[0].attributes.time.values).toEqual([0, sixtyFourK]);
 
         expect(meshes[0].indexLists[0].primitiveType).toEqual(PrimitiveType.TRIANGLES);
-        expect(meshes[0].indexLists[0].values).toEqualArray([0, 0, 0, 1, 1, 1, 0, 1, 0]);
+        expect(meshes[0].indexLists[0].values).toEqual([0, 0, 0, 1, 1, 1, 0, 1, 0]);
     });
 
     it('fitToUnsignedShortIndices creates two meshes', function() {

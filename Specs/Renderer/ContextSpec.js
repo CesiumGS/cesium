@@ -169,9 +169,9 @@ defineSuite([
         var pixel = renderFragment(context, fs);
 
         if (context.getStandardDerivatives()) {
-            expect(pixel).toEqualArray([0, 0, 255, 255]);
+            expect(pixel).toEqual([0, 0, 255, 255]);
         } else {
-            expect(pixel).toEqualArray([255, 255, 255, 255]);
+            expect(pixel).toEqual([255, 255, 255, 255]);
         }
     });
 

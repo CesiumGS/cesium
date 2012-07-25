@@ -20,7 +20,7 @@ define([
         });
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
