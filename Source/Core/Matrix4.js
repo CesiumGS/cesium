@@ -278,6 +278,9 @@ define([
         var eyeX = eye.x;
         var eyeY = eye.y;
         var eyeZ = eye.z;
+        var t0 = sX * -eyeX + sY * -eyeY+ sZ * -eyeZ;
+        var t1 = uX * -eyeX + uY * -eyeY+ uZ * -eyeZ;
+        var t2 = fX * eyeX + fY * eyeY + fZ * eyeZ;
 
         //The code below this comment is an optimized
         //version of the commented lines.
@@ -296,9 +299,9 @@ define([
         //return rotation.multiply(translation);
         if (typeof result === 'undefined') {
             return new Matrix4(
-                    sX,   sY,  sZ, sX * -eyeX + sY * -eyeY+ sZ * -eyeZ,
-                    uX,   uY,  uZ, uX * -eyeX + uY * -eyeY+ uZ * -eyeZ,
-                   -fX,  -fY, -fZ, fX * eyeX + fY * eyeY + fZ * eyeZ,
+                    sX,   sY,  sZ, t0,
+                    uX,   uY,  uZ, t1,
+                   -fX,  -fY, -fZ, t2,
                     0.0, 0.0, 0.0, 1.0);
         }
         result[0] = sX;
@@ -313,9 +316,9 @@ define([
         result[9] = uZ;
         result[10] = -fZ;
         result[11] = 0.0;
-        result[12] = sX * -eyeX + sY * -eyeY+ sZ * -eyeZ;
-        result[13] = uX * -eyeX + uY * -eyeY+ uZ * -eyeZ;
-        result[14] = fX * eyeX + fY * eyeY + fZ * eyeZ;
+        result[12] = t0;
+        result[13] = t1;
+        result[14] = t2;
         result[15] = 1.0;
         return result;
 
@@ -1110,21 +1113,29 @@ define([
                                matrix[8], matrix[9], matrix[10], matrix[11],
                                matrix[12], matrix[13], matrix[14], matrix[15]);
         }
+
+        var matrix1 = matrix[1];
+        var matrix2 = matrix[2];
+        var matrix3 = matrix[3];
+        var matrix6 = matrix[6];
+        var matrix7 = matrix[7];
+        var matrix11 = matrix[11];
+
         result[0] = matrix[0];
         result[1] = matrix[4];
         result[2] = matrix[8];
         result[3] = matrix[12];
-        result[4] = matrix[1];
+        result[4] = matrix1;
         result[5] = matrix[5];
         result[6] = matrix[9];
         result[7] = matrix[13];
-        result[8] = matrix[2];
-        result[9] = matrix[6];
+        result[8] = matrix2;
+        result[9] = matrix6;
         result[10] = matrix[10];
         result[11] = matrix[14];
-        result[12] = matrix[3];
-        result[13] = matrix[7];
-        result[14] = matrix[11];
+        result[12] = matrix3;
+        result[13] = matrix7;
+        result[14] = matrix11;
         result[15] = matrix[15];
         return result;
     };
