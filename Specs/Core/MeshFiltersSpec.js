@@ -115,9 +115,10 @@ defineSuite([
 
         var indices = MeshFilters.createAttributeIndices(mesh);
 
-        expect(indices.position).toBeIn([0, 1, 2]);
-        expect(indices.normal).toBeIn([0, 1, 2]);
-        expect(indices.color).toBeIn([0, 1, 2]);
+        var validIndices = [0, 1, 2];
+        expect(validIndices).toContain(indices.position);
+        expect(validIndices).toContain(indices.normal);
+        expect(validIndices).toContain(indices.color);
         expect(indices.position).not.toEqual(indices.normal);
         expect(indices.position).not.toEqual(indices.color);
     });

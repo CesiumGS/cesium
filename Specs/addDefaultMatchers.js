@@ -12,7 +12,7 @@ define(function() {
 
     function typedArrayToArray(array) {
         if (array !== null && typeof array === 'object' && isTypedArray(array)) {
-            return Array.prototype.slice.apply(array);
+            return Array.prototype.slice.call(array, 0);
         }
         return array;
     }
@@ -70,15 +70,6 @@ define(function() {
             this.env.equalityTesters_ = origTesters;
 
             return result;
-        },
-
-        toBeIn : function(expected) {
-            for ( var i = 0, len = expected.length; i < len; ++i) {
-                if (equals(this.env, this.actual, expected[i])) {
-                    return true;
-                }
-            }
-            return false;
         }
     };
 
