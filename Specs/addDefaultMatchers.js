@@ -2,23 +2,6 @@
 define(function() {
     "use strict";
 
-    function isEqual(a, b) {
-        if (a === b) {
-            return true;
-        }
-        if (a !== null && typeof a !== 'undefined' && typeof a.equals !== 'undefined') {
-            return a.equals(b);
-        }
-        if (b !== null && typeof b !== 'undefined' && typeof b.equals !== 'undefined') {
-            return b.equals(a);
-        }
-
-        if (a !== null && b !== null && typeof a !== 'undefined' && typeof b !== 'undefined') {
-            return a.toString() === b.toString();
-        }
-        return false;
-    }
-
     function isEqualEpsilon(a, b, epsilon) {
         if (typeof a !== 'undefined' && typeof a.equalsEpsilon !== 'undefined') {
             return a.equalsEpsilon(b, epsilon);
@@ -32,16 +15,8 @@ define(function() {
             return false;
         }
 
-        if (!f) {
-            f = isEqual;
-        }
-
-        var args = new Array(2).concat(Array.prototype.slice.call(arguments, 3));
-
         for ( var i = 0; i < a.length; i++) {
-            args[0] = a[i];
-            args[1] = b[i];
-            if (!f.apply(null, args)) {
+            if (!f(a[i], b[i])) {
                 return false;
             }
         }
@@ -83,12 +58,8 @@ define(function() {
                 return this.actual <= value;
             },
 
-            toEqual : function(expected) {
-                return isEqual(this.actual, expected);
-            },
-
             toEqualArray : function(expected) {
-                return isArrayEqual(this.actual, expected);
+                return isArrayEqual(this.actual, expected, this.env.equals_.bind(this.env));
             },
 
             toEqualEpsilon : function(expected, epsilon) {
@@ -96,7 +67,9 @@ define(function() {
             },
 
             toEqualArrayEpsilon : function(expected, epsilon) {
-                return isArrayEqual(this.actual, expected, isEqualEpsilon, epsilon);
+                return isArrayEqual(this.actual, expected, function(a, b) {
+                    return isEqualEpsilon(a, b, epsilon);
+                });
             },
 
             toBeBetween : function(lower, upper) {
