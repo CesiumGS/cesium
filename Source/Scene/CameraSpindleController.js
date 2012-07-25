@@ -233,14 +233,11 @@ define([
                 angle = angleToAxis;
             }
 
-            var tangent = this._camera.position.cross(this.constrainedAxis).normalize();
-            var localUp = tangent.cross(this._camera.position);
-            if (this._camera.up.dot(localUp) < 0) {
-                angle = -angle;
-            }
+            var tangent = p.cross(this.constrainedAxis).normalize().negate();
+            this.rotate(tangent, angle);
+        } else {
+            this.rotate(this._camera.right, angle);
         }
-
-        this.rotate(this._camera.right, angle);
     };
 
     /**
