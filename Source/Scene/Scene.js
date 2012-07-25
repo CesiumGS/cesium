@@ -220,7 +220,7 @@ define([
     };
 
     /**
-     * Pick an ellipsoid or map in 3D mode.
+     * Pick an ellipsoid or map.
      *
      * @memberof Scene
      *
@@ -249,6 +249,32 @@ define([
         }
 
         return p;
+    };
+
+    /**
+     * View an extent on an ellipsoid or map.
+     *
+     * @memberof Scene
+     *
+     * @param {Extent} extent The extent to view.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
+     *
+     * @exception {DeveloperError} extent is required.
+     */
+    Scene.prototype.viewExtent = function(extent, ellipsoid) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+
+        if (this.mode === SceneMode.SCENE3D) {
+            this._camera.viewExtent(extent, ellipsoid);
+        } else if (this.mode === SceneMode.SCENE2D) {
+            this._camera.viewExtent2D(extent, this.scene2D.projection);
+        } else if (this.mode === SceneMode.COLUMBUS_VIEW) {
+            this._camera.viewExtentColumbusView(extent, this.scene2D.projection);
+        }
     };
 
     /**
