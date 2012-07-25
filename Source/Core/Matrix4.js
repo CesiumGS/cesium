@@ -39,8 +39,16 @@ define([
      * @param {Number} [column2Row3=0.0] The value for column 2, row 3.
      * @param {Number} [column3Row3=0.0] The value for column 3, row 3.
      *
-     * @see Matrix4.fromColumnMajor
+     * @see Matrix4.fromColumnMajorArray
      * @see Matrix4.fromRowMajorArray
+     * @see Matrix4.fromRotationTranslation
+     * @see Matrix4.fromTranslation
+     * @see Matrix4.fromCamera
+     * @see Matrix4.computePerspectiveFieldOfView
+     * @see Matrix4.computeOrthographicOffCenter
+     * @see Matrix4.computePerspectiveOffCenter
+     * @see Matrix4.computeInfinitePerspectiveOffCenter
+     * @see Matrix4.computeViewportTransformation
      * @see Matrix2
      * @see Matrix3
      */
@@ -221,6 +229,7 @@ define([
     var fromCameraF = new Cartesian3();
     var fromCameraS = new Cartesian3();
     var fromCameraU = new Cartesian3();
+
     /**
      * Computes a Matrix4 instance from a Camera.
      * @memberof Matrix4
@@ -271,7 +280,7 @@ define([
         var eyeZ = eye.z;
 
         //The code below this comment is an optimized
-        //version of the commented out lines.
+        //version of the commented lines.
         //Rather that create two matrices and then multiply,
         //we just bake in the multiplcation as part of creation.
         //var rotation = new Matrix4(
@@ -1095,46 +1104,28 @@ define([
         if (typeof matrix === 'undefined') {
             throw new DeveloperError('matrix is required');
         }
-
-        var column0Row0 = matrix[0];
-        var column0Row1 = matrix[4];
-        var column0Row2 = matrix[8];
-        var column0Row3 = matrix[12];
-        var column1Row0 = matrix[1];
-        var column1Row1 = matrix[5];
-        var column1Row2 = matrix[9];
-        var column1Row3 = matrix[13];
-        var column2Row0 = matrix[2];
-        var column2Row1 = matrix[6];
-        var column2Row2 = matrix[10];
-        var column2Row3 = matrix[14];
-        var column3Row0 = matrix[3];
-        var column3Row1 = matrix[7];
-        var column3Row2 = matrix[11];
-        var column3Row3 = matrix[15];
-
         if (typeof result === 'undefined') {
-            return new Matrix4(column0Row0, column1Row0, column2Row0, column3Row0,
-                               column0Row1, column1Row1, column2Row1, column3Row1,
-                               column0Row2, column1Row2, column2Row2, column3Row2,
-                               column0Row3, column1Row3, column2Row3, column3Row3);
+            return new Matrix4(matrix[0], matrix[1], matrix[2], matrix[3],
+                               matrix[4], matrix[5], matrix[6], matrix[7],
+                               matrix[8], matrix[9], matrix[10], matrix[11],
+                               matrix[12], matrix[13], matrix[14], matrix[15]);
         }
-        result[0] = column0Row0;
-        result[1] = column0Row1;
-        result[2] = column0Row2;
-        result[3] = column0Row3;
-        result[4] = column1Row0;
-        result[5] = column1Row1;
-        result[6] = column1Row2;
-        result[7] = column1Row3;
-        result[8] = column2Row0;
-        result[9] = column2Row1;
-        result[10] = column2Row2;
-        result[11] = column2Row3;
-        result[12] = column3Row0;
-        result[13] = column3Row1;
-        result[14] = column3Row2;
-        result[15] = column3Row3;
+        result[0] = matrix[0];
+        result[1] = matrix[4];
+        result[2] = matrix[8];
+        result[3] = matrix[12];
+        result[4] = matrix[1];
+        result[5] = matrix[5];
+        result[6] = matrix[9];
+        result[7] = matrix[13];
+        result[8] = matrix[2];
+        result[9] = matrix[6];
+        result[10] = matrix[10];
+        result[11] = matrix[14];
+        result[12] = matrix[3];
+        result[13] = matrix[7];
+        result[14] = matrix[11];
+        result[15] = matrix[15];
         return result;
     };
 
@@ -1208,6 +1199,18 @@ define([
                 Math.abs(left[15] - right[15]) <= epsilon);
     };
 
+    /**
+     * Gets the translation portion of the provided matrix, assuming the matrix is a affine transformation matrix.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix to use.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     *
+     * @see Cartesian3
+     */
     Matrix4.getTranslation = function(matrix, result) {
         if (typeof matrix === 'undefined') {
             throw new DeveloperError('matrix is required');
@@ -1222,11 +1225,16 @@ define([
     };
 
     /**
-     * Returns the upper left 3x3 rotation matrix, assuming the matrix is a affine transformation matrix.
-     *
+     * Gets the upper left 3x3 rotation matrix of the provided matrix, assuming the matrix is a affine transformation matrix.
      * @memberof Matrix4
      *
-     * @return {Matrix3} The upper left 3x3 matrix from this 4x4 matrix.
+     * @param {Matrix4} matrix The matrix to use.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     *
+     * @see Matrix3
      */
      Matrix4.getRotation = function(matrix, result) {
          if (typeof matrix === 'undefined') {
@@ -1249,22 +1257,20 @@ define([
          return result;
      };
 
-    /**
-    * Computes and returns the inverse of this general 4x4 matrix.
-    * <p>
-    * The matrix is inverted using Cramer's Rule.  If the determinant
-    * is zero, the matrix can not be inverted, and an exception is thrown.
-    * </ p>
-    * <p>
-    * If the matrix is an affine transformation matrix, it is more efficient
-    * to invert it with {@link #inverseTransformation}.
-    * </ p>
-    *
-    * @memberof Matrix4
-    *
-    * @return {Matrix4} The inverse of this matrix.
-    * @exception {RuntimeError} This matrix is not invertible because its determinate is zero.
-    */
+     /**
+      * Computes the inverse of the provided matrix using Cramers Rule.
+      * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
+      * If the matrix is an affine transformation matrix, it is more efficient
+      * to invert it with {@link #inverseTransformation}.
+      * @memberof Matrix4
+      *
+      * @param {Matrix4} matrix The matrix to invert.
+      * @param {Matrix4} [result] The object onto which to store the result.
+      * @return {Matrix4} The modified result parameter or a new Cartesian3 instance if none was provided.
+      *
+      * @exception {DeveloperError} matrix is required.
+      * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
+      */
     Matrix4.inverse = function(matrix, result) {
         if (typeof matrix === 'undefined') {
             throw new DeveloperError('matrix is required');
@@ -1343,7 +1349,7 @@ define([
         var det = src0 * dst0 + src1 * dst1 + src2 * dst2 + src3 * dst3;
 
         if (Math.abs(det) < CesiumMath.EPSILON20) {
-            throw new RuntimeError('This matrix is not invertible because its determinate is zero.');
+            throw new RuntimeError('matrix is not invertible because its determinate is zero.');
         }
 
         // calculate matrix inverse
@@ -1375,21 +1381,21 @@ define([
     };
 
     /**
-    * Computes and returns the inverse of this matrix, assuming it is
-    * an affine transformation matrix, where the upper left 3x3 elements
-    * are a rotation matrix, and the upper three elements in the fourth
-    * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
-    * <p>
-    * This method is faster than computing the inverse for a general 4x4
-    * matrix using {@link #inverse}.
-    * </ p>
-    * <p>
-    * The matrix is not verified to be in the proper form.
-    * </ p>
-    * @memberof Matrix4
-    *
-    * @return {Matrix4} The inverse of this affine transformation matrix.
-    */
+     * Computes the inverse of the provided matrix assuming it is
+     * an affine transformation matrix, where the upper left 3x3 elements
+     * are a rotation matrix, and the upper three elements in the fourth
+     * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
+     * The matrix is not verified to be in the proper form.
+     * This method is faster than computing the inverse for a general 4x4
+     * matrix using {@link #inverse}.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix to invert.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     * @return {Matrix4} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
     Matrix4.inverseTransformation = function(matrix, result) {
         if (typeof matrix === 'undefined') {
             throw new DeveloperError('matrix is required');
@@ -1743,18 +1749,61 @@ define([
                '(' + this[3] + ', ' + this[7] + ', ' + this[11] + ', ' + this[15] +')';
     };
 
+    /**
+     * Gets the translation portion of this matrix, assuming the matrix is a affine transformation matrix.
+     * @memberof Matrix4
+     *
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @see Cartesian3
+     */
     Matrix4.prototype.getTranslation = function(result) {
         return Matrix4.getTranslation(this, result);
     };
 
+    /**
+     * Gets the upper left 3x3 rotation matrix of this matrix, assuming the matrix is a affine transformation matrix.
+     * @memberof Matrix4
+     *
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @see Matrix3
+     */
     Matrix4.prototype.getRotation = function(result) {
         return Matrix4.getRotation(this, result);
     };
 
+    /**
+     * Computes the inverse of this matrix using Cramers Rule.
+     * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
+     * If the matrix is an affine transformation matrix, it is more efficient
+     * to invert it with {@link #inverseTransformation}.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} [result] The object onto which to store the result.
+     * @return {Matrix4} The modified result parameter or a new Cartesian3 instance if none was provided.
+     *
+     * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
+     */
     Matrix4.prototype.inverse = function(result) {
         return Matrix4.inverse(this, result);
     };
 
+    /**
+     * Computes the inverse of this matrix assuming it is
+     * an affine transformation matrix, where the upper left 3x3 elements
+     * are a rotation matrix, and the upper three elements in the fourth
+     * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
+     * The matrix is not verified to be in the proper form.
+     * This method is faster than computing the inverse for a general 4x4
+     * matrix using {@link #inverse}.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} [result] The object onto which to store the result.
+     * @return {Matrix4} The modified result parameter or a new Cartesian3 instance if none was provided.
+     */
     Matrix4.prototype.inverseTransformation = function(result) {
         return Matrix4.inverseTransformation(this, result);
     };

@@ -35,7 +35,7 @@ defineSuite([
     });
 
     it('constructor sets properties from parameters.', function() {
-        var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         expect(matrix[Matrix4.COLUMN0ROW0]).toEqual(1.0);
         expect(matrix[Matrix4.COLUMN1ROW0]).toEqual(2.0);
         expect(matrix[Matrix4.COLUMN2ROW0]).toEqual(3.0);
