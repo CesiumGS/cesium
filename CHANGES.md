@@ -24,6 +24,13 @@ Beta Releases
             var position = scene.pickEllipsoid(windowPosition, ellipsoid);
             
    * `Camera.getPickRay` now returns the new `Ray` type instead of an object with position and direction properties.
+   * `Camera.viewExtent` now takes an `Extent` argument instead of west, south, east and north arguments. Prefer `Scene.viewExtent` over `Camera.viewExtent`. `Scene.viewExtent` will work in any `SceneMode`. For example, change
+   
+            camera.viewExtent(ellipsoid, west, south, east, north);
+      to:
+      
+            scene.viewExtent(extent, ellipsoid);
+            
    * `CameraSpindleController.mouseConstrainedZAxis` has been removed. Instead, use `CameraSpindleController.constrainedAxis`. Code that previously looked like:
             
             spindleController.mouseConstrainedZAxis = true;
@@ -32,7 +39,6 @@ Beta Releases
      
             spindleController.constrainedAxis = Cartesian3.UNIT_Z;
    
-   * The free look feature has been removed from `CameraColumbusViewController` in favor of rotating about the point clicked on the map with the middle mouse button.
    * The `Camera2DController` constructor and `CameraControllerCollection.add2D` now require a projection instead of an ellipsoid.
    * `Chain` has been removed.  `when` is now included as a more complete CommonJS Promises/A implementation.
    * `Jobs.downloadImage` was replaced with `loadImage` to provide a promise that will asynchronously load an image.
