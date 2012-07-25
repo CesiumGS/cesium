@@ -4,7 +4,9 @@ define([
         '../Core/Ellipsoid',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/IntersectionTests',
         '../Core/Matrix4',
+        '../Core/Ray',
         '../Core/Transforms',
         './CameraEventHandler',
         './CameraEventType',
@@ -15,7 +17,9 @@ define([
         Ellipsoid,
         Cartesian3,
         Cartesian4,
+        IntersectionTests,
         Matrix4,
+        Ray,
         Transforms,
         CameraEventHandler,
         CameraEventType,
@@ -70,8 +74,10 @@ define([
 
         var rotateMovement = rotate.getMovement();
         if (rotate.isButtonDown() && typeof this._transform === 'undefined' && rotateMovement) {
-            var center = this._camera.pickEllipsoid(rotateMovement.startPosition, this.spindleController.getEllipsoid());
-            if (typeof center !== 'undefined') {
+            var ray = new Ray(this._camera.getPositionWC(), this._camera.getDirectionWC());
+            var intersection = IntersectionTests.rayEllipsoid(ray, this.spindleController.getEllipsoid());
+            if (typeof intersection !== 'undefined') {
+                var center = ray.getPoint(intersection.start);
                 this._transform = Transforms.eastNorthUpToFixedFrame(center);
             }
         } else if (!rotate.isButtonDown()) {
