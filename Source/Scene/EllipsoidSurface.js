@@ -259,6 +259,9 @@ define([
             this._frozenLodCameraPosition = cameraPosition;
         }
 
+        var ellipsoid = this.terrainProvider.tilingScheme.ellipsoid;
+        var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition);
+
         this._occluder.setCameraPosition(cameraPosition);
 
         var levelZeroTiles = this._levelZeroTiles;
@@ -268,7 +271,7 @@ define([
                 queueTileLoad(this, tile);
             }
             if (tile.renderable) {
-                addBestAvailableTilesToRenderList(this, context, sceneState, tile);
+                addBestAvailableTilesToRenderList(this, context, sceneState, cameraPosition, cameraPositionCartographic, tile);
             }
         }
 
@@ -492,7 +495,7 @@ define([
         this._boundingSphereVA = undefined;
     };
 
-    function addBestAvailableTilesToRenderList(surface, context, sceneState, tile) {
+    function addBestAvailableTilesToRenderList(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) {
         ++tilesVisited;
 
         surface._tileReplacementQueue.markTileRendered(tile);
@@ -511,7 +514,7 @@ define([
         }
 
         // Algorithm #1: Don't load children unless we refine to them.
-        if (screenSpaceError(surface, context, sceneState, tile) < surface.maxScreenSpaceError) {
+        if (screenSpaceError(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) < surface.maxScreenSpaceError) {
             // This tile meets SSE requirements, so render it.
             surface._renderList.push(tile);
             ++tilesRendered;
@@ -522,7 +525,7 @@ define([
             // PERFORMANCE_TODO: traverse children front-to-back
             var tilesRenderedBefore = tilesRendered;
             for (var i = 0, len = children.length; i < len; ++i) {
-                addBestAvailableTilesToRenderList(surface, context, sceneState, children[i]);
+                addBestAvailableTilesToRenderList(surface, context, sceneState, cameraPosition, cameraPositionCartographic, children[i]);
             }
             if (tilesRendered !== tilesRenderedBefore) {
                 ++minimumTilesNeeded;
@@ -628,21 +631,15 @@ define([
         return result;
     }
 
-    function screenSpaceError(surface, context, sceneState, tile) {
+    function screenSpaceError(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) {
         var maxGeometricError = surface._tilingScheme.getLevelMaximumGeometricError(tile.level);
 
         //var boundingVolume = tile.get3DBoundingSphere();
         var camera = sceneState.camera;
-        var cameraPosition = camera.getPositionWC();
-        if (!surface._doLodUpdate) {
-            cameraPosition = surface._frozenLodCameraPosition;
-        }
 
         //var toCenter = boundingVolume.center.subtract(cameraPosition);
         //var distanceToBoundingSphere = toCenter.magnitude() - boundingVolume.radius;
 
-        var ellipsoid = surface.terrainProvider.tilingScheme.ellipsoid;
-        var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition);
         //var heightAboveEllipsoid = cameraPositionCartographic.height;
         //var distanceToTerrainHeight = heightAboveEllipsoid - tile.maxHeight;
 
