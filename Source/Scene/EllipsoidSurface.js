@@ -341,6 +341,10 @@ define([
             return;
         }
 
+        renderList.sort(function(a, b) {
+            return a.distance - b.distance;
+        });
+
         var uniformState = context.getUniformState();
         var mv = uniformState.getModelView();
 
@@ -496,7 +500,7 @@ define([
         if (!isTileVisible(surface, sceneState, tile)) {
             ++tilesCulled;
             tile.culled = true;
-            surface._renderList.push(tile);
+            //surface._renderList.push(tile);
             return;
         }
 
@@ -658,6 +662,7 @@ define([
         }*/
 
         var distance = Math.sqrt(distanceSquaredToTile(cameraPosition, cameraPositionCartographic, tile));
+        tile.distance = distance;
 
         tile.cameraInsideBoundingSphere = distance === 0.0;
 
