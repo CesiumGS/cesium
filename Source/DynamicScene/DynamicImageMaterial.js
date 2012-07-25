@@ -32,7 +32,7 @@ define([
         context.font = '64px sans-serif';
         context.strokeStyle = '#000000';
         context.strokeText('?', 16, 0);
-        return canvas.toDataURL('image/png');
+        return canvas;
     }
 
     var defaultTexture = createDefaultTexture();
