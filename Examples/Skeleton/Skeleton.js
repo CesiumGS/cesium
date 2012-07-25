@@ -63,6 +63,17 @@ require({
                                                                    Cesium.Math.toRadians(-119),
                                                                    Cesium.Math.toRadians(38))));
 
+    var wamiLayer = imageryLayerCollection.addImageryProvider(new Cesium.WideAreaMotionImageryProvider({
+        url : 'http://release.pixia.com/wami-soa-server/wami/IS',
+        cid : 'Whitby_Harbour_2012_12_01_nmv_nui',
+        extent: new Cesium.Extent(Cesium.Math.toRadians(-78.99810887065728),
+                                  Cesium.Math.toRadians(43.83708624484757),
+                                  Cesium.Math.toRadians(-78.88145812932201),
+                                  Cesium.Math.toRadians(43.88659137402857)),
+        proxy : new Cesium.DefaultProxy('/proxy/'),
+        maxLevel : 22
+    }));
+
     var cb = new Cesium.CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
 
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
