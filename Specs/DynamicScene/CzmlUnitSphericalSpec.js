@@ -22,8 +22,8 @@ defineSuite([
     };
 
     it('unwrapInterval', function() {
-        expect(CzmlUnitSpherical.unwrapInterval(constantSphericalInterval)).toEqualArray(constantSphericalInterval.unitSpherical);
-        expect(CzmlUnitSpherical.unwrapInterval(sampledSphericalInterval)).toEqualArray(sampledSphericalInterval.unitSpherical);
+        expect(CzmlUnitSpherical.unwrapInterval(constantSphericalInterval)).toEqual(constantSphericalInterval.unitSpherical);
+        expect(CzmlUnitSpherical.unwrapInterval(sampledSphericalInterval)).toEqual(sampledSphericalInterval.unitSpherical);
     });
 
     it('isSampled', function() {

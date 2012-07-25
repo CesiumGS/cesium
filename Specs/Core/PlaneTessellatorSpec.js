@@ -35,7 +35,7 @@ defineSuite(['Core/PlaneTessellator'], function(PlaneTessellator) {
             }
         });
 
-        expect(callbacks).toEqualArray([{
+        expect(callbacks).toEqual([{
             x : 0.0,
             y : 0.0
         }, {

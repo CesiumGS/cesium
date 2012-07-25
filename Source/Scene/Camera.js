@@ -263,8 +263,7 @@ define([
         var east = extent.east;
         var west = extent.west;
 
-        var transform = this.transform.clone();
-        transform.setColumn3(Cartesian4.UNIT_W);
+        var transform = this.transform.setColumn(3, Cartesian4.UNIT_W);
 
         var northEast = projection.project(new Cartographic(east, north));
         northEast = transform.multiplyByVector(new Cartesian4(northEast.x, northEast.y, northEast.z, 1.0));

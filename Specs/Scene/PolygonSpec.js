@@ -83,7 +83,7 @@ defineSuite([
         expect(polygon.getPositions()).not.toBeDefined();
 
         polygon.setPositions(positions);
-        expect(polygon.getPositions()).toEqualArray(positions);
+        expect(polygon.getPositions()).toEqual(positions);
     });
 
     it('configures extent', function() {
@@ -100,7 +100,7 @@ defineSuite([
     });
 
     it('gets the default color', function() {
-        expect(polygon.material.color).toEqualProperties({
+        expect(polygon.material.color).toEqual({
             red : 1.0,
             green : 1.0,
             blue : 0.0,
@@ -131,11 +131,11 @@ defineSuite([
         };
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polygon.update(context, sceneState);
         polygon.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders without a material', function() {
@@ -144,11 +144,11 @@ defineSuite([
         polygon.material = undefined;
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polygon.update(context, sceneState);
         polygon.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders without lighting', function() {
@@ -157,11 +157,11 @@ defineSuite([
         polygon.affectedByLighting = false;
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polygon.update(context, sceneState);
         polygon.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders extent', function() {
@@ -184,11 +184,11 @@ defineSuite([
         };
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polygon.update(context, sceneState);
         polygon.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not renders', function() {
@@ -202,11 +202,11 @@ defineSuite([
         polygon.show = false;
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polygon.update(context, sceneState);
         polygon.render(context, us);
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('is picked', function() {

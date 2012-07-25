@@ -31,10 +31,10 @@ defineSuite([
     };
 
     it('unwrapInterval', function() {
-        expect(CzmlCartographic.unwrapInterval(constantCartographicInterval)).toEqualArray(constantCartographicInterval.cartographicRadians);
-        expect(CzmlCartographic.unwrapInterval(constantCartographicDegreesInterval)).toEqualArray(constantCartographicInterval.cartographicRadians);
-        expect(CzmlCartographic.unwrapInterval(sampledCartographicInterval)).toEqualArray(sampledCartographicInterval.cartographicRadians);
-        expect(CzmlCartographic.unwrapInterval(sampledCartographicDegreesInterval)).toEqualArray(sampledCartographicInterval.cartographicRadians);
+        expect(CzmlCartographic.unwrapInterval(constantCartographicInterval)).toEqual(constantCartographicInterval.cartographicRadians);
+        expect(CzmlCartographic.unwrapInterval(constantCartographicDegreesInterval)).toEqual(constantCartographicInterval.cartographicRadians);
+        expect(CzmlCartographic.unwrapInterval(sampledCartographicInterval)).toEqual(sampledCartographicInterval.cartographicRadians);
+        expect(CzmlCartographic.unwrapInterval(sampledCartographicDegreesInterval)).toEqual(sampledCartographicInterval.cartographicRadians);
     });
 
     it('isSampled', function() {
