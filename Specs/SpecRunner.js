@@ -83,10 +83,16 @@ var defineSuite;
     }
 
     //specs is an array defined by SpecList.js
-    require(['Specs/addDefaultMatchers'].concat(specs), function(addDefaultMatchers) {
+    require([
+             'Specs/addDefaultMatchers',
+             'Specs/equalsMethodEqualityTester'
+         ].concat(specs), function(
+             addDefaultMatchers,
+             equalsMethodEqualityTester) {
         var env = jasmine.getEnv();
 
         env.beforeEach(addDefaultMatchers);
+        env.addEqualityTester(equalsMethodEqualityTester);
 
         createTests = function() {
             var isSuiteFocused = jasmine.TrivialReporter.isSuiteFocused;

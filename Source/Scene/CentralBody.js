@@ -2081,9 +2081,7 @@ define([
                     tile.mode = 2;
                 }
                 var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
-                var mvrtc = mv.clone();
-                mvrtc.setColumn3(centerEye);
-                tile.modelView = mvrtc;
+                tile.modelView = mv.setColumn(3, centerEye, tile.modelView);
 
                 context.continueDraw({
                     primitiveType : PrimitiveType.TRIANGLES,
