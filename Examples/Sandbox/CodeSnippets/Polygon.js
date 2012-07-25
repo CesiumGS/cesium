@@ -549,7 +549,8 @@
                                     "positiveZ": filePath,
                                     "negativeZ": filePath
                                 },
-                                "channels": "rgb"
+                                "channels": "rgb",
+                                "indexOfRefractionRatio": 0.9
                             }
                         }
                     },
@@ -828,7 +829,7 @@
                 fabric : {
                     "id" : "Stripe",
                     "uniforms" : {
-                        "direction" : "x",
+                        "horizontal" : true,
                         "lightColor" : {
                             "red" : 1.0,
                             "green" : 1.0,

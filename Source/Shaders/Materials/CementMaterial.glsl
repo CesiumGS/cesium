@@ -9,10 +9,11 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     float noise = agi_snoise(materialInput.st / grainScale);
     noise = pow(noise, 5.0) * roughness;
    
-    vec4 color = cementColor + noise;
-    color.w = 1.0;
+    vec4 color = cementColor;
+    color.rgb += noise;
     
     material.diffuse = color.rgb;
+    material.alpha = color.a;
     
     return material;
 }

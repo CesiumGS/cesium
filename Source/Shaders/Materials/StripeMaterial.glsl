@@ -2,6 +2,7 @@ uniform vec4 lightColor;
 uniform vec4 darkColor;
 uniform float offset;
 uniform float repeat;
+uniform bool horizontal;
 
 agi_material agi_getMaterial(agi_materialInput materialInput)
 {
@@ -11,7 +12,8 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     // Fuzz Factor - Controls blurriness between light and dark colors
     const float fuzz = 0.1;
 
-    float value = fract((materialInput.st.direction - offset) * (repeat * 0.5));
+    float coord = mix(materialInput.st.s, materialInput.st.t, float(horizontal));
+    float value = fract((coord - offset) * (repeat * 0.5));
     
     //anti-aliasing
     float val1 = clamp(value / fuzz, 0.0, 1.0);

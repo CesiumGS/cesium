@@ -19,10 +19,10 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     float horizontalNoise = agi_snoise(vec2(st.x * 20.0, st.y * 100.0)) * 0.02;
     float stripeNoise = min(verticalNoise, horizontalNoise);
  
-    color += stripeNoise;
-    color.w = 1.0;
+    color.rgb += stripeNoise;
     
     material.diffuse = color.rgb;
+    material.alpha = color.a;
     
     return material;
 }

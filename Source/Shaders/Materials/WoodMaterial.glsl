@@ -27,11 +27,10 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     
     //streaks
     r = abs(agi_snoise(vec2(st.x * grainFrequency, st.y * grainFrequency * 0.02))) * 0.2;
-    color += lightWoodColor * r;
+    color.rgb += lightWoodColor.rgb * r;
     
-    color.a = 1.0;
-
     material.diffuse = color.rgb;
+    material.alpha = color.a;
     
     return material;
 }

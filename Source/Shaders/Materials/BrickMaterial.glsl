@@ -13,7 +13,6 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
 
     // From OpenGL Shading Language (3rd edition) pg. 194, 501
     vec2 st = materialInput.st;
-    
     vec2 position = st / brickSize;
     if(fract(position.y * 0.5) > 0.5) {
         position.x += 0.5;    
@@ -37,6 +36,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     color.rgb += mortarNoise * (1.0 - useBrickFinal); 
 
     material.diffuse = color.rgb;
+    material.alpha = color.a;
     
     return material;
 }

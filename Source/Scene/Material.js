@@ -72,9 +72,192 @@ define([
     "use strict";
 
     /**
-     * @name Material
+     * A Material defines surface appearance through a combination of diffuse, specular,
+     * normal, emission, and alpha values. These values are specified using a
+     * JSON schema called Fabric which gets parsed and assembled into glsl shader code
+     * behind-the-scenes. Check out the <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>wiki page</a>
+     * for more details on Fabric.
+     * <br /><br />
+     * Base material types:
+     * <table border='1' cellpadding='1'><tr>
+     * <td>Color</td>
+     * <td>color: Object with red, green, blue, and alpha values between 0.0 and 1.0.</td>
+     * </tr><tr>
+     * <td>Image</td>
+     * <td>texture: String path to image.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.</td>
+     * </tr><tr>
+     * <td>DiffuseMap</td>
+     * <td>texture: String path to image.
+     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired texture channels.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.</td>
+     * </tr><tr>
+     * <td>AlphaMap</td>
+     * <td>texture: String path to image.
+     * <br />channel: One character string containing r, g, b, or a for selecting the desired texture channel.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.</td>
+     * </tr><tr>
+     * <td>SpecularMap</td>
+     * <td>texture: String path to image.
+     * <br />channel: One character string containing r, g, b, or a for selecting the desired texture channel.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.</td>
+     * </tr><tr>
+     * <td>EmissionMap</td>
+     * <td>texture: String path to image.
+     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired texture channels.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.</td>
+     * </tr><tr>
+     * <td>BumpMap</td>
+     * <td>texture: String path to image.
+     * <br />channel: One character string containing r, g, b, or a for selecting the desired texture channel.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.
+     * <br />strength: Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps. </td>
+     * </tr><tr>
+     * <td>NormalMap</td>
+     * <td> texture: String path to image.
+     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired texture channels.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.
+     * <br />strength: Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps. </td>
+     * </tr><tr>
+     * <td>Reflection</td>
+     * <td>cubeMap: Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths.
+     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired texture channels. </td>
+     * </tr><tr>
+     * <td>Refraction</td>
+     * <td>cubeMap: Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths.
+     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired texture channels.
+     * <br />indexOfRefractionRatio: Number representing the refraction strength where 1.0 is the lowest and 0.0 is the highest. </td>
+     * </tr><tr>
+     * <td>Fresnel</td>
+     * <td>reflection: Reflection Material.
+     * <br />refraction: Refraction Material. </td>
+     * </tr><tr>
+     * <td>Brick</td>
+     * <td>brickColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the brick color.
+     * <br />mortarColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the mortar color.
+     * <br />brickSize: Number between 0.0 and 1.0 where 0.0 is many small bricks and 1.0 is one large brick.
+     * <br />brickPct: Number for the ratio of brick to mortar where 0.0 is all mortar and 1.0 is all brick.
+     * <br />brickRoughness: Number between 0.0 and 1.0 representing how rough the brick looks.
+     * <br />mortarRoughness: Number between 0.0 and 1.0 representing how rough the mortar looks. </td>
+     * </tr><tr>
+     * <td>Wood</td>
+     * <td>lightWoodColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the wood's base color.
+     * <br />darkWoodColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the color of rings in the wood.
+     * <br />ringFrequency: Number for the frequency of rings in the wood.
+     * <br />noiseScale: Object with x and y values specifying the noisiness of the ring patterns in both directions. </td>
+     * </tr><tr>
+     * <td>Asphalt</td>
+     * <td>asphaltColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the asphalt's color.
+     * <br />bumpSize: Number for the size of the asphalt's bumps.
+     * <br />roughness: Number that controls how rough the asphalt looks. </td>
+     * </tr><tr>
+     * <td>Cement</td>
+     * <td>cementColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the cement's color.
+     * <br />grainScale: Number for the size of rock grains in the cement.
+     * <br />roughness: Number that controls how rough the cement looks. </td>
+     * </tr><tr>
+     * <td>Grass</td>
+     * <td>grassColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the grass' color.
+     * <br />dirtColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the dirt's color.
+     * <br />patchiness: Number that controls the size of the color patches in the grass. </td>
+     * </tr><tr>
+     * <td>Stripe</td>
+     * <td>horizontal: Boolean that determines if the stripes are horizontal or vertical.
+     * <br />lightColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the stripe's light alternating color.
+     * <br />darkColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the stripe's dark alternating color.
+     * <br />offset: Number that controls the stripe offset from the edge.
+     * <br />repeat: Number that controls the total number of stripes, half light and half dark. </td>
+     * </tr><tr>
+     * <td>Checkerboard</td>
+     * <td>lightColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the checkerboard's light alternating color.
+     * <br />darkColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the checkerboard's dark alternating color.
+     * <br />repeat: Object with x and y values specifying the number of columns and rows respectively. </td>
+     * </tr><tr>
+     * <td>Dot</td>
+     * <td>lightColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the dot color.
+     * <br />darkColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the background color.
+     * <br />repeat: Object with x and y values specifying the number of columns and rows of dots respectively. </td>
+     * </tr><tr>
+     * <td>TieDye</td>
+     * <td>lightColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the light color.
+     * <br />darkColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the dark color.
+     * <br />frequency: Number that controls the frequency of the pattern. </td>
+     * </tr><tr>
+     * <td>Facet</td>
+     * <td>lightColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the light color.
+     * <br />darkColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the dark color.
+     * <br />frequency: Number that controls the frequency of the pattern. </td>
+     * </tr><tr>
+     * <td>Blob</td>
+     * <td>lightColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the light color.
+     * <br />darkColor: Object with red, green, blue, and alpha values between 0.0 and 1.0 for the dark color.
+     * <br />frequency: Number that controls the frequency of the pattern. </td>
+     * </tr></table>
+     *
+     * @alias Material
+     *
+     * @param {Context} description.context The context in which textures get created. Optional if the material does not use textures.
+     * @param {Boolean} [description.strict = false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
+     * @param {Object} description.fabric The fabric JSON used to generate the material.
+     *
      * @constructor
+     *
+     * @exception {DeveloperError} fabric: uniform has invalid type.
+     * @exception {DeveloperError} fabric: uniforms and materials cannot share the same property.
+     * @exception {DeveloperError} fabric: cannot have source and components in the same section.
+     * @exception {DeveloperError} fabric: property name is not valid. It should be 'id', 'materials', 'uniforms', 'components', or 'source'.
+     * @exception {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'normal', 'emission', or 'alpha'.
+     * @exception {DeveloperError} texture: context is not defined.
+     * @exception {DeveloperError} texture: texture image not found.
+     * @exception {DeveloperError} texture: cube map image not found.
+     * @exception {DeveloperError} strict: shader source does not use string.
+     * @exception {DeveloperError} strict: shader source does not use uniform.
+     * @exception {DeveloperError} strict: shader source does not use material.
+     *
      * @example
+     * // The default material:
+     * var material = new Material();
+     *
+     * // Color material:
+     * var material = new Material({
+     *     fabric : {
+     *         "id" : "Color",
+     *         "uniforms" : {
+     *             "color" : {
+     *                 "red" : 1.0,
+     *                 "green" : 0.0,
+     *                 "blue" : 0.0,
+     *                 "alpha" : 1.0
+     *             }
+     *         }
+     *     }
+     * });
+     *
+     * //Diffuse specular material:
+     * var material = new Material({
+     *     context : context,
+     *     fabric : {
+     *         "materials" : {
+     *             "diffuseMaterial" : {
+     *                 "id" : "DiffuseMap",
+     *                 "uniforms" : {
+     *                     "texture" : "diffuseMap.png"
+     *                 }
+     *             },
+     *             "specularMaterial" : {
+     *                 "id" : "SpecularMap",
+     *                 "uniforms" : {
+     *                     "texture" : "specularMap.png"
+     *                 }
+     *              }
+     *         },
+     *         "components" : {
+     *             "diffuse" : "diffuseMaterial.diffuse",
+     *             "specular" : "specularMaterial.specular"
+     *         }
+     *     }
+     *
+     * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric wiki page</a>
      */
 
     function Material(description) {
@@ -85,10 +268,10 @@ define([
         this._template = this._description.fabric || {};
         this._materialID = this._template.id;
 
-        // If the factory contains this material ID, build the material template off of the stored template.
-        var isOldMaterialType = this._materialFactory.hasMaterial(this._materialID);
+        // If the cache contains this material ID, build the material template off of the stored template.
+        var isOldMaterialType = Material._materialCache.hasMaterial(this._materialID);
         if (isOldMaterialType) {
-            var newMaterialTemplate = clone(this._materialFactory.getMaterial(this._materialID));
+            var newMaterialTemplate = clone(Material._materialCache.getMaterial(this._materialID));
             this._extendObject(this._template, newMaterialTemplate);
         }
 
@@ -103,16 +286,16 @@ define([
         // Make sure the template has no obvious errors. More error checking happens later.
         this._checkForTemplateErrors();
 
-        // If the material has a new ID, add it to the factory.
+        // If the material has a new ID, add it to the cache.
         var isNewMaterialType = (isOldMaterialType === false) && (typeof this._materialID !== 'undefined');
         if (isNewMaterialType){
-            this._materialFactory.addMaterial(this._materialID, this._template);
+            Material._materialCache.addMaterial(this._materialID, this._template);
         }
 
         // Build the shader source for the main material.
         this._shaderSource = '';
         if (this._hasSourceSection) {
-            this._shaderSource += this._materialSource;
+            this._shaderSource += this._materialSource + '\n';
         }
         else {
             this._shaderSource += 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n';
@@ -139,7 +322,13 @@ define([
             if (typeof uniformType === 'undefined') {
                 var imageMatcher = new RegExp('^((data:)|((.)+\\.(gif|jpg|jpeg|tiff|png)$))', 'i');
                 var type = typeof uniformValue;
-                if (type === 'string') {
+                if (type === 'number') {
+                    uniformType = 'float';
+                }
+                else if (type === 'boolean') {
+                    uniformType = 'bool';
+                }
+                else if (type === 'string') {
                     if (uniformValue === 'agi_defaultCubeMap') {
                         uniformType = 'samplerCube';
                     }
@@ -149,9 +338,6 @@ define([
                     else {
                         uniformType = 'string';
                     }
-                }
-                else if (type === 'number') {
-                    uniformType = 'float';
                 }
                 else if (type === 'object') {
                     if (uniformValue instanceof Array) {
@@ -189,7 +375,7 @@ define([
             var uniformValue = that._materialUniforms[uniformID];
             var uniformType = getUniformType(uniformValue);
             if (typeof uniformType === 'undefined') {
-                throw new DeveloperError('Invalid uniform \'' + uniformID + '\'.');
+                throw new DeveloperError('Uniform \'' + uniformID + '\' has invalid type.');
             }
             else if (uniformType === 'string') {
                 if (that._replaceToken(uniformID, uniformValue, false) === 0 && that._strict) {
@@ -229,7 +415,7 @@ define([
                 var uniformValue = that[uniformID];
                 if (uniformType.indexOf('sampler') !== -1) {
                     if(!(uniformValue instanceof Texture || uniformValue instanceof CubeMap)) {
-                        uniformValue = that._texturePool.registerTextureToMaterial(that, uniformID, uniformValue, uniformType);
+                        uniformValue = Material._textureCache.registerTextureToMaterial(that, uniformID, uniformValue, uniformType);
                     }
                     var uniformDimensionsName = uniformID + 'Dimensions';
                     if(that.hasOwnProperty(uniformDimensionsName)) {
@@ -283,6 +469,29 @@ define([
         }
         this._shaderSource = newShaderSource + this._shaderSource;
     }
+
+    /**
+     * Returns the glsl source code for this material.
+     *
+     * @memberof Material
+     *
+     * @returns {String} glsl source code.
+     */
+    Material.prototype.getShaderSource = function() {
+        return this._shaderSource;
+    };
+
+    /**
+     * Returns the id for this material. The returned value is undefined if
+     * the id was not set.
+     *
+     * @memberof Material
+     *
+     * @returns {String} Material id.
+     */
+    Material.prototype.getID = function() {
+        return this._materialID;
+    };
 
     Material.prototype._getNewGUID = function() {
         return createGuid().replace(new RegExp('-', 'g'), '').slice(0,5);
@@ -362,7 +571,7 @@ define([
 
         // Make sure uniforms and materials do not share any of the same names.
         var duplicateNameError = function(property, properties) {
-            var errorString = 'Uniforms and materials should not share the same property \'' + property + '\'';
+            var errorString = 'Uniforms and materials cannot share the same property \'' + property + '\'';
             throw new DeveloperError(errorString);
         };
         var materialNames = [];
@@ -374,7 +583,7 @@ define([
         checkForValidProperties(this._materialUniforms, materialNames, duplicateNameError, false);
     };
 
-    Material.prototype._texturePool = {
+    Material._textureCache = {
         _pathsToMaterials : {},
         _pathsToTextures : {},
         _updateMaterialsOnTextureLoad : function(texture, path) {
@@ -434,7 +643,7 @@ define([
                                 });
                                 that._updateMaterialsOnTextureLoad(texture, path);
                             }, function() {
-                                throw new DeveloperError('Cube map has an invalid image path.');
+                                throw new DeveloperError('Cube map image not found.');
                             });
                         }
                     }
@@ -443,8 +652,7 @@ define([
             return texture;
         }
     };
-
-    Material.prototype._materialFactory = {
+    Material._materialCache = {
         _materials : {},
         hasMaterial : function (materialID) {
             return (typeof this.getMaterial(materialID) !== 'undefined');
@@ -456,15 +664,28 @@ define([
             return this._materials[materialID];
         }
     };
-    Material.prototype.getShaderSource = function() {
-        return this._shaderSource;
-    };
-    Material.prototype.getID = function() {
-        return this._materialID;
-    };
 
-    // Create basic material types
+    /**
+     * Static method for creating a new material using an existing materialID.
+     * <br /><br />
+     * Shorthand for: new Material({context : context, fabric : {"id" : materialID}});
+     *
+     * @param {Context} context The context in which textures get created. Can be undefined if the material does not use textures.
+     * @param {String} materialID The base material id.
+     *
+     * @returns {Material} New material object.
+     *
+     * @exception {DeveloperError} Material with that id does not exist.
+     *
+     * @example
+     * var material = Material.fromID(context, 'Color');
+     * material.color = vec4(1.0, 0.0, 0.0, 1.0);
+     */
+
     Material.fromID = function(context, materialID) {
+        if (!Material._materialCache.hasMaterial(materialID)) {
+            throw new DeveloperError('Material with id \'' + materialID + '\' does not exist.');
+        }
         return new Material({
             context : context,
             fabric : {
@@ -474,7 +695,7 @@ define([
     };
 
     // Color Material
-    Material.prototype._materialFactory.addMaterial('Color', {
+    Material._materialCache.addMaterial('Color', {
         "id" : "Color",
         "uniforms" : {
             "color" : new Color(1.0, 0.0, 0.0, 0.5)
@@ -484,7 +705,7 @@ define([
 
     // Image Material.
     // Useful for textures with an alpha component.
-    Material.prototype._materialFactory.addMaterial('Image', {
+    Material._materialCache.addMaterial('Image', {
         "id" : "Image",
         "uniforms" : {
             "texture" : "agi_defaultTexture",
@@ -497,7 +718,7 @@ define([
     });
 
     // Diffuse Map Material
-    Material.prototype._materialFactory.addMaterial('DiffuseMap', {
+    Material._materialCache.addMaterial('DiffuseMap', {
         "id" : "DiffuseMap",
         "uniforms" : {
             "texture" : "agi_defaultTexture",
@@ -511,7 +732,7 @@ define([
     });
 
     // Alpha Map Material
-    Material.prototype._materialFactory.addMaterial('AlphaMap', {
+    Material._materialCache.addMaterial('AlphaMap', {
         "id" : "AlphaMap",
         "uniforms" : {
             "texture" : "agi_defaultTexture",
@@ -525,7 +746,7 @@ define([
     });
 
     // Specular Map Material
-    Material.prototype._materialFactory.addMaterial('SpecularMap' , {
+    Material._materialCache.addMaterial('SpecularMap' , {
         "id" : "SpecularMap",
         "uniforms" : {
             "texture" : "agi_defaultTexture",
@@ -539,7 +760,7 @@ define([
     });
 
     // Emission Map Material
-    Material.prototype._materialFactory.addMaterial('EmissionMap' , {
+    Material._materialCache.addMaterial('EmissionMap' , {
         "id" : "EmissionMap",
         "uniforms" : {
             "texture" : "agi_defaultTexture",
@@ -553,7 +774,7 @@ define([
     });
 
     // Bump Map Material
-    Material.prototype._materialFactory.addMaterial('BumpMap' , {
+    Material._materialCache.addMaterial('BumpMap' , {
         "id" : "BumpMap",
         "uniforms" : {
             "texture" : "agi_defaultTexture",
@@ -568,7 +789,7 @@ define([
     });
 
     // Normal Map Material
-    Material.prototype._materialFactory.addMaterial('NormalMap', {
+    Material._materialCache.addMaterial('NormalMap', {
         "id" : "NormalMap",
         "uniforms" : {
             "texture" : "agi_defaultTexture",
@@ -583,7 +804,7 @@ define([
     });
 
     // Reflection Material
-    Material.prototype._materialFactory.addMaterial('Reflection', {
+    Material._materialCache.addMaterial('Reflection', {
         "id" : "Reflection",
         "uniforms" : {
             "cubeMap" : "agi_defaultCubeMap",
@@ -593,7 +814,7 @@ define([
     });
 
     // Refraction Material
-    Material.prototype._materialFactory.addMaterial('Refraction', {
+    Material._materialCache.addMaterial('Refraction', {
         "id" : "Refraction",
         "uniforms" : {
             "cubeMap" : "agi_defaultCubeMap",
@@ -604,7 +825,7 @@ define([
     });
 
     // Fresnel Material
-    Material.prototype._materialFactory.addMaterial('Fresnel' , {
+    Material._materialCache.addMaterial('Fresnel' , {
         "id" : "Fresnel",
         "materials" : {
             "reflection" : {
@@ -618,7 +839,7 @@ define([
     });
 
     // Brick Material
-    Material.prototype._materialFactory.addMaterial('Brick', {
+    Material._materialCache.addMaterial('Brick', {
         "id" : "Brick",
         "uniforms" : {
             "brickColor" : {
@@ -648,7 +869,7 @@ define([
     });
 
     // Wood Material
-    Material.prototype._materialFactory.addMaterial('Wood', {
+    Material._materialCache.addMaterial('Wood', {
         "id" : "Wood",
         "uniforms" : {
             "lightWoodColor" : {
@@ -674,7 +895,7 @@ define([
     });
 
     // Asphalt Material
-    Material.prototype._materialFactory.addMaterial('Asphalt', {
+    Material._materialCache.addMaterial('Asphalt', {
         "id" : "Asphalt",
         "uniforms" : {
             "asphaltColor" : {
@@ -690,7 +911,7 @@ define([
     });
 
     // Cement Material
-    Material.prototype._materialFactory.addMaterial('Cement', {
+    Material._materialCache.addMaterial('Cement', {
         "id" : "Cement",
         "uniforms" : {
             "cementColor" : {
@@ -706,7 +927,7 @@ define([
     });
 
     // Grass Material
-    Material.prototype._materialFactory.addMaterial('Grass', {
+    Material._materialCache.addMaterial('Grass', {
         "id" : "Grass",
         "uniforms" : {
             "grassColor" : {
@@ -727,10 +948,10 @@ define([
     });
 
     // Stripe Material
-    Material.prototype._materialFactory.addMaterial('Stripe', {
+    Material._materialCache.addMaterial('Stripe', {
         "id" : "Stripe",
         "uniforms" : {
-            "direction" : "y",
+            "horizontal" : true,
             "lightColor" : {
                 "red" : 1.0,
                 "green" : 1.0,
@@ -750,7 +971,7 @@ define([
     });
 
     // Checkerboard Material
-    Material.prototype._materialFactory.addMaterial('Checkerboard', {
+    Material._materialCache.addMaterial('Checkerboard', {
         "id" : "Checkerboard",
         "uniforms" : {
             "lightColor" : {
@@ -774,7 +995,7 @@ define([
     });
 
     // Dot Material
-    Material.prototype._materialFactory.addMaterial('Dot', {
+    Material._materialCache.addMaterial('Dot', {
         "id" : "DotMaterial",
         "uniforms" : {
             "lightColor" : {
@@ -798,7 +1019,7 @@ define([
     });
 
     // Tie-Dye Material
-    Material.prototype._materialFactory.addMaterial('TieDye', {
+    Material._materialCache.addMaterial('TieDye', {
         "id" : "TieDye",
         "uniforms" : {
             "lightColor" : {
@@ -819,7 +1040,7 @@ define([
     });
 
     // Facet Material
-    Material.prototype._materialFactory.addMaterial('Facet', {
+    Material._materialCache.addMaterial('Facet', {
         "id" : "Facet",
         "uniforms" : {
             "lightColor" : {
@@ -840,7 +1061,7 @@ define([
     });
 
     // Blob Material
-    Material.prototype._materialFactory.addMaterial('Blob', {
+    Material._materialCache.addMaterial('Blob', {
         "id" : "Blob",
         "uniforms" : {
             "lightColor" : {

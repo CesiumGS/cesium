@@ -369,4 +369,50 @@ defineSuite([
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
         destroyContext(context);
     });
+
+    it('throws with invalid image path to texture', function() {
+        expect(function() {
+            var context = createContext();
+            return new Material({
+                context : context,
+                strict : true,
+                fabric : {
+                    "id" : "DiffuseMap",
+                    "uniforms" : {
+                        "texture" : "bad.png"
+                    }
+                }
+            });
+        }).toThrow();
+    });
+
+    it('throws with invalid image path to cube map', function() {
+        expect(function() {
+            var context = createContext();
+            return new Material({
+                context : context,
+                strict : true,
+                fabric : {
+                    "id" : "Reflection",
+                    "uniforms" : {
+                        "cubeMap" : {
+                            "positiveX" : "bad.png",
+                            "negativeX" : "bad.png",
+                            "positiveY" : "bad.png",
+                            "negativeY" : "bad.png",
+                            "positiveZ" : "bad.png",
+                            "negativeZ" : "bad.png"
+                        }
+                    }
+                }
+            });
+        }).toThrow();
+    });
+
+    it('throws with invalid id sent to fromID', function() {
+        expect(function() {
+            var context = createContext();
+            return Material.fromID(context, "Nothing");
+        }).toThrow();
+    });
 });

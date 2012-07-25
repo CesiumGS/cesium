@@ -436,50 +436,6 @@ vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, agi_material material)
 }
 
 /**
- * Slow, but high quality light computation. Use sparingly.
- *
- * @name agi_lightValueGaussian
- * @glslFunction
- *
- * @param {vec3} toLight Direction to light in eye coordinates.
- * @param {vec3} toEye Direction to eye in eye coordinates.
- * @param {agi_material} material Material value used for light computation.
- *
- * @returns {vec4} Final rgba light value.
- *
- * @see agi_material
- */
-
-vec4 agi_lightValueGaussian(vec3 toLight, vec3 toEye, agi_material material)
-{
-    vec3 diffuseColor = material.diffuse;
-    float specularIntensity = material.specular + agi_epsilon7;
-    vec3 normal = material.normal;
-    vec3 emissionColor = material.emission;
-    float alpha = material.alpha;
-
-    float cosAngIncidence = max(dot(normal, toLight), 0.0);
-    vec3 halfAngle = normalize(toLight + toEye);
-    float angleNormalHalf = acos(dot(halfAngle, normal));
-    float exponent = angleNormalHalf / specularIntensity;
-    exponent = -(exponent * exponent);
-    float gaussianTerm = exp(exponent);
-    gaussianTerm = cosAngIncidence != 0.0 ? gaussianTerm : 0.0;
-
-    //x, y, z : diffuse ambient
-    //w : specular strength
-    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 0.5);
-    
-    vec3 lighting = ambientLight.xyz + emissionColor;
-    lighting += diffuseColor * cosAngIncidence;
-    lighting += gaussianTerm * ambientLight.w;
-    lighting = clamp(lighting, 0.0, 1.0);
-    
-    vec4 finalLighting = vec4(lighting, alpha);
-    return finalLighting;
-}
-
-/**
  * DOC_TBA
  *
  * @name agi_multiplyWithColorBalance

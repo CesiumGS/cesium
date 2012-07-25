@@ -11,7 +11,6 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     normalTangentSpace.xy = normalTangentSpace.xy * 2.0 - 1.0;
     normalTangentSpace.z = clamp(1.0 - strength, 0.1, 1.0);
     normalTangentSpace = normalize(normalTangentSpace);
-    
     vec3 normalEC = materialInput.tangentToEyeMatrix * normalTangentSpace;
     
     material.normal = normalEC;
