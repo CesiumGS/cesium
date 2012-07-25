@@ -86,7 +86,7 @@ defineSuite([
 
     it('has agi_eyeToWindowCoordinates', function() {
         var vp = context.getViewport();
-        var perspective = Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
+        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
         context.getUniformState().setProjection(perspective);
 
         var fs =
@@ -106,7 +106,7 @@ defineSuite([
 
     it('has agi_windowToEyeCoordinates', function() {
         var vp = context.getViewport();
-        var perspective = Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
+        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
         context.getUniformState().setProjection(perspective);
 
         var fs =
