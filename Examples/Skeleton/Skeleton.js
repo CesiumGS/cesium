@@ -22,7 +22,7 @@ require({
 
     var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'OjBxR9CwkxJQgZB8aLHV3Z3t7CoN3Vsi8ilW1CgNkaiiWD3B9mBsG7Rinq3hhKfPbJollxhvpknHSHaQ0PULtw..',
+        token : 'uSwV5xpNRco1WNN5FZBQ80kwsgHrGiFL7rXriGLxlGQUGK7EOpsV3iLKthZ8JhzJ2w_4bATEEJCI7PhdJWpt5Q..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
@@ -56,14 +56,12 @@ require({
 //
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
-    var cesiumLogo = new Cesium.SingleTileImageryProvider(
-            '../../Images/TestLayer.png',
-            new Cesium.Extent(
-                    Cesium.Math.toRadians(-120),
-                    Cesium.Math.toRadians(37),
-                    Cesium.Math.toRadians(-119),
-                    Cesium.Math.toRadians(38)));
-    imageryLayerCollection.addImageryProvider(cesiumLogo);
+    var testLayer = imageryLayerCollection.addImageryProvider(
+            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png',
+                                                 new Cesium.Extent(Cesium.Math.toRadians(-120),
+                                                                   Cesium.Math.toRadians(37),
+                                                                   Cesium.Math.toRadians(-119),
+                                                                   Cesium.Math.toRadians(38))));
 
     var cb = new Cesium.CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
 
@@ -167,6 +165,14 @@ require({
             break;
         case 'D'.charCodeAt(0):
             imageryLayerCollection.lower(esriLayer);
+            break;
+        case 109: // numpad -
+            imageryLayerCollection.remove(testLayer, false);
+            break;
+        case 107: // numpad +
+            if (!imageryLayerCollection.contains(testLayer)) {
+                imageryLayerCollection.add(testLayer);
+            }
             break;
         case "3".charCodeAt(0): // "3" -> 3D globe
             cb.showSkyAtmosphere = true;

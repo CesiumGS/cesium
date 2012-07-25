@@ -3,6 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian2',
+        '../Core/Event',
         '../Core/Rectangle',
         '../Renderer/PixelFormat',
         './ImageryLayer',
@@ -11,6 +12,7 @@ define([
         DeveloperError,
         destroyObject,
         Cartesian2,
+        Event,
         Rectangle,
         PixelFormat,
         ImageryLayer,
@@ -24,6 +26,10 @@ define([
      */
     function ImageryLayerCollection() {
         this._layers = [];
+
+        this.layerAdded = new Event();
+        this.layerRemoved = new Event();
+        this.layerMoved = new Event();
 
         /**
          * Determines if layers in this collection will be shown.
@@ -60,10 +66,13 @@ define([
         }
 
         if (typeof index === 'undefined') {
+            index = this._layers.length;
             this._layers.push(layer);
         } else {
             this._layers.splice(index, 0, layer);
         }
+
+        this.layerAdded.raiseEvent(layer, index);
     };
 
     /**
@@ -107,6 +116,8 @@ define([
         if (index !== -1) {
             this._layers.splice(index, 1);
 
+            this.layerRemoved.raiseEvent(layer, index);
+
             if (destroy) {
                 layer.destroy();
             }
@@ -127,10 +138,13 @@ define([
     ImageryLayerCollection.prototype.removeAll = function(destroy) {
         destroy = typeof destroy === 'undefined' ? true : destroy;
 
-        if (destroy) {
-            var layers = this._layers;
-            for ( var i = 0, len = layers.length; i < len; i++) {
-                layers[i].destroy();
+        var layers = this._layers;
+        for ( var i = 0, len = layers.length; i < len; i++) {
+            var layer = layers[i];
+            this.layerRemoved.raiseEvent(layer, i);
+
+            if (destroy) {
+                layer.destroy();
             }
         }
 
@@ -208,6 +222,8 @@ define([
         var temp = arr[i];
         arr[i] = arr[j];
         arr[j] = temp;
+
+        collection.layerMoved.raiseEvent(temp, j, i);
     }
 
     /**
@@ -226,21 +242,6 @@ define([
     };
 
     /**
-     * Raises a layer to the top of the collection.
-     *
-     * @memberof ImageryLayerCollection
-     *
-     * @param {ImageryLayer} layer the layer to move.
-     *
-     * @exception {DeveloperError} layer is not in this collection.
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    ImageryLayerCollection.prototype.raiseToTop = function(layer) {
-        var index = getLayerIndex(this._layers, layer);
-        swapLayers(this, index, this._layers.length - 1);
-    };
-
-    /**
      * Lowers a layer down one position in the collection.
      *
      * @memberof ImageryLayerCollection
@@ -256,6 +257,24 @@ define([
     };
 
     /**
+     * Raises a layer to the top of the collection.
+     *
+     * @memberof ImageryLayerCollection
+     *
+     * @param {ImageryLayer} layer the layer to move.
+     *
+     * @exception {DeveloperError} layer is not in this collection.
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
+    ImageryLayerCollection.prototype.raiseToTop = function(layer) {
+        var index = getLayerIndex(this._layers, layer);
+        this._layers.splice(index, 1);
+        this._layers.push(layer);
+
+        this.layerMoved.raiseEvent(layer, layer.length - 1, index);
+    };
+
+    /**
      * Lowers a layer to the bottom of the collection.
      *
      * @memberof ImageryLayerCollection
@@ -267,7 +286,10 @@ define([
      */
     ImageryLayerCollection.prototype.lowerToBottom = function(layer) {
         var index = getLayerIndex(this._layers, layer);
-        swapLayers(this, index, 0);
+        this._layers.splice(index, 1);
+        this._layers.splice(0, 0, layer);
+
+        this.layerMoved.raiseEvent(layer, 0, index);
     };
 
     /**
@@ -286,6 +308,7 @@ define([
         var logoHeight = 0;
         var logo;
 
+        layerLogos.length = layers.length;
         for ( var i = 0, len = layers.length; i < len; i++) {
             var layer = layers[i];
 

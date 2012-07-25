@@ -109,9 +109,8 @@ define([
             extent.north <= extent.south) {
             // There is no overlap between this terrain tile and this imagery
             // provider, so no skeletons need to be created.
-            return;
+            return false;
         }
-
 
         // Compute the required level in the imagery tiling scheme.
         // TODO: this should be imagerySSE / terrainSSE.
@@ -166,6 +165,8 @@ define([
                 tile.imagery.push(new TileImagery(this, i, j, imageryLevel, textureTranslation, textureScale));
             }
         }
+
+        return true;
     };
 
     var activeTileImageRequests = {};
