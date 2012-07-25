@@ -117,6 +117,7 @@ define([
      *
      * @param {Object} czmlIntervals The CZML data to process.
      * @param {TimeInterval} [constrainedInterval] Constrains the processing so that any times outside of this interval are ignored.
+     * @param {String} [sourceUri] The originating url of the CZML being processed.
      */
     DynamicProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval, sourceUri) {
         if (Array.isArray(czmlIntervals)) {
