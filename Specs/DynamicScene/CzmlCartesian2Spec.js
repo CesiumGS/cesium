@@ -20,8 +20,8 @@ defineSuite([
     };
 
     it('unwrapInterval', function() {
-        expect(CzmlCartesian2.unwrapInterval(constantCartesianInterval)).toEqualArray(constantCartesianInterval.cartesian2);
-        expect(CzmlCartesian2.unwrapInterval(sampledCartesianInterval)).toEqualArray(sampledCartesianInterval.cartesian2);
+        expect(CzmlCartesian2.unwrapInterval(constantCartesianInterval)).toEqual(constantCartesianInterval.cartesian2);
+        expect(CzmlCartesian2.unwrapInterval(sampledCartesianInterval)).toEqual(sampledCartesianInterval.cartesian2);
     });
 
     it('isSampled', function() {

@@ -155,7 +155,7 @@ defineSuite([
                 visualizer.update(time);
                 if (bb.getShow()) {
                     expect(bb.getPosition()).toEqual(testObject.position.getValueCartesian(time));
-                    expect(bb.getColor()).toEqualProperties(testObject.billboard.color.getValue(time));
+                    expect(bb.getColor()).toEqual(testObject.billboard.color.getValue(time));
                     expect(bb.getEyeOffset()).toEqual(testObject.billboard.eyeOffset.getValue(time));
                     expect(bb.getScale()).toEqual(testObject.billboard.scale.getValue(time));
                     expect(bb.getHorizontalOrigin()).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
@@ -182,7 +182,7 @@ defineSuite([
                 var imageReady = bb.getImageIndex() === 1; //true once the green image is loaded
                 if (imageReady) {
                     expect(bb.getPosition()).toEqual(testObject.position.getValueCartesian(time));
-                    expect(bb.getColor()).toEqualProperties(testObject.billboard.color.getValue(time));
+                    expect(bb.getColor()).toEqual(testObject.billboard.color.getValue(time));
                     expect(bb.getEyeOffset()).toEqual(testObject.billboard.eyeOffset.getValue(time));
                     expect(bb.getScale()).toEqual(testObject.billboard.scale.getValue(time));
                     expect(bb.getHorizontalOrigin()).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
