@@ -35,7 +35,7 @@ define([
         this._controllers = [];
         this._canvas = canvas;
         this._camera = camera;
-    }
+    };
 
     /**
      * DOC_TBA

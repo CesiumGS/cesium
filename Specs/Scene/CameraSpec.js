@@ -212,7 +212,7 @@ defineSuite([
 
     it('get inverse view matrix', function() {
         var expected = camera.getViewMatrix().inverse();
-        expect(expected.equals(camera.getInverseViewMatrix())).toEqual(true);
+        expect(expected).toEqual(camera.getInverseViewMatrix());
     });
 
     it('get inverse transform', function() {
