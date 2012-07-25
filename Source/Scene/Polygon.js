@@ -125,7 +125,7 @@ define([
      *
      * @example
      * var polygon = new Polygon();
-     * polygon.material.color = {
+     * polygon.material.uniforms.color = {
      *   red   : 1.0,
      *   green : 0.0,
      *   blue  : 0.0,
@@ -230,7 +230,7 @@ define([
          * DOC_TBA
          */
         this.material = Material.fromID(undefined, 'Color');
-        this.material.color = new Color(1.0, 1.0, 0.0, 0.5);
+        this.material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
         this._material = undefined;
 
         /**

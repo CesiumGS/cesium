@@ -71,7 +71,7 @@
                 Cesium.Math.toRadians(180.0),
                 Cesium.Math.toRadians(90.0)));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,
@@ -119,7 +119,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 33.0)
             ]));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,
@@ -165,7 +165,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 32.5)
             ]));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,
@@ -200,7 +200,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 33.0)
             ]));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,
@@ -236,7 +236,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 33.0)
             ]));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                     red: 1.0,
                     green: 1.0,
                     blue: 1.0,
@@ -280,7 +280,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 33.0)
             ]));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,
@@ -316,7 +316,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 33.0)
             ]));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,
@@ -366,7 +366,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 36.0)
             ]));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,
@@ -418,7 +418,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 36.0)
             ]));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,
@@ -471,7 +471,7 @@
                 Cesium.Math.toRadians(90.0)
             ));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,
@@ -523,7 +523,7 @@
                 Cesium.Math.toRadians(90.0)
             ));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,
@@ -576,7 +576,7 @@
                 Cesium.Math.toRadians(90.0)
             ));
 
-            polygon.material.color = {
+            polygon.material.uniforms.color = {
                 red: 1.0,
                 green: 1.0,
                 blue: 1.0,

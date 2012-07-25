@@ -100,7 +100,7 @@ defineSuite([
     });
 
     it('gets the default color', function() {
-        expect(polygon.material.color).toEqualProperties({
+        expect(polygon.material.uniforms.color).toEqualProperties({
             red : 1.0,
             green : 1.0,
             blue : 0.0,
@@ -123,7 +123,7 @@ defineSuite([
     it('renders', function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
         polygon = createPolygon();
-        polygon.material.color = {
+        polygon.material.uniforms.color = {
             red : 1.0,
             green : 0.0,
             blue : 0.0,
@@ -176,7 +176,7 @@ defineSuite([
             CesiumMath.toRadians(10.0),
             CesiumMath.toRadians(10.0)
         ));
-        polygon.material.color = {
+        polygon.material.uniforms.color = {
             red : 1.0,
             green : 0.0,
             blue : 0.0,
@@ -193,7 +193,7 @@ defineSuite([
 
     it('does not renders', function() {
         polygon = createPolygon();
-        polygon.material.color = {
+        polygon.material.uniforms.color = {
             red : 1.0,
             green : 0.0,
             blue : 0.0,

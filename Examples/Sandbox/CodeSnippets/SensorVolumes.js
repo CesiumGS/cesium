@@ -111,19 +111,19 @@
                 radius: 6000000.0
             });
 
-            sensor.outerMaterial.color = {
+            sensor.outerMaterial.uniforms.color = {
                 red   : 1.0,
                 green : 0.0,
                 blue  : 1.0,
                 alpha : 0.5
             };
-            sensor.innerMaterial.color = {
+            sensor.innerMaterial.uniforms.color = {
                 red : 1.0,
                 green : 1.0,
                 blue : 0.0,
                 alpha : 0.5
             };
-            sensor.capMaterial.color = {
+            sensor.capMaterial.uniforms.color = {
                 red : 0.0,
                 green : 1.0,
                 blue : 1.0,
@@ -226,8 +226,8 @@
             modelMatrix = modelMatrix.multiply(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var material = Cesium.Material.fromID(scene.getContext(), 'Checkerboard');
-            material.lightColor = new Cesium.Color(1.0, 1.0, 0.0, 0.75);
-            material.darkColor = new Cesium.Color(0.0, 1.0, 1.0, 0.25);
+            material.uniforms.lightColor = new Cesium.Color(1.0, 1.0, 0.0, 0.75);
+            material.uniforms.darkColor = new Cesium.Color(0.0, 1.0, 1.0, 0.25);
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
             sensors.addComplexConic({
@@ -251,8 +251,8 @@
             modelMatrix = modelMatrix.multiply(Cesium.Matrix4.createTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
             var material = Cesium.Material.fromID(scene.getContext(), 'Dot');
-            material.lightColor = new Cesium.Color(1.0, 1.0, 0.0, 0.75);
-            material.darkColor = new Cesium.Color(0.0, 1.0, 1.0, 0.25);
+            material.uniforms.lightColor = new Cesium.Color(1.0, 1.0, 0.0, 0.75);
+            material.uniforms.darkColor = new Cesium.Color(0.0, 1.0, 1.0, 0.25);
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
             sensors.addComplexConic({

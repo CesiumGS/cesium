@@ -88,7 +88,7 @@ define([
         if (typeof property !== 'undefined') {
             tRepeat = property.getValue(time);
             if (typeof tRepeat !== 'undefined') {
-                existingMaterial.repeat.x = tRepeat;
+                existingMaterial.uniforms.repeat.x = tRepeat;
             }
         }
 
@@ -97,7 +97,7 @@ define([
         if (typeof property !== 'undefined') {
             sRepeat = property.getValue(time);
             if (typeof value !== 'undefined') {
-                existingMaterial.repeat.y = sRepeat;
+                existingMaterial.uniforms.repeat.y = sRepeat;
             }
         }
 
@@ -106,7 +106,7 @@ define([
             var url = this.image.getValue(time);
             if (typeof url !== 'undefined' && existingMaterial.currentUrl !== url) {
                 existingMaterial.currentUrl = url;
-                existingMaterial.texture = url;
+                existingMaterial.uniforms.texture = url;
             }
         }
         return existingMaterial;

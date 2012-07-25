@@ -111,7 +111,7 @@ defineSuite([
         var polygon = testObject.polygon = new DynamicPolygon();
         polygon.show = new MockProperty(true);
         var colorMaterial = Material.fromID(undefined, 'Color');
-        colorMaterial.color = new Color(0.7, 0.6, 0.5, 0.4);
+        colorMaterial.uniforms.color = new Color(0.7, 0.6, 0.5, 0.4);
         polygon.material = new MockProperty(colorMaterial);
 
         visualizer.update(time);
@@ -126,7 +126,7 @@ defineSuite([
 
         testObject.vertexPositions = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112), new Cartesian3(1234, 5678, 910111)]);
         colorMaterial = Material.fromID(undefined, 'Color');
-        colorMaterial.color = new Color(0.1, 0.2, 0.4, 0.3);
+        colorMaterial.uniforms.color = new Color(0.1, 0.2, 0.4, 0.3);
         polygon.material = new MockProperty(colorMaterial);
 
         visualizer.update(time);

@@ -90,8 +90,8 @@ defineSuite([
                 }
             }
         });
-        material.value.x = 1.0;
-        material.first.repeat.x = 2.0;
+        material.uniforms.value.x = 1.0;
+        material.materials.first.uniforms.repeat.x = 2.0;
 
         var pixel = renderMaterial(material, context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
@@ -368,45 +368,6 @@ defineSuite([
         var pixel = renderMaterial(material, context);
         expect(pixel).not.toEqualArray([0, 0, 0, 0]);
         destroyContext(context);
-    });
-
-    it('throws with invalid image path to texture', function() {
-        expect(function() {
-            var context = createContext();
-            return new Material({
-                context : context,
-                strict : true,
-                fabric : {
-                    "id" : "DiffuseMap",
-                    "uniforms" : {
-                        "texture" : "bad.png"
-                    }
-                }
-            });
-        }).toThrow();
-    });
-
-    it('throws with invalid image path to cube map', function() {
-        expect(function() {
-            var context = createContext();
-            return new Material({
-                context : context,
-                strict : true,
-                fabric : {
-                    "id" : "Reflection",
-                    "uniforms" : {
-                        "cubeMap" : {
-                            "positiveX" : "bad.png",
-                            "negativeX" : "bad.png",
-                            "positiveY" : "bad.png",
-                            "negativeY" : "bad.png",
-                            "positiveZ" : "bad.png",
-                            "negativeZ" : "bad.png"
-                        }
-                    }
-                }
-            });
-        }).toThrow();
     });
 
     it('throws with invalid id sent to fromID', function() {

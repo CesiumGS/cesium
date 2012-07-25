@@ -208,7 +208,6 @@ define([
      * @exception {DeveloperError} fabric: property name is not valid. It should be 'id', 'materials', 'uniforms', 'components', or 'source'.
      * @exception {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'normal', 'emission', or 'alpha'.
      * @exception {DeveloperError} texture: context is not defined.
-     * @exception {DeveloperError} texture: texture image not found.
      * @exception {DeveloperError} texture: cube map image not found.
      * @exception {DeveloperError} strict: shader source does not use string.
      * @exception {DeveloperError} strict: shader source does not use uniform.
@@ -312,10 +311,6 @@ define([
             this._shaderSource += 'return material;\n}\n';
         }
 
-
-        // Set up uniforms for the main material
-        this._uniforms = {};
-
         // Determines the uniform type based on the uniform in the template.
         var getUniformType = function(uniformValue) {
             var uniformType = uniformValue.type;
@@ -375,18 +370,18 @@ define([
             var uniformValue = that._materialUniforms[uniformID];
             var uniformType = getUniformType(uniformValue);
             if (typeof uniformType === 'undefined') {
-                throw new DeveloperError('Uniform \'' + uniformID + '\' has invalid type.');
+                throw new DeveloperError('fabric: uniform \'' + uniformID + '\' has invalid type.');
             }
             else if (uniformType === 'string') {
                 if (that._replaceToken(uniformID, uniformValue, false) === 0 && that._strict) {
-                    throw new DeveloperError('Shader source does not use string \'' + uniformID + '\'.');
+                    throw new DeveloperError('strict: shader source does not use string \'' + uniformID + '\'.');
                 }
             }
             else {
                 // If uniform type is a texture, add texture dimension uniforms.
                 if (uniformType.indexOf('sampler') !== -1) {
                     if (typeof that._context === 'undefined') {
-                        throw new DeveloperError('Context is not defined');
+                        throw new DeveloperError('texture: context is not defined');
                     }
                     var textureDimensionsUniformName = uniformID + 'Dimensions';
                     if (that._shaderSource.indexOf(textureDimensionsUniformName) !== -1) {
@@ -402,42 +397,44 @@ define([
                 // Replace uniform name with guid version.
                 var newUniformID = uniformID + '_' + that._getNewGUID();
                 if (that._replaceToken(uniformID, newUniformID, true) === 1 && that._strict) {
-                    throw new DeveloperError('Shader source does not use uniform \'' + uniformID + '\'.');
+                    throw new DeveloperError('strict: shader source does not use uniform \'' + uniformID + '\'.');
                 }
                 // Set uniform value
-                that[uniformID] = uniformValue;
+                that.uniforms[uniformID] = uniformValue;
                 that._uniforms[newUniformID] = returnUniform(uniformID, uniformType);
             }
         };
         // Checks for updates to material values to refresh the uniforms.
         var returnUniform = function (uniformID, uniformType) {
             return function() {
-                var uniformValue = that[uniformID];
+                var uniformValue = that.uniforms[uniformID];
                 if (uniformType.indexOf('sampler') !== -1) {
                     if(!(uniformValue instanceof Texture || uniformValue instanceof CubeMap)) {
                         uniformValue = Material._textureCache.registerTextureToMaterial(that, uniformID, uniformValue, uniformType);
                     }
                     var uniformDimensionsName = uniformID + 'Dimensions';
-                    if(that.hasOwnProperty(uniformDimensionsName)) {
-                        var uniformDimensions = that[uniformDimensionsName];
+                    if(that.uniforms.hasOwnProperty(uniformDimensionsName)) {
+                        var uniformDimensions = that.uniforms[uniformDimensionsName];
                         uniformDimensions.x = (uniformValue instanceof Texture) ? uniformValue._width : uniformValue._size;
                         uniformDimensions.y = (uniformValue instanceof Texture) ? uniformValue._height : uniformValue._size;
                     }
                 }
-                else if (uniformType.indexOf('mat2') !== -1 && !(uniformValue instanceof Matrix2)) {
+                else if (uniformType.indexOf('mat2') !== -1 && !(uniformValue instanceof Matrix4)) {
                     uniformValue = new Matrix2(uniformValue);
                 }
                 else if (uniformType.indexOf('mat3') !== -1 && !(uniformValue instanceof Matrix3)) {
                     uniformValue = new Matrix3(uniformValue);
                 }
-                else if (uniformType.indexOf('mat4') !== -1 && !(uniformValue instanceof Matrix4)) {
+                else if (uniformType.indexOf('mat4') !== -1 && !(uniformValue instanceof Matrix2)) {
                     uniformValue = new Matrix4(uniformValue);
                 }
-                that[uniformID] = uniformValue;
-                return that[uniformID];
+                that.uniforms[uniformID] = uniformValue;
+                return that.uniforms[uniformID];
             };
         };
-        // Process all uniforms in the template
+        // Set up uniforms for the main material
+        this._uniforms = {};
+        this.uniforms = {};
         for (var uniformID in this._materialUniforms) {
             if (this._materialUniforms.hasOwnProperty(uniformID)) {
                 processUniform(uniformID);
@@ -446,13 +443,14 @@ define([
 
         // Create all sub-materials and combine source and uniforms together.
         var newShaderSource = '';
+        this.materials = {};
         for (var materialID in this._materialTemplates) {
             if (this._materialTemplates.hasOwnProperty(materialID)) {
                 // Construct the sub-material. Share texture names using extendObject.
                 var materialTemplate = this._materialTemplates[materialID];
                 var material = new Material({context : this._context, strict : this._strict, fabric : materialTemplate});
                 this._extendObject(this._uniforms, material._uniforms);
-                this[materialID] = material;
+                this.materials[materialID] = material;
 
                 // Make the material's agi_getMaterial unique by appending a guid.
                 var originalMethodName = 'agi_getMaterial';
@@ -463,7 +461,7 @@ define([
                 // Replace each material id with an agi_getMaterial method call.
                 var materialMethodCall = newMethodName + '(materialInput)';
                 if (this._replaceToken(materialID, materialMethodCall, true) === 0 && this._strict) {
-                    throw new DeveloperError('Shader source does not use material \'' + materialID + '\'.');
+                    throw new DeveloperError('strict: shader source does not use material \'' + materialID + '\'.');
                 }
             }
         }
@@ -540,7 +538,7 @@ define([
     Material.prototype._checkForTemplateErrors = function() {
         // Make sure source and components do not exist in the same template.
         if (this._hasSourceSection && this._hasComponentsSection) {
-            throw new DeveloperError('Cannot have source and components in the same template.');
+            throw new DeveloperError('fabric: cannot have source and components in the same template.');
         }
 
         var checkForValidProperties = function(object, properties, result, throwNotFound) {
@@ -557,7 +555,7 @@ define([
 
         // Make sure all template and components properties are valid.
         var invalidNameError = function(property, properties) {
-            var errorString = 'Property name \'' + property + '\' is not valid. It should be ';
+            var errorString = 'fabric: property name \'' + property + '\' is not valid. It should be ';
             for (var i = 0; i < properties.length; i++) {
                 var lastCharacter = i === properties.length - 1;
                 errorString += lastCharacter ? 'or ' : '';
@@ -571,7 +569,7 @@ define([
 
         // Make sure uniforms and materials do not share any of the same names.
         var duplicateNameError = function(property, properties) {
-            var errorString = 'Uniforms and materials cannot share the same property \'' + property + '\'';
+            var errorString = 'fabric: uniforms and materials cannot share the same property \'' + property + '\'';
             throw new DeveloperError(errorString);
         };
         var materialNames = [];
@@ -593,7 +591,7 @@ define([
                 var materialContainer = materialContainers[i];
                 var material = materialContainer.material;
                 var property = materialContainer.property;
-                material[property] = texture;
+                material.uniforms[property] = texture;
             }
         },
         registerTextureToMaterial : function(material, property, textureInfo, textureType) {
@@ -604,7 +602,7 @@ define([
                 path = textureInfo;
                 texture = this._pathsToTextures[path];
                 if (typeof texture === 'undefined') {
-                    texture = (material[property] instanceof Texture) ? material[property] : material._context.getDefaultTexture();
+                    texture = (material.uniforms[property] instanceof Texture) ? material.uniforms[property] : material._context.getDefaultTexture();
                     if (textureInfo !== 'agi_defaultTexture') {
                         this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
                         this._pathsToMaterials[path].push({'material' : material, 'property' : property});
@@ -612,8 +610,6 @@ define([
                             when(loadImage(path), function(image) {
                                 texture = material._context.createTexture2D({source : image});
                                 that._updateMaterialsOnTextureLoad(texture, path);
-                            }, function() {
-                                throw new DeveloperError('Texture image not found \'' + path + '\'.');
                             });
                         }
                     }
@@ -625,7 +621,7 @@ define([
                        textureInfo.positiveZ + textureInfo.negativeZ;
                 texture = this._pathsToTextures[path];
                 if (typeof texture === 'undefined') {
-                    texture = (material[property] instanceof CubeMap) ? material[property] : material._context.getDefaultCubeMap();
+                    texture = (material.uniforms[property] instanceof CubeMap) ? material.uniforms[property] : material._context.getDefaultCubeMap();
                     if (textureInfo !== 'agi_defaultCubeMap') {
                         this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
                         this._pathsToMaterials[path].push({'material' : material, 'property' : property});
@@ -642,8 +638,6 @@ define([
                                     }
                                 });
                                 that._updateMaterialsOnTextureLoad(texture, path);
-                            }, function() {
-                                throw new DeveloperError('Cube map image not found.');
                             });
                         }
                     }
@@ -675,16 +669,16 @@ define([
      *
      * @returns {Material} New material object.
      *
-     * @exception {DeveloperError} Material with that id does not exist.
+     * @exception {DeveloperError} material with that id does not exist.
      *
      * @example
      * var material = Material.fromID(context, 'Color');
-     * material.color = vec4(1.0, 0.0, 0.0, 1.0);
+     * material.uniforms.color = vec4(1.0, 0.0, 0.0, 1.0);
      */
 
     Material.fromID = function(context, materialID) {
         if (!Material._materialCache.hasMaterial(materialID)) {
-            throw new DeveloperError('Material with id \'' + materialID + '\' does not exist.');
+            throw new DeveloperError('material with id \'' + materialID + '\' does not exist.');
         }
         return new Material({
             context : context,

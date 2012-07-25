@@ -200,13 +200,13 @@
             };
 
             function update(value) {
-                polygon.material.lightColor = {
+                polygon.material.uniforms.lightColor = {
                     red : value.lightColorRed,
                     green : value.lightColorGreen,
                     blue : value.lightColorBlue,
                     alpha : value.lightColorAlpha
                 };
-                polygon.material.darkColor = {
+                polygon.material.uniforms.darkColor = {
                     red : value.darkColorRed,
                     green : value.darkColorGreen,
                     blue : value.darkColorBlue,
@@ -258,13 +258,13 @@
                 ellipsoid, ellipsoid.cartographicToCartesian(
                         Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)), 800000.0));
             polygon.material = Cesium.Material.fromID(scene.getContext(), 'Checkerboard');
-            polygon.material.lightColor = {
+            polygon.material.uniforms.lightColor = {
                 red : outside.lightColorRed,
                 green : outside.lightColorGreen,
                 blue : outside.lightColorBlue,
                 alpha : outside.lightColorAlpha
             };
-            polygon.material.darkColor = {
+            polygon.material.uniforms.darkColor = {
                 red : outside.darkColorRed,
                 green : outside.darkColorGreen,
                 blue : outside.darkColorBlue,
