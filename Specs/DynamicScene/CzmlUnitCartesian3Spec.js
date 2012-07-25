@@ -22,8 +22,8 @@ defineSuite([
     };
 
     it('unwrapInterval', function() {
-        expect(CzmlUnitCartesian3.unwrapInterval(constantCartesianInterval)).toEqualArray(constantCartesianInterval.unitCartesian);
-        expect(CzmlUnitCartesian3.unwrapInterval(sampledCartesianInterval)).toEqualArray(sampledCartesianInterval.unitCartesian);
+        expect(CzmlUnitCartesian3.unwrapInterval(constantCartesianInterval)).toEqual(constantCartesianInterval.unitCartesian);
+        expect(CzmlUnitCartesian3.unwrapInterval(sampledCartesianInterval)).toEqual(sampledCartesianInterval.unitCartesian);
     });
 
     it('isSampled', function() {

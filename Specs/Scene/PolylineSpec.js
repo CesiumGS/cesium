@@ -56,7 +56,7 @@ defineSuite([
         expect(polyline.getPositions()).not.toBeDefined();
 
         polyline.setPositions(positions);
-        expect(polyline.getPositions()).toEqualArray(positions);
+        expect(polyline.getPositions()).toEqual(positions);
     });
 
     it('gets the default width', function() {
@@ -68,7 +68,7 @@ defineSuite([
     });
 
     it('gets the default color', function() {
-        expect(polyline.color).toEqualProperties({
+        expect(polyline.color).toEqual({
             red : 0.0,
             green : 0.0,
             blue : 1.0,
@@ -77,7 +77,7 @@ defineSuite([
     });
 
     it('gets the default outline-color', function() {
-        expect(polyline.outlineColor).toEqualProperties({
+        expect(polyline.outlineColor).toEqual({
             red : 1.0,
             green : 1.0,
             blue : 1.0,
@@ -110,11 +110,11 @@ defineSuite([
         };
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polyline.update(context, sceneState);
         polyline.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not renders', function() {
@@ -135,11 +135,11 @@ defineSuite([
         polyline.show = false;
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polyline.update(context, sceneState);
         polyline.render(context, us);
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('is picked', function() {

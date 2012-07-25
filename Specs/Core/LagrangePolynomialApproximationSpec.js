@@ -25,7 +25,7 @@ defineSuite([
         var x = 100.0;
         var result = LagrangePolynomialApproximation.interpolateOrderZero(x, xTable, yTable, 3);
         var expectedResult = [13367002.870928623, 545695.7388100647, 0];
-        expect(result).toEqualArrayEpsilon(expectedResult, 1e-15);
+        expect(result).toEqualEpsilon(expectedResult, 1e-15);
     });
 
     it('getRequiredDataPoints should be 1 more than degree, except for 0, which requires 2', function() {

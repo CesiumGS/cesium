@@ -297,14 +297,14 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
     it('sorts interleaved attributes from large to small components (2)', function() {
@@ -351,7 +351,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
@@ -360,7 +360,7 @@ defineSuite([
             offset : 0,
             count : 1
         });
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
@@ -369,7 +369,7 @@ defineSuite([
             offset : 1,
             count : 1
         });
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
     it('sorts interleaved attributes from large to small components (3)', function() {
@@ -428,14 +428,14 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
     it('creates a custom interleaved vertex', function() {
@@ -500,7 +500,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, attributeIndices);
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
@@ -509,7 +509,7 @@ defineSuite([
             offset : 0,
             count : 1
         });
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         var vs2 =
             'attribute vec3 position; ' +
@@ -537,7 +537,7 @@ defineSuite([
             offset : 1,
             count : 1
         });
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
     it('creates an index buffer', function() {
