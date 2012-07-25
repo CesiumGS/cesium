@@ -877,25 +877,59 @@ define([
             throw new DeveloperError('right is required');
         }
 
-        var column0Row0 = left[0] * right[0] + left[4] * right[1] + left[8] * right[2] + left[12] * right[3];
-        var column0Row1 = left[1] * right[0] + left[5] * right[1] + left[9] * right[2] + left[13] * right[3];
-        var column0Row2 = left[2] * right[0] + left[6] * right[1] + left[10] * right[2] + left[14] * right[3];
-        var column0Row3 = left[3] * right[0] + left[7] * right[1] + left[11] * right[2] + left[15] * right[3];
+        var left0 = left[0];
+        var left1 = left[1];
+        var left2 = left[2];
+        var left3 = left[3];
+        var left4 = left[4];
+        var left5 = left[5];
+        var left6 = left[6];
+        var left7 = left[7];
+        var left8 = left[8];
+        var left9 = left[9];
+        var left10 = left[10];
+        var left11 = left[11];
+        var left12 = left[12];
+        var left13 = left[13];
+        var left14 = left[14];
+        var left15 = left[15];
 
-        var column1Row0 = left[0] * right[4] + left[4] * right[5] + left[8] * right[6] + left[12] * right[7];
-        var column1Row1 = left[1] * right[4] + left[5] * right[5] + left[9] * right[6] + left[13] * right[7];
-        var column1Row2 = left[2] * right[4] + left[6] * right[5] + left[10] * right[6] + left[14] * right[7];
-        var column1Row3 = left[3] * right[4] + left[7] * right[5] + left[11] * right[6] + left[15] * right[7];
+        var right0 = right[0];
+        var right1 = right[1];
+        var right2 = right[2];
+        var right3 = right[3];
+        var right4 = right[4];
+        var right5 = right[5];
+        var right6 = right[6];
+        var right7 = right[7];
+        var right8 = right[8];
+        var right9 = right[9];
+        var right10 = right[10];
+        var right11 = right[11];
+        var right12 = right[12];
+        var right13 = right[13];
+        var right14 = right[14];
+        var right15 = right[15];
 
-        var column2Row0 = left[0] * right[8] + left[4] * right[9] + left[8] * right[10] + left[12] * right[11];
-        var column2Row1 = left[1] * right[8] + left[5] * right[9] + left[9] * right[10] + left[13] * right[11];
-        var column2Row2 = left[2] * right[8] + left[6] * right[9] + left[10] * right[10] + left[14] * right[11];
-        var column2Row3 = left[3] * right[8] + left[7] * right[9] + left[11] * right[10] + left[15] * right[11];
+        var column0Row0 = left0 * right0 + left4 * right1 + left8 * right2 + left12 * right3;
+        var column0Row1 = left1 * right0 + left5 * right1 + left9 * right2 + left13 * right3;
+        var column0Row2 = left2 * right0 + left6 * right1 + left10 * right2 + left14 * right3;
+        var column0Row3 = left3 * right0 + left7 * right1 + left11 * right2 + left15 * right3;
 
-        var column3Row0 = left[0] * right[12] + left[4] * right[13] + left[8] * right[14] + left[12] * right[15];
-        var column3Row1 = left[1] * right[12] + left[5] * right[13] + left[9] * right[14] + left[13] * right[15];
-        var column3Row2 = left[2] * right[12] + left[6] * right[13] + left[10] * right[14] + left[14] * right[15];
-        var column3Row3 = left[3] * right[12] + left[7] * right[13] + left[11] * right[14] + left[15] * right[15];
+        var column1Row0 = left0 * right4 + left4 * right5 + left8 * right6 + left12 * right7;
+        var column1Row1 = left1 * right4 + left5 * right5 + left9 * right6 + left13 * right7;
+        var column1Row2 = left2 * right4 + left6 * right5 + left10 * right6 + left14 * right7;
+        var column1Row3 = left3 * right4 + left7 * right5 + left11 * right6 + left15 * right7;
+
+        var column2Row0 = left0 * right8 + left4 * right9 + left8 * right10 + left12 * right11;
+        var column2Row1 = left1 * right8 + left5 * right9 + left9 * right10 + left13 * right11;
+        var column2Row2 = left2 * right8 + left6 * right9 + left10 * right10 + left14 * right11;
+        var column2Row3 = left3 * right8 + left7 * right9 + left11 * right10 + left15 * right11;
+
+        var column3Row0 = left0 * right12 + left4 * right13 + left8 * right14 + left12 * right15;
+        var column3Row1 = left1 * right12 + left5 * right13 + left9 * right14 + left13 * right15;
+        var column3Row2 = left2 * right12 + left6 * right13 + left10 * right14 + left14 * right15;
+        var column3Row3 = left3 * right12 + left7 * right13 + left11 * right14 + left15 * right15;
 
         if (typeof result === 'undefined') {
             return new Matrix4(column0Row0, column1Row0, column2Row0, column3Row0,
