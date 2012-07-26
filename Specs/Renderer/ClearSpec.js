@@ -20,7 +20,7 @@ defineSuite([
 
     it('clear0', function() {
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('clear1', function() {
@@ -32,7 +32,7 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
     it('clear2', function() {
@@ -50,7 +50,7 @@ defineSuite([
                 alpha : false
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 0, 255, 0]);
+        expect(context.readPixels()).toEqual([255, 0, 255, 0]);
     });
 
     it('clear3', function() {
@@ -62,7 +62,7 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         context.clear(context.createClearState({
             color : {
@@ -81,7 +81,7 @@ defineSuite([
                 }
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         context.clear(context.createClearState({
             color : {
@@ -100,7 +100,7 @@ defineSuite([
                 }
             }
         }));
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('clears a framebuffer color attachment', function() {
@@ -124,7 +124,7 @@ defineSuite([
 
         expect(context.readPixels({
             framebuffer : framebuffer
-        })).toEqualArray([0, 255, 0, 255]);
+        })).toEqual([0, 255, 0, 255]);
 
         framebuffer = framebuffer.destroy();
     });
@@ -139,7 +139,7 @@ defineSuite([
             },
             dither : false
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         context.clear(context.createClearState({
             color : {
@@ -150,14 +150,14 @@ defineSuite([
             },
             dither : true
         }));
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('fails to read pixels (width)', function() {
         expect(function() {
             expect(context.readPixels({
                 width : -1
-            })).toEqualArray([0, 0, 0, 0]);
+            })).toEqual([0, 0, 0, 0]);
         }).toThrow();
     });
 
@@ -165,7 +165,7 @@ defineSuite([
         expect(function() {
             expect(context.readPixels({
                 height : -1
-            })).toEqualArray([0, 0, 0, 0]);
+            })).toEqual([0, 0, 0, 0]);
         }).toThrow();
     });
 });

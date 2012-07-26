@@ -59,7 +59,7 @@ define([
          * @type {CameraFreeLookController}
          */
         this.freeLookController = new CameraFreeLookController(canvas, camera);
-    }
+    };
 
     /**
      * @private

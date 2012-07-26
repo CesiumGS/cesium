@@ -375,7 +375,7 @@ define([
                 };
             case _gl.FLOAT_MAT4:
                 return function() {
-                    _gl.uniformMatrix4fv(_location, false, this.value.values);
+                    _gl.uniformMatrix4fv(_location, false, Matrix4.toArray(this.value));
                 };
             default:
                 throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type);
@@ -517,7 +517,7 @@ define([
             case _gl.FLOAT_MAT4:
                 return function() {
                     for ( var i = 0; i < _locations.length; ++i) {
-                        _gl.uniformMatrix4fv(_locations[i], false, this.value[i].values);
+                        _gl.uniformMatrix4fv(_locations[i], false, Matrix4.toArray(this.value[i]));
                     }
                 };
             default:
