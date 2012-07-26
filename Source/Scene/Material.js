@@ -72,48 +72,48 @@ define([
      * <td>color: Object with red, green, blue, and alpha values between 0.0 and 1.0.</td>
      * </tr><tr>
      * <td>Image</td>
-     * <td>texture: String path to image.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.</td>
+     * <td>image: String path to image.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.</td>
      * </tr><tr>
      * <td>DiffuseMap</td>
-     * <td>texture: String path to image.
-     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired texture channels.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.</td>
+     * <td>image: String path to image.
+     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired image channels.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.</td>
      * </tr><tr>
      * <td>AlphaMap</td>
-     * <td>texture: String path to image.
-     * <br />channel: One character string containing r, g, b, or a for selecting the desired texture channel.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.</td>
+     * <td>image: String path to image.
+     * <br />channel: One character string containing r, g, b, or a for selecting the desired image channel.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.</td>
      * </tr><tr>
      * <td>SpecularMap</td>
-     * <td>texture: String path to image.
-     * <br />channel: One character string containing r, g, b, or a for selecting the desired texture channel.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.</td>
+     * <td>image: String path to image.
+     * <br />channel: One character string containing r, g, b, or a for selecting the desired image channel.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.</td>
      * </tr><tr>
      * <td>EmissionMap</td>
-     * <td>texture: String path to image.
-     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired texture channels.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.</td>
+     * <td>image: String path to image.
+     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired image channels.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.</td>
      * </tr><tr>
      * <td>BumpMap</td>
-     * <td>texture: String path to image.
-     * <br />channel: One character string containing r, g, b, or a for selecting the desired texture channel.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.
+     * <td>image: String path to image.
+     * <br />channel: One character string containing r, g, b, or a for selecting the desired image channel.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.
      * <br />strength: Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps. </td>
      * </tr><tr>
      * <td>NormalMap</td>
-     * <td> texture: String path to image.
-     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired texture channels.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the texture.
+     * <td> image: String path to image.
+     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired image channels.
+     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.
      * <br />strength: Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps. </td>
      * </tr><tr>
      * <td>Reflection</td>
      * <td>cubeMap: Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths.
-     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired texture channels. </td>
+     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired image channels. </td>
      * </tr><tr>
      * <td>Refraction</td>
      * <td>cubeMap: Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths.
-     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired texture channels.
+     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired image channels.
      * <br />indexOfRefractionRatio: Number representing the refraction strength where 1.0 is the lowest and 0.0 is the highest. </td>
      * </tr><tr>
      * <td>Fresnel</td>
@@ -184,7 +184,7 @@ define([
      *
      * @alias Material
      *
-     * @param {Context} description.context The context in which textures get created. Optional if the material does not use textures.
+     * @param {Context} description.context The context in which textures get created. Optional if the material does not use images.
      * @param {Boolean} [description.strict = false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Object} description.fabric The fabric JSON used to generate the material.
      *
@@ -195,8 +195,7 @@ define([
      * @exception {DeveloperError} fabric: cannot have source and components in the same section.
      * @exception {DeveloperError} fabric: property name is not valid. It should be 'id', 'materials', 'uniforms', 'components', or 'source'.
      * @exception {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'normal', 'emission', or 'alpha'.
-     * @exception {DeveloperError} texture: context is not defined.
-     * @exception {DeveloperError} texture: cube map image not found.
+     * @exception {DeveloperError} image: context is not defined.
      * @exception {DeveloperError} strict: shader source does not use string.
      * @exception {DeveloperError} strict: shader source does not use uniform.
      * @exception {DeveloperError} strict: shader source does not use material.
@@ -228,13 +227,13 @@ define([
      *             "diffuseMaterial" : {
      *                 "id" : "DiffuseMap",
      *                 "uniforms" : {
-     *                     "texture" : "diffuseMap.png"
+     *                     "image" : "diffuseMap.png"
      *                 }
      *             },
      *             "specularMaterial" : {
      *                 "id" : "SpecularMap",
      *                 "uniforms" : {
-     *                     "texture" : "specularMap.png"
+     *                     "image" : "specularMap.png"
      *                 }
      *              }
      *         },
@@ -303,7 +302,7 @@ define([
         var getUniformType = function(uniformValue) {
             var uniformType = uniformValue.type;
             if (typeof uniformType === 'undefined') {
-                var imageMatcher = new RegExp('^((data:)|((.)+\\.(gif|jpg|jpeg|tiff|png)$))', 'i');
+                var imageMatcher = new RegExp('^((data:)|((.)+\\.(gif|jpg|jpeg|tiff|png|ico)$))', 'i');
                 var type = typeof uniformValue;
                 if (type === 'number') {
                     uniformType = 'float';
@@ -315,7 +314,7 @@ define([
                     if (uniformValue === 'agi_defaultCubeMap') {
                         uniformType = 'samplerCube';
                     }
-                    else if (imageMatcher.test(uniformValue) || uniformValue === 'agi_defaultTexture') {
+                    else if (imageMatcher.test(uniformValue) || uniformValue === 'agi_defaultImage') {
                         uniformType = 'sampler2D';
                     }
                     else {
@@ -366,15 +365,15 @@ define([
                 }
             }
             else {
-                // If uniform type is a texture, add texture dimension uniforms.
+                // If uniform type is an image, add image dimension uniforms.
                 if (uniformType.indexOf('sampler') !== -1) {
                     if (typeof that._context === 'undefined') {
-                        throw new DeveloperError('texture: context is not defined');
+                        throw new DeveloperError('image: context is not defined');
                     }
-                    var textureDimensionsUniformName = uniformID + 'Dimensions';
-                    if (that._shaderSource.indexOf(textureDimensionsUniformName) !== -1) {
-                        that._materialUniforms[textureDimensionsUniformName] = {'type' : 'ivec2', 'x' : 1, 'y' : 1};
-                        processUniform(textureDimensionsUniformName);
+                    var imageDimensionsUniformName = uniformID + 'Dimensions';
+                    if (that._shaderSource.indexOf(imageDimensionsUniformName) !== -1) {
+                        that._materialUniforms[imageDimensionsUniformName] = {'type' : 'ivec2', 'x' : 1, 'y' : 1};
+                        processUniform(imageDimensionsUniformName);
                     }
                 }
                 // Add uniform declaration to source code.
@@ -407,14 +406,14 @@ define([
                         uniformDimensions.y = (uniformValue instanceof Texture) ? uniformValue._height : uniformValue._size;
                     }
                 }
-                else if (uniformType.indexOf('mat2') !== -1 && !(uniformValue instanceof Matrix4)) {
-                    uniformValue = new Matrix2(uniformValue);
+                else if (uniformType.indexOf('mat2') !== -1 && !(uniformValue instanceof Matrix2)) {
+                    uniformValue = Matrix2.fromColumnMajorArray(uniformValue);
                 }
                 else if (uniformType.indexOf('mat3') !== -1 && !(uniformValue instanceof Matrix3)) {
-                    uniformValue = new Matrix3(uniformValue);
+                    uniformValue = Matrix3.fromColumnMajorArray(uniformValue);
                 }
-                else if (uniformType.indexOf('mat4') !== -1 && !(uniformValue instanceof Matrix2)) {
-                    uniformValue = new Matrix4(uniformValue);
+                else if (uniformType.indexOf('mat4') !== -1 && !(uniformValue instanceof Matrix4)) {
+                    uniformValue = Matrix4.fromColumnMajorArray(uniformValue);
                 }
                 that.uniforms[uniformID] = uniformValue;
                 return that.uniforms[uniformID];
@@ -434,7 +433,7 @@ define([
         this.materials = {};
         for (var materialID in this._materialTemplates) {
             if (this._materialTemplates.hasOwnProperty(materialID)) {
-                // Construct the sub-material. Share texture names using extendObject.
+                // Construct the sub-material.
                 var materialTemplate = this._materialTemplates[materialID];
                 var material = new Material({context : this._context, strict : this._strict, fabric : materialTemplate});
                 this._extendObject(this._uniforms, material._uniforms);
@@ -689,19 +688,18 @@ define([
     });
 
     // Image Material.
-    // Useful for textures with an alpha component.
     Material._materialCache.addMaterial('Image', {
         "id" : "Image",
         "uniforms" : {
-            "texture" : "agi_defaultTexture",
+            "image" : "agi_defaultImage",
             "repeat" : {
                 "x" : 1,
                 "y" : 1
             }
         },
         "components" : {
-            "diffuse" : "texture2D(texture, fract(repeat * materialInput.st)).rgb",
-            "alpha" : "texture2D(texture, fract(repeat * materialInput.st)).a"
+            "diffuse" : "texture2D(image, fract(repeat * materialInput.st)).rgb",
+            "alpha" : "texture2D(image, fract(repeat * materialInput.st)).a"
         }
     });
 
@@ -709,7 +707,7 @@ define([
     Material._materialCache.addMaterial('DiffuseMap', {
         "id" : "DiffuseMap",
         "uniforms" : {
-            "texture" : "agi_defaultTexture",
+            "image" : "agi_defaultImage",
             "channels" : "rgb",
             "repeat" : {
                 "x" : 1,
@@ -717,7 +715,7 @@ define([
             }
         },
         "components" : {
-            "diffuse" : "texture2D(texture, fract(repeat * materialInput.st)).channels"
+            "diffuse" : "texture2D(image, fract(repeat * materialInput.st)).channels"
         }
     });
 
@@ -725,7 +723,7 @@ define([
     Material._materialCache.addMaterial('AlphaMap', {
         "id" : "AlphaMap",
         "uniforms" : {
-            "texture" : "agi_defaultTexture",
+            "image" : "agi_defaultImage",
             "channel" : "a",
             "repeat" : {
                 "x" : 1,
@@ -733,7 +731,7 @@ define([
             }
         },
         "components" : {
-            "alpha" : "texture2D(texture, fract(repeat * materialInput.st)).channel"
+            "alpha" : "texture2D(image, fract(repeat * materialInput.st)).channel"
         }
     });
 
@@ -741,7 +739,7 @@ define([
     Material._materialCache.addMaterial('SpecularMap' , {
         "id" : "SpecularMap",
         "uniforms" : {
-            "texture" : "agi_defaultTexture",
+            "image" : "agi_defaultImage",
             "channel" : "r",
             "repeat" : {
                 "x" : 1,
@@ -749,7 +747,7 @@ define([
             }
         },
         "components" : {
-            "specular" : "texture2D(texture, fract(repeat * materialInput.st)).channel"
+            "specular" : "texture2D(image, fract(repeat * materialInput.st)).channel"
         }
     });
 
@@ -757,7 +755,7 @@ define([
     Material._materialCache.addMaterial('EmissionMap' , {
         "id" : "EmissionMap",
         "uniforms" : {
-            "texture" : "agi_defaultTexture",
+            "image" : "agi_defaultImage",
             "channels" : "rgb",
             "repeat" : {
                 "x" : 1,
@@ -765,7 +763,7 @@ define([
             }
         },
         "components" : {
-            "emission" : "texture2D(texture, fract(repeat * materialInput.st)).channels"
+            "emission" : "texture2D(image, fract(repeat * materialInput.st)).channels"
         }
     });
 
@@ -773,7 +771,7 @@ define([
     Material._materialCache.addMaterial('BumpMap' , {
         "id" : "BumpMap",
         "uniforms" : {
-            "texture" : "agi_defaultTexture",
+            "image" : "agi_defaultImage",
             "channel" : "r",
             "strength" : 0.8,
             "repeat" : {
@@ -788,7 +786,7 @@ define([
     Material._materialCache.addMaterial('NormalMap', {
         "id" : "NormalMap",
         "uniforms" : {
-            "texture" : "agi_defaultTexture",
+            "image" : "agi_defaultImage",
             "channels" : "rgb",
             "strength" : 0.8,
             "repeat" : {

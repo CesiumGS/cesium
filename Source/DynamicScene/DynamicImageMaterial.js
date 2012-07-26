@@ -106,7 +106,7 @@ define([
             var url = this.image.getValue(time);
             if (typeof url !== 'undefined' && existingMaterial.currentUrl !== url) {
                 existingMaterial.currentUrl = url;
-                existingMaterial.uniforms.texture = url;
+                existingMaterial.uniforms.image = url;
             }
         }
         return existingMaterial;

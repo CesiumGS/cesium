@@ -12,7 +12,7 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
-    it('draws all basic material types', function() {
+    it('draws all base material types', function() {
         var materialTypes = ['Color', 'Image', 'DiffuseMap', 'AlphaMap', 'SpecularMap', 'EmissionMap',
             'BumpMap', 'NormalMap','Reflection', 'Refraction', 'Fresnel', 'Brick', 'Wood', 'Asphalt',
             'Cement', 'Grass', 'Stripe', 'Checkerboard','Dot','TieDye', 'Facet', 'Blob'];
@@ -32,7 +32,7 @@ defineSuite([
         }
     });
 
-    it('builds a material from an existing material', function() {
+    it('creates a new material type and builds off of it', function() {
         var context = createContext();
         var material1 = new Material({
             context : context,
@@ -128,6 +128,103 @@ defineSuite([
         destroyContext(context);
     });
 
+    it('creates a material with an image uniform', function () {
+        var context = createContext();
+        var material = new Material({
+            context : context,
+            strict : true,
+            fabric : {
+                "id" : "DiffuseMap",
+                "uniforms" : {
+                    "image" :  "./Data/Images/Blue.png"
+                }
+            }
+        });
+        var pixel = renderMaterial(material, context);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        destroyContext(context);
+    });
+
+    it('create a material with a matrix uniform', function () {
+        var context = createContext();
+        var material1 = new Material({
+            context : context,
+            strict : true,
+            fabric : {
+                "uniforms" : {
+                    "value" : [0.5, 0.5, 0.5, 0.5]
+                },
+                "components" : {
+                    "diffuse" : "vec3(value[0][0], value[0][1], value[1][0])",
+                    "alpha" : "value[1][1]"
+                }
+            }
+        });
+        var pixel = renderMaterial(material1, context);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+
+        var material2 = new Material({
+            context : context,
+            strict : true,
+            fabric : {
+                "uniforms" : {
+                    "value" : [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+                },
+                "components" : {
+                    "diffuse" : "vec3(value[0][0], value[0][1], value[1][0])",
+                    "alpha" : "value[2][2]"
+                }
+            }
+        });
+        pixel = renderMaterial(material2, context);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+
+        var material3 = new Material({
+            context : context,
+            strict : true,
+            fabric : {
+                "uniforms" : {
+                    "value" : [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+                },
+                "components" : {
+                    "diffuse" : "vec3(value[0][0], value[0][1], value[1][0])",
+                    "alpha" : "value[3][3]"
+                }
+            }
+        });
+        pixel = renderMaterial(material3, context);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        destroyContext(context);
+    });
+
+    it('creates a material using unusual uniform and material names', function () {
+        var context = createContext();
+        var material = new Material({
+            context : context,
+            strict : true,
+            fabric : {
+                "uniforms" : {
+                    "i" : 0.5
+                },
+                "materials" : {
+                    "d" : {
+                        "id" : "ColorMaterial"
+                    },
+                    "diffuse" : {
+                        "id" : "ColorMaterial"
+                    }
+                },
+                "components" : {
+                    "diffuse" : "(d.diffuse + diffuse.diffuse)*i",
+                    "specular" : "i"
+                }
+            }
+        });
+        var pixel = renderMaterial(material, context);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        destroyContext(context);
+    });
+
     it('create a material using fromID', function () {
         var context = createContext();
         var material = Material.fromID(context, 'Color');
@@ -136,7 +233,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    it('throws without context for material that uses textures', function() {
+    it('throws without context for material that uses images', function() {
         expect(function() {
             return new Material({
                 context : undefined,
@@ -268,12 +365,12 @@ defineSuite([
                 strict : true,
                 fabric : {
                     "uniforms" : {
-                        "texture" : "agi_defaultTexture",
+                        "image" : "agi_defaultImage",
                         "channels" : "rgb"
                     }
                 },
                 "components" : {
-                    "diffuse" : "texture2D(texture, materialInput.st).rgb"
+                    "diffuse" : "texture2D(image, materialInput.st).rgb"
                 }
             });
         }).toThrow();
@@ -285,11 +382,11 @@ defineSuite([
             strict : false,
             fabric : {
                 "uniforms" : {
-                    "texture" : "agi_defaultTexture",
+                    "image" : "agi_defaultImage",
                     "channels" : "rgb"
                 },
                 "components" : {
-                    "diffuse" : "texture2D(texture, materialInput.st).rgb"
+                    "diffuse" : "texture2D(image, materialInput.st).rgb"
                 }
             }
         });
