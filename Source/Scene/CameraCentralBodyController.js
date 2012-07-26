@@ -11,7 +11,8 @@ define([
         './CameraEventHandler',
         './CameraEventType',
         './CameraSpindleController',
-        './CameraFreeLookController'
+        './CameraFreeLookController',
+        './CameraHelpers',
     ], function(
         destroyObject,
         Ellipsoid,
@@ -24,8 +25,11 @@ define([
         CameraEventHandler,
         CameraEventType,
         CameraSpindleController,
-        CameraFreeLookController) {
+        CameraFreeLookController,
+        CameraHelpers) {
     "use strict";
+
+    var maxHeight = CameraHelpers.maxHeight;
 
     /**
      * Defines camera movement and handles mouse events that move the camera. Moves the camera
@@ -129,6 +133,16 @@ define([
         camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
         camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+
+        var ellipsoid = this.spindleController.getEllipsoid();
+        position = ellipsoid.cartesianToCartographic(camera.position);
+        if (position.height < maxHeight + 1.0) {
+            position.height = maxHeight + 1.0;
+            camera.position = ellipsoid.cartographicToCartesian(position);
+            camera.direction = Cartesian3.fromCartesian4(this._transform.getColumn(3).subtract(camera.position)).normalize();
+            camera.right = camera.position.negate().cross(camera.direction).normalize();
+            camera.up = camera.right.cross(camera.direction);
+        }
     };
 
     /**
