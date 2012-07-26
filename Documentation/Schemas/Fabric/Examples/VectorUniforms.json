@@ -1,0 +1,27 @@
+{
+	"uniforms": {
+	    "myfloat" : 0.0,
+	    "myvec2" : {
+			"x" : 0.0,
+			"y" : 1.0
+		},
+	    "myvec3" : {
+			"x" : 0.0,
+			"y" : 1.0,
+			"z" : 2.0
+		},
+	    "myvec4" : {
+			"x" : 0.0,
+			"y" : 1.0,
+			"z" : 2.0,
+			"w" : 3.0
+		}
+	},
+    "components": {
+        "diffuse" : "myvec3",
+        "specular" : "myfloat",
+        "normal" : "myvec3",
+        "emission" : "myvec3",
+        "alpha" : "myfloat"
+    }
+}
