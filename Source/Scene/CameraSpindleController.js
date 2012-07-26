@@ -233,7 +233,7 @@ define([
                 angle = angleToAxis;
             }
 
-            var tangent = p.negate().cross(this.constrainedAxis).normalize();
+            var tangent = this._camera.direction.cross(this.constrainedAxis).normalize();
             this.rotate(tangent, angle);
         } else {
             this.rotate(this._camera.right, angle);
