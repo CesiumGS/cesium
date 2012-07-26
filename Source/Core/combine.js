@@ -6,30 +6,28 @@ define([
     "use strict";
 
     /**
-     * Merges the properties of objects into target. If target and an object
-     * share the same property, keep target's version.
+     * Merges object properties into a new combined object. When two objects have the same
+     * property, the value of the object that comes earlier in the array is used.
      *
      * @example
-     * var target = {
+     * var object1 = {
      *     one : 1,
      *     deep : {
      *         value1 : 10
      *     }
      * }
-     * var object1 = {
+     * var object2 = {
      *     two : 2
      * }
-     * var object2 = {
+     * var object3 = {
      *     deep : {
      *         value1 : 5,
      *         value2 : 11
      *     }
      * }
-     * combine(target, [object1,object2], true, true);
+     * var final = combine([object1,object2, object3], true, true);
      *
-     * // final value for target
-     * //
-     * // target = {
+     * // final === {
      * //     one : 1,
      * //     two : 2,
      * //     deep : {
@@ -38,24 +36,21 @@ define([
      * //     }
      * // }
      *
-     * // Avoid modifying any of the original objects:
-     * var final = combine({},[object1, object2]);
-     *
-     * @param {Object} target The object that other objects merge into.
-     * @param {Array} objects Array of objects that get merged into target.
+     * @param {Array} objects Array of objects that get merged together.
      * @param {Boolean} [deep = true] Perform a recursive merge.
-     * @param {Boolean} [allowDuplicates = true] When two properties are the same, keep the target's value. If false, throw an error.
+     * @param {Boolean} [allowDuplicates = true] An error gets thrown if allowDuplicates is false and two objects contain the same property.
      *
-     * @returns {Object} target
+     * @returns {Object} combined object
      *
      * @exports combine
      *
      * @exception {DeveloperError} Duplicate member.
      */
 
-    var combine = function(target, objects, deep, allowDuplicates) {
+    var combine = function(objects, deep, allowDuplicates) {
         deep = (typeof deep !== 'undefined') ? deep : true;
         allowDuplicates = (typeof allowDuplicates !== 'undefined') ? allowDuplicates : true;
+
         var combineTwo = function(object1, object2) {
             for (var property in object2) {
                 if (object2.hasOwnProperty(property)) {
@@ -73,10 +68,12 @@ define([
                 }
             }
         };
+
+        var combined = {};
         for (var i = 0; i < objects.length; i++) {
-            combineTwo(target, objects[i]);
+            combineTwo(combined, objects[i]);
         }
-        return target;
+        return combined;
     };
 
     return combine;

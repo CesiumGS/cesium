@@ -260,7 +260,7 @@ define([
         var isOldMaterialType = Material._materialCache.hasMaterial(this._materialID);
         if (isOldMaterialType) {
             var newMaterialTemplate = clone(Material._materialCache.getMaterial(this._materialID));
-            combine(this._template, [newMaterialTemplate]);
+            this._template = combine([this._template, newMaterialTemplate]);
         }
 
         // Once the template has been established, set the member variables.
@@ -281,23 +281,23 @@ define([
         }
 
         // Build the shader source for the main material.
-        this._shaderSource = '';
+        this.shaderSource = '';
         if (this._hasSourceSection) {
-            this._shaderSource += this._materialSource + '\n';
+            this.shaderSource += this._materialSource + '\n';
         }
         else {
-            this._shaderSource += 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n';
-            this._shaderSource += 'agi_material material = agi_getDefaultMaterial(materialInput);\n';
+            this.shaderSource += 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n';
+            this.shaderSource += 'agi_material material = agi_getDefaultMaterial(materialInput);\n';
             if (this._hasComponentsSection) {
                 for (var component in this._materialComponents) {
                     if (this._materialComponents.hasOwnProperty(component)) {
                         var expression = this._materialComponents[component];
                         var statement = 'material.' + component + ' = ' + expression + ';\n';
-                        this._shaderSource += statement;
+                        this.shaderSource += statement;
                     }
                 }
             }
-            this._shaderSource += 'return material;\n}\n';
+            this.shaderSource += 'return material;\n}\n';
         }
 
         // Determines the uniform type based on the uniform in the template.
@@ -373,15 +373,15 @@ define([
                         throw new DeveloperError('image: context is not defined');
                     }
                     var imageDimensionsUniformName = uniformID + 'Dimensions';
-                    if (that._shaderSource.indexOf(imageDimensionsUniformName) !== -1) {
+                    if (that.shaderSource.indexOf(imageDimensionsUniformName) !== -1) {
                         that._materialUniforms[imageDimensionsUniformName] = {'type' : 'ivec2', 'x' : 1, 'y' : 1};
                         processUniform(imageDimensionsUniformName);
                     }
                 }
                 // Add uniform declaration to source code.
                 var uniformPhrase = 'uniform ' + uniformType + ' ' + uniformID + ';\n';
-                if (that._shaderSource.indexOf(uniformPhrase) === -1) {
-                    that._shaderSource = uniformPhrase + that._shaderSource;
+                if (that.shaderSource.indexOf(uniformPhrase) === -1) {
+                    that.shaderSource = uniformPhrase + that.shaderSource;
                 }
                 // Replace uniform name with guid version.
                 var newUniformID = uniformID + '_' + that._getNewGUID();
@@ -408,13 +408,13 @@ define([
                         uniformDimensions.y = (uniformValue instanceof Texture) ? uniformValue._height : uniformValue._size;
                     }
                 }
-                else if (uniformType.indexOf('mat2') !== -1 && !(uniformValue instanceof Matrix2)) {
+                else if (uniformType === 'mat2' && uniformValue instanceof Array) {
                     uniformValue = Matrix2.fromColumnMajorArray(uniformValue);
                 }
-                else if (uniformType.indexOf('mat3') !== -1 && !(uniformValue instanceof Matrix3)) {
+                else if (uniformType === 'mat3' && uniformValue instanceof Array) {
                     uniformValue = Matrix3.fromColumnMajorArray(uniformValue);
                 }
-                else if (uniformType.indexOf('mat4') !== -1 && !(uniformValue instanceof Matrix4)) {
+                else if (uniformType === 'mat4' && uniformValue instanceof Array) {
                     uniformValue = Matrix4.fromColumnMajorArray(uniformValue);
                 }
                 that.uniforms[uniformID] = uniformValue;
@@ -438,14 +438,14 @@ define([
                 // Construct the sub-material.
                 var materialTemplate = this._materialTemplates[materialID];
                 var material = new Material({context : this._context, strict : this._strict, fabric : materialTemplate});
-                combine(this._uniforms, [material._uniforms]);
+                this._uniforms = combine([this._uniforms, material._uniforms]);
                 this.materials[materialID] = material;
 
                 // Make the material's agi_getMaterial unique by appending a guid.
                 var originalMethodName = 'agi_getMaterial';
                 var newMethodName = originalMethodName + '_' + this._getNewGUID();
                 material._replaceToken(originalMethodName, newMethodName, true);
-                newShaderSource += material._shaderSource + '\n';
+                newShaderSource += material.shaderSource + '\n';
 
                 // Replace each material id with an agi_getMaterial method call.
                 var materialMethodCall = newMethodName + '(materialInput)';
@@ -454,19 +454,8 @@ define([
                 }
             }
         }
-        this._shaderSource = newShaderSource + this._shaderSource;
+        this.shaderSource = newShaderSource + this.shaderSource;
     }
-
-    /**
-     * Returns the glsl source code for this material.
-     *
-     * @memberof Material
-     *
-     * @returns {String} glsl source code.
-     */
-    Material.prototype.getShaderSource = function() {
-        return this._shaderSource;
-    };
 
     /**
      * Returns the id for this material. The returned value is undefined if
@@ -480,8 +469,9 @@ define([
         return this._materialID;
     };
 
+    // Returns a random guid. Used for differentiating uniforms and materials.
     Material.prototype._getNewGUID = function() {
-        return createGuid().replace(new RegExp('-', 'g'), '').slice(0,5);
+        return createGuid().replace(new RegExp('-', 'g'), '').slice(0,6);
     };
 
     // Used for searching or replacing a token in the shader source with something else.
@@ -502,7 +492,7 @@ define([
         var suffixChars = '([a-zA-Z0-9_])?';
         var prefixChars = excludePeriod ? '([a-zA-Z0-9._])?' : '([a-zA-Z0-9_])?';
         var regExp = new RegExp(prefixChars + token + suffixChars, 'g');
-        this._shaderSource = this._shaderSource.replace(regExp, replaceFunction(newToken));
+        this.shaderSource = this.shaderSource.replace(regExp, replaceFunction(newToken));
         return count;
     };
 

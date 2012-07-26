@@ -28,13 +28,6 @@ define([
             colors.push(this.intervals[i].color);
         }
 
-        /**
-         * The glsl shader source
-         *
-         * type {String}
-         */
-        this._shaderSource = ShadersDistanceIntervalMaterial;
-
         this._uniforms = {
             u_distances : function() {
                 return distances;
@@ -43,12 +36,10 @@ define([
                 return colors;
             }
         };
-    };
 
-    DistanceIntervalMaterial.prototype.getShaderSource = function() {
-        return '#define NUMBER_OF_DISTANCES ' + this.intervals.length.toString() + '\n' +
-               '#line 0\n' +
-               this._shaderSource;
+        this.shaderSource = '#define NUMBER_OF_DISTANCES ' + this.intervals.length.toString() + '\n' +
+                            '#line 0\n' +
+                            ShadersDistanceIntervalMaterial;
     };
 
     return DistanceIntervalMaterial;

@@ -177,12 +177,12 @@ define([
             }
         };
 
-        this._uniforms3D = combine({}, [uniforms, {
+        this._uniforms3D = combine([uniforms, {
             u_model : function() {
                 return that.modelMatrix;
             }
         }], false, false);
-        this._uniforms2D = combine({}, [uniforms, {
+        this._uniforms2D = combine([uniforms, {
             u_model : function() {
                 return Matrix4.IDENTITY;
             }

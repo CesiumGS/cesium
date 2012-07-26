@@ -513,7 +513,7 @@ define([
                 '#line 0\n' +
                 Noise +
                 '#line 0\n' +
-                this._material.getShaderSource() +
+                this._material.shaderSource +
                 (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                 '#line 0\n' +
                 PolygonFS;
@@ -521,7 +521,7 @@ define([
             this._sp = this._sp && this._sp.release();
             this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
 
-            this._drawUniforms = combine({}, [this._uniforms, this._material._uniforms], false, false);
+            this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
         }
     };
 

@@ -366,7 +366,7 @@ define([
                 this._silhouetteMaterial = this.silhouetteMaterial || Material.fromID(undefined, 'Color');
 
                 var material = this._combineMaterials();
-                this._drawUniforms = combine({}, [this._uniforms, material._uniforms], false, false);
+                this._drawUniforms = combine([this._uniforms, material._uniforms], false, false);
 
                 var fsSource =
                     '#line 0\n' +
@@ -378,7 +378,7 @@ define([
                     '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +
-                    material.getShaderSource() +
+                    material.shaderSource +
                     '#line 0\n' +
                     ComplexConicSensorVolumeFS;
 
@@ -445,7 +445,7 @@ define([
 
             var that = this;
 
-            this._pickUniforms = combine({}, [this._uniforms, {
+            this._pickUniforms = combine([this._uniforms, {
                 u_pickColor : function() {
                     return that._pickId.normalizedRgba;
                 }

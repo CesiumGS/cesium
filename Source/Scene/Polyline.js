@@ -327,43 +327,43 @@ define([
             }
         };
 
-        this._drawUniformsOne3D = combine({}, [drawUniformsOne, {
+        this._drawUniformsOne3D = combine([drawUniformsOne, {
             u_model : function() {
                 return that._getModelMatrix(that._mode);
             }
         }], false, false);
-        this._drawUniformsTwo3D = combine({}, [drawUniformsTwo, {
+        this._drawUniformsTwo3D = combine([drawUniformsTwo, {
             u_model : function() {
                 return that._getModelMatrix(that._mode);
             }
         }], false, false);
-        this._drawUniformsThree3D = combine({}, [drawUniformsThree, {
+        this._drawUniformsThree3D = combine([drawUniformsThree, {
             u_model : function() {
                 return that._getModelMatrix(that._mode);
             }
         }], false, false);
-        this._pickUniforms3D = combine({}, [pickUniforms, {
+        this._pickUniforms3D = combine([pickUniforms, {
             u_model : function() {
                 return that._getModelMatrix(that._mode);
             }
         }], false, false);
 
-        this._drawUniformsOne2D = combine({}, [drawUniformsOne, {
+        this._drawUniformsOne2D = combine([drawUniformsOne, {
             u_model : function() {
                 return Matrix4.IDENTITY;
             }
         }], false, false);
-        this._drawUniformsTwo2D = combine({}, [drawUniformsTwo, {
+        this._drawUniformsTwo2D = combine([drawUniformsTwo, {
             u_model : function() {
                 return Matrix4.IDENTITY;
             }
         }], false, false);
-        this._drawUniformsThree2D = combine({}, [drawUniformsThree, {
+        this._drawUniformsThree2D = combine([drawUniformsThree, {
             u_model : function() {
                 return Matrix4.IDENTITY;
             }
         }], false, false);
-        this._pickUniforms2D = combine({}, [pickUniforms, {
+        this._pickUniforms2D = combine([pickUniforms, {
             u_model : function() {
                 return Matrix4.IDENTITY;
             }

@@ -8,7 +8,7 @@ defineSuite([
 
     it('combine throws with duplicate member', function() {
         expect(function() {
-            combine({}, [{
+            combine([{
                 x : 1,
                 y : 2
             },
@@ -32,7 +32,7 @@ defineSuite([
                 value2 : 1
             }
         };
-        var composite = combine({}, [obj1, obj2], false, true);
+        var composite = combine([obj1, obj2], false, true);
         expect(composite).toEqual({x : 1, y : 2, z : 3, other : {value1 : 0}});
     });
 
@@ -53,10 +53,7 @@ defineSuite([
             }
         };
 
-        var composite = combine({}, [object1, object2, object3]);
+        var composite = combine([object1, object2, object3]);
         expect(composite).toEqual({one : 1, two : 2, deep : {value1 : 10, value2 : 11}});
-
-        combine(object1, [object2, object3]);
-        expect(object1).toEqual({one : 1, two : 2, deep : {value1 : 10, value2 : 11}});
     });
 });

@@ -797,7 +797,7 @@ define([
 
         // PERFORMANCE_IDEA:  Only combine these if showing the atmosphere.  Maybe this is too much of a micro-optimization.
         // http://jsperf.com/object-property-access-propcount
-        this._drawUniforms = combine({}, [uniforms, atmosphereUniforms], false, false);
+        this._drawUniforms = combine([uniforms, atmosphereUniforms], false, false);
     };
 
     /**
@@ -1186,7 +1186,7 @@ define([
                     return tile.mode;
                 }
             };
-            tile._drawUniforms = combine({}, [drawUniforms, this._drawUniforms], false, false);
+            tile._drawUniforms = combine([drawUniforms, this._drawUniforms], false, false);
 
             tile._mode = mode;
         }
@@ -1518,21 +1518,21 @@ define([
         };
 
         if (typeof this._northPoleUniforms === 'undefined') {
-            this._northPoleUniforms = combine({}, [drawUniforms, {
+            this._northPoleUniforms = combine([drawUniforms, {
                 u_color : function() {
                     return that.northPoleColor;
                 }
             }], false, false);
-            combine(this._northPoleUniforms, [this._drawUniforms], false, false);
+            this._northPoleUniforms = combine([this._northPoleUniforms, this._drawUniforms], false, false);
         }
 
         if (typeof this._southPoleUniforms === 'undefined') {
-            this._southPoleUniforms = combine({}, [drawUniforms, {
+            this._southPoleUniforms = combine([drawUniforms, {
                 u_color : function() {
                     return that.southPoleColor;
                 }
             }], false, false);
-            combine(this._southPoleUniforms, [this._drawUniforms], false, false);
+            this._southPoleUniforms = combine([this._southPoleUniforms, this._drawUniforms], false, false);
         }
     };
 
