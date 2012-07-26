@@ -370,8 +370,6 @@ define([
 
             var tileImageryCollection = tile.imagery;
 
-            // TODO: clear out uniformMap.dayTextures?
-
             var numberOfDayTextures = 0;
             if (!tile.culled) {
                 for ( var imageryIndex = 0, imageryLen = tileImageryCollection.length; imageryIndex < imageryLen; ++imageryIndex) {
@@ -387,6 +385,11 @@ define([
                     ++numberOfDayTextures;
                 }
             }
+
+            //trim arrays to the used length
+            uniformMap.dayTextures.length = numberOfDayTextures;
+            uniformMap.dayTextureTranslation.length = numberOfDayTextures;
+            uniformMap.dayTextureScale.length = numberOfDayTextures;
 
             if (typeof tile.parent !== 'undefined' && tile.parent.cameraInsideBoundingSphere) {
                 uniformMap.cameraInsideBoundingSphere = true;

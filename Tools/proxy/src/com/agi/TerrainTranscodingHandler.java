@@ -16,8 +16,7 @@
 package com.agi;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.awt.image.Raster;
+import java.awt.image.DataBuffer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -91,12 +90,11 @@ public final class TerrainTranscodingHandler extends AbstractHandler {
 			ByteArrayOutputStream responseContent;
 
 			protected void onResponseComplete() throws IOException {
-				BufferedImage png = createPng(new ByteArrayInputStream(responseContent.toByteArray()));
+				ByteArrayInputStream tiffInputStream = new ByteArrayInputStream(responseContent.toByteArray());
+				BufferedImage resultImage = encodeHeightFloatsAsIntegers(tiffInputStream);
 
 				response.setContentType("image/png");
-
-				OutputStream outputStream = response.getOutputStream();
-				ImageIO.write(png, "PNG", outputStream);
+				ImageIO.write(resultImage, "PNG", response.getOutputStream());
 
 				continuation.complete();
 			}
@@ -145,21 +143,18 @@ public final class TerrainTranscodingHandler extends AbstractHandler {
 		client.send(exchange);
 	}
 
-	private static BufferedImage createPng(InputStream tiffInput) throws IOException {
-		BufferedImage sourceImage = ImageIO.read(tiffInput);
-		Raster sourceRaster = sourceImage.getData();
+	private static BufferedImage encodeHeightFloatsAsIntegers(InputStream input) throws IOException {
+		BufferedImage sourceImage = ImageIO.read(input);
+		DataBuffer sourceBuffer = sourceImage.getRaster().getDataBuffer();
 
-		float[] pixels = new float[sourceImage.getWidth() * sourceImage.getHeight()];
-		sourceRaster.getSamples(0, 0, sourceImage.getWidth(), sourceImage.getHeight(), 0, pixels);
+		BufferedImage resultImage = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+		DataBuffer resultBuffer = resultImage.getRaster().getDataBuffer();
 
 		final float bias = 1000.0f;
 
-		BufferedImage result = new BufferedImage(sourceImage.getWidth(), sourceImage.getHeight(), BufferedImage.TYPE_INT_RGB);
-		DataBufferInt buffer = (DataBufferInt) result.getRaster().getDataBuffer();
-
-		for (int i = 0; i < pixels.length; ++i) {
+		for (int i = 0; i < sourceBuffer.getSize(); ++i) {
 			// Offset the height by 1000.0 meters to avoid negative heights.
-			float heightFloat = pixels[i] + bias;
+			float heightFloat = sourceBuffer.getElemFloat(i) + bias;
 
 			// Convert the height to integer millimeters.
 			int height = (int) (heightFloat * 1000.0);
@@ -168,9 +163,9 @@ public final class TerrainTranscodingHandler extends AbstractHandler {
 				throw new RuntimeException("Invalid height.");
 
 			// Encode the high byte in red, low byte in blue.
-			buffer.setElem(i, height);
+			resultBuffer.setElem(i, height);
 		}
 
-		return result;
+		return resultImage;
 	}
 }
