@@ -6,6 +6,7 @@ define([
         '../Core/createGuid',
         '../Core/clone',
         '../Core/Color',
+        '../Core/combine',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -35,6 +36,7 @@ define([
         createGuid,
         clone,
         Color,
+        combine,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -258,7 +260,7 @@ define([
         var isOldMaterialType = Material._materialCache.hasMaterial(this._materialID);
         if (isOldMaterialType) {
             var newMaterialTemplate = clone(Material._materialCache.getMaterial(this._materialID));
-            this._extendObject(this._template, newMaterialTemplate);
+            combine(this._template, [newMaterialTemplate]);
         }
 
         // Once the template has been established, set the member variables.
@@ -436,7 +438,7 @@ define([
                 // Construct the sub-material.
                 var materialTemplate = this._materialTemplates[materialID];
                 var material = new Material({context : this._context, strict : this._strict, fabric : materialTemplate});
-                this._extendObject(this._uniforms, material._uniforms);
+                combine(this._uniforms, [material._uniforms]);
                 this.materials[materialID] = material;
 
                 // Make the material's agi_getMaterial unique by appending a guid.
@@ -480,24 +482,6 @@ define([
 
     Material.prototype._getNewGUID = function() {
         return createGuid().replace(new RegExp('-', 'g'), '').slice(0,5);
-    };
-
-    Material.prototype._extendObject = function(object1, object2) {
-        var extend = function(object1, object2) {
-            for (var property in object2) {
-                if (object2.hasOwnProperty(property)) {
-                    if (object1.hasOwnProperty(property) && (typeof object1[property] !== 'undefined')) {
-                        if (typeof object1[property] === 'object' && typeof object2[property] === 'object') {
-                            extend(object1[property], object2[property]);
-                        }
-                    }
-                    else {
-                        object1[property] = object2[property];
-                    }
-                }
-            }
-        };
-        extend(object1, object2);
     };
 
     // Used for searching or replacing a token in the shader source with something else.

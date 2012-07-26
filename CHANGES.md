@@ -132,7 +132,8 @@ Beta Releases
 
             label.setFillColor({ red : 1.0, blue : 0.0, green : 0.0, alpha : 1.0 });
             label.setOutlineColor({ red : 1.0, blue : 1.0, green : 1.0, alpha : 1.0 });
-
+            
+    * Materials are now created through a centralized Material.js class using a JSON schema called Fabric. For more details, go to https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric.
     * Renamed `Tipsify.Tipsify` to `Tipsify.tipsify`.
     * Renamed `Tipsify.CalculateACMR` to `Tipsify.calculateACMR`.
     * Renamed `LeapSecond.CompareLeapSecondDate` to `LeapSecond.compareLeapSecondDate`.

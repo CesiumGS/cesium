@@ -18,8 +18,8 @@
             lines[i] = lines[i].substr(4);
         }
 
-        // Remove 'use strict', which is in FF, not Chrome
-        var formattedCode = lines.join('\n').replace(/'use strict';\n\s*/, '');
+        // Remove "use strict", which is in FF, not Chrome
+        var formattedCode = lines.join('\n').replace(/"use strict";\n\s*/, '');
 
         // Firefox workaround: Function.toString strips empty parenthesis from default constructors.
         // Add the removed parentheses to the first instance, assuming a semicolon follows.
@@ -153,7 +153,7 @@
 
     var cam = tree.addNode('Camera', '', null, 'Camera');
     tree.addNode('Fly to Los Angeles', [new Sandbox.CameraFlyToLosAngeles(scene, ellipsoid, primitives)], cam, 'Camera');
-    tree.addNode('Set camera reference frame', [new Sandbox.CameraReferenceFrame(scene, ellipsoid, primitives)], cam, 'Camera');
+    tree.addNode('Set the camera reference frame', [new Sandbox.CameraReferenceFrame(scene, ellipsoid, primitives)], cam, 'Camera');
     tree.addNode('View an extent', [new Sandbox.ViewExtent(scene, ellipsoid, primitives)], cam, 'Camera');
 
     var pick = tree.addNode('Picking', '', null, 'Picking');

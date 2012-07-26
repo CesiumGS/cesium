@@ -344,7 +344,7 @@ define([
                 this._sp = this._sp && this._sp.release();
                 this._sp = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
 
-                this._drawUniforms = combine(this._uniforms, this._material._uniforms);
+                this._drawUniforms = combine({}, [this._uniforms, this._material._uniforms], false, false);
             }
 
             // Recreate vertex buffer when directions change
@@ -395,14 +395,12 @@ define([
             this._pickId = context.createPickId(this._pickIdThis);
 
             var that = this;
-            this._pickUniforms = combine(this._uniforms, {
+            this._pickUniforms = combine({}, [this._uniforms, {
                 u_pickColor : function() {
                     return that._pickId.normalizedRgba;
                 }
-            });
-
-            this.updateForPick = function(context) {
-            };
+            }], false, false);
+            this.updateForPick = function(context) {};
         }
     };
 

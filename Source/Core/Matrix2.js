@@ -211,9 +211,8 @@ define([
             throw new DeveloperError('index is required and must be 0 or 1.');
         }
 
-        var startIndex = index;
-        var x = matrix[startIndex];
-        var y = matrix[startIndex + 2];
+        var x = matrix[index];
+        var y = matrix[index + 2];
 
         if (typeof result === 'undefined') {
             return new Cartesian2(x, y);
@@ -250,10 +249,9 @@ define([
             throw new DeveloperError('index is required and must be 0 or 1.');
         }
 
-        var startIndex = index;
         result = Matrix2.clone(matrix, result);
-        result[startIndex] = cartesian.x;
-        result[startIndex + 2] = cartesian.y;
+        result[index] = cartesian.x;
+        result[index + 2] = cartesian.y;
         return result;
     };
 
@@ -456,23 +454,6 @@ define([
                 Math.abs(left[1] - right[1]) <= epsilon &&
                 Math.abs(left[2] - right[2]) <= epsilon &&
                 Math.abs(left[3] - right[3]) <= epsilon);
-    };
-
-    /**
-     * Creates a string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1)'.
-     * @memberof Matrix2
-     *
-     * @param {Matrix2} matrix The matrix to stringify.
-     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1)'.
-     *
-     * @exception {DeveloperError} matrix is required.
-     */
-    Matrix2.toString = function(matrix) {
-        if (typeof matrix === 'undefined') {
-            throw new DeveloperError('matrix is required');
-        }
-        return '(' + matrix[0] + ', ' + matrix[2] + ')\n' +
-               '(' + matrix[1] + ', ' + matrix[3] + ')';
     };
 
     /**
@@ -709,7 +690,8 @@ define([
      * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1)'.
      */
     Matrix2.prototype.toString = function() {
-        return Matrix2.toString(this);
+        return '(' + this[0] + ', ' + this[2] + ')\n' +
+               '(' + this[1] + ', ' + this[3] + ')';
     };
 
     return Matrix2;

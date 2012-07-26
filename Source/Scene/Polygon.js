@@ -521,7 +521,7 @@ define([
             this._sp = this._sp && this._sp.release();
             this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
 
-            this._drawUniforms = combine(this._uniforms, this._material._uniforms);
+            this._drawUniforms = combine({}, [this._uniforms, this._material._uniforms], false, false);
         }
     };
 
