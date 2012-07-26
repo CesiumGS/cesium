@@ -1,12 +1,12 @@
 /*global define*/
 define([
         './DynamicProperty',
-        './CzmlString',
+        './CzmlImage',
         './CzmlNumber',
         '../Scene/Material'
     ], function(
          DynamicProperty,
-         CzmlString,
+         CzmlImage,
          CzmlNumber,
          Material) {
     "use strict";
@@ -36,10 +36,10 @@ define([
      * interval into a new or existing instance of this class.
      *
      * @param {Object} czmlInterval The interval to process.
-     * @param {DynamicImageMaterial} [existingMaterial] The DynamicImageMaterial to modify.
+     * @param {String} [sourceUri] The originating url of the CZML being processed.
      * @returns The modified existingMaterial parameter or a new DynamicImageMaterial instance if existingMaterial was undefined or not a DynamicImageMaterial.
      */
-    DynamicImageMaterial.prototype.processCzmlIntervals = function(czmlInterval) {
+    DynamicImageMaterial.prototype.processCzmlIntervals = function(czmlInterval, sourceUri) {
         var materialData = czmlInterval.image;
         if (typeof materialData === 'undefined') {
             return;
@@ -48,9 +48,9 @@ define([
         if (typeof materialData.image !== 'undefined') {
             var image = this.image;
             if (typeof image === 'undefined') {
-                this.image = image = new DynamicProperty(CzmlString);
+                this.image = image = new DynamicProperty(CzmlImage);
             }
-            image.processCzmlIntervals(materialData.image);
+            image.processCzmlIntervals(materialData.image, undefined, sourceUri);
         }
 
         if (typeof materialData.verticalRepeat !== 'undefined') {
