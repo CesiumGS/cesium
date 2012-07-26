@@ -11,26 +11,20 @@ define([
         '../Core/Matrix4',
         '../Renderer/Texture',
         '../Renderer/CubeMap',
-        '../Shaders/Materials/AlphaMapMaterial',
         '../Shaders/Materials/AsphaltMaterial',
         '../Shaders/Materials/BlobMaterial',
         '../Shaders/Materials/BrickMaterial',
         '../Shaders/Materials/BumpMapMaterial',
         '../Shaders/Materials/CementMaterial',
         '../Shaders/Materials/CheckerboardMaterial',
-        '../Shaders/Materials/ColorMaterial',
-        '../Shaders/Materials/DiffuseMapMaterial',
         '../Shaders/Materials/DistanceIntervalMaterial',
         '../Shaders/Materials/DotMaterial',
-        '../Shaders/Materials/EmissionMapMaterial',
         '../Shaders/Materials/FacetMaterial',
         '../Shaders/Materials/FresnelMaterial',
         '../Shaders/Materials/GrassMaterial',
-        '../Shaders/Materials/ImageMaterial',
         '../Shaders/Materials/NormalMapMaterial',
         '../Shaders/Materials/ReflectionMaterial',
         '../Shaders/Materials/RefractionMaterial',
-        '../Shaders/Materials/SpecularMapMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/TieDyeMaterial',
         '../Shaders/Materials/WoodMaterial'
@@ -46,26 +40,20 @@ define([
         Matrix4,
         Texture,
         CubeMap,
-        AlphaMapMaterial,
         AsphaltMaterial,
         BlobMaterial,
         BrickMaterial,
         BumpMapMaterial,
         CementMaterial,
         CheckerboardMaterial,
-        ColorMaterial,
-        DiffuseMapMaterial,
         DistanceIntervalMaterial,
         DotMaterial,
-        EmissionMapMaterial,
         FacetMaterial,
         FresnelMaterial,
         GrassMaterial,
-        ImageMaterial,
         NormalMapMaterial,
         ReflectionMaterial,
         RefractionMaterial,
-        SpecularMapMaterial,
         StripeMaterial,
         TieDyeMaterial,
         WoodMaterial) {
@@ -694,7 +682,10 @@ define([
         "uniforms" : {
             "color" : new Color(1.0, 0.0, 0.0, 0.5)
         },
-        "source" : ColorMaterial
+        "components" : {
+            "diffuse" : "color.rgb",
+            "alpha" : "color.a"
+        }
     });
 
     // Image Material.
@@ -708,7 +699,10 @@ define([
                 "y" : 1
             }
         },
-        "source" : ImageMaterial
+        "components" : {
+            "diffuse" : "texture2D(texture, fract(repeat * materialInput.st)).rgb",
+            "alpha" : "texture2D(texture, fract(repeat * materialInput.st)).a"
+        }
     });
 
     // Diffuse Map Material
@@ -722,7 +716,9 @@ define([
                 "y" : 1
             }
         },
-        "source" : DiffuseMapMaterial
+        "components" : {
+            "diffuse" : "texture2D(texture, fract(repeat * materialInput.st)).channels"
+        }
     });
 
     // Alpha Map Material
@@ -736,7 +732,9 @@ define([
                 "y" : 1
             }
         },
-        "source" : AlphaMapMaterial
+        "components" : {
+            "alpha" : "texture2D(texture, fract(repeat * materialInput.st)).channel"
+        }
     });
 
     // Specular Map Material
@@ -750,7 +748,9 @@ define([
                 "y" : 1
             }
         },
-        "source" : SpecularMapMaterial
+        "components" : {
+            "specular" : "texture2D(texture, fract(repeat * materialInput.st)).channel"
+        }
     });
 
     // Emission Map Material
@@ -764,7 +764,9 @@ define([
                 "y" : 1
             }
         },
-        "source" : EmissionMapMaterial
+        "components" : {
+            "emission" : "texture2D(texture, fract(repeat * materialInput.st)).channels"
+        }
     });
 
     // Bump Map Material
