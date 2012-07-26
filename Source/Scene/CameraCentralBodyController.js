@@ -82,7 +82,14 @@ define([
             var intersection = IntersectionTests.rayEllipsoid(ray, this.spindleController.getEllipsoid());
             if (typeof intersection !== 'undefined') {
                 var center = ray.getPoint(intersection.start);
-                this._transform = Transforms.eastNorthUpToFixedFrame(center);
+                var normal = this.spindleController.getEllipsoid().geodeticSurfaceNormal(center);
+                var bitangent = normal.cross(this._camera.right);
+                var tangent = bitangent.cross(normal);
+                this._transform = new Matrix4(
+                        tangent.x, bitangent.x, normal.x, center.x,
+                        tangent.y, bitangent.y, normal.y, center.y,
+                        tangent.z, bitangent.z, normal.z, center.z,
+                        0.0,       0.0,         0.0,      1.0);
             }
         } else if (!rotate.isButtonDown()) {
             this._transform = undefined;
@@ -110,8 +117,8 @@ define([
         var oldEllipsoid = this.spindleController.getEllipsoid();
         var oldConstrainedZ = this.spindleController.constrainedAxis;
 
-        this.spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
         this.spindleController.constrainedAxis = Cartesian3.UNIT_Z;
+        this.spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
 
         var invTransform = camera.getInverseTransform();
         camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
@@ -126,8 +133,8 @@ define([
         right = camera.right;
         direction = camera.direction;
 
-        this.spindleController.setReferenceFrame(oldTransform, oldEllipsoid);
         this.spindleController.constrainedAxis = oldConstrainedZ;
+        this.spindleController.setReferenceFrame(oldTransform, oldEllipsoid);
 
         camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
         camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
