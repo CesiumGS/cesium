@@ -31,8 +31,13 @@ define([
             up : Cartesian3.UNIT_Z
         };
         var us = context.getUniformState();
-        us.setView(Matrix4.createLookAt(camera.eye, camera.target, camera.up));
-        us.setProjection(Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
+        us.setView(Matrix4.fromCamera({
+            eye : camera.eye,
+            target : camera.target,
+            up : camera.up
+        }));
+        //us.setView(Matrix4.createLookAt(camera.eye, camera.target, camera.up));
+        us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.ellipsoid = ellipsoid;
@@ -46,7 +51,7 @@ define([
         polygon.material = material;
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polygon.update(context, sceneState);
         polygon.render(context, us);

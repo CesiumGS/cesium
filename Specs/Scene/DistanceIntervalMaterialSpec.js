@@ -46,7 +46,7 @@ defineSuite([
                 }
             }]
         }), context);
-        expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
         destroyContext(context);
     });
 });

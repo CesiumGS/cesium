@@ -446,6 +446,13 @@ defineSuite([
         expect(left).toEqual(expectedResult);
     });
 
+    it('fromSpherical throws with no spherical parameter', function() {
+        expect(function() {
+            Cartesian3.fromSpherical(undefined);
+        }).toThrow();
+    });
+
+
     it('static clone throws with no parameter', function() {
         expect(function() {
             Cartesian3.clone();

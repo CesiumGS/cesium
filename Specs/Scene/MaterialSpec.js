@@ -27,7 +27,7 @@ defineSuite([
                 }
             });
             var pixel = renderMaterial(material, context);
-            expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+            expect(pixel).not.toEqual([0, 0, 0, 0]);
             destroyContext(context);
         }
     });
@@ -61,9 +61,9 @@ defineSuite([
         });
 
         var pixel1 = renderMaterial(material1, context);
-        expect(pixel1).not.toEqualArray([0, 0, 0, 0]);
+        expect(pixel1).not.toEqual([0, 0, 0, 0]);
         var pixel2 = renderMaterial(material2, context);
-        expect(pixel2).not.toEqualArray([0, 0, 0, 0]);
+        expect(pixel2).not.toEqual([0, 0, 0, 0]);
         destroyContext(context);
     });
 
@@ -94,7 +94,7 @@ defineSuite([
         material.materials.first.uniforms.repeat.x = 2.0;
 
         var pixel = renderMaterial(material, context);
-        expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
         destroyContext(context);
     });
 
@@ -124,7 +124,7 @@ defineSuite([
             }
         });
         var pixel = renderMaterial(material, context);
-        expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
         destroyContext(context);
     });
 
@@ -132,7 +132,7 @@ defineSuite([
         var context = createContext();
         var material = Material.fromID(context, 'Color');
         var pixel = renderMaterial(material, context);
-        expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
         destroyContext(context);
     });
 
@@ -294,7 +294,7 @@ defineSuite([
             }
         });
         var pixel = renderMaterial(material, context);
-        expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
         destroyContext(context);
     });
 
@@ -332,7 +332,7 @@ defineSuite([
             }
         });
         var pixel = renderMaterial(material, context);
-        expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
         destroyContext(context);
     });
 
@@ -366,7 +366,7 @@ defineSuite([
             }
         });
         var pixel = renderMaterial(material, context);
-        expect(pixel).not.toEqualArray([0, 0, 0, 0]);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
         destroyContext(context);
     });
 

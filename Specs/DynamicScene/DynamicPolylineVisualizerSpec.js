@@ -124,7 +124,7 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polyline.show.getValue(time));
         expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValueCartesian(time));
-        expect(primitive.color).toEqualProperties(testObject.polyline.color.getValue(time));
+        expect(primitive.color).toEqual(testObject.polyline.color.getValue(time));
         expect(primitive.outlineColor).toEqual(testObject.polyline.outlineColor.getValue(time));
         expect(primitive.outlineWidth).toEqual(testObject.polyline.outlineWidth.getValue(time));
         expect(primitive.width).toEqual(testObject.polyline.width.getValue(time));
@@ -138,7 +138,7 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polyline.show.getValue(time));
         expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValueCartesian(time));
-        expect(primitive.color).toEqualProperties(testObject.polyline.color.getValue(time));
+        expect(primitive.color).toEqual(testObject.polyline.color.getValue(time));
         expect(primitive.outlineColor).toEqual(testObject.polyline.outlineColor.getValue(time));
         expect(primitive.outlineWidth).toEqual(testObject.polyline.outlineWidth.getValue(time));
         expect(primitive.width).toEqual(testObject.polyline.width.getValue(time));

@@ -59,11 +59,11 @@ defineSuite([
     });
 
     it('getButtonPressTime', function() {
-        expect(handler.getButtonPressTime()).toEqual(null);
+        expect(handler.getButtonPressTime()).toBeUndefined();
     });
 
     it('getButtonReleaseTime', function() {
-        expect(handler.getButtonReleaseTime()).toEqual(null);
+        expect(handler.getButtonReleaseTime()).toBeUndefined();
     });
 
     it('isDestroyed', function() {

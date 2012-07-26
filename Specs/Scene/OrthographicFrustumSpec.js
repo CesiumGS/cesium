@@ -117,8 +117,8 @@ defineSuite([
 
     it('get orthographic projection matrix', function() {
         var projectionMatrix = frustum.getProjectionMatrix();
-        var expected = Matrix4.createOrthographicOffCenter(frustum.left, frustum.right, frustum.top, frustum.bottm, frustum.near, frustum.far);
-        expect(projectionMatrix.equalsEpsilon(expected, CesiumMath.EPSILON6)).toEqual(true);
+        var expected = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far);
+        expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
     it('clone', function() {

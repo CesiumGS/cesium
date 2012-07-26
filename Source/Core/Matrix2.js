@@ -703,10 +703,10 @@ define([
 
     /**
      * Creates a string representing this Matrix with each row being
-     * on a separate line and in the format '(column1, column2)'.
+     * on a separate line and in the format '(column0, column1)'.
      * @memberof Matrix2
      *
-     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column1, column2)'.
+     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1)'.
      */
     Matrix2.prototype.toString = function() {
         return Matrix2.toString(this);
