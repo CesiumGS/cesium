@@ -90,7 +90,15 @@ require({
         var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
         var errorLines = [];
         var highlightLines = [];
+        var hintGlobals = [
+            'require',
+            'document',
+            'window',
+            'console',
+            'Sandcastle'
+        ];
         var hintOptions = {
+            predef: hintGlobals,
             // These are copied from the Eclipse jsHint plugin options on the Cesium project itself.
             // They should be kept in sync with that list of options.
             bitwise : false,

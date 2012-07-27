@@ -69,7 +69,6 @@ body {
 <div id="cesiumContainer" class="fullSize"></div>
 
 <script id="cesium_sandcastle_script">
-/*global require,document,window,console,Sandcastle*/
 require([
     'Source/Cesium', 'Widgets/DojoWidgets/CesiumWidget',
     'dojo/on', 'dojo/dom'
@@ -81,9 +80,8 @@ require([
 
     function createPrimitives(widget) {
 
-        var scene = widget.scene;
         var ellipsoid = widget.ellipsoid;
-        var primitives = scene.getPrimitives();
+        var primitives = widget.scene.getPrimitives();
 
         var polyline = new Cesium.Polyline();
         Sandcastle.declare(polyline);
