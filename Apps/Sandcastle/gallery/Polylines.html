@@ -26,20 +26,20 @@
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
             { name: 'Source', location: 'Source' },
             { name: 'Core', location: 'Source/Core' },
-            { name: 'Controls', location: 'Source/Controls' },
-            { name: 'DojoWidgets', location: 'Source/DojoWidgets' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
-            { name: 'ThirdParty', location: 'Source/ThirdParty' }
+            { name: 'ThirdParty', location: 'Source/ThirdParty' },
+            { name: 'Widgets', location: 'Source/Widgets' }
         ]
     });
     </script>
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="Stylesheet" href="../../../Source/DojoWidgets/CesiumWidget.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/Widgets/DojoWidgets/CesiumWidget.css" type="text/css">
 </head>
 <body class="claro">
+
 
 <style>
 body {
@@ -70,11 +70,11 @@ body {
 <script id="cesium_sandcastle_script">
 /*global require,document,window,console,Sandcastle*/
 require([
-    'Source/Cesium', 'DojoWidgets/CesiumWidget',
-    'Core/JulianDate', 'dojo/on', 'dojo/dom'
+    'Source/Cesium', 'Widgets/DojoWidgets/CesiumWidget',
+    'dojo/on', 'dojo/dom'
 ], function(
     Cesium, CesiumWidget,
-    JulianDate, on, dom)
+    on, dom)
 {
     "use strict";
 
@@ -103,8 +103,7 @@ require([
             createPrimitives(widget);
             widget.startRenderLoop();
         }
-    });
-    cesiumWidget.placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId("cesiumContainer"));
 
     on(window, 'resize', function() {
         cesiumWidget.resize();

@@ -15,7 +15,7 @@ require({
             location: '../Apps/Sandcastle'
         }]
     }, [
-        'DojoWidgets/CesiumWidget',
+        'Widgets/DojoWidgets/CesiumWidget',
         'dojo/parser',
         'dojo/dom',
         'dojo/dom-class',
