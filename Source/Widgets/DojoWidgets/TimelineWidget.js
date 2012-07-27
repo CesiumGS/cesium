@@ -3,7 +3,7 @@ define(['dojo/_base/declare',
         'dojo/ready',
         'dojo/dom-construct',
         'dijit/_WidgetBase',
-        '../Widgets/Timeline'
+        '../Timeline'
     ], function(
         declare,
         ready,
