@@ -107,6 +107,7 @@ define([
         bumpMapUrl : undefined,
         endUserOptions : {},
         enableDragDrop: false,
+        refreshOnWindowResize: true,
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -556,6 +557,12 @@ define([
             on(imageryAerialWithLabels, 'Click', createImageryClickFunction(imageryAerialWithLabels, BingMapsStyle.AERIAL_WITH_LABELS));
             on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
             on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
+
+            if (widget.refreshOnWindowResize) {
+                on(window, 'resize', function() {
+                    widget.resize();
+                });
+            }
 
             //////////////////////////////////////////////////////////////////////////////////////////////////
 
