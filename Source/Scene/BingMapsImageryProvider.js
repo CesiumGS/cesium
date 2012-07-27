@@ -115,7 +115,7 @@ define([
      * @param {String|Object} [description.discardPolicy] If the service returns "missing" tiles,
      *        these can be filtered out by providing an object which is expected to have a
      *        shouldDiscardImage function.  By default, no tiles will be filtered.
-     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is
+     * @param {Object} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.server</code> is required.
