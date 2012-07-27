@@ -23,10 +23,6 @@ define([
         enableDragDrop : true,
 
         postSetup : function(widget) {
-            on(window, 'resize', function() {
-                cesium.resize();
-            });
-
             widget.startRenderLoop();
         },
 
