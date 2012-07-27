@@ -25,10 +25,10 @@ define([
      * evt.raiseEvent('1', '2');
      * evt.removeEventListener(MyObject.prototype.myListener);
      */
-    function Event() {
+    var Event = function() {
         this._listeners = [];
         this._scopes = [];
-    }
+    };
 
     /**
      * Registers a callback function to be executed whenever the event is raised.

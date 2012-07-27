@@ -6,15 +6,17 @@ define(function() {
      * Returns the first parameter if not undefined, otherwise the second parameter.
      * Useful for setting a default value for a parameter.
      *
+     * @exports defaultValue
+     *
      * @example
      * param = defaultValue(param, 'default');
      */
-    function defaultValue(a, b) {
+    var defaultValue = function(a, b) {
         if (typeof a !== 'undefined') {
             return a;
         }
         return b;
-    }
+    };
 
     return defaultValue;
 });

@@ -37,7 +37,7 @@ define([
      *     return destroyObject(this);
      * };
      */
-    function destroyObject(object, message) {
+    var destroyObject = function(object, message) {
         message = defaultValue(message, 'This object was destroyed, i.e., destroy() was called.');
 
         function throwOnDestroyed() {
@@ -55,7 +55,7 @@ define([
         object.isDestroyed = returnTrue;
 
         return undefined;
-    }
+    };
 
     return destroyObject;
 });

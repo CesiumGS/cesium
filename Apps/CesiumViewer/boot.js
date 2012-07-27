@@ -11,11 +11,8 @@ require({
         name : 'Core',
         location : 'Source/Core'
     }, {
-        name : 'Controls',
-        location : 'Source/Controls'
-    }, {
-        name : 'DojoWidgets',
-        location : 'Source/DojoWidgets'
+        name : 'Widgets',
+        location : 'Source/Widgets'
     }, {
         name : 'DynamicScene',
         location : 'Source/DynamicScene'
@@ -36,7 +33,7 @@ require({
         location : 'Apps/CesiumViewer'
     }]
 }, [
-    'DojoWidgets/checkForChromeFrame',
+    'Widgets/DojoWidgets/checkForChromeFrame',
     'dojo/parser',
     'dojo/dom-class',
     'dojo/_base/window',

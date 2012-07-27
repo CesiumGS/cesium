@@ -1,15 +1,14 @@
 <project name="Cesium" default="combine">
 	<target name="build" description="A developer build that runs in-place.">
-		<parallel>
-			<glslToJavascript destination="${shadersDirectory}" stripcomments="${build.minification}">
-				<fileset dir="${shadersDirectory}" includes="*.glsl" />
-			</glslToJavascript>
+		<glslToJavascript destination="${shadersDirectory}" stripcomments="${build.minification}">
+			<fileset dir="${shadersDirectory}" includes="*.glsl" />
+		</glslToJavascript>
 
+		<parallel>
 			<createCesiumJs output="${sourceDirectory}/Cesium.js">
 				<fileset dir="${sourceDirectory}">
 					<include name="**/*.js" />
-					<exclude name="DojoWidgets/**" />
-					<exclude name="Controls/**" />
+					<exclude name="Widgets/**" />
 					<exclude name="Cesium.js" />
 					<exclude name="main.js" />
 					<exclude name="**/*.profile.js" />

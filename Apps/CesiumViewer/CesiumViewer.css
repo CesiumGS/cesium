@@ -1,5 +1,5 @@
 @import	url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
-@import url('../../Source/DojoWidgets/CesiumWidget.css');
+@import url('../../Source/Widgets/DojoWidgets/CesiumWidget.css');
 
 html,body {
 	height: 100%;

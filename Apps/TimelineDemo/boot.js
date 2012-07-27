@@ -11,8 +11,8 @@ require({
         name : 'Core',
         location : 'Source/Core'
     }, {
-        name : 'Controls',
-        location : 'Source/Controls'
+        name : 'Widgets',
+        location : 'Source/Widgets'
     }, {
         name : 'TimelineDemo',
         location : 'Apps/TimelineDemo'

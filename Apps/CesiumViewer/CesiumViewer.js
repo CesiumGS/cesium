@@ -3,7 +3,7 @@ define([
     'dojo/dom',
     'dojo/on',
     'dojo/io-query',
-    'DojoWidgets/CesiumWidget'
+    'Widgets/DojoWidgets/CesiumWidget'
 ], function(
     dom,
     on,

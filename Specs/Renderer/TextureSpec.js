@@ -115,7 +115,7 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         texture = context.createTexture2DFromFramebuffer();
         expect(texture.getWidth()).toEqual(context.getCanvas().clientWidth);
@@ -129,9 +129,9 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        expect(renderFragment(context)).toEqualArray([255, 0, 0, 255]);
+        expect(renderFragment(context)).toEqual([255, 0, 0, 255]);
     });
 
     it('copies from the framebuffer', function() {
@@ -141,7 +141,7 @@ defineSuite([
         });
 
         // Render blue
-        expect(renderFragment(context)).toEqualArray([0, 0, 255, 255]);
+        expect(renderFragment(context)).toEqual([0, 0, 255, 255]);
 
         // Clear to red
         context.clear(context.createClearState({
@@ -152,7 +152,7 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         texture.copyFromFramebuffer();
 
@@ -165,10 +165,10 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         // Render red
-        expect(renderFragment(context)).toEqualArray([255, 0, 0, 255]);
+        expect(renderFragment(context)).toEqual([255, 0, 0, 255]);
     });
 
     it('draws a textured blue point', function() {
@@ -177,7 +177,7 @@ defineSuite([
             pixelFormat :PixelFormat.RGBA
         });
 
-        expect(renderFragment(context)).toEqualArray([0, 0, 255, 255]);
+        expect(renderFragment(context)).toEqual([0, 0, 255, 255]);
     });
 
     it('renders with premultiplied alpha', function() {
@@ -188,7 +188,7 @@ defineSuite([
         });
         expect(texture.getPreMultiplyAlpha()).toEqual(true);
 
-        expect(renderFragment(context)).toEqualArray([0, 0, 127, 127]);
+        expect(renderFragment(context)).toEqual([0, 0, 127, 127]);
     });
 
     it('draws textured blue and red points', function() {
@@ -222,12 +222,12 @@ defineSuite([
         // Blue on top
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // Red on bottom
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
     it('creates from a typed array', function() {
@@ -243,7 +243,7 @@ defineSuite([
             }
         });
 
-        expect(renderFragment(context)).toEqualArray([0, 255, 0, 255]);
+        expect(renderFragment(context)).toEqual([0, 255, 0, 255]);
     });
 
     it('copies from a typed array', function() {
@@ -261,7 +261,7 @@ defineSuite([
             height : 1
         });
 
-        expect(renderFragment(context)).toEqualArray([255, 0, 255, 0]);
+        expect(renderFragment(context)).toEqual([255, 0, 255, 0]);
     });
 
     it('copies over a subset of a texture', function() {
@@ -295,12 +295,12 @@ defineSuite([
         // Blue on top
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // Red on bottom
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         // After copy...
         texture.copyFrom(greenImage, 0, 1);
@@ -308,12 +308,12 @@ defineSuite([
         // Now green on top
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         // Still red on bottom
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
     // Fails on firefox.  Should be fixed soon: https://bugzilla.mozilla.org/show_bug.cgi?id=685156
@@ -328,7 +328,7 @@ defineSuite([
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
         }));
 
-        expect(renderFragment(context)).toEqualArray([0, 0, 255, 255]);
+        expect(renderFragment(context)).toEqual([0, 0, 255, 255]);
     });
 
     it('gets the default sampler', function() {
