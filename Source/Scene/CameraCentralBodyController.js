@@ -13,7 +13,7 @@ define([
         './CameraEventType',
         './CameraSpindleController',
         './CameraFreeLookController',
-        './CameraHelpers',
+        './CameraHelpers'
     ], function(
         destroyObject,
         Ellipsoid,
