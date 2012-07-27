@@ -76,7 +76,6 @@
 	<property name="version" value="b6a" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
-	<property name="shadersMaterialsDirectory" location="${shadersDirectory}/Materials" />
 	<property name="examplesDirectory" location="Examples" />
 	<property name="specsDirectory" location="Specs" />
 	<property name="imagesDirectory" location="Images" />
