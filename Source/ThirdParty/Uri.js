@@ -68,7 +68,6 @@ define(function() {
     /**
      * Returns the scheme part of the Uri.
      * In "http://example.com:80/a/b?x#y" this is "http".
-     * @return
      */
     Uri.prototype.getScheme = function() {
         return this.scheme;
@@ -77,7 +76,6 @@ define(function() {
     /**
      * Returns the authority part of the Uri.
      * In "http://example.com:80/a/b?x#y" this is "example.com:80".
-     * @return
      */
     Uri.prototype.getAuthority = function() {
         return this.authority;
@@ -87,7 +85,6 @@ define(function() {
      * Returns the path part of the Uri.
      * In "http://example.com:80/a/b?x#y" this is "/a/b".
      * In "mailto:mike@example.com" this is "mike@example.com".
-     * @return
      */
     Uri.prototype.getPath = function() {
         return this.path;
@@ -96,7 +93,6 @@ define(function() {
     /**
      * Returns the query part of the Uri.
      * In "http://example.com:80/a/b?x#y" this is "x".
-     * @return
      */
     Uri.prototype.getQuery = function() {
         return this.query;
@@ -105,7 +101,6 @@ define(function() {
     /**
      * Returns the fragment part of the Uri.
      * In "http://example.com:80/a/b?x#y" this is "y".
-     * @return
      */
     Uri.prototype.getFragment = function() {
         return this.fragment;
