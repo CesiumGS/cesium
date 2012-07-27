@@ -103,12 +103,35 @@ require({
     ///////////////////////////////////////////////////////////////////////////
     // Example mouse & keyboard handlers
 
-    var mouseX;
-    var mouseY;
-    function mouseMoveHandler(e) {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-    }
+    var handler = new Cesium.EventHandler(canvas);
+
+    var mousePosition;
+    handler.setMouseAction(function(movement) {
+        mousePosition = movement.endPosition;
+    }, Cesium.MouseEventType.MOVE);
+
+    (function() {
+        var alphaHandler = new Cesium.EventHandler(canvas);
+
+        var isDown = false;
+        var startPosition;
+        alphaHandler.setMouseAction(function(movement) {
+            isDown = true;
+            startPosition = movement.position;
+        }, Cesium.MouseEventType.LEFT_DOWN, Cesium.EventModifier.CTRL);
+
+        alphaHandler.setMouseAction(function(movement) {
+            isDown = false;
+        }, Cesium.MouseEventType.LEFT_UP, Cesium.EventModifier.CTRL);
+
+        alphaHandler.setMouseAction(function(movement) {
+            if (isDown) {
+                var distance = startPosition.y - movement.endPosition.y;
+                var adjustment = distance / 400;
+                bingAerialLayer.alpha = Math.min(1.0, Math.max(0.0, bingAerialLayer.alpha + adjustment));
+            }
+        }, Cesium.MouseEventType.MOVE, Cesium.EventModifier.CTRL);
+    })();
 
     function ellipsoidIntersections(ellipsoid, ray) {
         var position = ray.origin;
@@ -194,7 +217,7 @@ require({
             break;
         case 'B'.charCodeAt(0):
             var camera = scene.getCamera();
-            var pickRay = camera._getPickRayPerspective({x: mouseX, y: mouseY});
+            var pickRay = camera._getPickRayPerspective(mousePosition);
             var intersectionDistance = ellipsoidIntersections(ellipsoid, pickRay)[0];
             var intersectionPoint = pickRay.getPoint(intersectionDistance);
             var cartographicPick = ellipsoid.cartesianToCartographic(intersectionPoint);
@@ -215,8 +238,6 @@ require({
     }
 
     document.addEventListener('keydown', keydownHandler, false);
-
-    document.addEventListener('mousemove', mouseMoveHandler, false);
 
     canvas.oncontextmenu = function() {
         return false;

@@ -320,6 +320,9 @@ define([
         u_dayTextureScale : function() {
             return this.dayTextureScale;
         },
+        u_dayTextureAlpha : function() {
+            return this.dayTextureAlpha;
+        },
         u_cameraInsideBoundingSphere : function() {
             return this.cameraInsideBoundingSphere;
         },
@@ -334,6 +337,7 @@ define([
         dayTextures : new Array(8),
         dayTextureTranslation : new Array(8),
         dayTextureScale : new Array(8),
+        dayTextureAlpha : new Array(8),
         cameraInsideBoundingSphere : false,
         level : 0
     };
@@ -378,15 +382,15 @@ define([
                     uniformMap.dayTextures[numberOfDayTextures] = tileImagery.texture;
                     uniformMap.dayTextureTranslation[numberOfDayTextures] = tileImagery.textureTranslation;
                     uniformMap.dayTextureScale[numberOfDayTextures] = tileImagery.textureScale;
+                    uniformMap.dayTextureAlpha[numberOfDayTextures] = tileImagery.imageryLayer.alpha;
 
                     ++numberOfDayTextures;
                 }
             }
 
-            //trim arrays to the used length
+            // trim texture array to the used length so we don't end up using old textures
+            // which might get destroyed eventually
             uniformMap.dayTextures.length = numberOfDayTextures;
-            uniformMap.dayTextureTranslation.length = numberOfDayTextures;
-            uniformMap.dayTextureScale.length = numberOfDayTextures;
 
             if (typeof tile.parent !== 'undefined' && tile.parent.cameraInsideBoundingSphere) {
                 uniformMap.cameraInsideBoundingSphere = true;
@@ -418,10 +422,7 @@ define([
             uniformMap.center3D = rtc2;
 
             var centerEye2 = mv.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
-            // PERFORMANCE_TODO: use a scratch matrix instead of cloning for every tile.
-            var mvrtc2 = mv.clone();
-            mvrtc2.setColumn3(centerEye2);
-            uniformMap.modifiedModelView = mvrtc2;
+            uniformMap.modifiedModelView = mv.setColumn(3, centerEye2, uniformMap.modifiedModelView);
 
             context.continueDraw({
                 primitiveType : PrimitiveType.LINES,
