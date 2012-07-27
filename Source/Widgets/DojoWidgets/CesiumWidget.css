@@ -1,4 +1,4 @@
-@import url('../../Source/DojoWidgets/TimelineWidget.css');
+@import url('TimelineWidget.css');
 
 .cw-node {
     font-family: sans-serif;
@@ -38,14 +38,14 @@
 }
 
 .cw-animationIcon {
-    background-image: url('Images/animationBar.png');
+    background-image: url('../Images/animationBar.png');
     background-repeat: no-repeat;
     width: 24px;
     height: 24px;
 }
 
 .cw-bingIcon {
-    background-image: url('../../Images/Bing_Logo_51x19_White.png');
+    background-image: url('../../../Images/Bing_Logo_51x19_White.png');
     background-repeat: no-repeat;
     background-position:center;
     width: 51px;
@@ -78,7 +78,7 @@
     bottom: 68px;
     left: 5px;
     text-decoration: none;
-    background-image: url(../../Images/Cesium_Logo_overlay.png);
+    background-image: url(../../../Images/Cesium_Logo_overlay.png);
     width: 118px;
     height: 26px;
 }
@@ -122,7 +122,7 @@
 }
 
 .cw-viewIcon {
-    background-image: url('Images/viewControlBar.png');
+    background-image: url('../Images/viewControlBar.png');
     background-repeat: no-repeat;
     width: 24px;
     height: 24px;

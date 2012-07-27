@@ -11,11 +11,11 @@ require({
         name : 'Core',
         location : 'Source/Core'
     }, {
-        name : 'Controls',
-        location : 'Source/Controls'
+        name : 'Widgets',
+        location : 'Source/Widgets'
     }, {
         name : 'DojoWidgets',
-        location : 'Source/DojoWidgets'
+        location : 'Source/Widgets/DojoWidgets'
     }, {
         name : 'DynamicScene',
         location : 'Source/DynamicScene'
