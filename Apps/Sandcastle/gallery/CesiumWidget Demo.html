@@ -42,6 +42,7 @@
 
 
 
+
 <style>
 body {
     background: #000;
@@ -96,10 +97,6 @@ require([
             console.log(error);
         }
     }).placeAt(dom.byId("cesiumContainer"));
-
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
 
     console.log('Cesium started.');
 });

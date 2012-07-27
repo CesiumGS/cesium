@@ -41,6 +41,7 @@
 <body class="claro">
 
 
+
 <style>
 body {
     background: #000;
@@ -131,10 +132,6 @@ require([
             widget.startRenderLoop();
         }
     }).placeAt(dom.byId("cesiumContainer"));
-
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
 });
 
 </script>
