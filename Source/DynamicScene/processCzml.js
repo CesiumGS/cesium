@@ -9,7 +9,7 @@ define([
         CzmlDefaults) {
     "use strict";
 
-    function processCzmlPacket(packet, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions) {
+    function processCzmlPacket(packet, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri) {
         var objectId = packet.id;
         if (typeof objectId === 'undefined') {
             objectId = createGuid();
@@ -17,7 +17,7 @@ define([
 
         var object = dynamicObjectCollection.getOrCreateObject(objectId);
         for ( var i = updaterFunctions.length - 1; i > -1; i--) {
-            if (updaterFunctions[i](object, packet, dynamicObjectCollection) && typeof updatedObjectsHash[objectId] === 'undefined') {
+            if (updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri) && typeof updatedObjectsHash[objectId] === 'undefined') {
                 updatedObjectsHash[objectId] = true;
                 updatedObjects.push(object);
             }
@@ -60,10 +60,10 @@ define([
 
         if (Array.isArray(czml)) {
             for ( var i = 0, len = czml.length; i < len; i++) {
-                processCzmlPacket(czml[i], dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions);
+                processCzmlPacket(czml[i], dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri);
             }
         } else {
-            processCzmlPacket(czml, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions);
+            processCzmlPacket(czml, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri);
         }
 
         if (updatedObjects.length > 0) {

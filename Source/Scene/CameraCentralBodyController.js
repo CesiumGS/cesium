@@ -40,7 +40,7 @@ define([
      * @see CameraSpindleController
      * @see CameraFreeLookController
      */
-    function CameraCentralBodyController(canvas, camera, ellipsoid) {
+    var CameraCentralBodyController = function(canvas, camera, ellipsoid) {
         this._canvas = canvas;
         this._camera = camera;
         this._transform = Matrix4.IDENTITY;
@@ -59,7 +59,7 @@ define([
          * @type {CameraFreeLookController}
          */
         this.freeLookController = new CameraFreeLookController(canvas, camera);
-    }
+    };
 
     /**
      * @private

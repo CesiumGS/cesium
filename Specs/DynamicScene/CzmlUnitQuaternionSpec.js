@@ -22,8 +22,8 @@ defineSuite([
     };
 
     it('unwrapInterval', function() {
-        expect(CzmlUnitQuaternion.unwrapInterval(constantQuaternionInterval)).toEqualArray(constantQuaternionInterval.unitQuaternion);
-        expect(CzmlUnitQuaternion.unwrapInterval(sampledQuaternionInterval)).toEqualArray(sampledQuaternionInterval.unitQuaternion);
+        expect(CzmlUnitQuaternion.unwrapInterval(constantQuaternionInterval)).toEqual(constantQuaternionInterval.unitQuaternion);
+        expect(CzmlUnitQuaternion.unwrapInterval(sampledQuaternionInterval)).toEqual(sampledQuaternionInterval.unitQuaternion);
     });
 
     it('isSampled', function() {
