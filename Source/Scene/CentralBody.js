@@ -1199,6 +1199,10 @@ define([
             return undefined;
         }
 
+        if (sceneState.mode === SceneMode.SCENE2D) {
+            return undefined;
+        }
+
         var frustum = sceneState.camera.frustum;
         var extent = provider.maxExtent;
 
@@ -1229,6 +1233,10 @@ define([
 
         if (tile.zoom < provider.zoomMin) {
             return true;
+        }
+
+        if (typeof this._minTileDistance === 'undefined') {
+            return false;
         }
 
         var boundingVolume = this._getTileBoundingSphere(tile, sceneState);
@@ -1653,6 +1661,10 @@ define([
             };
             this._quadH.setTexture(this._quadV.getFramebuffer().getColorTexture());
             this._quadH.setDestroyTexture(false);
+        }
+
+        if ((mode !== SceneMode.SCENE2D && mode !== SceneMode.MORPHING) && typeof this._minTileDistance === 'undefined') {
+            this._minTileDistance = this._createTileDistanceFunction(sceneState, width, height);
         }
 
         this._quadV.update(context, sceneState);
