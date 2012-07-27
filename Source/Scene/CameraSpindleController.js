@@ -234,6 +234,10 @@ define([
             }
 
             var tangent = this.constrainedAxis.cross(p).normalize();
+            //var bitangent = this.constrainedAxis.cross(tangent);
+            //tangent = bitangent.cross(this.constrainedAxis);
+            var bitangent = this._camera.up.cross(tangent);
+            tangent = bitangent.cross(this._camera.up);
             this.rotate(tangent, angle);
         } else {
             this.rotate(this._camera.right, angle);
