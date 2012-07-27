@@ -17,9 +17,9 @@ define([
      *
      * @exports loadImage
      *
-     * @param {String} url The source of the image.
+     * @param {String|Promise} url The source of the image, or a promise for the URL.
      * @param {Boolean} [crossOrigin=true] Whether to request the image using Cross-Origin
-     * Resource Sharing (CORS).  Data URIs are never requested using CORS.
+     *        Resource Sharing (CORS).  Data URIs are never requested using CORS.
      *
      * @returns {Object} a promise that will resolve to the requested data when loaded.
      *
@@ -46,29 +46,32 @@ define([
 
         crossOrigin = defaultValue(crossOrigin, true);
 
-        // data URIs can't have crossOrigin set.
-        if (dataUriRegex.test(url)) {
-            crossOrigin = false;
-        }
+        return when(url, function(url) {
+            // data URIs can't have crossOrigin set.
+            if (dataUriRegex.test(url)) {
+                crossOrigin = false;
+            }
 
-        var deferred = when.defer();
-        var image = new Image();
+            var image = new Image();
 
-        if (crossOrigin) {
-            image.crossOrigin = '';
-        }
+            var deferred = when.defer();
 
-        image.onload = function(e) {
-            deferred.resolve(image);
-        };
+            image.onload = function(e) {
+                deferred.resolve(image);
+            };
 
-        image.onerror = function(e) {
-            deferred.reject();
-        };
+            image.onerror = function(e) {
+                deferred.reject();
+            };
 
-        image.src = url;
+            if (crossOrigin) {
+                image.crossOrigin = '';
+            }
 
-        return deferred.promise;
+            image.src = url;
+
+            return deferred.promise;
+        });
     };
 
     return loadImage;

@@ -13,8 +13,10 @@ define([
      * A policy for discarding tile images that match a known image containing a
      * "missing" icon.
      *
-     * @param {String} missingImageUrl The URL of the known missing image.
-     * @param {Array} pixelsToCheck An array of Cartesian2 pixel positions to compare against the missing image.
+     * @param {String|Object} missingImageUrl The URL of the known missing image, or a
+     *        promise for the URL.
+     * @param {Array} pixelsToCheck An array of Cartesian2 pixel positions to
+     *        compare against the missing image.
      */
     function DiscardMissingTileImagePolicy(missingImageUrl, pixelsToCheck) {
         this._missingImagePixels = when(loadImage(missingImageUrl), getImagePixels);
@@ -29,7 +31,7 @@ define([
      *
      * @return a promise that will resolve to true if the tile should be discarded.
      */
-    DiscardMissingTileImagePolicy.prototype.shouldDiscardTileImage = function(image) {
+    DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function(image) {
         var pixelsToCheck = this._pixelsToCheck;
         return when.all([this._missingImagePixels, image], function(values) {
             var missingImagePixels = values[0];
@@ -41,7 +43,8 @@ define([
                 var pos = pixelsToCheck[i];
                 var index = pos.x * 4 + pos.y * width;
                 for ( var offset = 0; offset < 4; offset++) {
-                    if (pixels[index + offset] !== missingImagePixels[index + offset]) {
+                    var pixel = index + offset;
+                    if (pixels[pixel] !== missingImagePixels[pixel]) {
                         return false;
                     }
                 }

@@ -40,7 +40,11 @@ define([
      * @constructor
      *
      * @param {String} description.url The URL of the ArcGIS MapServer service.
-     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {String|Object} [description.discardPolicy] If the service returns "missing" tiles,
+     *        these can be filtered out by providing an object which is expected to have a
+     *        shouldDiscardImage function.  By default, no tiles will be filtered.
+     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is
+     *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
      *
@@ -69,6 +73,13 @@ define([
          * @type {String}
          */
         this.url = description.url;
+
+        /**
+         * If the service returns "missing" tiles, these can be filtered out by providing
+         * an object which is expected to have a shouldDiscardImage function.  By default,
+         * no tiles will be filtered.
+         */
+        this.discardPolicy = description.discardPolicy;
 
         this._proxy = description.proxy;
 
@@ -136,7 +147,7 @@ define([
         });
 
         var that = this;
-        var isReady = when(metadata, function(data) {
+        this._isReady = when(metadata, function(data) {
             var tileInfo = data.tileInfo;
 
             that.tileWidth = tileInfo.rows;
@@ -179,16 +190,27 @@ define([
 
             return true;
         });
+    };
 
-        this._discardPolicy = when(isReady, function() {
-            // assume that the tile at (0,0) at the maximum LOD is missing.
-            var missingTileUrl = that.buildImageUrl(0, 0, that.maxLevel);
-            var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
-
-            return when(missingTileUrl, function(missingImageUrl) {
-                return new DiscardMissingTileImagePolicy(missingImageUrl, pixelsToCheck);
-            });
+    /**
+     * Creates a {@link DiscardMissingTileImagePolicy} that compares tiles
+     * against the tile at coordinate (0, 0), at the maximum level of detail, which is
+     * assumed to be missing.  Only a subset of the pixels are compared to improve performance.
+     * These pixels were chosen based on the current visual appearance of the tile on the ESRI servers at
+     * <a href="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/19/0/0">http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/19/0/0</a>.
+     *
+     * Before using this discard policy, check to make sure that the ArcGIS service actually has
+     * missing tiles.  In particular, overlay maps may just provide fully transparent tiles, in
+     * which case no discard policy is necessary.
+     */
+    ArcGisMapServerImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
+        var that = this;
+        var missingTileUrl = when(this._isReady, function() {
+            return that.buildImageUrl(0, 0, that.maxLevel);
         });
+        var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
+
+        return new DiscardMissingTileImagePolicy(missingTileUrl, pixelsToCheck);
     };
 
     /**
@@ -220,13 +242,7 @@ define([
      *         If the image is not suitable for display, the promise can resolve to undefined.
      */
     ArcGisMapServerImageryProvider.prototype.requestImage = function(url) {
-        var image = loadImage(url);
-
-        return when(this._discardPolicy, function(discardPolicy) {
-            return discardPolicy.shouldDiscardTileImage(image);
-        }).then(function(shouldDiscard) {
-            return shouldDiscard ? undefined : image;
-        });
+        return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this.discardPolicy);
     };
 
     /**
