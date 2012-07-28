@@ -12,13 +12,22 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
+    var context;
+
+    beforeEach(function() {
+        context = createContext();
+    });
+
+    afterEach(function() {
+        destroyContext(context);
+    });
+
     it('draws all base material types', function() {
         var materialTypes = ['Color', 'Image', 'DiffuseMap', 'AlphaMap', 'SpecularMap', 'EmissionMap',
             'BumpMap', 'NormalMap','Reflection', 'Refraction', 'Fresnel', 'Brick', 'Wood', 'Asphalt',
             'Cement', 'Grass', 'Stripe', 'Checkerboard','Dot','TieDye', 'Facet', 'Blob'];
         for (var i = 0; i < materialTypes.length; i++) {
             var materialID = materialTypes[i];
-            var context = createContext();
             var material = new Material({
                 context : context,
                 strict : true,
@@ -28,12 +37,10 @@ defineSuite([
             });
             var pixel = renderMaterial(material, context);
             expect(pixel).not.toEqual([0, 0, 0, 0]);
-            destroyContext(context);
         }
     });
 
     it('creates a new material type and builds off of it', function() {
-        var context = createContext();
         var material1 = new Material({
             context : context,
             strict : true,
@@ -64,11 +71,9 @@ defineSuite([
         expect(pixel1).not.toEqual([0, 0, 0, 0]);
         var pixel2 = renderMaterial(material2, context);
         expect(pixel2).not.toEqual([0, 0, 0, 0]);
-        destroyContext(context);
     });
 
     it('accesses material properties after construction', function() {
-        var context = createContext();
         var material = new Material({
             context : context,
             strict : true,
@@ -95,11 +100,9 @@ defineSuite([
 
         var pixel = renderMaterial(material, context);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-        destroyContext(context);
     });
 
     it('creates a material inside a material inside a material', function () {
-        var context = createContext();
         var material = new Material({
             context : context,
             strict : true,
@@ -125,11 +128,9 @@ defineSuite([
         });
         var pixel = renderMaterial(material, context);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-        destroyContext(context);
     });
 
     it('creates a material with an image uniform', function () {
-        var context = createContext();
         var material = new Material({
             context : context,
             strict : true,
@@ -142,11 +143,9 @@ defineSuite([
         });
         var pixel = renderMaterial(material, context);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-        destroyContext(context);
     });
 
     it('create a material with a matrix uniform', function () {
-        var context = createContext();
         var material1 = new Material({
             context : context,
             strict : true,
@@ -194,11 +193,9 @@ defineSuite([
         });
         pixel = renderMaterial(material3, context);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-        destroyContext(context);
     });
 
     it('creates a material using unusual uniform and material names', function () {
-        var context = createContext();
         var material = new Material({
             context : context,
             strict : true,
@@ -222,15 +219,12 @@ defineSuite([
         });
         var pixel = renderMaterial(material, context);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-        destroyContext(context);
     });
 
     it('create a material using fromID', function () {
-        var context = createContext();
         var material = Material.fromID(context, 'Color');
         var pixel = renderMaterial(material, context);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-        destroyContext(context);
     });
 
     it('throws without context for material that uses images', function() {
@@ -246,7 +240,6 @@ defineSuite([
 
     it('throws with source and components in same template', function () {
         expect(function() {
-            var context = createContext();
             return new Material({
                 context : context,
                 strict : true,
@@ -262,7 +255,6 @@ defineSuite([
         }).toThrow();
 
         expect(function() {
-            var context = createContext();
             return new Material({
                 context : context,
                 strict : true,
@@ -278,7 +270,6 @@ defineSuite([
 
     it('throws with duplicate names in materials and uniforms', function () {
         expect(function() {
-            var context = createContext();
             return new Material({
                 context : context,
                 strict : true,
@@ -297,7 +288,6 @@ defineSuite([
 
     it('throws with invalid template type', function() {
         expect(function() {
-            var context = createContext();
             return new Material({
                 context : context,
                 strict : true,
@@ -310,7 +300,6 @@ defineSuite([
 
     it('throws with invalid component type', function () {
         expect(function() {
-            var context = createContext();
             return new Material({
                 context : context,
                 strict : true,
@@ -325,7 +314,6 @@ defineSuite([
 
     it('throws with invalid uniform type', function() {
         expect(function() {
-            var context = createContext();
             return new Material({
                 context : context,
                 strict : true,
@@ -344,7 +332,6 @@ defineSuite([
         }).toThrow();
 
         expect(function() {
-            var context = createContext();
             return new Material({
                 context : context,
                 strict : true,
@@ -359,7 +346,6 @@ defineSuite([
 
     it('throws with unused uniform string', function() {
         expect(function() {
-            var context = createContext();
             return new Material({
                 context : context,
                 strict : true,
@@ -376,7 +362,6 @@ defineSuite([
         }).toThrow();
 
         // If strict is false, unused uniform strings are ignored.
-        var context = createContext();
         var material = new Material({
             context : context,
             strict : false,
@@ -392,12 +377,10 @@ defineSuite([
         });
         var pixel = renderMaterial(material, context);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-        destroyContext(context);
     });
 
     it('throws with unused uniform', function() {
         expect(function() {
-            var context = createContext();
             return new Material({
                 context : context,
                 strict : true,
@@ -414,7 +397,6 @@ defineSuite([
         }).toThrow();
 
         // If strict is false, unused uniforms are ignored.
-        var context = createContext();
         var material = new Material({
             context : context,
             strict : false,
@@ -430,12 +412,10 @@ defineSuite([
         });
         var pixel = renderMaterial(material, context);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-        destroyContext(context);
     });
 
     it('throws with unused material', function() {
         expect(function() {
-            var context = createContext();
             return new Material({
                 context : context,
                 strict : true,
@@ -450,7 +430,6 @@ defineSuite([
         }).toThrow();
 
         // If strict is false, unused materials are ignored.
-        var context = createContext();
         var material = new Material({
             context : context,
             strict : false,
@@ -464,12 +443,10 @@ defineSuite([
         });
         var pixel = renderMaterial(material, context);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-        destroyContext(context);
     });
 
     it('throws with invalid id sent to fromID', function() {
         expect(function() {
-            var context = createContext();
             return Material.fromID(context, "Nothing");
         }).toThrow();
     });
