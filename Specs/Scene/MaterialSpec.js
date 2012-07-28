@@ -14,12 +14,8 @@ defineSuite([
 
     var context;
 
-    beforeEach(function() {
+    it('initializem suite', function() {
         context = createContext();
-    });
-
-    afterEach(function() {
-        destroyContext(context);
     });
 
     function verifyMaterial(id) {
@@ -531,5 +527,9 @@ defineSuite([
         expect(function() {
             return Material.fromID(context, "Nothing");
         }).toThrow();
+    });
+
+    it('destroy suite', function() {
+        destroyContext(context);
     });
 });
