@@ -31,11 +31,7 @@ defineSuite([
     var va;
 
     beforeEach(function() {
-        context = createContext();
-    });
-
-    afterEach(function() {
-        destroyContext(context);
+        context = context || createContext();
     });
 
     it('has a position vertex attribute', function() {
@@ -512,5 +508,9 @@ defineSuite([
         expect(function() {
             s.destroy();
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

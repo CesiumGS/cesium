@@ -29,12 +29,11 @@ defineSuite([
     var whiteImage;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
     });
 
     afterEach(function() {
         atlas = atlas && atlas.destroy();
-        destroyContext(context);
     });
 
     it('initialize suite', function() {
@@ -190,5 +189,9 @@ defineSuite([
             atlasBuilder.addTextureFromFunction('./Data/Images/Blue.png', function(loadedCallback) {
             }, undefined);
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

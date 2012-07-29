@@ -18,15 +18,13 @@ defineSuite([
     var buffer;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
     });
 
     afterEach(function() {
         if (buffer) {
             buffer = buffer.destroy();
         }
-
-        destroyContext(context);
     });
 
     it('creates vertex buffer', function() {
@@ -148,5 +146,9 @@ defineSuite([
         expect(function() {
             b.destroy();
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

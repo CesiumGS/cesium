@@ -35,7 +35,7 @@ defineSuite([
     var blueOverRedImage;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
     });
 
     afterEach(function() {
@@ -50,8 +50,6 @@ defineSuite([
         if (texture) {
             texture = texture.destroy();
         }
-
-        destroyContext(context);
     });
 
     function renderFragment(context) {
@@ -79,7 +77,7 @@ defineSuite([
         return context.readPixels();
     }
 
-    it('initializem suite', function() {
+    it('create images', function() {
         greenImage = new Image();
         greenImage.src = './Data/Images/Green.png';
 
@@ -693,5 +691,9 @@ defineSuite([
         expect(function() {
             t.destroy();
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

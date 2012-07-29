@@ -25,7 +25,7 @@ defineSuite([
     var sp;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
     });
 
     afterEach(function() {
@@ -36,8 +36,6 @@ defineSuite([
         if (sp) {
             sp = sp.destroy();
         }
-
-        destroyContext(context);
     });
 
     it('creates with no arguments', function() {
@@ -626,5 +624,9 @@ defineSuite([
                 }
             });
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

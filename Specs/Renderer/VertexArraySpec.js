@@ -17,11 +17,7 @@ defineSuite([
     var context;
 
     beforeEach(function() {
-        context = createContext();
-    });
-
-    afterEach(function() {
-        destroyContext(context);
+        context = context || createContext();
     });
 
     it('binds', function() {
@@ -41,6 +37,7 @@ defineSuite([
 
         var va = context.createVertexArray(attributes);
         va._bind();
+        va._unBind();
         va = va.destroy();
     });
 
@@ -64,6 +61,7 @@ defineSuite([
         expect(va.getAttribute(0).strideInBytes).toEqual(0);
 
         va._bind();
+        va._unBind();
         va = va.destroy();
     });
 
@@ -87,6 +85,7 @@ defineSuite([
         var va = context.createVertexArray(attributes);
         expect(va.getNumberOfAttributes()).toEqual(2);
         va._bind();
+        va._unBind();
         va = va.destroy();
     });
 
@@ -112,6 +111,7 @@ defineSuite([
         var va = context.createVertexArray(attributes);
         expect(va.getNumberOfAttributes()).toEqual(2);
         va._bind();
+        va._unBind();
         va = va.destroy();
     });
 
@@ -152,6 +152,7 @@ defineSuite([
         expect(va.getAttribute(0).enabled).toEqual(false);
 
         va._bind();
+        va._unBind();
         va = va.destroy();
     });
 
@@ -545,5 +546,9 @@ defineSuite([
         expect(function() {
             va.destroy();
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

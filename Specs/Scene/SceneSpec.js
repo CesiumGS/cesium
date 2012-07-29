@@ -27,11 +27,7 @@ defineSuite([
     var scene;
 
     beforeEach(function() {
-        scene = createScene();
-    });
-
-    afterEach(function() {
-        destroyScene(scene);
+        scene = scene || createScene();
     });
 
     it('get canvas', function() {
@@ -134,8 +130,13 @@ defineSuite([
     });
 
     it('isDestroyed', function() {
-        expect(scene.isDestroyed()).toEqual(false);
+        var s = createScene();
+        expect(s.isDestroyed()).toEqual(false);
+        destroyScene(s);
+        expect(s.isDestroyed()).toEqual(true);
+    });
+
+    it('destroy scene', function() {
         destroyScene(scene);
-        expect(scene.isDestroyed()).toEqual(true);
     });
 });

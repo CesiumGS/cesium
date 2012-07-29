@@ -19,11 +19,7 @@ defineSuite([
     var context;
 
     beforeEach(function() {
-        context = createContext();
-    });
-
-    afterEach(function() {
-        destroyContext(context);
+        context = context || createContext();
     });
 
     var verifyDraw = function(fs) {
@@ -122,5 +118,9 @@ defineSuite([
             '}';
 
         verifyDraw(fs);
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

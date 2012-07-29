@@ -55,7 +55,8 @@ defineSuite([
     }
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
+
         billboards = new BillboardCollection();
 
         var camera = {
@@ -63,6 +64,7 @@ defineSuite([
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         };
+
         us = context.getUniformState();
         us.setView(Matrix4.fromCamera(camera));
         us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
@@ -70,7 +72,6 @@ defineSuite([
 
     afterEach(function() {
         billboards = billboards && billboards.destroy();
-        destroyContext(context);
     });
 
     it('initialize suite', function() {
@@ -1052,5 +1053,9 @@ defineSuite([
         expect(function() {
             billboards.get();
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

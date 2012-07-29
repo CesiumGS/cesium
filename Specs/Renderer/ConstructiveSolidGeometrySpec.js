@@ -17,11 +17,7 @@ defineSuite([
     var context;
 
     beforeEach(function() {
-        context = createContext();
-    });
-
-    afterEach(function() {
-        destroyContext(context);
+        context = context || createContext();
     });
 
     renderFragment = (function(renderFragment) {
@@ -640,5 +636,9 @@ defineSuite([
             '  gl_FragColor = vec4(agi_equalsEpsilon(i.start, 0.0) && agi_equalsEpsilon(i.stop, agi_infinity)); ' +
             '}';
         expect(renderFragment(context, fs)).toEqual([255, 255, 255, 255]);
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

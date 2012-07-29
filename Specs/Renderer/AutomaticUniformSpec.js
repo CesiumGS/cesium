@@ -17,11 +17,7 @@ defineSuite([
     var context;
 
     beforeEach(function() {
-        context = createContext();
-    });
-
-    afterEach(function() {
-        destroyContext(context);
+        context = context || createContext();
     });
 
     function verifyDraw(fs) {
@@ -106,6 +102,7 @@ defineSuite([
             '}';
         verifyDraw(fs);
     });
+
 
     it('has agi_view', function() {
         var us = context.getUniformState();
@@ -364,7 +361,14 @@ defineSuite([
     });
 
     it('has agi_viewerPositionWC', function() {
+        var us = context.getUniformState();
+        us.setView(Matrix4.IDENTITY);
+
         var fs = 'void main() { gl_FragColor = vec4(agi_viewerPositionWC == vec3(0.0)); }';
         verifyDraw(fs);
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

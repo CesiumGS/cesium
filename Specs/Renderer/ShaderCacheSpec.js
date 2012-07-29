@@ -13,11 +13,7 @@ defineSuite([
     var context;
 
     beforeEach(function() {
-        context = createContext();
-    });
-
-    afterEach(function() {
-        destroyContext(context);
+        context = context || createContext();
     });
 
     it('adds and removes', function() {
@@ -126,5 +122,9 @@ defineSuite([
     it('is not destroyed', function() {
         var cache = new ShaderCache(context);
         expect(cache.isDestroyed()).toEqual(false);
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

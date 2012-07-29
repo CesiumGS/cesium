@@ -28,7 +28,7 @@ defineSuite([
     var framebuffer;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
     });
 
     afterEach(function() {
@@ -43,8 +43,6 @@ defineSuite([
         if (framebuffer) {
             framebuffer = framebuffer.destroy();
         }
-
-        destroyContext(context);
     });
 
     it('has a color attachment', function() {
@@ -274,7 +272,9 @@ defineSuite([
         context.clear(context.createClearState({
             framebuffer : framebuffer
         }));
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context.readPixels({
+            framebuffer : framebuffer
+        })).toEqual([0, 0, 0, 0]);
 
         // 2 of 3.  Does not pass depth test
         context.draw({
@@ -339,7 +339,9 @@ defineSuite([
         context.clear(context.createClearState({
             framebuffer : framebuffer
         }));
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context.readPixels({
+            framebuffer : framebuffer
+        })).toEqual([0, 0, 0, 0]);
 
         // 2 of 3.  Passes stencil test
         context.draw({
@@ -471,5 +473,9 @@ defineSuite([
         expect(function() {
             f.destroy();
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

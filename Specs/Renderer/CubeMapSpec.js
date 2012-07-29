@@ -35,7 +35,7 @@ defineSuite([
     var blueOverRedImage;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
     });
 
     afterEach(function() {
@@ -50,11 +50,9 @@ defineSuite([
         if (cubeMap) {
             cubeMap = cubeMap.destroy();
         }
-
-        destroyContext(context);
     });
 
-    it('initializem suite', function() {
+    it('create images', function() {
         greenImage = new Image();
         greenImage.src = './Data/Images/Green.png';
 
@@ -912,5 +910,9 @@ defineSuite([
         expect(function() {
             c.destroy();
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

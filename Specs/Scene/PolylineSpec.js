@@ -27,7 +27,8 @@ defineSuite([
     var us;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
+
         polyline = new Polyline();
 
         var camera = {
@@ -35,6 +36,7 @@ defineSuite([
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         };
+
         us = context.getUniformState();
         us.setView(Matrix4.fromCamera(camera));
         us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
@@ -42,8 +44,7 @@ defineSuite([
 
     afterEach(function() {
         polyline = polyline && !polyline.isDestroyed() && polyline.destroy();
-        us = null;
-        destroyContext(context);
+        us = undefined;
     });
 
     it('gets default show', function() {
@@ -165,5 +166,9 @@ defineSuite([
         expect(polyline.isDestroyed()).toEqual(false);
         polyline.destroy();
         expect(polyline.isDestroyed()).toEqual(true);
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

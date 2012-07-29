@@ -15,11 +15,7 @@ defineSuite([
     var context;
 
     beforeEach(function() {
-        context = createContext();
-    });
-
-    afterEach(function() {
-        context = !context.isDestroyed() && destroyContext(context);
+        context = context || createContext();
     });
 
     it('getCanvas', function() {
@@ -46,6 +42,14 @@ defineSuite([
         expect(v.y).toEqual(2);
         expect(v.width).toEqual(3);
         expect(v.height).toEqual(4);
+
+        // Restore for later specs in this suite.
+        context.setViewport({
+            x : 0,
+            y : 0,
+            width : canvas.clientWidth,
+            height : canvas.clientHeight
+        });
     });
 
     it('getVersion', function() {
@@ -285,8 +289,13 @@ defineSuite([
     });
 
     it('isDestroyed', function() {
-        expect(context.isDestroyed()).toEqual(false);
-        context.destroy();
-        expect(context.isDestroyed()).toEqual(true);
+        var c = createContext();
+        expect(c.isDestroyed()).toEqual(false);
+        c.destroy();
+        expect(c.isDestroyed()).toEqual(true);
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

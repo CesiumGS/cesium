@@ -17,11 +17,7 @@ defineSuite([
     var context;
 
     beforeEach(function() {
-        context = createContext();
-    });
-
-    afterEach(function() {
-        destroyContext(context);
+        context = context || createContext();
     });
 
     it('creates a vertex array with static floats', function() {
@@ -272,5 +268,9 @@ defineSuite([
                 componentsPerAttribute : 1
             }]);
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

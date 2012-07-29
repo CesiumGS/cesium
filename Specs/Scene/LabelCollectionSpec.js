@@ -37,7 +37,8 @@ defineSuite([
     var us;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
+
         labels = new LabelCollection();
 
         var camera = {
@@ -45,6 +46,7 @@ defineSuite([
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         };
+
         us = context.getUniformState();
         us.setView(Matrix4.fromCamera(camera));
         us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
@@ -52,9 +54,7 @@ defineSuite([
 
     afterEach(function() {
         labels = labels && labels.destroy();
-        us = null;
-
-        destroyContext(context);
+        us = undefined;
     });
 
     it('default constructs a label', function() {
@@ -1154,5 +1154,9 @@ defineSuite([
         expect(dimension.width).toBeLessThan(width);
         expect(dimension.height).toBeLessThan(height);
         expect(dimension.descent).toEqual(descent);
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

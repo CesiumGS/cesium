@@ -15,11 +15,7 @@ defineSuite([
     var context;
 
     beforeEach(function() {
-        context = createContext();
-    });
-
-    afterEach(function() {
-        destroyContext(context);
+        context = context || createContext();
     });
 
     renderFragment = (function(renderFragment) {
@@ -400,5 +396,9 @@ defineSuite([
             '    && (intersection.intervals[0].start == 2.0) && (intersection.intervals[0].stop == 4.0)); ' +
             '}';
         expect(renderFragment(context, fs)).toEqual([255, 255, 255, 255]);
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

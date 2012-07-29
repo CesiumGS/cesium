@@ -40,7 +40,8 @@ defineSuite([
     var camera;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
+
         primitives = new CompositePrimitive();
 
         camera = new Camera(context.getCanvas());
@@ -60,10 +61,8 @@ defineSuite([
 
     afterEach(function() {
         primitives = primitives && primitives.destroy();
-        us = null;
+        us = undefined;
         camera = camera && camera.destroy();
-
-        destroyContext(context);
     });
 
     function createLabels() {
@@ -240,18 +239,6 @@ defineSuite([
         primitives.setCentralBody(cb);
 
         expect(primitives.getCentralBody()).toBe(cb);
-    });
-
-    it('renders a central body', function() {
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
-        primitives.setCentralBody(cb);
-
-        primitives.update(context, sceneState);
-        primitives.render(context, us);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders a primitive added with add()', function() {
@@ -478,6 +465,18 @@ defineSuite([
         expect(pickedObject).toEqual(p1);
     });
 
+    it('renders a central body', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
+        primitives.setCentralBody(cb);
+
+        primitives.update(context, sceneState);
+        primitives.render(context, us);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+    });
+
     it('is not destroyed when first constructed', function() {
         expect(primitives.isDestroyed()).toEqual(false);
     });
@@ -635,5 +634,9 @@ defineSuite([
         expect(function() {
             primitives.sendToBack(p);
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

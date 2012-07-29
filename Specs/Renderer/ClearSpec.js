@@ -11,19 +11,18 @@ defineSuite([
     var context;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
     });
 
-    afterEach(function() {
-        destroyContext(context);
-    });
-
-    it('clear0', function() {
+    it('default clear', function() {
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
-    it('clear1', function() {
+    it('clears to white', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -35,7 +34,10 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
-    it('clear2', function() {
+    it('clears with a color mask', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -53,7 +55,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 0, 255, 0]);
     });
 
-    it('clear3', function() {
+    it('clears with scissor test', function() {
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -130,6 +132,9 @@ defineSuite([
     });
 
     it('clears with dithering', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -167,5 +172,9 @@ defineSuite([
                 height : -1
             })).toEqual([0, 0, 0, 0]);
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

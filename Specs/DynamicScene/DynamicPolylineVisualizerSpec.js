@@ -32,12 +32,11 @@ defineSuite([
     var visualizer;
 
     beforeEach(function() {
-        scene = createScene();
+        scene = scene || createScene();
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -217,5 +216,9 @@ defineSuite([
         expect(scene.getPrimitives().getLength()).toEqual(1);
         primitive = scene.getPrimitives().get(0);
         expect(primitive.dynamicObject).toEqual(testObject2);
+    });
+
+    it('destroy scene', function() {
+        destroyScene(scene);
     });
 });

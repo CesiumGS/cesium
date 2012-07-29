@@ -33,7 +33,7 @@ defineSuite([
     var va;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
     });
 
     afterEach(function() {
@@ -44,8 +44,6 @@ defineSuite([
         if (va) {
             va = va.destroy();
         }
-
-        destroyContext(context);
     });
 
     it('draws a white point', function() {
@@ -923,5 +921,9 @@ defineSuite([
                 count : 1
             });
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });

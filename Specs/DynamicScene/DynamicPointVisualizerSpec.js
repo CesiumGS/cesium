@@ -32,12 +32,11 @@ defineSuite([
     var visualizer;
 
     beforeEach(function() {
-        scene = createScene();
+        scene = scene || createScene();
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -225,5 +224,9 @@ defineSuite([
         expect(billboardCollection.getLength()).toEqual(1);
         bb = billboardCollection.get(0);
         expect(bb.dynamicObject).toEqual(testObject2);
+    });
+
+    it('destroy scene', function() {
+        destroyScene(scene);
     });
 });

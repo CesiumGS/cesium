@@ -14,15 +14,13 @@ defineSuite([
     var renderbuffer;
 
     beforeEach(function() {
-        context = createContext();
+        context = context || createContext();
     });
 
     afterEach(function() {
         if (renderbuffer) {
             renderbuffer = renderbuffer.destroy();
         }
-
-        destroyContext(context);
     });
 
     it('creates', function() {
@@ -99,5 +97,9 @@ defineSuite([
         expect(function() {
             r.destroy();
         }).toThrow();
+    });
+
+    it('destroy context', function() {
+        destroyContext(context);
     });
 });
