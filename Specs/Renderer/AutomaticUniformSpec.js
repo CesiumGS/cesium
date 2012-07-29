@@ -103,7 +103,6 @@ defineSuite([
         verifyDraw(fs);
     });
 
-
     it('has agi_view', function() {
         var us = context.getUniformState();
         us.setView(new Matrix4( 1.0,  2.0,  3.0,  4.0,
