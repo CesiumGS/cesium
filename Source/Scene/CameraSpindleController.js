@@ -232,8 +232,14 @@ define([
             if (Math.abs(angle) > Math.abs(angleToAxis)) {
                 angle = angleToAxis;
             }
+
+            var tangent = this.constrainedAxis.cross(p).normalize();
+            var bitangent = this._camera.up.cross(tangent);
+            tangent = bitangent.cross(this._camera.up);
+            this.rotate(tangent, angle);
+        } else {
+            this.rotate(this._camera.right, angle);
         }
-        this.rotate(this._camera.right, angle);
     };
 
     /**
@@ -339,8 +345,7 @@ define([
 
     CameraSpindleController.prototype._spin = function(movement) {
         if (this.mode === CameraSpindleControllerMode.AUTO) {
-            var point = this._camera.pickEllipsoid(movement.startPosition, this._ellipsoid);
-            if (typeof point !== 'undefined') {
+            if (typeof this._camera.pickEllipsoid(movement.startPosition, this._ellipsoid) !== 'undefined') {
                 this._pan(movement);
             } else {
                 this._rotate(movement);
