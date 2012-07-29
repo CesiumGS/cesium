@@ -4,6 +4,7 @@ define([
         '../Core/FAR',
         '../Core/Math',
         '../Core/Quaternion',
+        '../Core/Matrix3',
         '../Core/Ellipsoid',
         '../Core/Cartesian3',
         './CameraEventHandler',
@@ -15,6 +16,7 @@ define([
         FAR,
         CesiumMath,
         Quaternion,
+        Matrix3,
         Ellipsoid,
         Cartesian3,
         CameraEventHandler,
@@ -179,7 +181,7 @@ define([
     CameraSpindleController.prototype.rotate = function(axis, angle) {
         var a = Cartesian3.clone(axis);
         var turnAngle = (typeof angle !== 'undefined') ? angle : this._moveRate;
-        var rotation = Quaternion.fromAxisAngle(a, turnAngle).toRotationMatrix();
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(a, turnAngle));
 
         var camera = this._camera;
         camera.position = rotation.multiplyByVector(camera.position);
@@ -230,8 +232,14 @@ define([
             if (Math.abs(angle) > Math.abs(angleToAxis)) {
                 angle = angleToAxis;
             }
+
+            var tangent = this.constrainedAxis.cross(p).normalize();
+            var bitangent = this._camera.up.cross(tangent);
+            tangent = bitangent.cross(this._camera.up);
+            this.rotate(tangent, angle);
+        } else {
+            this.rotate(this._camera.right, angle);
         }
-        this.rotate(this._camera.right, angle);
     };
 
     /**
@@ -337,8 +345,7 @@ define([
 
     CameraSpindleController.prototype._spin = function(movement) {
         if (this.mode === CameraSpindleControllerMode.AUTO) {
-            var point = this._camera.pickEllipsoid(movement.startPosition, this._ellipsoid);
-            if (typeof point !== 'undefined') {
+            if (typeof this._camera.pickEllipsoid(movement.startPosition, this._ellipsoid) !== 'undefined') {
                 this._pan(movement);
             } else {
                 this._rotate(movement);

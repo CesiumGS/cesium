@@ -53,8 +53,11 @@ define([
     /*global console*/
 
     var visualizers;
+    var currentTime = new JulianDate();
     var clock = new Clock({
-        currentTime : new JulianDate(),
+        startTime : currentTime.addDays(-0.5),
+        stopTime : currentTime.addDays(0.5),
+        currentTime : currentTime,
         clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
         multiplier : 1
     });

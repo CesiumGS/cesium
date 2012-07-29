@@ -10,6 +10,7 @@ define([
 
     /**
      * A 2x2 matrix, indexable as a column-major order array.
+     * Constructor parameters are in row-major order for code readability.
      * @alias Matrix2
      * @constructor
      *
@@ -25,8 +26,8 @@ define([
      */
     var Matrix2 = function(column0Row0, column1Row0, column0Row1, column1Row1) {
         this[0] = typeof column0Row0 === 'undefined' ? 0.0 : column0Row0;
-        this[1] = typeof column1Row0 === 'undefined' ? 0.0 : column1Row0;
-        this[2] = typeof column0Row1 === 'undefined' ? 0.0 : column0Row1;
+        this[1] = typeof column0Row1 === 'undefined' ? 0.0 : column0Row1;
+        this[2] = typeof column1Row0 === 'undefined' ? 0.0 : column1Row0;
         this[3] = typeof column1Row1 === 'undefined' ? 0.0 : column1Row1;
     };
 
@@ -45,8 +46,8 @@ define([
             throw new DeveloperError('values is required');
         }
         if (typeof result === 'undefined') {
-            return new Matrix2(values[0], values[1],
-                               values[2], values[3]);
+            return new Matrix2(values[0], values[2],
+                               values[1], values[3]);
         }
         result[0] = values[0];
         result[1] = values[1];
@@ -84,8 +85,8 @@ define([
             throw new DeveloperError('values is required.');
         }
         if (typeof result === 'undefined') {
-            return new Matrix2(values[0], values[2],
-                               values[1], values[3]);
+            return new Matrix2(values[0], values[1],
+                               values[2], values[3]);
         }
         result[0] = values[0];
         result[1] = values[2];
@@ -142,9 +143,9 @@ define([
             throw new DeveloperError('index is required and must be 0 or 1.');
         }
 
-        var startIndex = index;
+        var startIndex = index * 2;
         var x = matrix[startIndex];
-        var y = matrix[startIndex + 2];
+        var y = matrix[startIndex + 1];
 
         if (typeof result === 'undefined') {
             return new Cartesian2(x, y);
@@ -181,9 +182,9 @@ define([
             throw new DeveloperError('index is required and must be 0 or 1.');
         }
         result = Matrix2.clone(matrix, result);
-        var startIndex = index;
+        var startIndex = index * 2;
         result[startIndex] = cartesian.x;
-        result[startIndex + 2] = cartesian.y;
+        result[startIndex + 1] = cartesian.y;
         return result;
     };
 
@@ -210,9 +211,8 @@ define([
             throw new DeveloperError('index is required and must be 0 or 1.');
         }
 
-        var startIndex = index * 2;
-        var x = matrix[startIndex];
-        var y = matrix[startIndex + 1];
+        var x = matrix[index];
+        var y = matrix[index + 2];
 
         if (typeof result === 'undefined') {
             return new Cartesian2(x, y);
@@ -249,10 +249,9 @@ define([
             throw new DeveloperError('index is required and must be 0 or 1.');
         }
 
-        var startIndex = index * 2;
         result = Matrix2.clone(matrix, result);
-        result[startIndex] = cartesian.x;
-        result[startIndex + 1] = cartesian.y;
+        result[index] = cartesian.x;
+        result[index + 2] = cartesian.y;
         return result;
     };
 
@@ -276,18 +275,18 @@ define([
             throw new DeveloperError('right is required');
         }
 
-        var column0Row0 = left[0] * right[0] + left[1] * right[2];
-        var column1Row0 = left[0] * right[1] + left[1] * right[3];
-        var column0Row1 = left[2] * right[0] + left[3] * right[2];
-        var column1Row1 = left[2] * right[1] + left[3] * right[3];
+        var column0Row0 = left[0] * right[0] + left[2] * right[1];
+        var column1Row0 = left[0] * right[2] + left[2] * right[3];
+        var column0Row1 = left[1] * right[0] + left[3] * right[1];
+        var column1Row1 = left[1] * right[2] + left[3] * right[3];
 
         if (typeof result === 'undefined') {
             return new Matrix2(column0Row0, column1Row0,
                                column0Row1, column1Row1);
         }
         result[0] = column0Row0;
-        result[1] = column1Row0;
-        result[2] = column0Row1;
+        result[1] = column0Row1;
+        result[2] = column1Row0;
         result[3] = column1Row1;
         return result;
     };
@@ -312,8 +311,8 @@ define([
             throw new DeveloperError('cartesian is required');
         }
 
-        var x = matrix[0] * cartesian.x + matrix[1] * cartesian.y;
-        var y = matrix[2] * cartesian.x + matrix[3] * cartesian.y;
+        var x = matrix[0] * cartesian.x + matrix[2] * cartesian.y;
+        var y = matrix[1] * cartesian.x + matrix[3] * cartesian.y;
 
         if (typeof result === 'undefined') {
             return new Cartesian2(x, y);
@@ -344,8 +343,8 @@ define([
         }
 
         if (typeof result === 'undefined') {
-            return new Matrix2(matrix[0] * scalar, matrix[1] * scalar,
-                               matrix[2] * scalar, matrix[3] * scalar);
+            return new Matrix2(matrix[0] * scalar, matrix[2] * scalar,
+                               matrix[1] * scalar, matrix[3] * scalar);
         }
         result[0] = matrix[0] * scalar;
         result[1] = matrix[1] * scalar;
@@ -370,8 +369,8 @@ define([
         }
 
         if (typeof result === 'undefined') {
-            return new Matrix2(-matrix[0], -matrix[1],
-                               -matrix[2], -matrix[3]);
+            return new Matrix2(-matrix[0], -matrix[2],
+                               -matrix[1], -matrix[3]);
         }
         result[0] = -matrix[0];
         result[1] = -matrix[1];
@@ -396,16 +395,17 @@ define([
         }
 
         var column0Row0 = matrix[0];
-        var column1Row0 = matrix[2];
-        var column0Row1 = matrix[1];
+        var column0Row1 = matrix[2];
+        var column1Row0 = matrix[1];
         var column1Row1 = matrix[3];
+
         if (typeof result === 'undefined') {
             return new Matrix2(column0Row0, column1Row0,
                                column0Row1, column1Row1);
         }
         result[0] = column0Row0;
-        result[1] = column1Row0;
-        result[2] = column0Row1;
+        result[1] = column0Row1;
+        result[2] = column1Row0;
         result[3] = column1Row1;
         return result;
     };
@@ -457,23 +457,6 @@ define([
     };
 
     /**
-     * Creates a string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1)'.
-     * @memberof Matrix2
-     *
-     * @param {Matrix2} matrix The matrix to stringify.
-     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1)'.
-     *
-     * @exception {DeveloperError} matrix is required.
-     */
-    Matrix2.toString = function(matrix) {
-        if (typeof matrix === 'undefined') {
-            throw new DeveloperError('matrix is required');
-        }
-        return '(' + matrix[0] + ', ' + matrix[1] + ')\n' +
-               '(' + matrix[2] + ', ' + matrix[3] + ')';
-    };
-
-    /**
      * An immutable Matrix2 instance initialized to the identity matrix.
      * @memberof Matrix2
      */
@@ -490,24 +473,24 @@ define([
     Matrix2.COLUMN0ROW0 = 0;
 
     /**
-     * The index into Matrix2 for column 1, row 0.
-     * @memberof Matrix2
-     *
-     * @example
-     * var matrix = new Matrix2();
-     * matrix[Matrix2.COLUMN0ROW0] = 5.0; //set column 1, row 0 to 5.0
-     */
-    Matrix2.COLUMN1ROW0 = 1;
-
-    /**
      * The index into Matrix2 for column 0, row 1.
      * @memberof Matrix2
      *
      * @example
      * var matrix = new Matrix2();
-     * matrix[Matrix2.COLUMN0ROW0] = 5.0; //set column 0, row 1 to 5.0
+     * matrix[Matrix2.COLUMN0ROW1] = 5.0; //set column 0, row 1 to 5.0
      */
-    Matrix2.COLUMN0ROW1 = 2;
+    Matrix2.COLUMN0ROW1 = 1;
+
+    /**
+     * The index into Matrix2 for column 1, row 0.
+     * @memberof Matrix2
+     *
+     * @example
+     * var matrix = new Matrix2();
+     * matrix[Matrix2.COLUMN1ROW0] = 5.0; //set column 1, row 0 to 5.0
+     */
+    Matrix2.COLUMN1ROW0 = 2;
 
     /**
      * The index into Matrix2 for column 1, row 1.
@@ -515,7 +498,7 @@ define([
      *
      * @example
      * var matrix = new Matrix2();
-     * matrix[Matrix2.COLUMN0ROW0] = 5.0; //set column 1, row 1 to 5.0
+     * matrix[Matrix2.COLUMN1ROW1] = 5.0; //set column 1, row 1 to 5.0
      */
     Matrix2.COLUMN1ROW1 = 3;
 
@@ -701,13 +684,14 @@ define([
 
     /**
      * Creates a string representing this Matrix with each row being
-     * on a separate line and in the format '(column1, column2)'.
+     * on a separate line and in the format '(column0, column1)'.
      * @memberof Matrix2
      *
-     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column1, column2)'.
+     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1)'.
      */
     Matrix2.prototype.toString = function() {
-        return Matrix2.toString(this);
+        return '(' + this[0] + ', ' + this[2] + ')\n' +
+               '(' + this[1] + ', ' + this[3] + ')';
     };
 
     return Matrix2;

@@ -91,7 +91,7 @@ defineSuite([
     it('clears a color attachment', function() {
         // 1 of 4.  Clear default color buffer to black.
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
         var colorTexture = context.createTexture2D({
@@ -113,7 +113,7 @@ defineSuite([
         }));
 
         // 3 of 4.  Verify default color buffer is still black.
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -135,7 +135,7 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va
         });
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
     it('clears a cube map face color attachment', function() {
@@ -146,7 +146,7 @@ defineSuite([
 
         // 1 of 4.  Clear default color buffer to black.
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Clear framebuffer color attachment to green.
         framebuffer = context.createFramebuffer({
@@ -166,7 +166,7 @@ defineSuite([
         framebuffer.setColorTexture(null);
 
         // 3 of 4.  Verify default color buffer is still black.
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -188,7 +188,7 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va
         });
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         cubeMap = cubeMap.destroy();
     });
@@ -204,7 +204,7 @@ defineSuite([
 
         // 1 of 4.  Clear default color buffer to black.
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Render green point into color attachment.
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -226,7 +226,7 @@ defineSuite([
         });
 
         // 3 of 4.  Verify default color buffer is still black.
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 4 of 4.  Render green to default color buffer by reading from previous color attachment
         var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -241,7 +241,7 @@ defineSuite([
             shaderProgram : sp2,
             vertexArray : va
         });
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         sp2 = sp2.destroy();
     });
@@ -274,7 +274,7 @@ defineSuite([
         context.clear(context.createClearState({
             framebuffer : framebuffer
         }));
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 3.  Does not pass depth test
         context.draw({
@@ -291,7 +291,7 @@ defineSuite([
         });
         expect(context.readPixels({
             framebuffer : framebuffer
-        })).toEqualArray([0, 0, 0, 0]);
+        })).toEqual([0, 0, 0, 0]);
 
         // 3 of 3.  Passes depth test
         context.draw({
@@ -308,7 +308,7 @@ defineSuite([
         });
         expect(context.readPixels({
             framebuffer : framebuffer
-        })).toEqualArray([255, 255, 255, 255]);
+        })).toEqual([255, 255, 255, 255]);
     });
 
     it('draws with a stencil attachment', function() {
@@ -339,7 +339,7 @@ defineSuite([
         context.clear(context.createClearState({
             framebuffer : framebuffer
         }));
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 3.  Passes stencil test
         context.draw({
@@ -369,7 +369,7 @@ defineSuite([
         });
         expect(context.readPixels({
             framebuffer : framebuffer
-        })).toEqualArray([255, 255, 255, 255]);
+        })).toEqual([255, 255, 255, 255]);
 
         // 3 of 3.  Does not pass stencil test
         context.draw({
@@ -393,7 +393,7 @@ defineSuite([
         });
         expect(context.readPixels({
             framebuffer : framebuffer
-        })).toEqualArray([255, 255, 255, 255]);
+        })).toEqual([255, 255, 255, 255]);
     });
 
     it('destroys', function() {

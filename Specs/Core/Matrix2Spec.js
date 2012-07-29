@@ -26,28 +26,28 @@ defineSuite([
 
     it('fromRowMajorArray works without a result parameter', function() {
         var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
-        var matrix = Matrix2.fromRowMajorArray([1.0, 3.0, 2.0, 4.0]);
+        var matrix = Matrix2.fromRowMajorArray([1.0, 2.0, 3.0, 4.0]);
         expect(matrix).toEqual(expected);
     });
 
     it('fromRowMajorArray works with a result parameter', function() {
         var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var result = new Matrix2();
-        var matrix = Matrix2.fromRowMajorArray([1.0, 3.0, 2.0, 4.0], result);
+        var matrix = Matrix2.fromRowMajorArray([1.0, 2.0, 3.0, 4.0], result);
         expect(matrix).toBe(result);
         expect(matrix).toEqual(expected);
     });
 
     it('fromColumnMajorArray works without a result parameter', function() {
         var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
-        var matrix = Matrix2.fromColumnMajorArray([1.0, 2.0, 3.0, 4.0]);
+        var matrix = Matrix2.fromColumnMajorArray([1.0, 3.0, 2.0, 4.0]);
         expect(matrix).toEqual(expected);
     });
 
     it('fromColumnMajorArray works with a result parameter', function() {
         var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var result = new Matrix2();
-        var matrix = Matrix2.fromColumnMajorArray([1.0, 2.0, 3.0, 4.0], result);
+        var matrix = Matrix2.fromColumnMajorArray([1.0, 3.0, 2.0, 4.0], result);
         expect(matrix).toBe(result);
         expect(matrix).toEqual(expected);
     });
@@ -73,7 +73,7 @@ defineSuite([
         var expected = [1.0, 2.0, 3.0, 4.0];
         var returnedResult = Matrix2.fromColumnMajorArray(expected).toArray();
         expect(returnedResult).toNotBe(expected);
-        expect(returnedResult).toEqualArray(expected);
+        expect(returnedResult).toEqual(expected);
     });
 
     it('toArray works with a result parameter', function() {
@@ -82,7 +82,7 @@ defineSuite([
         var returnedResult = Matrix2.fromColumnMajorArray(expected).toArray(result);
         expect(returnedResult).toBe(result);
         expect(returnedResult).toNotBe(expected);
-        expect(returnedResult).toEqualArray(expected);
+        expect(returnedResult).toEqual(expected);
     });
 
     it('getColumn works without a result parameter', function() {
@@ -521,12 +521,6 @@ defineSuite([
     it('static equalsEpsilon throws with non-number parameter', function() {
         expect(function() {
             Matrix2.equalsEpsilon(new Matrix2(), new Matrix2(), {});
-        }).toThrow();
-    });
-
-    it('static toString throws with matrix parameter', function() {
-        expect(function() {
-            Matrix2.toString(undefined);
         }).toThrow();
     });
 });

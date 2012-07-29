@@ -40,12 +40,29 @@ defineSuite([
         var sizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
         var vertices = new ArrayBuffer(sizeInBytes);
         var positions = new Float32Array(vertices);
-        positions[0] = 1;
-        positions[1] = 2;
-        positions[2] = 3;
+        positions[0] = 1.0;
+        positions[1] = 2.0;
+        positions[2] = 3.0;
 
         buffer = context.createVertexBuffer(sizeInBytes, BufferUsage.STATIC_DRAW);
         buffer.copyFromArrayView(vertices);
+    });
+
+    it('can create a vertex buffer from a typed array', function() {
+        var typedArray = new Float32Array(3 * Float32Array.BYTES_PER_ELEMENT);
+        typedArray[0] = 1.0;
+        typedArray[1] = 2.0;
+        typedArray[2] = 3.0;
+
+        buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
+        expect(buffer.getSizeInBytes()).toEqual(typedArray.byteLength);
+        expect(buffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
+    });
+
+    it('only allows typed array or size when creating a vertex buffer', function() {
+        expect(function() {
+            buffer = context.createVertexBuffer({}, BufferUsage.STATIC_DRAW);
+        }).toThrow();
     });
 
     it('creates index buffer', function() {
@@ -69,6 +86,24 @@ defineSuite([
 
         buffer = context.createIndexBuffer(sizeInBytes, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
         buffer.copyFromArrayView(elements);
+    });
+
+    it('can create an index buffer from a typed array', function() {
+        var typedArray = new Uint16Array(3 * Uint16Array.BYTES_PER_ELEMENT);
+        typedArray[0] = 1;
+        typedArray[1] = 2;
+        typedArray[2] = 3;
+
+        buffer = context.createIndexBuffer(typedArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        expect(buffer.getSizeInBytes()).toEqual(typedArray.byteLength);
+        expect(buffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
+        expect(buffer.getIndexDatatype()).toEqual(IndexDatatype.UNSIGNED_SHORT);
+    });
+
+    it('only allows typed array or size when creating a vertex buffer', function() {
+        expect(function() {
+            buffer = context.createIndexBuffer({}, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        }).toThrow();
     });
 
     it('destroys', function() {

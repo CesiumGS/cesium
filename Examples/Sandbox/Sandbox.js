@@ -32,10 +32,8 @@ var Sandbox = Sandbox || {};
 
         primitives.setCentralBody(cb);
 
-        scene.getCamera().getControllers().addSpindle();
-        scene.getCamera().getControllers().get(0).constrainedAxis = Cesium.Cartesian3.UNIT_Z;
-
-        scene.getCamera().getControllers().addFreeLook();
+        scene.getCamera().getControllers().addCentralBody();
+        scene.getCamera().getControllers().get(0).spindleController.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
 
         scene.getCamera().frustum.near = 100.0;
 

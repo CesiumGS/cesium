@@ -44,14 +44,19 @@ define(['./DeveloperError'
      * @param {Spherical} spherical The Spherical to be converted to Cartesian3.
      * @param {Cartesian3} [cartesian3] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new instance if none was provided.
+     *
+     * @exception {DeveloperError} spherical is required.
      */
     Cartesian3.fromSpherical = function(spherical, result) {
+        if (typeof spherical === 'undefined') {
+            throw new DeveloperError('spherical is required');
+        }
         if (typeof result === 'undefined') {
             result = new Cartesian3();
         }
         var clock = spherical.clock;
         var cone = spherical.cone;
-        var magnitude = spherical.magnitude;
+        var magnitude = typeof spherical.magnitude === 'undefined' ? 1.0 : spherical.magnitude;
         var radial = magnitude * Math.sin(cone);
         result.x = radial * Math.cos(clock);
         result.y = radial * Math.sin(clock);
@@ -488,22 +493,6 @@ define(['./DeveloperError'
     };
 
     /**
-     * Creates a string representing the provided Cartesian in the format '(x, y)'.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} cartesian The Cartesian to stringify.
-     * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Cartesian3.toString = function(cartesian) {
-        if (typeof cartesian === 'undefined') {
-            throw new DeveloperError('cartesian is required');
-        }
-        return '(' + cartesian.x + ', ' + cartesian.y + ', ' + cartesian.z + ')';
-    };
-
-    /**
      * Computes the cross (outer) product of two Cartesians.
      * @memberof Cartesian3
      *
@@ -799,7 +788,7 @@ define(['./DeveloperError'
      * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
      */
     Cartesian3.prototype.toString = function() {
-        return Cartesian3.toString(this);
+        return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
     };
 
     /**

@@ -187,8 +187,8 @@ defineSuite([
         DynamicProperty._mergeNewSamples(epoch, times, values, newData, 1);
         DynamicProperty._mergeNewSamples(epoch, times, values, newData2, 1);
 
-        expect(times).toEqualArray(expectedTimes, JulianDate.compare);
-        expect(values).toEqualArray(expectedValues);
+        expect(times).toEqual(expectedTimes, JulianDate.compare);
+        expect(values).toEqual(expectedValues);
     });
 
     it('_mergeNewSamples works for ISO8601 dates', function() {
@@ -205,8 +205,8 @@ defineSuite([
         DynamicProperty._mergeNewSamples(undefined, times, values, newData, 1);
         DynamicProperty._mergeNewSamples(undefined, times, values, newData2, 1);
 
-        expect(times).toEqualArray(expectedTimes, JulianDate.compare);
-        expect(values).toEqualArray(expectedValues);
+        expect(times).toEqual(expectedTimes, JulianDate.compare);
+        expect(values).toEqual(expectedValues);
     });
 
     it('_mergeNewSamples works for elements of size 2.', function() {
@@ -223,8 +223,8 @@ defineSuite([
         DynamicProperty._mergeNewSamples(epoch, times, values, newData, 2);
         DynamicProperty._mergeNewSamples(epoch, times, values, newData2, 2);
 
-        expect(times).toEqualArray(expectedTimes, JulianDate.compare);
-        expect(values).toEqualArray(expectedValues);
+        expect(times).toEqual(expectedTimes, JulianDate.compare);
+        expect(values).toEqual(expectedValues);
     });
 
     it('_mergeNewSamples works for unsorted intersecting data.', function() {
@@ -241,8 +241,8 @@ defineSuite([
         DynamicProperty._mergeNewSamples(epoch, times, values, newData, 1);
         DynamicProperty._mergeNewSamples(epoch, times, values, newData2, 1);
 
-        expect(times).toEqualArray(expectedTimes, JulianDate.compare);
-        expect(values).toEqualArray(expectedValues);
+        expect(times).toEqual(expectedTimes, JulianDate.compare);
+        expect(values).toEqual(expectedValues);
     });
 
     it('_mergeNewSamples works for data with repeated values.', function() {
@@ -255,7 +255,7 @@ defineSuite([
         var expectedValues = ['d', 'c', 'e', 'f'];
         DynamicProperty._mergeNewSamples(epoch, times, values, newData, 1);
 
-        expect(times).toEqualArray(expectedTimes, JulianDate.compare);
-        expect(values).toEqualArray(expectedValues);
+        expect(times).toEqual(expectedTimes, JulianDate.compare);
+        expect(values).toEqual(expectedValues);
     });
 });

@@ -80,10 +80,11 @@ define([
         }
     }
 
+    var maxHeight = 20.0;
+
     function handleZoom(object, movement, distanceMeasure) {
         // distanceMeasure should be the height above the ellipsoid.
-        // The zoomRate slows as it approaches the surface and stops 20m above it.
-        var maxHeight = 20.0;
+        // The zoomRate slows as it approaches the surface and stops maxHeight above it.
         var zoomRate = object._zoomFactor * (distanceMeasure - maxHeight);
 
         if (zoomRate > object._maximumZoomRate) {
@@ -102,6 +103,10 @@ define([
             return;
         }
 
+        if (distanceMeasure - dist < maxHeight) {
+            dist = distanceMeasure - maxHeight - 1.0;
+        }
+
         if (dist > 0.0) {
             object.zoomIn(dist);
         } else {
@@ -115,6 +120,7 @@ define([
 
     return {
         move : move,
+        maxHeight : maxHeight,
         handleZoom : handleZoom,
         maintainInertia : maintainInertia,
         zoom : zoom
