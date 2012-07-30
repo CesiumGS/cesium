@@ -22,6 +22,14 @@ define([
         Ellipsoid) {
     "use strict";
 
+    var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
+    var gmstConstant1 = 8640184.812866;
+    var gmstConstant2 = 0.093104;
+    var gmstConstant3 = -6.2E-6;
+    var rateCoef = 1.1772758384668e-19;
+    var wgs84WRPrecessing = 7.2921158553E-5;
+    var twoPiOverSecondsInDay = CesiumMath.TWO_PI / 86400.0;
+
     /**
      * @exports Transforms
      *
@@ -140,19 +148,28 @@ define([
          * Computes a rotation matrix to transform a point or vector from True Equator Mean Equinox (TEME) axes to the
          * pseudo-fixed axes at a given time.  This method treats the UT1 time standard as equivalent to UTC.
          *
-         * @param {Cesium.JulianDate} date The time in either TAI or UTC at which to compute the rotation matrix.
+         * @param {JulianDate} date The time at which to compute the rotation matrix.
          *
-         * @return {Cesium.Matrix3} A rotation matrix that transforms a vector in the TEME axes to the pseudo-fixed axes at the given {@code date}.
+         * @exception {DeveloperError} date is required.
+         *
+         * @return {Matrix3} A rotation matrix that transforms a vector in the TEME axes to the pseudo-fixed axes at the given {@code date}.
+         *
+         * @example
+         * scene.setAnimation(function() {
+         *     var time = new Cesium.JulianDate();
+         *     scene.setSunPosition(Cesium.SunPosition.compute(time).position);
+         *     scene.getCamera().transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(time), Cesium.Cartesian3.ZERO);
+         * });
          */
         computeTemeToPseudoFixedMatrix : function (date) {
-            // GMST is actually computed using UT1.  We're using UTC as an approximation of UT1.
+            if (typeof date === 'undefined') {
+                throw new DeveloperError('date is required.');
+            }
 
-            var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;
-            var gmstConstant1 = 8640184.812866;
-            var gmstConstant2 = 0.093104;
-            var gmstConstant3 = -6.2E-6;
-            var rateCoef = 1.1772758384668e-19;
-            var wgs84WRPrecessing = 7.2921158553E-5;
+            // GMST is actually computed using UT1.  We're using UTC as an approximation of UT1.
+            // We do not want to use the function like convertTaiToUtc in JulianDate because
+            // we explicitly do not want to fail when inside the leap second.
+
             var dateInUtc = date.addSeconds(-date.getTaiMinusUtc());
 
             var t;
@@ -164,7 +181,7 @@ define([
             }
 
             var gmst0 = gmstConstant0 + t * (gmstConstant1 + t * (gmstConstant2 + t * gmstConstant3));
-            var angle = (gmst0 * CesiumMath.TWO_PI / 86400.0) % CesiumMath.TWO_PI;
+            var angle = (gmst0 * twoPiOverSecondsInDay) % CesiumMath.TWO_PI;
             var ratio = wgs84WRPrecessing + rateCoef * (dateInUtc.getJulianDayNumber() - 0.5 - 2451545);
 
             var secondsSinceMidnight = (dateInUtc.getSecondsOfDay() + TimeConstants.SECONDS_PER_DAY / 2.0) % 86400.0;
