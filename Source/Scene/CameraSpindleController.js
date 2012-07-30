@@ -7,6 +7,7 @@ define([
         '../Core/Matrix3',
         '../Core/Ellipsoid',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         './CameraEventHandler',
         './CameraEventType',
         './CameraSpindleControllerMode',
@@ -19,6 +20,7 @@ define([
         Matrix3,
         Ellipsoid,
         Cartesian3,
+        Cartesian4,
         CameraEventHandler,
         CameraEventType,
         CameraSpindleControllerMode,
@@ -388,6 +390,10 @@ define([
         if (typeof p0 === 'undefined' || typeof p1 === 'undefined') {
             return;
         }
+
+        var transform = camera.getInverseTransform();
+        p0 = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(p0.x, p0.y, p0.z, 1.0)));
+        p1 = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(p1.x, p1.y, p1.z, 1.0)));
 
         if (typeof this.constrainedAxis === 'undefined') {
             p0 = p0.normalize();
