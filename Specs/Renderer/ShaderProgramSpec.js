@@ -24,14 +24,18 @@ defineSuite([
          BufferUsage,
          UniformDatatype) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var sp;
     var va;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     it('has a position vertex attribute', function() {
@@ -508,9 +512,5 @@ defineSuite([
         expect(function() {
             s.destroy();
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

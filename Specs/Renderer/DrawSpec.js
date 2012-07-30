@@ -26,24 +26,23 @@ defineSuite([
          StencilFunction,
          StencilOperation) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var sp;
     var va;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     afterEach(function() {
-        if (sp) {
-            sp = sp.destroy();
-        }
-
-        if (va) {
-            va = va.destroy();
-        }
+        sp = sp && sp.destroy();
+        va = va && va.destroy();
     });
 
     it('draws a white point', function() {
@@ -921,9 +920,5 @@ defineSuite([
                 count : 1
             });
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

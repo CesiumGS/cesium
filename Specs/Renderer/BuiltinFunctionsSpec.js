@@ -14,12 +14,16 @@ defineSuite([
          PrimitiveType,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     var verifyDraw = function(fs) {
@@ -118,9 +122,5 @@ defineSuite([
             '}';
 
         verifyDraw(fs);
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

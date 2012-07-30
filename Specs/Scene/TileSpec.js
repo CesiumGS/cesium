@@ -8,7 +8,7 @@ defineSuite([
          Extent,
          CesiumMath) {
     "use strict";
-    /*global document,it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
 
     it('throws without a description', function() {

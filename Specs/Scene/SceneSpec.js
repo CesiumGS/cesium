@@ -22,12 +22,16 @@ defineSuite([
          createScene,
          destroyScene) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
 
-    beforeEach(function() {
-        scene = scene || createScene();
+    beforeAll(function() {
+        scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
     });
 
     it('get canvas', function() {
@@ -134,9 +138,5 @@ defineSuite([
         expect(s.isDestroyed()).toEqual(false);
         destroyScene(s);
         expect(s.isDestroyed()).toEqual(true);
-    });
-
-    it('destroy scene', function() {
-        destroyScene(scene);
     });
 });

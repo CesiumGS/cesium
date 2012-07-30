@@ -20,12 +20,16 @@ defineSuite([
          StencilFunction,
          StencilOperation) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     it('creates with defaults', function() {
@@ -635,9 +639,5 @@ defineSuite([
                 }
             });
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

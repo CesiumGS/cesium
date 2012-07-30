@@ -12,12 +12,16 @@ defineSuite([
          PrimitiveType,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     it('binds', function() {
@@ -546,9 +550,5 @@ defineSuite([
         expect(function() {
             va.destroy();
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

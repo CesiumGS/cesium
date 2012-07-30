@@ -6,12 +6,16 @@ defineSuite([
          createContext,
          destroyContext) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     it('default clear', function() {
@@ -172,9 +176,5 @@ defineSuite([
                 height : -1
             })).toEqual([0, 0, 0, 0]);
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

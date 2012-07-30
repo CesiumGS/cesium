@@ -10,12 +10,16 @@ defineSuite([
          renderFragment,
          ShadersRay) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     renderFragment = (function(renderFragment) {
@@ -396,9 +400,5 @@ defineSuite([
             '    && (intersection.intervals[0].start == 2.0) && (intersection.intervals[0].stop == 4.0)); ' +
             '}';
         expect(renderFragment(context, fs)).toEqual([255, 255, 255, 255]);
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

@@ -32,7 +32,7 @@ defineSuite([
          HorizontalOrigin,
          VerticalOrigin) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var billboards;
@@ -42,21 +42,15 @@ defineSuite([
     var blueImage;
     var whiteImage;
 
-    function createTextureAtlas(images) {
-        var atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 1, initialSize : new Cartesian2(3, 3)});
+    beforeAll(function() {
+        context = createContext();
+    });
 
-        // ANGLE Workaround
-        atlas.getTexture().setSampler(context.createSampler({
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        }));
-
-        return atlas;
-    }
+    afterAll(function() {
+        destroyContext(context);
+    });
 
     beforeEach(function() {
-        context = context || createContext();
-
         billboards = new BillboardCollection();
 
         var camera = {
@@ -73,6 +67,18 @@ defineSuite([
     afterEach(function() {
         billboards = billboards && billboards.destroy();
     });
+
+    function createTextureAtlas(images) {
+        var atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 1, initialSize : new Cartesian2(3, 3)});
+
+        // ANGLE Workaround
+        atlas.getTexture().setSampler(context.createSampler({
+            minificationFilter : TextureMinificationFilter.NEAREST,
+            magnificationFilter : TextureMagnificationFilter.NEAREST
+        }));
+
+        return atlas;
+    }
 
     it('initialize suite', function() {
         greenImage = new Image();
@@ -1053,9 +1059,5 @@ defineSuite([
         expect(function() {
             billboards.get();
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

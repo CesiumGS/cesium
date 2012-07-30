@@ -16,7 +16,7 @@ defineSuite([
          Matrix4,
          CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('creates an east-north-up-to-fixed-frame matrix', function() {
         var m = Transforms.eastNorthUpToFixedFrame(new Cartesian3(1.0, 0.0, 0.0), Ellipsoid.UNIT_SPHERE);

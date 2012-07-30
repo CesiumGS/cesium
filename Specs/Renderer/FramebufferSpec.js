@@ -20,29 +20,25 @@ defineSuite([
          StencilFunction,
          StencilOperation) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var sp;
     var va;
     var framebuffer;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     afterEach(function() {
-        if (sp) {
-            sp = sp.destroy();
-        }
-
-        if (va) {
-            va = va.destroy();
-        }
-
-        if (framebuffer) {
-            framebuffer = framebuffer.destroy();
-        }
+        sp = sp && sp.destroy();
+        va = va && va.destroy();
+        framebuffer = framebuffer && framebuffer.destroy();
     });
 
     it('has a color attachment', function() {
@@ -473,9 +469,5 @@ defineSuite([
         expect(function() {
             f.destroy();
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

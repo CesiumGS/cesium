@@ -28,7 +28,7 @@ defineSuite([
          VerticalOrigin,
          LabelStyle) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor and fillColor properties
 
@@ -36,9 +36,15 @@ defineSuite([
     var labels;
     var us;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
 
+    afterAll(function() {
+        destroyContext(context);
+    });
+
+    beforeEach(function() {
         labels = new LabelCollection();
 
         var camera = {
@@ -1154,9 +1160,5 @@ defineSuite([
         expect(dimension.width).toBeLessThan(width);
         expect(dimension.height).toBeLessThan(height);
         expect(dimension.descent).toEqual(descent);
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

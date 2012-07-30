@@ -8,19 +8,21 @@ defineSuite([
          destroyContext,
          RenderbufferFormat) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var renderbuffer;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     afterEach(function() {
-        if (renderbuffer) {
-            renderbuffer = renderbuffer.destroy();
-        }
+        renderbuffer = renderbuffer && renderbuffer.destroy();
     });
 
     it('creates', function() {
@@ -97,9 +99,5 @@ defineSuite([
         expect(function() {
             r.destroy();
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

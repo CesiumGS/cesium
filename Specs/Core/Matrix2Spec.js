@@ -6,7 +6,7 @@ defineSuite([
          Matrix2,
          Cartesian2) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix2();

@@ -10,12 +10,16 @@ defineSuite([
          destroyContext,
          renderFragment) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     it('getCanvas', function() {
@@ -293,9 +297,5 @@ defineSuite([
         expect(c.isDestroyed()).toEqual(false);
         c.destroy();
         expect(c.isDestroyed()).toEqual(true);
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

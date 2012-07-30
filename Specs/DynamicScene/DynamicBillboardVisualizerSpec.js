@@ -32,13 +32,17 @@ defineSuite([
               HorizontalOrigin,
               VerticalOrigin) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     var visualizer;
 
-    beforeEach(function() {
-        scene = scene || createScene();
+    beforeAll(function() {
+        scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
     });
 
     afterEach(function() {
@@ -285,9 +289,5 @@ defineSuite([
         expect(billboardCollection.getLength()).toEqual(1);
         bb = billboardCollection.get(0);
         expect(bb.dynamicObject).toEqual(testObject2);
-    });
-
-    it('destroy scene', function() {
-        destroyScene(scene);
     });
 });

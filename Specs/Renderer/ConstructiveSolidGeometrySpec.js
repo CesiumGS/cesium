@@ -12,12 +12,16 @@ defineSuite([
          ShadersRay,
          ShadersConstructiveSolidGeometry) {
     "use strict";
-    /*global xit,it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     renderFragment = (function(renderFragment) {
@@ -636,9 +640,5 @@ defineSuite([
             '  gl_FragColor = vec4(agi_equalsEpsilon(i.start, 0.0) && agi_equalsEpsilon(i.stop, agi_infinity)); ' +
             '}';
         expect(renderFragment(context, fs)).toEqual([255, 255, 255, 255]);
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

@@ -8,7 +8,7 @@ defineSuite([
          Extent,
          CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('compute 0', function() {
         var m = ExtentTessellator.compute({

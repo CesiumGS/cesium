@@ -22,7 +22,7 @@ defineSuite([
          TextureMinificationFilter,
          TextureMagnificationFilter) {
     "use strict";
-    /*global xit,it,expect,beforeEach,afterEach,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var sp;
@@ -34,22 +34,18 @@ defineSuite([
     var blueAlphaImage;
     var blueOverRedImage;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     afterEach(function() {
-        if (sp) {
-            sp = sp.destroy();
-        }
-
-        if (va) {
-            va = va.destroy();
-        }
-
-        if (cubeMap) {
-            cubeMap = cubeMap.destroy();
-        }
+        sp = sp && sp.destroy();
+        va = va && va.destroy();
+        cubeMap = cubeMap && cubeMap.destroy();
     });
 
     it('create images', function() {
@@ -910,9 +906,5 @@ defineSuite([
         expect(function() {
             c.destroy();
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

@@ -26,31 +26,21 @@ defineSuite([
          CesiumMath,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var polygon;
     var us;
 
-    function createPolygon() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+    beforeAll(function() {
+        context = createContext();
+    });
 
-        var p = new Polygon();
-        p.ellipsoid = ellipsoid;
-        p.granularity = CesiumMath.toRadians(20.0);
-        p.setPositions([
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
-        ]);
-
-        return p;
-    }
+    afterAll(function() {
+        destroyContext(context);
+    });
 
     beforeEach(function() {
-        context = context || createContext();
-
         polygon = new Polygon();
 
         var camera = {
@@ -68,6 +58,22 @@ defineSuite([
         polygon = polygon && polygon.destroy();
         us = undefined;
     });
+
+    function createPolygon() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+
+        var p = new Polygon();
+        p.ellipsoid = ellipsoid;
+        p.granularity = CesiumMath.toRadians(20.0);
+        p.setPositions([
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
+        ]);
+
+        return p;
+    }
 
     it('gets default show', function() {
         expect(polygon.show).toEqual(true);
@@ -226,9 +232,5 @@ defineSuite([
 
         var pickedObject = pick(context, polygon, 0, 0);
         expect(pickedObject).not.toBeDefined();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

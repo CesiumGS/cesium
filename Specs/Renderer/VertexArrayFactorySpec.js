@@ -18,24 +18,23 @@ defineSuite([
          BufferUsage,
          VertexLayout) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var va;
     var sp;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     afterEach(function() {
-        if (va) {
-            va = va.destroy();
-        }
-
-        if (sp) {
-            sp = sp.destroy();
-        }
+        va = va && va.destroy();
+        sp = sp && sp.destroy();
     });
 
     it('creates with no arguments', function() {
@@ -624,9 +623,5 @@ defineSuite([
                 }
             });
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

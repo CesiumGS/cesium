@@ -32,13 +32,17 @@ defineSuite([
               Matrix4,
               Scene) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     var visualizer;
 
-    beforeEach(function() {
-        scene = scene || createScene();
+    beforeAll(function() {
+        scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
     });
 
     afterEach(function() {
@@ -230,9 +234,5 @@ defineSuite([
         expect(scene.getPrimitives().getLength()).toEqual(1);
         conePrimitive = scene.getPrimitives().get(0);
         expect(conePrimitive.dynamicObject).toEqual(testObject2);
-    });
-
-    it('destroy scene', function() {
-        destroyScene(scene);
     });
 });

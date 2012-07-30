@@ -12,12 +12,16 @@ defineSuite([
          PrimitiveType,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     function verifyDraw(fs) {
@@ -365,9 +369,5 @@ defineSuite([
 
         var fs = 'void main() { gl_FragColor = vec4(agi_viewerPositionWC == vec3(0.0)); }';
         verifyDraw(fs);
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

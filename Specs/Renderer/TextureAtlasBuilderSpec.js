@@ -16,7 +16,7 @@ defineSuite([
          BufferUsage,
          PixelFormat) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var atlas;
@@ -28,8 +28,12 @@ defineSuite([
     var bigGreenImage;
     var whiteImage;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     afterEach(function() {
@@ -189,9 +193,5 @@ defineSuite([
             atlasBuilder.addTextureFromFunction('./Data/Images/Blue.png', function(loadedCallback) {
             }, undefined);
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

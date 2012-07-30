@@ -32,16 +32,22 @@ defineSuite([
          VerticalOrigin,
          Polygon) {
     "use strict";
-    /*global describe,it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var primitives;
     var us;
     var camera;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
 
+    afterAll(function() {
+        destroyContext(context);
+    });
+
+    beforeEach(function() {
         primitives = new CompositePrimitive();
 
         camera = new Camera(context.getCanvas());
@@ -634,9 +640,5 @@ defineSuite([
         expect(function() {
             primitives.sendToBack(p);
         }).toThrow();
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });

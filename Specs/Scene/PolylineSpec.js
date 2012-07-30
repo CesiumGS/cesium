@@ -20,15 +20,21 @@ defineSuite([
          CesiumMath,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var polyline;
     var us;
 
-    beforeEach(function() {
-        context = context || createContext();
+    beforeAll(function() {
+        context = createContext();
+    });
 
+    afterAll(function() {
+        destroyContext(context);
+    });
+
+    beforeEach(function() {
         polyline = new Polyline();
 
         var camera = {
@@ -166,9 +172,5 @@ defineSuite([
         expect(polyline.isDestroyed()).toEqual(false);
         polyline.destroy();
         expect(polyline.isDestroyed()).toEqual(true);
-    });
-
-    it('destroy context', function() {
-        destroyContext(context);
     });
 });
