@@ -378,7 +378,7 @@ defineSuite([
                 context : context,
                 strict : true,
                 fabric : {
-                    "invalid" : 3
+                    "invalid" : 3.0
                 }
             });
         }).toThrow();

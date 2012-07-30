@@ -16,6 +16,7 @@ define([
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
         './Material',
+        './combineMaterials',
         '../Shaders/Noise',
         '../Shaders/Ray',
         '../Shaders/ConstructiveSolidGeometry',
@@ -40,6 +41,7 @@ define([
         BlendEquation,
         BlendFunction,
         Material,
+        combineMaterials,
         ShadersNoise,
         ShadersRay,
         ShadersConstructiveSolidGeometry,
@@ -291,22 +293,30 @@ define([
     ComplexConicSensorVolume.prototype._combineMaterials = function() {
         // On older/mobile hardware, we could do one pass per material to avoid
         // going over the maximum uniform limit
-        var newMaterial = {};
-        newMaterial._uniforms = {};
-        newMaterial.shaderSource = '#line 0\n';
-        var materials = {'Outer' : this.outerMaterial, 'Inner' : this.innerMaterial, 'Cap' : this.capMaterial, 'Silhouette' : this.silhouetteMaterial};
-        for (var materialName in materials) {
-            if (materials.hasOwnProperty(materialName)) {
-                var material = materials[materialName];
-                newMaterial.shaderSource += material.shaderSource.replace(/agi_getMaterial/g, 'agi_getMaterial' + materialName);
-                for (var uniformName in material._uniforms) {
-                    if (material._uniforms.hasOwnProperty(uniformName)) {
-                        newMaterial._uniforms[uniformName] = material._uniforms[uniformName];
-                    }
-                }
+        return combineMaterials({
+            material : this.outerMaterial,
+            sourceTransform : function(source) {
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getOuterMaterial');
             }
-        }
-        return newMaterial;
+        },
+        {
+            material : this.innerMaterial,
+            sourceTransform : function(source) {
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getInnerMaterial');
+            }
+        },
+        {
+            material : this.capMaterial,
+            sourceTransform : function(source) {
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getCapMaterial');
+            }
+        },
+        {
+            material : this.silhouetteMaterial,
+            sourceTransform : function(source) {
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getSilhouetteMaterial');
+            }
+        });
     };
 
     /**

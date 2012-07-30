@@ -220,11 +220,7 @@
                fabric : {
                    "id" : "Image",
                    "uniforms" : {
-                       "image" : "../../Images/Cesium_Logo_overlay.png",
-                       "repeat" : {
-                           "x" : 1,
-                           "y" : 1
-                       }
+                       "image" : "../../Images/Cesium_Logo_overlay.png"
                    }
                }
             });
@@ -256,11 +252,7 @@
                    "id" : "DiffuseMap",
                    "uniforms" : {
                        "image" : "../../Images/Cesium_Logo_Color.jpg",
-                       "channels" : "rgb",
-                       "repeat" : {
-                           "x" : 1,
-                           "y" : 1
-                       }
+                       "channels" : "rgb"
                    }
                }
             });
@@ -294,11 +286,7 @@
                             "id" : "AlphaMap",
                             "uniforms" : {
                                 "image" : "../../Images/Cesium_Logo_Color.jpg",
-                                "channel" : "r",
-                                "repeat" : {
-                                    "x" : 1,
-                                    "y" : 1
-                                }
+                                "channel" : "r"
                             }
                         }
                     },
@@ -336,11 +324,7 @@
                     "id" : "SpecularMap",
                     "uniforms" : {
                         "image" : "../../Images/Cesium_Logo_Color.jpg",
-                        "channel" : "r",
-                        "repeat" : {
-                            "x" : 1,
-                            "y" : 1
-                        }
+                        "channel" : "r"
                     }
                 }
             });
@@ -431,11 +415,7 @@
                             "uniforms" : {
                                 "image" : "../../Images/bumpmap.png",
                                 "channel" : "r",
-                                "strength" : 0.8,
-                                "repeat" : {
-                                    "x" : 1,
-                                    "y" : 1
-                                }
+                                "strength" : 0.8
                             }
                         }
                     },
