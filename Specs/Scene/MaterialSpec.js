@@ -3,6 +3,7 @@ defineSuite([
         'Scene/Material',
         'Scene/Polygon',
         '../Specs/createContext',
+        '../Specs/destroyContext',
         '../Specs/sceneState',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -13,6 +14,7 @@ defineSuite([
         Material,
         Polygon,
         createContext,
+        destroyContext,
         sceneState,
         Cartesian3,
         Cartographic,
@@ -22,31 +24,37 @@ defineSuite([
     "use strict";
     /*global it,expect*/
 
+    var context;
+    var polygon;
+    var us;
 
-    var context = createContext();
-    var polygon = new Polygon();
-    var camera = {
-        eye : new Cartesian3(1.02, 0.0, 0.0),
-        target : Cartesian3.ZERO,
-        up : Cartesian3.UNIT_Z
-    };
-    var us = context.getUniformState();
-    us.setView(Matrix4.fromCamera({
-        eye : camera.eye,
-        target : camera.target,
-        up : camera.up
-    }));
-    us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
+    it('initializem suite', function() {
+        context = createContext();
 
-    var ellipsoid = Ellipsoid.UNIT_SPHERE;
-    polygon.ellipsoid = ellipsoid;
-    polygon.granularity = CesiumMath.toRadians(20.0);
-    polygon.setPositions([
-        ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
-        ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
-        ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
-        ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
-    ]);
+        polygon = new Polygon();
+        var camera = {
+            eye : new Cartesian3(1.02, 0.0, 0.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
+        };
+        us = context.getUniformState();
+        us.setView(Matrix4.fromCamera({
+            eye : camera.eye,
+            target : camera.target,
+            up : camera.up
+        }));
+        us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
+
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        polygon.ellipsoid = ellipsoid;
+        polygon.granularity = CesiumMath.toRadians(20.0);
+        polygon.setPositions([
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
+        ]);
+    });
 
     var renderMaterial = function(material) {
         polygon.material = material;
@@ -59,23 +67,104 @@ defineSuite([
         return context.readPixels();
     };
 
-    it('draws all base material types', function() {
-        var materialTypes = ['Color', 'Image', 'DiffuseMap', 'AlphaMap', 'SpecularMap', 'EmissionMap',
-            'BumpMap', 'NormalMap','Reflection', 'Refraction', 'Fresnel', 'Brick', 'Wood', 'Asphalt',
-            'Cement', 'Grass', 'Stripe', 'Checkerboard','Dot','TieDye', 'Facet', 'Blob'];
+    function verifyMaterial(id) {
+        var material = new Material({
+            context : context,
+            strict : true,
+            fabric : {
+                "id" : id
+            }
+        });
+        var pixel = renderMaterial(material, context);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+    }
 
-        for (var i = 0; i < materialTypes.length; i++) {
-            var materialId = materialTypes[i];
-            var material = new Material({
-                context : context,
-                strict : true,
-                fabric : {
-                    "id" : materialId
-                }
-            });
-            var pixel = renderMaterial(material);
-            expect(pixel).not.toEqual([0, 0, 0, 0]);
-        }
+    it('draws Color built-in material', function() {
+        verifyMaterial('Color');
+    });
+
+    it('draws Image built-in material', function() {
+        verifyMaterial('Image');
+    });
+
+    it('draws DiffuseMap built-in material', function() {
+        verifyMaterial('DiffuseMap');
+    });
+
+    it('draws AlphaMap built-in material', function() {
+        verifyMaterial('AlphaMap');
+    });
+
+    it('draws SpecularMap built-in material', function() {
+        verifyMaterial('SpecularMap');
+    });
+
+    it('draws EmissionMap built-in material', function() {
+        verifyMaterial('EmissionMap');
+    });
+
+    it('draws BumpMap built-in material', function() {
+        verifyMaterial('BumpMap');
+    });
+
+    it('draws NormalMap built-in material', function() {
+        verifyMaterial('NormalMap');
+    });
+
+    it('draws Reflection built-in material', function() {
+        verifyMaterial('Reflection');
+    });
+
+    it('draws Refraction built-in material', function() {
+        verifyMaterial('Refraction');
+    });
+
+    it('draws Fresnel built-in material', function() {
+        verifyMaterial('Fresnel');
+    });
+
+    it('draws Brick built-in material', function() {
+        verifyMaterial('Brick');
+    });
+
+    it('draws Wood built-in material', function() {
+        verifyMaterial('Wood');
+    });
+
+    it('draws Asphalt built-in material', function() {
+        verifyMaterial('Asphalt');
+    });
+
+    it('draws Cement built-in material', function() {
+        verifyMaterial('Cement');
+    });
+
+    it('draws Grass built-in material', function() {
+        verifyMaterial('Grass');
+    });
+
+    it('draws Stripe built-in material', function() {
+        verifyMaterial('Stripe');
+    });
+
+    it('draws Checkerboard built-in material', function() {
+        verifyMaterial('Checkerboard');
+    });
+
+    it('draws Dot built-in material', function() {
+        verifyMaterial('Dot');
+    });
+
+    it('draws TieDye built-in material', function() {
+        verifyMaterial('TieDye');
+    });
+
+    it('draws Facet built-in material', function() {
+        verifyMaterial('Facet');
+    });
+
+    it('draws Blob built-in material', function() {
+        verifyMaterial('Blob');
     });
 
     it('gets the material id', function() {
@@ -535,5 +624,9 @@ defineSuite([
         expect(function() {
             return Material.fromId(context, "Nothing");
         }).toThrow();
+    });
+
+    it('destroy suite', function() {
+        destroyContext(context);
     });
 });
