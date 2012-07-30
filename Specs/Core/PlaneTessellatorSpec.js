@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite(['Core/PlaneTessellator'], function(PlaneTessellator) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('compute with default arguments', function() {
         var m = PlaneTessellator.compute();

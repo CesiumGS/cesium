@@ -3,7 +3,7 @@ defineSuite(['Core/FullScreen'
             ],function(
               FullScreen) {
     "use strict";
-    /*global it,expect,document*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('Methods execute', function() {
         //Just make sure the functions run.

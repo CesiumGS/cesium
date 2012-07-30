@@ -4,7 +4,7 @@ defineSuite([
             ], function(
               CzmlNumber) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var simpleNumber = 0.5;
 
