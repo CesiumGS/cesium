@@ -36,7 +36,6 @@ define([
             target : camera.target,
             up : camera.up
         }));
-        //us.setView(Matrix4.createLookAt(camera.eye, camera.target, camera.up));
         us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;

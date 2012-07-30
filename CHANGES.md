@@ -7,62 +7,87 @@ Beta Releases
 ### b7 - xx/xx/2012
 
 * Breaking changes:
-   * Removed keyboard input handling from `EventHandler`.
-   * `TextureAtlas` takes an object literal in its constructor instead of separate parameters.  Code that previously looked like:
+    * Removed keyboard input handling from `EventHandler`.
+    * Materials are now created through a centralized Material class using a JSON schema called Fabric. Change:
+            
+            polygon.material = new BlobMaterial({repeat : 10.0});
+            
+        to:
+        
+            polygon.material = Material.fromId(context, 'Blob');
+            polygon.material.repeat = 10.0;
+            
+        or:   
+      
+            polygon.material = new Material({
+                context : context, 
+                fabric : {
+                    id : 'Blob',
+                    uniforms : {
+                        repeat : 10.0
+                    }
+                }
+            });
+            
+    For more details, go to the [Fabric wiki page](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric).
+    
+    * `TextureAtlas` takes an object literal in its constructor instead of separate parameters.  Code that previously looked like:
 
             context.createTextureAtlas(images, pixelFormat, borderWidthInPixels);
 
-      should now look like:
+        should now look like:
 
             context.createTextureAtlas({images : images, pixelFormat : pixelFormat, borderWidthInPixels : borderWidthInPixels});
             
-   * `Camera.pickEllipsoid` returns the picked position in world coordinates and the ellipsoid parameter is optional. Prefer the new `Scene.pickEllipsoid` method. For example, change
+    * `Camera.pickEllipsoid` returns the picked position in world coordinates and the ellipsoid parameter is optional. Prefer the new `Scene.pickEllipsoid` method. For example, change
    
             var position = camera.pickEllipsoid(ellipsoid, windowPosition);
-      to:
+        
+        to:
             
             var position = scene.pickEllipsoid(windowPosition, ellipsoid);
             
-   * `Camera.getPickRay` now returns the new `Ray` type instead of an object with position and direction properties.
-   * `Camera.viewExtent` now takes an `Extent` argument instead of west, south, east and north arguments. Prefer `Scene.viewExtent` over `Camera.viewExtent`. `Scene.viewExtent` will work in any `SceneMode`. For example, change
+    * `Camera.getPickRay` now returns the new `Ray` type instead of an object with position and direction properties.
+    * `Camera.viewExtent` now takes an `Extent` argument instead of west, south, east and north arguments. Prefer `Scene.viewExtent` over `Camera.viewExtent`. `Scene.viewExtent` will work in any `SceneMode`. For example, change
    
             camera.viewExtent(ellipsoid, west, south, east, north);
-      to:
+        
+        to:
       
             scene.viewExtent(extent, ellipsoid);
             
-   * `CameraSpindleController.mouseConstrainedZAxis` has been removed. Instead, use `CameraSpindleController.constrainedAxis`. Code that previously looked like:
+    * `CameraSpindleController.mouseConstrainedZAxis` has been removed. Instead, use `CameraSpindleController.constrainedAxis`. Code that previously looked like:
             
             spindleController.mouseConstrainedZAxis = true;
             
-     should now look like:
+        should now look like:
      
             spindleController.constrainedAxis = Cartesian3.UNIT_Z;
    
-   * The `Camera2DController` constructor and `CameraControllerCollection.add2D` now require a projection instead of an ellipsoid.
-   * `Chain` has been removed.  `when` is now included as a more complete CommonJS Promises/A implementation.
-   * `Jobs.downloadImage` was replaced with `loadImage` to provide a promise that will asynchronously load an image.
-   * `jsonp` now returns a promise for the requested data, removing the need for a callback parameter.
-   * JulianDate.getTimeStandard() has been removed, dates are now always stored internally as TAI.
-   * LeapSeconds.setLeapSeconds now takes an array of LeapSecond instances instead of JSON.
-   * TimeStandard.convertUtcToTai and TimeStandard.convertTaiToUtc have been removed as they are no longer needed. 
-   * `Cartesian3.prototype.getXY()` was replaced with `Cartesian2.fromCartesian3`.  Code that previously looked like `cartesian3.getXY();` should now look like `Cartesian2.fromCartesian3(cartesian3);`.
-   * `Cartesian4.prototype.getXY()` was replaced with `Cartesian2.fromCartesian4`.  Code that previously looked like `cartesian4.getXY();` should now look like `Cartesian2.fromCartesian4(cartesian4);`.
-   * `Cartesian4.prototype.getXYZ()` was replaced with `Cartesian3.fromCartesian4`.  Code that previously looked like `cartesian4.getXYZ();` should now look like `Cartesian3.fromCartesian4(cartesian4);`.
-   * `Math.angleBetween` was removed because it was a duplicate of `Cartesian3.angleBetween`.  Simply replace calls of the former to the later.
-   * `Cartographic3` was renamed to `Cartographic`.
-   * `Cartographic2` was removed; use `Cartographic` instead.
-   * `Ellipsoid.toCartesian` was renamed to `Ellipsoid.cartographicToCartesian`.
-   * `Ellipsoid.toCartesians` was renamed to `Ellipsoid.cartographicArrayToCartesianArray`.
-   * `Ellipsoid.toCartographic2` was renamed to `Ellipsoid.cartesianToCartographic`.
-   * `Ellipsoid.toCartographic2s` was renamed to `Ellipsoid.cartesianArrayToCartographicArray`.
-   * `Ellipsoid.toCartographic3` was renamed to `Ellipsoid.cartesianToCartographic`.
-   * `Ellipsoid.toCartographic3s` was renamed to `Ellipsoid.cartesianArrayToCartographicArray`.
-   * `Ellipsoid.cartographicDegreesToCartesian` was removed.  Code that previously looked like `ellipsoid.cartographicDegreesToCartesian(new Cartographic(45, 50, 10))` should now look like `ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(45, 50, 10))`.
-   * `Math.cartographic3ToRadians`, `Math.cartographic2ToRadians`, `Math.cartographic2ToDegrees`, and `Math.cartographic3ToDegrees` were removed.  These functions are no longer needed because Cartographic instances are always represented in radians. 
-   * All functions starting with `multiplyWith` now start with `multiplyBy` to be consistent with functions starting with `divideBy`. 
-   * The `multiplyWithMatrix` function on each `Matrix` type was renamed to `multiply`.
-   * All three Matrix classes have been largely re-written for consistency and performance.  The `values` property has been eliminated and Matrices are no longer immutable.  Code that previously looked like `matrix = matrix.setColumn0Row0(12);` now looks like `matrix[Matrix2.COLUMN0ROW0] = 12;`.  Code that previously looked like `matrix.setColumn3(cartesian3);` now looked like `matrix.setColumn(3, cartesian3, matrix)`. 
+    * The `Camera2DController` constructor and `CameraControllerCollection.add2D` now require a projection instead of an ellipsoid.
+    * `Chain` has been removed.  `when` is now included as a more complete CommonJS Promises/A implementation.
+    * `Jobs.downloadImage` was replaced with `loadImage` to provide a promise that will asynchronously load an image.
+    * `jsonp` now returns a promise for the requested data, removing the need for a callback parameter.
+    * JulianDate.getTimeStandard() has been removed, dates are now always stored internally as TAI.
+    * LeapSeconds.setLeapSeconds now takes an array of LeapSecond instances instead of JSON.
+    * TimeStandard.convertUtcToTai and TimeStandard.convertTaiToUtc have been removed as they are no longer needed. 
+    * `Cartesian3.prototype.getXY()` was replaced with `Cartesian2.fromCartesian3`.  Code that previously looked like `cartesian3.getXY();` should now look like `Cartesian2.fromCartesian3(cartesian3);`.
+    * `Cartesian4.prototype.getXY()` was replaced with `Cartesian2.fromCartesian4`.  Code that previously looked like `cartesian4.getXY();` should now look like `Cartesian2.fromCartesian4(cartesian4);`.
+    * `Cartesian4.prototype.getXYZ()` was replaced with `Cartesian3.fromCartesian4`.  Code that previously looked like `cartesian4.getXYZ();` should now look like `Cartesian3.fromCartesian4(cartesian4);`.
+    * `Math.angleBetween` was removed because it was a duplicate of `Cartesian3.angleBetween`.  Simply replace calls of the former to the later.
+    * `Cartographic3` was renamed to `Cartographic`.
+    * `Cartographic2` was removed; use `Cartographic` instead.
+    * `Ellipsoid.toCartesian` was renamed to `Ellipsoid.cartographicToCartesian`.
+    * `Ellipsoid.toCartesians` was renamed to `Ellipsoid.cartographicArrayToCartesianArray`.
+    * `Ellipsoid.toCartographic2` was renamed to `Ellipsoid.cartesianToCartographic`.
+    * `Ellipsoid.toCartographic2s` was renamed to `Ellipsoid.cartesianArrayToCartographicArray`.
+    * `Ellipsoid.toCartographic3` was renamed to `Ellipsoid.cartesianToCartographic`.
+    * `Ellipsoid.toCartographic3s` was renamed to `Ellipsoid.cartesianArrayToCartographicArray`.
+    * `Ellipsoid.cartographicDegreesToCartesian` was removed.  Code that previously looked like `ellipsoid.cartographicDegreesToCartesian(new Cartographic(45, 50, 10))` should now look like `ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(45, 50, 10))`.
+    * `Math.cartographic3ToRadians`, `Math.cartographic2ToRadians`, `Math.cartographic2ToDegrees`, and `Math.cartographic3ToDegrees` were removed.  These functions are no longer needed because Cartographic instances are always represented in radians. 
+    * All functions starting with `multiplyWith` now start with `multiplyBy` to be consistent with functions starting with `divideBy`. 
+    * The `multiplyWithMatrix` function on each `Matrix` type was renamed to `multiply`.
+    * All three Matrix classes have been largely re-written for consistency and performance.  The `values` property has been eliminated and Matrices are no longer immutable.  Code that previously looked like `matrix = matrix.setColumn0Row0(12);` now looks like `matrix[Matrix2.COLUMN0ROW0] = 12;`.  Code that previously looked like `matrix.setColumn3(cartesian3);` now looked like `matrix.setColumn(3, cartesian3, matrix)`. 
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties.
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x`, `y`, and `z` properties.
 * All `Cartesian3` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
@@ -109,7 +134,7 @@ Beta Releases
 
             primitives.addGround(polygon);
 
-      to:
+        to:
 
             primitives.add(polygon);
 
@@ -117,23 +142,22 @@ Beta Releases
 
             var m = ellipsoid.eastNorthUpToFixedFrame(p);
 
-      to:
+        to:
 
             var m = Cesium.Transforms.eastNorthUpToFixedFrame(p, ellipsoid);
 
     * Label properties `fillStyle` and `strokeStyle` were renamed to `fillColor` and `outlineColor`; they are also now color objects instead of strings.  The label `Color` property has been removed.
 
-      For example, change
+        For example, change
 
             label.setFillStyle("red");
             label.setStrokeStyle("#FFFFFFFF");
 
-      to:
+        to:
 
             label.setFillColor({ red : 1.0, blue : 0.0, green : 0.0, alpha : 1.0 });
             label.setOutlineColor({ red : 1.0, blue : 1.0, green : 1.0, alpha : 1.0 });
             
-    * Materials are now created through a centralized Material.js class using a JSON schema called Fabric. For more details, go to https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric.
     * Renamed `Tipsify.Tipsify` to `Tipsify.tipsify`.
     * Renamed `Tipsify.CalculateACMR` to `Tipsify.calculateACMR`.
     * Renamed `LeapSecond.CompareLeapSecondDate` to `LeapSecond.compareLeapSecondDate`.
@@ -144,21 +168,21 @@ Beta Releases
     * `Geoscope.ContainmentTests.pointInsideTriangle2D` is now `Cesium.pointInsideTriangle2D`.
     * Static constructor methods prefixed with "createFrom", now start with "from":
 
-             Matrix2.createfromColumnMajorArray 
+            Matrix2.createfromColumnMajorArray 
           
-      becomes
+        becomes
           
-             Matrix2.fromColumnMajorArray
+            Matrix2.fromColumnMajorArray
 
     * The `JulianDate` constructor no longer takes a `Date` object, use the new from methods instead:
         
-             new JulianDate(new Date());
+            new JulianDate(new Date());
           
-      becomes
+        becomes
           
-             JulianDate.fromDate(new Date("January 1, 2011 12:00:00 EST"));
-             JulianDate.fromIso8601("2012-04-24T18:08Z");
-             JulianDate.fromTotalDays(23452.23);
+            JulianDate.fromDate(new Date("January 1, 2011 12:00:00 EST"));
+            JulianDate.fromIso8601("2012-04-24T18:08Z");
+            JulianDate.fromTotalDays(23452.23);
 
     * `JulianDate.getDate` is now `JulianDate.toDate()` and returns a new instance each time.
     * `CentralBody.logoOffsetX` and `logoOffsetY` have been replaced with `CentralBody.logoOffset`, a `Cartesian2`.
@@ -192,9 +216,9 @@ Beta Releases
 
             scene.pick(movement.endX, scene.getCanvas().clientHeight - movement.endY);
 
-    becomes:
+        becomes:
 
-        scene.pick(movement.endPosition);
+            scene.pick(movement.endPosition);
 
 * Added `SceneTransitioner` to switch between 2D and 3D views.  See the new Skeleton 2D example.
 * Added `CentralBody.showGroundAtmosphere` to show an atmosphere on the ground.
@@ -226,9 +250,9 @@ Beta Releases
         * `FacetSensorVolumeMaterial` to `FacetMaterial`.
         * `BlobSensorVolumeMaterial` to `BlobMaterial`.
     * Added new materials:
-       * `VerticalStripeMaterial`
-       * `HorizontalStripeMaterial`
-       * `DistanceIntervalMaterial`
+        * `VerticalStripeMaterial`
+        * `HorizontalStripeMaterial`
+        * `DistanceIntervalMaterial`
     * Added polygon material support via the new `Polygon.material` property.
     * Added clock angle support to `ConicSensorVolume` via the new `maximumClockAngle` and `minimumClockAngle` properties.
     * Added a rectangular sensor, `RectangularPyramidSensorVolume`.
@@ -250,16 +274,16 @@ Beta Releases
     * Primitive update() and render() functions now require a context argument.  However, when using the new Scene object, these functions do not need to be called directly.
     * TextureAtlas should no longer be created directly; instead, call Scene.getContext().createTextureAtlas().
     * Other breaking changes:
-         * Camera get/set functions, e.g., getPosition/setPosition were  replaced with properties, e.g., position.
-         * Replaced CompositePrimitive, Polygon, and Polyline getShow/setShow functions with a show property.
-         * Replaced Polyline, Polygon, BillboardCollection, and LabelCollection getBufferUsage/setBufferUsage functions with a bufferUsage property.
-         * Changed colors used by billboards, labels, polylines, and polygons.  Previously, components were named r, g, b, and a.  They are now red, green, blue, and alpha.  Previously, each component's range was [0, 255].  The range is now [0, 1] floating point.  For example,
+        * Camera get/set functions, e.g., getPosition/setPosition were  replaced with properties, e.g., position.
+        * Replaced CompositePrimitive, Polygon, and Polyline getShow/setShow functions with a show property.
+        * Replaced Polyline, Polygon, BillboardCollection, and LabelCollection getBufferUsage/setBufferUsage functions with a bufferUsage property.
+        * Changed colors used by billboards, labels, polylines, and polygons.  Previously, components were named r, g, b, and a.  They are now red, green, blue, and alpha.  Previously, each component's range was [0, 255].  The range is now [0, 1] floating point.  For example,
 
                 color : { r : 0, g : 255, b : 0, a : 255 }
 
-    becomes
+            becomes:
 
-        color : { red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 }
+                color : { red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 }
 
 ### b1 - 09/19/2011
 
@@ -268,7 +292,7 @@ Beta Releases
 
         var handler = new Geoscope.EventHandler();
 
-  should now look like:
+    should now look like:
 
         var handler = new Geoscope.EventHandler(canvas);
 
@@ -277,7 +301,7 @@ Beta Releases
         var pickedObject = context.pick(primitives, us, Math.max(x, 0.0), 
             Math.max(context.getCanvas().clientHeight - y, 0.0));
 
-  can now look like:
+    can now look like:
 
         var pickedObject = context.pick(primitives, us, x, context.getCanvas().clientHeight - y);
 
@@ -287,7 +311,7 @@ Beta Releases
         polyline.setWidth(Math.min(5, maxWidth));
         polyline.setOutlineWidth(Math.min(10, maxWidth));
 
-  can now look like:
+    can now look like:
 
         polyline.setWidth(5);
         polyline.setOutlineWidth(10);
@@ -300,7 +324,7 @@ Beta Releases
         var context = new Geoscope.Context("glCanvas");
         var canvas = context.getCanvas();
 
-  should now look like:
+    should now look like:
 
         var canvas = document.getElementById("glCanvas");
         var context = new Geoscope.Context(canvas);

@@ -167,6 +167,7 @@ define([
     };
 
     DynamicPolygonVisualizer.prototype._updateObject = function(time, dynamicObject) {
+        var context = this._scene.getContext();
         var dynamicPolygon = dynamicObject.polygon;
         if (typeof dynamicPolygon === 'undefined') {
             return;
@@ -212,7 +213,7 @@ define([
             polygon.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polygon.material = Material.fromID(this._scene.getContext(), 'Color');
+            polygon.material = Material.fromId(context, 'Color');
 
         } else {
             polygon = this._polygonCollection[polygonVisualizerIndex];
@@ -227,7 +228,7 @@ define([
 
         var material = dynamicPolygon.material;
         if (typeof material !== 'undefined') {
-            polygon.material = material.getValue(time, this._scene.getContext(), polygon.material);
+            polygon.material = material.getValue(time, context, polygon.material);
         }
     };
 

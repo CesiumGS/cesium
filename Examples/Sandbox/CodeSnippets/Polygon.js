@@ -48,9 +48,9 @@
                     "id" : "Color",
                     "uniforms" : {
                         "color" : {
-                            "red" : 1,
-                            "green" : 0,
-                            "blue" : 0,
+                            "red" : 1.0,
+                            "green" : 0.0,
+                            "blue" : 0.0,
                             "alpha" : 0.75
                         }
                     }
@@ -1092,7 +1092,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
 
-            polygon.material = Cesium.Material.fromID(scene.getContext(), 'Checkerboard');
+            polygon.material = Cesium.Material.fromId(scene.getContext(), 'Checkerboard');
 
             primitives.add(polygon);
 
@@ -1110,7 +1110,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
 
-            polygon.material = Cesium.Material.fromID(scene.getContext(), 'Checkerboard');
+            polygon.material = Cesium.Material.fromId(scene.getContext(), 'Checkerboard');
 
             primitives.add(polygon);
 
@@ -1128,7 +1128,7 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
 
-            polygon.material = Cesium.Material.fromID(scene.getContext(), 'Checkerboard');
+            polygon.material = Cesium.Material.fromId(scene.getContext(), 'Checkerboard');
 
             primitives.add(polygon);
 

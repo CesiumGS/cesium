@@ -184,7 +184,7 @@ importClass(java.io.FileReader);
 importClass(java.io.FileWriter);
 importClass(Packages.org.apache.tools.ant.util.FileUtils);
 
-var moduleIDs = [];
+var moduleIds = [];
 var parameters = [];
 var assignments = [];
 
@@ -198,18 +198,18 @@ for (var i = 0, len = filesets.size(); i < len; i++) {
     var relativePath = filenames[j];
     var file = new File(basedir, relativePath);
 
-    var moduleID = relativePath.replace('\\', '/');
-    moduleID = moduleID.substring(0, moduleID.lastIndexOf('.'));
+    var moduleId = relativePath.replace('\\', '/');
+    moduleId = moduleId.substring(0, moduleId.lastIndexOf('.'));
 
     var baseName = file.getName();
 	var assignmentName = baseName.substring(0, baseName.lastIndexOf('.'));
-    if (/Shaders\//.test(moduleID)) {
+    if (/Shaders\//.test(moduleId)) {
       assignmentName = '_shaders.' + assignmentName;
     }
 
-    var parameterName = moduleID.replace('/', '_');
+    var parameterName = moduleId.replace('/', '_');
 
-    moduleIDs.push("'" + moduleID + "'");
+    moduleIds.push("'" + moduleId + "'");
     parameters.push(parameterName);
     assignments.push('Cesium.' + assignmentName + ' = ' + parameterName + ';');
   }
@@ -223,7 +223,7 @@ if (new File(output).exists()) {
 }
 
 var contents = '/*global define*/\n' +
-               'define([' + moduleIDs.join(', ') + '], function (' + parameters.join(', ') + ') {\n' +
+               'define([' + moduleIds.join(', ') + '], function (' + parameters.join(', ') + ') {\n' +
                '  "use strict";\n' +
                '  var Cesium = { _shaders : {} };\n  ' +
                assignments.join('\n  ') + '\n' +

@@ -47,31 +47,31 @@ define([
      * @exception {DeveloperError} Duplicate member.
      */
 
+    var combineTwoObjects = function(object1, object2, deep, allowDuplicates) {
+        for (var property in object2) {
+            if (object2.hasOwnProperty(property)) {
+                if (object1.hasOwnProperty(property) && (typeof object1[property] !== 'undefined')) {
+                    if (!allowDuplicates) {
+                        throw new DeveloperError('Duplicate member: ' + property);
+                    }
+                    if (deep && typeof object1[property] === 'object' && typeof object2[property] === 'object') {
+                        combineTwoObjects(object1[property], object2[property], deep, allowDuplicates);
+                    }
+                }
+                else {
+                    object1[property] = object2[property];
+                }
+            }
+        }
+    };
+
     var combine = function(objects, deep, allowDuplicates) {
         deep = (typeof deep !== 'undefined') ? deep : true;
         allowDuplicates = (typeof allowDuplicates !== 'undefined') ? allowDuplicates : true;
 
-        var combineTwo = function(object1, object2) {
-            for (var property in object2) {
-                if (object2.hasOwnProperty(property)) {
-                    if (object1.hasOwnProperty(property) && (typeof object1[property] !== 'undefined')) {
-                        if (!allowDuplicates) {
-                            throw new DeveloperError('Duplicate member: ' + property);
-                        }
-                        if (deep && typeof object1[property] === 'object' && typeof object2[property] === 'object') {
-                            combineTwo(object1[property], object2[property]);
-                        }
-                    }
-                    else {
-                        object1[property] = object2[property];
-                    }
-                }
-            }
-        };
-
         var combined = {};
         for (var i = 0; i < objects.length; i++) {
-            combineTwo(combined, objects[i]);
+            combineTwoObjects(combined, objects[i], deep, allowDuplicates);
         }
         return combined;
     };

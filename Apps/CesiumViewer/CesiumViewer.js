@@ -69,9 +69,9 @@ define([
     var speedIndicatorElement;
     var timeLabel;
     var lastTimeLabelUpdate;
-    var cameraCenteredObjectID;
-    var cameraCenteredObjectIDPosition;
-    var lastCameraCenteredObjectID;
+    var cameraCenteredObjectId;
+    var cameraCenteredObjectIdPosition;
+    var lastCameraCenteredObjectId;
 
     function updateSpeedIndicator() {
         if (animationController.isAnimating()) {
@@ -127,9 +127,9 @@ define([
 
     function onObjectRightClickSelected(selectedObject) {
         if (selectedObject && selectedObject.dynamicObject) {
-            cameraCenteredObjectID = selectedObject.dynamicObject.id;
+            cameraCenteredObjectId = selectedObject.dynamicObject.id;
         } else {
-            cameraCenteredObjectID = undefined;
+            cameraCenteredObjectId = undefined;
         }
     }
 
@@ -153,14 +153,14 @@ define([
                 }
 
                 // Update the camera to stay centered on the selected object, if any.
-                if (cameraCenteredObjectID) {
-                    var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectID);
+                if (cameraCenteredObjectId) {
+                    var dynamicObject = dynamicObjectCollection.getObject(cameraCenteredObjectId);
                     if (dynamicObject && dynamicObject.position) {
-                        cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
-                        if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
+                        cameraCenteredObjectIdPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIdPosition);
+                        if (typeof cameraCenteredObjectIdPosition !== 'undefined') {
                             // If we're centering on an object for the first time, zoom to within 2km of it.
-                            if (lastCameraCenteredObjectID !== cameraCenteredObjectID) {
-                                lastCameraCenteredObjectID = cameraCenteredObjectID;
+                            if (lastCameraCenteredObjectId !== cameraCenteredObjectId) {
+                                lastCameraCenteredObjectId = cameraCenteredObjectId;
                                 var camera = widget.scene.getCamera();
                                 camera.position = camera.position.normalize().multiplyByScalar(5000.0);
 
@@ -171,7 +171,7 @@ define([
                             }
 
                             if (typeof spindleController !== 'undefined' && !spindleController.isDestroyed()) {
-                                var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, widget.ellipsoid);
+                                var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIdPosition, widget.ellipsoid);
                                 spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
                             }
                         }
@@ -198,7 +198,7 @@ define([
             }
 
             if (typeof queryObject.lookAt !== 'undefined') {
-                cameraCenteredObjectID = queryObject.lookAt;
+                cameraCenteredObjectId = queryObject.lookAt;
             }
 
             on(cesium, 'ObjectRightClickSelected', onObjectRightClickSelected);
@@ -309,7 +309,7 @@ define([
                 cesium.showGroundAtmosphere(true);
             });
             on(view2D, 'Click', function() {
-                cameraCenteredObjectID = undefined;
+                cameraCenteredObjectId = undefined;
                 view2D.set('checked', true);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', false);
@@ -318,7 +318,7 @@ define([
                 transitioner.morphTo2D();
             });
             on(view3D, 'Click', function() {
-                cameraCenteredObjectID = undefined;
+                cameraCenteredObjectId = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
@@ -327,7 +327,7 @@ define([
                 cesium.showGroundAtmosphere(true);
             });
             on(viewColumbus, 'Click', function() {
-                cameraCenteredObjectID = undefined;
+                cameraCenteredObjectId = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', true);

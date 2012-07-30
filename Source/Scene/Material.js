@@ -186,7 +186,7 @@ define([
      *
      * @alias Material
      *
-     * @param {Context} description.context The context in which textures get created. Optional if the material does not use images.
+     * @param {Context} [description.context] The context used to create textures if the material uses them.
      * @param {Boolean} [description.strict = false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Object} description.fabric The fabric JSON used to generate the material.
      *
@@ -246,20 +246,21 @@ define([
      *     }
      *
      * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric wiki page</a>
+     *
      */
 
-    function Material(description) {
+    var Material = function(description) {
         var that = this;
         this._description = description || {};
         this._context = this._description.context;
         this._strict = (typeof this._description.strict !== 'undefined') ? this._description.strict : false;
         this._template = this._description.fabric || {};
-        this._materialID = this._template.id;
+        this._materialId = this._template.id;
 
-        // If the cache contains this material ID, build the material template off of the stored template.
-        var isOldMaterialType = Material._materialCache.hasMaterial(this._materialID);
+        // If the cache contains this material id, build the material template off of the stored template.
+        var isOldMaterialType = Material._materialCache.hasMaterial(this._materialId);
         if (isOldMaterialType) {
-            var newMaterialTemplate = clone(Material._materialCache.getMaterial(this._materialID));
+            var newMaterialTemplate = clone(Material._materialCache.getMaterial(this._materialId));
             this._template = combine([this._template, newMaterialTemplate]);
         }
 
@@ -274,10 +275,10 @@ define([
         // Make sure the template has no obvious errors. More error checking happens later.
         this._checkForTemplateErrors();
 
-        // If the material has a new ID, add it to the cache.
-        var isNewMaterialType = (isOldMaterialType === false) && (typeof this._materialID !== 'undefined');
+        // If the material has a new id, add it to the cache.
+        var isNewMaterialType = (isOldMaterialType === false) && (typeof this._materialId !== 'undefined');
         if (isNewMaterialType){
-            Material._materialCache.addMaterial(this._materialID, this._template);
+            Material._materialCache.addMaterial(this._materialId, this._template);
         }
 
         // Build the shader source for the main material.
@@ -355,15 +356,15 @@ define([
 
         // Writes uniform declarations to the shader file and connects uniform values with
         // corresponding material properties through the returnUniforms function.
-        var processUniform = function(uniformID) {
-            var uniformValue = that._materialUniforms[uniformID];
+        var processUniform = function(uniformId) {
+            var uniformValue = that._materialUniforms[uniformId];
             var uniformType = getUniformType(uniformValue);
             if (typeof uniformType === 'undefined') {
-                throw new DeveloperError('fabric: uniform \'' + uniformID + '\' has invalid type.');
+                throw new DeveloperError('fabric: uniform \'' + uniformId + '\' has invalid type.');
             }
             else if (uniformType === 'string') {
-                if (that._replaceToken(uniformID, uniformValue, false) === 0 && that._strict) {
-                    throw new DeveloperError('strict: shader source does not use string \'' + uniformID + '\'.');
+                if (that._replaceToken(uniformId, uniformValue, false) === 0 && that._strict) {
+                    throw new DeveloperError('strict: shader source does not use string \'' + uniformId + '\'.');
                 }
             }
             else {
@@ -372,36 +373,36 @@ define([
                     if (typeof that._context === 'undefined') {
                         throw new DeveloperError('image: context is not defined');
                     }
-                    var imageDimensionsUniformName = uniformID + 'Dimensions';
+                    var imageDimensionsUniformName = uniformId + 'Dimensions';
                     if (that.shaderSource.indexOf(imageDimensionsUniformName) !== -1) {
                         that._materialUniforms[imageDimensionsUniformName] = {'type' : 'ivec2', 'x' : 1, 'y' : 1};
                         processUniform(imageDimensionsUniformName);
                     }
                 }
                 // Add uniform declaration to source code.
-                var uniformPhrase = 'uniform ' + uniformType + ' ' + uniformID + ';\n';
+                var uniformPhrase = 'uniform ' + uniformType + ' ' + uniformId + ';\n';
                 if (that.shaderSource.indexOf(uniformPhrase) === -1) {
                     that.shaderSource = uniformPhrase + that.shaderSource;
                 }
                 // Replace uniform name with guid version.
-                var newUniformID = uniformID + '_' + that._getNewGUID();
-                if (that._replaceToken(uniformID, newUniformID, true) === 1 && that._strict) {
-                    throw new DeveloperError('strict: shader source does not use uniform \'' + uniformID + '\'.');
+                var newUniformId = uniformId + '_' + that._getRandomId();
+                if (that._replaceToken(uniformId, newUniformId, true) === 1 && that._strict) {
+                    throw new DeveloperError('strict: shader source does not use uniform \'' + uniformId + '\'.');
                 }
                 // Set uniform value
-                that.uniforms[uniformID] = uniformValue;
-                that._uniforms[newUniformID] = returnUniform(uniformID, uniformType);
+                that.uniforms[uniformId] = uniformValue;
+                that._uniforms[newUniformId] = returnUniform(uniformId, uniformType);
             }
         };
         // Checks for updates to material values to refresh the uniforms.
-        var returnUniform = function (uniformID, uniformType) {
+        var returnUniform = function (uniformId, uniformType) {
             return function() {
-                var uniformValue = that.uniforms[uniformID];
+                var uniformValue = that.uniforms[uniformId];
                 if (uniformType.indexOf('sampler') !== -1) {
                     if(!(uniformValue instanceof Texture || uniformValue instanceof CubeMap)) {
-                        uniformValue = Material._textureCache.registerTextureToMaterial(that, uniformID, uniformValue, uniformType);
+                        uniformValue = Material._textureCache.registerTextureToMaterial(that, uniformId, uniformValue, uniformType);
                     }
-                    var uniformDimensionsName = uniformID + 'Dimensions';
+                    var uniformDimensionsName = uniformId + 'Dimensions';
                     if(that.uniforms.hasOwnProperty(uniformDimensionsName)) {
                         var uniformDimensions = that.uniforms[uniformDimensionsName];
                         uniformDimensions.x = (uniformValue instanceof Texture) ? uniformValue._width : uniformValue._size;
@@ -417,45 +418,45 @@ define([
                 else if (uniformType === 'mat4' && uniformValue instanceof Array) {
                     uniformValue = Matrix4.fromColumnMajorArray(uniformValue);
                 }
-                that.uniforms[uniformID] = uniformValue;
-                return that.uniforms[uniformID];
+                that.uniforms[uniformId] = uniformValue;
+                return that.uniforms[uniformId];
             };
         };
         // Set up uniforms for the main material
         this._uniforms = {};
         this.uniforms = {};
-        for (var uniformID in this._materialUniforms) {
-            if (this._materialUniforms.hasOwnProperty(uniformID)) {
-                processUniform(uniformID);
+        for (var uniformId in this._materialUniforms) {
+            if (this._materialUniforms.hasOwnProperty(uniformId)) {
+                processUniform(uniformId);
             }
         }
 
         // Create all sub-materials and combine source and uniforms together.
         var newShaderSource = '';
         this.materials = {};
-        for (var materialID in this._materialTemplates) {
-            if (this._materialTemplates.hasOwnProperty(materialID)) {
+        for (var materialId in this._materialTemplates) {
+            if (this._materialTemplates.hasOwnProperty(materialId)) {
                 // Construct the sub-material.
-                var materialTemplate = this._materialTemplates[materialID];
+                var materialTemplate = this._materialTemplates[materialId];
                 var material = new Material({context : this._context, strict : this._strict, fabric : materialTemplate});
                 this._uniforms = combine([this._uniforms, material._uniforms]);
-                this.materials[materialID] = material;
+                this.materials[materialId] = material;
 
                 // Make the material's agi_getMaterial unique by appending a guid.
                 var originalMethodName = 'agi_getMaterial';
-                var newMethodName = originalMethodName + '_' + this._getNewGUID();
+                var newMethodName = originalMethodName + '_' + this._getRandomId();
                 material._replaceToken(originalMethodName, newMethodName, true);
                 newShaderSource += material.shaderSource + '\n';
 
                 // Replace each material id with an agi_getMaterial method call.
                 var materialMethodCall = newMethodName + '(materialInput)';
-                if (this._replaceToken(materialID, materialMethodCall, true) === 0 && this._strict) {
-                    throw new DeveloperError('strict: shader source does not use material \'' + materialID + '\'.');
+                if (this._replaceToken(materialId, materialMethodCall, true) === 0 && this._strict) {
+                    throw new DeveloperError('strict: shader source does not use material \'' + materialId + '\'.');
                 }
             }
         }
         this.shaderSource = newShaderSource + this.shaderSource;
-    }
+    };
 
     /**
      * Returns the id for this material. The returned value is undefined if
@@ -465,13 +466,13 @@ define([
      *
      * @returns {String} Material id.
      */
-    Material.prototype.getID = function() {
-        return this._materialID;
+    Material.prototype.getId = function() {
+        return this._materialId;
     };
 
-    // Returns a random guid. Used for differentiating uniforms and materials.
-    Material.prototype._getNewGUID = function() {
-        return createGuid().replace(new RegExp('-', 'g'), '').slice(0,6);
+    // Returns a random id for differentiating uniforms and materials with the same names.
+    Material.prototype._getRandomId = function() {
+        return Math.random().toString().substring(2, 10);
     };
 
     // Used for searching or replacing a token in the shader source with something else.
@@ -506,7 +507,8 @@ define([
             if (typeof object !== 'undefined') {
                 for (var property in object) {
                     if (object.hasOwnProperty(property)) {
-                        if (throwNotFound * (properties.indexOf(property) === -1)) {
+                        var hasProperty = properties.indexOf(property) !== -1;
+                        if ((throwNotFound && !hasProperty) || (!throwNotFound && hasProperty)) {
                             result(property, properties);
                         }
                     }
@@ -518,10 +520,8 @@ define([
         var invalidNameError = function(property, properties) {
             var errorString = 'fabric: property name \'' + property + '\' is not valid. It should be ';
             for (var i = 0; i < properties.length; i++) {
-                var lastCharacter = i === properties.length - 1;
-                errorString += lastCharacter ? 'or ' : '';
-                errorString += '\'' + properties[i] + '\'';
-                errorString += lastCharacter ? '.' : ', ';
+                var propertyName = '\'' + properties[i] + '\'';
+                errorString += (i === properties.length - 1) ? ('or ' + propertyName + '.') : (propertyName + ', ');
             }
             throw new DeveloperError(errorString);
         };
@@ -564,7 +564,7 @@ define([
                 texture = this._pathsToTextures[path];
                 if (typeof texture === 'undefined') {
                     texture = (material.uniforms[property] instanceof Texture) ? material.uniforms[property] : material._context.getDefaultTexture();
-                    if (textureInfo !== 'agi_defaultTexture') {
+                    if (textureInfo !== 'agi_defaultImage') {
                         this._pathsToMaterials[path] = this._pathsToMaterials[path] || [];
                         this._pathsToMaterials[path].push({'material' : material, 'property' : property});
                         if (this._pathsToMaterials[path].length === 1) {
@@ -609,42 +609,42 @@ define([
     };
     Material._materialCache = {
         _materials : {},
-        hasMaterial : function (materialID) {
-            return (typeof this.getMaterial(materialID) !== 'undefined');
+        hasMaterial : function (materialId) {
+            return (typeof this.getMaterial(materialId) !== 'undefined');
         },
-        addMaterial : function (materialID, materialTemplate) {
-            this._materials[materialID] = materialTemplate;
+        addMaterial : function (materialId, materialTemplate) {
+            this._materials[materialId] = materialTemplate;
         },
-        getMaterial : function (materialID) {
-            return this._materials[materialID];
+        getMaterial : function (materialId) {
+            return this._materials[materialId];
         }
     };
 
     /**
-     * Static method for creating a new material using an existing materialID.
+     * Static method for creating a new material using an existing materialId.
      * <br /><br />
-     * Shorthand for: new Material({context : context, fabric : {"id" : materialID}});
+     * Shorthand for: new Material({context : context, fabric : {"id" : materialId}});
      *
-     * @param {Context} context The context in which textures get created. Can be undefined if the material does not use textures.
-     * @param {String} materialID The base material id.
+     * @param {Context} context The context used to create textures if the material uses them.
+     * @param {String} materialId The base material id.
      *
      * @returns {Material} New material object.
      *
      * @exception {DeveloperError} material with that id does not exist.
      *
      * @example
-     * var material = Material.fromID(context, 'Color');
+     * var material = Material.fromId(context, 'Color');
      * material.uniforms.color = vec4(1.0, 0.0, 0.0, 1.0);
      */
 
-    Material.fromID = function(context, materialID) {
-        if (!Material._materialCache.hasMaterial(materialID)) {
-            throw new DeveloperError('material with id \'' + materialID + '\' does not exist.');
+    Material.fromId = function(context, materialId) {
+        if (!Material._materialCache.hasMaterial(materialId)) {
+            throw new DeveloperError('material with id \'' + materialId + '\' does not exist.');
         }
         return new Material({
             context : context,
             fabric : {
-                "id" : materialID
+                "id" : materialId
             }
         });
     };
