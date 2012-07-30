@@ -12,21 +12,23 @@ defineSuite([
          IndexDatatype,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var buffer;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     afterEach(function() {
         if (buffer) {
             buffer = buffer.destroy();
         }
-
-        destroyContext(context);
     });
 
     it('creates vertex buffer', function() {

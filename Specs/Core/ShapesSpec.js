@@ -10,7 +10,7 @@ defineSuite([
          Ellipsoid,
          CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('computeCircleBoundary computes a closed loop', function() {
         var ellipsoid = Ellipsoid.WGS84;

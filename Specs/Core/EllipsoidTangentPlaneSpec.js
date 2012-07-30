@@ -10,7 +10,7 @@ defineSuite([
          Cartesian3,
          CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('projectPointsOntoEllipsoid', function () {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;

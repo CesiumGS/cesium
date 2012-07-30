@@ -6,7 +6,7 @@ defineSuite([
          Ray,
          Cartesian3) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor throws without a position', function() {
         expect(function() {

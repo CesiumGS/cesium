@@ -6,7 +6,7 @@ defineSuite([
          CachePolicy,
          Cache) {
     "use strict";
-    /*global it,expect,describe,beforeEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     describe('LRU', function() {
         var LRU = CachePolicy.LRU;

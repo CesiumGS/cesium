@@ -20,14 +20,21 @@ defineSuite([
          CesiumMath,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var polyline;
     var us;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
+    });
+
+    beforeEach(function() {
         polyline = new Polyline();
 
         var camera = {
@@ -35,6 +42,7 @@ defineSuite([
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         };
+
         us = context.getUniformState();
         us.setView(Matrix4.fromCamera(camera));
         us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
@@ -42,8 +50,7 @@ defineSuite([
 
     afterEach(function() {
         polyline = polyline && !polyline.isDestroyed() && polyline.destroy();
-        us = null;
-        destroyContext(context);
+        us = undefined;
     });
 
     it('gets default show', function() {

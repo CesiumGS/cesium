@@ -22,7 +22,7 @@ defineSuite([
               HorizontalOrigin,
               VerticalOrigin) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('processCzmlPacket adds data for infinite billboard.', function() {
         var sourceUri = 'http://someImage.com/';

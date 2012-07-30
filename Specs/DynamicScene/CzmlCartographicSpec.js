@@ -8,7 +8,7 @@ defineSuite([
               Cartographic,
               CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var cartographic1 = new Cartographic(123.456, 789.101112, 321.312);
     var cartographic2 = new Cartographic(789.101112, 123.456, 521.312);

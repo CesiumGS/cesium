@@ -10,7 +10,7 @@ defineSuite([
          MouseEventType,
          Cartesian2) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     // create a mock document object to add events to so they are callable.
     var MockDoc = function() {

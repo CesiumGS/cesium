@@ -4,7 +4,7 @@ defineSuite([
      ], function(
          combine) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('combine throws with duplicate member', function() {
         expect(function() {
