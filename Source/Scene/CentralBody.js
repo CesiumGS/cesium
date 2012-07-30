@@ -1353,10 +1353,10 @@ define([
         upperRight.x = Math.max(0.0, Math.min(upperRight.x, description.width));
         upperRight.y = Math.max(0.0, Math.min(upperRight.y, description.height));
 
-        var x = lowerLeft.x;
-        var y = lowerLeft.y;
-        var width = upperRight.x - x;
-        var height = upperRight.y - y;
+        var x = Math.floor(lowerLeft.x);
+        var y = Math.floor(lowerLeft.y);
+        var width = Math.ceil(upperRight.x) - x;
+        var height = Math.ceil(upperRight.y) - y;
 
         return new Rectangle(x, y, width, height);
     };
@@ -1773,27 +1773,34 @@ define([
         // update scisor/depth plane
         var depthQuad = this._computeDepthQuad(sceneState);
 
+        var disabledScissorTest = { enabled : false };
+        var scissorTest = undefined;
         if (mode === SceneMode.SCENE3D) {
             var uniformState = context.getUniformState();
             var mvp = uniformState.getModelViewProjection();
-            var scissorTest = {
-                enabled : true,
-                rectangle : this._createScissorRectangle({
-                    sceneState : sceneState,
-                    width : width,
-                    height : height,
-                    quad : depthQuad,
-                    modelViewProjection : mvp,
-                    viewportTransformation : uniformState.getViewportTransformation()
-                })
-            };
+            var rect = this._createScissorRectangle({
+                sceneState : sceneState,
+                width : width,
+                height : height,
+                quad : depthQuad,
+                modelViewProjection : mvp,
+                viewportTransformation : uniformState.getViewportTransformation()
+            });
+
+            if (rect.width !== 0 && rect.height !== 0) {
+                scissorTest = {
+                    enabled : true,
+                    rectangle : rect
+                };
+            } else {
+                scissorTest = disabledScissorTest;
+            }
 
             this._rsColor.scissorTest = scissorTest;
             this._rsDepth.scissorTest = scissorTest;
             this._quadV.renderState.scissorTest = scissorTest;
             this._quadH.renderState.scissorTest = scissorTest;
         } else {
-            var disabledScissorTest = { enabled : false };
             this._rsColor.scissorTest = disabledScissorTest;
             this._rsDepth.scissorTest = disabledScissorTest;
             this._quadV.renderState.scissorTest = disabledScissorTest;
