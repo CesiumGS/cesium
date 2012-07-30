@@ -53,7 +53,6 @@ define([
     var CameraCentralBodyController = function(canvas, camera, ellipsoid) {
         this._canvas = canvas;
         this._camera = camera;
-        this._transform = Matrix4.IDENTITY;
         this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
         /**
@@ -78,7 +77,7 @@ define([
         var rotate = this._rotateHandler;
         var rotating = rotate.isMoving() && rotate.getMovement();
 
-        if (rotating && typeof this._transform !== 'undefined') {
+        if (rotating) {
             this._rotate(rotate.getMovement());
         }
 
@@ -115,8 +114,8 @@ define([
         var center = ray.getPoint(intersection.start);
         center = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(new Cartesian4(center.x, center.y, center.z, 1.0)));
         var localTransform = Transforms.eastNorthUpToFixedFrame(center);
-
         var transform = localTransform.multiply(oldTransform);
+
         this.spindleController.constrainedAxis = Cartesian3.UNIT_Z;
         this.spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
 
