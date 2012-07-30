@@ -141,17 +141,17 @@ defineSuite([
 
         // rotation matrix determinants are 1.0
         var det = t[0] * t[4] * t[8] + t[3] * t[7] * t[2] + t[6] * t[1] * t[5] - t[6] * t[4] * t[2] - t[3] * t[1] * t[8] - t[0] * t[7] * t[5];
-        expect(CesiumMath.equalsEpsilon(det, 1.0, CesiumMath.EPSILON14)).toEqual(true);
+        expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
         // rotation matrix inverses are equal to its transpose
         var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
         expect(t4.inverse().equalsEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14)).toEqual(true);
 
-        time = time.addDays(1.0);
+        time = time.addHours(23.93447); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
         var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
         var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
-        expect(CesiumMath.equalsEpsilon(tAngle, uAngle, CesiumMath.EPSILON1)).toEqual(true);
+        expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
     });
 
     it('compute TEME to pseudo-fixed matrix pm', function() {
@@ -163,17 +163,17 @@ defineSuite([
 
         // rotation matrix determinants are 1.0
         var det = t[0] * t[4] * t[8] + t[3] * t[7] * t[2] + t[6] * t[1] * t[5] - t[6] * t[4] * t[2] - t[3] * t[1] * t[8] - t[0] * t[7] * t[5];
-        expect(CesiumMath.equalsEpsilon(det, 1.0, CesiumMath.EPSILON14)).toEqual(true);
+        expect(det).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
 
         // rotation matrix inverses are equal to its transpose
         var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
         expect(t4.inverse().equalsEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14)).toEqual(true);
 
-        time = time.addDays(1.0);
+        time = time.addHours(23.93447); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
         var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
         var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
-        expect(CesiumMath.equalsEpsilon(tAngle, uAngle, CesiumMath.EPSILON1)).toEqual(true);
+        expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
     });
 
     it('transform point to window coordinates without a model-view-projection matrix throws', function() {
