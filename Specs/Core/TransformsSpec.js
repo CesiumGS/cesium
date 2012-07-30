@@ -21,91 +21,91 @@ defineSuite([
     it('creates an east-north-up-to-fixed-frame matrix', function() {
         var m = Transforms.eastNorthUpToFixedFrame(new Cartesian3(1.0, 0.0, 0.0), Ellipsoid.UNIT_SPHERE);
 
-        expect(m.getColumn0().equals(Cartesian4.UNIT_Y)).toEqual(true); // east
-        expect(m.getColumn1().equals(Cartesian4.UNIT_Z)).toEqual(true); // north
-        expect(m.getColumn2().equals(Cartesian4.UNIT_X)).toEqual(true); // up
-        expect(m.getColumn3().equals(new Cartesian4(1.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
+        expect(m.getColumn(0).equals(Cartesian4.UNIT_Y)).toEqual(true); // east
+        expect(m.getColumn(1).equals(Cartesian4.UNIT_Z)).toEqual(true); // north
+        expect(m.getColumn(2).equals(Cartesian4.UNIT_X)).toEqual(true); // up
+        expect(m.getColumn(3).equals(new Cartesian4(1.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
     });
 
     it('creates an east-north-up-to-fixed-frame matrix at altitude', function() {
         var m = Transforms.eastNorthUpToFixedFrame(new Cartesian3(2.0, 0.0, 0.0), Ellipsoid.UNIT_SPHERE);
 
-        expect(m.getColumn0().equals(Cartesian4.UNIT_Y)).toEqual(true); // east
-        expect(m.getColumn1().equals(Cartesian4.UNIT_Z)).toEqual(true); // north
-        expect(m.getColumn2().equals(Cartesian4.UNIT_X)).toEqual(true); // up
-        expect(m.getColumn3().equals(new Cartesian4(2.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
+        expect(m.getColumn(0).equals(Cartesian4.UNIT_Y)).toEqual(true); // east
+        expect(m.getColumn(1).equals(Cartesian4.UNIT_Z)).toEqual(true); // north
+        expect(m.getColumn(2).equals(Cartesian4.UNIT_X)).toEqual(true); // up
+        expect(m.getColumn(3).equals(new Cartesian4(2.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
     });
 
     it('creates an east-north-up-to-fixed-frame matrix 2', function() {
         var m = Transforms.eastNorthUpToFixedFrame(new Cartesian3(-1.0, 0.0, 0.0), Ellipsoid.UNIT_SPHERE);
 
-        expect(m.getColumn0().equals(Cartesian4.UNIT_Y.negate())).toEqual(true); // east
-        expect(m.getColumn1().equals(Cartesian4.UNIT_Z)).toEqual(true); // north
-        expect(m.getColumn2().equals(Cartesian4.UNIT_X.negate())).toEqual(true); // up
-        expect(m.getColumn3().equals(new Cartesian4(-1.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
+        expect(m.getColumn(0).equals(Cartesian4.UNIT_Y.negate())).toEqual(true); // east
+        expect(m.getColumn(1).equals(Cartesian4.UNIT_Z)).toEqual(true); // north
+        expect(m.getColumn(2).equals(Cartesian4.UNIT_X.negate())).toEqual(true); // up
+        expect(m.getColumn(3).equals(new Cartesian4(-1.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
     });
 
     it('creates an east-north-up-to-fixed-frame matrix at north pole', function() {
         var m = Transforms.eastNorthUpToFixedFrame(new Cartesian3(0.0, 0.0, 1.0), Ellipsoid.UNIT_SPHERE);
 
-        expect(m.getColumn0().equals(Cartesian4.UNIT_Y)).toEqual(true); // east
-        expect(m.getColumn1().equals(Cartesian4.UNIT_X.negate())).toEqual(true); // north
-        expect(m.getColumn2().equals(Cartesian4.UNIT_Z)).toEqual(true); // up
-        expect(m.getColumn3().equals(new Cartesian4(0.0, 0.0, 1.0, 1.0))).toEqual(true); // translation
+        expect(m.getColumn(0).equals(Cartesian4.UNIT_Y)).toEqual(true); // east
+        expect(m.getColumn(1).equals(Cartesian4.UNIT_X.negate())).toEqual(true); // north
+        expect(m.getColumn(2).equals(Cartesian4.UNIT_Z)).toEqual(true); // up
+        expect(m.getColumn(3).equals(new Cartesian4(0.0, 0.0, 1.0, 1.0))).toEqual(true); // translation
     });
 
     it('creates an east-north-up-to-fixed-frame matrix at south pole', function() {
         var m = Transforms.eastNorthUpToFixedFrame(new Cartesian3(0.0, 0.0, -1.0), Ellipsoid.UNIT_SPHERE);
 
-        expect(m.getColumn0().equals(Cartesian4.UNIT_Y)).toEqual(true); // east
-        expect(m.getColumn1().equals(Cartesian4.UNIT_X)).toEqual(true); // north
-        expect(m.getColumn2().equals(Cartesian4.UNIT_Z.negate())).toEqual(true); // up
-        expect(m.getColumn3().equals(new Cartesian4(0.0, 0.0, -1.0, 1.0))).toEqual(true); // translation
+        expect(m.getColumn(0).equals(Cartesian4.UNIT_Y)).toEqual(true); // east
+        expect(m.getColumn(1).equals(Cartesian4.UNIT_X)).toEqual(true); // north
+        expect(m.getColumn(2).equals(Cartesian4.UNIT_Z.negate())).toEqual(true); // up
+        expect(m.getColumn(3).equals(new Cartesian4(0.0, 0.0, -1.0, 1.0))).toEqual(true); // translation
     });
 
     it('creates an north-east-down-to-fixed-frame matrix', function() {
         var m = Transforms.northEastDownToFixedFrame(new Cartesian3(1.0, 0.0, 0.0), Ellipsoid.UNIT_SPHERE);
 
-        expect(m.getColumn0().equals(Cartesian4.UNIT_Z)).toEqual(true); // north
-        expect(m.getColumn1().equals(Cartesian4.UNIT_Y)).toEqual(true); // east
-        expect(m.getColumn2().equals(Cartesian4.UNIT_X.negate())).toEqual(true); // down
-        expect(m.getColumn3().equals(new Cartesian4(1.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
+        expect(m.getColumn(0).equals(Cartesian4.UNIT_Z)).toEqual(true); // north
+        expect(m.getColumn(1).equals(Cartesian4.UNIT_Y)).toEqual(true); // east
+        expect(m.getColumn(2).equals(Cartesian4.UNIT_X.negate())).toEqual(true); // down
+        expect(m.getColumn(3).equals(new Cartesian4(1.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
     });
 
     it('creates an north-east-down-to-fixed-frame matrix at altitude', function() {
         var m = Transforms.northEastDownToFixedFrame(new Cartesian3(2.0, 0.0, 0.0), Ellipsoid.UNIT_SPHERE);
 
-        expect(m.getColumn0().equals(Cartesian4.UNIT_Z)).toEqual(true); // north
-        expect(m.getColumn1().equals(Cartesian4.UNIT_Y)).toEqual(true); // east
-        expect(m.getColumn2().equals(Cartesian4.UNIT_X.negate())).toEqual(true); // down
-        expect(m.getColumn3().equals(new Cartesian4(2.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
+        expect(m.getColumn(0).equals(Cartesian4.UNIT_Z)).toEqual(true); // north
+        expect(m.getColumn(1).equals(Cartesian4.UNIT_Y)).toEqual(true); // east
+        expect(m.getColumn(2).equals(Cartesian4.UNIT_X.negate())).toEqual(true); // down
+        expect(m.getColumn(3).equals(new Cartesian4(2.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
     });
 
     it('creates an north-east-down-to-fixed-frame matrix 2', function() {
         var m = Transforms.northEastDownToFixedFrame(new Cartesian3(-1.0, 0.0, 0.0), Ellipsoid.UNIT_SPHERE);
 
-        expect(m.getColumn0().equals(Cartesian4.UNIT_Z)).toEqual(true); // north
-        expect(m.getColumn1().equals(Cartesian4.UNIT_Y.negate())).toEqual(true); // east
-        expect(m.getColumn2().equals(Cartesian4.UNIT_X)).toEqual(true); // down
-        expect(m.getColumn3().equals(new Cartesian4(-1.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
+        expect(m.getColumn(0).equals(Cartesian4.UNIT_Z)).toEqual(true); // north
+        expect(m.getColumn(1).equals(Cartesian4.UNIT_Y.negate())).toEqual(true); // east
+        expect(m.getColumn(2).equals(Cartesian4.UNIT_X)).toEqual(true); // down
+        expect(m.getColumn(3).equals(new Cartesian4(-1.0, 0.0, 0.0, 1.0))).toEqual(true); // translation
     });
 
     it('creates an north-east-down-to-fixed-frame matrix at north pole', function() {
         var m = Transforms.northEastDownToFixedFrame(new Cartesian3(0.0, 0.0, 1.0), Ellipsoid.UNIT_SPHERE);
 
-        expect(m.getColumn0().equals(Cartesian4.UNIT_X.negate())).toEqual(true); // north
-        expect(m.getColumn1().equals(Cartesian4.UNIT_Y)).toEqual(true); // east
-        expect(m.getColumn2().equals(Cartesian4.UNIT_Z.negate())).toEqual(true); // down
-        expect(m.getColumn3().equals(new Cartesian4(0.0, 0.0, 1.0, 1.0))).toEqual(true); // translation
+        expect(m.getColumn(0).equals(Cartesian4.UNIT_X.negate())).toEqual(true); // north
+        expect(m.getColumn(1).equals(Cartesian4.UNIT_Y)).toEqual(true); // east
+        expect(m.getColumn(2).equals(Cartesian4.UNIT_Z.negate())).toEqual(true); // down
+        expect(m.getColumn(3).equals(new Cartesian4(0.0, 0.0, 1.0, 1.0))).toEqual(true); // translation
     });
 
     it('creates an north-east-down-to-fixed-frame matrix at south pole', function() {
         var m = Transforms.northEastDownToFixedFrame(new Cartesian3(0.0, 0.0, -1.0), Ellipsoid.UNIT_SPHERE);
 
-        expect(m.getColumn0().equals(Cartesian4.UNIT_X)).toEqual(true); // north
-        expect(m.getColumn1().equals(Cartesian4.UNIT_Y)).toEqual(true); // east
-        expect(m.getColumn2().equals(Cartesian4.UNIT_Z)).toEqual(true); // down
-        expect(m.getColumn3().equals(new Cartesian4(0.0, 0.0, -1.0, 1.0))).toEqual(true); // translation
+        expect(m.getColumn(0).equals(Cartesian4.UNIT_X)).toEqual(true); // north
+        expect(m.getColumn(1).equals(Cartesian4.UNIT_Y)).toEqual(true); // east
+        expect(m.getColumn(2).equals(Cartesian4.UNIT_Z)).toEqual(true); // down
+        expect(m.getColumn(3).equals(new Cartesian4(0.0, 0.0, -1.0, 1.0))).toEqual(true); // translation
     });
 
     it('creates an east-north-up-to-fixed-frame matrix without a position throws', function() {
@@ -141,10 +141,14 @@ defineSuite([
     it('transform point to window coordinates center', function() {
         var width = 1024.0;
         var height = 768.0;
-        var perspective = Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
-        var view = Matrix4.createLookAt(Cartesian3.UNIT_X.multiplyWithScalar(2.0), Cartesian3.ZERO, Cartesian3.UNIT_Z);
-        var mvpMatrix = perspective.multiplyWithMatrix(view);
-        var vpTransform = Matrix4.createViewportTransformation(
+        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
+        var view = Matrix4.fromCamera({
+            eye : Cartesian3.UNIT_X.multiplyByScalar(2.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
+        });
+        var mvpMatrix = perspective.multiply(view);
+        var vpTransform = Matrix4.computeViewportTransformation(
             {
                 width : width,
                 height : height
@@ -156,16 +160,16 @@ defineSuite([
     it('transform point to window coordinates lower left', function() {
         var width = 1024.0;
         var height = 768.0;
-        var perspective = Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
-        var vpTransform = Matrix4.createViewportTransformation(
+        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
+        var vpTransform = Matrix4.computeViewportTransformation(
             {
                 width : width,
                 height : height
             });
 
-        var z = -perspective.getColumn3Row2() / perspective.getColumn2Row2();
-        var x = z / perspective.getColumn0Row0();
-        var y = z / perspective.getColumn1Row1();
+        var z = -perspective[Matrix4.COLUMN3ROW2] / perspective[Matrix4.COLUMN2ROW2];
+        var x = z / perspective[Matrix4.COLUMN0ROW0];
+        var y = z / perspective[Matrix4.COLUMN1ROW1];
         var point = new Cartesian3(x, y, z);
         var expected = new Cartesian2(0.0, 0.0);
         var actual = Transforms.pointToWindowCoordinates(perspective, vpTransform, point);
@@ -176,16 +180,16 @@ defineSuite([
     it('transform point to window coordinates upper right', function() {
         var width = 1024.0;
         var height = 768.0;
-        var perspective = Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
-        var vpTransform = Matrix4.createViewportTransformation(
+        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), width / height, 1.0, 10.0);
+        var vpTransform = Matrix4.computeViewportTransformation(
             {
                 width : width,
                 height : height
             });
 
-        var z = -perspective.getColumn3Row2() / perspective.getColumn2Row2();
-        var x = -z / perspective.getColumn0Row0();
-        var y = -z / perspective.getColumn1Row1();
+        var z = -perspective[Matrix4.COLUMN3ROW2] / perspective[Matrix4.COLUMN2ROW2];
+        var x = -z / perspective[Matrix4.COLUMN0ROW0];
+        var y = -z / perspective[Matrix4.COLUMN1ROW1];
         var point = new Cartesian3(x, y, z);
         var expected = new Cartesian2(width, height);
         var actual = Transforms.pointToWindowCoordinates(perspective, vpTransform, point);

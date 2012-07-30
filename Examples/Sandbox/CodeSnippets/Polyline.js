@@ -5,9 +5,9 @@
     Sandbox.PolylineTwoPoints = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polylines = new Cesium.PolylineCollection(undefined);
-            polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-75.10, 39.57),  // Philadelphia
-                new Cesium.Cartographic2(-80.12, 25.46)   // Miami
+            polylines.add({positions:ellipsoid.cartographicArrayToCartesianArray([
+                new Cesium.Cartographic.fromDegrees(-75.10, 39.57),  // Philadelphia
+                new Cesium.Cartographic.fromDegrees(-80.12, 25.46)   // Miami
             ])});
             primitives.add(polylines);
         };
@@ -16,11 +16,11 @@
     Sandbox.PolylineSeveralPoints = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polylines = new Cesium.PolylineCollection(undefined);
-            polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-75.10, 39.57),  // Philadelphia
-                new Cesium.Cartographic2(-77.02, 38.53),  // Washington, D.C.
-                new Cesium.Cartographic2(-80.50, 35.14),  // Charlotte
-                new Cesium.Cartographic2(-80.12, 25.46)   // Miami
+            polylines.add({positions:ellipsoid.cartographicArrayToCartesianArray([
+                new Cesium.Cartographic.fromDegrees(-75.10, 39.57),  // Philadelphia
+                new Cesium.Cartographic.fromDegrees(-77.02, 38.53),  // Washington, D.C.
+                new Cesium.Cartographic.fromDegrees(-80.50, 35.14),  // Charlotte
+                new Cesium.Cartographic.fromDegrees(-80.12, 25.46)   // Miami
             ])});
 
             primitives.add(polylines);
@@ -30,19 +30,19 @@
     Sandbox.MultiplePolylineSeveralPoints = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polylines = new Cesium.PolylineCollection(undefined);
-            polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-75.10, 39.57),  // Philadelphia
-                new Cesium.Cartographic2(-77.02, 38.53),  // Washington, D.C.
-                new Cesium.Cartographic2(-80.50, 35.14),  // Charlotte
-                new Cesium.Cartographic2(-80.12, 25.46)   // Miami
+            polylines.add({positions:ellipsoid.cartographicArrayToCartesianArray([
+                new Cesium.Cartographic.fromDegrees(-75.10, 39.57),  // Philadelphia
+                new Cesium.Cartographic.fromDegrees(-77.02, 38.53),  // Washington, D.C.
+                new Cesium.Cartographic.fromDegrees(-80.50, 35.14),  // Charlotte
+                new Cesium.Cartographic.fromDegrees(-80.12, 25.46)   // Miami
             ]),
             width:2});
 
-            polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-73.10, 37.57),
-                new Cesium.Cartographic2(-75.02, 36.53),
-                new Cesium.Cartographic2(-78.50, 33.14),
-                new Cesium.Cartographic2(-78.12, 23.46)
+            polylines.add({positions:ellipsoid.cartographicArrayToCartesianArray([
+                new Cesium.Cartographic.fromDegrees(-73.10, 37.57),
+                new Cesium.Cartographic.fromDegrees(-75.02, 36.53),
+                new Cesium.Cartographic.fromDegrees(-78.50, 33.14),
+                new Cesium.Cartographic.fromDegrees(-78.12, 23.46)
             ]),
             width:4,
             color:{
@@ -59,9 +59,9 @@
     Sandbox.PolylineColor = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polylines = new Cesium.PolylineCollection(undefined);
-            var polyline = polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-75.10, 39.57),  // Philadelphia
-                new Cesium.Cartographic2(-80.12, 25.46)   // Miami
+            var polyline = polylines.add({positions:ellipsoid.cartographicArrayToCartesianArray([
+                new Cesium.Cartographic.fromDegrees(-75.10, 39.57),  // Philadelphia
+                new Cesium.Cartographic.fromDegrees(-80.12, 25.46)   // Miami
             ])});
 
             polyline.setColor( { red : 1.0, green : 1.0, blue : 0.0, alpha : 1.0 });        // Yellow interior
@@ -74,9 +74,9 @@
     Sandbox.PolylineTranslucency = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polylines = new Cesium.PolylineCollection(undefined);
-            var polyline = polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-                new Cesium.Cartographic2(-75.10, 39.57),  // Philadelphia
-                new Cesium.Cartographic2(-80.12, 25.46)   // Miami
+            var polyline = polylines.add({positions:ellipsoid.cartographicArrayToCartesianArray([
+                new Cesium.Cartographic.fromDegrees(-75.10, 39.57),  // Philadelphia
+                new Cesium.Cartographic.fromDegrees(-80.12, 25.46)   // Miami
             ])});
 
             var color = polyline.getColor();
@@ -91,12 +91,12 @@
     };
 
     Sandbox.PolylineWidth = function (scene, ellipsoid, primitives) {
-        this.code = function() {
+        this.code = function () {
             var polylines = new Cesium.PolylineCollection(undefined);
             var polyline = polylines.add({
-                positions : ellipsoid.cartographicDegreesToCartesians([
-                   new Cesium.Cartographic2(-75.10, 39.57), // Philadelphia
-                   new Cesium.Cartographic2(-80.12, 25.46) // Miami
+                positions : ellipsoid.cartographicArrayToCartesianArray([
+                new Cesium.Cartographic.fromDegrees(-75.10, 39.57),  // Philadelphia
+                new Cesium.Cartographic.fromDegrees(-80.12, 25.46)   // Miami
                 ]),
                 color : {
                     red : 1.0,
@@ -115,7 +115,7 @@
 
     Sandbox.PolylineReferenceFrame = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var center = ellipsoid.cartographicDegreesToCartesian(new Cesium.Cartographic2(-75.59777, 40.03883));
+            var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
 
             // The arrow points to the east, i.e. along the local x-axis.
             var polylines = new Cesium.PolylineCollection(undefined);

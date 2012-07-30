@@ -3,7 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         './Camera2DController',
         './CameraFlightController',
         './CameraSpindleController',
@@ -14,7 +14,7 @@ define([
         DeveloperError,
         destroyObject,
         Ellipsoid,
-        Cartographic3,
+        Cartographic,
         Camera2DController,
         CameraFlightController,
         CameraSpindleController,
@@ -31,11 +31,11 @@ define([
      *
      * @see Camera#getControllers
      */
-    function CameraControllerCollection(camera, canvas) {
+    var CameraControllerCollection = function(camera, canvas) {
         this._controllers = [];
         this._canvas = canvas;
         this._camera = camera;
-    }
+    };
 
     /**
      * DOC_TBA
@@ -114,7 +114,7 @@ define([
     CameraControllerCollection.prototype.addFlight = function(template) {
         var t = template || {};
         var ellipsoid = t.ellipsoid || Ellipsoid.WGS84;
-        var destination = t.destination || Ellipsoid.WGS84.cartographicDegreesToCartesian(new Cartographic3(0.0, 0.0, 0.0));
+        var destination = t.destination || ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 0.0));
         var duration = t.duration || 4.0;
         var complete = template.complete;
 		var flightController = new CameraFlightController(this._canvas, this._camera, ellipsoid, destination, duration, complete);
