@@ -212,11 +212,11 @@
             if (currentCodeSnippet && currentCodeSnippet.code) {
                 editor.display(Sandbox.beautify(currentCodeSnippet.code.toString().replace('(undefined);', '();')));
 
-                //scene.getCamera().lookAt(currentCodeSnippet.camera || {
-                //    eye : new Cesium.Cartesian3(2203128.2853925996, -7504680.128731707, 5615591.201449535),
-                //    target : Cesium.Cartesian3.ZERO,
-                //    up : new Cesium.Cartesian3(-0.1642824655609347, 0.5596076102188919, 0.8123118822806428)
-                //});
+                scene.getCamera().lookAt(currentCodeSnippet.camera || {
+                    eye : new Cesium.Cartesian3(2203128.2853925996, -7504680.128731707, 5615591.201449535),
+                    target : Cesium.Cartesian3.ZERO,
+                    up : new Cesium.Cartesian3(-0.1642824655609347, 0.5596076102188919, 0.8123118822806428)
+                });
             } else {
                 editor.display(sampleMessage);
             }
