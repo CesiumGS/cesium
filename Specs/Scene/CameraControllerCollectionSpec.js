@@ -14,7 +14,7 @@ defineSuite([
          Ellipsoid,
          MercatorProjection) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var camera;
     var collection;

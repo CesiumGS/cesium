@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite(['Core/shallowEquals'], function(shallowEquals) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('returns false if left is undefined', function() {
         expect(shallowEquals(undefined, {

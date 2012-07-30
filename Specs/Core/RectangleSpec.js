@@ -6,7 +6,7 @@ defineSuite([
          Rectangle,
          Cartesian2) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var positions = [
                      new Cartesian2(3, -1),

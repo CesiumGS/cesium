@@ -20,31 +20,25 @@ defineSuite([
          StencilFunction,
          StencilOperation) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var sp;
     var va;
     var framebuffer;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
     });
 
-    afterEach(function() {
-        if (sp) {
-            sp = sp.destroy();
-        }
-
-        if (va) {
-            va = va.destroy();
-        }
-
-        if (framebuffer) {
-            framebuffer = framebuffer.destroy();
-        }
-
+    afterAll(function() {
         destroyContext(context);
+    });
+
+    afterEach(function() {
+        sp = sp && sp.destroy();
+        va = va && va.destroy();
+        framebuffer = framebuffer && framebuffer.destroy();
     });
 
     it('has a color attachment', function() {
@@ -274,7 +268,9 @@ defineSuite([
         context.clear(context.createClearState({
             framebuffer : framebuffer
         }));
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context.readPixels({
+            framebuffer : framebuffer
+        })).toEqual([0, 0, 0, 0]);
 
         // 2 of 3.  Does not pass depth test
         context.draw({
@@ -339,7 +335,9 @@ defineSuite([
         context.clear(context.createClearState({
             framebuffer : framebuffer
         }));
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context.readPixels({
+            framebuffer : framebuffer
+        })).toEqual([0, 0, 0, 0]);
 
         // 2 of 3.  Passes stencil test
         context.draw({

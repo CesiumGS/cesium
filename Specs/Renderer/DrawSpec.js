@@ -26,26 +26,23 @@ defineSuite([
          StencilFunction,
          StencilOperation) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var sp;
     var va;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
     });
 
-    afterEach(function() {
-        if (sp) {
-            sp = sp.destroy();
-        }
-
-        if (va) {
-            va = va.destroy();
-        }
-
+    afterAll(function() {
         destroyContext(context);
+    });
+
+    afterEach(function() {
+        sp = sp && sp.destroy();
+        va = va && va.destroy();
     });
 
     it('draws a white point', function() {

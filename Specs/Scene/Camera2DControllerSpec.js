@@ -22,7 +22,7 @@ defineSuite([
          CesiumMath,
          Transforms) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var position;
     var up;
