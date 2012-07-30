@@ -5,16 +5,22 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Ellipsoid',
+         'Core/JulianDate',
          'Core/Matrix4',
-         'Core/Math'
+         'Core/Math',
+         'Core/Quaternion',
+         'Core/TimeConstants'
      ], function(
          Transforms,
          Cartesian2,
          Cartesian3,
          Cartesian4,
          Ellipsoid,
+         JulianDate,
          Matrix4,
-         CesiumMath) {
+         CesiumMath,
+         Quaternion,
+         TimeConstants) {
     "use strict";
     /*global it,expect*/
 
@@ -118,6 +124,56 @@ defineSuite([
         expect(function() {
             Transforms.northEastDownToFixedFrame();
         }).toThrow();
+    });
+
+    it('compute TEME to pseudo-fixed matrix without a date throws', function() {
+        expect(function() {
+            Transforms.computeTemeToPseudoFixedMatrix();
+        }).toThrow();
+    });
+
+    it('compute TEME to pseudo-fixed matrix am', function() {
+        var time = new JulianDate();
+        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.getSecondsOfDay();
+        time = time.addSeconds(secondsDiff);
+
+        var t = Transforms.computeTemeToPseudoFixedMatrix(time);
+
+        // rotation matrix determinants are 1.0
+        var det = t[0] * t[4] * t[8] + t[3] * t[7] * t[2] + t[6] * t[1] * t[5] - t[6] * t[4] * t[2] - t[3] * t[1] * t[8] - t[0] * t[7] * t[5];
+        expect(CesiumMath.equalsEpsilon(det, 1.0, CesiumMath.EPSILON14)).toEqual(true);
+
+        // rotation matrix inverses are equal to its transpose
+        var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
+        expect(t4.inverse().equalsEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14)).toEqual(true);
+
+        time = time.addDays(1.0);
+        var u = Transforms.computeTemeToPseudoFixedMatrix(time);
+        var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
+        var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
+        expect(CesiumMath.equalsEpsilon(tAngle, uAngle, CesiumMath.EPSILON1)).toEqual(true);
+    });
+
+    it('compute TEME to pseudo-fixed matrix pm', function() {
+        var time = new JulianDate();
+        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.getSecondsOfDay();
+        time = time.addSeconds(secondsDiff + TimeConstants.SECONDS_PER_DAY * 0.5);
+
+        var t = Transforms.computeTemeToPseudoFixedMatrix(time);
+
+        // rotation matrix determinants are 1.0
+        var det = t[0] * t[4] * t[8] + t[3] * t[7] * t[2] + t[6] * t[1] * t[5] - t[6] * t[4] * t[2] - t[3] * t[1] * t[8] - t[0] * t[7] * t[5];
+        expect(CesiumMath.equalsEpsilon(det, 1.0, CesiumMath.EPSILON14)).toEqual(true);
+
+        // rotation matrix inverses are equal to its transpose
+        var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
+        expect(t4.inverse().equalsEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14)).toEqual(true);
+
+        time = time.addDays(1.0);
+        var u = Transforms.computeTemeToPseudoFixedMatrix(time);
+        var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
+        var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
+        expect(CesiumMath.equalsEpsilon(tAngle, uAngle, CesiumMath.EPSILON1)).toEqual(true);
     });
 
     it('transform point to window coordinates without a model-view-projection matrix throws', function() {
