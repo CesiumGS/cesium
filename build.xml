@@ -118,8 +118,6 @@ for (var i = 0; i < filesets.size(); i++) {
   var basedir  = fileset.getDir(project);
   var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
 
-  var glslDoc = "";	
-  	
   for (var j = 0; j < filenames.length; j++) {
     var filename = filenames[j];
 
@@ -134,12 +132,7 @@ for (var i = 0; i < filesets.size(); i++) {
     reader.close();
 
     contents = contents.replace(/\r\n/gm, '\n');
-	
-    var docComments = contents.match(/\/\*\*[\s\S]*?\*\//gm) || [];
-    if (docComments.length > 0) {
-        glslDoc = glslDoc + docComments.join('\n');
-    }		
-			
+
     var copyrightComments = contents.match(/\/\*\!(?:.|\n)*?\*\//gm) || [];
 
     if (stripComments) {
@@ -160,7 +153,42 @@ for (var i = 0; i < filesets.size(); i++) {
     writer.write(contents);
     writer.close();
   }
-		
+}
+]]>
+	</scriptdef>
+
+	<scriptdef name="extractShaderComments" language="javascript">
+		<element name="fileset" type="fileset" />
+		<![CDATA[
+importClass(java.io.File);
+importClass(java.io.FileReader);
+importClass(java.io.FileWriter);
+importClass(Packages.org.apache.tools.ant.util.FileUtils);
+
+var filesets = elements.get("fileset");
+for (var i = 0; i < filesets.size(); i++) {
+  var fileset = filesets.get(i);
+  var basedir  = fileset.getDir(project);
+  var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
+
+  var glslDoc = "";
+
+  for (var j = 0; j < filenames.length; j++) {
+    var filename = filenames[j];
+
+    var file = new File(basedir, filename);
+    var reader = new FileReader(file);
+    var contents = String(FileUtils.readFully(reader));
+    reader.close();
+
+    contents = contents.replace(/\r\n/gm, '\n');
+
+    var docComments = contents.match(/\/\*\*[\s\S]*?\*\//gm) || [];
+    if (docComments.length > 0) {
+        glslDoc = glslDoc + docComments.join('\n');
+    }
+  }
+
   var glslDocFile = new File(basedir, 'glslComments.js');
   var glslDocWriter = new FileWriter(glslDocFile);
   glslDocWriter.write(glslDoc);
@@ -362,6 +390,10 @@ if (oldContents !== contents) {
 	</target>
 
 	<target name="generateDocumentation">
+		<extractShaderComments>
+			<fileset dir="${shadersDirectory}" includes="**/*.glsl" />
+		</extractShaderComments>
+
 		<!--
 		These needs to be a relative path because Rhino doesn't work properly with Windows
 		absolute paths:
