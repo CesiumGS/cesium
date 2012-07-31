@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite(['Core/FeatureDetection'], function(FeatureDetection) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('detects cross-origin imagery', function() {
         //just make sure the function runs, the test can't expect a value of true or false

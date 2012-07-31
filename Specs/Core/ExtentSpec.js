@@ -6,7 +6,7 @@ defineSuite([
          Extent,
          CesiumMath) {
     "use strict";
-    /*global it,expect,describe*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor checks for a valid extent.', function() {
         expect(function() {

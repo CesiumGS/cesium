@@ -8,7 +8,7 @@ defineSuite([
               Quaternion,
               CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var quaternion1 = new Quaternion(1, 2, 3, 4).normalize();
     var quaternion2 = new Quaternion(4, 5, 6, 7).normalize();

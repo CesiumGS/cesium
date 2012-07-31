@@ -8,7 +8,7 @@ defineSuite([
               Spherical,
               CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var spherical1 = new Spherical(2, 3, 1.0);
     var spherical2 = new Spherical(4, 5, 1.0);
