@@ -3,14 +3,14 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian2',
-        '../Core/Rectangle',
+        '../Core/BoundingRectangle',
         '../Core/createGuid',
         './PixelFormat'
     ], function(
         DeveloperError,
         destroyObject,
         Cartesian2,
-        Rectangle,
+        BoundingRectangle,
         createGuid,
         PixelFormat) {
     "use strict";
@@ -230,7 +230,7 @@ define([
             var atlasHeight = this._texture.getHeight();
             var nodeWidth = node.topRight.x - node.bottomLeft.x;
             var nodeHeight = node.topRight.y - node.bottomLeft.y;
-            this._textureCoordinates[index] = new Rectangle(
+            this._textureCoordinates[index] = new BoundingRectangle(
                 node.bottomLeft.x / atlasWidth, node.bottomLeft.y / atlasHeight,
                 nodeWidth / atlasWidth, nodeHeight / atlasHeight
             );
@@ -329,7 +329,7 @@ define([
      * @memberof TextureAtlas
      *
      * @param {Image} image An image to be added to the texture atlas.
-     * @param {Array} subRegions An array of {@link Rectangle} sub-regions measured in pixels from the bottom-left.
+     * @param {Array} subRegions An array of {@link BoundingRectangle} sub-regions measured in pixels from the bottom-left.
      *
      * @returns {Number} The index of the first newly-added region.
      *
@@ -346,7 +346,7 @@ define([
         var baseRegion = this._textureCoordinates[index];
         for (var i = 0; i < numSubRegions; ++i) {
             var thisRegion = subRegions[i];
-            this._textureCoordinates.push(new Rectangle(
+            this._textureCoordinates.push(new BoundingRectangle(
                 baseRegion.x + (thisRegion.x / atlasWidth),
                 baseRegion.y + (thisRegion.y / atlasHeight),
                 thisRegion.width / atlasWidth,
@@ -371,7 +371,7 @@ define([
     };
 
     /**
-     * Returns an array of {@link Rectangle} texture coordinate regions for all the images in the texture atlas.
+     * Returns an array of {@link BoundingRectangle} texture coordinate regions for all the images in the texture atlas.
      * The x and y values of the rectangle correspond to the bottom-left corner of the texture coordinate.
      * The coordinates are in the order that the corresponding images were added to the atlas.
      *
@@ -379,7 +379,7 @@ define([
      *
      * @returns {Array} The texture coordinates.
      *
-     * @see Rectangle
+     * @see BoundingRectangle
      */
     TextureAtlas.prototype.getTextureCoordinates = function() {
         return this._textureCoordinates;

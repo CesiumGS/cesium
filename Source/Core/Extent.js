@@ -1,24 +1,24 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Math',
-        '../Core/Occluder',
-        '../Core/Rectangle'
+        '../Core/Occluder'
     ], function(
         defaultValue,
+        BoundingRectangle,
         BoundingSphere,
         Cartesian3,
         Cartographic,
         DeveloperError,
         Ellipsoid,
         CesiumMath,
-        Occluder,
-        Rectangle) {
+        Occluder) {
     "use strict";
 
     /**
@@ -237,7 +237,7 @@ define([
      *
      * @param {Extent} extent DOC_TBA
      * @param {Object} projection DOC_TBA
-     * @returns {Rectangle} DOC_TBA
+     * @returns {BoundingRectangle} DOC_TBA
      */
     Extent.computeBoundingRectangle = function(extent, projection) {
         if (typeof extent === 'undefined') {
@@ -257,7 +257,7 @@ define([
         var upperRight = projection.project(lla);
 
         var diagonal = upperRight.subtract(lowerLeft);
-        return new Rectangle(lowerLeft.x, lowerLeft.y, diagonal.x, diagonal.y);
+        return new BoundingRectangle(lowerLeft.x, lowerLeft.y, diagonal.x, diagonal.y);
     };
 
     /**

@@ -11,7 +11,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Extent',
         '../Core/BoundingSphere',
-        '../Core/Rectangle',
+        '../Core/BoundingRectangle',
         '../Core/Cache',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -66,7 +66,7 @@ define([
         Ellipsoid,
         Extent,
         BoundingSphere,
-        Rectangle,
+        BoundingRectangle,
         Cache,
         Cartesian2,
         Cartesian3,
@@ -913,9 +913,9 @@ define([
             var w = Math.max(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x) - x;
             var h = Math.max(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y) - y;
 
-            var fRect = new Rectangle(x, y, w, h);
+            var fRect = new BoundingRectangle(x, y, w, h);
 
-            return !Rectangle.rectangleRectangleIntersect(bRect, fRect);
+            return !Rectangle.rectangleIntersect(bRect, fRect);
         }
 
         var boundingVolume = this._getTileBoundingSphere(tile, sceneState);
@@ -1358,7 +1358,7 @@ define([
         var width = Math.ceil(upperRight.x) - x;
         var height = Math.ceil(upperRight.y) - y;
 
-        return new Rectangle(x, y, width, height);
+        return new BoundingRectangle(x, y, width, height);
     };
 
     CentralBody.prototype._computeDepthQuad = function(sceneState) {
@@ -1417,7 +1417,7 @@ define([
         var halfWidth = Math.floor(Math.max(screenUp.subtract(center).magnitude(), screenRight.subtract(center).magnitude()));
         var halfHeight = halfWidth;
 
-        return new Rectangle(
+        return new BoundingRectangle(
                 Math.floor(center.x) - halfWidth,
                 Math.floor(center.y) - halfHeight,
                 halfWidth * 2.0,
@@ -1618,7 +1618,7 @@ define([
                 this._quadLogo = this._quadLogo && this._quadLogo.destroy();
             }
             else {
-                this._quadLogo = new ViewportQuad(new Rectangle(this.logoOffset.x, this.logoOffset.y, imageLogo.width, imageLogo.height));
+                this._quadLogo = new ViewportQuad(new BoundingRectangle(this.logoOffset.x, this.logoOffset.y, imageLogo.width, imageLogo.height));
                 this._quadLogo.setTexture(context.createTexture2D({
                     source : imageLogo,
                     pixelFormat : PixelFormat.RGBA
@@ -1627,7 +1627,7 @@ define([
             }
             this._imageLogo = imageLogo;
         } else if (this._quadLogo && this._imageLogo && !this.logoOffset.equals(this._logoOffset)) {
-            this._quadLogo.setRectangle(new Rectangle(this.logoOffset.x, this.logoOffset.y, this._imageLogo.width, this._imageLogo.height));
+            this._quadLogo.setRectangle(new BoundingRectangle(this.logoOffset.x, this.logoOffset.y, this._imageLogo.width, this._imageLogo.height));
             this._logoOffset = this.logoOffset;
         }
 
@@ -1658,7 +1658,7 @@ define([
             });
 
             // create viewport quad for vertical gaussian blur pass
-            this._quadV = new ViewportQuad(new Rectangle(0.0, 0.0, width, height));
+            this._quadV = new ViewportQuad(new BoundingRectangle(0.0, 0.0, width, height));
             this._quadV.vertexShader = '#define VERTICAL 1\n' + CentralBodyVSFilter;
             this._quadV.fragmentShader = CentralBodyFSFilter;
             this._quadV.uniforms.u_height = function() {
@@ -1676,7 +1676,7 @@ define([
             this._quadV.setDestroyFramebuffer(true);
 
             // create viewport quad for horizontal gaussian blur pass
-            this._quadH = new ViewportQuad(new Rectangle(0.0, 0.0, width, height));
+            this._quadH = new ViewportQuad(new BoundingRectangle(0.0, 0.0, width, height));
             this._quadH.vertexShader = CentralBodyVSFilter;
             this._quadH.fragmentShader = CentralBodyFSFilter;
             this._quadH.uniforms.u_width = function() {

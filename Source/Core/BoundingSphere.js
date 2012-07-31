@@ -79,7 +79,7 @@ define([
      *
      * @exception {DeveloperError} <code>positions</code> is required.
      *
-     * @returns {BoundingSphere} The bounding sphere computed from positions.
+     * @return {BoundingSphere} The bounding sphere computed from positions.
      *
      * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      */
@@ -213,7 +213,7 @@ define([
      * @param {BoundingSphere} sphere The bounding sphere to test.
      * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0 where the coefficients a, b, c, and d are the components x, y, z, and w of the {Cartesian4}, respectively.
      *
-     * @returns {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side, and {Intersect.INTERSETING} if the sphere intersects the plane.
+     * @return {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side, and {Intersect.INTERSETING} if the sphere intersects the plane.
      *
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} plane is required.

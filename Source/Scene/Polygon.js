@@ -7,7 +7,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Math',
         '../Core/Ellipsoid',
-        '../Core/Rectangle',
+        '../Core/BoundingRectangle',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/ComponentDatatype',
@@ -36,7 +36,7 @@ define([
         Cartesian2,
         CesiumMath,
         Ellipsoid,
-        Rectangle,
+        BoundingRectangle,
         Cartesian3,
         Cartographic,
         ComponentDatatype,
@@ -337,7 +337,7 @@ define([
     };
 
     Polygon._appendTextureCoordinates = function(tangentPlane, positions2D, mesh) {
-        var boundingRectangle = new Rectangle.createAxisAlignedBoundingRectangle(positions2D);
+        var boundingRectangle = new BoundingRectangle.fromPoints(positions2D);
         var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
 
         var positions = mesh.attributes.position.values;

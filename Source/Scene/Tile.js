@@ -282,7 +282,7 @@ define([
      *
      * @memberof Tile
      *
-     * @return {Rectangle} The bounding rectangle.
+     * @return {BoundingRectangle} The bounding rectangle.
      */
     Tile.prototype.get2DBoundingRectangle = function(projection) {
         this._compute2DBounds(projection);

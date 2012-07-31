@@ -1,0 +1,132 @@
+/*global defineSuite*/
+defineSuite([
+         'Core/BoundingRectangle',
+         'Core/Cartesian2'
+     ], function(
+         BoundingRectangle,
+         Cartesian2) {
+    "use strict";
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    var positions = [
+                     new Cartesian2(3, -1),
+                     new Cartesian2(2, -2),
+                     new Cartesian2(1, -3),
+                     new Cartesian2(0, 0),
+                     new Cartesian2(-1, 1),
+                     new Cartesian2(-2, 2),
+                     new Cartesian2(-3, 3)
+                 ];
+
+    it('constructor throws without x', function() {
+        expect(function() {
+            return new BoundingRectangle();
+        }).toThrow();
+    });
+
+    it('constructor throws without y', function() {
+        expect(function() {
+            return new BoundingRectangle(1.0);
+        }).toThrow();
+    });
+
+    it('constructor throws without width', function() {
+        expect(function() {
+            return new BoundingRectangle(1.0, 2.0);
+        }).toThrow();
+    });
+
+    it('constructor throws with width less than zero', function() {
+        expect(function() {
+            return new BoundingRectangle(1.0, 2.0, -1.0, 4.0);
+        }).toThrow();
+    });
+
+    it('constructor throws without height', function() {
+        expect(function() {
+            return new BoundingRectangle(1.0, 2.0, 3.0);
+        }).toThrow();
+    });
+
+    it('constructor throws with height less than zero', function() {
+        expect(function() {
+            return new BoundingRectangle(1.0, 2.0, 3.0, -1.0);
+        }).toThrow();
+    });
+
+    it('constructs', function() {
+        var rect = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
+        expect(rect.x).toEqual(1.0);
+        expect(rect.y).toEqual(2.0);
+        expect(rect.width).toEqual(3.0);
+        expect(rect.height).toEqual(4.0);
+    });
+
+    it('clone without a result parameter', function() {
+        var rect = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
+        var result = rect.clone();
+        expect(rect).toNotBe(result);
+        expect(rect).toEqual(result);
+    });
+
+    it('clone with a result parameter', function() {
+        var rect = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
+        var result = new BoundingRectangle(1.0, 2.0, 3.0, 5.0);
+        var returnedResult = rect.clone(result);
+        expect(rect).toNotBe(result);
+        expect(result).toBe(returnedResult);
+        expect(rect).toEqual(result);
+    });
+
+    it('clone works with "this" result parameter', function() {
+        var rect = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
+        var returnedResult = rect.clone(rect);
+        expect(rect).toBe(returnedResult);
+    });
+
+    it('throws an exception when creating an axis aligned bounding rectangle without any positions', function() {
+        expect(function() {
+            return BoundingRectangle.fromPoints();
+        }).toThrow();
+    });
+
+    it('throws an exception creating an axis aligned bounding rectangle with positions of length one', function() {
+        expect(function() {
+            return BoundingRectangle.fromPoints([ Cartesian2.ZERO ]);
+        }).toThrow();
+    });
+
+    it('create axis aligned bounding rectangle', function() {
+        var rectangle = BoundingRectangle.fromPoints(positions);
+        expect(rectangle.x).toEqual(-3);
+        expect(rectangle.y).toEqual(-3);
+        expect(rectangle.width).toEqual(6);
+        expect(rectangle.height).toEqual(6);
+    });
+
+    it('rectangleIntersect throws with rect1', function() {
+        expect(function() {
+            BoundingRectangle.rectangleIntersect();
+        }).toThrow();
+    });
+
+    it('rectangleIntersect throws with rect2', function() {
+        expect(function() {
+            BoundingRectangle.rectangleIntersect(new BoundingRectangle(1.0, 2.0, 3.0, 4.0));
+        }).toThrow();
+    });
+
+    it('rectangleIntersect', function() {
+        var rect1 = new BoundingRectangle(0, 0, 4, 4);
+        var rect2 = new BoundingRectangle(2, 2, 4, 4);
+        var rect3 = new BoundingRectangle(5, 5, 4, 4);
+        expect(BoundingRectangle.rectangleIntersect(rect1, rect2)).toEqual(true);
+        expect(BoundingRectangle.rectangleIntersect(rect1, rect3)).toEqual(false);
+    });
+
+    it('static clone throws with no parameter', function() {
+        expect(function() {
+            BoundingRectangle.clone();
+        }).toThrow();
+    });
+});
