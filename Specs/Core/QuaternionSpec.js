@@ -137,16 +137,6 @@ defineSuite([
         expect(q.equals(new Quaternion(1.0, 2.0, 3.0, 4.0))).toEqual(true);
     });
 
-    it('rotate', function() {
-        var s = Math.sin(CesiumMath.PI_OVER_FOUR);
-        var c = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(s);
-        var q = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
-        var xAxis = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-        var yAxis = new Cartesian4(0.0, 1.0, 0.0, 0.0);
-        expect(q.rotate(xAxis).equalsEpsilon(yAxis, CesiumMath.EPSILON15)).toEqual(true);
-    });
-
     it('getAxis', function() {
         var s = Math.sin(CesiumMath.PI_OVER_FOUR);
         var c = Math.cos(CesiumMath.PI_OVER_FOUR);
@@ -172,9 +162,9 @@ defineSuite([
         var r = new Quaternion(5.0, 6.0, 7.0, 8.0);
         var t = 0.75;
         var s = q.multiplyByScalar(1.0 - t).add(r.multiplyByScalar(t));
-        expect(q.lerp(0.0, r).equals(q)).toEqual(true);
-        expect(q.lerp(1.0, r).equals(r)).toEqual(true);
-        expect(q.lerp(t, r).equals(s)).toEqual(true);
+        expect(q.lerp(r, 0.0).equals(q)).toEqual(true);
+        expect(q.lerp(r, 1.0).equals(r)).toEqual(true);
+        expect(q.lerp(r, t).equals(s)).toEqual(true);
     });
 
     it('slerp', function() {
@@ -183,35 +173,17 @@ defineSuite([
         var r = new Quaternion(cartesian1.x, cartesian1.y, cartesian1.z, Math.cos(CesiumMath.PI_OVER_FOUR));
         var cartesian2 = new Cartesian3(0.0, 0.0, Math.sin(Math.PI / 8.0));
         var s = new Quaternion(cartesian2.x, cartesian2.y, cartesian2.z, Math.cos(Math.PI / 8.0));
-        expect(q.slerp(0.0, r).equals(q)).toEqual(true);
-        expect(q.slerp(1.0, r).equals(r)).toEqual(true);
-        expect(q.slerp(0.5, r).equalsEpsilon(s, CesiumMath.EPSILON15)).toEqual(true);
+        expect(q.slerp(r, 0.0).equals(q)).toEqual(true);
+        expect(q.slerp(r, 1.0).equals(r)).toEqual(true);
+        expect(q.slerp(r, 0.5)).toEqualEpsilon(s, CesiumMath.EPSILON15);
     });
 
     it('slerp (2)', function() {
         var q = new Quaternion(0.0, 0.0, 0.0, -1.0).normalize();
         var cartesian1 = new Cartesian3(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR));
         var r = new Quaternion(cartesian1.x, cartesian1.y, cartesian1.z, Math.cos(CesiumMath.PI_OVER_FOUR));
-        expect(q.slerp(0.0, r).equals(q)).toEqual(true);
-        expect(q.slerp(1.0, r).equalsEpsilon(new Quaternion(0.0, 0.0, -Math.sqrt(2) / 2.0, -Math.sqrt(2) / 2.0), CesiumMath.EPSILON10)).toEqual(true);
-    });
-
-    it('log', function() {
-        var s = Math.sin(CesiumMath.PI_OVER_FOUR);
-        var c = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(s);
-        var q = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
-        expect(q.log().equals(new Cartesian3(0.0, 0.0, CesiumMath.PI_OVER_FOUR)));
-    });
-
-    it('power', function() {
-        var s = Math.sin(CesiumMath.PI_OVER_FOUR);
-        var c = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(s);
-        var t = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
-        var u = t.power(2.0);
-        var v = t.multiply(t);
-        expect(u.equalsEpsilon(v, CesiumMath.EPSILON15)).toEqual(true);
+        expect(q.slerp(r, 0.0).equals(q)).toEqual(true);
+        expect(q.slerp(r, 1.0)).toEqualEpsilon(new Quaternion(0.0, 0.0, -Math.sqrt(2) / 2.0, -Math.sqrt(2) / 2.0), CesiumMath.EPSILON10);
     });
 
     it('equalsEpsilon', function() {
@@ -271,7 +243,7 @@ defineSuite([
         var yRotation = new Matrix3( cTheta, 0.0, sTheta,
                                         0.0, 1.0,    0.0,
                                     -sTheta, 0.0, cTheta);
-        expect(Quaternion.fromRotationMatrix(yRotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
+        expect(Quaternion.fromRotationMatrix(yRotation)).toEqualEpsilon(q, CesiumMath.EPSILON15);
     });
 
     it('fromRotationMatrix (3)', function() {
@@ -331,14 +303,6 @@ defineSuite([
                                    0.0, 1.0, 0.0,
                                    0.0, 0.0, 1.0);
         var q = new Quaternion(0.0, 0.0, 0.0, Math.sqrt(2.0) / 2.0);
-        expect(Quaternion.fromRotationMatrix(rotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
-    });
-
-    it('exp', function() {
-        var s = Math.sin(CesiumMath.PI_OVER_FOUR);
-        var c = Math.cos(CesiumMath.PI_OVER_FOUR);
-        var cartesian = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(s);
-        var q = new Quaternion(cartesian.x, cartesian.y, cartesian.z, c);
-        expect(Quaternion.exp(new Cartesian3(0.0, 0.0, CesiumMath.PI_OVER_FOUR)).equals(q)).toEqual(true);
+        expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(q, CesiumMath.EPSILON15);
     });
 });
