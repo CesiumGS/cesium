@@ -20,7 +20,7 @@
 		
 		"uniforms": {
 			"type": "object",
-			"description": "Uniform variables, and their default values, that are input to this material.",
+			"description": "Uniform variables, and their default values, that are input to this material.  Texture and cube-map face uniform values are specified as an image URL or a <a href=\"https://developer.mozilla.org/en/data_URIs\">data URI</a>.  Alternatively, a placeholder RGBA white texture can be used by specifying agi_defaultImage or agi_defaultCubeMap for textures or cube-maps, respectively.",
 			"properties": {
 			},
 			"additionalProperties": {
