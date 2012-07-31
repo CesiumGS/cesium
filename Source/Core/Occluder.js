@@ -254,7 +254,7 @@ define([
      * var occluderBoundingSphere = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
      * var occluder = new Occluder(occluderBoundingSphere, cameraPosition);
      * var positions = [new Cartesian3(-0.25, 0, -5.3), new Cartesian3(0.25, 0, -5.3)];
-     * var tileOccluderSphere = new BoundingSphere(positions);
+     * var tileOccluderSphere = BoundingSphere.fromPoints(positions);
      * var occludeePosition = tileOccluderSphere.center;
      * var occludeePt = occluder.getOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
      *

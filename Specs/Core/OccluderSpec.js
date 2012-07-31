@@ -144,7 +144,7 @@ defineSuite([
     it('can compute an occludee point', function() {
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
         var positions = [new Cartesian3(-1.085, 0, -6.221), new Cartesian3(1.085, 0, -6.221)];
-        var tileOccluderSphere = new BoundingSphere(positions);
+        var tileOccluderSphere = BoundingSphere.fromPoints(positions);
         var occludeePosition = tileOccluderSphere.center;
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
         expect(result.valid).toEqual(true);
@@ -222,7 +222,7 @@ defineSuite([
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
         var occluder = new Occluder(occluderBS, cameraPosition);
         var positions = [new Cartesian3(-0.25, 0, -5.3), new Cartesian3(0.25, 0, -5.3)];
-        var tileOccluderSphere = new BoundingSphere(positions);
+        var tileOccluderSphere = BoundingSphere.fromPoints(positions);
         var occludeePosition = tileOccluderSphere.center;
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
 
@@ -239,7 +239,7 @@ defineSuite([
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
         var occluder = new Occluder(occluderBS, cameraPosition);
         var positions = [new Cartesian3(-0.25, 0, -5.3), new Cartesian3(0.25, 0, -5.3)];
-        var tileOccluderSphere = new BoundingSphere(positions);
+        var tileOccluderSphere = BoundingSphere.fromPoints(positions);
         var occludeePosition = tileOccluderSphere.center;
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
         expect(result.valid).toEqual(true);

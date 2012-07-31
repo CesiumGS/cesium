@@ -195,7 +195,7 @@ define([
      * @returns {BoundingSphere} DOC_TBA
      */
     Extent.computeMorphBoundingSphere = function(extent, ellipsoid, time, projection) {
-        return new BoundingSphere(computePositions(extent, ellipsoid, time, projection));
+        return BoundingSphere.fromPoints(computePositions(extent, ellipsoid, time, projection));
     };
 
     /**
@@ -206,7 +206,7 @@ define([
      * @returns {BoundingSphere} DOC_TBA
      */
     Extent.compute3DBoundingSphere = function(extent, ellipsoid) {
-        return new BoundingSphere(computePositions(extent, ellipsoid));
+        return BoundingSphere.fromPoints(computePositions(extent, ellipsoid));
     };
 
     /**
@@ -220,7 +220,7 @@ define([
     Extent.computeOccludeePoint = function(extent, ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var positions = computePositions(extent, ellipsoid);
-        var bs = new BoundingSphere(positions);
+        var bs = BoundingSphere.fromPoints(positions);
 
         // TODO: get correct ellipsoid center
         var ellipsoidCenter = Cartesian3.ZERO;
