@@ -17,7 +17,7 @@
 	<script src="javascript/shCore.js"></script>
 	<script src="javascript/shBrushJScript.js"></script>
 	<script type="text/javascript">
-         var resetFilter = function() {
+        var resetFilter = function() {
             document.filterForm.classFilter.value = '';
             document.filterForm.submit();
             return false;
@@ -25,7 +25,7 @@
     </script>
 </head>
 
-<body onload="document.filterForm.classFilter.focus(); document.filterForm.classFilter.value=((window.location.search).split('='))[1] || document.getElementById('ClassFilter').value; ">
+<body>
 
 <div id="mainIndex">
     
@@ -35,17 +35,18 @@
         <div class="menu">
             
             <div class="rightLinks indexLinks">
-                <a href="http://cesium.agi.com/">demos</a>
-                <a href="https://github.com/AnalyticalGraphicsInc/cesium/wiki">source</a>
+                <a href="http://cesium.agi.com/" target="_blank">demos</a>
+                <a href="https://github.com/AnalyticalGraphicsInc/cesium/wiki" target="_blank">source</a>
             </div>
             <div class="indexLinks">
-                <a id="allLink" href="javascript: void(0); resetFilter();">all</a>
-                <a id="jsIndexLink" href="javascript: void(0); resetFilter();">js</a>
-                <a id="glslIndexLink" href="javascript: void(0); resetFilter();">glsl</a>
+                <a id="allLink">all</a>
+                <a id="jsIndexLink">js</a>
+                <a id="glslIndexLink">glsl</a>
             </div>
             <div class="divider"></div>
-            <form name="filterForm" method="get">
+            <form name="filterForm" method="get" onsubmit="return false;">
                 <input type="text" name="classFilter" class="classFilter" id="ClassFilter" placeholder="Filter"></input>
+                <input type="hidden" id="filterType" value="all"/>
             </form>
             <?js= this.nav ?>
         </div>
@@ -63,7 +64,15 @@
 	codeview.classFilter.Init();
 	
 	var searchTerm = ((window.location.search).split('='))[1];
-	if(searchTerm){
+	var show = ((window.location.search).split('='))[2];
+	
+	if (show) {
+	   document.getElementById("filterType").value = show;
+	} 
+	
+	if (searchTerm) {
+	    searchTerm = searchTerm.split('&')[0] || searchTerm;
+	    document.filterForm.classFilter.value = searchTerm;
 	    var links = document.getElementById("ClassList").getElementsByTagName('a');
 		for (i = 0; i < links.length; i++) {
 			var currentLink = links[i];
