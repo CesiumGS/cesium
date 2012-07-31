@@ -38,21 +38,36 @@ define([
      * on a central body.
      *
      * @name ImageryLayer
+     *
+     * @param {ImageryProvider} imageryProvider the imagery provider to use.
+     * @param {Extent} [description.extent=imageryProvider.extent] The extent of the layer.
+     * @param {Number} [description.maxScreenSpaceError=1.0] DOC_TBA
+     * @param {Number} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
      */
     function ImageryLayer(imageryProvider, description) {
         this.imageryProvider = imageryProvider;
 
         description = defaultValue(description, {});
 
-        var extent = defaultValue(description.extent, imageryProvider.extent);
-        extent = defaultValue(extent, Extent.MAX_VALUE);
+        this.extent = defaultValue(description.extent, imageryProvider.extent);
+        this.extent = defaultValue(this.extent, Extent.MAX_VALUE);
 
-        this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 1);
-
-        this.extent = extent;
+        /**
+         * DOC_TBA
+         *
+         * @type {Number}
+         */
+        this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 1.0);
 
         this._imageryCache = new ImageryCache();
         this._texturePool = new TexturePool();
+
+        /**
+         * The alpha blending value of this layer, from 0.0 to 1.0.
+         *
+         * @type {Number}
+         */
+        this.alpha = defaultValue(description.alpha, 1.0);
 
         this._tileFailCount = 0;
 
@@ -78,20 +93,6 @@ define([
          * @type {Number}
          */
         this.failedTileRetryTime = 5.0;
-
-        /**
-         * DOC_TBA
-         *
-         * @type {Number}
-         */
-        this.pixelError3D = 5.0;
-
-        /**
-         * DOC_TBA
-         *
-         * @type {Number}
-         */
-        this.pixelError2D = 2.0;
     }
 
     ImageryLayer.prototype.createTileImagerySkeletons = function(tile, geometryTilingScheme) {

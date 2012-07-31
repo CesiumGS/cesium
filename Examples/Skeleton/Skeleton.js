@@ -22,38 +22,45 @@ require({
 
     var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'lowV5Zc2LPiP2LWw_Z12TbCGKtq7vBTFveTYR5z8lljGnqEURaBcKpk2BKjUlgRyHGGoetE24cEk4wL2ymwk1Q..',
+        token : '63h5JcwJuWc6BlUCja2NCk5aROEQSi3gTQ3JraxWC47OYUGaPqOyW9LilIgqXZDb_IXximH5QbmwGnv_mWQyjQ..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
 
-//    var esriLayer = imageryLayerCollection.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
-//        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-//        proxy : new Cesium.DefaultProxy('/proxy/')
-//    }));
+    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+        proxy : new Cesium.DefaultProxy('/proxy/')
+    });
+    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
+    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
 
-//    var streetsLayer = imageryLayerCollection.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
-//        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
-//        proxy : new Cesium.DefaultProxy('/proxy/')
-//    }));
+    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
+        proxy : new Cesium.DefaultProxy('/proxy/')
+    });
+    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
 
-    var bingAerialLayer = imageryLayerCollection.addImageryProvider(new Cesium.BingMapsImageryProvider({
-        server : 'dev.virtualearth.net',
-        mapStyle : Cesium.BingMapsStyle.AERIAL,
-        // Some versions of Safari support WebGL, but don't correctly implement
-        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-    }));
+//    var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({
+//        server : 'dev.virtualearth.net',
+//        mapStyle : Cesium.BingMapsStyle.AERIAL,
+//        // Some versions of Safari support WebGL, but don't correctly implement
+//        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+//        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+//    });
+//    bingAerialImageryProvider.discardPolicy = bingAerialImageryProvider.createDiscardMissingTilePolicy();
+//    var bingAerialLayer = imageryLayerCollection.addImageryProvider(bingAerialImageryProvider);
 
-//    var bingRoadLayer = imageryLayerCollection.addImageryProvider(new Cesium.BingMapsImageryProvider({
+//    var bingRoadImageryProvider = new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
 //        mapStyle : Cesium.BingMapsStyle.ROAD,
 //        // Some versions of Safari support WebGL, but don't correctly implement
 //        // cross-origin image loading, so we need to load Bing imagery using a proxy.
 //        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-//    }));
-//
+//    });
+//    bingRoadImageryProvider.discardPolicy = bingRoadImageryProvider.createDiscardMissingTilePolicy();
+//    var bingRoadLayer = imageryLayerCollection.addImageryProvider(bingRoadImageryProvider);
+
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
     var testLayer = imageryLayerCollection.addImageryProvider(
@@ -114,12 +121,35 @@ require({
     ///////////////////////////////////////////////////////////////////////////
     // Example mouse & keyboard handlers
 
-    var mouseX;
-    var mouseY;
-    function mouseMoveHandler(e) {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-    }
+    var handler = new Cesium.EventHandler(canvas);
+
+    var mousePosition;
+    handler.setMouseAction(function(movement) {
+        mousePosition = movement.endPosition;
+    }, Cesium.MouseEventType.MOVE);
+
+    (function() {
+        var alphaHandler = new Cesium.EventHandler(canvas);
+
+        var isDown = false;
+        var startPosition;
+        alphaHandler.setMouseAction(function(movement) {
+            isDown = true;
+            startPosition = movement.position;
+        }, Cesium.MouseEventType.LEFT_DOWN, Cesium.EventModifier.CTRL);
+
+        alphaHandler.setMouseAction(function(movement) {
+            isDown = false;
+        }, Cesium.MouseEventType.LEFT_UP, Cesium.EventModifier.CTRL);
+
+        alphaHandler.setMouseAction(function(movement) {
+            if (isDown) {
+                var distance = startPosition.y - movement.endPosition.y;
+                var adjustment = distance / 400;
+                esriStreetsLayer.alpha = Math.min(1.0, Math.max(0.0, esriStreetsLayer.alpha + adjustment));
+            }
+        }, Cesium.MouseEventType.MOVE, Cesium.EventModifier.CTRL);
+    })();
 
     function ellipsoidIntersections(ellipsoid, ray) {
         var position = ray.origin;
@@ -205,7 +235,7 @@ require({
             break;
         case 'B'.charCodeAt(0):
             var camera = scene.getCamera();
-            var pickRay = camera._getPickRayPerspective({x: mouseX, y: mouseY});
+            var pickRay = camera._getPickRayPerspective(mousePosition);
             var intersectionDistance = ellipsoidIntersections(ellipsoid, pickRay)[0];
             var intersectionPoint = pickRay.getPoint(intersectionDistance);
             var cartographicPick = ellipsoid.cartesianToCartographic(intersectionPoint);
@@ -226,8 +256,6 @@ require({
     }
 
     document.addEventListener('keydown', keydownHandler, false);
-
-    document.addEventListener('mousemove', mouseMoveHandler, false);
 
     canvas.oncontextmenu = function() {
         return false;

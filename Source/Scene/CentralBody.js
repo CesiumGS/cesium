@@ -1293,6 +1293,7 @@ define([
 
             fs =
                 fsPrepend +
+                '#define TEXTURE_UNITS ' + context.getMaximumTextureImageUnits() + '\n' +
                 '#line 0\n' +
                 CentralBodyFS;
 

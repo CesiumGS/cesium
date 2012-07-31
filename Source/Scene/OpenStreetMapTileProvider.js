@@ -23,7 +23,7 @@ define([
      *
      * @param {String} description.url The OpenStreetMap url.
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
-     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A string crediting the data source, which is displayed on the canvas.
      *
      * @see SingleTileImageryProvider

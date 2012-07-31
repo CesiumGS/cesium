@@ -1,18 +1,22 @@
 /*global define*/
 define([
+        '../Core/loadImage',
         '../Core/DeveloperError',
         '../Renderer/MipmapHint',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        './TileState'
+        './TileState',
+        '../ThirdParty/when'
     ], function(
+        loadImage,
         DeveloperError,
         MipmapHint,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        TileState) {
+        TileState,
+        when) {
     "use strict";
 
     /**
@@ -89,6 +93,18 @@ define([
         tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.transformedImage, texturePool);
         tileImagery.transformedImage = undefined;
         tileImagery.state = TileState.READY;
+    };
+
+    ImageryProvider.loadImageAndCheckDiscardPolicy = function(url, discardPolicy) {
+        var image = loadImage(url);
+
+        if (typeof discardPolicy === 'undefined') {
+            return image;
+        }
+
+        return when(discardPolicy.shouldDiscardImage(image), function(shouldDiscard) {
+            return shouldDiscard ? undefined : image;
+        });
     };
 
     ImageryProvider.createTextureFromTransformedImage = function(context, transformedImage, texturePool) {

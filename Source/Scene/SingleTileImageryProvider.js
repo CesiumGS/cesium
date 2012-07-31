@@ -27,7 +27,7 @@ define([
      *
      * @param {String} url The url for the tile.
      * @param {Extent} extent The extent covered by the image.
-     * @param {Object} [proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Object} [proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} url is required.
      * @exception {DeveloperError} extent is required.

@@ -1,9 +1,15 @@
 //#define SHOW_TILE_BOUNDARIES
 //#define SHOW_LEVELS
+
+#ifndef TEXTURE_UNITS
+#define TEXTURE_UNITS 8
+#endif
+
 uniform int u_numberOfDayTextures;
-uniform sampler2D u_dayTextures[8];
-uniform vec2 u_dayTextureTranslation[8];
-uniform vec2 u_dayTextureScale[8];
+uniform sampler2D u_dayTextures[TEXTURE_UNITS];
+uniform vec2 u_dayTextureTranslation[TEXTURE_UNITS];
+uniform vec2 u_dayTextureScale[TEXTURE_UNITS];
+uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 uniform bool u_cameraInsideBoundingSphere;
 uniform int u_level;
 
@@ -21,8 +27,8 @@ void main()
     vec3 normalEC = normalize(agi_normal * normalMC);                                           // normalized surface normal in eye coordiantes
     
 #ifdef SHOW_DAY
-    vec3 startDayColor = vec3(0.0, 0.0, 255.0);
-    for (int i = 0; i < 8; ++i)
+    vec3 startDayColor = vec3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
+    for (int i = 0; i < TEXTURE_UNITS; ++i)
     {
         if (i >= u_numberOfDayTextures)
             break;
@@ -31,7 +37,7 @@ void main()
             textureCoordinates.y >= 0.0 && textureCoordinates.y <= 1.0)
         {
 	        vec4 color = texture2D(u_dayTextures[i], textureCoordinates);
-	        startDayColor = mix(startDayColor, color.rgb, color.a);
+	        startDayColor = mix(startDayColor, color.rgb, color.a * u_dayTextureAlpha[i]);
         } 
     }
     if (u_cameraInsideBoundingSphere)

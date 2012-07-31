@@ -108,9 +108,15 @@ define([
      * @constructor
      *
      * @param {String} description.server The name of the Bing Maps server hosting the imagery.
-     * @param {String} [description.key] An optional Bing Maps key, which can be created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
-     * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
-     * @param {Object} [description.proxy=undefined] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {String} [description.key] An optional Bing Maps key, which can be created at
+     *        <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
+     * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
+     *        imagery to load.
+     * @param {String|Object} [description.discardPolicy] If the service returns "missing" tiles,
+     *        these can be filtered out by providing an object which is expected to have a
+     *        shouldDiscardImage function.  By default, no tiles will be filtered.
+     * @param {Object} [description.proxy] A proxy to use for requests. This object is
+     *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.server</code> is required.
      *
@@ -158,6 +164,13 @@ define([
          * @type {Enumeration}
          */
         this.mapStyle = mapStyle;
+
+        /**
+         * If the service returns "missing" tiles, these can be filtered out by providing
+         * an object which is expected to have a shouldDiscardImage function.  By default,
+         * no tiles will be filtered.
+         */
+        this.discardPolicy = description.discardPolicy;
 
         this._proxy = description.proxy;
 
@@ -239,16 +252,23 @@ define([
 
             return that._imageUrlTemplate;
         });
+    };
 
-        this._discardPolicy = when(this._imageUrlTemplate, function(template) {
-            // assume that the tile at (0,0) at the maximum level is missing.
-            var missingTileUrl = that.buildImageUrl(0, 0, that.maxLevel);
-            var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)];
-
-            return when(missingTileUrl, function(missingImageUrl) {
-                return new DiscardMissingTileImagePolicy(missingImageUrl, pixelsToCheck);
-            });
+    /**
+     * Creates a {@link DiscardMissingTileImagePolicy} that compares tiles
+     * against the tile at coordinate (0, 0), at the maximum zoom level, which is
+     * assumed to be missing.  Only a subset of the pixels are compared, based on the
+     * current visual appearance of the tile on the default Bing server, to improve
+     * performance.
+     */
+    BingMapsImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
+        var that = this;
+        var missingTileUrl = when(this._imageUrlTemplate, function() {
+            return that.buildImageUrl(0, 0, that.maxLevel);
         });
+        var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)];
+
+        return new DiscardMissingTileImagePolicy(missingTileUrl, pixelsToCheck);
     };
 
     /**
@@ -354,13 +374,7 @@ define([
      *         If the image is not suitable for display, the promise can resolve to undefined.
      */
     BingMapsImageryProvider.prototype.requestImage = function(url) {
-        var image = loadImage(url);
-
-        return when(this._discardPolicy, function(discardPolicy) {
-            return discardPolicy.shouldDiscardTileImage(image);
-        }).then(function(shouldDiscard) {
-            return shouldDiscard ? undefined : image;
-        });
+        return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this.discardPolicy);
     };
 
     /**

@@ -320,6 +320,9 @@ define([
         u_dayTextureScale : function() {
             return this.dayTextureScale;
         },
+        u_dayTextureAlpha : function() {
+            return this.dayTextureAlpha;
+        },
         u_cameraInsideBoundingSphere : function() {
             return this.cameraInsideBoundingSphere;
         },
@@ -331,9 +334,10 @@ define([
         modifiedModelView : undefined,
 
         numberOfDayTextures : 0,
-        dayTextures : new Array(8),
-        dayTextureTranslation : new Array(8),
-        dayTextureScale : new Array(8),
+        dayTextures : [],
+        dayTextureTranslation : [],
+        dayTextureScale : [],
+        dayTextureAlpha : [],
         cameraInsideBoundingSphere : false,
         level : 0
     };
@@ -355,6 +359,8 @@ define([
 
         var uniformMap = combine(uniformMapTemplate, centralBodyUniformMap);
 
+        var maxTextures = context.getMaximumTextureImageUnits();
+
         for ( var i = 0, len = renderList.length; i < len; i++) {
             var tile = renderList[i];
             uniformMap.level = tile.level;
@@ -363,17 +369,19 @@ define([
             uniformMap.center3D = rtc;
 
             var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
-            // PERFORMANCE_TODO: use a scratch matrix instead of cloning for every tile.
-            var mvrtc = mv.clone();
-            mvrtc.setColumn3(centerEye);
-            uniformMap.modifiedModelView = mvrtc;
+            uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);
 
             var tileImageryCollection = tile.imagery;
+            var imageryIndex = 0;
+            var imageryLen = tileImageryCollection.length;
 
-            var numberOfDayTextures = 0;
-            if (!tile.culled) {
-                for ( var imageryIndex = 0, imageryLen = tileImageryCollection.length; imageryIndex < imageryLen; ++imageryIndex) {
+            while (imageryIndex < imageryLen) {
+                var numberOfDayTextures = 0;
+
+                while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                     var tileImagery = tileImageryCollection[imageryIndex];
+                    ++imageryIndex;
+
                     if (typeof tileImagery === 'undefined' || tileImagery.state !== TileState.READY) {
                         continue;
                     }
@@ -381,29 +389,28 @@ define([
                     uniformMap.dayTextures[numberOfDayTextures] = tileImagery.texture;
                     uniformMap.dayTextureTranslation[numberOfDayTextures] = tileImagery.textureTranslation;
                     uniformMap.dayTextureScale[numberOfDayTextures] = tileImagery.textureScale;
+                    uniformMap.dayTextureAlpha[numberOfDayTextures] = tileImagery.imageryLayer.alpha;
 
                     ++numberOfDayTextures;
                 }
+
+                // trim texture array to the used length so we don't end up using old textures
+                // which might get destroyed eventually
+                uniformMap.dayTextures.length = numberOfDayTextures;
+                uniformMap.numberOfDayTextures = numberOfDayTextures;
+
+                if (typeof tile.parent !== 'undefined' && tile.parent.cameraInsideBoundingSphere) {
+                    uniformMap.cameraInsideBoundingSphere = true;
+                } else {
+                    uniformMap.cameraInsideBoundingSphere = false;
+                }
+
+                context.continueDraw({
+                    primitiveType : TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES,
+                            vertexArray : tile.vertexArray,
+                            uniformMap : uniformMap
+                });
             }
-
-            //trim arrays to the used length
-            uniformMap.dayTextures.length = numberOfDayTextures;
-            uniformMap.dayTextureTranslation.length = numberOfDayTextures;
-            uniformMap.dayTextureScale.length = numberOfDayTextures;
-
-            if (typeof tile.parent !== 'undefined' && tile.parent.cameraInsideBoundingSphere) {
-                uniformMap.cameraInsideBoundingSphere = true;
-            } else {
-                uniformMap.cameraInsideBoundingSphere = false;
-            }
-
-            uniformMap.numberOfDayTextures = numberOfDayTextures;
-
-            context.continueDraw({
-                primitiveType : TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES,
-                vertexArray : tile.vertexArray,
-                uniformMap : uniformMap
-            });
         }
 
         if (this._boundingSphereTile) {
@@ -421,10 +428,7 @@ define([
             uniformMap.center3D = rtc2;
 
             var centerEye2 = mv.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
-            // PERFORMANCE_TODO: use a scratch matrix instead of cloning for every tile.
-            var mvrtc2 = mv.clone();
-            mvrtc2.setColumn3(centerEye2);
-            uniformMap.modifiedModelView = mvrtc2;
+            uniformMap.modifiedModelView = mv.setColumn(3, centerEye2, uniformMap.modifiedModelView);
 
             context.continueDraw({
                 primitiveType : PrimitiveType.LINES,
@@ -505,12 +509,9 @@ define([
 
         if (!isTileVisible(surface, sceneState, tile)) {
             ++tilesCulled;
-            tile.culled = true;
             //surface._renderList.push(tile);
             return;
         }
-
-        tile.culled = false;
 
         if (tile.level > maxDepth) {
             maxDepth = tile.level;
@@ -772,7 +773,12 @@ define([
                     imageryLayer.createResources(context, tileImagery);
                 }
 
-                doneLoading = doneLoading && tileImagery.state === TileState.READY;
+                var tileImageryDoneLoading =
+                    tileImagery.state === TileState.READY ||
+                    tileImagery.state === TileState.FAILED ||
+                    tileImagery.state === TileState.INVALID;
+
+                doneLoading = doneLoading && tileImageryDoneLoading;
             }
 
             // The tile becomes renderable when the terrain and all imagery data are loaded.

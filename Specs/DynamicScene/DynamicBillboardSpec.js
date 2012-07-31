@@ -25,9 +25,10 @@ defineSuite([
     /*global it,expect*/
 
     it('processCzmlPacket adds data for infinite billboard.', function() {
+        var sourceUri = 'http://someImage.com/';
         var billboardPacket = {
             billboard : {
-                image : 'http://someImage.com/image',
+                image : 'image.png',
                 scale : 1.0,
                 horizontalOrigin : 'CENTER',
                 verticalOrigin : 'CENTER',
@@ -45,10 +46,10 @@ defineSuite([
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicBillboard.processCzmlPacket(dynamicObject, billboardPacket)).toEqual(true);
+        expect(DynamicBillboard.processCzmlPacket(dynamicObject, billboardPacket, undefined, sourceUri)).toEqual(true);
 
         expect(dynamicObject.billboard).toBeDefined();
-        expect(dynamicObject.billboard.image.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.image);
+        expect(dynamicObject.billboard.image.getValue(Iso8601.MINIMUM_VALUE)).toEqual('http://someImage.com/image.png');
         expect(dynamicObject.billboard.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.scale);
         expect(dynamicObject.billboard.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.CENTER);
         expect(dynamicObject.billboard.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);

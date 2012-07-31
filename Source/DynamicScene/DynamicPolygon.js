@@ -45,6 +45,8 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject which will contain the polygon data.
      * @param {Object} packet The CZML packet to process.
+     * @param {DynamicObjectCollection} [dynamicObjectCollection] The collection into which objects are being loaded.
+     * @param {String} [sourceUri] The originating url of the CZML being processed.
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject
@@ -52,7 +54,7 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicPolygon.processCzmlPacket = function(dynamicObject, packet) {
+    DynamicPolygon.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polygonData = packet.polygon;
         if (typeof polygonData === 'undefined') {
             return false;
@@ -85,7 +87,7 @@ define([
                 polygon.material = material = new DynamicMaterialProperty();
                 polygonUpdated = true;
             }
-            material.processCzmlIntervals(polygonData.material, interval);
+            material.processCzmlIntervals(polygonData.material, interval, sourceUri);
         }
         return polygonUpdated;
     };
