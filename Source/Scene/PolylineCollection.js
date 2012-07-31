@@ -3,6 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/combine',
         '../Core/destroyObject',
+        '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Matrix4',
         '../Core/ComponentDatatype',
@@ -22,6 +23,7 @@ define([
         DeveloperError,
         combine,
         destroyObject,
+        Cartesian3,
         Cartesian4,
         Matrix4,
         ComponentDatatype,
@@ -1340,8 +1342,8 @@ define([
             var startN = ((i === 0) || (segmentLength === 2)) ? 0 : 1;
             for ( var n = startN; n < segmentLength; ++n) {
                 var position = segment[n].cartesian;
-                var p = modelMatrix.multiplyWithVector(new Cartesian4(position.x, position.y, position.z, 1.0));
-                newPositions.push(projection.project(ellipsoid.toCartographic3(p.getXYZ())));
+                var p = modelMatrix.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+                newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
             }
         }
         return newPositions;
