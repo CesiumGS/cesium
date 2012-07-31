@@ -71,7 +71,7 @@ define([
          *
          * @type Number
          */
-        this.levelZeroMaximumGeometricError = this.ellipsoid.getRadii().x * 2 * Math.PI / 128;
+        this.levelZeroMaximumGeometricError = this.ellipsoid.getRadii().x * 2 * Math.PI / 1024;
     }
 
     /**
