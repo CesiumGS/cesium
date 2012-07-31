@@ -915,7 +915,7 @@ define([
 
             var fRect = new BoundingRectangle(x, y, w, h);
 
-            return !Rectangle.rectangleIntersect(bRect, fRect);
+            return !BoundingRectangle.rectangleIntersect(bRect, fRect);
         }
 
         var boundingVolume = this._getTileBoundingSphere(tile, sceneState);
@@ -1358,7 +1358,11 @@ define([
         var width = Math.ceil(upperRight.x) - x;
         var height = Math.ceil(upperRight.y) - y;
 
-        return new BoundingRectangle(x, y, width, height);
+        if (width > 0.0 && height > 0.0) {
+            return new BoundingRectangle(x, y, width, height);
+        }
+
+        return undefined;
     };
 
     CentralBody.prototype._computeDepthQuad = function(sceneState) {
@@ -1453,7 +1457,7 @@ define([
                 CesiumMath.PI_OVER_TWO
             );
             boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
-            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
+            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeIntersect) === Intersect.OUTSIDE;
             occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
@@ -1786,7 +1790,7 @@ define([
                 viewportTransformation : uniformState.getViewportTransformation()
             });
 
-            if (rect.width !== 0 && rect.height !== 0) {
+            if (typeof rect !== 'undefined') {
                 scissorTest = {
                     enabled : true,
                     rectangle : rect
