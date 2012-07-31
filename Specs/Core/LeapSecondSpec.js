@@ -10,7 +10,7 @@ defineSuite([
          TimeStandard,
          binarySearch) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('throws an exception if constructed without a julian date', function() {
         expect(function() {

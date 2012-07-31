@@ -18,7 +18,7 @@ defineSuite([
          Tipsify,
          EquidistantCylindricalProjection) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('converts triangles to wireframe in place', function() {
         var mesh = MeshFilters.toWireframeInPlace({

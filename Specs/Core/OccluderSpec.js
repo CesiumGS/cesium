@@ -12,7 +12,7 @@ defineSuite([
          Visibility,
          CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('throws an exception during construction (1 of 3)', function() {
         expect(function() {

@@ -14,7 +14,7 @@ defineSuite([
               Iso8601,
               TimeInterval) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('processCzmlPacket adds data for infinite polygon.', function() {
         var polygonPacket = {
