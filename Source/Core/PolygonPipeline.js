@@ -444,6 +444,396 @@ define([
             }
 
             return mesh;
+        },
+
+        /**
+         * Determines if a given point lies inside or on the boundary of the triangle formed by three points.
+         *
+         * @param {Cartesian} point
+         * @param {Cartesian} p0
+         * @param {Cartesian} p1
+         * @param {Cartesian} p2
+         * @returns {Boolean} <code>true</code> if <code>point</code> lies within or on the boundary of the triangle
+         * defined by points <code>p0</code>, <code>p1</code>, and <code>p2</code>.
+         *
+         * @private
+         */
+        _isPointInTriangle2D : function(point, p0, p1, p2) {
+            if (!point || !p0 || !p1 || !p2) {
+                throw new DeveloperError('point, p0, p1, and p2 are required.');
+            }
+
+            // Implementation from http://www.blackpawn.com/texts/pointinpoly/default.html.
+            var v0 = p2.subtract(p0);
+            var v1 = p1.subtract(p0);
+            var v2 = point.subtract(p0);
+
+            var dot00 = v0.dot(v0);
+            var dot01 = v0.dot(v1);
+            var dot02 = v0.dot(v2);
+            var dot11 = v1.dot(v1);
+            var dot12 = v1.dot(v2);
+
+            var q = 1.0 / (dot00 * dot11 - dot01 * dot01);
+            var u = (dot11 * dot02 - dot01 * dot12) * q;
+            var v = (dot00 * dot12 - dot01 * dot02) * q;
+
+            return (u >= 0) && (v >= 0) && (u + v < 1);
+        },
+
+        /**
+         * Returns the index of the vertex with the maximum X value.
+         *
+         * @param {Array} vertices An array of the Cartesian points defining the polygon's vertices.
+         * @returns {Number} The index of the vertex with the maximum X value.
+         *
+         * @exception {DeveloperError} <code>vertices</code> is required.
+         * @exception {DeveloperError} <code>vertices</code> must not be empty.
+         *
+         * @private
+         */
+        _getRightmostVertexIndex : function(vertices) {
+            if (!vertices) {
+                throw new DeveloperError('vertices is required');
+            }
+            if (vertices.length === 0) {
+                throw new DeveloperError('vertices must not be empty.');
+            }
+
+            var maximumX = vertices[0].X;
+            var rightmostVertexIndex = 0;
+            for (var i = 0; i < vertices.length; i++) {
+                if (vertices[i].X > maximumX) {
+                    maximumX = vertices[i].X;
+                    rightmostVertexIndex = i;
+                }
+            }
+            return rightmostVertexIndex;
+        },
+
+        /**
+         * Returns the index of the ring that contains the rightmost vertex.
+         *
+         * @param {Array} rings An array of arrays of Cartesians. Each array contains the vertices defining a polygon.
+         * @returns {Number} The index of the ring containing the rightmost vertex.
+         *
+         * @exception {DeveloperError} <code>rings</code> is required.
+         * @exception {DeveloperError} <code>rings</code> must not be empty.
+         * @exception {DeveloperError} The first ring in <code>rings</code> must not be empty.
+         *
+         * @private
+         */
+        _getRightmostRingIndex : function(rings) {
+            if (!rings) {
+                throw new DeveloperError('rings is required');
+            }
+            if (rings.length === 0) {
+                throw new DeveloperError('rings must not be empty');
+            }
+            if (rings[0].length === 0) {
+                throw new DeveloperError('The first ring in rings must not be empty.');
+            }
+
+            var rightmostX = rings[0][0].X;
+            var rightmostRingIndex = 0;
+            for (var ring = 0; ring < rings.Count; ring++) {
+                var maximumX = rings[ring][_getRightmostVertexIndex(rings[ring])];
+                if (maximumX > rightmostX) {
+                    rightmostX = maximumX;
+                    rightmostRingIndex = ring;
+                }
+            }
+
+            return rightmostRingIndex;
+        },
+
+        /**
+         * Returns a list containing the reflex vertices for a given polygon.
+         *
+         * @param {Array} polygon An array of Cartesian elements defining the polygon.
+         * @returns {Array}
+         *
+         * @exception DeveloperError} <code>polygon</code> is required.
+         *
+         * @private
+         */
+        _getReflexVertices : function(polygon) {
+            if (!polygon) {
+                throw new DeveloperException('polygon is required.');
+            }
+
+            // Idea: Return a list of indices, rather than the vertices themselves.
+            var reflexVertices;
+            for (var i = 0; i < polygon.length; i++) {
+                var p0 = polygon[(i + 1) % polygon.length];
+                var p1 = polygon[i];
+                var p2 = polygon[((i - 1) + polygon.length) % polygon.length];
+
+                var u = p1.subtract(p0);
+                var v = p2.subtract(p1);
+                if (((u.X * v.Y) - (u.Y * v.X)) < 0.0) {
+                    reflexVertices.push(p1);
+                }
+            }
+            return reflexVertices;
+        },
+
+        /**
+         * Returns true if the give point is a vertex of the provided polygon.
+         *
+         * @param {Array} polygon A list of Cartesian elements defining a polygon.
+         * @param {Cartesian} point The point to check.
+         * @returns {Boolean} <code>true></code> if <code>point</code> is found in <code>polygon</code>, <code>false</code> otherwise.
+         *
+         * @exception {DeveloperError} <code>polygon</code> is required.
+         * @exception {DeveloperError} <code>point</code> is required.
+         *
+         * @private
+         */
+        _isVertex : function(polygon, point) {
+            if (!polygon) {
+                throw new DeveloperError('polygon is required.');
+            }
+            if (!point) {
+                throw new DeveloperError('point is required.');
+            }
+
+            for (var i =0; i < positions.length; i++) {
+                if (point.equals(positions[i])){
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        /**
+         * Given a point inside a polygon, find the nearest point directly to the right that lies on one of the polygon's edges.
+         *
+         * @param {Cartesian} point A point inside the polygon defined by <code>ring</code>.
+         * @param {Array} ring A list of Cartesian points defining a polygon.
+         * @param {Array} [edge]  An array containing the two endpoints of the edge containing the intersection.
+         *
+         * @private
+         */
+        _intersectPointWithRing : function(point, ring, edge) {
+            if (!point) {
+                throw new DeveloperError('point is required.');
+            }
+            if (!ring) {
+                throw new DeveloperError('ring is required');
+            }
+
+            var minDistance = Number.MAX_VALUE;
+            var rightmostVertexIndex = _getRightmostVertexIndex(ring);
+            var intersection = new Cartesian3(ring[rightmostVertexIndex].X, point.Y, 0.0);
+            edge = [ring[rightmostVertexIndex], ring[rightmostVertexIndex + 1]];
+
+            var boundaryMinX = ring[0].X;
+            var boundaryMaxX = boundaryMinX;
+            for (var i = 1; i < ring.Count; ++i)
+            {
+                if (ring[i].X < boundaryMinX) {
+                    boundaryMinX = ring[i].X;
+                } else if (ring[i].X > boundaryMaxX) {
+                    boundaryMaxX = ring[i].X;
+                }
+            }
+            boundaryMaxX += (boundaryMaxX - boundaryMinX);
+            var point2 = new Cartesian3(boundaryMaxX, point.Y, 0.0);
+
+            // Find the nearest intersection.
+            for (var i = 0; i < ring.Count; i++)
+            {
+                var v1 = ring[i];
+                var v2 = ring[(i + 1) % ring.Count];
+
+                if (((v1.X >= point.X) || (v2.X >= point.X)) && (((v1.Y >= point.Y) && (v2.Y <= point.Y)) ||
+                ((v1.Y <= point.Y) && (v2.Y >= point.Y)))) {
+                    var temp = ((v2.Y - v1.Y) * (point2.X - point.X)) - ((v2.X - v1.X) * (point2.Y - point.Y));
+                    if (temp != 0.0) {
+                        temp = 1.0 / temp;
+                        var ua = (((v2.X - v1.X) * (point.Y - v1.Y)) - ((v2.Y - v1.Y) * (point.X - v1.X))) * temp;
+                        var ub = (((point2.X - point.X) * (point.Y - v1.Y)) - ((point2.Y - point.Y) * (point.X - v1.X))) * temp;
+                        if ((ua >= 0.0) && (ua <= 1.0) && (ub >= 0.0) && (ub <= 1.0)) {
+                            var tempIntersection = new Cartesian3(point.X + ua * (point2.X - point.X), point.Y + ua * (point2.Y - point.Y), 0.0);
+                            var dist = tempIntersection.subtract(point);
+                            temp = dist.magnitudeSquared();
+                            if (temp < minDistance) {
+                                intersection = tempIntersection;
+                                minDistance = temp;
+                                edge = [v1, v2];
+                            }
+                        }
+                    }
+                }
+            }
+
+            return intersection;
+        },
+
+        /**
+         * Given an outer ring and multiple inner rings, determine the point on the outer ring that is visible
+         * to the rightmost vertex of the rightmost inner ring.
+         *
+         * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
+         * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+         * @returns {Number} The index of the vertex in <code>outerRing</code> that is mutually visible to the rightmost vertex in <code>inenrRing</code>.
+         *
+         * @exception {DeveloperError} <code>outerRing</code> is required.
+         * @exception {DeveloperError} <code>outerRing</code> must not be empty.
+         * @exception {DeveloperError} <code>innerRings</code> is required.
+         *
+         * @private
+         */
+        _getMutuallyVisibleVertexIndex : function(outerRing, innerRings) {
+            if (!outerRing) {
+                throw new DeveloperError('outerRing is required.');
+            }
+            if (outerRing.length === 0) {
+                throw new DeveloperError('outerRing must not be empty.');
+            }
+            if (!innerRings) {
+                throw new DeveloperError('innerRings is required.');
+            }
+
+            var innerRingIndex = _getRightmostRingIndex(innerRings);
+            var innerRing = innerRings[innerRingIndex];
+            var innerRingVertexIndex = _getRightmostVertexIndex(innerRing);
+            var innerRingVertex = innerRing[innerRingVertexIndex];
+            var edge;
+            var intersection = _intersectPointWithRing(innerRingVertex, outerRing, edge);
+
+            var visibleVertex;
+            if (isVertex(outerRing, intersection)) {
+                visibleVertex = intersection;
+            } else {
+                // Set P to be the edge endpoint closest to the inner ring vertex
+                var d1 = (edge[0].subtract(innerRingVertex)).magnitudeSquared();
+                var d2 = (edge[1].subtract(innerRingVertex)).magnitudeSquared();
+                var p = (d1 < d2) ? edge[0] : edge[1];
+
+                var reflexVertices = _getReflexVertices(outerRing);
+                reflexVertices.remove(p); // Do not include p if it happens to be reflex.
+
+                var pointsInside = [];
+                for (var vertex in reflexVertices)
+                {
+                    if (_isPointInTriangle2D(innerRingVertex, intersection, p, vertex))
+                    {
+                        pointsInside.Add(vertex);
+                    }
+                }
+
+                // If all reflexive vertices are outside the triangle formed by points
+                // innerRingVertex, intersection and P, then P is the visible vertex.
+                // Otherwise, return the reflex vertex that minimizes the angle between <1,0> and <k, reflex>.
+                var minAngle = Math.PI;
+                if (pointsInside.Count > 0) {
+                    var v1 = new Cartesian3(1.0, 0.0, 0.0);
+                    for (var i = 0; i < pointsInside.Count; i++) {
+                        var v2 = pointsInside[i].subtract(innerRingVertex);
+                        var angle = Math.abs(Math.acos(v1.Dot(v2) / (v1.magnitude() * v2.magnitude())));
+                        if (angle < minAngle) {
+                            minAngle = angle;
+                            p = pointsInside[i];
+                        }
+                    }
+                }
+                visibleVertex = p;
+            }
+
+            return outerRing.indexOf(visibleVertex);
+        },
+
+        /**
+         * TODO: DOC
+         * TODO: Port WindingOrder check from Matt F's czml-writer KML.
+         *
+         * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
+         * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+         *
+         * @exception {DeveloperError} <code>outerRing</code> is required.
+         * @exception {DeveloperError} <code>outerRing</code> must not be empty.
+         * @exception {DeveloperError} <code>innerRings</code> is required.
+         */
+        eliminateHole : function(outerRing, innerRings) {
+            if (!outerRing) {
+                throw new DeveloperError('outerRing is required.');
+            }
+            if (outerRing.length === 0) {
+                throw new DeveloperError('outerRing must not be empty.');
+            }
+            if (!innerRings) {
+                throw new DeveloperError('innerRings is required.');
+            }
+
+            // Convert from LLA -> XYZ and project points onto a tangent plane to find the mutually visible vertex.
+            var cartesianOuterRing = [];
+            for (var point in outerRing)
+            {
+                cartesianOuterRing.push(Ellipsoid.WGS84.cartographicToCartesian(point));
+            }
+
+            var cartesianInnerRings = [];
+            for (var ring in innerRings)
+            {
+               var cartesianInnerRing = [];
+                for (var point in ring)
+                {
+                    cartesianInnerRing.Add(Ellipsoid.WGS84.cartographicToCartesian(point));
+                }
+                cartesianInnerRings.Add(cartesianInnerRing);
+            }
+
+            var tangentPlane = new EllipsoidTangentPlane(Ellipsoid.WGS84, cartesianOuterRing);
+            cartesianOuterRing = (tangentPlane.projectPointsOntoPlane(cartesianOuterRing));
+            for (var i = 0; i < cartesianInnerRings.Count; i++)
+            {
+                cartesianInnerRings[i] = (tangentPlane.projectPointsOntoPlane(cartesianInnerRings[i]));
+            }
+
+            var visibleVertexIndex = getMutuallyVisibleVertexIndex(cartesianOuterRing, cartesianInnerRings);
+            var innerRingIndex = getRightmostRingIndex(cartesianInnerRings);
+            var innerRingVertexIndex = getRightmostVertexIndex(cartesianInnerRings[innerRingIndex]);
+
+            var innerRing = innerRings[innerRingIndex];
+            var newPolygonVertices = [];
+
+            for (var i = 0; i < outerRing.Count; i++)
+            {
+                newPolygonVertices.push(outerRing[i]);
+            }
+
+            var holeVerticesToAdd = [];
+
+            // If the rightmost inner vertex is not the starting and ending point of the ring,
+            // then some other point is duplicated in the inner ring and should be skipped once.
+            if (innerRingVertexIndex != 0)
+            {
+                for (var j = 0; j <= innerRing.Count; j++)
+                {
+                    var index = (j + innerRingVertexIndex) % innerRing.Count;
+                    if (index != 0)
+                    {
+                        holeVerticesToAdd.push(innerRing[index]);
+                    }
+                }
+            }
+            else
+            {
+                for (var j = 0; j < innerRing.Count; j++)
+                {
+                    holeVerticesToAdd.push(innerRing[(j + innerRingVertexIndex) % innerRing.Count]);
+                }
+            }
+
+            var lastVisibleVertexIndex = newPolygonVertices.indexOf(outerRing[visibleVertexIndex]);
+
+            holeVerticesToAdd.push(outerRing[lastVisibleVertexIndex]);
+            newPolygonVertices.InsertRange(lastVisibleVertexIndex + 1, holeVerticesToAdd);
+            innerRings.RemoveAt(innerRingIndex);
+
+            return newPolygonVertices;
         }
     };
 
