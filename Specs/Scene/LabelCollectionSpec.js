@@ -28,7 +28,7 @@ defineSuite([
          VerticalOrigin,
          LabelStyle) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor and fillColor properties
 
@@ -36,8 +36,15 @@ defineSuite([
     var labels;
     var us;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
+    });
+
+    beforeEach(function() {
         labels = new LabelCollection();
 
         var camera = {
@@ -45,6 +52,7 @@ defineSuite([
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         };
+
         us = context.getUniformState();
         us.setView(Matrix4.fromCamera(camera));
         us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
@@ -52,9 +60,7 @@ defineSuite([
 
     afterEach(function() {
         labels = labels && labels.destroy();
-        us = null;
-
-        destroyContext(context);
+        us = undefined;
     });
 
     it('default constructs a label', function() {

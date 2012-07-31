@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite(['Core/binarySearch'], function(binarySearch) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('can perform a binary search (1)', function() {
         var array = [0, 1, 2, 3, 4, 5, 6, 7];

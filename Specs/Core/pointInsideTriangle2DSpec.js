@@ -6,7 +6,7 @@ defineSuite([
          pointInsideTriangle2D,
          Cartesian2) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('pointInsideTriangle2D has point inside', function() {
         expect(pointInsideTriangle2D(new Cartesian2(0.25, 0.25), Cartesian2.ZERO, new Cartesian2(1.0, 0.0), new Cartesian2(0.0, 1.0))).toEqual(true);

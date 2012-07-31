@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite(['Core/Color'], function(Color) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('Constructing without arguments produces expected defaults', function() {
         var v = new Color();

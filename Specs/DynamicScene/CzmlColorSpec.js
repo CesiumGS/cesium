@@ -6,7 +6,7 @@ defineSuite([
               CzmlColor,
               Color) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var constantRgbaInterval = {
         rgba : [1, 2, 3, 4]
