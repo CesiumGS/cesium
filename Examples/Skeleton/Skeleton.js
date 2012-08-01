@@ -26,6 +26,12 @@ require({
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
+//    var terrainProvider = new Cesium.WebMapServiceTerrainProvider({
+//        url : 'http://localhost:8081/geoserver/terrain/wms',
+//        layerName : 'terrain:SRTM',
+//        proxy : new Cesium.DefaultProxy('/terrain/')
+//    });
+
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
 
     var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
@@ -40,6 +46,7 @@ require({
         proxy : new Cesium.DefaultProxy('/proxy/')
     });
     var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
+
 
 //    var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
