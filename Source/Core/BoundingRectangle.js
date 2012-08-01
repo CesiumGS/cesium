@@ -1,9 +1,13 @@
 /*global define*/
 define([
+        './Cartographic',
         './DeveloperError',
+        './Extent',
         './Math'
     ], function(
+        Cartographic,
         DeveloperError,
+        Extent,
         CesiumMath) {
     "use strict";
 
@@ -149,6 +153,37 @@ define([
         var width = maximumX - minimumX;
         var height = maximumY - minimumY;
         return new BoundingRectangle(minimumX, minimumY, width, height);
+    };
+
+    /**
+     * Creates a bounding rectangle from an extent.
+     *
+     * @memberof BoundingRectangle
+     *
+     * @param {Extent} extent The extent used to create a bounding rectangle.
+     * @param {Object} projection The projection used to project the extent into 2D.
+     *
+     * @exception {DeveloperError} extent is required.
+     * @exception {DeveloperError} projection is required.
+     *
+     * @returns {BoundingRectangle} The bounding rectangle containing the extent.
+     */
+    BoundingRectangle.fromExtent = function(extent, projection) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        if (typeof projection === 'undefined' || typeof projection.project === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        Extent.validate(extent);
+
+        var lowerLeft = projection.project(extent.getSouthwest());
+        var upperRight = projection.project(extent.getNortheast());
+
+        var diagonal = upperRight.subtract(lowerLeft);
+        return new BoundingRectangle(lowerLeft.x, lowerLeft.y, diagonal.x, diagonal.y);
     };
 
     /**

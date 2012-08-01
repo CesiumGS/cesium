@@ -1,12 +1,22 @@
 /*global define*/
 define([
-        './DeveloperError',
+        './defaultValue',
         './Cartesian3',
-        './Intersect'
+        './Cartographic',
+        './DeveloperError',
+        './Ellipsoid',
+        './Extent',
+        './Intersect',
+        './Math'
     ], function(
-        DeveloperError,
+        defaultValue,
         Cartesian3,
-        Intersect) {
+        Cartographic,
+        DeveloperError,
+        Ellipsoid,
+        Extent,
+        Intersect,
+        CesiumMath) {
     "use strict";
 
     /**
@@ -203,6 +213,143 @@ define([
         }
 
         return new BoundingSphere(naiveCenter, naiveRadius);
+    };
+
+    /**
+     * Creates a bounding sphere from an extent projected in 2D.
+     *
+     * @memberof BoundingSphere
+     *
+     * @param {Extent} extent The extent used to create a bounding sphere.
+     * @param {Object} projection The projection used to project the extent into 2D.
+     *
+     * @exception {DeveloperError} extent is required.
+     * @exception {DeveloperError} projection is required.
+     *
+     * @returns {BoundingSphere} The bounding sphere containing the extent.
+     */
+    BoundingSphere.fromExtent2D = function(extent, projection) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        if (typeof projection === 'undefined' || typeof projection.project === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        Extent.validate(extent);
+
+        var lowerLeft = projection.project(extent.getSouthwest());
+        var upperRight = projection.project(extent.getNortheast());
+
+        var width = upperRight.x - lowerLeft.x;
+        var height = upperRight.y - lowerLeft.y;
+
+        var center = new Cartesian3(lowerLeft.x + width * 0.5, lowerLeft.y + height * 0.5, 0.0);
+        var radius = Math.sqrt(width * width + height * height) * 0.5;
+        return new BoundingSphere(center, radius);
+    };
+
+    function getExtentPosition(lla, ellipsoid, time, projection) {
+        if (typeof time === 'undefined' || time === 0.0 || typeof projection === 'undefined') {
+            return ellipsoid.cartographicToCartesian(lla);
+        }
+
+        var twod = projection.project(lla);
+        twod = new Cartesian3(0.0, twod.x, twod.y);
+        return twod.lerp(ellipsoid.cartographicToCartesian(lla), time);
+    }
+
+    BoundingSphere._computeExtentPositions = function(extent, ellipsoid, time, projection) {
+        var positions = [];
+
+        var lla = new Cartographic(extent.west, extent.north);
+        positions.push(getExtentPosition(lla, ellipsoid, time, projection));
+        lla.longitude = extent.east;
+        positions.push(getExtentPosition(lla, ellipsoid, time, projection));
+        lla.latitude = extent.south;
+        positions.push(getExtentPosition(lla, ellipsoid, time, projection));
+        lla.longitude = extent.west;
+        positions.push(getExtentPosition(lla, ellipsoid, time, projection));
+
+        if (extent.north < 0.0) {
+            lla.latitude = extent.north;
+        } else if (extent.south > 0.0) {
+            lla.latitude = extent.south;
+        } else {
+            lla.latitude = 0.0;
+        }
+
+        for ( var i = 1; i < 8; ++i) {
+            var temp = -Math.PI + i * CesiumMath.PI_OVER_TWO;
+            if (extent.west < temp && temp < extent.east) {
+                lla.longitude = temp;
+                positions.push(getExtentPosition(lla, ellipsoid, time, projection));
+            }
+        }
+
+        if (lla.latitude === 0.0) {
+            lla.longitude = extent.west;
+            positions.push(getExtentPosition(lla, ellipsoid, time, projection));
+            lla.longitude = extent.east;
+            positions.push(getExtentPosition(lla, ellipsoid, time, projection));
+        }
+
+        return positions;
+    };
+
+    /**
+     * Creates a bounding sphere from an extent that is in the process of being morphed.
+     *
+     * @memberof BoundingSphere
+     *
+     * @param {Extent} extent The extent used to create a bounding sphere.
+     * @param {Object} projection The projection used to project the extent into 2D.
+     * @param {Number} time The morph time.
+     *
+     * @exception {DeveloperError} extent is required.
+     * @exception {DeveloperError} projection is required.
+     * @exception {DeveloperError} time is required.
+     *
+     * @returns {BoundingSphere} The bounding sphere containing the extent.
+     */
+    BoundingSphere.fromExtentMorph = function(extent, projection, time) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is required.');
+        }
+
+        if (typeof projection === 'undefined' || typeof projection.project === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        Extent.validate(extent);
+        return BoundingSphere.fromPoints(BoundingSphere._computeExtentPositions(extent, projection.getEllipsoid(), time, projection));
+    };
+
+    /**
+     * Creates a bounding sphere from an extent in 3D.
+     *
+     * @memberof BoundingSphere
+     *
+     * @param {Extent} extent The extent used to create a bounding sphere.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
+     *
+     * @exception {DeveloperError} extent is required.
+     *
+     * @returns {BoundingSphere} The bounding sphere containing the extent.
+     */
+    BoundingSphere.fromExtent3D = function(extent, ellipsoid) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        Extent.validate(extent);
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        return BoundingSphere.fromPoints(BoundingSphere._computeExtentPositions(extent, ellipsoid));
     };
 
     /**

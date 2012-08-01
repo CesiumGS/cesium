@@ -1,14 +1,20 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Math',
         './Cartesian3',
-        './Visibility'
+        './Visibility',
+        './Ellipsoid',
+        './BoundingSphere'
     ], function(
+        defaultValue,
         DeveloperError,
         CesiumMath,
         Cartesian3,
-        Visibility) {
+        Visibility,
+        Ellipsoid,
+        BoundingSphere) {
     "use strict";
 
     /**
@@ -318,6 +324,35 @@ define([
         return {
             occludeePoint : occludeePoint,
             valid : valid
+        };
+    };
+
+    /**
+     * Computes a point that can be used as the occludee position to the visibility functions from an extent.
+     *
+     * @memberof Occluder
+     *
+     * @param {Extent} extent The extent used to create a bounding sphere.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
+     *
+     * @exception {DeveloperError} extent is required.
+     *
+     * @return {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
+     * which is a boolean value.
+     */
+    Occluder.computeOccludeePointFromExtent = function(extent, ellipsoid) {
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        var positions = BoundingSphere._computeExtentPositions(extent, ellipsoid);
+        var bs = BoundingSphere.fromPoints(positions);
+
+        // TODO: get correct ellipsoid center
+        var ellipsoidCenter = Cartesian3.ZERO;
+        if (!ellipsoidCenter.equals(bs.center)) {
+            return Occluder.getOccludeePoint(new BoundingSphere(ellipsoidCenter, ellipsoid.getMinimumRadius()), bs.center, positions);
+        }
+        return {
+            valid : false,
+            occludeePoint : Cartesian3.ZERO
         };
     };
 

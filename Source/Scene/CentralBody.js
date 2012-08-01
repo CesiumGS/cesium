@@ -1456,9 +1456,9 @@ define([
                 Math.PI,
                 CesiumMath.PI_OVER_TWO
             );
-            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
+            boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
             frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeIntersect) === Intersect.OUTSIDE;
-            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid).occludeePoint;
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
             this._drawNorthPole = !frustumCull && !occluded;
@@ -1503,9 +1503,9 @@ define([
                 Math.PI,
                 this._dayTileProvider.maxExtent.south
             );
-            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
+            boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
             frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeIntersect) === Intersect.OUTSIDE;
-            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid).occludeePoint;
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
             this._drawSouthPole = !frustumCull && !occluded;
