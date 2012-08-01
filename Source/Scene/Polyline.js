@@ -106,7 +106,6 @@ define([
     *
     * @memberof Polyline
     *
-    * @exception {DeveloperError} value must not be undefined.
     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
     * @see Polyline#getPositions
@@ -119,14 +118,13 @@ define([
     * );
      */
     Polyline.prototype.setPositions = function(value) {
-        if (typeof value === 'undefined') {
-            throw new DeveloperError('value must not be undefined.');
-                }
-        if (this._positions.length !== value.length) {
+        var length = 0;
+        if(value && typeof value !== 'undefined')
+            length = value.length;
+        if (this._positions.length !== length) {
             this._makeDirty(POSITION_SIZE_INDEX);
-            }
+        }
         var positions = [];
-        var length = value.length;
         for ( var i = 0; i < length; ++i) {
             var position = value[i];
             positions.push(new Cartesian3(position.x, position.y, position.z));

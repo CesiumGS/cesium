@@ -1593,28 +1593,35 @@ defineSuite([
         expect(p === null).toBeFalsy();
     });
 
-    it('throws when setting positions with a null value', function() {
-        expect(function() {
-            var p = polylines.add({
-                positions : [{
-                    x : 0.0,
-                    y : -1.0,
-                    z : 0.0
-                },
-                {
-                    x : 0.0,
-                    y : 1.0,
-                    z : 0.0
-                }]
-            });
-            p.setPositions(null);
-        }).toThrow();
+    it('sets positions with a null value', function() {
+        var p = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }]
+        });
+        expect(p.getPositions().length).toEqual(2);
+        p.setPositions(null);
+        expect(p.getPositions().length).toEqual(0);
+
     });
 
     it('throws when accessing without an index', function() {
         expect(function() {
             polylines.get();
         }).toThrow();
+    });
+
+    it('isDestroyed', function() {
+        expect(polylines.isDestroyed()).toEqual(false);
+        polylines.destroy();
+        expect(polylines.isDestroyed()).toEqual(true);
     });
 
 });

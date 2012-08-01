@@ -63,7 +63,15 @@ Beta Releases
    * All functions starting with `multiplyWith` now start with `multiplyBy` to be consistent with functions starting with `divideBy`. 
    * The `multiplyWithMatrix` function on each `Matrix` type was renamed to `multiply`.
    * All three Matrix classes have been largely re-written for consistency and performance.  The `values` property has been eliminated and Matrices are no longer immutable.  Code that previously looked like `matrix = matrix.setColumn0Row0(12);` now looks like `matrix[Matrix2.COLUMN0ROW0] = 12;`.  Code that previously looked like `matrix.setColumn3(cartesian3);` now looked like `matrix.setColumn(3, cartesian3, matrix)`. 
-   * 'Polyline' is no longer externally creatable. To create a 'Polyline' use the 'PolylineCollection.add' method. 
+   * 'Polyline' is no longer externally creatable. To create a 'Polyline' use the 'PolylineCollection.add' method.
+   
+            Polyline polyline = new Polyline();
+            
+       to
+       
+            PolylineCollection polylineCollection = new PolylineCollection();
+            Polyline polyline = polylineCollection.add();
+            
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties.
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x`, `y`, and `z` properties.
 * All `Cartesian3` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
