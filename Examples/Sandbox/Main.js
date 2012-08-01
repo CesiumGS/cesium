@@ -61,6 +61,7 @@
     var pl = tree.addNode('Polyline', '', null, 'Polyline');
     tree.addNode('Draw a line between two points', [new Sandbox.PolylineTwoPoints(scene, ellipsoid, primitives)], pl, 'Polyline');
     tree.addNode('Draw a line between several points', [new Sandbox.PolylineSeveralPoints(scene, ellipsoid, primitives)], pl, 'Polyline');
+    tree.addNode("Draw two lines between several points", [new Sandbox.MultiplePolylineSeveralPoints(scene, ellipsoid, primitives)], pl, "Polyline");
     tree.addNode('Set the interior and outline color', [new Sandbox.PolylineColor(scene, ellipsoid, primitives)], pl, 'Polyline');
     tree.addNode('Set the interior and outline translucency', [new Sandbox.PolylineTranslucency(scene, ellipsoid, primitives)], pl, 'Polyline');
     tree.addNode('Set the interior and outline width', [new Sandbox.PolylineWidth(scene, ellipsoid, primitives)], pl, 'Polyline');

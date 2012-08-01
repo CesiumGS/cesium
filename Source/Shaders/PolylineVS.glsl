@@ -1,5 +1,9 @@
 attribute vec3 position2D;
 attribute vec3 position3D;
+attribute vec4 color;
+attribute float show;
+
+varying vec4 v_color;
 
 uniform float u_morphTime;
 
@@ -13,5 +17,6 @@ void main()
     vec4 p = agi_columbusViewMorph(position2D.zxy, position3D, u_morphTime);
 #endif
 
-    gl_Position = agi_modelViewProjection * p;                      // position in clip coordinates
+    gl_Position = agi_modelViewProjection * p * show;                      // position in clip coordinates
+    v_color = color;
 }

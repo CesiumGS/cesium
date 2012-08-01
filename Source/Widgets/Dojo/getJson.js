@@ -1,7 +1,7 @@
 /*global define*/
 define([
         'dojo/_base/xhr',
-        '../Core/DeveloperError'
+        '../../Core/DeveloperError'
     ], function(
         xhr,
         DeveloperError) {
