@@ -63,27 +63,16 @@
 <script type="text/javascript">
 	codeview.classFilter.Init();
 	
-	var searchTerm = ((window.location.search).split('='))[1];
-	var show = ((window.location.search).split('='))[2];
+	var searchTerm = (document.URL.split('='))[1];
+	var show = (document.URL.split('='))[2];
 	
 	if (show) {
 	   document.getElementById("filterType").value = show;
 	} 
 	
 	if (searchTerm) {
-	    searchTerm = searchTerm.split('&')[0] || searchTerm;
+	    searchTerm = searchTerm.split('&')[0] || '';
 	    document.filterForm.classFilter.value = searchTerm;
-	    var links = document.getElementById("ClassList").getElementsByTagName('a');
-		for (i = 0; i < links.length; i++) {
-			var currentLink = links[i];
-			var anchorIndex = currentLink.href.indexOf('#');
-			if(anchorIndex !== -1) {
-				currentLink.href = currentLink.href.slice(0, anchorIndex) + "?classFilter=" + searchTerm + currentLink.href.slice(anchorIndex);
-			}
-			else {
-				currentLink.href = currentLink.href + "?classFilter=" + searchTerm;
-			}
-		}
 	}
 	else {
 		searchTerm="";
