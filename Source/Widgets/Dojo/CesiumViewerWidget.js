@@ -107,7 +107,7 @@ define([
         bumpMapUrl : undefined,
         endUserOptions : {},
         enableDragDrop: false,
-        refreshOnWindowResize: true,
+        resizeWidgetOnWindowResize: true,
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -558,7 +558,7 @@ define([
             on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
             on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
 
-            if (widget.refreshOnWindowResize) {
+            if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
                     widget.resize();
                 });
