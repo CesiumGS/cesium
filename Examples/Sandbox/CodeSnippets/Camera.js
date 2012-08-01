@@ -31,7 +31,8 @@
             var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
             var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
-            var spindle = scene.getCamera().getControllers().get(0).spindleController;
+            scene.getCamera().getControllers().removeAll();
+            var spindle = scene.getCamera().getControllers().addSpindle();
             spindle.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
             spindle.setReferenceFrame(transform, Cesium.Ellipsoid.UNIT_SPHERE);
 
@@ -71,8 +72,9 @@
         };
 
         this.clear = function() {
-            var spindle = scene.getCamera().getControllers().get(0).spindleController;
-            spindle.setReferenceFrame(Cesium.Matrix4.IDENTITY);
+            scene.getCamera().getControllers().removeAll();
+            scene.getCamera().getControllers().addCentralBody();
+            scene.getCamera().transform = Cesium.Matrix4.IDENTITY;
         };
     };
 
