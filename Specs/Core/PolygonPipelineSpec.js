@@ -274,7 +274,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('tests if a point is inside a triangle', function () {
+    it('tests if a point is inside a triangle', function() {
         var a = new Cartesian3(0, 0, 0);
         var b = new Cartesian3(0, 1, 0);
         var c = new Cartesian3(1, 0, 0);
@@ -290,5 +290,131 @@ defineSuite([
         // p is outside the triangle
         p = new Cartesian3(1, 1, 0);
         expect(PolygonPipeline._isPointInTriangle2D(p, a, b, c)).toEqual(false);
+    });
+
+    it('gets the rightmost vertex index', function() {
+        var ring = [
+            new Cartesian3(0.0, 1.0, 0.0),
+            new Cartesian3(1.0, 2.0, 0.0),
+            new Cartesian3(2.0, 2.0, 0.0),
+            new Cartesian3(3.0, 1.0, 0.0),
+            new Cartesian3(2.0, 0.0, 0.0),
+            new Cartesian3(1.0, 1.0, 0.0)
+        ];
+        expect(PolygonPipeline._getRightmostVertexIndex(ring) === 3).toEqual(true);
+    });
+
+    it('gets the rightmost ring index', function() {
+        var ring0 = [
+            new Cartesian3(0.0, 1.0, 0.0),
+            new Cartesian3(1.0, 2.0, 0.0),
+            new Cartesian3(2.0, 2.0, 0.0),
+            new Cartesian3(3.0, 1.0, 0.0),
+            new Cartesian3(2.0, 0.0, 0.0),
+            new Cartesian3(1.0, 1.0, 0.0)
+        ];
+
+        var ring1 = [
+            new Cartesian3(4.0, 1.0, 0.0),
+            new Cartesian3(5.0, 2.0, 0.0),
+            new Cartesian3(6.0, 2.0, 0.0),
+            new Cartesian3(7.0, 1.0, 0.0),
+            new Cartesian3(6.0, 0.0, 0.0),
+            new Cartesian3(5.0, 1.0, 0.0)
+        ];
+
+        var rings = [ring0, ring1];
+        expect(PolygonPipeline._getRightmostRingIndex(rings) === 1).toEqual(true);
+    });
+
+    it('gets reflex vertices', function() {
+        var polygon = [
+            new Cartesian3(0.0, 2.0, 0.0),
+            new Cartesian3(1.6, 2.0, 0.0),   // reflex
+            new Cartesian3(2.0, 3.0, 0.0),
+            new Cartesian3(2.3, 2.0, 0.0),   // reflex
+            new Cartesian3(4.0, 2.0, 0.0),
+            new Cartesian3(2.6, 1.0, 0.0),   // reflex
+            new Cartesian3(3.0, 0.0, 0.0),
+            new Cartesian3(2.0, 1.0, 0.0),   // reflex
+            new Cartesian3(1.0, 0.0, 0.0),
+            new Cartesian3(1.3, 1.0, 0.0)    // reflex
+        ];
+
+        var reflexVertices = PolygonPipeline._getReflexVertices(polygon);
+        expect(reflexVertices.length == 5).toEqual(true);
+        expect(reflexVertices[0].equals(polygon[1])).toEqual(true);
+        expect(reflexVertices[1].equals(polygon[3])).toEqual(true);
+        expect(reflexVertices[2].equals(polygon[5])).toEqual(true);
+        expect(reflexVertices[3].equals(polygon[7])).toEqual(true);
+        expect(reflexVertices[4].equals(polygon[9])).toEqual(true);
+    });
+
+    it('checks if a point is a vertex', function() {
+        var ring = [
+            new Cartesian3(0.0, 0.0, 0.0),
+            new Cartesian3(0.0, 1.0, 0.0),
+            new Cartesian3(1.0, 1.0, 0.0),
+            new Cartesian3(1.0, 0.0, 0.0),
+        ];
+        expect(PolygonPipeline._isVertex(ring, ring[0])).toEqual(true);
+        expect(PolygonPipeline._isVertex(ring, new Cartesian3(1.0, 1.0, 1.0))).toEqual(false);
+    });
+
+    it('calculates point intersection with ring', function() {
+        var ring = [
+            new Cartesian3(0.0, 0.0, 0.0),
+            new Cartesian3(0.0, 1.0, 0.0),
+            new Cartesian3(1.0, 1.0, 0.0),
+            new Cartesian3(1.0, 0.0, 0.0),
+        ];
+        var point = new Cartesian3(0.5, 0.5, 0.0);
+        var result = PolygonPipeline._intersectPointWithRing(point, ring);
+        expect(result.equals(new Cartesian3(1.0, 0.5, 0.0))).toEqual(true);
+    });
+
+    it('finds mutually visible vertex', function() {
+        var outerRing = [
+            new Cartesian3(0.0, 5.0, 0.0),
+            new Cartesian3(5.0, 10.0, 0.0),
+            new Cartesian3(10.0, 5.0, 0.0),
+            new Cartesian3(5.0, 0.0, 0.0),
+            new Cartesian3(0.0, 5.0, 0.0)
+        ];
+
+        var innerRing = [
+            new Cartesian3(3.0, 7.0, 0.0),
+            new Cartesian3(3.0, 3.0, 0.0),
+            new Cartesian3(7.0, 3.0, 0.0),
+            new Cartesian3(7.0, 7.0, 0.0),
+            new Cartesian3(3.0, 7.0, 0.0)
+        ];
+
+        var innerRings = [innerRing];
+        var expectedResult = 3;
+        var result = PolygonPipeline._getMutuallyVisibleVertexIndex(outerRing, innerRings);
+        expect(result === expectedResult).toEqual(true);
+    });
+
+    it('removes a hole from a polygon', function() {
+        var outerRing = [
+            new Cartographic(-122.0, 37.0, 0.0),
+            new Cartographic(-121.9, 37.0, 0.0),
+            new Cartographic(-121.9, 37.1, 0.0),
+            new Cartographic(-122.0, 37.1, 0.0),
+            new Cartographic(-122.0, 37.0, 0.0)
+        ];
+
+        var innerRing =[
+            new Cartographic(-121.99, 37.01, 0.0),
+            new Cartographic(-121.96, 37.01, 0.0),
+            new Cartographic(-121.96, 37.04, 0.0),
+            new Cartographic(-121.99, 37.04, 0.0),
+            new Cartographic(-121.99, 37.01, 0.0)
+        ];
+
+        var innerRings = [innerRing];
+        outerRing = PolygonPipeline.eliminateHole(outerRing, innerRings);
+        expect(innerRings.length === 0).toEqual(true);
     });
 });
