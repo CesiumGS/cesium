@@ -44,7 +44,7 @@ define([
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectCollection',
         '../../DynamicScene/VisualizerCollection',
-        'dojo/text!./CesiumWidget.html'
+        'dojo/text!./CesiumViewerWidget.html'
     ], function (
         require,
         declare,
@@ -93,7 +93,7 @@ define([
         template) {
     "use strict";
 
-    return declare('Cesium.CesiumWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
+    return declare('Cesium.CesiumViewerWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
         templateString : template,
         preRender : undefined,
         postSetup : undefined,
