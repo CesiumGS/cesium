@@ -83,7 +83,7 @@ Beta Releases
 * Added a new application, Cesium Viewer, for viewing CZML files and otherwise exploring the globe.
 * Added a new Widgets directory, to contain common re-usable Cesium related controls.
 * Added a new Timeline widget to the Widgets directory.
-* Added a new DojoWidgets directory, to contain dojo-specific widgets.
+* Added a new Widgets/Dojo directory, to contain dojo-specific widgets.
 * Added new Timeline and Cesium dojo widgets.
 * Added `CameraCentralBodyController` as the new default controller to handle mouse input.
     * The left mouse button rotates around the central body.
