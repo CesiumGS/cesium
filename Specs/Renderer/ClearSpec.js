@@ -6,24 +6,27 @@ defineSuite([
          createContext,
          destroyContext) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
     });
 
-    afterEach(function() {
+    afterAll(function() {
         destroyContext(context);
     });
 
-    it('clear0', function() {
+    it('default clear', function() {
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
-    it('clear1', function() {
+    it('clears to white', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -32,10 +35,13 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
-    it('clear2', function() {
+    it('clears with a color mask', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -50,10 +56,10 @@ defineSuite([
                 alpha : false
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 0, 255, 0]);
+        expect(context.readPixels()).toEqual([255, 0, 255, 0]);
     });
 
-    it('clear3', function() {
+    it('clears with scissor test', function() {
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -62,7 +68,7 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         context.clear(context.createClearState({
             color : {
@@ -81,7 +87,7 @@ defineSuite([
                 }
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         context.clear(context.createClearState({
             color : {
@@ -100,7 +106,7 @@ defineSuite([
                 }
             }
         }));
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('clears a framebuffer color attachment', function() {
@@ -124,12 +130,15 @@ defineSuite([
 
         expect(context.readPixels({
             framebuffer : framebuffer
-        })).toEqualArray([0, 255, 0, 255]);
+        })).toEqual([0, 255, 0, 255]);
 
         framebuffer = framebuffer.destroy();
     });
 
     it('clears with dithering', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
         context.clear(context.createClearState({
             color : {
                 red : 1.0,
@@ -139,7 +148,7 @@ defineSuite([
             },
             dither : false
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         context.clear(context.createClearState({
             color : {
@@ -150,14 +159,14 @@ defineSuite([
             },
             dither : true
         }));
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('fails to read pixels (width)', function() {
         expect(function() {
             expect(context.readPixels({
                 width : -1
-            })).toEqualArray([0, 0, 0, 0]);
+            })).toEqual([0, 0, 0, 0]);
         }).toThrow();
     });
 
@@ -165,7 +174,7 @@ defineSuite([
         expect(function() {
             expect(context.readPixels({
                 height : -1
-            })).toEqualArray([0, 0, 0, 0]);
+            })).toEqual([0, 0, 0, 0]);
         }).toThrow();
     });
 });

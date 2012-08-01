@@ -276,7 +276,7 @@ define(['./DeveloperError'
      * @exception {DeveloperError} cartesian is required.
      * @exception {DeveloperError} scalar is required and must be a number.
      */
-    Cartesian4.multiplyWithScalar = function(cartesian, scalar, result) {
+    Cartesian4.multiplyByScalar = function(cartesian, scalar, result) {
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required');
         }
@@ -395,19 +395,19 @@ define(['./DeveloperError'
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
         }
-        Cartesian4.multiplyWithScalar(end, t, lerpScratch);
-        result = Cartesian4.multiplyWithScalar(start, 1.0 - t, result);
+        Cartesian4.multiplyByScalar(end, t, lerpScratch);
+        result = Cartesian4.multiplyByScalar(start, 1.0 - t, result);
         return Cartesian4.add(lerpScratch, result, result);
     };
 
     /**
      * Compares the provided Cartesians componentwise and returns
-     * <code>true/code> if they are equal, <code>false/code> otherwise.
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [left] The first Cartesian.
      * @param {Cartesian4} [right] The second Cartesian.
-     * @return {Boolean} <code>true/code> if left and right are equal, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Cartesian4.equals = function(left, right) {
         return (left === right) ||
@@ -421,14 +421,14 @@ define(['./DeveloperError'
 
     /**
      * Compares the provided Cartesians componentwise and returns
-     * <code>true/code> if they are within the provided epsilon,
-     * <code>false/code> otherwise.
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [left] The first Cartesian.
      * @param {Cartesian4} [right] The second Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true/code> if left and right are within the provided epsilon, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
@@ -443,22 +443,6 @@ define(['./DeveloperError'
                 (Math.abs(left.y - right.y) <= epsilon) &&
                 (Math.abs(left.z - right.z) <= epsilon) &&
                 (Math.abs(left.w - right.w) <= epsilon));
-    };
-
-    /**
-     * Creates a string representing the provided Cartesian in the format '(x, y)'.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} cartesian The Cartesian to stringify.
-     * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Cartesian4.toString = function(cartesian) {
-        if (typeof cartesian === 'undefined') {
-            throw new DeveloperError('cartesian is required');
-        }
-        return '(' + cartesian.x + ', ' + cartesian.y + ', ' + cartesian.z + ', ' + cartesian.w + ')';
     };
 
     /**
@@ -618,8 +602,8 @@ define(['./DeveloperError'
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
-    Cartesian4.prototype.multiplyWithScalar = function(scalar, result) {
-        return Cartesian4.multiplyWithScalar(this, scalar, result);
+    Cartesian4.prototype.multiplyByScalar = function(scalar, result) {
+        return Cartesian4.multiplyByScalar(this, scalar, result);
     };
 
     /**
@@ -677,11 +661,11 @@ define(['./DeveloperError'
 
     /**
      * Compares this Cartesian against the provided Cartesian componentwise and returns
-     * <code>true/code> if they are equal, <code>false/code> otherwise.
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [right] The right hand side Cartesian.
-     * @return {Boolean} <code>true/code> if they are equal, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     Cartesian4.prototype.equals = function(right) {
         return Cartesian4.equals(this, right);
@@ -689,13 +673,13 @@ define(['./DeveloperError'
 
     /**
      * Compares this Cartesian against the provided Cartesian componentwise and returns
-     * <code>true/code> if they are within the provided epsilon,
-     * <code>false/code> otherwise.
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true/code> if they are within the provided epsilon, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
@@ -710,7 +694,7 @@ define(['./DeveloperError'
      * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
      */
     Cartesian4.prototype.toString = function() {
-        return Cartesian4.toString(this);
+        return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
     };
 
     return Cartesian4;

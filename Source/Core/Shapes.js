@@ -5,6 +5,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Quaternion',
+        './Matrix3',
         './EllipsoidTangentPlane'
     ], function(
         DeveloperError,
@@ -12,6 +13,7 @@ define([
         Cartesian2,
         Cartesian3,
         Quaternion,
+        Matrix3,
         EllipsoidTangentPlane) {
     "use strict";
 
@@ -33,10 +35,10 @@ define([
 
             temp = -Math.cos(azimuth);
 
-            rotAxis = eastVec.multiplyWithScalar(temp);
+            rotAxis = eastVec.multiplyByScalar(temp);
 
             temp = Math.sin(azimuth);
-            tempVec = northVec.multiplyWithScalar(temp);
+            tempVec = northVec.multiplyByScalar(temp);
 
             rotAxis = rotAxis.add(tempVec);
 
@@ -53,11 +55,11 @@ define([
             temp = Math.sin(angle / 2.0);
 
             var unitQuat = (new Quaternion(rotAxis.x * temp, rotAxis.y * temp, rotAxis.z * temp, Math.cos(angle / 2.0))).normalize();
-            var rotMtx = unitQuat.toRotationMatrix();
+            var rotMtx = Matrix3.fromQuaternion(unitQuat);
 
-            var tmpEllipsePts = rotMtx.multiplyWithVector(unitPos);
+            var tmpEllipsePts = rotMtx.multiplyByVector(unitPos);
             var unitCart = tmpEllipsePts.normalize();
-            tmpEllipsePts = unitCart.multiplyWithScalar(mag);
+            tmpEllipsePts = unitCart.multiplyByScalar(mag);
             ellipsePts[ellipsePtsIndex] = tmpEllipsePts;
         }
     }
@@ -187,7 +189,7 @@ define([
             var tempVec = new Cartesian3(0.0, 0.0, 1);
             var temp = 1.0 / mag;
 
-            var unitPos = surfPos.multiplyWithScalar(temp);
+            var unitPos = surfPos.multiplyByScalar(temp);
             var eastVec = tempVec.cross(surfPos).normalize();
             var northVec = unitPos.cross(eastVec);
 

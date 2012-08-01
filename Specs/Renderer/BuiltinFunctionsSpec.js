@@ -14,15 +14,15 @@ defineSuite([
          PrimitiveType,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
     });
 
-    afterEach(function() {
+    afterAll(function() {
         destroyContext(context);
     });
 
@@ -38,14 +38,14 @@ defineSuite([
         });
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -86,7 +86,7 @@ defineSuite([
 
     it('has agi_eyeToWindowCoordinates', function() {
         var vp = context.getViewport();
-        var perspective = Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
+        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
         context.getUniformState().setProjection(perspective);
 
         var fs =
@@ -106,7 +106,7 @@ defineSuite([
 
     it('has agi_windowToEyeCoordinates', function() {
         var vp = context.getViewport();
-        var perspective = Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
+        var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
         context.getUniformState().setProjection(perspective);
 
         var fs =

@@ -6,7 +6,7 @@ defineSuite([
          Cache,
          Cartesian3) {
     "use strict";
-    /*global it,expect,beforeEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var AddAlways = function(fetchFunc) {
         this._fetchFunc = fetchFunc;

@@ -213,7 +213,7 @@ define([
         var gamma = Math.sqrt((k.x * n.x) + (k.y * n.y) + (k.z * n.z));
 
         var rSurface = k.divideByScalar(gamma);
-        return rSurface.add(n.multiplyWithScalar(position.height || 0.0));
+        return rSurface.add(n.multiplyByScalar(position.height || 0.0));
     };
 
     /**
@@ -366,7 +366,7 @@ define([
                 (positionY * positionY) * oneOverRadiiSquared.y +
                 (positionZ * positionZ) * oneOverRadiiSquared.z);
 
-        return pos.multiplyWithScalar(beta);
+        return pos.multiplyByScalar(beta);
     };
 
     /**

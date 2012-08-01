@@ -6,7 +6,7 @@ defineSuite([
               CzmlColor,
               Color) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var constantRgbaInterval = {
         rgba : [1, 2, 3, 4]
@@ -28,10 +28,10 @@ defineSuite([
     var color2 = new Color(sampledRgbafInterval.rgbaf[6], sampledRgbafInterval.rgbaf[7], sampledRgbafInterval.rgbaf[8], sampledRgbafInterval.rgbaf[9]);
 
     it('unwrapInterval', function() {
-        expect(CzmlColor.unwrapInterval(constantRgbaInterval)).toEqualArray(constantRgbafInterval.rgbaf);
-        expect(CzmlColor.unwrapInterval(constantRgbafInterval)).toEqualArray(constantRgbafInterval.rgbaf);
-        expect(CzmlColor.unwrapInterval(sampledRgbaInterval)).toEqualArray(sampledRgbafInterval.rgbaf);
-        expect(CzmlColor.unwrapInterval(sampledRgbafInterval)).toEqualArray(sampledRgbafInterval.rgbaf);
+        expect(CzmlColor.unwrapInterval(constantRgbaInterval)).toEqual(constantRgbafInterval.rgbaf);
+        expect(CzmlColor.unwrapInterval(constantRgbafInterval)).toEqual(constantRgbafInterval.rgbaf);
+        expect(CzmlColor.unwrapInterval(sampledRgbaInterval)).toEqual(sampledRgbafInterval.rgbaf);
+        expect(CzmlColor.unwrapInterval(sampledRgbafInterval)).toEqual(sampledRgbafInterval.rgbaf);
     });
 
     it('isSampled', function() {

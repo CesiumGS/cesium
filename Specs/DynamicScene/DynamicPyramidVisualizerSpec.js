@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicPyramidVisualizer',
+             'Core/Matrix3',
              'Core/Matrix4',
              '../Specs/createScene',
              '../Specs/destroyScene',
@@ -17,6 +18,7 @@ defineSuite([
              'Scene/Scene'
             ], function(
               DynamicPyramidVisualizer,
+              Matrix3,
               Matrix4,
               createScene,
               destroyScene,
@@ -32,18 +34,21 @@ defineSuite([
               Color,
               Scene) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     var visualizer;
 
-    beforeEach(function() {
+    beforeAll(function() {
         scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -140,7 +145,7 @@ defineSuite([
         expect(p.radius).toEqual(testObject.pyramid.radius.getValue(time));
         expect(p.show).toEqual(testObject.pyramid.show.getValue(time));
         expect(p.material).toEqual(testObject.pyramid.material.getValue(time));
-        expect(p.modelMatrix).toEqual(new Matrix4(testObject.orientation.getValue(time).conjugate().toRotationMatrix(), testObject.position.getValueCartesian(time)));
+        expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValueCartesian(time)));
 
         pyramid.show.value = false;
         visualizer.update(time);

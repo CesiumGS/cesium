@@ -26,18 +26,21 @@ defineSuite([
               Color,
               Scene) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     var visualizer;
 
-    beforeEach(function() {
+    beforeAll(function() {
         scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {

@@ -5,6 +5,7 @@ define([
         '../Core/FAR',
         '../Core/Math',
         '../Core/Quaternion',
+        '../Core/Matrix3',
         '../Core/Cartesian2',
         '../Core/Cartographic',
         './CameraEventHandler',
@@ -18,6 +19,7 @@ define([
         FAR,
         CesiumMath,
         Quaternion,
+        Matrix3,
         Cartesian2,
         Cartographic,
         CameraEventHandler,
@@ -403,7 +405,7 @@ define([
        var distance = start.subtract(end);
        if (distance.x !== 0) {
            position = camera.position;
-           newPosition = position.add(right.multiplyWithScalar(distance.x));
+           newPosition = position.add(right.multiplyByScalar(distance.x));
 
            var maxX = this._maxCoord.x * this._maxTranslateFactor;
            if (newPosition.x > maxX) {
@@ -417,7 +419,7 @@ define([
        }
        if (distance.y !== 0) {
            position = camera.position;
-           newPosition = position.add(up.multiplyWithScalar(distance.y));
+           newPosition = position.add(up.multiplyByScalar(distance.y));
 
            var maxY = this._maxCoord.y * this._maxTranslateFactor;
            if (newPosition.y > maxY) {
@@ -462,8 +464,8 @@ define([
        var theta = endTheta - startTheta;
 
        var camera = this._camera;
-       var rotation = Quaternion.fromAxisAngle(camera.direction, theta).toRotationMatrix();
-       camera.up = rotation.multiplyWithVector(camera.up);
+       var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(camera.direction, theta));
+       camera.up = rotation.multiplyByVector(camera.up);
        camera.right = camera.direction.cross(camera.up);
    };
 

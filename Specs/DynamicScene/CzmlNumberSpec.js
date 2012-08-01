@@ -4,7 +4,7 @@ defineSuite([
             ], function(
               CzmlNumber) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var simpleNumber = 0.5;
 
@@ -13,8 +13,8 @@ defineSuite([
     };
 
     it('unwrapInterval', function() {
-        expect(CzmlNumber.unwrapInterval(simpleNumber)).toEqualArray(simpleNumber);
-        expect(CzmlNumber.unwrapInterval(sampledNumberInterval)).toEqualArray(sampledNumberInterval.number);
+        expect(CzmlNumber.unwrapInterval(simpleNumber)).toEqual(simpleNumber);
+        expect(CzmlNumber.unwrapInterval(sampledNumberInterval)).toEqual(sampledNumberInterval.number);
     });
 
     it('isSampled', function() {

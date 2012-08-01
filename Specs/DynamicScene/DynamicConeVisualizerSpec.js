@@ -12,6 +12,7 @@ defineSuite([
              'Core/Quaternion',
              'Core/Cartesian3',
              'Core/Color',
+             'Core/Matrix3',
              'Core/Matrix4',
              'Scene/Scene'
             ], function(
@@ -27,21 +28,25 @@ defineSuite([
               Quaternion,
               Cartesian3,
               Color,
+              Matrix3,
               Matrix4,
               Scene) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     var visualizer;
 
-    beforeEach(function() {
+    beforeAll(function() {
         scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -153,7 +158,7 @@ defineSuite([
         expect(c.innerMaterial).toEqual(testObject.cone.innerMaterial.getValue(time));
         expect(c.outerMaterial).toEqual(testObject.cone.outerMaterial.getValue(time));
         expect(c.silhouetteMaterial).toEqual(testObject.cone.silhouetteMaterial.getValue(time));
-        expect(c.modelMatrix).toEqual(new Matrix4(testObject.orientation.getValue(time).conjugate().toRotationMatrix(), testObject.position.getValueCartesian(time)));
+        expect(c.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValueCartesian(time)));
 
         cone.show.value = false;
         visualizer.update(time);

@@ -32,15 +32,22 @@ defineSuite([
          VerticalOrigin,
          Polygon) {
     "use strict";
-    /*global describe,it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var primitives;
     var us;
     var camera;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
+    });
+
+    beforeEach(function() {
         primitives = new CompositePrimitive();
 
         camera = new Camera(context.getCanvas());
@@ -60,10 +67,8 @@ defineSuite([
 
     afterEach(function() {
         primitives = primitives && primitives.destroy();
-        us = null;
+        us = undefined;
         camera = camera && camera.destroy();
-
-        destroyContext(context);
     });
 
     function createLabels() {
@@ -242,44 +247,32 @@ defineSuite([
         expect(primitives.getCentralBody()).toBe(cb);
     });
 
-    it('renders a central body', function() {
-        context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
-
-        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
-        primitives.setCentralBody(cb);
-
-        primitives.update(context, sceneState);
-        primitives.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
-    });
-
     it('renders a primitive added with add()', function() {
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         primitives.add(createLabels());
         primitives.update(context, sceneState);
         primitives.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not render', function() {
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         primitives.show = false;
         primitives.add(createLabels());
         primitives.update(context, sceneState);
         primitives.render(context, us);
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('renders a primitive in more than one composite', function() {
         var otherPrimitives = new CompositePrimitive(context);
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var p = createLabels();
         primitives.add(p);
@@ -288,22 +281,22 @@ defineSuite([
 
         primitives.update(context, sceneState);
         primitives.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         // Render using other composite
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         otherPrimitives.update(context, sceneState);
         otherPrimitives.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         otherPrimitives.destroy();
     });
 
     it('renders child composites', function() {
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var children = new CompositePrimitive();
         children.add(createLabels());
@@ -311,7 +304,7 @@ defineSuite([
 
         primitives.update(context, sceneState);
         primitives.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('picks a primitive added with add()', function() {
@@ -476,6 +469,18 @@ defineSuite([
 
         var pickedObject = pick(context, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
+    });
+
+    it('renders a central body', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
+        primitives.setCentralBody(cb);
+
+        primitives.update(context, sceneState);
+        primitives.render(context, us);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('is not destroyed when first constructed', function() {

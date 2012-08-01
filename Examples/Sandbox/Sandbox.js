@@ -32,10 +32,8 @@ var Sandbox = Sandbox || {};
 
         primitives.setCentralBody(cb);
 
-        scene.getCamera().getControllers().addSpindle();
-        scene.getCamera().getControllers().get(0).constrainedAxis = Cesium.Cartesian3.UNIT_Z;
-
-        scene.getCamera().getControllers().addFreeLook();
+        scene.getCamera().getControllers().addCentralBody();
+        scene.getCamera().getControllers().get(0).spindleController.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
 
         scene.getCamera().frustum.near = 100.0;
 
@@ -45,7 +43,7 @@ var Sandbox = Sandbox || {};
         scene.setAnimation(function() {
             var camera = scene.getCamera();
             var cameraPosition = new Cesium.Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-            scene.setSunPosition(camera.transform.multiplyWithVector(cameraPosition));
+            scene.setSunPosition(camera.transform.multiplyByVector(cameraPosition));
 
             //  In case of canvas resize
             canvas.width = canvas.clientWidth;

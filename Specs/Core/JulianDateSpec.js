@@ -8,7 +8,7 @@ function(JulianDate,
          TimeConstants,
          CesiumMath) {
     "use strict";
-    /*global it, expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
     it('Construct a default date', function() {
@@ -30,6 +30,22 @@ function(JulianDate,
         var julianDate = new JulianDate(dayNumber, seconds, timeStandard);
         expect(julianDate.getJulianDayNumber()).toEqual(dayNumber);
         expect(julianDate.getSecondsOfDay()).toEqual(seconds);
+    });
+
+    it('clone works without result parameter', function() {
+        var julianDate = new JulianDate();
+        var returnedResult = julianDate.clone();
+        expect(returnedResult).toEqual(julianDate);
+        expect(returnedResult).toNotBe(julianDate);
+    });
+
+    it('clone works with result parameter', function() {
+        var julianDate = new JulianDate(1, 2);
+        var result = new JulianDate();
+        var returnedResult = julianDate.clone(result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toNotBe(julianDate);
+        expect(returnedResult).toEqual(julianDate);
     });
 
     it('Construct a date from UTC components just before a leap second', function() {

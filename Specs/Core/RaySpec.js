@@ -6,7 +6,7 @@ defineSuite([
          Ray,
          Cartesian3) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor throws without a position', function() {
         expect(function() {
@@ -31,6 +31,6 @@ defineSuite([
     it('get point along ray', function() {
         var t = 5.0;
         var ray = new Ray(Cartesian3.ZERO, Cartesian3.UNIT_X);
-        expect(ray.getPoint(t).equals(Cartesian3.UNIT_X.multiplyWithScalar(t))).toEqual(true);
+        expect(ray.getPoint(t).equals(Cartesian3.UNIT_X.multiplyByScalar(t))).toEqual(true);
     });
 });

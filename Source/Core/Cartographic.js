@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Math'
-       ], function(
-         DeveloperError,
-         CesiumMath) {
+    ], function(
+        defaultValue,
+        DeveloperError,
+        CesiumMath) {
     "use strict";
 
     /**
@@ -23,19 +25,19 @@ define([
          * The longitude, in radians.
          * @type Number
          */
-        this.longitude = typeof longitude === 'undefined' ? 0.0 : longitude;
+        this.longitude = defaultValue(longitude, 0.0);
 
         /**
          * The latitude, in radians.
          * @type Number
          */
-        this.latitude = typeof latitude === 'undefined' ? 0.0 : latitude;
+        this.latitude = defaultValue(latitude, 0.0);
 
         /**
          * The height, in meters, above the ellipsoid.
          * @type Number
          */
-        this.height = typeof height === 'undefined' ? 0.0 : height;
+        this.height = defaultValue(height, 0.0);
     };
 
     /**
@@ -51,9 +53,9 @@ define([
      * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Cartographic.fromDegrees = function(longitude, latitude, height, result) {
-        longitude = typeof longitude === 'undefined' ? 0.0 : CesiumMath.toRadians(longitude);
-        latitude = typeof latitude === 'undefined' ? 0.0 : CesiumMath.toRadians(latitude);
-        height = typeof height === 'undefined' ? 0.0 : height;
+        longitude = CesiumMath.toRadians(defaultValue(longitude, 0.0));
+        latitude = CesiumMath.toRadians(defaultValue(latitude, 0.0));
+        height = defaultValue(height, 0.0);
 
         if (typeof result === 'undefined') {
             return new Cartographic(longitude, latitude, height);
@@ -90,12 +92,12 @@ define([
 
     /**
      * Compares the provided cartographics componentwise and returns
-     * <code>true/code> if they are equal, <code>false/code> otherwise.
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Cartographic
      *
      * @param {Cartographic} [left] The first cartographic.
      * @param {Cartographic} [right] The second cartographic.
-     * @return {Boolean} <code>true/code> if left and right are equal, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Cartographic.equals = function(left, right) {
         return (left === right) ||
@@ -108,14 +110,14 @@ define([
 
     /**
      * Compares the provided cartographics componentwise and returns
-     * <code>true/code> if they are within the provided epsilon,
-     * <code>false/code> otherwise.
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
      * @memberof Cartographic
      *
      * @param {Cartographic} [left] The first cartographic.
      * @param {Cartographic} [right] The second cartographic.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true/code> if left and right are within the provided epsilon, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
@@ -167,11 +169,11 @@ define([
 
     /**
      * Compares the provided against this cartographic componentwise and returns
-     * <code>true/code> if they are equal, <code>false/code> otherwise.
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Cartographic
      *
      * @param {Cartographic} [right] The second cartographic.
-     * @return {Boolean} <code>true/code> if left and right are equal, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Cartographic.prototype.equals = function(right) {
         return Cartographic.equals(this, right);
@@ -179,13 +181,13 @@ define([
 
     /**
      * Compares the provided against this cartographic componentwise and returns
-     * <code>true/code> if they are within the provided epsilon,
-     * <code>false/code> otherwise.
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
      * @memberof Cartographic
      *
      * @param {Cartographic} [right] The second cartographic.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true/code> if left and right are within the provided epsilon, <code>false/code> otherwise.
+     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */

@@ -69,7 +69,7 @@ define([
             transform : transform
         };
 
-        position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyWithScalar(5.0 * maxRadii);
+        position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
         direction = Cartesian3.ZERO.subtract(position).normalize();
         var right = direction.cross(Cartesian3.UNIT_Z).normalize();
         up = right.cross(direction);
@@ -88,7 +88,7 @@ define([
             transform : transform
         };
 
-        position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyWithScalar(2.0 * maxRadii);
+        position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * maxRadii);
         direction = Cartesian3.ZERO.subtract(position).normalize();
         right = direction.cross(Cartesian3.UNIT_Z).normalize();
         up = right.cross(direction);
@@ -221,13 +221,12 @@ define([
             this._destroyMorphHandler();
 
             var camera = scene.getCamera();
-            var controllers = camera.getControllers();
-            controllers.removeAll();
-
-            controllers.addColumbusView();
-
             camera.frustum = this._cameraCV.frustum.clone();
             camera.transform = this._cameraCV.transform.clone();
+
+            var controllers = camera.getControllers();
+            controllers.removeAll();
+            controllers.addColumbusView();
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
                 this._morphCancelled = false;
@@ -307,12 +306,12 @@ define([
         var dir = new Cartesian4(camera.direction.x, camera.direction.y, camera.direction.z, 0.0);
         var up = new Cartesian4(camera.up.x, camera.up.y, camera.up.z, 0.0);
 
-        var frame = transform.inverseTransformation().multiplyWithMatrix(camera.transform);
+        var frame = transform.inverseTransformation().multiply(camera.transform);
         camera.transform = transform.clone();
 
-        camera.position = Cartesian3.fromCartesian4(frame.multiplyWithVector(pos));
-        camera.direction = Cartesian3.fromCartesian4(frame.multiplyWithVector(dir));
-        camera.up = Cartesian3.fromCartesian4(frame.multiplyWithVector(up));
+        camera.position = Cartesian3.fromCartesian4(frame.multiplyByVector(pos));
+        camera.direction = Cartesian3.fromCartesian4(frame.multiplyByVector(dir));
+        camera.up = Cartesian3.fromCartesian4(frame.multiplyByVector(up));
         camera.right = camera.direction.cross(camera.up);
     };
 
@@ -339,7 +338,7 @@ define([
             camera.frustum.fovy = CesiumMath.lerp(startFOVy, endFOVy, value.time);
 
             var distance = d / Math.tan(camera.frustum.fovy * 0.5);
-            camera.position = camera.position.normalize().multiplyWithScalar(distance);
+            camera.position = camera.position.normalize().multiplyByScalar(distance);
         };
 
         var animation = scene.getAnimations().add({
@@ -377,7 +376,7 @@ define([
         var tanTheta = this._cameraCV.frustum.aspectRatio * tanPhi;
         var d = (maxRadii * Math.PI) / tanTheta;
 
-        var endPos = this._camera2D.position.normalize().multiplyWithScalar(d);
+        var endPos = this._camera2D.position.normalize().multiplyByScalar(d);
         var endDir = that._camera2D.direction.clone();
         var endUp = that._camera2D.up.clone();
 
@@ -416,7 +415,7 @@ define([
         var d = (maxRadii * Math.PI) / tanTheta;
 
         var camera3DTo2D = {};
-        camera3DTo2D.position = this._camera2D.position.normalize().multiplyWithScalar(d);
+        camera3DTo2D.position = this._camera2D.position.normalize().multiplyByScalar(d);
         camera3DTo2D.direction = this._camera2D.direction.clone();
         camera3DTo2D.up = this._camera2D.up.clone();
 
@@ -436,7 +435,7 @@ define([
         var tanPhi = Math.tan(this._cameraCV.frustum.fovy * 0.5);
         var tanTheta = this._cameraCV.frustum.aspectRatio * tanPhi;
         var d = (maxRadii * Math.PI) / tanTheta;
-        var endPos2D = this._camera2D.position.normalize().multiplyWithScalar(d);
+        var endPos2D = this._camera2D.position.normalize().multiplyByScalar(d);
 
         var top = camera.frustum.top;
         var bottom = camera.frustum.bottom;
@@ -602,7 +601,7 @@ define([
 
         var maxRadii = this._ellipsoid.getMaximumRadius();
         var endPos = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 10.0));
-        endPos = endPos.normalize().multiplyWithScalar(2.0 * maxRadii);
+        endPos = endPos.normalize().multiplyByScalar(2.0 * maxRadii);
         var endDir = Cartesian3.ZERO.subtract(endPos).normalize();
         var endRight = endDir.cross(Cartesian3.UNIT_Z).normalize();
         var endUp = endRight.cross(endDir);

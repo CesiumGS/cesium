@@ -8,7 +8,7 @@ defineSuite([
          Cartesian3,
          CesiumMath) {
     "use strict";
-    /*global it,expect,beforeEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var points;
     beforeEach(function() {
@@ -92,10 +92,10 @@ defineSuite([
             var c = u * u * u - 2.0 * u * u + u;
             var d = u * u * u - u * u;
 
-            var p0 = p.multiplyWithScalar(a);
-            var p1 = q.multiplyWithScalar(b);
-            var p2 = pT.multiplyWithScalar(c);
-            var p3 = qT.multiplyWithScalar(d);
+            var p0 = p.multiplyByScalar(a);
+            var p1 = q.multiplyByScalar(b);
+            var p2 = pT.multiplyByScalar(c);
+            var p3 = qT.multiplyByScalar(d);
 
             return p0.add(p1).add(p2).add(p3);
         };

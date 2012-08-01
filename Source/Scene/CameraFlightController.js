@@ -4,6 +4,7 @@ define([
         '../Core/EventHandler',
         '../Core/MouseEventType',
         '../Core/Quaternion',
+        '../Core/Matrix3',
         '../Core/Cartesian3',
         '../Core/HermiteSpline'
     ], function(
@@ -11,6 +12,7 @@ define([
         EventHandler,
         MouseEventType,
         Quaternion,
+        Matrix3,
         Cartesian3,
         HermiteSpline) {
     "use strict";
@@ -81,12 +83,12 @@ define([
 
         maxStartAlt = ellipsoid.getMaximumRadius() + abovePercentage * altitude;
 
-        var aboveEnd = endPoint.normalize().multiplyWithScalar(maxStartAlt);
-        var afterStart = start.normalize().multiplyWithScalar(maxStartAlt);
+        var aboveEnd = endPoint.normalize().multiplyByScalar(maxStartAlt);
+        var afterStart = start.normalize().multiplyByScalar(maxStartAlt);
 
         var points, axis, angle, rotation;
         if (start.magnitude() > maxStartAlt && dot > 0) {
-            var middle = start.subtract(aboveEnd).multiplyWithScalar(0.5).add(aboveEnd);
+            var middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
 
             points = [{
                 point : start
@@ -108,9 +110,9 @@ define([
             var increment = incrementPercentage * angle;
             var startCondition = (startAboveMaxAlt) ? angle - increment : angle;
             for ( var i = startCondition; i > 0.0; i = i - increment) {
-                rotation = Quaternion.fromAxisAngle(axis, i).toRotationMatrix();
+                rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
                 points.push({
-                    point : rotation.multiplyWithVector(aboveEnd)
+                    point : rotation.multiplyByVector(aboveEnd)
                 });
             }
 

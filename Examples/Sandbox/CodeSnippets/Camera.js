@@ -31,71 +31,72 @@
             var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
             var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
-            var spindle = scene.getCamera().getControllers().get(0);
+            var spindle = scene.getCamera().getControllers().get(0).spindleController;
             spindle.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
             spindle.setReferenceFrame(transform, Cesium.Ellipsoid.UNIT_SPHERE);
 
-            // draw x axis in red
-            var xAxis = new Cesium.Polyline(undefined);
-            xAxis.modelMatrix = transform;
-            xAxis.color = {red : 1.0, green : 0.0, blue : 0.0, alpha : 1.0 };
-            xAxis.setPositions([
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_X.multiplyWithScalar(100000.0)
-            ]);
-            primitives.add(xAxis);
-
-            // draw y axis in green
-            var yAxis = new Cesium.Polyline(undefined);
-            yAxis.modelMatrix = transform;
-            yAxis.color = {red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 };
-            yAxis.setPositions([
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Y.multiplyWithScalar(100000.0)
-            ]);
-            primitives.add(yAxis);
-
-            // draw z axis in blue
-            var zAxis = new Cesium.Polyline(undefined);
-            zAxis.modelMatrix = transform;
-            zAxis.color = {red : 0.0, green : 0.0, blue : 1.0, alpha : 1.0 };
-            zAxis.setPositions([
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Z.multiplyWithScalar(100000.0)
-            ]);
-            primitives.add(zAxis);
+            var polylines = new Cesium.PolylineCollection(undefined);
+            polylines.modelMatrix = transform;
+            polylines.add({
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    Cesium.Cartesian3.UNIT_X.multiplyByScalar(100000.0)
+                ],
+                width : 2,
+                color : {red : 1.0, green : 0.0, blue : 0.0, alpha : 1.0 }
+            });
+            polylines.add({
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    Cesium.Cartesian3.UNIT_Y.multiplyByScalar(100000.0)
+                ],
+                width : 2,
+                color : {red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 }
+            });
+            polylines.add({
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    Cesium.Cartesian3.UNIT_Z.multiplyByScalar(100000.0)
+                ],
+                width : 2,
+                color : {red : 0.0, green : 0.0, blue : 1.0, alpha : 1.0 }
+            });
+            primitives.add(polylines);
         };
 
         this.camera = {
-            eye: new Cesium.Cartesian3(1.0, 1.0, 1.0).normalize().multiplyWithScalar(200000.0),
+            eye: new Cesium.Cartesian3(1.0, 1.0, 1.0).normalize().multiplyByScalar(200000.0),
             target: Cesium.Cartesian3.ZERO,
             up: Cesium.Cartesian3.UNIT_Z
         };
 
         this.clear = function() {
-            var spindle = scene.getCamera().getControllers().get(0);
+            var spindle = scene.getCamera().getControllers().get(0).spindleController;
             spindle.setReferenceFrame(Cesium.Matrix4.IDENTITY);
         };
     };
 
     Sandbox.ViewExtent = function (scene, ellipsoid, primitives) {
         this.code = function() {
-            var west = Cesium.Math.toRadians(-77.0),
-                south = Cesium.Math.toRadians(38.0),
-                east = Cesium.Math.toRadians(-72.0),
-                north = Cesium.Math.toRadians(42.0);
+            var west = Cesium.Math.toRadians(-77.0);
+            var south = Cesium.Math.toRadians(38.0);
+            var east = Cesium.Math.toRadians(-72.0);
+            var north = Cesium.Math.toRadians(42.0);
 
-            scene.getCamera().viewExtent(ellipsoid, west, south, east, north);
+            var extent = new Cesium.Extent(west, south, east, north);
+            scene.viewExtent(extent, ellipsoid);
 
-            var polyline = new Cesium.Polyline(undefined);
-            polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-78, 38),
-                Cesium.Cartographic.fromDegrees(-78, 42),
-                Cesium.Cartographic.fromDegrees(-72, 42),
-                Cesium.Cartographic.fromDegrees(-72, 38),
-                Cesium.Cartographic.fromDegrees(-78, 38)
-            ]));
-            primitives.add(polyline);
+            var polylines = new Cesium.PolylineCollection();
+            polylines.add({
+                positions: ellipsoid.cartographicArrayToCartesianArray([
+                    new Cesium.Cartographic(west, south),
+                    new Cesium.Cartographic(west, north),
+                    new Cesium.Cartographic(east, north),
+                    new Cesium.Cartographic(east, south),
+                    new Cesium.Cartographic(west, south)
+                ])
+            });
+            primitives.add(polylines);
         };
 
         this.clear = function() {

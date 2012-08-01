@@ -12,7 +12,7 @@ defineSuite([
          TimeInterval,
          DynamicObject) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('getObject throws if no id specified', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
