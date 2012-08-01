@@ -4,7 +4,7 @@ defineSuite([
             ], function(
               CzmlImage) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var simpleImage = 'foo.png';
 

@@ -22,7 +22,7 @@ defineSuite([
          HermitePolynomialApproximation,
          LagrangePolynomialApproximation) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('Works with uninterpolatable value types.', function() {
         var dynamicProperty = new DynamicProperty(CzmlBoolean);

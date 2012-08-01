@@ -16,7 +16,7 @@ defineSuite([
          BufferUsage,
          PixelFormat) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var atlas;
@@ -27,13 +27,16 @@ defineSuite([
     var bigBlueImage;
     var bigGreenImage;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     afterEach(function() {
         atlas = atlas && atlas.destroy();
-        destroyContext(context);
     });
 
     it('initialize suite', function() {
@@ -1012,6 +1015,7 @@ defineSuite([
             atlas = context.createTextureAtlas({initialSize : new Cartesian2(0, 0)});
         }).toThrow();
     });
+
     it('throws without context', function() {
         expect(function() {
             return new TextureAtlas();

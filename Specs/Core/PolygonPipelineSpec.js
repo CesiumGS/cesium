@@ -16,7 +16,7 @@ defineSuite([
          EllipsoidTangentPlane,
          WindingOrder) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('cleanUp removes duplicate points', function() {
         var positions = PolygonPipeline.cleanUp([

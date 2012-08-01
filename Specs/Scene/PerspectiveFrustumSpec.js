@@ -12,7 +12,7 @@ defineSuite([
          Matrix4,
          CesiumMath) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var frustum, planes;
 

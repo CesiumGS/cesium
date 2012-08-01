@@ -89,6 +89,7 @@ Beta Releases
     * The left mouse button rotates around the central body.
     * The right mouse button and mouse wheel zoom in and out.
     * The middle mouse button rotates around the point clicked on the central body.
+* Added `computeTemeToPseudoFixedMatrix` function to `Transforms`.
 
 ### b6a - 06/20/2012
 

@@ -8,7 +8,7 @@ defineSuite([
           JulianDate,
           Ellipsoid) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var cartesianInterval = {
         epoch : '2012-04-18T15:59:00Z',
