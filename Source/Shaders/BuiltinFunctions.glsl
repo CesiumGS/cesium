@@ -326,35 +326,39 @@ mat3 agi_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
 /**
  * Used as input to every material's agi_getMaterial function. 
  *
- * Member variables:
- * s: 1D texture coordinates.
- * st: 2D texture coordinates.
- * str: 3D texture coordinates.
- * normalEC: The unperturbed surface normal in eye coordinates.
- * tangentToEyeMatrix: Matrix for converting a tangent space normal to eye space.
- * positionToEyeWC: Direction from the fragment to the eye.
- * positionMC: position in model coordinates.
- *
  * @name agi_materialInput
  * @glslStruct
+ *
+ * @property {float} s 1D texture coordinates.
+ * @property {vec2} st 2D texture coordinates.
+ * @property {vec3} str 3D texture coordinates.
+ * @property {vec3} normalEC Unperturbed surface normal in eye coordinates.
+ * @property {mat3} tangentToEyeMatrix Matrix for converting a tangent space normal to eye space.
+ * @property {vec3} positionToEyeWC Direction from the fragment to the eye.
+ * @property {vec3} positionMC Position in model coordinates.
  */
 struct agi_materialInput
 {
     float s;
     vec2 st;
     vec3 str;
+    vec3 normalEC;
     mat3 tangentToEyeMatrix;
     vec3 positionToEyeWC;
-    vec3 normalEC;
     vec3 positionMC;
 };
 
 /**
- * Holds material information that can be used for lighting.
- * Returned by all agi_getMaterial functions.
+ * Holds material information that can be used for lighting. Returned by all agi_getMaterial functions.
  *
  * @name agi_material
  * @glslStruct
+ *
+ * @property {vec3} diffuse Incoming light that scatters evenly in all directions.
+ * @property {float} specular Intensity of incoming light reflecting in a single direction.
+ * @property {vec3} normal Surface's normal in tangent coordinates. It is used for effects such as normal mapping. The default is the surface's unmodified normal.
+ * @property {vec3} emission Light emitted by the material equally in all directions. The default is vec3(0.0), which emits no light.
+ * @property {float} alpha Opacity of this material. 0.0 is completely transparent; 1.0 is completely opaque.
  */
 struct agi_material
 {
@@ -368,12 +372,12 @@ struct agi_material
 /**
  * An agi_material with default values. Every material's agi_getMaterial
  * should use this default material as a base for the material it returns.
+ * The default normal value is given by materialInput.normalEC.
  *
  * @name agi_getDefaultMaterial
  * @glslFunction 
  *
  * @param {agi_materialInput} input The input used to construct the default material.
- * input.normalEC is the default normal component.
  * 
  * @returns {agi_material} The default material.
  *

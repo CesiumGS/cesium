@@ -6,14 +6,13 @@ define(function() {
      * DOC_TBA
      * @exports combineMaterials
      */
-    var combineMaterials = function() {
+    var combineMaterials = function(materials) {
         var unforms = {};
         var concatenatedSource = '';
         var duplicateUniforms = {};
 
-        var length = arguments.length;
-        for ( var i = 0; i < length; ++i) {
-            var material = arguments[i].material;
+        for ( var i = 0; i < materials.length; ++i) {
+            var material = materials[i].material;
             var materialSource = material.shaderSource;
             var materialUniforms = material._uniforms;
 
@@ -23,12 +22,6 @@ define(function() {
                         // Rename uniform
                         var count = duplicateUniforms[name] || 1;
                         var uniqueName = '_agi_' + name + count.toString();
-
-                        // PERFORMANCE_IDEA:  We could cache the RegExp for duplicate uniforms
-                        // or see if a pure JavaScript search-and-replace is faster.
-
-                        // This could rename other things like GLSL comments and other identifiers
-                        // with the same name.
                         materialSource = materialSource.replace(new RegExp(name, 'g'), uniqueName);
                         unforms[uniqueName] = materialUniforms[name];
 
@@ -39,8 +32,8 @@ define(function() {
                 }
             }
 
-            if (arguments[i].sourceTransform) {
-                materialSource = arguments[i].sourceTransform(materialSource);
+            if (materials[i].sourceTransform) {
+                materialSource = materials[i].sourceTransform(materialSource);
             }
 
             concatenatedSource += '#line 0\n' + materialSource;
@@ -48,7 +41,7 @@ define(function() {
 
         return {
             _uniforms : unforms,
-            shaderSource : concatenatedSources
+            shaderSource : concatenatedSource
         };
     };
 

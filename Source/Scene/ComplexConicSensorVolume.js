@@ -174,25 +174,25 @@ define([
         /**
          * DOC_TBA
          */
-        this.outerMaterial = t.outerMaterial || Material.fromId(undefined, 'Color');
+        this.outerMaterial = (typeof t.outerMaterial !== 'undefined') ? t.outerMaterial : Material.fromId(undefined, Material.ColorId);
         this._outerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.innerMaterial = t.innerMaterial || Material.fromId(undefined, 'Color');
+        this.innerMaterial = (typeof t.innerMaterial !== 'undefined') ? t.innerMaterial : Material.fromId(undefined, Material.ColorId);
         this._innerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.capMaterial = t.capMaterial || Material.fromId(undefined, 'Color');
+        this.capMaterial = (typeof t.capMaterial !== 'undefined') ? t.capMaterial : Material.fromId(undefined, Material.ColorId);
         this._capMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.silhouetteMaterial = t.silhouetteMaterial || Material.fromId(undefined, 'Color');
+        this.silhouetteMaterial = (typeof t.silhouetteMaterial !== 'undefined') ? t.silhouetteMaterial : Material.fromId(undefined, Material.ColorId);
         this._silhouetteMaterial = undefined;
 
         /**
@@ -293,7 +293,7 @@ define([
     ComplexConicSensorVolume.prototype._combineMaterials = function() {
         // On older/mobile hardware, we could do one pass per material to avoid
         // going over the maximum uniform limit
-        return combineMaterials({
+        return combineMaterials([{
             material : this.outerMaterial,
             sourceTransform : function(source) {
                 return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getOuterMaterial');
@@ -316,7 +316,7 @@ define([
             sourceTransform : function(source) {
                 return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getSilhouetteMaterial');
             }
-        });
+        }]);
     };
 
     /**
@@ -360,10 +360,10 @@ define([
                 (!this._capMaterial || (this._capMaterial !== this.capMaterial)) ||
                 (!this._silhouetteMaterial || (this._silhouetteMaterial !== this.silhouetteMaterial))) {
 
-                this._outerMaterial = this.outerMaterial || Material.fromId(context, 'Color');
-                this._innerMaterial = this.innerMaterial || Material.fromId(context, 'Color');
-                this._capMaterial = this.capMaterial || Material.fromId(context, 'Color');
-                this._silhouetteMaterial = this.silhouetteMaterial || Material.fromId(context, 'Color');
+                this._outerMaterial = (typeof this.outerMaterial !== 'undefined') ? this.outerMaterial : Material.fromId(context, Material.ColorId);
+                this._innerMaterial = (typeof this.innerMaterial !== 'undefined') ? this.innerMaterial : Material.fromId(context, Material.ColorId);
+                this._capMaterial = (typeof this.capMaterial !== 'undefined') ? this.capMaterial : Material.fromId(context, Material.ColorId);
+                this._silhouetteMaterial = (typeof this.silhouetteMaterial !== 'undefined') ? this.silhouetteMaterial : Material.fromId(context, Material.ColorId);
 
                 var material = this._combineMaterials();
                 this._drawUniforms = combine([this._uniforms, material._uniforms], false, false);

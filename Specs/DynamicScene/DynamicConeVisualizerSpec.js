@@ -139,13 +139,13 @@ defineSuite([
         cone.radius = new MockProperty(123.5);
         cone.show = new MockProperty(true);
 
-        var redMaterial = Material.fromId(scene.getContext(), 'Color');
+        var redMaterial = Material.fromId(scene.getContext(), Material.ColorId);
         redMaterial.uniforms.color = Color.RED;
-        var whiteMaterial = Material.fromId(scene.getContext(), 'Color');
+        var whiteMaterial = Material.fromId(scene.getContext(), Material.ColorId);
         whiteMaterial.uniforms.color = Color.WHITE;
-        var blueMaterial = Material.fromId(scene.getContext(), 'Color');
+        var blueMaterial = Material.fromId(scene.getContext(), Material.ColorId);
         blueMaterial.uniforms.color = Color.BLUE;
-        var yellowMaterial = Material.fromId(scene.getContext(), 'Color');
+        var yellowMaterial = Material.fromId(scene.getContext(), Material.ColorId);
         yellowMaterial.uniforms.color = Color.YELLOW;
         cone.capMaterial = new MockProperty(redMaterial);
         cone.innerMaterial = new MockProperty(whiteMaterial);

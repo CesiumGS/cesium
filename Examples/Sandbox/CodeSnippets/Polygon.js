@@ -45,13 +45,13 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "Color",
-                    "uniforms" : {
-                        "color" : {
-                            "red" : 1.0,
-                            "green" : 0.0,
-                            "blue" : 0.0,
-                            "alpha" : 0.75
+                    id : 'Color',
+                    uniforms : {
+                        color : {
+                            red : 1.0,
+                            green : 0.0,
+                            blue : 0.0,
+                            alpha : 0.75
                         }
                     }
                 }
@@ -83,18 +83,18 @@
             polygon.material = new Cesium.Material({
                 context: scene.getContext(),
                 fabric: {
-                    "materials": {
-                        "logo": {
-                            "id": "Image",
-                            "uniforms": {
-                                "image": "../../Images/Cesium_Logo_overlay.png"
+                    materials: {
+                        logo: {
+                            id: 'Image',
+                            uniforms: {
+                                image: '../../Images/Cesium_Logo_overlay.png'
                             }
                         }
                     },
-                    "components": {
-                        "diffuse": "mix(vec3(0.0, 0.0, 1.0), logo.diffuse, logo.alpha)",
-                        "specular" : "mix(0.0, 0.01, logo.alpha)",
-                        "alpha": "logo.alpha"
+                    components: {
+                        diffuse: 'mix(vec3(0.0, 0.0, 1.0), logo.diffuse, logo.alpha)',
+                        specular : 'mix(0.0, 0.01, logo.alpha)',
+                        alpha: 'logo.alpha'
                     }
                 }
             });
@@ -124,25 +124,25 @@
             polygon.material = new Cesium.Material({
                 context: scene.getContext(),
                 fabric: {
-                    "materials" : {
-                        "grass" : {
-                            "id" : "Grass"
+                    materials : {
+                        grass : {
+                            id : 'Grass'
                         },
-                        "asphalt" : {
-                            "id" : "Asphalt"
+                        asphalt : {
+                            id : 'Asphalt'
                         },
-                        "cement" : {
-                            "id" : "Cement"
+                        cement : {
+                            id : 'Cement'
                         }
                     },
-                    "source" :
-                        "agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n" +
-                        "agi_material material = agi_getDefaultMaterial(materialInput);\n" +
-                        "float distanceFromCenter = abs(materialInput.st - vec2(0.5)).x;\n" +
-                        "if(distanceFromCenter > 0.3){material.diffuse = grass.diffuse;}\n" +
-                        "else if(distanceFromCenter > 0.2){material.diffuse = cement.diffuse;}\n" +
-                        "else{material.diffuse = asphalt.diffuse;}\n" +
-                        "return material;\n}\n"
+                    source :
+                        'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n' +
+                        'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
+                        'float distanceFromCenter = abs(materialInput.st - vec2(0.5)).x;\n' +
+                        'if(distanceFromCenter > 0.3){material.diffuse = grass.diffuse;}\n' +
+                        'else if(distanceFromCenter > 0.2){material.diffuse = cement.diffuse;}\n' +
+                        'else{material.diffuse = asphalt.diffuse;}\n' +
+                        'return material;\n}\n'
                 }
             });
 
@@ -170,27 +170,27 @@
             polygon.material = new Cesium.Material({
                 context: scene.getContext(),
                 fabric: {
-                    "uniforms" : {
-                        "image": "../../Images/earthspec1k.jpg",
-                        "heightField" : "../../Images/earthbump1k.jpg"
+                    uniforms : {
+                        image: '../../Images/earthspec1k.jpg',
+                        heightField : '../../Images/earthbump1k.jpg'
                     },
-                    "materials": {
-                        "bumpMap": {
-                            "id": "BumpMap",
-                            "uniforms" : {
-                                "image" : "../../Images/earthbump1k.jpg"
+                    materials: {
+                        bumpMap: {
+                            id: 'BumpMap',
+                            uniforms : {
+                                image : '../../Images/earthbump1k.jpg'
                             }
                         }
                     },
-                    "source" :
-                        "agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n" +
-                        "agi_material material = agi_getDefaultMaterial(materialInput);\n" +
-                        "float heightValue = texture2D(heightField, materialInput.st).r;\n" +
-                        "material.diffuse = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue);\n" +
-                        "material.alpha = (1.0 - texture2D(image, materialInput.st).r) * 0.7;\n" +
-                        "material.normal = bumpMap.normal;\n" +
-                        "material.specular = (1.0 - texture2D(image, materialInput.st).r) / 100.0;\n" +
-                        "return material;\n}\n"
+                    source :
+                        'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n' +
+                        'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
+                        'float heightValue = texture2D(heightField, materialInput.st).r;\n' +
+                        'material.diffuse = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue);\n' +
+                        'material.alpha = (1.0 - texture2D(image, materialInput.st).r) * 0.7;\n' +
+                        'material.normal = bumpMap.normal;\n' +
+                        'material.specular = (1.0 - texture2D(image, materialInput.st).r) / 100.0;\n' +
+                        'return material;\n}\n'
                 }
             });
 
@@ -218,9 +218,9 @@
             polygon.material = new Cesium.Material({
                context : scene.getContext(),
                fabric : {
-                   "id" : "Image",
-                   "uniforms" : {
-                       "image" : "../../Images/Cesium_Logo_overlay.png"
+                   id : 'Image',
+                   uniforms : {
+                       image : '../../Images/Cesium_Logo_overlay.png'
                    }
                }
             });
@@ -249,10 +249,9 @@
             polygon.material = new Cesium.Material({
                context : scene.getContext(),
                fabric : {
-                   "id" : "DiffuseMap",
-                   "uniforms" : {
-                       "image" : "../../Images/Cesium_Logo_Color.jpg",
-                       "channels" : "rgb"
+                   id : 'DiffuseMap',
+                   uniforms : {
+                       image : '../../Images/Cesium_Logo_Color.jpg'
                    }
                }
             });
@@ -281,18 +280,18 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "materials" : {
-                        "alphaMaterial" : {
-                            "id" : "AlphaMap",
-                            "uniforms" : {
-                                "image" : "../../Images/Cesium_Logo_Color.jpg",
-                                "channel" : "r"
+                    materials : {
+                        alphaMaterial : {
+                            id : 'AlphaMap',
+                            uniforms : {
+                                image : '../../Images/Cesium_Logo_Color.jpg',
+                                channel : 'r'
                             }
                         }
                     },
-                    "components" : {
-                        "diffuse" : "vec3(1.0)",
-                        "alpha" : "alphaMaterial.alpha"
+                    components : {
+                        diffuse : 'vec3(1.0)',
+                        alpha : 'alphaMaterial.alpha'
                     }
                 }
             });
@@ -321,10 +320,10 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "SpecularMap",
-                    "uniforms" : {
-                        "image" : "../../Images/Cesium_Logo_Color.jpg",
-                        "channel" : "r"
+                    id : 'SpecularMap',
+                    uniforms : {
+                        image : '../../Images/Cesium_Logo_Color.jpg',
+                        channel : 'r'
                     }
                 }
             });
@@ -353,28 +352,27 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "materials" : {
-                        "diffuseMaterial" : {
-                            "id" : "DiffuseMap",
-                            "uniforms" : {
-                                "image" : "../../Images/Cesium_Logo_Color.jpg"
+                    materials : {
+                        diffuseMaterial : {
+                            id : 'DiffuseMap',
+                            uniforms : {
+                                image : '../../Images/Cesium_Logo_Color.jpg'
                             }
                         },
-                        "emissionMaterial" : {
-                            "id" : "EmissionMap",
-                            "uniforms" : {
-                                "image" : "../../Images/checkerboard.png",
-                                "channels" : "rgb",
-                                "repeat" : {
-                                    "x" : 1,
-                                    "y" : 0.5
+                        emissionMaterial : {
+                            id : 'EmissionMap',
+                            uniforms : {
+                                image : '../../Images/checkerboard.png',
+                                repeat : {
+                                    x : 1,
+                                    y : 0.5
                                 }
                             }
                         }
                     },
-                    "components" : {
-                        "diffuse" : "diffuseMaterial.diffuse",
-                        "emission" : "emissionMaterial.emission * 0.2"
+                    components : {
+                        diffuse : 'diffuseMaterial.diffuse',
+                        emission : 'emissionMaterial.emission * 0.2'
                     }
                 }
             });
@@ -403,26 +401,25 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "materials" : {
-                        "diffuseMaterial" : {
-                            "id" : "DiffuseMap",
-                            "uniforms" : {
-                                "image" : "../../Images/bumpmap.png"
+                    materials : {
+                        diffuseMaterial : {
+                            id : 'DiffuseMap',
+                            uniforms : {
+                                image : '../../Images/bumpmap.png'
                             }
                         },
-                        "bumpMaterial" : {
-                            "id" : "BumpMap",
-                            "uniforms" : {
-                                "image" : "../../Images/bumpmap.png",
-                                "channel" : "r",
-                                "strength" : 0.8
+                        bumpMaterial : {
+                            id : 'BumpMap',
+                            uniforms : {
+                                image : '../../Images/bumpmap.png',
+                                strength : 0.8
                             }
                         }
                     },
-                    "components" : {
-                        "diffuse" : "diffuseMaterial.diffuse",
-                        "specular" : 0.01,
-                        "normal" : "bumpMaterial.normal"
+                    components : {
+                        diffuse : 'diffuseMaterial.diffuse',
+                        specular : 0.01,
+                        normal : 'bumpMaterial.normal'
                     }
                 }
             });
@@ -451,30 +448,29 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "materials" : {
-                        "diffuseMaterial" : {
-                            "id" : "DiffuseMap",
-                            "uniforms" : {
-                                "image" : "../../Images/bumpmap.png"
+                    materials : {
+                        diffuseMaterial : {
+                            id : 'DiffuseMap',
+                            uniforms : {
+                                image : '../../Images/bumpmap.png'
                             }
                         },
-                        "normalMap" : {
-                            "id" : "NormalMap",
-                            "uniforms" : {
-                                "image" : "../../Images/normalmap.png",
-                                "channels" : "rgb",
-                                "strength" : 0.6,
-                                "repeat" : {
-                                    "x" : 1,
-                                    "y" : 1
+                        normalMap : {
+                            id : 'NormalMap',
+                            uniforms : {
+                                image : '../../Images/normalmap.png',
+                                strength : 0.6,
+                                repeat : {
+                                    x : 1,
+                                    y : 1
                                 }
                             }
                         }
                     },
-                    "components" : {
-                        "diffuse" : "diffuseMaterial.diffuse",
-                        "specular" : 0.01,
-                        "normal" : "normalMap.normal"
+                    components : {
+                        diffuse : 'diffuseMaterial.diffuse',
+                        specular : 0.01,
+                        normal : 'normalMap.normal'
                     }
                 }
             });
@@ -505,28 +501,27 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "uniforms" : {
-                        "image" : "../../Images/earthspec1k.jpg"
+                    uniforms : {
+                        image : '../../Images/earthspec1k.jpg'
                     },
-                    "materials" : {
-                        "reflection": {
-                            "id": "Reflection",
-                            "uniforms": {
-                                "cubeMap": {
-                                    "positiveX": filePath,
-                                    "negativeX": filePath,
-                                    "positiveY": filePath,
-                                    "negativeY": filePath,
-                                    "positiveZ": filePath,
-                                    "negativeZ": filePath
-                                },
-                                "channels": "rgb"
+                    materials : {
+                        reflection: {
+                            id: 'Reflection',
+                            uniforms: {
+                                cubeMap: {
+                                    positiveX: filePath,
+                                    negativeX: filePath,
+                                    positiveY: filePath,
+                                    negativeY: filePath,
+                                    positiveZ: filePath,
+                                    negativeZ: filePath
+                                }
                             }
                         }
                     },
-                    "components": {
-                        "diffuse": "reflection.diffuse + 0.7",
-                        "alpha": "0.1 * texture2D(image, materialInput.st).r"
+                    components: {
+                        diffuse: 'reflection.diffuse + 0.7',
+                        alpha: '0.1 * texture2D(image, materialInput.st).r'
                     }
                 }
             });
@@ -557,29 +552,28 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "uniforms" : {
-                        "image" : "../../Images/earthspec1k.jpg"
+                    uniforms : {
+                        image : '../../Images/earthspec1k.jpg'
                     },
-                    "materials" : {
-                        "refraction": {
-                            "id": "Refraction",
-                            "uniforms": {
-                                "cubeMap": {
-                                    "positiveX": filePath,
-                                    "negativeX": filePath,
-                                    "positiveY": filePath,
-                                    "negativeY": filePath,
-                                    "positiveZ": filePath,
-                                    "negativeZ": filePath
+                    materials : {
+                        refraction: {
+                            id: 'Refraction',
+                            uniforms: {
+                                cubeMap: {
+                                    positiveX: filePath,
+                                    negativeX: filePath,
+                                    positiveY: filePath,
+                                    negativeY: filePath,
+                                    positiveZ: filePath,
+                                    negativeZ: filePath
                                 },
-                                "channels": "rgb",
-                                "indexOfRefractionRatio": 0.9
+                                indexOfRefractionRatio: 0.9
                             }
                         }
                     },
-                    "components": {
-                        "diffuse": "refraction.diffuse + 0.7",
-                        "alpha": "0.1 * texture2D(image, materialInput.st).r"
+                    components: {
+                        diffuse: 'refraction.diffuse + 0.7',
+                        alpha: '0.1 * texture2D(image, materialInput.st).r'
                     }
                 }
             });
@@ -610,43 +604,43 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "uniforms" : {
-                        "image" : "../../Images/earthspec1k.jpg"
+                    uniforms : {
+                        image : '../../Images/earthspec1k.jpg'
                     },
-                    "materials" : {
-                        "fresnel" : {
-                            "id" : "Fresnel",
-                            "materials" : {
-                                "reflection" : {
-                                    "uniforms" : {
-                                        "cubeMap" : {
-                                            "positiveX" : filePath,
-                                            "negativeX" : filePath,
-                                            "positiveY" : filePath,
-                                            "negativeY" : filePath,
-                                            "positiveZ" : filePath,
-                                            "negativeZ" : filePath
+                    materials : {
+                        fresnel : {
+                            id : 'Fresnel',
+                            materials : {
+                                reflection : {
+                                    uniforms : {
+                                        cubeMap : {
+                                            positiveX : filePath,
+                                            negativeX : filePath,
+                                            positiveY : filePath,
+                                            negativeY : filePath,
+                                            positiveZ : filePath,
+                                            negativeZ : filePath
                                         }
                                     }
                                 },
-                                "refraction" : {
-                                    "uniforms" : {
-                                        "cubeMap" : {
-                                            "positiveX" : filePath,
-                                            "negativeX" : filePath,
-                                            "positiveY" : filePath,
-                                            "negativeY" : filePath,
-                                            "positiveZ" : filePath,
-                                            "negativeZ" : filePath
+                                refraction : {
+                                    uniforms : {
+                                        cubeMap : {
+                                            positiveX : filePath,
+                                            negativeX : filePath,
+                                            positiveY : filePath,
+                                            negativeY : filePath,
+                                            positiveZ : filePath,
+                                            negativeZ : filePath
                                         }
                                     }
                                 }
                             }
                         }
                     },
-                    "components": {
-                        "diffuse": "fresnel.diffuse + 0.7",
-                        "alpha": "0.1 * texture2D(image, materialInput.st).r"
+                    components: {
+                        diffuse: 'fresnel.diffuse + 0.7',
+                        alpha: '0.1 * texture2D(image, materialInput.st).r'
                     }
                 }
             });
@@ -668,30 +662,30 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "Brick",
-                    "uniforms" : {
-                        "brickColor" : {
-                            "red": 0.6,
-                            "green": 0.3,
-                            "blue": 0.1,
-                            "alpha": 1.0
+                    id : 'Brick',
+                    uniforms : {
+                        brickColor : {
+                            red: 0.6,
+                            green: 0.3,
+                            blue: 0.1,
+                            alpha: 1.0
                         },
-                        "mortarColor" : {
-                            "red" : 0.8,
-                            "green" : 0.8,
-                            "blue" : 0.7,
-                            "alpha" : 1.0
+                        mortarColor : {
+                            red : 0.8,
+                            green : 0.8,
+                            blue : 0.7,
+                            alpha : 1.0
                         },
-                        "brickSize" : {
-                            "x" : 0.30,
-                            "y" : 0.15
+                        brickSize : {
+                            x : 0.30,
+                            y : 0.15
                         },
-                        "brickPct" : {
-                            "x" : 0.90,
-                            "y" : 0.85
+                        brickPct : {
+                            x : 0.90,
+                            y : 0.85
                         },
-                        "brickRoughness" : 0.2,
-                        "mortarRoughness" : 0.1
+                        brickRoughness : 0.2,
+                        mortarRoughness : 0.1
                     }
                 }
             });
@@ -713,26 +707,26 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "Wood",
-                    "uniforms" : {
-                        "lightWoodColor" : {
-                            "red" : 0.6,
-                            "green" : 0.3,
-                            "blue" : 0.1,
-                            "alpha" : 1.0
+                    id : 'Wood',
+                    uniforms : {
+                        lightWoodColor : {
+                            red : 0.6,
+                            green : 0.3,
+                            blue : 0.1,
+                            alpha : 1.0
                         },
-                        "darkWoodColor" : {
-                            "red" : 0.4,
-                            "green" : 0.2,
-                            "blue" : 0.07,
-                            "alpha" : 1.0
+                        darkWoodColor : {
+                            red : 0.4,
+                            green : 0.2,
+                            blue : 0.07,
+                            alpha : 1.0
                         },
-                        "ringFrequency" : 3.0,
-                        "noiseScale" : {
-                            "x" : 0.7,
-                            "y" : 0.5
+                        ringFrequency : 3.0,
+                        noiseScale : {
+                            x : 0.7,
+                            y : 0.5
                         },
-                        "grainFrequency" : 27.0
+                        grainFrequency : 27.0
                     }
                 }
             });
@@ -753,16 +747,16 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "Asphalt",
-                    "uniforms" : {
-                        "asphaltColor" : {
-                            "red" : 0.15,
-                            "green" : 0.15,
-                            "blue" : 0.15,
-                            "alpha" : 1.0
+                    id : 'Asphalt',
+                    uniforms : {
+                        asphaltColor : {
+                            red : 0.15,
+                            green : 0.15,
+                            blue : 0.15,
+                            alpha : 1.0
                         },
-                        "bumpSize" : 0.02,
-                        "roughness" : 0.2
+                        bumpSize : 0.02,
+                        roughness : 0.2
                     }
                 }
             });
@@ -783,16 +777,16 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "Cement",
-                    "uniforms" : {
-                        "cementColor" : {
-                            "red" : 0.95,
-                            "green" : 0.95,
-                            "blue" : 0.85,
-                            "alpha" : 1.0
+                    id : 'Cement',
+                    uniforms : {
+                        cementColor : {
+                            red : 0.95,
+                            green : 0.95,
+                            blue : 0.85,
+                            alpha : 1.0
                         },
-                        "grainScale" : 0.01,
-                        "roughness" : 0.3
+                        grainScale : 0.01,
+                        roughness : 0.3
                     }
                 }
             });
@@ -814,21 +808,21 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "Grass",
-                    "uniforms" : {
-                        "grassColor" : {
-                            "red" : 0.25,
-                            "green" : 0.4,
-                            "blue" : 0.1,
-                            "alpha" : 1.0
+                    id : 'Grass',
+                    uniforms : {
+                        grassColor : {
+                            red : 0.25,
+                            green : 0.4,
+                            blue : 0.1,
+                            alpha : 1.0
                         },
-                        "dirtColor" : {
-                            "red" : 0.1,
-                            "green" : 0.1,
-                            "blue" : 0.1,
-                            "alpha" : 1.0
+                        dirtColor : {
+                            red : 0.1,
+                            green : 0.1,
+                            blue : 0.1,
+                            alpha : 1.0
                         },
-                        "patchiness" : 1.5
+                        patchiness : 1.5
                     }
                 }
             });
@@ -850,23 +844,23 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "Stripe",
-                    "uniforms" : {
-                        "horizontal" : true,
-                        "lightColor" : {
-                            "red" : 1.0,
-                            "green" : 1.0,
-                            "blue" : 1.0,
-                            "alpha" : 0.5
+                    id : 'Stripe',
+                    uniforms : {
+                        horizontal : true,
+                        lightColor : {
+                            red : 1.0,
+                            green : 1.0,
+                            blue : 1.0,
+                            alpha : 0.5
                         },
-                        "darkColor" : {
-                            "red" : 0.0,
-                            "green" : 0.0,
-                            "blue" : 1.0,
-                            "alpha" : 0.5
+                        darkColor : {
+                            red : 0.0,
+                            green : 0.0,
+                            blue : 1.0,
+                            alpha : 0.5
                         },
-                        "offset" : 0.0,
-                        "repeat" : 5.0
+                        offset : 0.0,
+                        repeat : 5.0
                     }
                 }
             });
@@ -888,23 +882,23 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "Checkerboard",
-                    "uniforms" : {
-                        "lightColor" : {
-                            "red" : 1.0,
-                            "green" : 1.0,
-                            "blue" : 0.0,
-                            "alpha" : 0.75
+                    id : 'Checkerboard',
+                    uniforms : {
+                        lightColor : {
+                            red : 1.0,
+                            green : 1.0,
+                            blue : 0.0,
+                            alpha : 0.75
                         },
-                        "darkColor" : {
-                            "red" : 0.0,
-                            "green" : 1.0,
-                            "blue" : 1.0,
-                            "alpha" : 0.75
+                        darkColor : {
+                            red : 0.0,
+                            green : 1.0,
+                            blue : 1.0,
+                            alpha : 0.75
                         },
-                        "repeat" : {
-                            "x" : 5.0,
-                            "y" : 5.0
+                        repeat : {
+                            x : 5.0,
+                            y : 5.0
                         }
                     }
                 }
@@ -928,23 +922,23 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "Dot",
-                    "uniforms" : {
-                        "lightColor" : {
-                            "red" : 1.0,
-                            "green" : 1.0,
-                            "blue" : 0.0,
-                            "alpha" : 0.75
+                    id : 'Dot',
+                    uniforms : {
+                        lightColor : {
+                            red : 1.0,
+                            green : 1.0,
+                            blue : 0.0,
+                            alpha : 0.75
                         },
-                        "darkColor" : {
-                            "red" : 0.0,
-                            "green" : 1.0,
-                            "blue" : 1.0,
-                            "alpha" : 0.75
+                        darkColor : {
+                            red : 0.0,
+                            green : 1.0,
+                            blue : 1.0,
+                            alpha : 0.75
                         },
-                        "repeat" : {
-                            "x" : 5.0,
-                            "y" : 5.0
+                        repeat : {
+                            x : 5.0,
+                            y : 5.0
                         }
                     }
                 }
@@ -967,21 +961,21 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "TieDye",
-                    "uniforms" : {
-                        "lightColor" : {
-                            "red" : 1.0,
-                            "green" : 1.0,
-                            "blue" : 0.0,
-                            "alpha" : 0.75
+                    id : 'TieDye',
+                    uniforms : {
+                        lightColor : {
+                            red : 1.0,
+                            green : 1.0,
+                            blue : 0.0,
+                            alpha : 0.75
                         },
-                        "darkColor" : {
-                            "red" : 1.0,
-                            "green" : 0.0,
-                            "blue" : 0.0,
-                            "alpha" : 0.75
+                        darkColor : {
+                            red : 1.0,
+                            green : 0.0,
+                            blue : 0.0,
+                            alpha : 0.75
                         },
-                        "frequency" : 5.0
+                        frequency : 5.0
                     }
                 }
             });
@@ -1003,21 +997,21 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "Facet",
-                    "uniforms" : {
-                        "lightColor" : {
-                            "red" : 0.25,
-                            "green" : 0.25,
-                            "blue" : 0.25,
-                            "alpha" : 0.75
+                    id : 'Facet',
+                    uniforms : {
+                        lightColor : {
+                            red : 0.25,
+                            green : 0.25,
+                            blue : 0.25,
+                            alpha : 0.75
                         },
-                        "darkColor" : {
-                            "red" : 0.75,
-                            "green" : 0.75,
-                            "blue" : 0.75,
-                            "alpha" : 0.75
+                        darkColor : {
+                            red : 0.75,
+                            green : 0.75,
+                            blue : 0.75,
+                            alpha : 0.75
                         },
-                        "frequency" : 10.0
+                        frequency : 10.0
                     }
                 }
             });
@@ -1039,21 +1033,21 @@
             polygon.material = new Cesium.Material({
                 context : scene.getContext(),
                 fabric : {
-                    "id" : "Blob",
-                    "uniforms" : {
-                        "lightColor" : {
-                            "red" : 1.0,
-                            "green" : 1.0,
-                            "blue" : 1.0,
-                            "alpha" : 0.5
+                    id : 'Blob',
+                    uniforms : {
+                        lightColor : {
+                            red : 1.0,
+                            green : 1.0,
+                            blue : 1.0,
+                            alpha : 0.5
                         },
-                        "darkColor" : {
-                            "red" : 0.0,
-                            "green" : 0.0,
-                            "blue" : 1.0,
-                            "alpha" : 0.5
+                        darkColor : {
+                            red : 0.0,
+                            green : 0.0,
+                            blue : 1.0,
+                            alpha : 0.5
                         },
-                        "frequency" : 10.0
+                        frequency : 10.0
                     }
                 }
             });
