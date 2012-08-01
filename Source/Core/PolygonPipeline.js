@@ -756,11 +756,13 @@ define([
         },
 
         /**
-         * TODO: DOC
-         * TODO: Port WindingOrder check from Matt F's czml-writer KML.
+         * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
+         * a polygon with a hole added to it. The added hole is removed from <code>innerRings</code>.
          *
          * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
          * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+         *
+         * @return A single list of {@link Cartographic} points defining the polygon, including the eliminated inner ring.
          *
          * @exception {DeveloperError} <code>outerRing</code> is required.
          * @exception {DeveloperError} <code>outerRing</code> must not be empty.
@@ -779,18 +781,23 @@ define([
 
             // Convert from LLA -> XYZ and project points onto a tangent plane to find the mutually visible vertex.
             var cartesianOuterRing = [];
-            for (var point in outerRing)
-            {
+            for (var point in outerRing) {
                 cartesianOuterRing.push(Ellipsoid.WGS84.cartographicToCartesian(point));
             }
 
+            var windingOrder = PolygonPipeline.computeArea2D(cartesianOuterRing) >= 0.0 ? 0 : 1;
             var cartesianInnerRings = [];
-            for (var ring in innerRings)
-            {
-               var cartesianInnerRing = [];
+            for (var i = 0; i < innerRings.length; ++i) {
+                var ring = innerRings[i];
+                var cartesianInnerRing = [];
                 for (var point in ring)
                 {
                     cartesianInnerRing.push(Ellipsoid.WGS84.cartographicToCartesian(point));
+                }
+                var innerWindingOrder = PolygonPipeline.computeArea2D(cartesianInnerRing) >= 0.0 ? 0 : 1;
+                if (innerWindingOrder === windingOrder) {
+                    ring.reverse();
+                    cartesianInnerRing.reverse();
                 }
                 cartesianInnerRings.push(cartesianInnerRing);
             }
