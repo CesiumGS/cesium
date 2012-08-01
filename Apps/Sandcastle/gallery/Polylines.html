@@ -36,12 +36,9 @@
     });
     </script>
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="Stylesheet" href="../../../Source/Widgets/DojoWidgets/CesiumWidget.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro">
-
-
-
 <style>
 body {
     background: #000;
@@ -70,10 +67,10 @@ body {
 
 <script id="cesium_sandcastle_script">
 require([
-    'Source/Cesium', 'Widgets/DojoWidgets/CesiumWidget',
+    'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
     'dojo/on', 'dojo/dom'
 ], function(
-    Cesium, CesiumWidget,
+    Cesium, CesiumViewerWidget,
     on, dom)
 {
     "use strict";
@@ -93,9 +90,9 @@ require([
 
     }
 
-    var cesiumWidget = new CesiumWidget({
+    var cesiumViewerWidget = new CesiumViewerWidget({
         onObjectMousedOver : function(mousedOverObject) {
-            cesiumWidget.highlightObject(mousedOverObject);
+            cesiumViewerWidget.highlightObject(mousedOverObject);
             Sandcastle.highlight(mousedOverObject);
         },
         postSetup : function(widget) {

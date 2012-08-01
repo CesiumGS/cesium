@@ -15,7 +15,7 @@ require({
             location: '../Apps/Sandcastle'
         }]
     }, [
-        'Widgets/DojoWidgets/CesiumWidget',
+        'Widgets/Dojo/CesiumViewerWidget',
         'dojo/parser',
         'dojo/dom',
         'dojo/dom-class',
@@ -43,7 +43,7 @@ require({
         'Sandcastle/LinkButton',
         'dojo/domReady!'],
     function (
-            CesiumWidget,
+            CesiumViewerWidget,
             parser,
             dom,
             domClass,
@@ -57,7 +57,7 @@ require({
     ) {
         "use strict";
         parser.parse();
-        window.CesiumWidget = CesiumWidget; // for autocomplete.
+        window.CesiumViewerWidget = CesiumViewerWidget; // for autocomplete.
         fx.fadeOut({ node: 'loading', onEnd: function () {
             domConstruct.destroy('loading');
         }}).play();
