@@ -24,17 +24,17 @@ defineSuite([
          BufferUsage,
          UniformDatatype) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var sp;
     var va;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
     });
 
-    afterEach(function() {
+    afterAll(function() {
         destroyContext(context);
     });
 

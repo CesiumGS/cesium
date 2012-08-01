@@ -22,14 +22,21 @@ defineSuite([
          CesiumMath,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global it,expect,beforeEach,afterEach,beforeAll,afterAll*/
 
     var context;
     var polylines;
     var us;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
+    });
+
+    beforeEach(function() {
         polylines = new PolylineCollection();
 
         var camera = {
@@ -44,7 +51,6 @@ defineSuite([
 
     afterEach(function() {
         us = null;
-        destroyContext(context);
     });
 
     it("default constructs a polyline", function() {

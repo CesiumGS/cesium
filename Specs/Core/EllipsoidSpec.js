@@ -10,7 +10,7 @@ defineSuite([
          Cartographic,
          CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('construct', function() {
         var e = new Ellipsoid(new Cartesian3(1, 2, 3));

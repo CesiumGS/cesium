@@ -6,7 +6,7 @@ defineSuite([
               CzmlCartesian3,
               Cartesian3) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var cartesian1 = new Cartesian3(123.456, 789.101112, 321.312);
     var cartesian2 = new Cartesian3(789.101112, 123.456, 521.312);

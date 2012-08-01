@@ -10,7 +10,7 @@ defineSuite([
          Ellipsoid,
          CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var date1 = new Date('January 15, 2012');
     date1.setUTCHours(12, 0, 0, 0);
