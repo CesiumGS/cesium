@@ -26,18 +26,21 @@ defineSuite([
               Color,
               Scene) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     var visualizer;
 
-    beforeEach(function() {
+    beforeAll(function() {
         scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -124,7 +127,7 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polyline.show.getValue(time));
         expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValueCartesian(time));
-        expect(primitive.color).toEqualProperties(testObject.polyline.color.getValue(time));
+        expect(primitive.color).toEqual(testObject.polyline.color.getValue(time));
         expect(primitive.outlineColor).toEqual(testObject.polyline.outlineColor.getValue(time));
         expect(primitive.outlineWidth).toEqual(testObject.polyline.outlineWidth.getValue(time));
         expect(primitive.width).toEqual(testObject.polyline.width.getValue(time));
@@ -138,7 +141,7 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polyline.show.getValue(time));
         expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValueCartesian(time));
-        expect(primitive.color).toEqualProperties(testObject.polyline.color.getValue(time));
+        expect(primitive.color).toEqual(testObject.polyline.color.getValue(time));
         expect(primitive.outlineColor).toEqual(testObject.polyline.outlineColor.getValue(time));
         expect(primitive.outlineWidth).toEqual(testObject.polyline.outlineWidth.getValue(time));
         expect(primitive.width).toEqual(testObject.polyline.width.getValue(time));

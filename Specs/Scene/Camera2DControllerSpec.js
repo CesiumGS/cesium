@@ -3,7 +3,6 @@ defineSuite([
          'Scene/Camera2DController',
          'Scene/Camera',
          'Scene/OrthographicFrustum',
-         'Core/Cartographic2',
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Ellipsoid',
@@ -15,7 +14,6 @@ defineSuite([
          Camera2DController,
          Camera,
          OrthographicFrustum,
-         Cartographic2,
          Cartesian2,
          Cartesian3,
          Ellipsoid,
@@ -24,7 +22,7 @@ defineSuite([
          CesiumMath,
          Transforms) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var position;
     var up;
@@ -140,19 +138,6 @@ defineSuite([
             endPosition : new Cartesian2(1000.0, 1000.0)
         });
         expect(camera.position.equalsEpsilon(new Cartesian3(-3.9, 2.6, 0.0), CesiumMath.EPSILON2)).toEqual(true);
-    });
-
-    it('zoom', function() {
-        var offset = 0.5 * Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
-        var ratio = frustum.top / frustum.right;
-        controller._zoom({
-            startPosition : new Cartesian2(0.0, 0.0),
-            endPosition : new Cartesian2(0.0, 1.0)
-        });
-        expect(frustum.right).toEqualEpsilon(offset, CesiumMath.EPSILON1);
-        expect(frustum.left).toEqualEpsilon(-offset, CesiumMath.EPSILON1);
-        expect(frustum.top).toEqualEpsilon(ratio * offset, CesiumMath.EPSILON1);
-        expect(frustum.bottom).toEqualEpsilon(-ratio * offset, CesiumMath.EPSILON1);
     });
 
     it('zoomOut', function() {

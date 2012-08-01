@@ -18,7 +18,7 @@ defineSuite([
          Tipsify,
          EquidistantCylindricalProjection) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('converts triangles to wireframe in place', function() {
         var mesh = MeshFilters.toWireframeInPlace({
@@ -115,9 +115,10 @@ defineSuite([
 
         var indices = MeshFilters.createAttributeIndices(mesh);
 
-        expect(indices.position).toBeIn([0, 1, 2]);
-        expect(indices.normal).toBeIn([0, 1, 2]);
-        expect(indices.color).toBeIn([0, 1, 2]);
+        var validIndices = [0, 1, 2];
+        expect(validIndices).toContain(indices.position);
+        expect(validIndices).toContain(indices.normal);
+        expect(validIndices).toContain(indices.color);
         expect(indices.position).not.toEqual(indices.normal);
         expect(indices.position).not.toEqual(indices.color);
     });
@@ -303,10 +304,10 @@ defineSuite([
         expect(meshes.length).toEqual(1);
         expect(meshes[0].attributes.time.componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(meshes[0].attributes.time.componentsPerAttribute).toEqual(1);
-        expect(meshes[0].attributes.time.values).toEqualArray([0, sixtyFourK]);
+        expect(meshes[0].attributes.time.values).toEqual([0, sixtyFourK]);
 
         expect(meshes[0].indexLists[0].primitiveType).toEqual(PrimitiveType.TRIANGLES);
-        expect(meshes[0].indexLists[0].values).toEqualArray([0, 0, 0, 1, 1, 1, 0, 1, 0]);
+        expect(meshes[0].indexLists[0].values).toEqual([0, 0, 0, 1, 1, 1, 0, 1, 0]);
     });
 
     it('fitToUnsignedShortIndices creates two meshes', function() {
@@ -412,8 +413,8 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new EquidistantCylindricalProjection();
-        var projectedP1 = projection.project(ellipsoid.toCartographic2(p1));
-        var projectedP2 = projection.project(ellipsoid.toCartographic2(p2));
+        var projectedP1 = projection.project(ellipsoid.cartesianToCartographic(p1));
+        var projectedP2 = projection.project(ellipsoid.cartesianToCartographic(p2));
 
         expect(mesh.attributes.position2D.values[0]).toEqual(projectedP1.x);
         expect(mesh.attributes.position2D.values[1]).toEqual(projectedP1.y);

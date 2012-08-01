@@ -12,15 +12,15 @@ defineSuite([
          PrimitiveType,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
     });
 
-    afterEach(function() {
+    afterAll(function() {
         destroyContext(context);
     });
 
@@ -36,14 +36,14 @@ defineSuite([
         });
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -364,6 +364,9 @@ defineSuite([
     });
 
     it('has agi_viewerPositionWC', function() {
+        var us = context.getUniformState();
+        us.setView(Matrix4.IDENTITY);
+
         var fs = 'void main() { gl_FragColor = vec4(agi_viewerPositionWC == vec3(0.0)); }';
         verifyDraw(fs);
     });

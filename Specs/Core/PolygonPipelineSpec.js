@@ -3,7 +3,7 @@ defineSuite([
          'Core/PolygonPipeline',
          'Core/Cartesian2',
          'Core/Cartesian3',
-         'Core/Cartographic3',
+         'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/EllipsoidTangentPlane',
          'Core/WindingOrder'
@@ -11,12 +11,12 @@ defineSuite([
          PolygonPipeline,
          Cartesian2,
          Cartesian3,
-         Cartographic3,
+         Cartographic,
          Ellipsoid,
          EllipsoidTangentPlane,
          WindingOrder) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('cleanUp removes duplicate points', function() {
         var positions = PolygonPipeline.cleanUp([
@@ -26,7 +26,7 @@ defineSuite([
                                                  new Cartesian3(3.0, 3.0, 3.0)
                                                 ]);
 
-        expect(positions).toEqualArray([
+        expect(positions).toEqual([
                                         new Cartesian3(1.0, 1.0, 1.0),
                                         new Cartesian3(2.0, 2.0, 2.0),
                                         new Cartesian3(3.0, 3.0, 3.0)
@@ -41,7 +41,7 @@ defineSuite([
                                                  new Cartesian3(1.0, 1.0, 1.0)
                                                 ]);
 
-        expect(positions).toEqualArray([
+        expect(positions).toEqual([
                                         new Cartesian3(2.0, 2.0, 2.0),
                                         new Cartesian3(3.0, 3.0, 3.0),
                                         new Cartesian3(1.0, 1.0, 1.0)
@@ -64,7 +64,7 @@ defineSuite([
 
     it('EllipsoidTangentPlane projects a point', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var p = ellipsoid.toCartesian(Cartographic3.ZERO);
+        var p = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
 
         var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
         var projectedP = tangentPlane.projectPointsOntoPlane([p]);
@@ -89,7 +89,7 @@ defineSuite([
 
     it('projectPointsOntoPlane throws without positions', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var p = ellipsoid.toCartesian(Cartographic3.ZERO);
+        var p = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
         var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
 
         expect(function() {
@@ -174,13 +174,13 @@ defineSuite([
     it('earClip2D triangulates a triangle', function() {
         var indices = PolygonPipeline.earClip2D([new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(0.0, 1.0)]);
 
-        expect(indices).toEqualArray([0, 1, 2]);
+        expect(indices).toEqual([0, 1, 2]);
     });
 
     it('earClip2D triangulates a square', function() {
         var indices = PolygonPipeline.earClip2D([new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(1.0, 1.0), new Cartesian2(0.0, 1.0)]);
 
-        expect(indices).toEqualArray([0, 1, 2, 0, 2, 3]);
+        expect(indices).toEqual([0, 1, 2, 0, 2, 3]);
     });
 
     it('earClip2D triangulates simple concave', function() {
@@ -188,7 +188,7 @@ defineSuite([
 
         var indices = PolygonPipeline.earClip2D(positions);
 
-        expect(indices).toEqualArray([1, 2, 3, 3, 4, 0, 0, 1, 3]);
+        expect(indices).toEqual([1, 2, 3, 3, 4, 0, 0, 1, 3]);
     });
 
     it('earClip2D triangulates complex concave', function() {
@@ -197,7 +197,7 @@ defineSuite([
 
         var indices = PolygonPipeline.earClip2D(positions);
 
-        expect(indices).toEqualArray([3, 4, 5, 3, 5, 6, 3, 6, 7, 7, 0, 1, 7, 1, 2, 2, 3, 7]);
+        expect(indices).toEqual([3, 4, 5, 3, 5, 6, 3, 6, 7, 7, 0, 1, 7, 1, 2, 2, 3, 7]);
     });
 
     it('earClip2D throws without positions', function() {

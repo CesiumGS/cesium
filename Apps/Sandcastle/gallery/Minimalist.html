@@ -17,9 +17,31 @@
     }
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript">
+    require({
+        baseUrl : '../../..',
+        packages: [
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Source', location: 'Source' },
+            { name: 'Core', location: 'Source/Core' },
+            { name: 'DynamicScene', location: 'Source/DynamicScene' },
+            { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Scene', location: 'Source/Scene' },
+            { name: 'Shaders', location: 'Source/Shaders' },
+            { name: 'ThirdParty', location: 'Source/ThirdParty' },
+            { name: 'Widgets', location: 'Source/Widgets' }
+        ]
+    });
+    </script>
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/Widgets/DojoWidgets/CesiumWidget.css" type="text/css">
 </head>
 <body class="claro">
+
+
+
 <style>
 body {
     background: #000;
@@ -47,11 +69,8 @@ body {
 <div id="cesiumContainer" class="fullSize"></div>
 
 <script id="cesium_sandcastle_script">
-/*global require,document,window,console*/
-require({
-    baseUrl : '../../../Source'
-}, [
-    'Cesium'
+require([
+    'Source/Cesium'
 ], function (
     Cesium
 ) {

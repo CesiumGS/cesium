@@ -16,7 +16,7 @@ defineSuite([
               Iso8601,
               TimeInterval) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('processCzmlPacket adds data for infinite pyramid.', function() {
         var pyramidPacket = {
@@ -44,7 +44,7 @@ defineSuite([
         expect(DynamicPyramid.processCzmlPacket(dynamicObject, pyramidPacket)).toEqual(true);
 
         expect(dynamicObject.pyramid).toBeDefined();
-        expect(dynamicObject.pyramid.directions.getValueSpherical(Iso8601.MINIMUM_VALUE)).toEqualArray(
+        expect(dynamicObject.pyramid.directions.getValueSpherical(Iso8601.MINIMUM_VALUE)).toEqual(
                 [new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]),
                         new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
         expect(dynamicObject.pyramid.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.radius);
@@ -84,7 +84,7 @@ defineSuite([
         expect(DynamicPyramid.processCzmlPacket(dynamicObject, pyramidPacket)).toEqual(true);
 
         expect(dynamicObject.pyramid).toBeDefined();
-        expect(dynamicObject.pyramid.directions.getValueSpherical(validTime)).toEqualArray(
+        expect(dynamicObject.pyramid.directions.getValueSpherical(validTime)).toEqual(
                 [new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]),
                         new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
         expect(dynamicObject.pyramid.radius.getValue(validTime)).toEqual(pyramidPacket.pyramid.radius);

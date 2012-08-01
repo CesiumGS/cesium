@@ -7,9 +7,119 @@
  */
 var defineSuite;
 
+/**
+ * Registers a function that is called before running all tests.
+ *
+ * @param {Function} beforeAllFunction The function to run before all tests.
+ */
+var beforeAll;
+
+/**
+ * Registers a function that is called after running all tests.
+ *
+ * @param {Function} afterAllFunction The function to run after all tests.
+ */
+var afterAll;
+
 (function() {
     "use strict";
     /*global require,describe,specs,jasmine*/
+
+    // patch in beforeAll/afterAll functions
+    // based on existing beforeEach/afterEach
+
+    jasmine.Env.prototype.beforeAll = function(beforeAllFunction) {
+        if (this.currentSuite) {
+            this.currentSuite.beforeAll(beforeAllFunction);
+        } else {
+            this.currentRunner_.beforeAll(beforeAllFunction);
+        }
+    };
+
+    jasmine.Env.prototype.afterAll = function(afterAllFunction) {
+        if (this.currentSuite) {
+            this.currentSuite.afterAll(afterAllFunction);
+        } else {
+            this.currentRunner_.afterAll(afterAllFunction);
+        }
+    };
+
+    jasmine.Runner.prototype.beforeAll = function(beforeAllFunction) {
+        beforeAllFunction.typeName = 'beforeAll';
+        if (typeof this.beforeAll_ === 'undefined') {
+            this.beforeAll_ = [];
+        }
+        this.beforeAll_.splice(0, 0, beforeAllFunction);
+    };
+
+    jasmine.Runner.prototype.afterAll = function(afterAllFunction) {
+        afterAllFunction.typeName = 'afterAll';
+        if (typeof this.afterAll_ === 'undefined') {
+            this.afterAll_ = [];
+        }
+        this.afterAll_.splice(0, 0, afterAllFunction);
+    };
+
+    jasmine.Suite.prototype.beforeAll = function(beforeAllFunction) {
+        beforeAllFunction.typeName = 'beforeAll';
+        if (typeof this.beforeAll_ === 'undefined') {
+            this.beforeAll_ = [];
+        }
+        this.beforeAll_.unshift(beforeAllFunction);
+    };
+
+    jasmine.Suite.prototype.afterAll = function(afterAllFunction) {
+        afterAllFunction.typeName = 'afterAll';
+        if (typeof this.afterAll_ === 'undefined') {
+            this.afterAll_ = [];
+        }
+        this.afterAll_.unshift(afterAllFunction);
+    };
+
+    var originalAddBeforesAndAftersToQueue = jasmine.Spec.prototype.addBeforesAndAftersToQueue;
+    jasmine.Spec.prototype.addBeforesAndAftersToQueue = function() {
+        originalAddBeforesAndAftersToQueue.apply(this);
+
+        var runner = this.env.currentRunner();
+        var i;
+
+        var suite = this.suite;
+        if (suite.queue.index === 0) {
+            if (typeof suite.beforeAll_ !== 'undefined') {
+                for (i = 0; i < suite.beforeAll_.length; i++) {
+                    this.queue.addBefore(new jasmine.Block(this.env, suite.beforeAll_[i], this));
+                }
+            }
+
+            if (typeof runner.beforeAll_ !== 'undefined' && runner.queue.index === 0) {
+                for (i = 0; i < runner.beforeAll_.length; i++) {
+                    this.queue.addBefore(new jasmine.Block(this.env, runner.beforeAll_[i], this));
+                }
+            }
+        }
+
+        if (suite.queue.index === suite.queue.blocks.length - 1) {
+            if (typeof suite.afterAll_ !== 'undefined') {
+                for (i = 0; i < suite.afterAll_.length; i++) {
+                    this.queue.add(new jasmine.Block(this.env, suite.afterAll_[i], this));
+                }
+            }
+
+            if (typeof runner.beforeAll_ !== 'undefined' && runner.queue.index === runner.queue.blocks.length - 1) {
+                for (i = 0; i < runner.afterAll_.length; i++) {
+                    this.queue.add(new jasmine.Block(this.env, runner.afterAll_[i], this));
+                }
+            }
+        }
+    };
+
+    beforeAll = function(beforeAllFunction) {
+        jasmine.getEnv().beforeAll(beforeAllFunction);
+    };
+
+    afterAll = function(afterAllFunction) {
+        jasmine.getEnv().afterAll(afterAllFunction);
+    };
 
     var tests = [];
     var readyToCreateTests = false;
@@ -83,10 +193,16 @@ var defineSuite;
     }
 
     //specs is an array defined by SpecList.js
-    require(['Specs/addDefaultMatchers'].concat(specs), function(addDefaultMatchers) {
+    require([
+             'Specs/addDefaultMatchers',
+             'Specs/equalsMethodEqualityTester'
+         ].concat(specs), function(
+             addDefaultMatchers,
+             equalsMethodEqualityTester) {
         var env = jasmine.getEnv();
 
         env.beforeEach(addDefaultMatchers);
+        env.addEqualityTester(equalsMethodEqualityTester);
 
         createTests = function() {
             var isSuiteFocused = jasmine.TrivialReporter.isSuiteFocused;

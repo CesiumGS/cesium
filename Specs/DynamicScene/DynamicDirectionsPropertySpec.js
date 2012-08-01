@@ -18,7 +18,7 @@ defineSuite([
           Spherical,
           CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var sphericalInterval = {
         unitSpherical : [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]

@@ -4,8 +4,10 @@ define([
         '../Core/FAR',
         '../Core/Math',
         '../Core/Quaternion',
+        '../Core/Matrix3',
         '../Core/Ellipsoid',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         './CameraEventHandler',
         './CameraEventType',
         './CameraSpindleControllerMode',
@@ -15,8 +17,10 @@ define([
         FAR,
         CesiumMath,
         Quaternion,
+        Matrix3,
         Ellipsoid,
         Cartesian3,
+        Cartesian4,
         CameraEventHandler,
         CameraEventType,
         CameraSpindleControllerMode,
@@ -116,7 +120,7 @@ define([
      * // Example 1.
      * // Change the reference frame to one centered at a point on the ellipsoid's surface.
      * // Set the spindle controller's ellipsoid to a unit sphere for easy rotation around that point.
-     * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
+     * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
      * var transform = Transforms.eastNorthUpToFixedFrame(center);
      * scene.getCamera().getControllers().get(0).setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
      *
@@ -179,12 +183,12 @@ define([
     CameraSpindleController.prototype.rotate = function(axis, angle) {
         var a = Cartesian3.clone(axis);
         var turnAngle = (typeof angle !== 'undefined') ? angle : this._moveRate;
-        var rotation = Quaternion.fromAxisAngle(a, turnAngle).toRotationMatrix();
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(a, turnAngle));
 
         var camera = this._camera;
-        camera.position = rotation.multiplyWithVector(camera.position);
-        camera.direction = rotation.multiplyWithVector(camera.direction);
-        camera.up = rotation.multiplyWithVector(camera.up);
+        camera.position = rotation.multiplyByVector(camera.position);
+        camera.direction = rotation.multiplyByVector(camera.direction);
+        camera.up = rotation.multiplyByVector(camera.up);
         camera.right = camera.direction.cross(camera.up);
     };
 
@@ -230,8 +234,14 @@ define([
             if (Math.abs(angle) > Math.abs(angleToAxis)) {
                 angle = angleToAxis;
             }
+
+            var tangent = this.constrainedAxis.cross(p).normalize();
+            var bitangent = this._camera.up.cross(tangent);
+            tangent = bitangent.cross(this._camera.up);
+            this.rotate(tangent, angle);
+        } else {
+            this.rotate(this._camera.right, angle);
         }
-        this.rotate(this._camera.right, angle);
     };
 
     /**
@@ -337,8 +347,7 @@ define([
 
     CameraSpindleController.prototype._spin = function(movement) {
         if (this.mode === CameraSpindleControllerMode.AUTO) {
-            var point = this._camera.pickEllipsoid(movement.startPosition, this._ellipsoid);
-            if (typeof point !== 'undefined') {
+            if (typeof this._camera.pickEllipsoid(movement.startPosition, this._ellipsoid) !== 'undefined') {
                 this._pan(movement);
             } else {
                 this._rotate(movement);
@@ -382,6 +391,10 @@ define([
             return;
         }
 
+        var transform = camera.getInverseTransform();
+        p0 = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(p0.x, p0.y, p0.z, 1.0)));
+        p1 = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(p1.x, p1.y, p1.z, 1.0)));
+
         if (typeof this.constrainedAxis === 'undefined') {
             p0 = p0.normalize();
             p1 = p1.normalize();
@@ -415,7 +428,7 @@ define([
     };
 
     CameraSpindleController.prototype._zoom = function(movement) {
-        handleZoom(this, movement, this._ellipsoid.toCartographic3(this._camera.position).height);
+        handleZoom(this, movement, this._ellipsoid.cartesianToCartographic(this._camera.position).height);
     };
 
    /**

@@ -5,8 +5,9 @@ define([
         '../Core/FAR',
         '../Core/Math',
         '../Core/Quaternion',
+        '../Core/Matrix3',
         '../Core/Cartesian2',
-        '../Core/Cartographic3',
+        '../Core/Cartographic',
         './CameraEventHandler',
         './CameraEventType',
         './CameraHelpers',
@@ -18,8 +19,9 @@ define([
         FAR,
         CesiumMath,
         Quaternion,
+        Matrix3,
         Cartesian2,
-        Cartographic3,
+        Cartographic,
         CameraEventHandler,
         CameraEventType,
         CameraHelpers,
@@ -110,7 +112,7 @@ define([
         this._frustum.top *= maxZoomOut;
         this._frustum.bottom *= maxZoomOut;
 
-        this._maxCoord = projection.project(new Cartographic3(Math.PI, CesiumMath.PI_OVER_TWO, 0.0));
+        this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO, 0.0));
 
         this._maxZoomFactor = 2.5;
         this._maxTranslateFactor = 1.5;
@@ -146,7 +148,7 @@ define([
         }
 
         this._projection = projection;
-        this._maxCoord = projection.project(new Cartographic3(Math.PI, CesiumMath.toRadians(85.05112878)));
+        this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
     };
 
     /**
@@ -403,7 +405,7 @@ define([
        var distance = start.subtract(end);
        if (distance.x !== 0) {
            position = camera.position;
-           newPosition = position.add(right.multiplyWithScalar(distance.x));
+           newPosition = position.add(right.multiplyByScalar(distance.x));
 
            var maxX = this._maxCoord.x * this._maxTranslateFactor;
            if (newPosition.x > maxX) {
@@ -417,7 +419,7 @@ define([
        }
        if (distance.y !== 0) {
            position = camera.position;
-           newPosition = position.add(up.multiplyWithScalar(distance.y));
+           newPosition = position.add(up.multiplyByScalar(distance.y));
 
            var maxY = this._maxCoord.y * this._maxTranslateFactor;
            if (newPosition.y > maxY) {
@@ -462,8 +464,8 @@ define([
        var theta = endTheta - startTheta;
 
        var camera = this._camera;
-       var rotation = Quaternion.fromAxisAngle(camera.direction, theta).toRotationMatrix();
-       camera.up = rotation.multiplyWithVector(camera.up);
+       var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(camera.direction, theta));
+       camera.up = rotation.multiplyByVector(camera.up);
        camera.right = camera.direction.cross(camera.up);
    };
 

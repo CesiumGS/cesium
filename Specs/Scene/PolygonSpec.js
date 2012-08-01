@@ -6,7 +6,7 @@ defineSuite([
          '../Specs/sceneState',
          '../Specs/pick',
          'Core/Cartesian3',
-         'Core/Cartographic3',
+         'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Extent',
          'Core/Matrix4',
@@ -19,18 +19,45 @@ defineSuite([
          sceneState,
          pick,
          Cartesian3,
-         Cartographic3,
+         Cartographic,
          Ellipsoid,
          Extent,
          Matrix4,
          CesiumMath,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var polygon;
     var us;
+
+    beforeAll(function() {
+        context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
+    });
+
+    beforeEach(function() {
+        polygon = new Polygon();
+
+        var camera = {
+            eye : new Cartesian3(1.02, 0.0, 0.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
+        };
+
+        us = context.getUniformState();
+        us.setView(Matrix4.fromCamera(camera));
+        us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
+    });
+
+    afterEach(function() {
+        polygon = polygon && polygon.destroy();
+        us = undefined;
+    });
 
     function createPolygon() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
@@ -39,35 +66,14 @@ defineSuite([
         p.ellipsoid = ellipsoid;
         p.granularity = CesiumMath.toRadians(20.0);
         p.setPositions([
-            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, -50.0, 0.0))),
-            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, -50.0, 0.0))),
-            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(50.0, 50.0, 0.0))),
-            ellipsoid.toCartesian(CesiumMath.cartographic3ToRadians(new Cartographic3(-50.0, 50.0, 0.0)))
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         ]);
 
         return p;
     }
-
-    beforeEach(function() {
-        context = createContext();
-        polygon = new Polygon();
-
-        var camera = {
-            eye : new Cartesian3(1.02, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z
-        };
-        us = context.getUniformState();
-        us.setView(Matrix4.createLookAt(camera.eye, camera.target, camera.up));
-        us.setProjection(Matrix4.createPerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
-    });
-
-    afterEach(function() {
-        polygon = polygon && polygon.destroy();
-        us = null;
-
-        destroyContext(context);
-    });
 
     it('gets default show', function() {
         expect(polygon.show).toEqual(true);
@@ -83,7 +89,7 @@ defineSuite([
         expect(polygon.getPositions()).not.toBeDefined();
 
         polygon.setPositions(positions);
-        expect(polygon.getPositions()).toEqualArray(positions);
+        expect(polygon.getPositions()).toEqual(positions);
     });
 
     it('configures extent', function() {
@@ -100,7 +106,7 @@ defineSuite([
     });
 
     it('gets the default color', function() {
-        expect(polygon.material.color).toEqualProperties({
+        expect(polygon.material.color).toEqual({
             red : 1.0,
             green : 1.0,
             blue : 0.0,
@@ -131,11 +137,11 @@ defineSuite([
         };
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polygon.update(context, sceneState);
         polygon.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders without a material', function() {
@@ -144,11 +150,11 @@ defineSuite([
         polygon.material = undefined;
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polygon.update(context, sceneState);
         polygon.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders without lighting', function() {
@@ -157,11 +163,11 @@ defineSuite([
         polygon.affectedByLighting = false;
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polygon.update(context, sceneState);
         polygon.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders extent', function() {
@@ -184,11 +190,11 @@ defineSuite([
         };
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polygon.update(context, sceneState);
         polygon.render(context, us);
-        expect(context.readPixels()).not.toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not renders', function() {
@@ -202,11 +208,11 @@ defineSuite([
         polygon.show = false;
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polygon.update(context, sceneState);
         polygon.render(context, us);
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
     it('is picked', function() {

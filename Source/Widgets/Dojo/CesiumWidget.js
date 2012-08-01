@@ -8,20 +8,20 @@ define([
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
-        '../Core/Ellipsoid',
-        '../Core/SunPosition',
-        '../Core/EventHandler',
-        '../Core/FeatureDetection',
-        '../Core/MouseEventType',
-        '../Core/Cartesian2',
-        '../Core/JulianDate',
-        '../Core/DefaultProxy',
-        '../Scene/Scene',
-        '../Scene/CentralBody',
-        '../Scene/BingMapsTileProvider',
-        '../Scene/BingMapsStyle',
-        '../Scene/SingleTileProvider',
-        '../Scene/PerformanceDisplay',
+        '../../Core/Ellipsoid',
+        '../../Core/SunPosition',
+        '../../Core/EventHandler',
+        '../../Core/FeatureDetection',
+        '../../Core/MouseEventType',
+        '../../Core/Cartesian2',
+        '../../Core/JulianDate',
+        '../../Core/DefaultProxy',
+        '../../Scene/Scene',
+        '../../Scene/CentralBody',
+        '../../Scene/BingMapsTileProvider',
+        '../../Scene/BingMapsStyle',
+        '../../Scene/SingleTileProvider',
+        '../../Scene/PerformanceDisplay',
         'dojo/text!./CesiumWidget.html'
     ], function (
         require,
@@ -210,7 +210,7 @@ define([
 
             var camera = scene.getCamera(), maxRadii = ellipsoid.getRadii().getMaximumComponent();
 
-            camera.position = camera.position.multiplyWithScalar(1.5);
+            camera.position = camera.position.multiplyByScalar(1.5);
             camera.frustum.near = 0.0002 * maxRadii;
             camera.frustum.far = 50.0 * maxRadii;
 
@@ -231,8 +231,6 @@ define([
             }
 
             this.defaultCamera = camera.clone();
-
-            this.render();
         },
 
         viewHome : function() {

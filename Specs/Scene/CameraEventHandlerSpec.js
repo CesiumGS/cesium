@@ -8,7 +8,7 @@ defineSuite([
          CameraEventType,
          MouseEventType) {
     "use strict";
-    /*global document,describe,it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var handler;
     var handler2;
@@ -59,11 +59,11 @@ defineSuite([
     });
 
     it('getButtonPressTime', function() {
-        expect(handler.getButtonPressTime()).toEqual(null);
+        expect(handler.getButtonPressTime()).toBeUndefined();
     });
 
     it('getButtonReleaseTime', function() {
-        expect(handler.getButtonReleaseTime()).toEqual(null);
+        expect(handler.getButtonReleaseTime()).toBeUndefined();
     });
 
     it('isDestroyed', function() {

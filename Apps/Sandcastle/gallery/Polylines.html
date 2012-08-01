@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Cesium Demo</title>
     <script>
+    var Sandcastle = {};
+    Sandcastle.declare = function () {};
+    Sandcastle.highlight = function () {};
+    Sandcastle.registered = [];
     if (window.location.protocol === 'file:') {
         if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
             window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
@@ -13,7 +17,26 @@
     }
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript">
+    require({
+        baseUrl : '../../..',
+        packages: [
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Source', location: 'Source' },
+            { name: 'Core', location: 'Source/Core' },
+            { name: 'DynamicScene', location: 'Source/DynamicScene' },
+            { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Scene', location: 'Source/Scene' },
+            { name: 'Shaders', location: 'Source/Shaders' },
+            { name: 'ThirdParty', location: 'Source/ThirdParty' },
+            { name: 'Widgets', location: 'Source/Widgets' }
+        ]
+    });
+    </script>
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro">
 <style>
@@ -38,181 +61,45 @@ body {
     height: 100%;
     z-index: -1;
 }
-#toolbar {
-    background: rgba(0, 0, 0, 0.5);
-    border: solid 1px rgba(0, 0, 0, 0.9);
-    margin: 5px;
-    padding: 2px 5px;
-    border-radius: 5px;
-}
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
-<div id="toolbar">Loading, please wait...</div>
 
 <script id="cesium_sandcastle_script">
-/*global require,document,window,console*/
-require({
-    baseUrl : '../../..',
-    packages: [
-        { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
-        { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
-        { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
-        { name: 'Source', location: 'Source' },
-        { name: 'Core', location: 'Source/Core' },
-        { name: 'Controls', location: 'Source/Controls' },
-        { name: 'DynamicScene', location: 'Source/DynamicScene' },
-        { name: 'Renderer', location: 'Source/Renderer' },
-        { name: 'Scene', location: 'Source/Scene' },
-        { name: 'Shaders', location: 'Source/Shaders' },
-        { name: 'ThirdParty', location: 'Source/ThirdParty' }
-    ]
-}, [
-    'Source/Cesium',
-    'dojo/on',
-    'dojo/dom',
-    'dojo/parser',
-    'dijit/form/Button',
-    'dijit/form/ToggleButton'
+require([
+    'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
+    'dojo/on', 'dojo/dom'
 ], function(
-    Cesium, on, dom, parser, Button, ToggleButton)
+    Cesium, CesiumViewerWidget,
+    on, dom)
 {
     "use strict";
 
-    //A real application should require only the subset of modules that
-    //are actually used, instead of requiring the Cesium module, which
-    //includes everything.
+    function createPrimitives(widget) {
 
-    var canvas = document.createElement('canvas');
-    canvas.className = "fullSize";
-    document.getElementById('cesiumContainer').appendChild(canvas);
-    var ellipsoid = Cesium.Ellipsoid.WGS84; // Used in many Sandbox examples
-    var scene = new Cesium.Scene(canvas);
-    var primitives = scene.getPrimitives();
+        var ellipsoid = widget.ellipsoid;
+        var primitives = widget.scene.getPrimitives();
 
-    // Bing Maps
-    var bing = new Cesium.BingMapsTileProvider({
-        server : "dev.virtualearth.net",
-        mapStyle : Cesium.BingMapsStyle.AERIAL,
-        // Some versions of Safari support WebGL, but don't correctly implement
-        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-    });
+        var polyline = new Cesium.Polyline();
+        Sandcastle.declare(polyline);
+        polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+            new Cesium.Cartographic.fromDegrees(-75.10, 39.57), // Philadelphia
+            new Cesium.Cartographic.fromDegrees(-80.12, 25.46) // Miami
+        ]));
+        primitives.add(polyline);
 
-    var cb = new Cesium.CentralBody(ellipsoid);
-    cb.dayTileProvider = bing;
-    cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
-    cb.specularMapSource = '../../../Images/earthspec1k.jpg';
-    if (scene.getContext().getMaximumTextureSize() > 2048) {
-        cb.cloudsMapSource = '../../../Images/earthcloudmaptrans.jpg';
-        cb.bumpMapSource = '../../../Images/earthbump1k.jpg';
     }
-    cb.showSkyAtmosphere = true;
-    cb.showGroundAtmosphere = true;
-    primitives.setCentralBody(cb);
 
-    scene.getCamera().frustum.near = 1.0;
-    scene.getCamera().getControllers().addCentralBody();
-
-    var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Polyline demos
-
-	var polyline = new Cesium.Polyline();
-	polyline.setPositions(ellipsoid.cartographicDegreesToCartesians([
-		new Cesium.Cartographic2(-75.10, 39.57), // Philadelphia
-		new Cesium.Cartographic2(-80.12, 25.46) // Miami
-	]));
-
-	primitives.add(polyline);
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Demo buttons:
-
-    dom.byId("toolbar").innerHTML = "Demo buttons: ";
-
-    var button1 = new ToggleButton({
-        label: "Ground Atmosphere",
-        iconClass: 'dijitCheckBoxIcon',
-        checked: cb.showGroundAtmosphere,
-        onChange: function (newValue) {
-            cb.showGroundAtmosphere = newValue;
-            console.log('Show ground atmosphere: ' + newValue);
+    var cesiumViewerWidget = new CesiumViewerWidget({
+        onObjectMousedOver : function(mousedOverObject) {
+            cesiumViewerWidget.highlightObject(mousedOverObject);
+            Sandcastle.highlight(mousedOverObject);
+        },
+        postSetup : function(widget) {
+            createPrimitives(widget);
+            widget.startRenderLoop();
         }
-    }).placeAt("toolbar");
-
-    var button2 = new ToggleButton({
-        label: "Sky Atmosphere",
-        iconClass: 'dijitCheckBoxIcon',
-        checked: cb.showSkyAtmosphere,
-        onChange: function (newValue) {
-            cb.showSkyAtmosphere = newValue;
-            console.log('Show sky atmosphere: ' + newValue);
-        }
-    }).placeAt("toolbar");
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    scene.setAnimation(function() {
-        scene.setSunPosition(Cesium.SunPosition.compute().position);
-
-        // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
-    });
-
-    (function tick() {
-        scene.render();
-        Cesium.requestAnimationFrame(tick);
-    }());
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Example mouse handler
-
-    var handler = new Cesium.EventHandler(canvas);
-
-    handler.setMouseAction(function(movement) {
-        // INSERT CODE HERE: Handler for left-click
-        // ...
-    }, Cesium.MouseEventType.LEFT_CLICK);
-
-    handler.setMouseAction(function(movement) {
-        // INSERT CODE HERE: Handler for mouse move
-        // Use movement.startX, movement.startY, movement.endX, movement.endY
-        // ...
-    }, Cesium.MouseEventType.MOVE);
-
-    // Prevent right-click from opening a context menu.
-    canvas.oncontextmenu = function() {
-        return false;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Example resize handler
-
-    var onResize = function () {
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
-
-        if (canvas.width === width && canvas.height === height) {
-            return;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        scene.getContext().setViewport({
-            x: 0,
-            y: 0,
-            width: width,
-            height: height
-        });
-
-        scene.getCamera().frustum.aspectRatio = width / height;
-    };
-    window.addEventListener('resize', onResize, false);
-    onResize();
-
-    console.log('Cesium started.');
+    }).placeAt(dom.byId("cesiumContainer"));
 });
 
 </script>

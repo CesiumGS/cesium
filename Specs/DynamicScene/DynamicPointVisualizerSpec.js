@@ -26,18 +26,21 @@ defineSuite([
               Scene,
               BillboardCollection) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     var visualizer;
 
-    beforeEach(function() {
+    beforeAll(function() {
         scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -129,7 +132,7 @@ defineSuite([
         visualizer.update(time);
         expect(bb.getShow()).toEqual(testObject.point.show.getValue(time));
         expect(bb.getPosition()).toEqual(testObject.position.getValueCartesian(time));
-        expect(bb._visualizerColor).toEqualProperties(testObject.point.color.getValue(time));
+        expect(bb._visualizerColor).toEqual(testObject.point.color.getValue(time));
         expect(bb._visualizerOutlineColor).toEqual(testObject.point.outlineColor.getValue(time));
         expect(bb._visualizerOutlineWidth).toEqual(testObject.point.outlineWidth.getValue(time));
         expect(bb._visualizerPixelSize).toEqual(testObject.point.pixelSize.getValue(time));
@@ -143,7 +146,7 @@ defineSuite([
         visualizer.update(time);
         expect(bb.getShow()).toEqual(testObject.point.show.getValue(time));
         expect(bb.getPosition()).toEqual(testObject.position.getValueCartesian(time));
-        expect(bb._visualizerColor).toEqualProperties(testObject.point.color.getValue(time));
+        expect(bb._visualizerColor).toEqual(testObject.point.color.getValue(time));
         expect(bb._visualizerOutlineColor).toEqual(testObject.point.outlineColor.getValue(time));
         expect(bb._visualizerOutlineWidth).toEqual(testObject.point.outlineWidth.getValue(time));
         expect(bb._visualizerPixelSize).toEqual(testObject.point.pixelSize.getValue(time));

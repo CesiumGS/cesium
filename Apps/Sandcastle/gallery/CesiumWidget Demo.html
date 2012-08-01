@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Cesium Demo</title>
     <script>
+    var Sandcastle = {};
+    Sandcastle.declare = function () {};
+    Sandcastle.highlight = function () {};
+    Sandcastle.registered = [];
     if (window.location.protocol === 'file:') {
         if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
             window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
@@ -13,7 +17,26 @@
     }
     </script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript">
+    require({
+        baseUrl : '../../..',
+        packages: [
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Source', location: 'Source' },
+            { name: 'Core', location: 'Source/Core' },
+            { name: 'DynamicScene', location: 'Source/DynamicScene' },
+            { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Scene', location: 'Source/Scene' },
+            { name: 'Shaders', location: 'Source/Shaders' },
+            { name: 'ThirdParty', location: 'Source/ThirdParty' },
+            { name: 'Widgets', location: 'Source/Widgets' }
+        ]
+    });
+    </script>
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro">
 <style>
@@ -41,52 +64,26 @@ body {
 #toolbar {
     background: rgba(0, 0, 0, 0.5);
     border: solid 1px rgba(0, 0, 0, 0.9);
-    margin: 5px;
     padding: 2px 5px;
     border-radius: 5px;
+    position: absolute;
+    top: 5px;
+    left: 5px;
 }
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
-<div id="toolbar">Loading, please wait...</div>
 
 <script id="cesium_sandcastle_script">
-/*global require,document,window,console*/
-require({
-    baseUrl : '../../..',
-    packages: [
-        { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
-        { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
-        { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
-        { name: 'Source', location: 'Source' },
-        { name: 'Core', location: 'Source/Core' },
-        { name: 'Controls', location: 'Source/Controls' },
-        { name: 'DojoWidgets', location: 'Source/DojoWidgets' },
-        { name: 'DynamicScene', location: 'Source/DynamicScene' },
-        { name: 'Renderer', location: 'Source/Renderer' },
-        { name: 'Scene', location: 'Source/Scene' },
-        { name: 'Shaders', location: 'Source/Shaders' },
-        { name: 'ThirdParty', location: 'Source/ThirdParty' }
-    ]
-}, [
-    'Source/Cesium',
-    'DojoWidgets/CesiumWidget',
-    'Core/JulianDate',
-    'Core/requestAnimationFrame',
-    'dojo/on',
-    'dojo/dom',
-    'dojo/parser',
-    'dijit/form/Button',
-    'dijit/form/ToggleButton'
+require([
+    'Source/Cesium', 'Widgets/Dojo/CesiumWidget',
+    'Core/JulianDate', 'Core/requestAnimationFrame',
+    'dojo/on', 'dojo/dom'
 ], function(
-    Cesium, CesiumWidget, JulianDate, requestAnimationFrame, on, dom, parser, Button, ToggleButton)
+    Cesium, CesiumWidget,
+    JulianDate, requestAnimationFrame, on, dom)
 {
     "use strict";
-    parser.parse();
-
-    //A real application should require only the subset of modules that
-    //are actually used, instead of requiring the Cesium module, which
-    //includes everything.
 
     var cesiumWidget = new CesiumWidget({
         postSetup : function(widget) {
@@ -95,40 +92,12 @@ require({
                 widget.render(currentTime);
                 requestAnimationFrame(update);
             }
-
-            ///////////////////////////////////////////////////////////////////////////
-            // Demo buttons:
-
-            var cb = widget.centralBody;
-            dom.byId("toolbar").innerHTML = "Demo buttons: ";
-
-            var button1 = new ToggleButton({
-                label: "Ground Atmosphere",
-                iconClass: 'dijitCheckBoxIcon',
-                checked: cb.showGroundAtmosphere,
-                onChange: function (newValue) {
-                    cb.showGroundAtmosphere = newValue;
-                    console.log('Show ground atmosphere: ' + newValue);
-                }
-            }).placeAt("toolbar");
-
-            var button2 = new ToggleButton({
-                label: "Sky Atmosphere",
-                iconClass: 'dijitCheckBoxIcon',
-                checked: cb.showSkyAtmosphere,
-                onChange: function (newValue) {
-                    cb.showSkyAtmosphere = newValue;
-                    console.log('Show sky atmosphere: ' + newValue);
-                }
-            }).placeAt("toolbar");
-
             update();
         },
         onSetupError : function(widget, error) {
             console.log(error);
         }
-    });
-    cesiumWidget.placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId("cesiumContainer"));
 
     on(window, 'resize', function() {
         cesiumWidget.resize();

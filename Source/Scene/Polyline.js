@@ -267,9 +267,9 @@ define([
      *   alpha : 0.5
      * };
      * polyline.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...)),
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...)),
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...))
      * ]);
      */
     var Polyline = function() {
@@ -466,7 +466,7 @@ define([
          * @example
          * // The arrow points to the east, i.e., along the local x-axis.
          * var polyline = new Polyline();
-         * var center = ellipsoid.cartographicDegreesToCartesian(new Cartographic2(-75.59777, 40.03883));
+         * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * polyline.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          * polyline.setPositions([
          *   new Cartesian3(0.0, 0.0, 0.0),
@@ -630,9 +630,9 @@ define([
      *
      * @example
      * polyline.setPositions([
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...)),
-     *   ellipsoid.toCartesian(new Cartographic3(...))
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...)),
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...)),
+     *   ellipsoid.cartographicToCartesian(new Cartographic(...))
      * ]);
      */
     Polyline.prototype.setPositions = function(value) {
@@ -831,7 +831,7 @@ define([
                     var i, p;
                     if (typeof positions2D !== 'undefined') {
                         for (i = 0; i < positions2D.length; ++i) {
-                            p = mv2D.multiplyWithVector(new Cartesian4(positions2D[i].x, positions2D[i].y, positions2D[i].z, 1.0));
+                            p = mv2D.multiplyByVector(new Cartesian4(positions2D[i].x, positions2D[i].y, positions2D[i].z, 1.0));
                             worldPositions2D.push(new Cartesian3(p.x, p.y, p.z));
                         }
                     }
@@ -840,7 +840,7 @@ define([
                     var worldPositions3D = [];
                     if (typeof positions3D !== 'undefined') {
                         for (i = 0; i < positions3D.length; ++i) {
-                            p = mv3D.multiplyWithVector(new Cartesian4(positions3D[i].x, positions3D[i].y, positions3D[i].z, 1.0));
+                            p = mv3D.multiplyByVector(new Cartesian4(positions3D[i].x, positions3D[i].y, positions3D[i].z, 1.0));
                             worldPositions3D.push(new Cartesian3(p.x, p.y, p.z));
                         }
                     }

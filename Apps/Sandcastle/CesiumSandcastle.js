@@ -15,7 +15,7 @@ require({
             location: '../Apps/Sandcastle'
         }]
     }, [
-        'DojoWidgets/CesiumWidget',
+        'Widgets/Dojo/CesiumViewerWidget',
         'dojo/parser',
         'dojo/dom',
         'dojo/dom-class',
@@ -43,7 +43,7 @@ require({
         'Sandcastle/LinkButton',
         'dojo/domReady!'],
     function (
-            CesiumWidget,
+            CesiumViewerWidget,
             parser,
             dom,
             domClass,
@@ -57,7 +57,7 @@ require({
     ) {
         "use strict";
         parser.parse();
-        window.CesiumWidget = CesiumWidget; // for autocomplete.
+        window.CesiumViewerWidget = CesiumViewerWidget; // for autocomplete.
         fx.fadeOut({ node: 'loading', onEnd: function () {
             domConstruct.destroy('loading');
         }}).play();
@@ -90,7 +90,15 @@ require({
         var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
         var errorLines = [];
         var highlightLines = [];
+        var hintGlobals = [
+            'require',
+            'document',
+            'window',
+            'console',
+            'Sandcastle'
+        ];
         var hintOptions = {
+            predef: hintGlobals,
             // These are copied from the Eclipse jsHint plugin options on the Cesium project itself.
             // They should be kept in sync with that list of options.
             bitwise : false,

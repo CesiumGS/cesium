@@ -12,7 +12,7 @@ defineSuite([
          Camera,
          PerspectiveFrustum) {
     "use strict";
-    /*global it,expect,document,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var position;
     var up;

@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite(['Core/Queue'], function(Queue) {
     "use strict";
-    /*global it,expect,beforeEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var queue;
     beforeEach(function() {

@@ -1,12 +1,14 @@
 /*global defineSuite*/
 defineSuite([
          'Core/AxisAlignedBoundingBox',
-         'Core/Cartesian3'
+         'Core/Cartesian3',
+         'Core/Math'
      ], function(
          AxisAlignedBoundingBox,
-         Cartesian3) {
+         Cartesian3,
+         CesiumMath) {
     "use strict";
-    /*global it,expect,describe*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var positions = [
                      new Cartesian3(3, -1, -3),
@@ -30,7 +32,7 @@ defineSuite([
 
     it('computes a center', function() {
         var box = new AxisAlignedBoundingBox(positions);
-        expect(box.center.equalsEpsilon(Cartesian3.ZERO, Math.EPSILON14)).toEqual(true);
+        expect(box.center.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)).toEqual(true);
     });
 
     it('computes the bounding box for a single position', function() {

@@ -16,7 +16,7 @@ defineSuite([
          BufferUsage,
          PixelFormat) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var atlas;
@@ -28,13 +28,16 @@ defineSuite([
     var bigGreenImage;
     var whiteImage;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     afterEach(function() {
         atlas = atlas && atlas.destroy();
-        destroyContext(context);
     });
 
     it('initialize suite', function() {
@@ -86,7 +89,7 @@ defineSuite([
         });
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
