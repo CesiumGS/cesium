@@ -3,12 +3,18 @@ defineSuite([
          'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartesian4',
+         'Core/Ellipsoid',
+         'Core/EquidistantCylindricalProjection',
+         'Core/Extent',
          'Core/Intersect',
          'Core/Math'
      ], function(
          BoundingSphere,
          Cartesian3,
          Cartesian4,
+         Ellipsoid,
+         EquidistantCylindricalProjection,
+         Extent,
          Intersect,
          CesiumMath) {
     "use strict";
@@ -121,6 +127,69 @@ defineSuite([
             expect(currentPos.y <= max.y && currentPos.y >= min.y).toEqual(true);
             expect(currentPos.z <= max.z && currentPos.z >= min.z).toEqual(true);
         }
+    });
+
+    it('from extent 2d throws without an extent', function() {
+        expect(function() {
+            return BoundingSphere.fromExtent2D();
+        }).toThrow();
+    });
+
+    it('from extent 2d throws without a projection', function() {
+        expect(function() {
+            return BoundingSphere.fromExtent2D(Extent.MAX_VALUE);
+        }).toThrow();
+    });
+
+    it('from extent 2d', function() {
+        var extent = Extent.MAX_VALUE;
+        var projection = new EquidistantCylindricalProjection(Ellipsoid.UNIT_SPHERE);
+        var expected = new BoundingSphere(Cartesian3.ZERO, Math.sqrt(extent.east * extent.east + extent.north * extent.north));
+        expect(BoundingSphere.fromExtent2D(extent, projection)).toEqual(expected);
+    });
+
+    it('from extent morph throws without an extent', function() {
+        expect(function() {
+            return BoundingSphere.fromExtentMorph();
+        }).toThrow();
+    });
+
+    it('from extent morph throws without a projection', function() {
+        expect(function() {
+            return BoundingSphere.fromExtentMorph(Extent.MAX_VALUE);
+        }).toThrow();
+    });
+
+    it('from extent morph throws without a time', function() {
+        expect(function() {
+            return BoundingSphere.fromExtentMorph(Extent.MAX_VALUE, new EquidistantCylindricalProjection());
+        }).toThrow();
+    });
+
+    it('from extent morph', function() {
+        var extent = Extent.MAX_VALUE;
+        var projection = new EquidistantCylindricalProjection();
+
+        var actual = BoundingSphere.fromExtentMorph(extent, projection, 0.0);
+        var expected = BoundingSphere.fromExtent2D(extent, projection);
+        expect(actual).toEqual(expected);
+
+        actual = BoundingSphere.fromExtentMorph(extent, projection, 1.0);
+        expected = BoundingSphere.fromExtent3D(extent);
+        expect(actual).toEqual(expected);
+    });
+
+    it('from extent 3d throws without an extent', function() {
+        expect(function() {
+            return BoundingSphere.fromExtent3D();
+        }).toThrow();
+    });
+
+    it('from extent 3d', function() {
+        var extent = Extent.MAX_VALUE;
+        var ellipsoid = Ellipsoid.WGS84;
+        var expected = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
+        expect(BoundingSphere.fromExtent3D(extent, ellipsoid)).toEqual(expected);
     });
 
     it('static clone throws with no parameter', function() {

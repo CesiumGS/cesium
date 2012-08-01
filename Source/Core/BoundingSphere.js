@@ -251,7 +251,7 @@ define([
     };
 
     function getExtentPosition(lla, ellipsoid, time, projection) {
-        if (typeof time === 'undefined' || time === 0.0 || typeof projection === 'undefined') {
+        if (typeof time === 'undefined' || typeof projection === 'undefined') {
             return ellipsoid.cartographicToCartesian(lla);
         }
 
@@ -318,12 +318,12 @@ define([
             throw new DeveloperError('extent is required.');
         }
 
-        if (typeof time === 'undefined') {
-            throw new DeveloperError('time is required.');
-        }
-
         if (typeof projection === 'undefined' || typeof projection.project === 'undefined') {
             throw new DeveloperError('projection is required.');
+        }
+
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is required.');
         }
 
         Extent.validate(extent);

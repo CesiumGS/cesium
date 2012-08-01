@@ -1,22 +1,18 @@
 /*global defineSuite*/
 defineSuite([
          'Core/BoundingRectangle',
-         'Core/Cartesian2'
+         'Core/Cartesian2',
+         'Core/Ellipsoid',
+         'Core/EquidistantCylindricalProjection',
+         'Core/Extent'
      ], function(
          BoundingRectangle,
-         Cartesian2) {
+         Cartesian2,
+         Ellipsoid,
+         EquidistantCylindricalProjection,
+         Extent) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
-
-    var positions = [
-                     new Cartesian2(3, -1),
-                     new Cartesian2(2, -2),
-                     new Cartesian2(1, -3),
-                     new Cartesian2(0, 0),
-                     new Cartesian2(-1, 1),
-                     new Cartesian2(-2, 2),
-                     new Cartesian2(-3, 3)
-                 ];
 
     it('constructor throws without x', function() {
         expect(function() {
@@ -97,11 +93,39 @@ defineSuite([
     });
 
     it('create axis aligned bounding rectangle', function() {
+        var positions = [
+             new Cartesian2(3, -1),
+             new Cartesian2(2, -2),
+             new Cartesian2(1, -3),
+             new Cartesian2(0, 0),
+             new Cartesian2(-1, 1),
+             new Cartesian2(-2, 2),
+             new Cartesian2(-3, 3)
+         ];
         var rectangle = BoundingRectangle.fromPoints(positions);
         expect(rectangle.x).toEqual(-3);
         expect(rectangle.y).toEqual(-3);
         expect(rectangle.width).toEqual(6);
         expect(rectangle.height).toEqual(6);
+    });
+
+    it('create a bounding rectangle from an extent throws without an extent', function() {
+        expect(function() {
+            return BoundingRectangle.fromExtent();
+        }).toThrow();
+    });
+
+    it('create a bounding rectangle from an extent throws without a projection', function() {
+        expect(function() {
+            return BoundingRectangle.fromExtent(Extent.MAX_VALUE);
+        }).toThrow();
+    });
+
+    it('create a bounding rectangle from an extent', function() {
+        var extent = Extent.MAX_VALUE;
+        var projection = new EquidistantCylindricalProjection(Ellipsoid.UNIT_SPHERE);
+        var expected = new BoundingRectangle(extent.west, extent.south, extent.east - extent.west, extent.north - extent.south);
+        expect(BoundingRectangle.fromExtent(extent, projection)).toEqual(expected);
     });
 
     it('rectangleIntersect throws with rect1', function() {

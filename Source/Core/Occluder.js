@@ -341,6 +341,10 @@ define([
      * which is a boolean value.
      */
     Occluder.computeOccludeePointFromExtent = function(extent, ellipsoid) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var positions = BoundingSphere._computeExtentPositions(extent, ellipsoid);
         var bs = BoundingSphere.fromPoints(positions);

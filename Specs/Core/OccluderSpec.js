@@ -4,13 +4,17 @@ defineSuite([
          'Core/Cartesian3',
          'Core/BoundingSphere',
          'Core/Visibility',
-         'Core/Math'
+         'Core/Math',
+         'Core/Ellipsoid',
+         'Core/Extent'
      ], function(
          Occluder,
          Cartesian3,
          BoundingSphere,
          Visibility,
-         CesiumMath) {
+         CesiumMath,
+         Ellipsoid,
+         Extent) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -244,5 +248,28 @@ defineSuite([
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
         expect(result.valid).toEqual(true);
         expect(occluder.isVisible(new BoundingSphere(result.occludeePoint, 0.0))).toEqual(true);
+    });
+
+    it('compute occludee point from extent throws without an extent', function() {
+        expect(function() {
+            return Occluder.computeOccludeePointFromExtent();
+        }).toThrow();
+    });
+
+    it('compute invalid occludee point from extent', function() {
+        var extent = Extent.MAX_VALUE;
+        expect(Occluder.computeOccludeePointFromExtent(extent).valid).toEqual(false);
+    });
+
+    it('compute valid occludee point from extent', function() {
+        var edge = Math.PI / 32.0;
+        var extent = new Extent(-edge, -edge, edge, edge);
+        var ellipsoid = Ellipsoid.WGS84;
+        var positions = BoundingSphere._computeExtentPositions(extent, ellipsoid);
+        var bs = BoundingSphere.fromPoints(positions);
+        var point = Occluder.getOccludeePoint(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), bs.center, positions).occludeePoint;
+        var actual = Occluder.computeOccludeePointFromExtent(extent);
+        expect(actual.valid).toEqual(true);
+        expect(actual.occludeePoint).toEqual(point);
     });
 });
