@@ -10,7 +10,7 @@ defineSuite([
               DynamicBillboard,
               JulianDate) {
     "use strict";
-    /*global it,expect,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var czml = {
         'id' : 'test',

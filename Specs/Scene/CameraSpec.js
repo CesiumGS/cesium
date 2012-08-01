@@ -32,7 +32,7 @@ defineSuite([
          OrthographicFrustum,
          PerspectiveFrustum) {
     "use strict";
-    /*global describe,it,expect,document,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var camera;
     var canvas = {

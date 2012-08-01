@@ -10,7 +10,7 @@ defineSuite([
               ClockRange,
               JulianDate) {
     "use strict";
-    /*global it,expect,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor sets default parameters', function() {
         var clock = new Clock();

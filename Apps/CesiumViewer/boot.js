@@ -33,7 +33,7 @@ require({
         location : 'Apps/CesiumViewer'
     }]
 }, [
-    'Widgets/DojoWidgets/checkForChromeFrame',
+    'Widgets/Dojo/checkForChromeFrame',
     'dojo/parser',
     'dojo/dom-class',
     'dojo/_base/window',

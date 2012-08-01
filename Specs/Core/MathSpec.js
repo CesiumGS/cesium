@@ -8,7 +8,7 @@ defineSuite([
          Cartesian3,
          Cartographic) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('sign of -2', function() {
         expect(CesiumMath.sign(-2)).toEqual(-1);

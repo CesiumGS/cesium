@@ -8,7 +8,7 @@ defineSuite([
          Cartesian3,
          CesiumMath) {
     "use strict";
-    /*global it,expect,describe*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var positions = [
                      new Cartesian3(3, -1, -3),

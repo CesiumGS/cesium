@@ -3,12 +3,12 @@ define([
     'dojo/dom',
     'dojo/on',
     'dojo/io-query',
-    'Widgets/DojoWidgets/CesiumWidget'
+    'Widgets/Dojo/CesiumViewerWidget'
 ], function(
     dom,
     on,
     ioQuery,
-    CesiumWidget
+    CesiumViewerWidget
 ) {
     "use strict";
     /*global console*/
@@ -18,7 +18,7 @@ define([
         endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
     }
 
-    var cesium = new CesiumWidget({
+    new CesiumViewerWidget({
         endUserOptions : endUserOptions,
         enableDragDrop : true,
 
@@ -29,7 +29,5 @@ define([
         onSetupError : function(widget, error) {
             console.log(error);
         }
-    });
-
-    cesium.placeAt(dom.byId('cesiumContainer'));
+    }).placeAt(dom.byId('cesiumContainer'));
 });

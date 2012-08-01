@@ -4,7 +4,7 @@ defineSuite([
      ], function(
          UniformDatatype) {
     "use strict";
-    /*global it, expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('FLOAT', function() {
         expect(UniformDatatype.FLOAT.getGLSL()).toEqual('float');

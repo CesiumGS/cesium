@@ -4,24 +4,34 @@ define([
         '../Core/Ellipsoid',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/IntersectionTests',
+        '../Core/Math',
         '../Core/Matrix4',
+        '../Core/Ray',
         '../Core/Transforms',
         './CameraEventHandler',
         './CameraEventType',
         './CameraSpindleController',
-        './CameraFreeLookController'
+        './CameraFreeLookController',
+        './CameraHelpers'
     ], function(
         destroyObject,
         Ellipsoid,
         Cartesian3,
         Cartesian4,
+        IntersectionTests,
+        CesiumMath,
         Matrix4,
+        Ray,
         Transforms,
         CameraEventHandler,
         CameraEventType,
         CameraSpindleController,
-        CameraFreeLookController) {
+        CameraFreeLookController,
+        CameraHelpers) {
     "use strict";
+
+    var maxHeight = CameraHelpers.maxHeight;
 
     /**
      * Defines camera movement and handles mouse events that move the camera. Moves the camera
@@ -43,7 +53,6 @@ define([
     var CameraCentralBodyController = function(canvas, camera, ellipsoid) {
         this._canvas = canvas;
         this._camera = camera;
-        this._transform = Matrix4.IDENTITY;
         this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
         /**
@@ -68,18 +77,8 @@ define([
         var rotate = this._rotateHandler;
         var rotating = rotate.isMoving() && rotate.getMovement();
 
-        var rotateMovement = rotate.getMovement();
-        if (rotate.isButtonDown() && typeof this._transform === 'undefined' && rotateMovement) {
-            var center = this._camera.pickEllipsoid(rotateMovement.startPosition, this.spindleController.getEllipsoid());
-            if (typeof center !== 'undefined') {
-                this._transform = Transforms.eastNorthUpToFixedFrame(center);
-            }
-        } else if (!rotate.isButtonDown()) {
-            this._transform = undefined;
-        }
-
-        if (rotating && typeof this._transform !== 'undefined') {
-                this._rotate(rotateMovement);
+        if (rotating) {
+            this._rotate(rotate.getMovement());
         }
 
         this.spindleController.update();
@@ -89,9 +88,15 @@ define([
     };
 
     CameraCentralBodyController.prototype._rotate = function(movement) {
-        var transform = this._transform;
         var camera = this._camera;
+
+        var ellipsoid = this.spindleController.getEllipsoid();
         var position = camera.position;
+        if (ellipsoid.cartesianToCartographic(position).height - maxHeight - 1.0 < CesiumMath.EPSILON3 &&
+                movement.endPosition.y - movement.startPosition.y < 0) {
+            return;
+        }
+
         var up = camera.up;
         var right = camera.right;
         var direction = camera.direction;
@@ -100,8 +105,19 @@ define([
         var oldEllipsoid = this.spindleController.getEllipsoid();
         var oldConstrainedZ = this.spindleController.constrainedAxis;
 
-        this.spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+        var ray = new Ray(this._camera.getPositionWC(), this._camera.getDirectionWC());
+        var intersection = IntersectionTests.rayEllipsoid(ray, this.spindleController.getEllipsoid());
+        if (typeof intersection === 'undefined') {
+            return;
+        }
+
+        var center = ray.getPoint(intersection.start);
+        center = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(new Cartesian4(center.x, center.y, center.z, 1.0)));
+        var localTransform = Transforms.eastNorthUpToFixedFrame(center);
+        var transform = localTransform.multiply(oldTransform);
+
         this.spindleController.constrainedAxis = Cartesian3.UNIT_Z;
+        this.spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
 
         var invTransform = camera.getInverseTransform();
         camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
@@ -116,13 +132,22 @@ define([
         right = camera.right;
         direction = camera.direction;
 
-        this.spindleController.setReferenceFrame(oldTransform, oldEllipsoid);
         this.spindleController.constrainedAxis = oldConstrainedZ;
+        this.spindleController.setReferenceFrame(oldTransform, oldEllipsoid);
 
         camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
         camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
         camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+
+        position = ellipsoid.cartesianToCartographic(camera.position);
+        if (position.height < maxHeight + 1.0) {
+            position.height = maxHeight + 1.0;
+            camera.position = ellipsoid.cartographicToCartesian(position);
+            camera.direction = Cartesian3.fromCartesian4(transform.getColumn(3).subtract(camera.position)).normalize();
+            camera.right = camera.position.negate().cross(camera.direction).normalize();
+            camera.up = camera.right.cross(camera.direction);
+        }
     };
 
     /**

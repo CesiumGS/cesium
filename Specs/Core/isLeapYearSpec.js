@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite(['Core/isLeapYear'], function(isLeapYear) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('Check for valid leap years', function() {
         expect(isLeapYear(2000)).toEqual(true);

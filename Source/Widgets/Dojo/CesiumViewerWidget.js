@@ -44,7 +44,7 @@ define([
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectCollection',
         '../../DynamicScene/VisualizerCollection',
-        'dojo/text!./CesiumWidget.html'
+        'dojo/text!./CesiumViewerWidget.html'
     ], function (
         require,
         declare,
@@ -93,7 +93,7 @@ define([
         template) {
     "use strict";
 
-    return declare('Cesium.CesiumWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
+    return declare('Cesium.CesiumViewerWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
         templateString : template,
         preRender : undefined,
         postSetup : undefined,
@@ -107,7 +107,7 @@ define([
         bumpMapUrl : undefined,
         endUserOptions : {},
         enableDragDrop: false,
-        refreshOnWindowResize: true,
+        resizeWidgetOnWindowResize: true,
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -558,7 +558,7 @@ define([
             on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
             on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
 
-            if (widget.refreshOnWindowResize) {
+            if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
                     widget.resize();
                 });
