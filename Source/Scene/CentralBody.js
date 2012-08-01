@@ -1311,52 +1311,35 @@ define([
         return this._refine3D(tile, context, sceneState);
     };
 
-    CentralBody.prototype._createScissorRectangle = function(description) {
-        var quad = description.quad;
+    CentralBody.prototype._createScissorRectangle = function(context, sceneState, width, height) {
+        var vp = context.getUniformState().getViewProjection();
+        var vt = context.getUniformState().getViewportTransformation();
 
-        var upperLeft = new Cartesian3(quad[0], quad[1], quad[2]);
-        var lowerLeft = new Cartesian3(quad[3], quad[4], quad[5]);
-        var upperRight = new Cartesian3(quad[6], quad[7], quad[8]);
-        var lowerRight = new Cartesian3(quad[9], quad[10], quad[11]);
-
-        var mvp = description.modelViewProjection;
-        var vt = description.viewportTransformation;
-
-        var diag1 = upperRight.subtract(lowerLeft);
-        var diag2 = upperLeft.subtract(lowerRight);
-
-        var diag1Length = diag1.magnitude();
-        var diag2Length = diag2.magnitude();
-
-        var halfWidth = Math.max(diag1Length, diag2Length) * 0.5;
-        var halfHeight = halfWidth;
-
-        var center = lowerLeft.add(diag1.normalize().multiplyByScalar(diag1Length * 0.5));
-
-        var camera = description.sceneState.camera;
-        var nearCenter = camera.position.add(camera.direction.multiplyByScalar(camera.frustum.near));
-
-        if (camera.direction.dot(center.subtract(nearCenter)) < 0) {
-            center = center.subtract(nearCenter);
-            var centerProjN = camera.direction.multiplyByScalar(camera.direction.dot(center));
-            var centerRejN = center.subtract(centerProjN);
-            center = nearCenter.add(centerRejN);
+        var camera = sceneState.camera;
+        var toCenter = camera.position.normalize().negate();
+        var direction = camera.direction;
+        var right;
+        if (1.0 - toCenter.dot(direction) < CesiumMath.EPSILON6 || 1.0 + toCenter.dot(direction) < CesiumMath.EPSILON6) {
+            right = camera.right;
+        } else {
+            right = toCenter.cross(direction).normalize();
         }
+        var up = right.cross(toCenter).normalize();
 
-        lowerLeft = center.add(camera.up.multiplyByScalar(-halfHeight)).add(camera.right.multiplyByScalar(-halfWidth));
-        lowerLeft = Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft);
-        upperRight = center.add(camera.up.multiplyByScalar(halfHeight)).add(camera.right.multiplyByScalar(halfWidth));
-        upperRight = Transforms.pointToWindowCoordinates(mvp, vt, upperRight);
+        //TODO: find the size of the rectangle to include the sky atmosphere instead of scaling the radius by 2.5
+        var maxRadii = this._ellipsoid.getMaximumRadius() * 2.5;
+        var upperRight = right.multiplyByScalar(maxRadii).add(up.multiplyByScalar(maxRadii));
+        var lowerLeft = upperRight.negate();
 
-        lowerLeft.x = Math.max(0.0, Math.min(lowerLeft.x, description.width));
-        lowerLeft.y = Math.max(0.0, Math.min(lowerLeft.y, description.height));
-        upperRight.x = Math.max(0.0, Math.min(upperRight.x, description.width));
-        upperRight.y = Math.max(0.0, Math.min(upperRight.y, description.height));
+        upperRight = Cartesian3.fromCartesian4(camera.transform.multiplyByVector(new Cartesian4(upperRight.x, upperRight.y, upperRight.z, 1.0)));
+        lowerLeft = Cartesian3.fromCartesian4(camera.transform.multiplyByVector(new Cartesian4(lowerLeft.x, lowerLeft.y, lowerLeft.z, 1.0)));
+        upperRight = Transforms.pointToWindowCoordinates(vp, vt, upperRight);
+        lowerLeft = Transforms.pointToWindowCoordinates(vp, vt, lowerLeft);
 
-        var x = Math.floor(lowerLeft.x);
-        var y = Math.floor(lowerLeft.y);
-        var width = Math.ceil(upperRight.x) - x;
-        var height = Math.ceil(upperRight.y) - y;
+        var x = Math.max(0.0, Math.min(Math.floor(lowerLeft.x), width));
+        var y = Math.max(0.0, Math.min(Math.floor(lowerLeft.y), height));
+        width = Math.max(0.0, Math.min(Math.ceil(upperRight.x), width)) - x;
+        height = Math.max(0.0, Math.min(Math.ceil(upperRight.y), height)) - y;
 
         return new Rectangle(x, y, width, height);
     };
@@ -1775,18 +1758,8 @@ define([
 
         var scissorTest = { enabled : false };
         if (mode === SceneMode.SCENE3D) {
-            var uniformState = context.getUniformState();
-            var mvp = uniformState.getModelViewProjection();
-            var rect = this._createScissorRectangle({
-                sceneState : sceneState,
-                width : width,
-                height : height,
-                quad : depthQuad,
-                modelViewProjection : mvp,
-                viewportTransformation : uniformState.getViewportTransformation()
-            });
-
-            if (rect.width !== 0 && rect.height !== 0) {
+            var rect = this._createScissorRectangle(context, sceneState, width, height);
+            if (rect.width > 0 && rect.height > 0) {
                 scissorTest = {
                     enabled : true,
                     rectangle : rect
