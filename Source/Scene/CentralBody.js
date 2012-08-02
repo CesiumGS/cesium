@@ -1777,7 +1777,8 @@ define([
         // update scisor/depth plane
         var depthQuad = this._computeDepthQuad(sceneState);
 
-        var scissorTest = { enabled : false };
+        // TODO: Re-enable scissor test.
+        /*var scissorTest = { enabled : false };
         if (mode === SceneMode.SCENE3D) {
             var uniformState = context.getUniformState();
             var mvp = uniformState.getModelViewProjection();
@@ -1800,7 +1801,7 @@ define([
         this._rsColor.scissorTest = scissorTest;
         this._rsDepth.scissorTest = scissorTest;
         this._quadV.renderState.scissorTest = scissorTest;
-        this._quadH.renderState.scissorTest = scissorTest;
+        this._quadH.renderState.scissorTest = scissorTest;*/
 
         // depth plane
         if (!this._vaDepth) {
