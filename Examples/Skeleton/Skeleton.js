@@ -33,24 +33,24 @@ require({
 
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
 
-//    var wmsImagery = new Cesium.WebMapServiceImageryProvider({
-//        url : 'http://localhost:8081/geoserver/wms',
-//        layerName : 'demo'
+    var wmsImagery = new Cesium.WebMapServiceImageryProvider({
+        url : 'http://localhost:8081/geoserver/wms',
+        layerName : 'demo'
+    });
+    var wmsLayer = imageryLayerCollection.addImageryProvider(wmsImagery);
+
+//    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+//        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+//        proxy : new Cesium.DefaultProxy('/proxy/')
 //    });
-//    var wmsLayer = imageryLayerCollection.addImageryProvider(wmsImagery);
-
-    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-        proxy : new Cesium.DefaultProxy('/proxy/')
-    });
-    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
-    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
-
-    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
-        proxy : new Cesium.DefaultProxy('/proxy/')
-    });
-    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
+//    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
+//    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
+//
+//    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+//        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
+//        proxy : new Cesium.DefaultProxy('/proxy/')
+//    });
+//    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
 
 
 //    var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({
@@ -75,12 +75,12 @@ require({
 
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
-    var testLayer = imageryLayerCollection.addImageryProvider(
-            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png',
-                                                 new Cesium.Extent(Cesium.Math.toRadians(-120),
-                                                                   Cesium.Math.toRadians(37),
-                                                                   Cesium.Math.toRadians(-119),
-                                                                   Cesium.Math.toRadians(38))));
+//    var testLayer = imageryLayerCollection.addImageryProvider(
+//            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png',
+//                                                 new Cesium.Extent(Cesium.Math.toRadians(-120),
+//                                                                   Cesium.Math.toRadians(37),
+//                                                                   Cesium.Math.toRadians(-119),
+//                                                                   Cesium.Math.toRadians(38))));
 
     var cb = new Cesium.CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
 
