@@ -8,7 +8,6 @@
 			<createCesiumJs output="${sourceDirectory}/Cesium.js">
 				<fileset dir="${sourceDirectory}">
 					<include name="**/*.js" />
-					<exclude name="DojoWidgets/**" />
 					<exclude name="Widgets/**" />
 					<exclude name="Cesium.js" />
 					<exclude name="main.js" />
@@ -75,7 +74,7 @@
 	<property name="build.minification" value="false" />
 
 	<!-- Inputs -->
-	<property name="version" value="b6a" />
+	<property name="version" value="b7" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />

@@ -18,53 +18,5 @@
 </head>
 <body class="claro" style="background: #000;">
     <div id="cesiumContainer"></div>
-    <div data-dojo-type="dijit.form.Button" id="timeLabel"
-        data-dojo-props="class: 'timeLabel', showLabel: true, label:''"></div>
-    <div class="viewButtons">
-        <div id="viewHome" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'viewIcon', showLabel: false, label:'Home View'"></div>
-        <div id="view2D" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'viewIcon view2D', showLabel: false, label:'2D View'"></div>
-        <div id="view3D" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'viewIcon view3D', showLabel: false, checked: true, label:'3D View'"></div>
-        <div id="viewColumbus" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'viewIcon viewColumbus', showLabel: false, label:'Columbus View'"></div>
-        <div id="cbLighting" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'viewIcon toggleCbLighting', showLabel: false, checked: false, label:'Toggle Lighting'"></div>
-        <div id="viewFullScreen" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'viewIcon viewFullScreen', showLabel: false, label:'Toggle Full Screen'"></div>
-        <div id="imagery" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'bingIcon', showLabel: false, label:'Bing'">
-            <div data-dojo-type="dijit.TooltipDialog">
-                <span data-dojo-type="dijit.form.ToggleButton" id="imageryAerial"
-                    data-dojo-props="class: 'imagerySelector', showLabel: true, checked: true, label:'Bing Maps Aerial'">
-                </span> <span data-dojo-type="dijit.form.ToggleButton" id="imageryAerialWithLabels"
-                    data-dojo-props="class: 'imagerySelector', showLabel: true, label:'Bing Maps Aerial with Labels'"></span>
-                <span data-dojo-type="dijit.form.ToggleButton" id="imageryRoad"
-                    data-dojo-props="class: 'imagerySelector', showLabel: true, label:'Bing Maps Road'"></span> <span
-                    data-dojo-type="dijit.form.ToggleButton" id="imagerySingleTile"
-                    data-dojo-props="class: 'imagerySelector', showLabel: true, label:'No Streaming Imagery'"></span>
-            </div>
-        </div>
-    </div>
-    <div class="timelineContainer">
-        <div id="mainTimeline" data-dojo-type="Cesium.TimelineWidget"></div>
-    </div>
-    <div class="animButtons">
-        <div id="animReset" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'animationIcon', showLabel: false, label:'Reset'"></div>
-        <div id="animReverse" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'animationIcon animReverse', showLabel: false, label:'Play Reverse'"></div>
-        <div id="animPause" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'animationIcon animPause', showLabel: false, label:'Pause'"></div>
-        <div id="animPlay" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'animationIcon animPlay', showLabel: false, checked: true, label:'Play'"></div>
-        <div id="animSlow" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'animationIcon animSlow', showLabel: false, label:'Play Slower'"></div>
-        <div id="animFast" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'animationIcon animFast', showLabel: false, label:'Play Faster'"></div>
-        <span id="speedIndicator"></span>
-    </div>
-    <a class="cesiumLogo" href="http://cesium.agi.com/" target="_blank"><img
-        src="../../Images/Cesium_Logo_overlay.png" alt="Cesium" width="118" height="26" /></a>
 </body>
 </html>
