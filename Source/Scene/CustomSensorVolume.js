@@ -10,6 +10,7 @@ define([
         '../Core/Matrix4',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
+        '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
@@ -30,6 +31,7 @@ define([
         Matrix4,
         ComponentDatatype,
         PrimitiveType,
+        BoundingSphere,
         BufferUsage,
         BlendEquation,
         BlendFunction,
@@ -153,6 +155,17 @@ define([
          * @type Number
          */
         this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
+
+        /**
+         * DOC_TBA
+         *
+         * @type BoundingSphere
+         */
+        this.boundingVolume = undefined;
+
+        var center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
+        var radius = isFinite(this.radius) ? this.radius : FAR;
+        this.boundingVolume = new BoundingSphere(center, radius);
 
         var that = this;
         this._uniforms = {
@@ -357,6 +370,10 @@ define([
                 if (directions && (directions.length >= 3)) {
                     this._va = CustomSensorVolume._createVertexArray(context, directions, this.radius, this.bufferUsage);
                 }
+
+                var center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
+                var radius = isFinite(this.radius) ? this.radius : FAR;
+                this.boundingVolume = new BoundingSphere(center, radius);
             }
         }
     };

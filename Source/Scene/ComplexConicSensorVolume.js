@@ -11,6 +11,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
         '../Core/BoxTessellator',
+        '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
         '../Renderer/BlendEquation',
@@ -36,6 +37,7 @@ define([
         ComponentDatatype,
         PrimitiveType,
         BoxTessellator,
+        BoundingSphere,
         BufferUsage,
         CullFace,
         BlendEquation,
@@ -207,6 +209,17 @@ define([
          */
         this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
 
+        /**
+         * DOC_TBA
+         *
+         * @type BoundingSphere
+         */
+        this.boundingVolume = undefined;
+
+        var center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
+        var radius = isFinite(this.radius) ? this.radius : FAR;
+        this.boundingVolume = new BoundingSphere(center, radius);
+
         var that = this;
         this._uniforms = {
             u_model : function() {
@@ -349,6 +362,10 @@ define([
                     attributeIndices : attributeIndices,
                     bufferUsage : BufferUsage.STATIC_DRAW
                 });
+
+                var center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
+                var radius = isFinite(this._radius) ? this._radius : FAR;
+                this.boundingVolume = new BoundingSphere(center, radius);
             }
 
             // Recompile shader when material changes

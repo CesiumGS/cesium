@@ -2,15 +2,19 @@
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Intersect',
         './ComplexConicSensorVolume',
         './CustomSensorVolume',
-        './RectangularPyramidSensorVolume'
+        './RectangularPyramidSensorVolume',
+        './SceneMode'
     ], function(
         DeveloperError,
         destroyObject,
+        Intersect,
         ComplexConicSensorVolume,
         CustomSensorVolume,
-        RectangularPyramidSensorVolume) {
+        RectangularPyramidSensorVolume,
+        SceneMode) {
     "use strict";
 
     /**
@@ -21,6 +25,7 @@ define([
      */
     var SensorVolumeCollection = function() {
         this._sensors = [];
+        this._renderList = [];
     };
 
     /**
@@ -147,8 +152,20 @@ define([
     SensorVolumeCollection.prototype.update = function(context, sceneState) {
         var sensors = this._sensors;
         var length = sensors.length;
+        var camera = sceneState.camera;
+        var mode = sceneState.mode;
+
         for ( var i = 0; i < length; ++i) {
-            sensors[i].update(context, sceneState);
+            var sensor = sensors[i];
+            sensor.update(context, sceneState);
+
+            if (mode === SceneMode.SCENE3D) {
+                var boundingVolume = sensor.boundingVolume;
+                if (typeof boundingVolume === 'undefined' ||
+                        camera.getVisibility(boundingVolume, boundingVolume.constructor.planeIntersect) !== Intersect.OUTSIDE) {
+                    this._renderList.push(sensor);
+                }
+            }
         }
     };
 
@@ -156,11 +173,12 @@ define([
      * @private
      */
     SensorVolumeCollection.prototype.render = function(context) {
-        var sensors = this._sensors;
+        var sensors = this._renderList;
         var length = sensors.length;
         for ( var i = 0; i < length; ++i) {
             sensors[i].render(context);
         }
+        sensors.length = 0;
     };
 
     /**

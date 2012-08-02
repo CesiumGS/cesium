@@ -132,8 +132,17 @@ define([
          */
         this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
 
+        /**
+         * DOC_TBA
+         *
+         * @type BoundingSphere
+         */
+        this.boundingVolume = undefined;
+
         t._pickIdThis = t._pickIdThis || this;
         this._customSensor = new CustomSensorVolume(t);
+
+        this.boundingVolume = this._customSensor.boundingVolume;
     };
 
     /**
@@ -188,6 +197,8 @@ define([
         }
 
         s.update(context, sceneState);
+
+        this.boundingVolume = s.boundingVolume;
     };
 
     /**
