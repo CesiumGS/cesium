@@ -106,22 +106,23 @@ define([
         /**
          * If supplied, this function will be called at the end of widget setup.
          * @type {Function}
+         * @see CesiumViewerWidget.startRenderLoop
          */
         postSetup : undefined,
         /**
-         * Enable streaming Imagery.  This is read-only after construction,
-         * use {@link CesiumViewerWidget.enableStreamingImagery} to change it.
+         * Enable streaming Imagery.  This is read-only after construction.
          *
          * @type {Boolean}
          * @default true
+         * @see CesiumViewerWidget.enableStreamingImagery
          */
         useStreamingImagery : true,
         /**
-         * The map style for streaming imagery.  This is read-only after construction,
-         * use {@link CesiumViewerWidget.setStreamingImageryMapStyle} to change it.
+         * The map style for streaming imagery.  This is read-only after construction.
          *
          * @type {BingMapsStyle}
          * @default {@link BingMapsStyle.AERIAL}
+         * @see CesiumViewerWidget.setStreamingImageryMapStyle
          */
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
@@ -794,12 +795,54 @@ define([
             centralBody.bumpMapSource = this.bumpMapUrl;
         },
 
+        /**
+         * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
+         * on your page.  Typically it is started from {@link CesiumViewerWidget.postSetup}.  If you wish to
+         * customize your render loop, avoid this function and instead use code similar to the following example.
+         * @see requestAnimationFrame
+         * @example
+         * // This takes the place of startRenderLoop for a single widget.
+         *
+         * var animationController = widget.animationController;
+         * function updateAndRender() {
+         *     var currentTime = animationController.update();
+         *     widget.update(currentTime);
+         *     widget.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
+         * @example
+         * // This example requires widget1 and widget2 to share an animationController
+         * // (for example, widget2's constructor was called with a copy of widget1's
+         * // animationController).
+         *
+         * function updateAndRender() {
+         *     var currentTime = animationController.update();
+         *     widget1.update(currentTime);
+         *     widget2.update(currentTime);
+         *     widget1.render();
+         *     widget2.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
+         * @example
+         * // This example uses separate animationControllers for widget1 and widget2.
+         * // These widgets can animate at different rates and pause individually.
+         *
+         * function updateAndRender() {
+         *     var currentTime = widget1.animationController.update();
+         *     widget1.update(currentTime);
+         *     widget1.render();
+         *     currentTime = widget2.animationController.update();
+         *     widget2.update(currentTime);
+         *     widget2.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
+         */
         startRenderLoop : function() {
             var widget = this;
             var animationController = widget.animationController;
-
-            // Note that clients are permitted to use their own custom render loop.
-            // At a minimum it should include lines similar to the following:
 
             function updateAndRender() {
                 var currentTime = animationController.update();
