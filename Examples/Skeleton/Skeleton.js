@@ -33,6 +33,12 @@ require({
 
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
 
+//    var wmsImagery = new Cesium.WebMapServiceImageryProvider({
+//        url : 'http://localhost:8081/geoserver/wms',
+//        layerName : 'demo'
+//    });
+//    var wmsLayer = imageryLayerCollection.addImageryProvider(wmsImagery);
+
     var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
         url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
         proxy : new Cesium.DefaultProxy('/proxy/')
