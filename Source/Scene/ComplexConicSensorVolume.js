@@ -16,7 +16,6 @@ define([
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
         './Material',
-        './combineMaterials',
         '../Shaders/Noise',
         '../Shaders/Ray',
         '../Shaders/ConstructiveSolidGeometry',
@@ -41,7 +40,6 @@ define([
         BlendEquation,
         BlendFunction,
         Material,
-        combineMaterials,
         ShadersNoise,
         ShadersRay,
         ShadersConstructiveSolidGeometry,
@@ -293,30 +291,36 @@ define([
     ComplexConicSensorVolume.prototype._combineMaterials = function() {
         // On older/mobile hardware, we could do one pass per material to avoid
         // going over the maximum uniform limit
-        return combineMaterials([{
-            material : this.outerMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getOuterMaterial');
+
+        this.outerMaterial.shaderSource = this.outerMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getOuterMaterial');
+        this.innerMaterial.shaderSource = this.innerMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getInnerMaterial');
+        this.capMaterial.shaderSource = this.capMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getCapMaterial');
+        this.silhouetteMaterial.shaderSource = this.silhouetteMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getSilhouetteMaterial');
+        var materials = [this.outerMaterial, this.innerMaterial, this.capMaterial, this.silhouetteMaterial];
+
+        var combinedUniforms = {};
+        var concatenatedSource = '';
+        for (var i = 0; i < materials.length; i++) {
+            var material = materials[i];
+            var materialSource = material.shaderSource;
+            var materialUniforms = material._uniforms;
+            for (var uniformName in materialUniforms) {
+                if (materialUniforms.hasOwnProperty(uniformName)) {
+                    var count = 1;
+                    var newUniformName = uniformName;
+                    while (combinedUniforms.hasOwnProperty(newUniformName)) {
+                        newUniformName = uniformName + count;
+                        count += 1;
+                    }
+                    combinedUniforms[newUniformName] = materialUniforms[uniformName];
+                }
             }
-        },
-        {
-            material : this.innerMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getInnerMaterial');
-            }
-        },
-        {
-            material : this.capMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getCapMaterial');
-            }
-        },
-        {
-            material : this.silhouetteMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getSilhouetteMaterial');
-            }
-        }]);
+            concatenatedSource += materialSource;
+        }
+        return {
+            _uniforms : combinedUniforms,
+            shaderSource : concatenatedSource
+        };
     };
 
     /**
