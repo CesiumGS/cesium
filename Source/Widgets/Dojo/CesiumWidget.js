@@ -52,7 +52,6 @@ define([
     return declare('Cesium.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
         templateString : template,
         preRender : undefined,
-        postSetup : undefined,
         useStreamingImagery : true,
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
@@ -68,6 +67,12 @@ define([
 
         postCreate : function() {
             ready(this, '_setupCesium');
+        },
+
+        postSetup : undefined,
+
+        onSetupError : function(widget, error) {
+            console.log(error);
         },
 
         resize : function() {

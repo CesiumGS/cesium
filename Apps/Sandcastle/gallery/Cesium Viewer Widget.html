@@ -87,13 +87,8 @@ require([
     var cesiumViewerWidget = new CesiumViewerWidget({
         postSetup : function(widget) {
             widget.startRenderLoop();
-        },
-        onSetupError : function(widget, error) {
-            console.log(error);
         }
     }).placeAt(dom.byId("cesiumContainer"));
-
-    console.log('Cesium started.');
 });
 
 </script>
