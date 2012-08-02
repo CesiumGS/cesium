@@ -87,10 +87,7 @@ require([
 
     var cesiumWidget = new CesiumWidget({
         postSetup : function(widget) {
-            (function update() {
-                widget.render(new JulianDate());
-                requestAnimationFrame(update);
-            }());
+            widget.startRenderLoop();
         }
     }).placeAt(dom.byId("cesiumContainer"));
 

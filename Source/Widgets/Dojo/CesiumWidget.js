@@ -16,6 +16,7 @@ define([
         '../../Core/Cartesian2',
         '../../Core/JulianDate',
         '../../Core/DefaultProxy',
+        '../../Core/requestAnimationFrame',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
         '../../Scene/BingMapsTileProvider',
@@ -40,6 +41,7 @@ define([
         Cartesian2,
         JulianDate,
         DefaultProxy,
+        requestAnimationFrame,
         Scene,
         CentralBody,
         BingMapsTileProvider,
@@ -299,6 +301,15 @@ define([
             if ((logoOffsetX !== logoOffset.x) || (logoOffsetY !== logoOffset.y)) {
                 this.centralBody.logoOffset = new Cartesian2(logoOffsetX, logoOffsetY);
             }
+        },
+
+        startRenderLoop : function() {
+            var widget = this;
+
+            (function render() {
+                widget.render(new JulianDate());
+                requestAnimationFrame(render);
+            }());
         },
 
         render : function(time) {

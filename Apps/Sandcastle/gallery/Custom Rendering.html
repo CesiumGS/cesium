@@ -196,12 +196,9 @@ require([
             var ellipsoid = Cesium.Ellipsoid.WGS84;
             var primitives = widget.scene.getPrimitives();
             primitives.add(new Box(ellipsoid.cartographicToCartesian(
-                Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000.0))));    
-            
-            (function update() {
-                widget.render(new JulianDate());
-                requestAnimationFrame(update);
-            }());
+                Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000.0))));
+
+            widget.startRenderLoop();
         }
     }).placeAt(dom.byId("cesiumContainer"));
 
