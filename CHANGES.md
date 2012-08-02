@@ -4,6 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b8 - xx/xx/2012
+
+* Breaking changes:
+    * ...
+* ...
+
 ### b7 - 08/01/2012
 
 * Breaking changes:
