@@ -8,6 +8,7 @@ define([
         '../Core/Math',
         '../Core/Ellipsoid',
         '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/ComponentDatatype',
@@ -37,6 +38,7 @@ define([
         CesiumMath,
         Ellipsoid,
         BoundingRectangle,
+        BoundingSphere,
         Cartesian3,
         Cartographic,
         ComponentDatatype,
@@ -251,6 +253,27 @@ define([
          * @type Number
          */
         this.morphTime = this._mode.morphTime;
+
+        /**
+         * A bounding sphere used for culling in 3D mode.
+         *
+         * @type BoundingSphere
+         */
+        this.boundingVolume = undefined;
+
+        /**
+         * A bounding sphere used for culling in Columbus view mode.
+         *
+         * @type BoundingSphere
+         */
+        this.boundingVolume2D = undefined;
+
+        /**
+         * A bounding rectangle used for culling in 2D mode.
+         *
+         * @type BoundingRectangle
+         */
+        this.boundingRectangle = undefined;
 
         var that = this;
         this._uniforms = {
@@ -487,7 +510,33 @@ define([
 
         if (this._createVertexArray) {
             this._createVertexArray = false;
-            this._vertices.update(context, this._createMeshes(), this.bufferUsage);
+            var meshes = this._createMeshes();
+
+            // update bounding volumes/rectangle
+            if (typeof this._extent !== 'undefined') {
+                this.boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid);
+                if (this._mode !== SceneMode.SCENE3D) {
+                    this.boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection);
+                    this.boundingVolume2D.center = new Cartesian3(0.0, this.boundingVolume2D.center.x, this.boundingVolume2D.center.y);
+                    this.boundingRectangle = BoundingRectangle.fromExtent(this._extent, this._projection);
+                }
+            } else {
+                this.boundingVolume = BoundingSphere.fromPoints(this._positions);
+                if (this._mode !== SceneMode.SCENE3D) {
+                    var positions = [];
+                    for (var i = 0; i < meshes.length; ++i) {
+                        var positions2D = meshes[i].attributes.position2D.values;
+                        for (var j = 0; j < positions2D.length; j += 2) {
+                            positions.push(new Cartesian3(positions2D[j], positions2D[j + 1], 0.0));
+                        }
+                    }
+                    this.boundingVolume2D = BoundingSphere.fromPoints(positions);
+                    this.boundingVolume2D.center = new Cartesian3(0.0, this.boundingVolume2D.center.x, this.boundingVolume2D.center.y);
+                    this.boundingRectangle = BoundingRectangle.fromPoints(positions);
+                }
+            }
+
+            this._vertices.update(context, meshes, this.bufferUsage);
         }
 
         if (!this._rs) {
