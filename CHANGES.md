@@ -7,13 +7,6 @@ Beta Releases
 ### b8 - xx/xx/2012
 
 * Breaking changes:
-    * ...
-* ...
-
-### b7 - 08/01/2012
-
-* Breaking changes:
-    * Removed keyboard input handling from `EventHandler`.
     * Materials are now created through a centralized Material class using a JSON schema called Fabric. Change:
             
             polygon.material = new BlobMaterial({repeat : 10.0});
@@ -33,10 +26,16 @@ Beta Releases
                         repeat : 10.0
                     }
                 }
-            });
+            }); 
             
     For more details, go to the [Fabric wiki page](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric).
-    
+
+* ...
+
+### b7 - 08/01/2012
+
+* Breaking changes:
+    * Removed keyboard input handling from `EventHandler`.
     * `TextureAtlas` takes an object literal in its constructor instead of separate parameters.  Code that previously looked like:
 
             context.createTextureAtlas(images, pixelFormat, borderWidthInPixels);
