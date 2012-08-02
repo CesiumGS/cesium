@@ -363,9 +363,8 @@ define([
                     bufferUsage : BufferUsage.STATIC_DRAW
                 });
 
-                var center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
-                var radius = isFinite(this._radius) ? this._radius : FAR;
-                this.boundingVolume = new BoundingSphere(center, radius);
+                this.boundingVolume.center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
+                this.boundingVolume.radius = isFinite(this._radius) ? this._radius : FAR;
             }
 
             // Recompile shader when material changes

@@ -371,9 +371,8 @@ define([
                     this._va = CustomSensorVolume._createVertexArray(context, directions, this.radius, this.bufferUsage);
                 }
 
-                var center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
-                var radius = isFinite(this.radius) ? this.radius : FAR;
-                this.boundingVolume = new BoundingSphere(center, radius);
+                this.boundingVolume.center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
+                this.boundingVolume.radius = isFinite(this.radius) ? this.radius : FAR;
             }
         }
     };
