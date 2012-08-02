@@ -5,26 +5,32 @@ defineSuite([
          '../Specs/destroyContext',
          '../Specs/sceneState',
          '../Specs/pick',
+         'Core/BoundingRectangle',
+         'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Extent',
          'Core/Matrix4',
          'Core/Math',
-         'Renderer/BufferUsage'
+         'Renderer/BufferUsage',
+         'Scene/SceneMode'
      ], function(
          Polygon,
          createContext,
          destroyContext,
          sceneState,
          pick,
+         BoundingRectangle,
+         BoundingSphere,
          Cartesian3,
          Cartographic,
          Ellipsoid,
          Extent,
          Matrix4,
          CesiumMath,
-         BufferUsage) {
+         BufferUsage,
+         SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -232,5 +238,137 @@ defineSuite([
 
         var pickedObject = pick(context, polygon, 0, 0);
         expect(pickedObject).not.toBeDefined();
+    });
+
+    it('test 3D bounding sphere from positions', function() {
+        polygon = createPolygon();
+        polygon.update(context, sceneState);
+        expect(polygon.boundingVolume).toEqual(BoundingSphere.fromPoints(polygon._positions));
+    });
+
+    it('test 2D bounding sphere from positions', function() {
+        var projection = sceneState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+        var positions = [
+            Cartographic.fromDegrees(-1.0, -1.0, 0.0),
+            Cartographic.fromDegrees(1.0, -1.0, 0.0),
+            Cartographic.fromDegrees(1.0, 1.0, 0.0),
+            Cartographic.fromDegrees(-1.0, 1.0, 0.0)
+        ];
+
+        var polygon = new Polygon();
+        polygon.ellipsoid = ellipsoid;
+        polygon.granularity = CesiumMath.toRadians(20.0);
+        polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray(positions));
+
+        var mode = sceneState.mode;
+        sceneState.mode = SceneMode.COLUMBUS_VIEW;
+        polygon.update(context, sceneState);
+        sceneState.mode = mode;
+
+        var projectedPositions = [];
+        for (var i = 0; i < positions.length; ++i) {
+            var position = positions[i];
+            projectedPositions.push(projection.project(position));
+        }
+
+        var sphere = BoundingSphere.fromPoints(projectedPositions);
+        sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
+        expect(polygon.boundingVolume2D.center.equalsEpsilon(sphere.center, CesiumMath.EPSILON9)).toEqual(true);
+        expect(polygon.boundingVolume2D.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON9);
+    });
+
+    it('test 2D bounding rectangle from positions', function() {
+        var projection = sceneState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+        var positions = [
+            Cartographic.fromDegrees(-1.0, -1.0, 0.0),
+            Cartographic.fromDegrees(1.0, -1.0, 0.0),
+            Cartographic.fromDegrees(1.0, 1.0, 0.0),
+            Cartographic.fromDegrees(-1.0, 1.0, 0.0)
+        ];
+
+        var polygon = new Polygon();
+        polygon.ellipsoid = ellipsoid;
+        polygon.granularity = CesiumMath.toRadians(20.0);
+        polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray(positions));
+
+        var mode = sceneState.mode;
+        sceneState.mode = SceneMode.SCENE2D;
+        polygon.update(context, sceneState);
+        sceneState.mode = mode;
+
+        var projectedPositions = [];
+        for (var i = 0; i < positions.length; ++i) {
+            var position = positions[i];
+            projectedPositions.push(projection.project(position));
+        }
+
+        var rect = BoundingRectangle.fromPoints(projectedPositions);
+        expect(polygon.boundingRectangle.x).toEqualEpsilon(rect.x, CesiumMath.EPSILON10);
+        expect(polygon.boundingRectangle.y).toEqualEpsilon(rect.y, CesiumMath.EPSILON10);
+        expect(polygon.boundingRectangle.width).toEqualEpsilon(rect.width, CesiumMath.EPSILON10);
+        expect(polygon.boundingRectangle.height).toEqualEpsilon(rect.height, CesiumMath.EPSILON10);
+    });
+
+    it('test 3D bounding sphere from extent', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var extent = new Extent(
+                0.0,
+                0.0,
+                CesiumMath.toRadians(10.0),
+                CesiumMath.toRadians(10.0));
+
+        var polygon = new Polygon();
+        polygon.ellipsoid = ellipsoid;
+        polygon.configureExtent(extent);
+
+        polygon.update(context, sceneState);
+        expect(polygon.boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent, ellipsoid));
+    });
+
+    it('test 2D bounding sphere from extent', function() {
+        var projection = sceneState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+        var extent = new Extent(
+                0.0,
+                0.0,
+                CesiumMath.toRadians(10.0),
+                CesiumMath.toRadians(10.0));
+
+        var polygon = new Polygon();
+        polygon.ellipsoid = ellipsoid;
+        polygon.configureExtent(extent);
+
+        var mode = sceneState.mode;
+        sceneState.mode = SceneMode.COLUMBUS_VIEW;
+        polygon.update(context, sceneState);
+        sceneState.mode = mode;
+
+        var sphere = BoundingSphere.fromExtent2D(extent, projection);
+        sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
+        expect(polygon.boundingVolume2D).toEqual(sphere);
+    });
+
+    it('test 2D bounding rectangle from extent', function() {
+        var projection = sceneState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+        var extent = new Extent(
+                0.0,
+                0.0,
+                CesiumMath.toRadians(10.0),
+                CesiumMath.toRadians(10.0));
+
+        var polygon = new Polygon();
+        polygon.ellipsoid = ellipsoid;
+        polygon.configureExtent(extent);
+
+        var mode = sceneState.mode;
+        sceneState.mode = SceneMode.COLUMBUS_VIEW;
+        polygon.update(context, sceneState);
+        sceneState.mode = mode;
+
+        var rect = BoundingRectangle.fromExtent(extent, projection);
+        expect(polygon.boundingRectangle).toEqual(rect);
     });
 });
