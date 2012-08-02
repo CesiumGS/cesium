@@ -149,7 +149,7 @@ define([
 
         var extent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
         var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
-        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=EPSG:3857&format=application%2Fbil16';
+        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=64&height=64&srs=EPSG:3857&format=application%2Fbil16';
         if (this.token) {
             url += '&token=' + this.token;
         }
@@ -162,7 +162,7 @@ define([
                 console.log('received: ' + received);
             }
 
-            var littleEndianBuffer = new ArrayBuffer(256 * 256 * 2);
+            var littleEndianBuffer = new ArrayBuffer(64 * 64 * 2);
             if (arrayBuffer.byteLength === littleEndianBuffer.byteLength) {
                 var inView = new DataView(arrayBuffer);
                 var outView = new DataView(littleEndianBuffer);
@@ -195,8 +195,8 @@ define([
             console.log('transforming: ' + transforming);
         }
 
-        var width = 256;
-        var height = 256;
+        var width = 64;
+        var height = 64;
 
         var southwest = this.tilingScheme.cartographicToWebMercator(tile.extent.west, tile.extent.south);
         var northeast = this.tilingScheme.cartographicToWebMercator(tile.extent.east, tile.extent.north);

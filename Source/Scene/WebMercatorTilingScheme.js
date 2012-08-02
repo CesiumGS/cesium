@@ -71,7 +71,7 @@ define([
          *
          * @type Number
          */
-        this.levelZeroMaximumGeometricError = this.ellipsoid.getRadii().x * 2 * Math.PI / 1024;
+        this.levelZeroMaximumGeometricError = this.ellipsoid.getRadii().x * 2 * Math.PI / 512;
 
         if (typeof description.extentSouthwestInMeters !== 'undefined' &&
             typeof description.extentNortheastInMeters !== 'undefined') {
