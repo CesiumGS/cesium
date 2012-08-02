@@ -104,7 +104,7 @@ require([
             ellipsoid, ellipsoid.cartographicToCartesian(
                 new Cesium.Cartographic.fromDegrees(-90.0, 35.0)), 400000.0));
         // Any polygon-compatible material can be used
-        circle2.material = new Cesium.TieDyeMaterial();
+        circle2.material = Cesium.Material.fromId(scene.getContext(), 'TieDye');
         primitives.add(circle2);
 
         // Fill an ellipse
