@@ -6,7 +6,7 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
-        './ColorMaterial',
+        './Material',
         './CustomSensorVolume'
     ], function(
         DeveloperError,
@@ -15,7 +15,7 @@ define([
         CesiumMath,
         Matrix4,
         BufferUsage,
-        ColorMaterial,
+        Material,
         CustomSensorVolume) {
     "use strict";
 
@@ -118,7 +118,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = t.material || new ColorMaterial();
+        this.material = t.material || Material.fromId(undefined, 'Color');
 
         /**
          * DOC_TBA

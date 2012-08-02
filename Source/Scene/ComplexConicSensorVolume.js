@@ -15,7 +15,7 @@ define([
         '../Renderer/CullFace',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
-        './ColorMaterial',
+        './Material',
         './combineMaterials',
         '../Shaders/Noise',
         '../Shaders/Ray',
@@ -40,7 +40,7 @@ define([
         CullFace,
         BlendEquation,
         BlendFunction,
-        ColorMaterial,
+        Material,
         combineMaterials,
         ShadersNoise,
         ShadersRay,
@@ -174,25 +174,25 @@ define([
         /**
          * DOC_TBA
          */
-        this.outerMaterial = t.outerMaterial || new ColorMaterial();
+        this.outerMaterial = t.outerMaterial || Material.fromId(undefined, 'Color');
         this._outerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.innerMaterial = t.innerMaterial || new ColorMaterial();
+        this.innerMaterial = t.innerMaterial || Material.fromId(undefined, 'Color');
         this._innerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.capMaterial = t.capMaterial || new ColorMaterial();
+        this.capMaterial = t.capMaterial || Material.fromId(undefined, 'Color');
         this._capMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.silhouetteMaterial = t.silhouetteMaterial || new ColorMaterial();
+        this.silhouetteMaterial = t.silhouetteMaterial || Material.fromId(undefined, 'Color');
         this._silhouetteMaterial = undefined;
 
         /**
@@ -296,22 +296,25 @@ define([
         return combineMaterials({
             material : this.outerMaterial,
             sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterialColor', 'g'), 'agi_getOuterMaterialColor');
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getOuterMaterial');
             }
-        }, {
+        },
+        {
             material : this.innerMaterial,
             sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterialColor', 'g'), 'agi_getInnerMaterialColor');
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getInnerMaterial');
             }
-        }, {
+        },
+        {
             material : this.capMaterial,
             sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterialColor', 'g'), 'agi_getCapMaterialColor');
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getCapMaterial');
             }
-        }, {
+        },
+        {
             material : this.silhouetteMaterial,
             sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterialColor', 'g'), 'agi_getSilhouetteMaterialColor');
+                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getSilhouetteMaterial');
             }
         });
     };
@@ -357,13 +360,13 @@ define([
                 (!this._capMaterial || (this._capMaterial !== this.capMaterial)) ||
                 (!this._silhouetteMaterial || (this._silhouetteMaterial !== this.silhouetteMaterial))) {
 
-                this._outerMaterial = this.outerMaterial || new ColorMaterial();
-                this._innerMaterial = this.innerMaterial || new ColorMaterial();
-                this._capMaterial = this.capMaterial || new ColorMaterial();
-                this._silhouetteMaterial = this.silhouetteMaterial || new ColorMaterial();
+                this._outerMaterial = this.outerMaterial || Material.fromId(context, 'Color');
+                this._innerMaterial = this.innerMaterial || Material.fromId(context, 'Color');
+                this._capMaterial = this.capMaterial || Material.fromId(context, 'Color');
+                this._silhouetteMaterial = this.silhouetteMaterial || Material.fromId(context, 'Color');
 
                 var material = this._combineMaterials();
-                this._drawUniforms = combine(this._uniforms, material._uniforms);
+                this._drawUniforms = combine([this._uniforms, material._uniforms], false, false);
 
                 var fsSource =
                     '#line 0\n' +
@@ -375,7 +378,7 @@ define([
                     '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +
-                    material._getShaderSource() +
+                    material.shaderSource +
                     '#line 0\n' +
                     ComplexConicSensorVolumeFS;
 
@@ -441,14 +444,13 @@ define([
             this._pickId = context.createPickId(this);
 
             var that = this;
-            this._pickUniforms = combine(this._uniforms, {
+
+            this._pickUniforms = combine([this._uniforms, {
                 u_pickColor : function() {
                     return that._pickId.normalizedRgba;
                 }
-            });
-
-            this.updateForPick = function(context) {
-            };
+            }], false, false);
+            this.updateForPick = function(context) {};
         }
     };
 

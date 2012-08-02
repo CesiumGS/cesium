@@ -6,7 +6,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
-        '../Scene/ColorMaterial'
+        '../Scene/Material'
        ], function(
          DeveloperError,
          destroyObject,
@@ -14,7 +14,7 @@ define([
          Matrix3,
          Matrix4,
          CustomSensorVolume,
-         ColorMaterial) {
+         Material) {
     "use strict";
 
     /**
@@ -175,6 +175,7 @@ define([
     var position;
     var orientation;
     DynamicPyramidVisualizer.prototype._updateObject = function(time, dynamicObject) {
+        var context = this._scene.getContext();
         var dynamicPyramid = dynamicObject.pyramid;
         if (typeof dynamicPyramid === 'undefined') {
             return;
@@ -230,7 +231,7 @@ define([
             pyramid.radius = Number.POSITIVE_INFINITY;
             pyramid.showIntersection = true;
             pyramid.intersectionColor = Color.YELLOW;
-            pyramid.material = new ColorMaterial();
+            pyramid.material = Material.fromId(context, 'Color');
         } else {
             pyramid = this._pyramidCollection[pyramidVisualizerIndex];
         }
@@ -257,7 +258,7 @@ define([
 
         var material = dynamicPyramid.material;
         if (typeof material !== 'undefined') {
-            pyramid.material = material.getValue(time, this._scene.getContext(), pyramid.material);
+            pyramid.material = material.getValue(time, context, pyramid.material);
         }
 
         var property = dynamicPyramid.intersectionColor;

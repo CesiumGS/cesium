@@ -7,7 +7,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/ComplexConicSensorVolume',
-        '../Scene/ColorMaterial'
+        '../Scene/Material'
        ], function(
          DeveloperError,
          destroyObject,
@@ -16,7 +16,7 @@ define([
          Matrix3,
          Matrix4,
          ComplexConicSensorVolume,
-         ColorMaterial) {
+         Material) {
     "use strict";
 
     /**
@@ -178,6 +178,7 @@ define([
     var orientation;
     var intersectionColor;
     DynamicConeVisualizer.prototype._updateObject = function(time, dynamicObject) {
+        var context = this._scene.getContext();
         var dynamicCone = dynamicObject.cone;
         if (typeof dynamicCone === 'undefined') {
             return;
@@ -225,17 +226,17 @@ define([
             cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            cone.capMaterial = new ColorMaterial();
+            cone.capMaterial = Material.fromId(context, 'Color');
             cone.innerHalfAngle = 0;
             cone.outerHalfAngle = Math.PI;
-            cone.innerMaterial = new ColorMaterial();
+            cone.innerMaterial = Material.fromId(context, 'Color');
             cone.intersectionColor = Color.YELLOW;
             cone.maximumClockAngle =  CesiumMath.TWO_PI;
             cone.minimumClockAngle = -CesiumMath.TWO_PI;
-            cone.outerMaterial = new ColorMaterial();
+            cone.outerMaterial = Material.fromId(context, 'Color');
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
-            cone.silhouetteMaterial = new ColorMaterial();
+            cone.silhouetteMaterial = Material.fromId(context, 'Color');
         } else {
             cone = this._coneCollection[coneVisualizerIndex];
         }
@@ -297,7 +298,6 @@ define([
             orientation.clone(cone._visualizerOrientation);
         }
 
-        var context = this._scene.getContext();
         var material = dynamicCone.capMaterial;
         if (typeof material !== 'undefined') {
             cone.capMaterial = material.getValue(time, context, cone.capMaterial);

@@ -1,0 +1,20 @@
+{
+	"materials" : {
+		"hot" : {
+			"components" : {
+				"diffuse" : "vec3(1.0, 0.0, 0.0)"
+			}		
+		},
+		"cold" : {
+			"components" : {
+				"diffuse" : "vec3(0.0, 1.0, 0.0)"
+			}		
+		}
+	},
+	"uniforms" : {
+	    "temperature" : 0.5
+	},
+    "components" : {
+        "diffuse" : "mix(cold.diffuse, hot.diffuse, temperature)"
+    }
+}
