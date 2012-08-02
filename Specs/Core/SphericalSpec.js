@@ -8,7 +8,7 @@ defineSuite([
          Cartesian3,
          CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     //Mock object to make sure methods take non-sphericals.
     function NotSpherical(clock, cone, magnitude) {

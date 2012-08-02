@@ -6,7 +6,7 @@ defineSuite([
                     Cartesian3,
               CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('construct with default values', function() {
         var cartesian = new Cartesian3();

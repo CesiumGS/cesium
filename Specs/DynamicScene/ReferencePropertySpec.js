@@ -10,7 +10,7 @@ defineSuite([
               DynamicObject,
               Iso8601) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var testObjectLink = 'testObject.property';
     function createTestObject(dynamicObjectCollection, methodName) {

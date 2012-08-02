@@ -1199,6 +1199,10 @@ define([
             return undefined;
         }
 
+        if (sceneState.mode === SceneMode.SCENE2D) {
+            return undefined;
+        }
+
         var frustum = sceneState.camera.frustum;
         var extent = provider.maxExtent;
 
@@ -1229,6 +1233,10 @@ define([
 
         if (tile.zoom < provider.zoomMin) {
             return true;
+        }
+
+        if (typeof this._minTileDistance === 'undefined') {
+            return false;
         }
 
         var boundingVolume = this._getTileBoundingSphere(tile, sceneState);
@@ -1305,29 +1313,52 @@ define([
 
     CentralBody.prototype._createScissorRectangle = function(description) {
         var quad = description.quad;
+
         var upperLeft = new Cartesian3(quad[0], quad[1], quad[2]);
+        var lowerLeft = new Cartesian3(quad[3], quad[4], quad[5]);
+        var upperRight = new Cartesian3(quad[6], quad[7], quad[8]);
         var lowerRight = new Cartesian3(quad[9], quad[10], quad[11]);
+
         var mvp = description.modelViewProjection;
-        var clip = description.viewportTransformation;
+        var vt = description.viewportTransformation;
 
-        var center = upperLeft.add(lowerRight).multiplyByScalar(0.5);
-        var centerScreen = mvp.multiplyByVector(new Cartesian4(center.x, center.y, center.z, 1.0));
-        centerScreen = centerScreen.multiplyByScalar(1.0 / centerScreen.w);
-        var centerClip = clip.multiplyByVector(centerScreen);
+        var diag1 = upperRight.subtract(lowerLeft);
+        var diag2 = upperLeft.subtract(lowerRight);
 
-        var surfaceScreen = mvp.multiplyByVector(new Cartesian4(upperLeft.x, upperLeft.y, upperLeft.z, 1.0));
-        surfaceScreen = surfaceScreen.multiplyByScalar(1.0 / surfaceScreen.w);
-        var surfaceClip = clip.multiplyByVector(surfaceScreen);
+        var diag1Length = diag1.magnitude();
+        var diag2Length = diag2.magnitude();
 
-        var radius = Math.ceil(Cartesian3.magnitude(surfaceClip.subtract(centerClip, surfaceClip)));
-        var diameter = 2.0 * radius;
+        var halfWidth = Math.max(diag1Length, diag2Length) * 0.5;
+        var halfHeight = halfWidth;
 
-        return {
-            x : Math.floor(centerClip.x) - radius,
-            y : Math.floor(centerClip.y) - radius,
-            width : diameter,
-            height : diameter
-        };
+        var center = lowerLeft.add(diag1.normalize().multiplyByScalar(diag1Length * 0.5));
+
+        var camera = description.sceneState.camera;
+        var nearCenter = camera.position.add(camera.direction.multiplyByScalar(camera.frustum.near));
+
+        if (camera.direction.dot(center.subtract(nearCenter)) < 0) {
+            center = center.subtract(nearCenter);
+            var centerProjN = camera.direction.multiplyByScalar(camera.direction.dot(center));
+            var centerRejN = center.subtract(centerProjN);
+            center = nearCenter.add(centerRejN);
+        }
+
+        lowerLeft = center.add(camera.up.multiplyByScalar(-halfHeight)).add(camera.right.multiplyByScalar(-halfWidth));
+        lowerLeft = Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft);
+        upperRight = center.add(camera.up.multiplyByScalar(halfHeight)).add(camera.right.multiplyByScalar(halfWidth));
+        upperRight = Transforms.pointToWindowCoordinates(mvp, vt, upperRight);
+
+        lowerLeft.x = Math.max(0.0, Math.min(lowerLeft.x, description.width));
+        lowerLeft.y = Math.max(0.0, Math.min(lowerLeft.y, description.height));
+        upperRight.x = Math.max(0.0, Math.min(upperRight.x, description.width));
+        upperRight.y = Math.max(0.0, Math.min(upperRight.y, description.height));
+
+        var x = Math.floor(lowerLeft.x);
+        var y = Math.floor(lowerLeft.y);
+        var width = Math.ceil(upperRight.x) - x;
+        var height = Math.ceil(upperRight.y) - y;
+
+        return new Rectangle(x, y, width, height);
     };
 
     CentralBody.prototype._computeDepthQuad = function(sceneState) {
@@ -1655,6 +1686,10 @@ define([
             this._quadH.setDestroyTexture(false);
         }
 
+        if ((mode !== SceneMode.SCENE2D && mode !== SceneMode.MORPHING) && typeof this._minTileDistance === 'undefined') {
+            this._minTileDistance = this._createTileDistanceFunction(sceneState, width, height);
+        }
+
         this._quadV.update(context, sceneState);
         this._quadH.update(context, sceneState);
 
@@ -1738,24 +1773,31 @@ define([
         // update scisor/depth plane
         var depthQuad = this._computeDepthQuad(sceneState);
 
-        // TODO: re-enable scissorTest
-        /*if (mode === SceneMode.SCENE3D) {
+        // TODO: Re-enable scissor test.
+        /*var scissorTest = { enabled : false };
+        if (mode === SceneMode.SCENE3D) {
             var uniformState = context.getUniformState();
             var mvp = uniformState.getModelViewProjection();
-            var scissorTest = {
-                enabled : true,
-                rectangle : this._createScissorRectangle({
-                    quad : depthQuad,
-                    modelViewProjection : mvp,
-                    viewportTransformation : uniformState.getViewportTransformation()
-                })
-            };
+            var rect = this._createScissorRectangle({
+                sceneState : sceneState,
+                width : width,
+                height : height,
+                quad : depthQuad,
+                modelViewProjection : mvp,
+                viewportTransformation : uniformState.getViewportTransformation()
+            });
 
-            this._rsColor.scissorTest = scissorTest;
-            this._rsDepth.scissorTest = scissorTest;
-            this._quadV.renderState.scissorTest = scissorTest;
-            this._quadH.renderState.scissorTest = scissorTest;
-        }*/
+            if (rect.width !== 0 && rect.height !== 0) {
+                scissorTest = {
+                    enabled : true,
+                    rectangle : rect
+                };
+            }
+        }
+        this._rsColor.scissorTest = scissorTest;
+        this._rsDepth.scissorTest = scissorTest;
+        this._quadV.renderState.scissorTest = scissorTest;
+        this._quadH.renderState.scissorTest = scissorTest;*/
 
         // depth plane
         if (!this._vaDepth) {
@@ -1981,7 +2023,6 @@ define([
 
         this._occluder.setCameraPosition(cameraPosition);
 
-        // TODO: refactor
         this._fillPoles(context, sceneState);
 
         this._throttleImages(sceneState);

@@ -4,7 +4,7 @@ defineSuite([
      ], function(
          Cartographic) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('default constructor sets expected properties', function() {
         var c = new Cartographic();

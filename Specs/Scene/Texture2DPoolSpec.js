@@ -6,7 +6,7 @@ defineSuite([
          Texture2DPool,
          destroyObject) {
     "use strict";
-    /*global jasmine,it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var fakeContext;
     var pool;
