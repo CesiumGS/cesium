@@ -38,7 +38,7 @@ define([
      * @param {Number} description.heightScale DOC_TBA
      * @param {Number} description.heightOffset DOC_TBA
      * @param {Number} description.bytesPerHeight DOC_TBA
-     * @param {Number} description.strideBytes DOC_TBA
+     * @param {Number} description.stride DOC_TBA
      * @param {Number} description.width The width of the heightmap image.
      * @param {Number} description.height The height of the heightmap image.
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
@@ -57,7 +57,7 @@ define([
         var heightScale = description.heightScale;
         var heightOffset = description.heightOffset;
         var bytesPerHeight = description.bytesPerHeight;
-        var strideBytes = description.strideBytes;
+        var stride = description.stride;
         var width = description.width;
         var height = description.height;
 
@@ -114,13 +114,16 @@ define([
                 var x = extent.west + granularityX * col;
                 var longitude = x * oneOverCentralBodySemimajorAxis;
 
-                var terrainOffset = row * (width * strideBytes) + col * strideBytes;
-                var heightSample = heightmap[terrainOffset] << 16;
-                heightSample += heightmap[terrainOffset + 1] << 8;
-                heightSample += heightmap[terrainOffset + 2];
+                var terrainOffset = row * (width * stride) + col * stride;
 
-                if (bytesPerHeight === 4) {
-                    heightSample = (heightSample << 8) + heightmap[terrainOffset + 3];
+                var heightSample;
+                if (typeof bytesPerHeight === 'undefined') {
+                    heightSample = heightmap[terrainOffset];
+                } else {
+                    heightSample = 0;
+                    for (var byteOffset = 0; i < bytesPerHeight; ++i) {
+                        heightSample = (heightSample << 8) + heightmap[terrainOffset + byteOffset];
+                    }
                 }
 
                 heightSample = heightSample / heightScale - heightOffset;
@@ -199,7 +202,7 @@ define([
      * @param {Number} description.heightScale DOC_TBA
      * @param {Number} description.heightOffset DOC_TBA
      * @param {Number} description.bytesPerHeight DOC_TBA
-     * @param {Number} description.strideBytes DOC_TBA
+     * @param {Number} description.stride DOC_TBA
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Boolean} description.generateTextureCoordinates Whether to generate texture coordinates.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.

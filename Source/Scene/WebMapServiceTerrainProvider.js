@@ -2,8 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/jsonp',
-        '../Core/loadImage',
-        '../Core/getImagePixels',
+        '../Core/loadArrayBuffer',
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/BoundingSphere',
@@ -21,8 +20,7 @@ define([
     ], function(
         defaultValue,
         jsonp,
-        loadImage,
-        getImagePixels,
+        loadArrayBuffer,
         DeveloperError,
         CesiumMath,
         BoundingSphere,
@@ -151,19 +149,29 @@ define([
 
         var extent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
         var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
-        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=EPSG:3857&format=image%2Ftiff';
+        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=EPSG:3857&format=application%2Fbil16';
         if (this.token) {
             url += '&token=' + this.token;
         }
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
         }
-        return when(loadImage(url, true), function(image) {
+        return when(loadArrayBuffer(url), function(arrayBuffer) {
             ++received;
             if ((received % 10) === 0) {
                 console.log('received: ' + received);
             }
-            tile.geometry = image;
+
+            var littleEndianBuffer = new ArrayBuffer(256 * 256 * 2);
+            if (arrayBuffer.byteLength === littleEndianBuffer.byteLength) {
+                var inView = new DataView(arrayBuffer);
+                var outView = new DataView(littleEndianBuffer);
+                for ( var i = 0; i < arrayBuffer.byteLength; i += 2) {
+                    outView.setInt16(i, inView.getInt16(i, false), true);
+                }
+            }
+
+            tile.geometry = new Int16Array(littleEndianBuffer);
             tile.state = TileState.RECEIVED;
             --requestsInFlight;
         });
@@ -187,11 +195,8 @@ define([
             console.log('transforming: ' + transforming);
         }
 
-        // Get the height data from the image by copying it to a canvas.
-        var image = tile.geometry;
-        var width = image.width;
-        var height = image.height;
-        var pixels = getImagePixels(image);
+        var width = 256;
+        var height = 256;
 
         var southwest = this.tilingScheme.cartographicToWebMercator(tile.extent.west, tile.extent.south);
         var northeast = this.tilingScheme.cartographicToWebMercator(tile.extent.east, tile.extent.north);
@@ -205,11 +210,10 @@ define([
         tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
         var verticesPromise = taskProcessor.scheduleTask({
-            heightmap : pixels,
-            heightScale : 1000.0,
-            heightOffset : 1000.0,
-            bytesPerHeight : 3,
-            strideBytes : 4,
+            heightmap : tile.geometry,
+            heightScale : 1.0,
+            heightOffset : 0.0,
+            stride : 1,
             width : width,
             height : height,
             extent : webMercatorExtent,

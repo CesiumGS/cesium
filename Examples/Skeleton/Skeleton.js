@@ -20,17 +20,16 @@ require({
 //        numberOfLevelZeroTilesY : 2
 //    }));
 
-    var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
-        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'fKo4wmpAI8RNigtUm3lpcMz534bIfR87_t5id38ibmwZ0pBUmMiQflAlJNbOo4Zpi4ke7qWqwvs4LEMUV0PdhA..',
-        proxy : new Cesium.DefaultProxy('/terrain/')
-    });
-
-//    var terrainProvider = new Cesium.WebMapServiceTerrainProvider({
-//        url : 'http://localhost:8081/geoserver/terrain/wms',
-//        layerName : 'terrain:SRTM',
+//    var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
+//        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+//        token : 'fKo4wmpAI8RNigtUm3lpcMz534bIfR87_t5id38ibmwZ0pBUmMiQflAlJNbOo4Zpi4ke7qWqwvs4LEMUV0PdhA..',
 //        proxy : new Cesium.DefaultProxy('/terrain/')
 //    });
+
+    var terrainProvider = new Cesium.WebMapServiceTerrainProvider({
+        url : 'http://localhost:8081/geoserver/terrain/wms',
+        layerName : 'terrain:SRTM'
+    });
 
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
 
