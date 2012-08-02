@@ -380,10 +380,10 @@ defineSuite([
                 },
                 materials : {
                     d : {
-                        id : 'ColorMaterial'
+                        id : 'Color'
                     },
                     diffuse : {
-                        id : 'ColorMaterial'
+                        id : 'Color'
                     }
                 },
                 components : {

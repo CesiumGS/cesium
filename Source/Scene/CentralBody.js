@@ -1773,8 +1773,8 @@ define([
         // update scisor/depth plane
         var depthQuad = this._computeDepthQuad(sceneState);
 
-        var disabledScissorTest = { enabled : false };
-        var scissorTest = undefined;
+        // TODO: Re-enable scissor test.
+        /*var scissorTest = { enabled : false };
         if (mode === SceneMode.SCENE3D) {
             var uniformState = context.getUniformState();
             var mvp = uniformState.getModelViewProjection();
@@ -1792,20 +1792,12 @@ define([
                     enabled : true,
                     rectangle : rect
                 };
-            } else {
-                scissorTest = disabledScissorTest;
             }
-
-            this._rsColor.scissorTest = scissorTest;
-            this._rsDepth.scissorTest = scissorTest;
-            this._quadV.renderState.scissorTest = scissorTest;
-            this._quadH.renderState.scissorTest = scissorTest;
-        } else {
-            this._rsColor.scissorTest = disabledScissorTest;
-            this._rsDepth.scissorTest = disabledScissorTest;
-            this._quadV.renderState.scissorTest = disabledScissorTest;
-            this._quadH.renderState.scissorTest = disabledScissorTest;
         }
+        this._rsColor.scissorTest = scissorTest;
+        this._rsDepth.scissorTest = scissorTest;
+        this._quadV.renderState.scissorTest = scissorTest;
+        this._quadH.renderState.scissorTest = scissorTest;*/
 
         // depth plane
         if (!this._vaDepth) {

@@ -35,35 +35,33 @@
             spindle.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
             spindle.setReferenceFrame(transform, Cesium.Ellipsoid.UNIT_SPHERE);
 
-            // draw x axis in red
-            var xAxis = new Cesium.Polyline(undefined);
-            xAxis.modelMatrix = transform;
-            xAxis.color = {red : 1.0, green : 0.0, blue : 0.0, alpha : 1.0 };
-            xAxis.setPositions([
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_X.multiplyByScalar(100000.0)
-            ]);
-            primitives.add(xAxis);
-
-            // draw y axis in green
-            var yAxis = new Cesium.Polyline(undefined);
-            yAxis.modelMatrix = transform;
-            yAxis.color = {red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 };
-            yAxis.setPositions([
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Y.multiplyByScalar(100000.0)
-            ]);
-            primitives.add(yAxis);
-
-            // draw z axis in blue
-            var zAxis = new Cesium.Polyline(undefined);
-            zAxis.modelMatrix = transform;
-            zAxis.color = {red : 0.0, green : 0.0, blue : 1.0, alpha : 1.0 };
-            zAxis.setPositions([
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Z.multiplyByScalar(100000.0)
-            ]);
-            primitives.add(zAxis);
+            var polylines = new Cesium.PolylineCollection(undefined);
+            polylines.modelMatrix = transform;
+            polylines.add({
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    Cesium.Cartesian3.UNIT_X.multiplyByScalar(100000.0)
+                ],
+                width : 2,
+                color : {red : 1.0, green : 0.0, blue : 0.0, alpha : 1.0 }
+            });
+            polylines.add({
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    Cesium.Cartesian3.UNIT_Y.multiplyByScalar(100000.0)
+                ],
+                width : 2,
+                color : {red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 }
+            });
+            polylines.add({
+                positions : [
+                    Cesium.Cartesian3.ZERO,
+                    Cesium.Cartesian3.UNIT_Z.multiplyByScalar(100000.0)
+                ],
+                width : 2,
+                color : {red : 0.0, green : 0.0, blue : 1.0, alpha : 1.0 }
+            });
+            primitives.add(polylines);
         };
 
         this.camera = {
@@ -88,15 +86,17 @@
             var extent = new Cesium.Extent(west, south, east, north);
             scene.viewExtent(extent, ellipsoid);
 
-            var polyline = new Cesium.Polyline();
-            polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-                new Cesium.Cartographic(west, south),
-                new Cesium.Cartographic(west, north),
-                new Cesium.Cartographic(east, north),
-                new Cesium.Cartographic(east, south),
-                new Cesium.Cartographic(west, south)
-            ]));
-            primitives.add(polyline);
+            var polylines = new Cesium.PolylineCollection();
+            polylines.add({
+                positions: ellipsoid.cartographicArrayToCartesianArray([
+                    new Cesium.Cartographic(west, south),
+                    new Cesium.Cartographic(west, north),
+                    new Cesium.Cartographic(east, north),
+                    new Cesium.Cartographic(east, south),
+                    new Cesium.Cartographic(west, south)
+                ])
+            });
+            primitives.add(polylines);
         };
 
         this.clear = function() {
