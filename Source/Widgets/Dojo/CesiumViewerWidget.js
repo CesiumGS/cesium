@@ -93,11 +93,36 @@ define([
         template) {
     "use strict";
 
-    return declare('Cesium.CesiumViewerWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
+    /**
+     * This Dojo widget wraps the full functionality of Cesium Viewer.
+     *
+     * @class CesiumViewerWidget
+     * @param {Object} options - A list of options to pre-configure the widget.  Names matching member fields/functions will override the default values.
+     */
+    return declare('Cesium.CesiumViewerWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin],
+    /** @lends CesiumViewerWidget */
+    {
         templateString : template,
-        preRender : undefined,
+        /**
+         * If supplied, this function will be called at the end of widget setup.
+         * @type {Function}
+         */
         postSetup : undefined,
+        /**
+         * Enable streaming Imagery.  This is read-only after construction,
+         * use {@link CesiumViewerWidget.enableStreamingImagery} to change it.
+         *
+         * @type {Boolean}
+         * @default true
+         */
         useStreamingImagery : true,
+        /**
+         * The map style for streaming imagery.  This is read-only after construction,
+         * use {@link CesiumViewerWidget.setStreamingImageryMapStyle} to change it.
+         *
+         * @type {BingMapsStyle}
+         * @default {@link BingMapsStyle.AERIAL}
+         */
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
         dayImageUrl : undefined,
@@ -106,7 +131,31 @@ define([
         cloudsMapUrl : undefined,
         bumpMapUrl : undefined,
         endUserOptions : {},
+        /**
+         * Allow the user to drag-and-drop CZML files into this widget.
+         * This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @default false
+         */
         enableDragDrop: false,
+        /**
+         * Register this widget's resize handler to get called every time the browser window
+         * resize event fires.  This is read-only after construction.  Generally this should
+         * be true for full-screen widgets, and true for
+         * fluid layouts where the widget is likely to change size at the same time as the
+         * window.  The exception is, if you use a Dojo layout where this widget exists inside
+         * a Dojo ContentPane or similar, you should set this to false, because Dojo will perform
+         * its own layout calculations and call this widget's resize handler automatically.
+         * This can also be false for a fixed-size widget.
+         *
+         * If unsure, test the widget with this set to false, and if window resizes cause the
+         * globe to stretch, change this to true.
+         *
+         * @type {Boolean}
+         * @default true
+         * @see CesiumViewerWidget.resize
+         */
         resizeWidgetOnWindowResize: true,
 
         constructor : function() {
@@ -117,6 +166,12 @@ define([
             ready(this, '_setupCesium');
         },
 
+        /**
+         * This function must be called when the widget changes size.  It updates the canvas
+         * size, camera aspect ratio, and viewport size.
+         *
+         * @see CesiumViewerWidget.resizeWidgetOnWindowResize
+         */
         resize : function() {
             var width = this.canvas.clientWidth, height = this.canvas.clientHeight;
 
@@ -615,11 +670,23 @@ define([
             this.centralBody.showGroundAtmosphere = show;
         },
 
+        /**
+         * Enable or disable streaming imagery, and update the globe.
+         *
+         * @param {Boolean}
+         * @see CesiumViewerWidget.useStreamingImagery
+         */
         enableStreamingImagery : function(value) {
             this.useStreamingImagery = value;
             this._configureCentralBodyImagery();
         },
 
+        /**
+         * Change the streaming imagery type, and update the globe.
+         *
+         * @param {BingMapsStyle}
+         * @see CesiumViewerWidget.mapStyle
+         */
         setStreamingImageryMapStyle : function(value) {
             this.useStreamingImagery = true;
 
