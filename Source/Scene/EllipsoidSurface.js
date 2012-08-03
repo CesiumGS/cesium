@@ -216,24 +216,11 @@ define([
         }
     }
 
-    function dumpTileStats(levelZeroTiles) {
-        var counters = {
-                tiles: 0,
-                renderable: 0
-        };
-        for (var i = 0; i < levelZeroTiles.length; ++i) {
-            countTileStats(levelZeroTiles[i], counters);
-        }
-
-        console.log('tiles: ' + counters.tiles + ' renderable: ' + counters.renderable);
-    }
-
     var maxDepth;
     var tilesVisited;
     var tilesCulled;
     var tilesRendered;
     var minimumTilesNeeded;
-    var doit = false;
 
     var lastMaxDepth = -1;
     var lastTilesVisited = -1;
@@ -307,9 +294,6 @@ define([
             lastMaxDepth = maxDepth;
         }
 
-        if (doit) {
-            dumpTileStats(levelZeroTiles);
-        }
         processTileLoadQueue(this, context, sceneState);
     };
 

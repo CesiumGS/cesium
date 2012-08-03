@@ -104,13 +104,6 @@ define([
         return maxErrorRadians;
     }
 
-    var requesting = 0;
-    var received = 0;
-    var transforming = 0;
-    var transformed = 0;
-    var creating = 0;
-    var ready = 0;
-
     var requestsInFlight = 0;
     // Creating the geometry will require a request to the ImageServer, which will complete
     // asynchronously.  The question is, what do we do in the meantime?  The best thing to do is
@@ -144,11 +137,6 @@ define([
 
         ++requestsInFlight;
 
-        ++requesting;
-        if ((requesting % 10) === 0) {
-            console.log('requesting: ' + requesting);
-        }
-
         var extent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
         var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
         var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=EPSG:3857&format=image%2Ftiff';
@@ -160,10 +148,6 @@ define([
         }
 
         when(loadImage(url, true), function(image) {
-            ++received;
-            if ((received % 10) === 0) {
-                console.log('received: ' + received);
-            }
             tile.geometry = image;
             tile.state = TileState.RECEIVED;
             --requestsInFlight;
@@ -186,11 +170,6 @@ define([
      * @param {Tile} tile The tile to transform geometry for.
      */
     WebMapServiceTerrainProvider.prototype.transformGeometry = function(context, tile) {
-        ++transforming;
-        if ((transforming % 10) === 0) {
-            console.log('transforming: ' + transforming);
-        }
-
         // Get the height data from the image by copying it to a canvas.
         var image = tile.geometry;
         var width = image.width;
@@ -229,11 +208,6 @@ define([
         }
 
         when(verticesPromise, function(result) {
-            ++transformed;
-            if ((transformed % 10) === 0) {
-                console.log('transformed: ' + transformed);
-            }
-
             tile.geometry = undefined;
             tile.transformedGeometry = {
                 vertices : result.vertices,
@@ -257,11 +231,6 @@ define([
      * @param {Tile} tile The tile to create resources for.
      */
     WebMapServiceTerrainProvider.prototype.createResources = function(context, tile) {
-        ++creating;
-        if ((creating % 10) === 0) {
-            console.log('creating: ' + creating);
-        }
-
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
@@ -281,10 +250,6 @@ define([
         tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, scratch)).normalize();
 
         tile.state = TileState.READY;
-        ++ready;
-        if ((ready % 10) === 0) {
-            console.log('ready: ' + ready);
-        }
     };
 
     /**
