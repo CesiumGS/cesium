@@ -632,7 +632,7 @@ define([
             var rightmostVertexIndex = PolygonPipeline._getRightmostVertexIndex(ring);
             var intersection = new Cartesian3(ring[rightmostVertexIndex].x, point.y, 0.0);
             edge.push(ring[rightmostVertexIndex]);
-            edge.push(ring[rightmostVertexIndex + 1]);
+            edge.push(ring[(rightmostVertexIndex + 1) % ring.length]);
 
             var boundaryMinX = ring[0].x;
             var boundaryMaxX = boundaryMinX;
@@ -760,10 +760,10 @@ define([
          * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
          * a polygon with a hole added to it. The added hole is removed from <code>innerRings</code>.
          *
-         * @param {Array} outerRing An array of Cartographic points defining the outer boundary of the polygon.
-         * @param {Array} innerRings An array of arrays of Cartographic points, where each array represents a hole in the polygon.
+         * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
+         * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
          *
-         * @return A single list of {@link Cartographic} points defining the polygon, including the eliminated inner ring.
+         * @return A single list of Cartesian points defining the polygon, including the eliminated inner ring.
          *
          * @exception {DeveloperError} <code>outerRing</code> is required.
          * @exception {DeveloperError} <code>outerRing</code> must not be empty.
@@ -780,41 +780,34 @@ define([
                 throw new DeveloperError('innerRings is required.');
             }
 
-            // Convert from LLA -> XYZ and project points onto a tangent plane to find the mutually visible vertex.
-            var cartesianOuterRing = [];
-            for (var i = 0; i < outerRing.length; i++) {
-                var point = outerRing[i];
-                cartesianOuterRing.push(Ellipsoid.WGS84.cartographicToCartesian(point));
-            }
-
-            var windingOrder = PolygonPipeline.computeArea2D(cartesianOuterRing) >= 0.0 ? 0 : 1;
-            var cartesianInnerRings = [];
-            for (var i = 0; i < innerRings.length; ++i) {
+            // Check that the holes are defined in the winding order opposite that of the outer ring
+            var windingOrder = PolygonPipeline.computeArea2D(outerRing) >= 0.0 ? 0 : 1;
+            for (var i = 0; i < innerRings.length; i++) {
                 var ring = innerRings[i];
-                var cartesianInnerRing = [];
-                for (var i = 0; i < ring.length; i++)
-                {
-                    var point = ring[i];
-                    cartesianInnerRing.push(Ellipsoid.WGS84.cartographicToCartesian(point));
+
+                // Ensure each hole's first and last points are the same
+                if (!(ring[0]).equals(ring[ring.length - 1])) {
+                    ring.push(ring[0]);
                 }
-                var innerWindingOrder = PolygonPipeline.computeArea2D(cartesianInnerRing) >= 0.0 ? 0 : 1;
+
+                var innerWindingOrder = PolygonPipeline.computeArea2D(ring) >= 0.0 ? 0 : 1;
                 if (innerWindingOrder === windingOrder) {
                     ring.reverse();
-                    cartesianInnerRing.reverse();
                 }
-                cartesianInnerRings.push(cartesianInnerRing);
             }
 
-            var tangentPlane = new EllipsoidTangentPlane(Ellipsoid.WGS84, cartesianOuterRing);
-            cartesianOuterRing = (tangentPlane.projectPointsOntoPlane(cartesianOuterRing));
-            for (var i = 0; i < cartesianInnerRings.length; i++)
+            // Project points onto a tangent plane to find the mutually visible vertex.
+            var tangentPlane = EllipsoidTangentPlane.create(Ellipsoid.WGS84, outerRing);
+            var tangentOuterRing = (tangentPlane.projectPointsOntoPlane(outerRing));
+            var tangentInnerRings = [];
+            for (var i = 0; i < innerRings.length; i++)
             {
-                cartesianInnerRings[i] = (tangentPlane.projectPointsOntoPlane(cartesianInnerRings[i]));
+                tangentInnerRings.push(tangentPlane.projectPointsOntoPlane(innerRings[i]));
             }
 
-            var visibleVertexIndex = PolygonPipeline._getMutuallyVisibleVertexIndex(cartesianOuterRing, cartesianInnerRings);
-            var innerRingIndex = PolygonPipeline._getRightmostRingIndex(cartesianInnerRings);
-            var innerRingVertexIndex = PolygonPipeline._getRightmostVertexIndex(cartesianInnerRings[innerRingIndex]);
+            var visibleVertexIndex = PolygonPipeline._getMutuallyVisibleVertexIndex(tangentOuterRing, tangentInnerRings);
+            var innerRingIndex = PolygonPipeline._getRightmostRingIndex(tangentInnerRings);
+            var innerRingVertexIndex = PolygonPipeline._getRightmostVertexIndex(tangentInnerRings[innerRingIndex]);
 
             var innerRing = innerRings[innerRingIndex];
             var newPolygonVertices = [];
