@@ -399,11 +399,11 @@ define([
                 uniformMap.dayTextures.length = numberOfDayTextures;
                 uniformMap.numberOfDayTextures = numberOfDayTextures;
 
-                if (typeof tile.parent !== 'undefined' && tile.parent.cameraInsideBoundingSphere) {
-                    uniformMap.cameraInsideBoundingSphere = true;
-                } else {
-                    uniformMap.cameraInsideBoundingSphere = false;
-                }
+//                if (typeof tile.parent !== 'undefined' && tile.parent.cameraInsideBoundingSphere) {
+//                    uniformMap.cameraInsideBoundingSphere = true;
+//                } else {
+//                    uniformMap.cameraInsideBoundingSphere = false;
+//                }
 
                 context.continueDraw({
                     primitiveType : TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES,
@@ -665,7 +665,7 @@ define([
         var distance = Math.sqrt(distanceSquaredToTile(cameraPosition, cameraPositionCartographic, tile));
         tile.distance = distance;
 
-        tile.cameraInsideBoundingSphere = distance === 0.0;
+//        tile.cameraInsideBoundingSphere = distance === 0.0;
 
         var viewport = context.getViewport();
         var viewportHeight = viewport.height;
