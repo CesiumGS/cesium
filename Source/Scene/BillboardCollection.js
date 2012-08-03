@@ -10,6 +10,8 @@ define([
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/VertexArrayFacade',
@@ -28,6 +30,8 @@ define([
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
+        BoundingRectangle,
+        BoundingSphere,
         BlendingState,
         BufferUsage,
         VertexArrayFacade,
@@ -153,6 +157,27 @@ define([
          * @type Number
          */
         this.morphTime = this._mode.morphTime;
+
+        /**
+         * A bounding sphere used for culling in 3D mode.
+         *
+         * @type BoundingSphere
+         */
+        this.boundingVolume = undefined;
+
+        /**
+         * A bounding sphere used for culling in Columbus view mode.
+         *
+         * @type BoundingSphere
+         */
+        this.boundingVolume2D = undefined;
+
+        /**
+         * A bounding rectangle used for culling in 2D mode.
+         *
+         * @type BoundingRectangle
+         */
+        this.boundingRectangle = undefined;
 
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
@@ -811,33 +836,66 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    BillboardCollection.prototype._updateScene2D = function(projection, billboards) {
+    BillboardCollection.prototype._updateScene2D = function(projection, billboards, recomputeBoundingSphere) {
         var length = billboards.length;
 
+        var positions = [];
         for ( var i = 0; i < length; ++i) {
             var b = billboards[i];
             var p = this.modelMatrix.multiplyByVector(new Cartesian4(b.getPosition().x, b.getPosition().y, b.getPosition().z, 1.0));
             var projectedPoint = projection.project(projection.getEllipsoid().cartesianToCartographic(new Cartesian3(p.x, p.y, p.z)));
-            b._setActualPosition({
-                x : 0.0,
-                y : projectedPoint.x,
-                z : projectedPoint.y
-            });
+            b._setActualPosition(new Cartesian3(0.0, projectedPoint.x, projectedPoint.y));
+
+            if (recomputeBoundingSphere) {
+                positions.push(projectedPoint);
+            } else {
+                var width = projectedPoint.x - this.boundingRectangle.x;
+                var height = projectedPoint.y - this.boundingRectangle.y;
+
+                if (width > this.boundingRectangle.width) {
+                    this.boundingRectangle.width = width;
+                } else if (width < 0) {
+                    this.boundingRectangle.width -= width;
+                    this.boundingRectangle.x = projectedPoint.x;
+                }
+
+                if (height > this.boundingRectangle.height) {
+                    this.boundingRectangle.height = height;
+                } else if (height < 0) {
+                    this.boundingRectangle.height -= height;
+                    this.boundingRectangle.y = projectedPoint.y;
+                }
+            }
+        }
+
+        if (recomputeBoundingSphere) {
+            this.boundingRectangle = BoundingRectangle.fromPoints(positions);
         }
     };
 
-    BillboardCollection.prototype._updateColumbusView = function(projection, billboards) {
+    BillboardCollection.prototype._updateColumbusView = function(projection, billboards, recomputeBoundingSphere) {
         var length = billboards.length;
 
+        var positions = [];
         for ( var i = 0; i < length; ++i) {
             var b = billboards[i];
             var p = this.modelMatrix.multiplyByVector(new Cartesian4(b.getPosition().x, b.getPosition().y, b.getPosition().z, 1.0));
             var projectedPoint = projection.project(projection.getEllipsoid().cartesianToCartographic(new Cartesian3(p.x, p.y, p.z)));
-            b._setActualPosition({
-                x : projectedPoint.z,
-                y : projectedPoint.x,
-                z : projectedPoint.y
-            });
+            var point = new Cartesian3(projectedPoint.z, projectedPoint.x, projectedPoint.y);
+            b._setActualPosition(point);
+
+            if (recomputeBoundingSphere) {
+                positions.push(point);
+            } else {
+                var radius = point.subtract(this.boundingVolume2D.center).magnitude();
+                if (radius > this.boundingVolume2D.radius) {
+                    this.boundingVolume2D.radius = radius;
+                }
+            }
+        }
+
+        if (recomputeBoundingSphere) {
+            this.boundingVolume2D = BoundingSphere.fromPoints(positions);
         }
     };
 
@@ -864,35 +922,42 @@ define([
 
             switch (mode) {
             case SceneMode.SCENE3D:
+                var positions = [];
                 for (i = 0; i < length; ++i) {
                     b = billboards[i];
-                    b._setActualPosition(b.getPosition());
+                    var position = b.getPosition();
+                    b._setActualPosition(position);
+                    positions.push(position);
                 }
+                this.boundingVolume = BoundingSphere.fromPoints(positions);
                 break;
 
             case SceneMode.SCENE2D:
-                this._updateScene2D(projection, this._billboards);
+                this._updateScene2D(projection, this._billboards, true);
                 break;
 
             case SceneMode.COLUMBUS_VIEW:
-                this._updateColumbusView(projection, this._billboards);
+                this._updateColumbusView(projection, this._billboards, true);
                 break;
             }
         } else if (mode === SceneMode.MORPHING) {
             billboards = this._billboards;
             length = billboards.length;
 
+            var positions = [];
             for (i = 0; i < length; ++i) {
                 b = billboards[i];
                 var p = b.getPosition();
                 var projectedPoint = projection.project(projection.getEllipsoid().cartesianToCartographic(p));
-
-                b._setActualPosition({
-                    x : CesiumMath.lerp(projectedPoint.z, p.x, this.morphTime),
-                    y : CesiumMath.lerp(projectedPoint.x, p.y, this.morphTime),
-                    z : CesiumMath.lerp(projectedPoint.y, p.z, this.morphTime)
-                });
+                var point = new Cartesian3(
+                        CesiumMath.lerp(projectedPoint.z, p.x, this.morphTime),
+                        CesiumMath.lerp(projectedPoint.x, p.y, this.morphTime),
+                        CesiumMath.lerp(projectedPoint.y, p.z, this.morphTime));
+                b._setActualPosition(point);
+                positions.push(point);
             }
+
+            this.boundingVolume2D = BoundingSphere.fromPoints(positions);
         } else if (mode === SceneMode.SCENE2D) {
             this._updateScene2D(projection, this._billboardsToUpdate);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
@@ -996,6 +1061,13 @@ define([
                         var b = billboardsToUpdate[m];
                         b._clean();
 
+                        if (sceneState.mode === SceneMode.SCENE3D) {
+                            var radius = b.getPosition().subtract(this.boundingVolume.center).magnitude();
+                            if (radius > this.boundingVolume.radius) {
+                                this.boundingVolume.radius = radius;
+                            }
+                        }
+
                         for ( var n = 0; n < writers.length; ++n) {
                             writers[n](context, textureAtlasCoordinates, vafWriters, b);
                         }
@@ -1005,6 +1077,13 @@ define([
                     for ( var h = 0; h < updateLength; ++h) {
                         var bb = billboardsToUpdate[h];
                         bb._clean();
+
+                        if (sceneState.mode === SceneMode.SCENE3D) {
+                            var radius = bb.getPosition().subtract(this.boundingVolume.center).magnitude();
+                            if (radius > this.boundingVolume.radius) {
+                                this.boundingVolume.radius = radius;
+                            }
+                        }
 
                         for ( var o = 0; o < writers.length; ++o) {
                             writers[o](context, textureAtlasCoordinates, vafWriters, bb);
