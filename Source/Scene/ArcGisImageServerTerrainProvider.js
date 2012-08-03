@@ -4,6 +4,7 @@ define([
         '../Core/jsonp',
         '../Core/loadImage',
         '../Core/getImagePixels',
+        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/BoundingSphere',
@@ -23,6 +24,7 @@ define([
         jsonp,
         loadImage,
         getImagePixels,
+        writeTextToCanvas,
         DeveloperError,
         CesiumMath,
         BoundingSphere,
@@ -121,17 +123,10 @@ define([
             that.maxLevel = 25;*/
 
             // Create the copyright message.
-            var canvas = document.createElement('canvas');
-            canvas.width = 800.0;
-            canvas.height = 20.0;
+            that._logo = writeTextToCanvas(data.copyrightText, {
+                font : '12px sans-serif'
+            });
 
-            var context = canvas.getContext('2d');
-            context.fillStyle = '#fff';
-            context.font = '12px sans-serif';
-            context.textBaseline = 'top';
-            context.fillText(data.copyrightText, 0, 0);
-
-            that._logo = canvas;
             that.ready = true;
         });
     }
@@ -342,6 +337,14 @@ define([
      */
     ArcGisImageServerTerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
         throw new DeveloperError('Not supported yet.');
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof ArcGisImageServerTerrainProvider
+     */
+    ArcGisImageServerTerrainProvider.prototype.getLogo = function() {
+        return this._logo;
     };
 
     return ArcGisImageServerTerrainProvider;
