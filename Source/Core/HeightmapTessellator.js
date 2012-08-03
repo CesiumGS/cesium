@@ -7,7 +7,8 @@ define([
         './Extent',
         './Cartesian3',
         './ComponentDatatype',
-        './PrimitiveType'
+        './PrimitiveType',
+        './Math'
     ], function(
         defaultValue,
         getImagePixels,
@@ -16,7 +17,8 @@ define([
         Extent,
         Cartesian3,
         ComponentDatatype,
-        PrimitiveType) {
+        PrimitiveType,
+        CesiumMath) {
     "use strict";
 
     /**
@@ -67,6 +69,7 @@ define([
         var generateTextureCoordinates = description.generateTextureCoordinates;
         var interleaveTextureCoordinates = description.interleaveTextureCoordinates;
         var relativeToCenter = description.relativeToCenter;
+        var isGeographic = description.isGeographic;
 
         var vertices = description.vertices;
         var textureCoordinates = description.textureCoordinates;
@@ -85,11 +88,12 @@ define([
         var atan = Math.atan;
         var exp = Math.exp;
         var piOverTwo = Math.PI / 2.0;
+        var toRadians = CesiumMath.toRadians;
 
-        var geographicWest = extent.west * oneOverCentralBodySemimajorAxis;
-        var geographicSouth = piOverTwo - (2.0 * atan(exp(-extent.south * oneOverCentralBodySemimajorAxis)));
-        var geographicEast = extent.east * oneOverCentralBodySemimajorAxis;
-        var geographicNorth = piOverTwo - (2.0 * atan(exp(-extent.north * oneOverCentralBodySemimajorAxis)));
+//        var geographicWest = extent.west * oneOverCentralBodySemimajorAxis;
+//        var geographicSouth = piOverTwo - (2.0 * atan(exp(-extent.south * oneOverCentralBodySemimajorAxis)));
+//        var geographicEast = extent.east * oneOverCentralBodySemimajorAxis;
+//        var geographicNorth = piOverTwo - (2.0 * atan(exp(-extent.north * oneOverCentralBodySemimajorAxis)));
 
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
@@ -98,8 +102,12 @@ define([
         var maxHeight = -65536.0;
 
         for ( var row = 0; row < height; ++row) {
-            var y = extent.north - granularityY * row;
-            var latitude = piOverTwo - (2.0 * atan(exp(-y * oneOverCentralBodySemimajorAxis)));
+            var latitude = extent.north - granularityY * row;
+            if (!isGeographic) {
+                latitude = piOverTwo - (2.0 * atan(exp(-latitude * oneOverCentralBodySemimajorAxis)));
+            } else {
+                latitude = toRadians(latitude);
+            }
             var cosLatitude = cos(latitude);
             var nZ = sin(latitude);
             var kZ = radiiSquaredZ * nZ;
@@ -111,8 +119,12 @@ define([
             var v = (height - row - 1) / (height - 1);
 
             for ( var col = 0; col < width; ++col) {
-                var x = extent.west + granularityX * col;
-                var longitude = x * oneOverCentralBodySemimajorAxis;
+                var longitude = extent.west + granularityX * col;
+                if (!isGeographic) {
+                    longitude = longitude * oneOverCentralBodySemimajorAxis;
+                } else {
+                    longitude = toRadians(longitude);
+                }
 
                 var terrainOffset = row * (width * stride) + col * stride;
 

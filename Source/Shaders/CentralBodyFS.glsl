@@ -1,4 +1,4 @@
-//#define SHOW_TILE_BOUNDARIES
+#define SHOW_TILE_BOUNDARIES
 //#define SHOW_LEVELS
 
 #ifndef TEXTURE_UNITS

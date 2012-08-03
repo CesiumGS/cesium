@@ -139,12 +139,19 @@ define([
 
         this._logo = undefined;
 
-        this.projection = Projections.MERCATOR;
-        this.tilingScheme = new WebMercatorTilingScheme();
+//        this.projection = Projections.MERCATOR;
+//        this.tilingScheme = new WebMercatorTilingScheme();
+//        this.extent = new Extent(-CesiumMath.PI,
+//                CesiumMath.toRadians(-85.05112878),
+//                CesiumMath.PI,
+//                CesiumMath.toRadians(85.05112878));
+
+        this.projection = Projections.WGS84;
+        this.tilingScheme = new GeographicTilingScheme();
         this.extent = new Extent(-CesiumMath.PI,
-                CesiumMath.toRadians(-85.05112878),
+                -CesiumMath.PI_OVER_TWO,
                 CesiumMath.PI,
-                CesiumMath.toRadians(85.05112878));
+                CesiumMath.PI_OVER_TWO);
 
         this.maxLevel = 18;
 
@@ -185,7 +192,8 @@ define([
     WebMapServiceImageryProvider.prototype.buildImageUrl = function(x, y, level) {
         var extent = this.tilingScheme.tileXYToNativeExtent(x, y, level);
         var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
-        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=EPSG:3857&format=image%2Fpng';
+        var srs = 'EPSG:4326';
+        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=' + srs + '&format=image%2Fpng';
 
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);

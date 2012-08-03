@@ -78,8 +78,8 @@ define([
          *
          * @type TilingScheme
          */
-        this.tilingScheme = new WebMercatorTilingScheme();
-        this.projection = Projections.MERCATOR;
+        this.tilingScheme = new GeographicTilingScheme();
+        this.projection = Projections.WGS84;
         this.maxLevel = 18;
 
         this._proxy = description.proxy;
@@ -149,7 +149,8 @@ define([
 
         var extent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
         var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
-        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=64&height=64&srs=EPSG:3857&format=application%2Fbil16';
+        var srs = 'EPSG:4326';
+        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=64&height=64&srs=' + srs + '&format=application%2Fbil16';
         if (this.token) {
             url += '&token=' + this.token;
         }
@@ -198,15 +199,7 @@ define([
         var width = 64;
         var height = 64;
 
-        var southwest = this.tilingScheme.cartographicToWebMercator(tile.extent.west, tile.extent.south);
-        var northeast = this.tilingScheme.cartographicToWebMercator(tile.extent.east, tile.extent.north);
-        var webMercatorExtent = {
-                west : southwest.x,
-                south : southwest.y,
-                east : northeast.x,
-                north : northeast.y
-        };
-
+        var nativeExtent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
         tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
         var verticesPromise = taskProcessor.scheduleTask({
@@ -216,10 +209,11 @@ define([
             stride : 1,
             width : width,
             height : height,
-            extent : webMercatorExtent,
+            extent : nativeExtent,
             relativeToCenter : tile.center,
             radiiSquared : this.tilingScheme.ellipsoid.getRadiiSquared(),
-            oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x
+            oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x,
+            isGeographic : true
         });
 
         if (typeof verticesPromise === 'undefined') {
