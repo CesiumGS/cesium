@@ -305,5 +305,13 @@ define([
         throw new DeveloperError('Not supported yet.');
     };
 
+    /**
+     * DOC_TBA
+     * @memberof WebMapServiceTerrainProvider
+     */
+    WebMapServiceTerrainProvider.prototype.getLogo = function() {
+        return this._logo;
+    };
+
     return WebMapServiceTerrainProvider;
 });
