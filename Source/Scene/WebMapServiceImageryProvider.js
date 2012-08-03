@@ -137,7 +137,13 @@ define([
          */
         this.ready = false;
 
-        this._logo = undefined;
+        // Create the copyright message.
+        if (typeof description.copyrightText !== 'undefined') {
+            // Create the copyright message.
+            this._logo = writeTextToCanvas(description.copyrightText, {
+                font : '12px sans-serif'
+            });
+        }
 
 //        this.projection = Projections.MERCATOR;
 //        this.tilingScheme = new WebMercatorTilingScheme();
@@ -193,7 +199,7 @@ define([
         var extent = this.tilingScheme.tileXYToNativeExtent(x, y, level);
         var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
         var srs = 'EPSG:4326';
-        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=' + srs + '&format=image%2Fpng';
+        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=' + srs + '&format=image%2Fjpeg';
 
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);

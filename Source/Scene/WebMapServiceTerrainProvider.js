@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/jsonp',
         '../Core/loadArrayBuffer',
+        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/BoundingSphere',
@@ -21,6 +22,7 @@ define([
         defaultValue,
         jsonp,
         loadArrayBuffer,
+        writeTextToCanvas,
         DeveloperError,
         CesiumMath,
         BoundingSphere,
@@ -83,6 +85,15 @@ define([
         this.maxLevel = 18;
 
         this._proxy = description.proxy;
+
+        // Create the copyright message.
+        if (typeof description.copyrightText !== 'undefined') {
+            // Create the copyright message.
+            this._logo = writeTextToCanvas(description.copyrightText, {
+                font : '12px sans-serif'
+            });
+        }
+
         this.ready = true;
     }
 

@@ -28,14 +28,16 @@ require({
 
     var terrainProvider = new Cesium.WebMapServiceTerrainProvider({
         url : 'http://localhost:8081/geoserver/terrain/wms',
-        layerName : 'terrain:SRTM'
+        layerName : 'terrain:SRTM',
+        copyrightText : 'Terrain: Jarvis, A., H.I. Reuter, A. Nelson, E. Guevara, 2008, Hole-filled SRTM for the globe Version 4, available from the CGIAR-CSI SRTM 90m Database: http://srtm.csi.cgiar.org.'
     });
 
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
 
     var wmsImagery = new Cesium.WebMapServiceImageryProvider({
         url : 'http://localhost:8081/geoserver/wms',
-        layerName : 'demo'
+        layerName : 'demo',
+        copyrightText : "Imagery: Copyright NASA's Earth Observatory, EarthSat, Space Imaging, SPOT IMAGE"
     });
     var wmsLayer = imageryLayerCollection.addImageryProvider(wmsImagery);
 
