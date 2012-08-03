@@ -1403,7 +1403,6 @@ define([
         this._fillPoles(context, sceneState);
 
         this._surface.update(context, sceneState);
-        this._imageryLayerCollection.update(context, sceneState);
 
         this._mode = mode;
         this._projection = projection;
@@ -1480,7 +1479,7 @@ define([
                 });
             }
 
-            this._imageryLayerCollection.render(context);
+            this._surface._renderLogos(context);
         }
     };
 

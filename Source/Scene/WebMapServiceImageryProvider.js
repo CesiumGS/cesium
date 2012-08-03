@@ -236,7 +236,7 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof ArcGisMapServerImageryProvider
+     * @memberof WebMapServiceImageryProvider
      */
     WebMapServiceImageryProvider.prototype.getLogo = function() {
         return this._logo;

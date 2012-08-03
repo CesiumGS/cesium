@@ -2,21 +2,13 @@
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
-        '../Core/Cartesian2',
         '../Core/Event',
-        '../Core/Rectangle',
-        '../Renderer/PixelFormat',
-        './ImageryLayer',
-        './ViewportQuad'
+        './ImageryLayer'
     ], function(
         DeveloperError,
         destroyObject,
-        Cartesian2,
         Event,
-        Rectangle,
-        PixelFormat,
-        ImageryLayer,
-        ViewportQuad) {
+        ImageryLayer) {
     "use strict";
 
     /**
@@ -30,23 +22,6 @@ define([
         this.layerAdded = new Event();
         this.layerRemoved = new Event();
         this.layerMoved = new Event();
-
-        /**
-         * Determines if layers in this collection will be shown.
-         *
-         * @type Boolean
-         */
-        this.show = true;
-
-        /**
-         * The offset, relative to the bottom left corner of the viewport,
-         * where the logo for imagery will be drawn.
-         *
-         * @type {Cartesian2}
-         */
-        this.logoOffset = Cartesian2.ZERO;
-        this._layerLogos = [];
-        this._logoQuad = undefined;
     }
 
     /**
@@ -290,92 +265,6 @@ define([
         this._layers.splice(0, 0, layer);
 
         this.layerMoved.raiseEvent(layer, 0, index);
-    };
-
-    /**
-     * @private
-     */
-    ImageryLayerCollection.prototype.update = function(context, sceneState) {
-        if (!this.show) {
-            return;
-        }
-
-        var layers = this._layers;
-
-        var layerLogos = this._layerLogos;
-        var rebuildLogo = false;
-        var logoWidth = 0;
-        var logoHeight = 0;
-        var logo;
-
-        layerLogos.length = layers.length;
-        for ( var i = 0, len = layers.length; i < len; i++) {
-            var layer = layers[i];
-
-            logo = undefined;
-            if (typeof layer.imageryProvider.getLogo === 'function') {
-                logo = layer.imageryProvider.getLogo();
-            }
-
-            if (layerLogos[i] !== logo) {
-                rebuildLogo = true;
-                layerLogos[i] = logo;
-            }
-
-            if (typeof logo !== 'undefined') {
-                logoHeight += logo.height;
-                logoWidth = Math.max(logoWidth, logo.width);
-            }
-        }
-
-        if (rebuildLogo) {
-            var logoRectangle = new Rectangle(this.logoOffset.x, this.logoOffset.y, logoWidth, logoHeight);
-            if (typeof this._logoQuad === 'undefined') {
-                this._logoQuad = new ViewportQuad(logoRectangle);
-                this._logoQuad.enableBlending = true;
-            } else {
-                this._logoQuad.setRectangle(logoRectangle);
-            }
-
-            var texture = this._logoQuad.getTexture();
-            if (typeof texture === 'undefined' || texture.getWidth() !== logoWidth || texture.getHeight() !== logoHeight) {
-                texture = context.createTexture2D({
-                    width : logoWidth,
-                    height : logoHeight,
-                    pixelFormat : PixelFormat.RGBA
-                });
-
-                this._logoQuad.setTexture(texture);
-            }
-
-            var offset = 0;
-            for (i = 0, len = layerLogos.length; i < len; i++) {
-                logo = layerLogos[i];
-                if (typeof logo !== 'undefined') {
-                    texture.copyFrom(logo, 0, offset);
-                    offset += logo.height;
-                }
-            }
-        }
-
-        if (typeof this._logoQuad !== 'undefined') {
-            this._logoQuad.update(context, sceneState);
-        }
-    };
-
-    /**
-     * Renders all imagery layers, bottom to top.
-     *
-     * @memberof ImageryLayerCollection
-     */
-    ImageryLayerCollection.prototype.render = function(context) {
-        if (!this.show) {
-            return;
-        }
-
-        if (typeof this._logoQuad !== 'undefined') {
-            this._logoQuad.render(context);
-        }
     };
 
     /**

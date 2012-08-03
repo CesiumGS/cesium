@@ -13,6 +13,7 @@ define([
         '../Core/Math',
         '../Core/Occluder',
         '../Core/PrimitiveType',
+        '../Core/Rectangle',
         '../Core/CubeMapEllipsoidTessellator',
         '../Core/MeshFilters',
         './ImageryLayerCollection',
@@ -21,6 +22,7 @@ define([
         './TileImagery',
         './TileLoadQueue',
         './TileReplacementQueue',
+        './ViewportQuad',
         '../ThirdParty/when'
     ], function(
         combine,
@@ -36,6 +38,7 @@ define([
         CesiumMath,
         Occluder,
         PrimitiveType,
+        Rectangle,
         CubeMapEllipsoidTessellator,
         MeshFilters,
         ImageryLayerCollection,
@@ -44,6 +47,7 @@ define([
         TileImagery,
         TileLoadQueue,
         TileReplacementQueue,
+        ViewportQuad,
         when) {
     "use strict";
 
@@ -67,6 +71,16 @@ define([
         this._imageryLayerCollection.layerAdded.addEventListener(EllipsoidSurface.prototype._onLayerAdded, this);
         this._imageryLayerCollection.layerRemoved.addEventListener(EllipsoidSurface.prototype._onLayerRemoved, this);
         this._imageryLayerCollection.layerMoved.addEventListener(EllipsoidSurface.prototype._onLayerMoved, this);
+
+        /**
+         * The offset, relative to the bottom left corner of the viewport,
+         * where the logo for terrain and imagery providers will be drawn.
+         *
+         * @type {Cartesian2}
+         */
+        this.logoOffset = Cartesian2.ZERO;
+        this._logos = [];
+        this._logoQuad = undefined;
 
         this._levelZeroTiles = undefined;
         this._renderList = [];
@@ -242,6 +256,8 @@ define([
                 return;
             }
         }
+
+        updateLogos(this, context, sceneState);
 
         maxDepth = 0;
         tilesVisited = 0;
@@ -441,6 +457,12 @@ define([
         context.endDraw();
     };
 
+    EllipsoidSurface.prototype._renderLogos = function(context) {
+        if (typeof this._logoQuad !== 'undefined') {
+            this._logoQuad.render(context);
+        }
+    };
+
     /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
@@ -501,6 +523,85 @@ define([
         this._boundingSphereTile = tile;
         this._boundingSphereVA = undefined;
     };
+
+    var logoData = {
+        logos : undefined,
+        logoIndex : 0,
+        rebuildLogo : false,
+        totalLogoWidth : 0,
+        totalLogoHeight : 0
+    };
+
+    function updateLogos(surface, context, sceneState) {
+        logoData.logos = surface._logos;
+        logoData.logoIndex = 0;
+        logoData.rebuildLogo = false;
+        logoData.totalLogoWidth = 0;
+        logoData.totalLogoHeight = 0;
+
+        checkLogo(logoData, surface.terrainProvider);
+
+        var imageryLayerCollection = surface._imageryLayerCollection;
+        for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+            var layer = imageryLayerCollection.get(i);
+            checkLogo(logoData, layer.imageryProvider);
+        }
+
+        if (logoData.rebuildLogo) {
+            var width = logoData.totalLogoWidth;
+            var height = logoData.totalLogoHeight;
+            var logoRectangle = new Rectangle(surface.logoOffset.x, surface.logoOffset.y, width, height);
+            if (typeof surface._logoQuad === 'undefined') {
+                surface._logoQuad = new ViewportQuad(logoRectangle);
+                surface._logoQuad.enableBlending = true;
+            } else {
+                surface._logoQuad.setRectangle(logoRectangle);
+            }
+
+            var texture = surface._logoQuad.getTexture();
+            if (typeof texture === 'undefined' || texture.getWidth() !== width || texture.getHeight() !== height) {
+                texture = context.createTexture2D({
+                    width : width,
+                    height : height
+                });
+
+                surface._logoQuad.setTexture(texture);
+            }
+
+            var heightOffset = 0;
+            for (i = 0, len = logoData.logos.length; i < len; i++) {
+                var logo = logoData.logos[i];
+                if (typeof logo !== 'undefined') {
+                    texture.copyFrom(logo, 0, heightOffset);
+                    heightOffset += logo.height + 2;
+                }
+            }
+        }
+
+        if (typeof surface._logoQuad !== 'undefined') {
+            surface._logoQuad.update(context, sceneState);
+        }
+    }
+
+    function checkLogo(logoData, logoSource) {
+        var logo;
+        if (typeof logoSource.getLogo === 'function') {
+            logo = logoSource.getLogo();
+        } else {
+            logo = undefined;
+        }
+
+        if (logoData.logos[logoData.logoIndex] !== logo) {
+            logoData.rebuildLogo = true;
+            logoData.logos[logoData.logoIndex] = logo;
+        }
+        logoData.logoIndex++;
+
+        if (typeof logo !== 'undefined') {
+            logoData.totalLogoWidth = Math.max(logoData.totalLogoWidth, logo.width);
+            logoData.totalLogoHeight += logo.height + 2;
+        }
+    }
 
     function addBestAvailableTilesToRenderList(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) {
         ++tilesVisited;
