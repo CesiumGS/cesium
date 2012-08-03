@@ -156,6 +156,27 @@ define([
          * <code>BufferUsage.DYNAMIC_DRAW</code>.
          */
         this.bufferUsage = BufferUsage.STATIC_DRAW;
+
+        /**
+         * A bounding sphere used for culling in 3D mode.
+         *
+         * @type BoundingSphere
+         */
+        this.boundingVolume = undefined;
+
+        /**
+         * A bounding sphere used for culling in Columbus view mode.
+         *
+         * @type BoundingSphere
+         */
+        this.boundingVolume2D = undefined;
+
+        /**
+         * A bounding rectangle used for culling in 2D mode.
+         *
+         * @type BoundingRectangle
+         */
+        this.boundingRectangle = undefined;
     };
 
     LabelCollection.prototype._getCollection = function() {
@@ -434,6 +455,10 @@ define([
         }
 
         this._billboardCollection.update(context, sceneState);
+
+        this.boundingVolume = this._billboardCollection.boundingVolume;
+        this.boundingVolume2D = this._billboardCollection.boundingVolume2D;
+        this.boundingRectangle = this._billboardCollection.boundingRectangle;
     };
 
     /**
