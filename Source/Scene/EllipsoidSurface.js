@@ -98,6 +98,9 @@ define([
             that._tilingScheme = tilingScheme;
             that._levelZeroTiles = tilingScheme.createLevelZeroTiles();
             that._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, that.terrainProvider.tilingScheme.ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
+        }, function(e) {
+            /*global console*/
+            console.error('failed to load tiling scheme: ' + e);
         });
     };
 

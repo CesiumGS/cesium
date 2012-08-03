@@ -189,6 +189,9 @@ define([
             that.ready = true;
 
             return true;
+        }, function(e) {
+            /*global console*/
+            console.error('failed to load metadata: ' + e);
         });
     };
 

@@ -128,6 +128,9 @@ define([
             });
 
             that.ready = true;
+        }, function(e) {
+            /*global console*/
+            console.error('failed to load metadata: ' + e);
         });
     }
 
@@ -201,7 +204,8 @@ define([
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
         }
-        return when(loadImage(url, true), function(image) {
+
+        when(loadImage(url, true), function(image) {
             ++received;
             if ((received % 10) === 0) {
                 console.log('received: ' + received);
@@ -209,6 +213,9 @@ define([
             tile.geometry = image;
             tile.state = TileState.RECEIVED;
             --requestsInFlight;
+        }, function(e) {
+            /*global console*/
+            console.error('failed to load tile geometry: ' + e);
         });
     };
 
@@ -239,10 +246,10 @@ define([
         var southwest = this.tilingScheme.cartographicToWebMercator(tile.extent.west, tile.extent.south);
         var northeast = this.tilingScheme.cartographicToWebMercator(tile.extent.east, tile.extent.north);
         var webMercatorExtent = {
-                west : southwest.x,
-                south : southwest.y,
-                east : northeast.x,
-                north : northeast.y
+            west : southwest.x,
+            south : southwest.y,
+            east : northeast.x,
+            north : northeast.y
         };
 
         tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
@@ -267,7 +274,7 @@ define([
             return;
         }
 
-        return when(verticesPromise, function(result) {
+        when(verticesPromise, function(result) {
             ++transformed;
             if ((transformed % 10) === 0) {
                 console.log('transformed: ' + transformed);
@@ -280,6 +287,9 @@ define([
                 indices : TerrainProvider.getRegularGridIndices(width, height)
             };
             tile.state = TileState.TRANSFORMED;
+        }, function(e) {
+            /*global console*/
+            console.error('failed to load transform geometry: ' + e);
         });
     };
 
