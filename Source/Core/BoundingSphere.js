@@ -81,6 +81,23 @@ define([
     };
 
     /**
+     * Compares the provided BoundingSphere componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} [left] The first BoundingSphere.
+     * @param {BoundingSphere} [right] The second BoundingSphere.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    BoundingSphere.equals = function(left, right) {
+        return (left === right) ||
+               ((typeof left !== 'undefined') &&
+                (typeof right !== 'undefined') &&
+                (left.center.equals(right.center)) &&
+                (left.radius === right.radius));
+    };
+
+    /**
      * Computes a tight-fitting bounding sphere enclosing a list of 3D Cartesian points.
      * The bounding sphere is computed by running two algorithms, a naive algorithm and Ritter's algorithm. The
      * smaller of the two spheres is used to ensure a tight fit.
@@ -397,6 +414,18 @@ define([
      */
     BoundingSphere.prototype.clone = function(result) {
         return BoundingSphere.clone(this, result);
+    };
+
+    /**
+     * Compares this BoundingSphere against the provided BoundingSphere componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} [right] The right hand side BoundingSphere.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     */
+    BoundingSphere.prototype.equals = function(right) {
+        return BoundingSphere.equals(this, right);
     };
 
     return BoundingSphere;

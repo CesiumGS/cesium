@@ -100,6 +100,25 @@ define([
     };
 
     /**
+     * Compares the provided BoundingRectangles componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof BoundingRectangle
+     *
+     * @param {BoundingRectangle} [left] The first BoundingRectangle.
+     * @param {BoundingRectangle} [right] The second BoundingRectangle.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    BoundingRectangle.equals = function(left, right) {
+        return (left === right) ||
+               ((typeof left !== 'undefined') &&
+                (typeof right !== 'undefined') &&
+                (left.x === right.x) &&
+                (left.y === right.y) &&
+                (left.width === right.width) &&
+                (left.height === right.height));
+    };
+
+    /**
      * Computes a bounding rectangle enclosing the list of 2D points.
      *
      * @memberof BoundingRectangle
@@ -223,6 +242,18 @@ define([
      */
     BoundingRectangle.prototype.clone = function(result) {
         return BoundingRectangle.clone(this, result);
+    };
+
+    /**
+     * Compares this BoundingRectangle against the provided BoundingRectangle componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof BoundingRectangle
+     *
+     * @param {BoundingRectangle} [right] The right hand side BoundingRectangle.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     */
+    BoundingRectangle.prototype.equals = function(right) {
+        return BoundingRectangle.equals(this, right);
     };
 
     return BoundingRectangle;

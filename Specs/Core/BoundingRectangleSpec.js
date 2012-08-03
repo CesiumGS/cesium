@@ -80,6 +80,14 @@ defineSuite([
         expect(rect).toBe(returnedResult);
     });
 
+    it('equals', function() {
+        var rect = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
+        expect(rect.equals(new BoundingRectangle(1.0, 2.0, 3.0, 4.0))).toEqual(true);
+        expect(rect.equals(new BoundingRectangle(2.0, 2.0, 2.0, 2.0))).toEqual(false);
+        expect(rect.equals(new BoundingRectangle(4.0, 3.0, 2.0, 1.0))).toEqual(false);
+        expect(rect.equals(undefined)).toEqual(false);
+    });
+
     it('throws an exception when creating an axis aligned bounding rectangle without any positions', function() {
         expect(function() {
             return BoundingRectangle.fromPoints();

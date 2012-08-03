@@ -72,6 +72,14 @@ defineSuite([
         expect(sphere).toBe(returnedResult);
     });
 
+    it('equals', function() {
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 2.0);
+        expect(sphere.equals(new BoundingSphere(Cartesian3.ZERO, 2.0))).toEqual(true);
+        expect(sphere.equals(new BoundingSphere(Cartesian3.UNIT_X, 2.0))).toEqual(false);
+        expect(sphere.equals(new BoundingSphere(Cartesian3.ZERO, 3.0))).toEqual(false);
+        expect(sphere.equals(undefined)).toEqual(false);
+    });
+
     it('throws an exception when constructed with fromPoints without positions', function() {
         expect(function() {
             BoundingSphere.fromPoints();

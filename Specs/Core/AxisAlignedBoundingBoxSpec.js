@@ -65,6 +65,13 @@ defineSuite([
         expect(box).toBe(returnedResult);
     });
 
+    it('equals', function() {
+        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X);
+        expect(box.equals(box.clone())).toEqual(true);
+        expect(box.equals(new AxisAlignedBoundingBox(Cartesian3.UNIT_X, Cartesian3.UNIT_Y))).toEqual(false);
+        expect(box.equals(undefined)).toEqual(false);
+    });
+
     it('throws an exception when constructed without any positions', function() {
         expect(function() {
             return AxisAlignedBoundingBox.fromPoints();

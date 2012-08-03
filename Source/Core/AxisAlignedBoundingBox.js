@@ -81,6 +81,24 @@ define([
     };
 
     /**
+     * Compares the provided AxisAlignedBoundingBox componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof AxisAlignedBoundingBox
+     *
+     * @param {AxisAlignedBoundingBox} [left] The first AxisAlignedBoundingBox.
+     * @param {AxisAlignedBoundingBox} [right] The second AxisAlignedBoundingBox.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    AxisAlignedBoundingBox.equals = function(left, right) {
+        return (left === right) ||
+               ((typeof left !== 'undefined') &&
+                (typeof right !== 'undefined') &&
+                (left.center.equals(right.center)) &&
+                (left.minimum.equals(right.minimum)) &&
+                (left.maximum.equals(right.maximum)));
+    };
+
+    /**
      * Creates an instance of an AxisAlignedBoundingBox. The box is determined by finding the points spaced the
      * furthest apart on the x-, y-, and z-axes.
      *
@@ -202,6 +220,18 @@ define([
      */
     AxisAlignedBoundingBox.prototype.clone = function(result) {
         return AxisAlignedBoundingBox.clone(this, result);
+    };
+
+    /**
+     * Compares this AxisAlignedBoundingBox against the provided AxisAlignedBoundingBox componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof AxisAlignedBoundingBox
+     *
+     * @param {AxisAlignedBoundingBox} [right] The right hand side AxisAlignedBoundingBox.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     */
+    AxisAlignedBoundingBox.prototype.equals = function(right) {
+        return AxisAlignedBoundingBox.equals(this, right);
     };
 
     return AxisAlignedBoundingBox;
