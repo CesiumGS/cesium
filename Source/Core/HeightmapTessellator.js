@@ -70,6 +70,8 @@ define([
         var interleaveTextureCoordinates = description.interleaveTextureCoordinates;
         var relativeToCenter = description.relativeToCenter;
         var isGeographic = description.isGeographic;
+        var voidIndicator = defaultValue(description.voidIndicator, -32768);
+        var voidFillValue = defaultValue(description.voidFillValue, 0);
 
         var vertices = description.vertices;
         var textureCoordinates = description.textureCoordinates;
@@ -139,6 +141,9 @@ define([
                 }
 
                 heightSample = heightSample / heightScale - heightOffset;
+                if (heightSample === voidIndicator) {
+                    heightSample = voidFillValue;
+                }
 
                 maxHeight = Math.max(maxHeight, heightSample);
                 minHeight = Math.min(minHeight, heightSample);
