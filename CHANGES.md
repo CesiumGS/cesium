@@ -4,7 +4,13 @@ Change Log
 Beta Releases
 -------------
 
-### b7 - xx/xx/2012
+### b8 - xx/xx/2012
+
+* Breaking changes:
+    * ...
+* ...
+
+### b7 - 08/01/2012
 
 * Breaking changes:
    * Removed keyboard input handling from `EventHandler`.
@@ -63,6 +69,15 @@ Beta Releases
    * All functions starting with `multiplyWith` now start with `multiplyBy` to be consistent with functions starting with `divideBy`. 
    * The `multiplyWithMatrix` function on each `Matrix` type was renamed to `multiply`.
    * All three Matrix classes have been largely re-written for consistency and performance.  The `values` property has been eliminated and Matrices are no longer immutable.  Code that previously looked like `matrix = matrix.setColumn0Row0(12);` now looks like `matrix[Matrix2.COLUMN0ROW0] = 12;`.  Code that previously looked like `matrix.setColumn3(cartesian3);` now looked like `matrix.setColumn(3, cartesian3, matrix)`. 
+   * 'Polyline' is no longer externally creatable. To create a 'Polyline' use the 'PolylineCollection.add' method.
+   
+            Polyline polyline = new Polyline();
+            
+       to
+       
+            PolylineCollection polylineCollection = new PolylineCollection();
+            Polyline polyline = polylineCollection.add();
+            
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties.
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x`, `y`, and `z` properties.
 * All `Cartesian3` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
@@ -82,14 +97,15 @@ Beta Releases
 * Added a new DynamicScene layer for time-dynamic, data-driven visualization.  This include CZML processing.  For more details see https://github.com/AnalyticalGraphicsInc/cesium/wiki/Architecture and https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-in-Cesium.
 * Added a new application, Cesium Viewer, for viewing CZML files and otherwise exploring the globe.
 * Added a new Widgets directory, to contain common re-usable Cesium related controls.
-* Added a new Timeline control to the widgets directory.
-* Added a new DojoWidgets directory, to contain dojo-specific widgets.
+* Added a new Timeline widget to the Widgets directory.
+* Added a new Widgets/Dojo directory, to contain dojo-specific widgets.
 * Added new Timeline and Cesium dojo widgets.
 * Added `CameraCentralBodyController` as the new default controller to handle mouse input.
     * The left mouse button rotates around the central body.
     * The right mouse button and mouse wheel zoom in and out.
     * The middle mouse button rotates around the point clicked on the central body.
 * Added `computeTemeToPseudoFixedMatrix` function to `Transforms`.
+* Added 'PolylineCollection' to manage numerous polylines. 'PolylineCollection' dramatically improves rendering speed when using polylines.
 
 ### b6a - 06/20/2012
 

@@ -22,6 +22,7 @@ define([
      * @see ClockStep
      * @see ClockRange
      * @see JulianDate
+     * @see AnimationController
      *
      * @example
      * //Create a clock that loops on Christmas day 2012 and runs
@@ -135,16 +136,16 @@ define([
      *
      * @param {Number} [secondsToTick] optional parameter to force the clock to tick the provided number of seconds,
      * regardless of the value of <code>clockStep</code> and <code>multiplier</code>.
-     * @returns {JulianDate} The new value of the <code>currentTime<code> property.
+     * @returns {JulianDate} The new value of the <code>currentTime</code> property.
      */
     Clock.prototype.tick = function(secondsToTick) {
         return this._tick(secondsToTick, this.multiplier);
     };
 
     /**
-     * Advances the clock in the opposite direction of the current <code>multiplier<code>.
-     * If <code>multiplier<code> is positive this will advance the clock backwards one tick.
-     * If <code>multiplier<code> is negative this will advance the clock forward one tick.
+     * Advances the clock in the opposite direction of the current <code>multiplier</code>.
+     * If <code>multiplier</code> is positive this will advance the clock backwards one tick.
+     * If <code>multiplier</code> is negative this will advance the clock forward one tick.
      * @memberof Clock
      *
      * @returns {JulianDate} The new value of Clock.currentTime
