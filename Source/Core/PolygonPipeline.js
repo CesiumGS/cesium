@@ -602,7 +602,7 @@ define([
                 throw new DeveloperError('point is required.');
             }
 
-            for (var i =0; i < polygon.length; i++) {
+            for (var i = 0; i < polygon.length; i++) {
                 if (point.equals(polygon[i])){
                     return true;
                 }
@@ -726,8 +726,9 @@ define([
                 }
 
                 var pointsInside = [];
-                for (var vertex in reflexVertices)
+                for (var i = 0; i < reflexVertices.length; i++)
                 {
+                    var vertex = reflexVertices[i];
                     if (PolygonPipeline._isPointInTriangle2D(innerRingVertex, intersection, p, vertex))
                     {
                         pointsInside.Add(vertex);
@@ -759,8 +760,8 @@ define([
          * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
          * a polygon with a hole added to it. The added hole is removed from <code>innerRings</code>.
          *
-         * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
-         * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+         * @param {Array} outerRing An array of Cartographic points defining the outer boundary of the polygon.
+         * @param {Array} innerRings An array of arrays of Cartographic points, where each array represents a hole in the polygon.
          *
          * @return A single list of {@link Cartographic} points defining the polygon, including the eliminated inner ring.
          *
@@ -781,7 +782,8 @@ define([
 
             // Convert from LLA -> XYZ and project points onto a tangent plane to find the mutually visible vertex.
             var cartesianOuterRing = [];
-            for (var point in outerRing) {
+            for (var i = 0; i < outerRing.length; i++) {
+                var point = outerRing[i];
                 cartesianOuterRing.push(Ellipsoid.WGS84.cartographicToCartesian(point));
             }
 
@@ -790,8 +792,9 @@ define([
             for (var i = 0; i < innerRings.length; ++i) {
                 var ring = innerRings[i];
                 var cartesianInnerRing = [];
-                for (var point in ring)
+                for (var i = 0; i < ring.length; i++)
                 {
+                    var point = ring[i];
                     cartesianInnerRing.push(Ellipsoid.WGS84.cartographicToCartesian(point));
                 }
                 var innerWindingOrder = PolygonPipeline.computeArea2D(cartesianInnerRing) >= 0.0 ? 0 : 1;
