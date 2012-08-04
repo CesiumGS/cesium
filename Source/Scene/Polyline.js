@@ -27,7 +27,7 @@ define([
             for ( var i = 0; i < length; ++i) {
                 var position = newPositions[i];
                 positions.push(new Cartesian3(position.x, position.y, position.z));
-    }
+            }
         }
         this._show = (typeof p.show === 'undefined') ? true : p.show;
         this._width = (typeof p.width === 'undefined') ? 1.0 : p.width;
@@ -45,6 +45,10 @@ define([
         this._dirty = false;
         this._pickId = undefined;
         this._pickIdThis = p._pickIdThis;
+
+        this.boundingVolume = undefined;
+        this.boundingVolume2D = undefined;
+        this.boundingRectangle = undefined;
     };
 
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;

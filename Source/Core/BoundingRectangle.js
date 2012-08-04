@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        './Cartesian2',
         './Cartographic',
         './DeveloperError',
         './Extent',
         './Math'
     ], function(
+        Cartesian2,
         Cartographic,
         DeveloperError,
         Extent,
@@ -71,6 +73,45 @@ define([
          * @type Number
          */
         this.height = height;
+    };
+
+    /**
+     * Creates a bounding rectangle that contains both the left and right bounding rectangles.
+     * @memberof BoundingRectangle
+     *
+     * @param {BoundingRectangle} left A rectangle to enclose in bounding rectangle.
+     * @param {BoundingRectangle} right A rectangle to enclose in a bounding rectangle.
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     *
+     * @return {BoundingRectangle} A rectangle that encloses both left and right bounding rectangles.
+     */
+    BoundingRectangle.expand = function(left, right, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required.');
+        }
+
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new BoundingRectangle(1.0, 1.0, 1.0, 1.0);
+        }
+
+        var center1 = new Cartesian2(2.0 * left.x + left.width * 0.5, 2.0 * left.y + left.height * 0.5);
+        var center2 = new Cartesian2(2.0 * right.x + right.width * 0.5, 2.0 * right.y + right.height * 0.5);
+        var center = center1.add(center2).multiplyByScalar(0.5);
+        var corner = new Cartesian2(Math.min(left.x, right.x), Math.min(left.y, right.y));
+        var halfDimensions = center.subtract(corner);
+
+        result.x = corner.x;
+        result.y = corner.y;
+        result.width = halfDimensions.x * 2.0;
+        result.height = halfDimensions.y * 2.0;
+        return result;
     };
 
     /**
@@ -231,6 +272,25 @@ define([
                  rect1.x + rect1.width < rect2.x ||
                  rect1.y + rect1.height < rect2.y ||
                  rect1.y > rect2.y + rect2.height);
+    };
+
+    /**
+     * Creates a bounding rectangle that contains both this bounding rectangle and the argument rectangle.
+     * @memberof BoundingRectangle
+     *
+     * @param {BoundingRectangle} rectangle The rectangle to enclose in this bounding rectangle.
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
+     *
+     * @exception {DeveloperError} rectangle is required.
+     *
+     * @return {BoundingRectangle} A rectangle that encloses both this rectangle and the argument rectangle.
+     */
+    BoundingRectangle.prototype.expand = function(rectangle, result) {
+        if (typeof rectangle === 'undefined') {
+            throw new DeveloperError('rectangle is required.');
+        }
+
+        return BoundingRectangle.expand(this, rectangle, result);
     };
 
     /**

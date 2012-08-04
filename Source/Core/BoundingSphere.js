@@ -57,6 +57,44 @@ define([
     };
 
     /**
+     * Creates a bounding sphere that contains both the left and right bounding spheres.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} left A sphere to enclose in bounding sphere.
+     * @param {BoundingSphere} right A sphere to enclose in a bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     *
+     * @return {BoundingSphere} A sphere that encloses both left and right bounding spheres.
+     */
+    BoundingSphere.expand = function(left, right, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required.');
+        }
+
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new BoundingSphere(Cartesian3.ZERO.clone(), 0.0);
+        }
+
+        var center = left.center.add(right.center).multiplyByScalar(0.5);
+        var radius1 = left.center.subtract(center).magnitude() + left.radius;
+        var radius2 = right.center.subtract(center).magnitude() + right.radius;
+        var radius = Math.max(radius1, radius2);
+
+        result.center.x = center.x;
+        result.center.y = center.y;
+        result.center.z = center.z;
+        result.radius = radius;
+        return result;
+    };
+
+    /**
      * Duplicates a BoundingSphere instance.
      * @memberof BoundingSphere
      *
@@ -403,6 +441,25 @@ define([
             return Intersect.INTERSECTING;
         }
         return Intersect.INSIDE;
+    };
+
+    /**
+     * Creates a bounding sphere that contains both this bounding sphere and the argument sphere.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The sphere to enclose in this bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     *
+     * @exception {DeveloperError} sphere is required.
+     *
+     * @return {BoundingSphere} A sphere that encloses both this sphere and the argument sphere.
+     */
+    BoundingSphere.prototype.expand = function(sphere, result) {
+        if (typeof sphere === 'undefined') {
+            throw new DeveloperError('sphere is required.');
+        }
+
+        return BoundingSphere.expand(this, sphere, result);
     };
 
     /**

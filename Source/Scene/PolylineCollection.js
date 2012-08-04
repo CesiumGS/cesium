@@ -11,6 +11,8 @@ define([
         '../Core/PrimitiveType',
         '../Core/PolylinePipeline',
         '../Core/Color',
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         './SceneMode',
@@ -31,6 +33,8 @@ define([
         PrimitiveType,
         PolylinePipeline,
         Color,
+        BoundingRectangle,
+        BoundingSphere,
         BlendingState,
         BufferUsage,
         SceneMode,
@@ -106,16 +110,56 @@ define([
      * });
      */
     var PolylineCollection = function() {
+        /**
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
+         */
+        this.morphTime = 1.0;
+
+        /**
+         * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
+         * When this is the identity matrix, the polylines are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
+         * shaders via {@link agi_model} and derived uniforms.
+         *
+         * @type Matrix4
+         *
+         * @see Transforms.eastNorthUpToFixedFrame
+         * @see agi_model
+         */
+        this.modelMatrix = Matrix4.IDENTITY;
+        this._modelMatrix = Matrix4.IDENTITY;
+
+        /**
+         * A bounding sphere used for culling in 3D mode.
+         *
+         * @type BoundingSphere
+         */
+        this.boundingVolume = undefined;
+
+        /**
+         * A bounding sphere used for culling in Columbus view mode.
+         *
+         * @type BoundingSphere
+         */
+        this.boundingVolume2D = undefined;
+
+        /**
+         * A bounding rectangle used for culling in 2D mode.
+         *
+         * @type BoundingRectangle
+         */
+        this.boundingRectangle = undefined;
+
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
         this._createVertexArray = false;
-        this.morphTime = 1.0;
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
         this._polylines = [];
         this._polylineBuckets = {};
-
-        this.modelMatrix = Matrix4.IDENTITY;
-        this._modelMatrix = Matrix4.IDENTITY;
 
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
@@ -1327,7 +1371,16 @@ define([
      */
     PolylineBucket.prototype._getPositions = function(polyline) {
         if (this.mode === SceneMode.SCENE3D) {
-            return polyline.getPositions();
+            var positions = polyline.getPositions();
+            polyline.boundingVolume = BoundingSphere.fromPoints(positions);
+
+            if (typeof polyline._collection.boundingVolume === 'undefined') {
+                polyline._collection.boundingVolume = polyline.boundingVolume.clone();
+            } else {
+                polyline._collection.boundingVolume.expand(polyline.boundingVolume, polyline._collection.boundingVolume);
+            }
+
+            return positions;
         }
         var ellipsoid = this.ellipsoid;
         var projection = this.projection;
@@ -1346,6 +1399,22 @@ define([
                 newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
             }
         }
+
+        polyline.boundingVolume2D = BoundingSphere.fromPoints(newPositions);
+        polyline.boundingVolume2D.center = new Cartesian3(polyline.boundingVolume2D.center.z, polyline.boundingVolume2D.center.x, polyline.boundingVolume2D.center.y);
+        if (typeof polyline._collection.boundingVolume2D === 'undefined') {
+            polyline._collection.boundingVolume2D = polyline.boundingVolume2D.clone();
+        } else {
+            polyline._collection.boundingVolume2D.expand(polyline.boundingVolume2D, polyline._collection.boundingVolume2D);
+        }
+
+        polyline.boundingRectangle = BoundingRectangle.fromPoints(newPositions);
+        if (typeof polyline._collection.boundingRectangle === 'undefined') {
+            polyline._collection.boundingRectangle = polyline.boundingRectangle.clone();
+        } else {
+            polyline._collection.boundingRectangle.expand(polyline.boundingRectangle, polyline._collection.boundingRectangle);
+        }
+
         return newPositions;
     };
 
