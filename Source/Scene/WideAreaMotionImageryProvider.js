@@ -7,6 +7,9 @@ define([
         '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/Math',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
         './ImageryProvider',
         './Projections',
         './TileState',
@@ -19,6 +22,9 @@ define([
         Cartesian2,
         Extent,
         CesiumMath,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
         ImageryProvider,
         Projections,
         TileState,
@@ -79,25 +85,11 @@ define([
         this.extent = defaultValue(description.extent, Extent.MAX_VALUE);
 
         /**
-         * The width of every image loaded.
-         *
-         * @type {Number}
-         */
-        this.tileWidth = 256;
-
-        /**
-         * The height of every image loaded.
-         *
-         * @type {Number}
-         */
-        this.tileHeight = 256;
-
-        /**
          * The maximum level-of-detail that can be requested.
          *
          * @type {Number}
          */
-        this.maxLevel = defaultValue(description.maxLevel, 18);
+        this.maxLevel = 0;
 
         /**
          * The map projection of the image.
@@ -119,6 +111,9 @@ define([
             numberOfLevelZeroTilesY : 1
         });
 
+        this._currentTime = undefined;
+        this._advancingTime = false;
+
         /**
          * True if the provider is ready for use; otherwise, false.
          *
@@ -126,15 +121,16 @@ define([
          */
         this.ready = true;
 
-        this._tileUrl = this.url + "?"; // Get URL is required
-        this._tileUrl += "SERVICE=IS&VERSION=" + '1.0.0' + "&REQUEST=GetMap&CRS=EPSG:4326";
-        this._tileUrl += "&WIDTH=" + this.tileWidth + "&HEIGHT=" + this.tileHeight;
-        this._tileUrl += "&CID=" + this.cid;
-        this._tileUrl += "&TRANSPARENT=TRUE&BGCOLOR=0xFFFFFF&FORMAT=" + 'image/png';
-        this._tileUrl += '&TIME=F1';
-
-        this._tileUrl += "&BBOX="; // The value will be added for each request
-
+        this._tileUrl = this.url + '?';
+        this._tileUrl += 'SERVICE=IS&VERSION=1.0.0&REQUEST=GetMap&CRS=EPSG:4326';
+        this._tileUrl += '&WIDTH=' + 1024 + '&HEIGHT=' + 1024;
+        this._tileUrl += '&CID=' + this.cid;
+        this._tileUrl += '&TRANSPARENT=TRUE&BGCOLOR=0xFFFFFF&FORMAT=image/png';
+        this._tileUrl += '&BBOX=' +
+                         CesiumMath.toDegrees(this.extent.west) + "," +
+                         CesiumMath.toDegrees(this.extent.south) + "," +
+                         CesiumMath.toDegrees(this.extent.east) + "," +
+                         CesiumMath.toDegrees(this.extent.north);
     };
 
     /**
@@ -148,12 +144,7 @@ define([
      *                          if the URL needs to be built asynchronously.
      */
     WideAreaMotionImageryProvider.prototype.buildImageUrl = function(x, y, level) {
-        var extent = this.tilingScheme.tileXYToExtent(x, y, level);
-        var imageUrl = this._tileUrl +
-                       CesiumMath.toDegrees(extent.west) + "," +
-                       CesiumMath.toDegrees(extent.south) + "," +
-                       CesiumMath.toDegrees(extent.east) + "," +
-                       CesiumMath.toDegrees(extent.north);
+        var imageUrl = this._tileUrl;
 
         if (typeof this._proxy !== 'undefined') {
             imageUrl = this._proxy.getURL(imageUrl);
@@ -171,7 +162,19 @@ define([
      *         If the image is not suitable for display, the promise can resolve to undefined.
      */
     WideAreaMotionImageryProvider.prototype.requestImage = function(url) {
-        return loadImage(url);
+        var imageUrl = this._tileUrl;
+
+        if (typeof this._currentTime === 'undefined') {
+            imageUrl += '&TIME=F1';
+        } else {
+            imageUrl += '&TIME=' + this._currentTime.toDate().toISOString();
+        }
+
+        if (typeof this._proxy !== 'undefined') {
+            imageUrl = this._proxy.getURL(imageUrl);
+        }
+
+        return loadImage(imageUrl);
     };
 
     /**
@@ -200,7 +203,50 @@ define([
      * @param {TileImagery} tileImagery The tile imagery to create resources for.
      * @param {TexturePool} texturePool A texture pool to use to create textures.
      */
-    WideAreaMotionImageryProvider.prototype.createResources = ImageryProvider.prototype.createResources;
+    WideAreaMotionImageryProvider.prototype.createResources = function(context, tileImagery, texturePool) {
+        if (typeof this._texture === 'undefined') {
+            var texture = texturePool.createTexture2D(context, {
+                source : tileImagery.transformedImage
+            });
+
+            texture.setSampler({
+                wrapS : TextureWrap.CLAMP,
+                wrapT : TextureWrap.CLAMP,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR,
+
+                // TODO: Remove Chrome work around
+                maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8
+            });
+
+            this._texture = texture;
+        }
+
+        tileImagery.texture = this._texture;
+        tileImagery.transformedImage = undefined;
+        tileImagery.state = TileState.READY;
+    };
+
+    WideAreaMotionImageryProvider.prototype.setTime = function(time) {
+        if (typeof this._currentTime !== 'undefined' && this._currentTime.equals(time)) {
+            return;
+        }
+
+        this._currentTime = time;
+
+        if (this._advancingTime) {
+            return;
+        }
+
+        var that = this;
+        this._advancingTime = true;
+        this.requestImage().then(function(image) {
+            that._texture.copyFrom(image);
+            that._advancingTime = false;
+        }, function() {
+            that._advancingTime = false;
+        });
+    };
 
     return WideAreaMotionImageryProvider;
 });
