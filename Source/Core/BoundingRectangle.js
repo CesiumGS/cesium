@@ -101,16 +101,13 @@ define([
             result = new BoundingRectangle(1.0, 1.0, 1.0, 1.0);
         }
 
-        var center1 = new Cartesian2(2.0 * left.x + left.width * 0.5, 2.0 * left.y + left.height * 0.5);
-        var center2 = new Cartesian2(2.0 * right.x + right.width * 0.5, 2.0 * right.y + right.height * 0.5);
-        var center = center1.add(center2).multiplyByScalar(0.5);
-        var corner = new Cartesian2(Math.min(left.x, right.x), Math.min(left.y, right.y));
-        var halfDimensions = center.subtract(corner);
+        var lowerLeft = new Cartesian2(Math.min(left.x, right.x), Math.min(left.y, right.y));
+        var upperRight = new Cartesian2(Math.max(left.x + left.width, right.x + right.width), Math.max(left.y + left.height, right.y + right.height));
 
-        result.x = corner.x;
-        result.y = corner.y;
-        result.width = halfDimensions.x * 2.0;
-        result.height = halfDimensions.y * 2.0;
+        result.x = lowerLeft.x;
+        result.y = lowerLeft.y;
+        result.width = upperRight.x - lowerLeft.x;
+        result.height = upperRight.y - lowerLeft.y;
         return result;
     };
 

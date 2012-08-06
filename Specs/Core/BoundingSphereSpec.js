@@ -241,4 +241,18 @@ defineSuite([
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
         expect(BoundingSphere.planeIntersect(sphere, plane)).toEqual(Intersect.INTERSECTING);
     });
+
+    it('expand throws without a sphere', function() {
+        expect(function() {
+            var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
+            return bs.expand();
+        }).toThrow();
+    });
+
+    it('expands to contain another sphere', function() {
+        var bs1 = new BoundingSphere(Cartesian3.UNIT_X.negate(), 1.0);
+        var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
+        var expected = new BoundingSphere(Cartesian3.ZERO, 2.0);
+        expect(bs1.expand(bs2)).toEqual(expected);
+    });
 });

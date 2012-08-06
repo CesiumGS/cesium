@@ -161,4 +161,18 @@ defineSuite([
             BoundingRectangle.clone();
         }).toThrow();
     });
+
+    it('expand throws without a rectangle', function() {
+        expect(function() {
+            var rect = new Rectangle(1.0, 2.0, 3.0, 4.0);
+            return rect.expand();
+        }).toThrow();
+    });
+
+    it('expands to contain a another rectangle', function() {
+        var rect1 = new BoundingRectangle(2.0, 0.0, 1.0, 1.0);
+        var rect2 = new BoundingRectangle(-2.0, 0.0, 1.0, 2.0);
+        var expected = new BoundingRectangle(-2.0, 0.0, 5.0, 2.0);
+        expect(rect1.expand(rect2)).toEqual(expected);
+    });
 });
