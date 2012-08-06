@@ -70,7 +70,7 @@ defineSuite([
         var projectedP = tangentPlane.projectPointsOntoPlane([p]);
 
         expect(projectedP.length).toEqual(1);
-        expect(projectedP[0].equals(Cartesian2.ZERO)).toEqual(true);
+        expect(projectedP[0].equals(Cartesian3.ZERO)).toEqual(true);
     });
 
     it('EllipsoidTangentPlane throws without ellipsoid', function() {
@@ -292,6 +292,12 @@ defineSuite([
         expect(PolygonPipeline._isPointInTriangle2D(p, a, b, c)).toEqual(false);
     });
 
+    it('_isPointInTriangle2D throws an exception without arguments', function() {
+        expect(function() {
+            PolygonPipeline._isPointInTriangle2D();
+        }).toThrow();
+    });
+
     it('gets the rightmost vertex index', function() {
         var ring = [
             new Cartesian3(0.0, 1.0, 0.0),
@@ -302,6 +308,36 @@ defineSuite([
             new Cartesian3(1.0, 1.0, 0.0)
         ];
         expect(PolygonPipeline._getRightmostVertexIndex(ring) === 3).toEqual(true);
+    });
+
+    it('_getRightmostVertexIndex throws an exception without an argument', function() {
+        expect(function() {
+            PolygonPipeline._getRightmostVertexIndex();
+        }).toThrow();
+    });
+
+    it('_getRightmostVertexIndex throws an exception without vertices', function() {
+        expect(function() {
+            PolygonPipeline._getRightmostVertexIndex([]);
+        }).toThrow();
+    });
+
+    it('_getRightmostRingIndex throws an exception without an argument', function() {
+        expect(function() {
+            PolygonPipeline._getRightmostRingIndex();
+        }).toThrow();
+    });
+
+    it('_getRightmostRingIndex throws an exception with an empty ring', function() {
+        expect(function() {
+            PolygonPipeline._getRightmostRingIndex([]);
+        }).toThrow();
+    });
+
+    it('_getRightmostRingIndex throws an exception without an initial vertex', function() {
+        expect(function() {
+            PolygonPipeline._getRightmostRingIndex([[]]);
+        }).toThrow();
     });
 
     it('gets the rightmost ring index', function() {
@@ -350,6 +386,12 @@ defineSuite([
         expect(reflexVertices[4].equals(polygon[9])).toEqual(true);
     });
 
+    it('_getReflexVertices throws an exception without an argument', function() {
+        expect(function() {
+            PolygonPipeline._getReflexVertices();
+        }).toThrow();
+    });
+
     it('checks if a point is a vertex', function() {
         var ring = [
             new Cartesian3(0.0, 0.0, 0.0),
@@ -359,6 +401,18 @@ defineSuite([
         ];
         expect(PolygonPipeline._isVertex(ring, ring[0])).toEqual(true);
         expect(PolygonPipeline._isVertex(ring, new Cartesian3(1.0, 1.0, 1.0))).toEqual(false);
+    });
+
+    it('_isVertex throws an exception without a polygon', function() {
+        expect(function() {
+            PolygonPipeline._isVertex();
+        }).toThrow();
+    });
+
+    it('_isVertex throws an exception without a point', function() {
+        expect(function() {
+            PolygonPipeline._isVertex([]);
+        }).toThrow();
     });
 
     it('calculates point intersection with ring', function() {
@@ -371,6 +425,18 @@ defineSuite([
         var point = new Cartesian3(0.5, 0.5, 0.0);
         var result = PolygonPipeline._intersectPointWithRing(point, ring);
         expect(result.equals(new Cartesian3(1.0, 0.5, 0.0))).toEqual(true);
+    });
+
+    it('_intersectPointWithRing throws an exception without a point', function() {
+        expect(function() {
+            PolygonPipeline._intersectPointWithRing();
+        }).toThrow();
+    });
+
+    it('_intersectPointWithRing throws an exception without a ring', function() {
+        expect(function() {
+            PolygonPipeline._intersectPointWithRing(new Cartesian3());
+        }).toThrow();
     });
 
     it('finds mutually visible vertex', function() {
@@ -396,6 +462,24 @@ defineSuite([
         expect(result === expectedResult).toEqual(true);
     });
 
+    it('_getMutuallyVisibleVertexIndex throws an exception without an outer ring', function() {
+        expect(function() {
+            PolygonPipeline._getMutuallyVisibleVertexIndex();
+        }).toThrow();
+    });
+
+    it('_getMutuallyVisibleVertexIndex throws an exception with an empty outer ring', function() {
+        expect(function() {
+            PolygonPipeline._getMutuallyVisibleVertexIndex([]);
+        }).toThrow();
+    });
+
+    it('_getMutuallyVisibleVertexIndex throws an exception without inner rings', function() {
+        expect(function() {
+            PolygonPipeline._getMutuallyVisibleVertexIndex([new Cartesian3()]);
+        }).toThrow();
+    });
+
     it('removes a hole from a polygon', function() {
         var outerRing = [
             new Cartographic(-122.0, 37.0, 0.0),
@@ -416,5 +500,23 @@ defineSuite([
         var innerRings = [innerRing];
         outerRing = PolygonPipeline.eliminateHole(outerRing, innerRings);
         expect(innerRings.length === 0).toEqual(true);
+    });
+
+    it('eliminateHole throws an exception without an outerRing', function() {
+        expect(function() {
+            PolygonPipeline.eliminateHole();
+        }).toThrow();
+    });
+
+    it('eliminateHole throws an exception with an empty outerRing', function() {
+        expect(function() {
+            PolygonPipeline.eliminateHole([]);
+        }).toThrow();
+    });
+
+    it('eliminateHole throws an exception without a second argument', function() {
+        expect(function() {
+            PolygonPipeline.eliminateHole([new Cartesian3()]);
+        }).toThrow();
     });
 });

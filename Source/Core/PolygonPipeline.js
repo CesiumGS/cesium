@@ -768,6 +768,12 @@ define([
          * @exception {DeveloperError} <code>outerRing</code> is required.
          * @exception {DeveloperError} <code>outerRing</code> must not be empty.
          * @exception {DeveloperError} <code>innerRings</code> is required.
+         *
+         * @example
+         * // Simplifying a polygon with multiple holes.
+         * while (innerRings.length !== 0) {
+         *     outerRing = Cesium.PolygonPipeline.eliminateHole(outerRing, innerRings);
+         * }
          */
         eliminateHole : function(outerRing, innerRings) {
             if (!outerRing) {
