@@ -397,6 +397,13 @@ define([
 
         if(typeof this._extent !== 'undefined'){
             mesh = ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true});
+
+            this.boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid);
+            if (this._mode !== SceneMode.SCENE3D) {
+                this.boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection);
+                this.boundingVolume2D.center = new Cartesian3(0.0, this.boundingVolume2D.center.x, this.boundingVolume2D.center.y);
+                this.boundingRectangle = BoundingRectangle.fromExtent(this._extent, this._projection);
+            }
         }
         else if(typeof this._positions !== 'undefined'){
             var cleanedPositions = PolygonPipeline.cleanUp(this._positions);
@@ -412,6 +419,8 @@ define([
             mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
             // PERFORMANCE_IDEA:  Only compute texture coordinates if the material requires them.
             mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
+
+            this.boundingVolume = BoundingSphere.fromPoints(this._positions);
         }
         else {
             return undefined;
@@ -428,6 +437,11 @@ define([
             delete mesh.attributes.position;
         } else {
             mesh = MeshFilters.projectTo2D(mesh, this._projection);
+
+            var projectedPositions = mesh.attributes.position2D.values;
+            this.boundingVolume2D = BoundingSphere.fromFlatPoints(projectedPositions);
+            this.boundingVolume2D.center = new Cartesian3(0.0, this.boundingVolume2D.center.x, this.boundingVolume2D.center.y);
+            this.boundingRectangle = BoundingRectangle.fromFlatPoints(projectedPositions);
         }
         meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
 
@@ -510,33 +524,7 @@ define([
 
         if (this._createVertexArray) {
             this._createVertexArray = false;
-            var meshes = this._createMeshes();
-
-            // update bounding volumes/rectangle
-            if (typeof this._extent !== 'undefined') {
-                this.boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid);
-                if (this._mode !== SceneMode.SCENE3D) {
-                    this.boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection);
-                    this.boundingVolume2D.center = new Cartesian3(0.0, this.boundingVolume2D.center.x, this.boundingVolume2D.center.y);
-                    this.boundingRectangle = BoundingRectangle.fromExtent(this._extent, this._projection);
-                }
-            } else {
-                this.boundingVolume = BoundingSphere.fromPoints(this._positions);
-                if (this._mode !== SceneMode.SCENE3D) {
-                    var positions = [];
-                    for (var i = 0; i < meshes.length; ++i) {
-                        var positions2D = meshes[i].attributes.position2D.values;
-                        for (var j = 0; j < positions2D.length; j += 2) {
-                            positions.push(new Cartesian3(positions2D[j], positions2D[j + 1], 0.0));
-                        }
-                    }
-                    this.boundingVolume2D = BoundingSphere.fromPoints(positions);
-                    this.boundingVolume2D.center = new Cartesian3(0.0, this.boundingVolume2D.center.x, this.boundingVolume2D.center.y);
-                    this.boundingRectangle = BoundingRectangle.fromPoints(positions);
-                }
-            }
-
-            this._vertices.update(context, meshes, this.bufferUsage);
+            this._vertices.update(context, this._createMeshes(), this.bufferUsage);
         }
 
         if (!this._rs) {

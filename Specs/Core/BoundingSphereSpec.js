@@ -137,6 +137,18 @@ defineSuite([
         }
     });
 
+    it('compute bounding sphere from flat points', function() {
+        var positions = getPositions();
+        var flatPositions = [];
+        for (var i = 0; i < positions.length; i++) {
+            flatPositions.push(positions[i].x, positions[i].y, positions[i].z);
+        }
+
+        var sphere1 = BoundingSphere.fromPoints(positions);
+        var sphere2 = BoundingSphere.fromFlatPoints(flatPositions);
+        expect(sphere1).toEqual(sphere2);
+    });
+
     it('from extent 2d throws without an extent', function() {
         expect(function() {
             return BoundingSphere.fromExtent2D();
