@@ -22,34 +22,47 @@ require({
 
     var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : '63h5JcwJuWc6BlUCja2NCk5aROEQSi3gTQ3JraxWC47OYUGaPqOyW9LilIgqXZDb_IXximH5QbmwGnv_mWQyjQ..',
+        token : 'Edf539842Ur_1PY_s1qSXiLA2AqMnTj6zrRhJi3xIbtbyUTSc7FF7VIkokvJvuDIzkKG_f1z3d80TdCYdWr1og..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
+//    var terrainProvider = new Cesium.WebMapServiceTerrainProvider({
+//        url : 'http://localhost:8081/geoserver/terrain/wms',
+//        layerName : 'terrain:SRTM',
+//        proxy : new Cesium.DefaultProxy('/terrain/')
+//    });
+
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
 
-//    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-//        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-//        proxy : new Cesium.DefaultProxy('/proxy/')
+//    var wmsImagery = new Cesium.WebMapServiceImageryProvider({
+//        url : 'http://localhost:8081/geoserver/wms',
+//        layerName : 'demo'
 //    });
-//    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
-//    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
-//
-//    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-//        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
-//        proxy : new Cesium.DefaultProxy('/proxy/')
-//    });
-//    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
+//    var wmsLayer = imageryLayerCollection.addImageryProvider(wmsImagery);
 
-    var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({
-        server : 'dev.virtualearth.net',
-        mapStyle : Cesium.BingMapsStyle.AERIAL,
-        // Some versions of Safari support WebGL, but don't correctly implement
-        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+        proxy : new Cesium.DefaultProxy('/proxy/')
     });
-    bingAerialImageryProvider.discardPolicy = bingAerialImageryProvider.createDiscardMissingTilePolicy();
-    var bingAerialLayer = imageryLayerCollection.addImageryProvider(bingAerialImageryProvider);
+    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
+    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
+
+    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
+        proxy : new Cesium.DefaultProxy('/proxy/')
+    });
+    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
+
+
+//    var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({
+//        server : 'dev.virtualearth.net',
+//        mapStyle : Cesium.BingMapsStyle.AERIAL,
+//        // Some versions of Safari support WebGL, but don't correctly implement
+//        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+//        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+//    });
+//    bingAerialImageryProvider.discardPolicy = bingAerialImageryProvider.createDiscardMissingTilePolicy();
+//    var bingAerialLayer = imageryLayerCollection.addImageryProvider(bingAerialImageryProvider);
 
 //    var bingRoadImageryProvider = new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
@@ -195,6 +208,7 @@ require({
     var mousePosition;
     handler.setMouseAction(function(movement) {
         mousePosition = movement.endPosition;
+        // Use movement.startPosition, movement.endPosition
     }, Cesium.MouseEventType.MOVE);
 
     (function() {

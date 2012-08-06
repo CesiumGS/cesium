@@ -218,7 +218,9 @@ define([
             }
 
             tileImagery.state = TileState.RECEIVED;
-        }, function() {
+        }, function(e) {
+            /*global console*/
+            console.error('failed to load imagery: ' + e);
             tileImagery.state = TileState.FAILED;
         });
     };

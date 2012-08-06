@@ -4,7 +4,6 @@ define([
         '../Core/jsonp',
         '../Core/loadImage',
         '../Core/getImagePixels',
-        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/BoundingSphere',
@@ -24,7 +23,6 @@ define([
         jsonp,
         loadImage,
         getImagePixels,
-        writeTextToCanvas,
         DeveloperError,
         CesiumMath,
         BoundingSphere,
@@ -43,36 +41,39 @@ define([
 
     /**
      * A {@link TerrainProvider} that produces geometry by tessellating height maps
-     * retrieved from an ArcGIS ImageServer.
+     * retrieved from a WMS server.
      *
-     * @alias ArcGisImageServerTerrainProvider
+     * @alias WebMapServiceTerrainProvider
      * @constructor
      *
-     * @param {String} description.url The URL of the ArcGIS ImageServer service.
-     * @param {String} [description.token] The authorization token to use to connect to the service.
+     * @param {String} description.url The URL of the WMS service.
+     * @param {String} description.layerName The name of the layer.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see TerrainProvider
      */
-    function ArcGisImageServerTerrainProvider(description) {
+    function WebMapServiceTerrainProvider(description) {
         description = defaultValue(description, {});
 
         if (typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }
 
+        if (typeof description.layerName === 'undefined') {
+            throw new DeveloperError('description.layerName is required.');
+        }
+
         /**
-         * The URL of the ArcGIS ImageServer.
+         * The URL of the WMS server.
          * @type {String}
          */
         this.url = description.url;
 
         /**
-         * The authorization token to use to connect to the service.
-         *
+         * The name of the layer.
          * @type {String}
          */
-        this.token = description.token;
+        this.layerName = description.layerName;
 
         /**
          * The tiling scheme used to tile the surface.
@@ -81,57 +82,10 @@ define([
          */
         this.tilingScheme = new WebMercatorTilingScheme();
         this.projection = Projections.MERCATOR;
-        this.maxLevel = 25;
+        this.maxLevel = 18;
 
         this._proxy = description.proxy;
-
-        // Grab the details of this ImageServer.
-        var url = this.url;
-        if (this.token) {
-            url += '?token=' + this.token;
-        }
-        var metadata = jsonp(url, {
-            parameters : {
-                f : 'json'
-            }
-        });
-
-        var that = this;
-        when(metadata, function(data) {
-            /*var extentData = data.extent;
-
-            if (extentData.spatialReference.wkid === 102100) {
-                that.projection = Projections.MERCATOR;
-                that._extentSouthwestInMeters = new Cartesian2(extentData.xmin, extentData.ymin);
-                that._extentNortheastInMeters = new Cartesian2(extentData.xmax, extentData.ymax);
-                that.tilingScheme = new WebMercatorTilingScheme({
-                    extentSouthwestInMeters: that._extentSouthwestInMeters,
-                    extentNortheastInMeters: that._extentNortheastInMeters
-                });
-            } if (extentData.spatialReference.wkid === 4326) {
-                that.projection = Projections.WGS84;
-                var extent = new Extent(CesiumMath.toRadians(extentData.xmin),
-                                        CesiumMath.toRadians(extentData.ymin),
-                                        CesiumMath.toRadians(extentData.xmax),
-                                        CesiumMath.toRadians(extentData.ymax));
-                that.tilingScheme = new GeographicTilingScheme({
-                    extent: extent
-                });
-            }
-
-            // The server can pretty much provide any level we ask for by interpolating.
-            that.maxLevel = 25;*/
-
-            // Create the copyright message.
-            that._logo = writeTextToCanvas(data.copyrightText, {
-                font : '12px sans-serif'
-            });
-
-            that.ready = true;
-        }, function(e) {
-            /*global console*/
-            console.error('failed to load metadata: ' + e);
-        });
+        this.ready = true;
     }
 
     function computeDesiredGranularity(tilingScheme, tile) {
@@ -175,17 +129,17 @@ define([
      *
      * @param {Tile} The tile to request geometry for.
      */
-    ArcGisImageServerTerrainProvider.prototype.requestTileGeometry = function(tile) {
-        if (requestsInFlight > 6) {
+    WebMapServiceTerrainProvider.prototype.requestTileGeometry = function(tile) {
+        if (requestsInFlight > 1) {
             tile.state = TileState.UNLOADED;
             return;
         }
 
         ++requestsInFlight;
 
-        var extent = this.tilingScheme.tileXYToExtent(tile.x, tile.y, tile.level);
-        var bbox = CesiumMath.toDegrees(extent.west) + '%2C' + CesiumMath.toDegrees(extent.south) + '%2C' + CesiumMath.toDegrees(extent.east) + '%2C' + CesiumMath.toDegrees(extent.north);
-        var url = this.url + '/exportImage?format=tiff&f=image&size=128%2C128&bboxSR=4326&imageSR=3857&bbox=' + bbox;
+        var extent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
+        var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
+        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=EPSG:3857&format=image%2Ftiff';
         if (this.token) {
             url += '&token=' + this.token;
         }
@@ -199,7 +153,7 @@ define([
             --requestsInFlight;
         }, function(e) {
             /*global console*/
-            console.error('failed to load tile geometry: ' + e);
+            console.error('failed to load metadata: ' + e);
         });
     };
 
@@ -215,7 +169,7 @@ define([
      * @param {Context} context The context to use to create resources.
      * @param {Tile} tile The tile to transform geometry for.
      */
-    ArcGisImageServerTerrainProvider.prototype.transformGeometry = function(context, tile) {
+    WebMapServiceTerrainProvider.prototype.transformGeometry = function(context, tile) {
         // Get the height data from the image by copying it to a canvas.
         var image = tile.geometry;
         var width = image.width;
@@ -263,7 +217,7 @@ define([
             tile.state = TileState.TRANSFORMED;
         }, function(e) {
             /*global console*/
-            console.error('failed to load transform geometry: ' + e);
+            console.error('failed to load metadata: ' + e);
         });
     };
 
@@ -276,7 +230,7 @@ define([
      * @param {Context} context The context to use to create resources.
      * @param {Tile} tile The tile to create resources for.
      */
-    ArcGisImageServerTerrainProvider.prototype.createResources = function(context, tile) {
+    WebMapServiceTerrainProvider.prototype.createResources = function(context, tile) {
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
@@ -310,17 +264,17 @@ define([
      * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
      * populated with geometry, or a promise for such a value in the future.
      */
-    ArcGisImageServerTerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
+    WebMapServiceTerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
         throw new DeveloperError('Not supported yet.');
     };
 
     /**
      * DOC_TBA
-     * @memberof ArcGisImageServerTerrainProvider
+     * @memberof WebMapServiceTerrainProvider
      */
-    ArcGisImageServerTerrainProvider.prototype.getLogo = function() {
+    WebMapServiceTerrainProvider.prototype.getLogo = function() {
         return this._logo;
     };
 
-    return ArcGisImageServerTerrainProvider;
+    return WebMapServiceTerrainProvider;
 });

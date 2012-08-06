@@ -1095,7 +1095,8 @@ define([
         // update scisor/depth plane
         var depthQuad = this._computeDepthQuad(sceneState);
 
-        var scissorTest = { enabled : false };
+        // TODO: Re-enable scissor test.
+        /*var scissorTest = { enabled : false };
         if (mode === SceneMode.SCENE3D) {
             var uniformState = context.getUniformState();
             var mvp = uniformState.getModelViewProjection();
@@ -1103,22 +1104,22 @@ define([
                 sceneState : sceneState,
                 width : width,
                 height : height,
-                    quad : depthQuad,
-                    modelViewProjection : mvp,
-                    viewportTransformation : uniformState.getViewportTransformation()
+                quad : depthQuad,
+                modelViewProjection : mvp,
+                viewportTransformation : uniformState.getViewportTransformation()
             });
 
             if (rect.width !== 0 && rect.height !== 0) {
                 scissorTest = {
                     enabled : true,
                     rectangle : rect
-            };
+                };
             }
         }
-            this._rsColor.scissorTest = scissorTest;
-            this._rsDepth.scissorTest = scissorTest;
-            this._quadV.renderState.scissorTest = scissorTest;
-            this._quadH.renderState.scissorTest = scissorTest;
+        this._rsColor.scissorTest = scissorTest;
+        this._rsDepth.scissorTest = scissorTest;
+        this._quadV.renderState.scissorTest = scissorTest;
+        this._quadH.renderState.scissorTest = scissorTest;*/
 
         // depth plane
         if (!this._vaDepth) {
@@ -1403,7 +1404,6 @@ define([
         this._fillPoles(context, sceneState);
 
         this._surface.update(context, sceneState);
-        this._imageryLayerCollection.update(context, sceneState);
 
         this._mode = mode;
         this._projection = projection;
@@ -1480,7 +1480,7 @@ define([
                 });
             }
 
-            this._imageryLayerCollection.render(context);
+            this._surface._renderLogos(context);
         }
     };
 

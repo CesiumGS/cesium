@@ -39,7 +39,7 @@ body {
 }
 
 .runner.running {
-  background-color: yellow;
+  background-color: #eee;
 }
 
 .suite {
@@ -173,5 +173,23 @@ body {
   border: 1px solid gray;
   display: block;
   margin: 5px 0;
+}
+.progressContainer {
+  position: relative;
+}
+.progressBar.passed {
+  background-color: #bfb;
+}
+.progressBar.failed {
+  background-color: #fbb;
+}
+.progressBar, .progressText {
+  height: 1.5em;
+}
+.progressText {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 99%;
   padding: 2px 0 2px 10px;
 }

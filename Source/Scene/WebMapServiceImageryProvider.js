@@ -34,15 +34,13 @@ define([
     "use strict";
 
     /**
-     * Provides tiled imagery hosted by an ArcGIS server.
+     * Provides tiled imagery hosted by a WMS server.
      *
-     * @alias ArcGisMapServerImageryProvider
+     * @alias WebMapServiceImageryProvider
      * @constructor
      *
-     * @param {String} description.url The URL of the ArcGIS MapServer service.
-     * @param {String|Object} [description.discardPolicy] If the service returns "missing" tiles,
-     *        these can be filtered out by providing an object which is expected to have a
-     *        shouldDiscardImage function.  By default, no tiles will be filtered.
+     * @param {String} description.url The URL of the WMS service.
+     * @param {String} description.layerName The name of the layer.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
@@ -61,25 +59,28 @@ define([
      *     url: 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      */
-    var ArcGisMapServerImageryProvider = function(description) {
+    var WebMapServiceImageryProvider = function(description) {
         description = defaultValue(description, {});
 
         if (typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }
 
+        if (typeof description.layerName === 'undefined') {
+            throw new DeveloperError('description.layerName is required.');
+        }
+
         /**
-         * The URL of the ArcGIS MapServer.
+         * The URL of the WMS server.
          * @type {String}
          */
         this.url = description.url;
 
         /**
-         * If the service returns "missing" tiles, these can be filtered out by providing
-         * an object which is expected to have a shouldDiscardImage function.  By default,
-         * no tiles will be filtered.
+         * The name of the layer to access on the WMS server.
+         * @type {String}
          */
-        this.discardPolicy = description.discardPolicy;
+        this.layerName = description.layerName;
 
         this._proxy = description.proxy;
 
@@ -138,61 +139,16 @@ define([
 
         this._logo = undefined;
 
-        // Grab the details of this MapServer.
-        var metadata = jsonp(this.url, {
-            parameters : {
-                f : 'json'
-            },
-            proxy : this._proxy
-        });
+        this.projection = Projections.MERCATOR;
+        this.tilingScheme = new WebMercatorTilingScheme();
+        this.extent = new Extent(-CesiumMath.PI,
+                CesiumMath.toRadians(-85.05112878),
+                CesiumMath.PI,
+                CesiumMath.toRadians(85.05112878));
 
-        var that = this;
-        this._isReady = when(metadata, function(data) {
-            var tileInfo = data.tileInfo;
+        this.maxLevel = 18;
 
-            that.tileWidth = tileInfo.rows;
-            that.tileHeight = tileInfo.cols;
-
-            if (tileInfo.spatialReference.wkid === 102100) {
-                var levelZeroResolution = tileInfo.lods[0].resolution;
-                var rows = tileInfo.rows;
-                var cols = tileInfo.cols;
-                var west = tileInfo.origin.x;
-                var north = tileInfo.origin.y;
-                var east = west + levelZeroResolution * cols;
-                var south = north - levelZeroResolution * rows;
-
-                that.projection = Projections.MERCATOR;
-                that.tilingScheme = new WebMercatorTilingScheme({
-                    extentSouthwestInMeters : new Cartesian2(west, south),
-                    extentNortheastInMeters : new Cartesian2(east, north)
-                });
-                that.extent = that.tilingScheme.extent;
-            } else if (data.tileInfo.spatialReference.wkid === 4326) {
-                that.projection = Projections.WGS84;
-                that.extent = new Extent(CesiumMath.toRadians(data.fullExtent.xmin),
-                                         CesiumMath.toRadians(data.fullExtent.ymin),
-                                         CesiumMath.toRadians(data.fullExtent.xmax),
-                                         CesiumMath.toRadians(data.fullExtent.ymax));
-                that.tilingScheme = new GeographicTilingScheme({
-                    extent : that.extent
-                });
-            }
-
-            that.maxLevel = data.tileInfo.lods.length - 1;
-
-            // Create the copyright message.
-            that._logo = writeTextToCanvas(data.copyrightText, {
-                font : '12px sans-serif'
-            });
-
-            that.ready = true;
-
-            return true;
-        }, function(e) {
-            /*global console*/
-            console.error('failed to load metadata: ' + e);
-        });
+        this.ready = true;
     };
 
     /**
@@ -206,7 +162,7 @@ define([
      * missing tiles.  In particular, overlay maps may just provide fully transparent tiles, in
      * which case no discard policy is necessary.
      */
-    ArcGisMapServerImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
+    WebMapServiceImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
         var that = this;
         var missingTileUrl = when(this._isReady, function() {
             return that.buildImageUrl(0, 0, that.maxLevel);
@@ -226,8 +182,10 @@ define([
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    ArcGisMapServerImageryProvider.prototype.buildImageUrl = function(x, y, level) {
-        var url = this.url + '/tile/' + level + '/' + y + '/' + x;
+    WebMapServiceImageryProvider.prototype.buildImageUrl = function(x, y, level) {
+        var extent = this.tilingScheme.tileXYToNativeExtent(x, y, level);
+        var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
+        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=EPSG:3857&format=image%2Fpng';
 
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
@@ -244,8 +202,8 @@ define([
      * @return A promise for the image that will resolve when the image is available.
      *         If the image is not suitable for display, the promise can resolve to undefined.
      */
-    ArcGisMapServerImageryProvider.prototype.requestImage = function(url) {
-        return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this.discardPolicy);
+    WebMapServiceImageryProvider.prototype.requestImage = function(url) {
+        return loadImage(url);
     };
 
     /**
@@ -258,7 +216,7 @@ define([
      * @param {Context} context The context to use to create resources.
      * @param {TileImagery} tileImagery The tile imagery to transform.
      */
-    ArcGisMapServerImageryProvider.prototype.transformImagery = function(context, tileImagery) {
+    WebMapServiceImageryProvider.prototype.transformImagery = function(context, tileImagery) {
         tileImagery.transformedImage = tileImagery.image;
         tileImagery.image = undefined;
         tileImagery.state = TileState.TRANSFORMED;
@@ -274,15 +232,15 @@ define([
      * @param {TileImagery} tileImagery The tile imagery to create resources for.
      * @param {TexturePool} texturePool A texture pool to use to create textures.
      */
-    ArcGisMapServerImageryProvider.prototype.createResources = ImageryProvider.prototype.createResources;
+    WebMapServiceImageryProvider.prototype.createResources = ImageryProvider.prototype.createResources;
 
     /**
      * DOC_TBA
-     * @memberof ArcGisMapServerImageryProvider
+     * @memberof WebMapServiceImageryProvider
      */
-    ArcGisMapServerImageryProvider.prototype.getLogo = function() {
+    WebMapServiceImageryProvider.prototype.getLogo = function() {
         return this._logo;
     };
 
-    return ArcGisMapServerImageryProvider;
+    return WebMapServiceImageryProvider;
 });

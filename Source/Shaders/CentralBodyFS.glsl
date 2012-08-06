@@ -1,5 +1,6 @@
 //#define SHOW_TILE_BOUNDARIES
 //#define SHOW_LEVELS
+//#define SHOW_CAMERA_INSIDE_BOUNDING_SPHERE
 
 #ifndef TEXTURE_UNITS
 #define TEXTURE_UNITS 8
@@ -40,10 +41,12 @@ void main()
 	        startDayColor = mix(startDayColor, color.rgb, color.a * u_dayTextureAlpha[i]);
         } 
     }
+#ifdef SHOW_CAMERA_INSIDE_BOUNDING_SPHERE
     if (u_cameraInsideBoundingSphere)
     {
         startDayColor = mix(startDayColor, vec3(1.0, 0.0, 0.0), 0.2);
     }
+#endif
     
 #ifdef SHOW_LEVELS
     startDayColor = vec3(0.0, 0.0, 0.0);

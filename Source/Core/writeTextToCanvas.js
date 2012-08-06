@@ -13,6 +13,7 @@ define([
 
     /**
      * Writes the given text into a new canvas.  The canvas will be sized to fit the text.
+     * If text is blank, returns undefined.
      *
      * @param {String} text The text to write.
      * @param {String} [description.font='10px sans-serif'] The CSS font to use.
@@ -23,11 +24,16 @@ define([
      * @param {Color} [description.strokeColor=Color.BLACK] The stroke color.
      *
      * @returns {Canvas} A new canvas with the given text drawn into it.  The dimensions object
-     *                   from measureText will also be added to the returned canvas.
+     *                   from measureText will also be added to the returned canvas. If text is
+     *                   blank, returns undefined.
      */
     var writeTextToCanvas = function(text, description) {
         if (typeof text === 'undefined') {
             throw new DeveloperError('text is required.');
+        }
+
+        if (text === '') {
+            return undefined;
         }
 
         description = defaultValue(description, {});
