@@ -615,24 +615,24 @@ define([
          *
          * @param {Cartesian} point A point inside the polygon defined by <code>ring</code>.
          * @param {Array} ring A list of Cartesian points defining a polygon.
-         * @param {Array} [edge]  An array containing the two endpoints of the edge containing the intersection.
+         * @param {Array} [edgeIndices]  An array containing the indices two endpoints of the edge containing the intersection.
          *
          * @private
          */
-        _intersectPointWithRing : function(point, ring, edge) {
+        _intersectPointWithRing : function(point, ring, edgeIndices) {
             if (!point) {
                 throw new DeveloperError('point is required.');
             }
             if (!ring) {
                 throw new DeveloperError('ring is required');
             }
-            edge = edge || [];
+            edgeIndices = edgeIndices || [];
 
             var minDistance = Number.MAX_VALUE;
             var rightmostVertexIndex = PolygonPipeline._getRightmostVertexIndex(ring);
             var intersection = new Cartesian3(ring[rightmostVertexIndex].x, point.y, 0.0);
-            edge.push(ring[rightmostVertexIndex]);
-            edge.push(ring[(rightmostVertexIndex + 1) % ring.length]);
+            edgeIndices.push(rightmostVertexIndex);
+            edgeIndices.push((rightmostVertexIndex + 1) % ring.length);
 
             var boundaryMinX = ring[0].x;
             var boundaryMaxX = boundaryMinX;
@@ -656,7 +656,7 @@ define([
                 if (((v1.x >= point.x) || (v2.x >= point.x)) && (((v1.y >= point.y) && (v2.y <= point.y)) ||
                 ((v1.y <= point.y) && (v2.y >= point.y)))) {
                     var temp = ((v2.y - v1.y) * (point2.x - point.x)) - ((v2.x - v1.x) * (point2.y - point.y));
-                    if (temp != 0.0) {
+                    if (temp !== 0.0) {
                         temp = 1.0 / temp;
                         var ua = (((v2.x - v1.x) * (point.y - v1.y)) - ((v2.y - v1.y) * (point.x - v1.x))) * temp;
                         var ub = (((point2.x - point.x) * (point.y - v1.y)) - ((point2.y - point.y) * (point.x - v1.x))) * temp;
@@ -667,8 +667,8 @@ define([
                             if (temp < minDistance) {
                                 intersection = tempIntersection;
                                 minDistance = temp;
-                                edge[0] = v1;
-                                edge[1] = v2;
+                                edgeIndices[0] = i;
+                                edgeIndices[1] = (i + 1) % ring.length;
                             }
                         }
                     }
@@ -707,17 +707,17 @@ define([
             var innerRing = innerRings[innerRingIndex];
             var innerRingVertexIndex = PolygonPipeline._getRightmostVertexIndex(innerRing);
             var innerRingVertex = innerRing[innerRingVertexIndex];
-            var edge = [];
-            var intersection = PolygonPipeline._intersectPointWithRing(innerRingVertex, outerRing, edge);
+            var edgeIndices = [];
+            var intersection = PolygonPipeline._intersectPointWithRing(innerRingVertex, outerRing, edgeIndices);
 
             var visibleVertex;
             if (PolygonPipeline._isVertex(outerRing, intersection)) {
                 visibleVertex = intersection;
             } else {
                 // Set P to be the edge endpoint closest to the inner ring vertex
-                var d1 = (edge[0].subtract(innerRingVertex)).magnitudeSquared();
-                var d2 = (edge[1].subtract(innerRingVertex)).magnitudeSquared();
-                var p = (d1 < d2) ? edge[0] : edge[1];
+                var d1 = (outerRing[edgeIndices[0]].subtract(innerRingVertex)).magnitudeSquared();
+                var d2 = (outerRing[edgeIndices[1]].subtract(innerRingVertex)).magnitudeSquared();
+                var p = (d1 < d2) ? outerRing[edgeIndices[0]] : outerRing[edgeIndices[1]];
 
                 var reflexVertices = PolygonPipeline._getReflexVertices(outerRing);
                 var reflexIndex = reflexVertices.indexOf(p);
@@ -729,9 +729,9 @@ define([
                 for (var i = 0; i < reflexVertices.length; i++)
                 {
                     var vertex = reflexVertices[i];
-                    if (PolygonPipeline._isPointInTriangle2D(innerRingVertex, intersection, p, vertex))
+                    if (PolygonPipeline._isPointInTriangle2D(vertex, innerRingVertex, intersection, p))
                     {
-                        pointsInside.Add(vertex);
+                        pointsInside.push(vertex);
                     }
                 }
 
@@ -743,7 +743,7 @@ define([
                     var v1 = new Cartesian3(1.0, 0.0, 0.0);
                     for (var i = 0; i < pointsInside.length; i++) {
                         var v2 = pointsInside[i].subtract(innerRingVertex);
-                        var angle = Math.abs(Math.acos(v1.Dot(v2) / (v1.magnitude() * v2.magnitude())));
+                        var angle = Math.abs(Math.acos(v1.dot(v2) / (v1.magnitude() * v2.magnitude())));
                         if (angle < minAngle) {
                             minAngle = angle;
                             p = pointsInside[i];
@@ -840,7 +840,7 @@ define([
                 }
             }
 
-            var lastVisibleVertexIndex = newPolygonVertices.indexOf(outerRing[visibleVertexIndex]);
+            var lastVisibleVertexIndex = newPolygonVertices.lastIndexOf(outerRing[visibleVertexIndex]);
 
             holeVerticesToAdd.push(outerRing[lastVisibleVertexIndex]);
 
