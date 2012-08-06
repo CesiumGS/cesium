@@ -827,7 +827,7 @@ define([
 
             // If the rightmost inner vertex is not the starting and ending point of the ring,
             // then some other point is duplicated in the inner ring and should be skipped once.
-            if (innerRingVertexIndex != 0)
+            if (innerRingVertexIndex !== 0)
             {
                 for (var j = 0; j <= innerRing.length; j++)
                 {

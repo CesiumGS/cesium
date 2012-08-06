@@ -480,6 +480,31 @@ defineSuite([
         }).toThrow();
     });
 
+    it('_getMutuallyVisibleVertexIndex works with concave polygons', function() {
+
+        var outerRing = Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                     new Cartographic.fromDegrees(-122.0, 37.0),
+                     new Cartographic.fromDegrees(-121.96, 37.0),
+                     new Cartographic.fromDegrees(-122.95, 37.07),
+                     new Cartographic.fromDegrees(-122.94, 37.0),
+                     new Cartographic.fromDegrees(-121.9, 37.0),
+                     new Cartographic.fromDegrees(-121.9, 37.1),
+                     new Cartographic.fromDegrees(-122.0, 37.1),
+                     new Cartographic.fromDegrees(-122.0, 37.0)
+        ]);
+
+         var innerRing = Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                      new Cartographic.fromDegrees(-121.99, 37.01),
+                      new Cartographic.fromDegrees(-121.99, 37.04),
+                      new Cartographic.fromDegrees(-121.96, 37.04),
+                      new Cartographic.fromDegrees(-121.96, 37.01),
+         ]);
+
+         var index = PolygonPipeline._getMutuallyVisibleVertexIndex(outerRing, [innerRing]);
+         expect(index).toEqual(1);
+    });
+
+
     it('removes a hole from a polygon', function() {
         var outerRing = [
             new Cartographic(-122.0, 37.0, 0.0),
@@ -518,5 +543,42 @@ defineSuite([
         expect(function() {
             PolygonPipeline.eliminateHole([new Cartesian3()]);
         }).toThrow();
+    });
+
+    it('eliminateHole works with concave polygons', function() {
+        var outerRing = Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                     new Cartographic.fromDegrees(-122.0, 37.0),
+                     new Cartographic.fromDegrees(-121.96, 37.0),
+                     new Cartographic.fromDegrees(-122.95, 37.07),
+                     new Cartographic.fromDegrees(-122.94, 37.0),
+                     new Cartographic.fromDegrees(-121.9, 37.0),
+                     new Cartographic.fromDegrees(-121.9, 37.1),
+                     new Cartographic.fromDegrees(-122.0, 37.1)
+        ]);
+
+         var innerRing = Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                      new Cartographic.fromDegrees(-121.96, 37.04),
+                      new Cartographic.fromDegrees(-121.96, 37.01),
+                      new Cartographic.fromDegrees(-121.99, 37.01),
+                      new Cartographic.fromDegrees(-121.99, 37.04)
+         ]);
+
+         var positions = PolygonPipeline.eliminateHole(outerRing, [innerRing]);
+
+         expect(positions[0].equals(outerRing[0])).toEqual(true);
+         expect(positions[1].equals(outerRing[1])).toEqual(true);
+         expect(positions[2].equals(outerRing[2])).toEqual(true);
+         expect(positions[3].equals(outerRing[3])).toEqual(true);
+         expect(positions[4].equals(outerRing[4])).toEqual(true);
+
+         expect(positions[5].equals(innerRing[1])).toEqual(true);
+         expect(positions[6].equals(innerRing[2])).toEqual(true);
+         expect(positions[7].equals(innerRing[3])).toEqual(true);
+         expect(positions[8].equals(innerRing[0])).toEqual(true);
+         expect(positions[9].equals(innerRing[1])).toEqual(true);
+
+         expect(positions[10].equals(outerRing[4])).toEqual(true);
+         expect(positions[11].equals(outerRing[5])).toEqual(true);
+         expect(positions[12].equals(outerRing[6])).toEqual(true);
     });
 });
