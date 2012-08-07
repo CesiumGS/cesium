@@ -197,12 +197,12 @@ require({
     };
     image.src = '../../Images/facility.gif';*/
 
-    /*
     // labels
     var labels = new Cesium.LabelCollection(undefined);
     labels.add({
         position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
-        text     : 'Philadelphia'
+        text     : 'Philadelphia',
+        horizontalOrigin : Cesium.HorizontalOrigin.RIGHT
     });
     labels.add({
         position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.50, 35.14)),
@@ -213,9 +213,8 @@ require({
         text     : 'Miami'
     });
     primitives.add(labels);
-    */
 
-    var polylines = new Cesium.PolylineCollection();
+    /*var polylines = new Cesium.PolylineCollection();
     polylines.add({positions:ellipsoid.cartographicArrayToCartesianArray([
         new Cesium.Cartographic.fromDegrees(-75.0, 40.0),
         new Cesium.Cartographic.fromDegrees(-75.0, 40.0),
@@ -238,7 +237,7 @@ require({
     //   alpha:1.0
     //}
     });
-    primitives.add(polylines);
+    primitives.add(polylines);*/
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -250,12 +249,17 @@ require({
     });
 
     var spheres = [];
-    var primitive = polylines;
+    var lines = [];
+    var primitive = labels;
     (function tick() {
         for (var i = 0; i < spheres.length; ++i) {
             scene.getPrimitives().remove(spheres[i]);
         }
         spheres.length = 0;
+        for (var i = 0; i < lines.length; ++i) {
+            scene.getPrimitives().remove(lines[i]);
+        }
+        lines.length = 0;
 
         if (scene.mode === Cesium.SceneMode.SCENE3D && typeof primitive !== 'undefined') {
             if (typeof primitive.getLength !== 'undefined') {
@@ -273,6 +277,45 @@ require({
                 sphere.color = { red : 1.0, green : 1.0, blue : 0.0, alpha : 1.0 };
                 spheres.push(sphere);
                 scene.getPrimitives().add(sphere);
+            }
+        } else if (scene.mode === Cesium.SceneMode.SCENE2D && typeof primitive !== 'undefined') {
+            if (typeof primitive.getLength !== 'undefined') {
+                var projection = scene.scene2D.projection;
+                for (var j = 0; j < primitive.getLength(); ++j) {
+                    var p = primitive.get(j);
+                    if (typeof p.boundingRectangle !== 'undefined') {
+                        var rect = p.boundingRectangle;
+                        var polylines = new Cesium.PolylineCollection();
+                        polylines.add({
+                            positions : ellipsoid.cartographicArrayToCartesianArray([
+                                projection.unproject(new Cesium.Cartesian3(rect.x, rect.y, 0.0)),
+                                projection.unproject(new Cesium.Cartesian3(rect.x + rect.width, rect.y, 0.0)),
+                                projection.unproject(new Cesium.Cartesian3(rect.x + rect.width, rect.y + rect.height, 0.0)),
+                                projection.unproject(new Cesium.Cartesian3(rect.x, rect.y + rect.height, 0.0)),
+                                projection.unproject(new Cesium.Cartesian3(rect.x, rect.y, 0.0))
+                            ])
+                        });
+                        lines.push(polylines);
+                        scene.getPrimitives().add(polylines);
+                    }
+                }
+            }
+
+            if (typeof primitive.boundingRectangle !== 'undefined'){
+                var projection = scene.scene2D.projection;
+                var rect = primitive.boundingRectangle;
+                var polylines = new Cesium.PolylineCollection();
+                polylines.add({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        projection.unproject(new Cesium.Cartesian3(rect.x, rect.y, 0.0)),
+                        projection.unproject(new Cesium.Cartesian3(rect.x + rect.width, rect.y, 0.0)),
+                        projection.unproject(new Cesium.Cartesian3(rect.x + rect.width, rect.y + rect.height, 0.0)),
+                        projection.unproject(new Cesium.Cartesian3(rect.x, rect.y + rect.height, 0.0)),
+                        projection.unproject(new Cesium.Cartesian3(rect.x, rect.y, 0.0))
+                    ])
+                });
+                lines.push(polylines);
+                scene.getPrimitives().add(polylines);
             }
         }
 
@@ -298,8 +341,22 @@ require({
         // Use movement.startPosition, movement.endPosition
     }, Cesium.MouseEventType.MOVE);
 
+    var label;
     function keydownHandler(e) {
         switch (e.keyCode) {
+        case "6".charCodeAt(0):
+            label.setPosition(label.getPosition().add(scene.getCamera().up.multiplyByScalar(-100000.0)));
+            break;
+        case "5".charCodeAt(0):
+            label.setPosition(label.getPosition().add(scene.getCamera().up.multiplyByScalar(100000.0)));
+            break;
+        case "4".charCodeAt(0):
+            label = labels.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-118.24, 34.05)),
+                text     : 'Los Angeles',
+                horizontalOrigin : Cesium.HorizontalOrigin.LEFT
+            });
+            break;
         case "3".charCodeAt(0): // "3" -> 3D globe
             cb.showSkyAtmosphere = true;
             cb.showGroundAtmosphere = true;
