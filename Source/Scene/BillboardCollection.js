@@ -123,6 +123,8 @@ define([
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
+        this._maxSize = 0;
+
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
          * When this is the identity matrix, the billboards are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
@@ -820,6 +822,8 @@ define([
         var bottomLeftY = imageRectangle.y;
         var topRightX = imageRectangle.x + imageRectangle.width;
         var topRightY = imageRectangle.y + imageRectangle.height;
+        this._maxSize = Math.max(this._maxSize, imageRectangle.width, imageRectangle.height);
+
         vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, bottomLeftX * 65535, bottomLeftY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Lower Left
         vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, topRightX * 65535, bottomLeftY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Lower Right
         vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, topRightX * 65535, topRightY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Upper Right
@@ -930,6 +934,7 @@ define([
                     positions.push(position);
                 }
                 this.boundingVolume = BoundingSphere.fromPoints(positions);
+                this._baseRadius = this.boundingVolume.radius;
                 break;
 
             case SceneMode.SCENE2D:
@@ -1063,8 +1068,8 @@ define([
 
                         if (sceneState.mode === SceneMode.SCENE3D) {
                             var radius = b.getPosition().subtract(this.boundingVolume.center).magnitude();
-                            if (radius > this.boundingVolume.radius) {
-                                this.boundingVolume.radius = radius;
+                            if (radius > this._baseRadius) {
+                                this._baseRadius = radius;
                             }
                         }
 
@@ -1080,8 +1085,8 @@ define([
 
                         if (sceneState.mode === SceneMode.SCENE3D) {
                             var radius = bb.getPosition().subtract(this.boundingVolume.center).magnitude();
-                            if (radius > this.boundingVolume.radius) {
-                                this.boundingVolume.radius = radius;
+                            if (radius > this._baseRadius) {
+                                this._baseRadius = radius;
                             }
                         }
 
@@ -1102,6 +1107,22 @@ define([
         }
 
         this._uniforms = (sceneState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;
+
+        if (sceneState.mode === SceneMode.SCENE3D) {
+            var camera = sceneState.camera;
+            var frustum = camera.frustum;
+
+            var tanPhi = Math.tan(frustum.fovy * 0.5);
+            var d1 = 1.0 / tanPhi;
+
+            var toCenter = camera.getPositionWC().subtract(this.boundingVolume.center);
+            var distance = toCenter.magnitude() - this._baseRadius;
+            var sizeScale = distance / d1;
+
+            this.boundingVolume.radius = this._baseRadius + sizeScale * this._maxSize;
+        } else {
+            this.boundingVolume.radius = this._baseRadius;
+        }
     };
 
     /**
