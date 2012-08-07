@@ -649,9 +649,10 @@ define([
     };
 
     CentralBody.prototype._attributeIndices = {
-        position3D : 0,
-        textureCoordinates : 1,
-        position2D : 2
+            position3D : 0,
+            webMercatorCoordinates : 1,
+            geographicCoordinates : 2,
+            position2D : 3
     };
 
     /**

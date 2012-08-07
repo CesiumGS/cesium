@@ -20,33 +20,33 @@ require({
 //        numberOfLevelZeroTilesY : 2
 //    }));
 
-//    var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
-//        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-//        token : '3Q12dGgcZ4NDveUn7-5WxhMC-OLa3FdfV9jCtsnN8yB9eC_WO9aQDFuxP96YuNGJq6Rc6d-OhtmTn2HM0W9Ung..',
-//        proxy : new Cesium.DefaultProxy('/terrain/')
-//    });
-
-    var terrainProvider = new Cesium.WebMapServiceTerrainProvider({
-        url : 'http://localhost:8081/geoserver/terrain/wms',
-        layerName : 'terrain:SRTM',
-        copyrightText : 'Terrain: Jarvis, A., H.I. Reuter, A. Nelson, E. Guevara, 2008, Hole-filled SRTM for the globe Version 4, available from the CGIAR-CSI SRTM 90m Database: http://srtm.csi.cgiar.org.'
+    var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
+        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+        token : 'tgsEw5sX6bxpgTwrPU6YRfcZSyKjutxeRxzknTduDW305iCY3bpk_TRTx4FYOpa55ohoRSiLsQ7n6djp0ir8nQ..',
+        proxy : new Cesium.DefaultProxy('/terrain/')
     });
+
+//    var terrainProvider = new Cesium.WebMapServiceTerrainProvider({
+//        url : 'http://localhost:8081/geoserver/terrain/wms',
+//        layerName : 'terrain:SRTM',
+//        copyrightText : 'Terrain: Jarvis, A., H.I. Reuter, A. Nelson, E. Guevara, 2008, Hole-filled SRTM for the globe Version 4, available from the CGIAR-CSI SRTM 90m Database: http://srtm.csi.cgiar.org.'
+//    });
 
     var imageryLayerCollection = new Cesium.ImageryLayerCollection();
 
-    var wmsImagery = new Cesium.WebMapServiceImageryProvider({
-        url : 'http://localhost:8081/geoserver/wms',
-        layerName : 'demo',
-        copyrightText : "Imagery: Copyright NASA's Earth Observatory, EarthSat, Space Imaging, SPOT IMAGE"
-    });
-    var wmsLayer = imageryLayerCollection.addImageryProvider(wmsImagery);
-
-//    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-//        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-//        proxy : new Cesium.DefaultProxy('/proxy/')
+//    var wmsImagery = new Cesium.WebMapServiceImageryProvider({
+//        url : 'http://localhost:8081/geoserver/wms',
+//        layerName : 'demo',
+//        copyrightText : "Imagery: Copyright NASA's Earth Observatory, EarthSat, Space Imaging, SPOT IMAGE"
 //    });
-//    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
-//    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
+//    var wmsLayer = imageryLayerCollection.addImageryProvider(wmsImagery);
+
+    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+        proxy : new Cesium.DefaultProxy('/proxy/')
+    });
+    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
+    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
 //
 //    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
 //        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
@@ -77,12 +77,12 @@ require({
 
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
-//    var testLayer = imageryLayerCollection.addImageryProvider(
-//            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png',
-//                                                 new Cesium.Extent(Cesium.Math.toRadians(-120),
-//                                                                   Cesium.Math.toRadians(37),
-//                                                                   Cesium.Math.toRadians(-119),
-//                                                                   Cesium.Math.toRadians(38))));
+    var testLayer = imageryLayerCollection.addImageryProvider(
+            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png',
+                                                 new Cesium.Extent(Cesium.Math.toRadians(-120),
+                                                                   Cesium.Math.toRadians(37),
+                                                                   Cesium.Math.toRadians(-119),
+                                                                   Cesium.Math.toRadians(38))));
 
     var cb = new Cesium.CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
 
@@ -101,6 +101,8 @@ require({
     scene.getCamera().frustum.near = 100.0;
     scene.getCamera().frustum.far = 20000000.0;
     scene.getCamera().getControllers().addCentralBody();
+
+    //scene.viewExtent(testLayer.imageryProvider.extent, ellipsoid);
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 

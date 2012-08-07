@@ -11,6 +11,7 @@ uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec2 u_dayTextureTranslation[TEXTURE_UNITS];
 uniform vec2 u_dayTextureScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
+uniform bool u_dayTextureIsGeographic[TEXTURE_UNITS];
 uniform bool u_cameraInsideBoundingSphere;
 uniform int u_level;
 
@@ -20,7 +21,8 @@ varying vec3 v_positionEC;
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 
-varying vec2 v_textureCoordinates;
+varying vec2 v_webMercatorCoordinates;
+varying vec2 v_geographicCoordinates;
 
 void main()
 {
@@ -33,7 +35,8 @@ void main()
     {
         if (i >= u_numberOfDayTextures)
             break;
-        vec2 textureCoordinates = (v_textureCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
+        vec2 baseCoordinates = u_dayTextureIsGeographic[i] ? v_geographicCoordinates : v_webMercatorCoordinates;
+        vec2 textureCoordinates = (baseCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
         if (textureCoordinates.x >= 0.0 && textureCoordinates.x <= 1.0 &&
             textureCoordinates.y >= 0.0 && textureCoordinates.y <= 1.0)
         {
@@ -74,8 +77,8 @@ void main()
 #endif
     
 #ifdef SHOW_TILE_BOUNDARIES
-    if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
-        v_textureCoordinates.y < (1.0/256.0) || v_textureCoordinates.y > (255.0/256.0))
+    if (v_webMercatorCoordinates.x < (1.0/256.0) || v_webMercatorCoordinates.x > (255.0/256.0) ||
+        v_webMercatorCoordinates.y < (1.0/256.0) || v_webMercatorCoordinates.y > (255.0/256.0))
     {
         startDayColor = vec3(1.0, 0.0, 0.0);
     }

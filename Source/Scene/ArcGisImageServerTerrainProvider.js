@@ -307,7 +307,7 @@ define([
         tile.transformedGeometry = undefined;
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = buffers.statistics.maxHeight;
-        tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
+        tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 7);
 
         var ellipsoid = this.tilingScheme.ellipsoid;
         tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSouthwest());

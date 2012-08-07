@@ -92,10 +92,10 @@ define([
         var piOverTwo = Math.PI / 2.0;
         var toRadians = CesiumMath.toRadians;
 
-//        var geographicWest = extent.west * oneOverCentralBodySemimajorAxis;
-//        var geographicSouth = piOverTwo - (2.0 * atan(exp(-extent.south * oneOverCentralBodySemimajorAxis)));
-//        var geographicEast = extent.east * oneOverCentralBodySemimajorAxis;
-//        var geographicNorth = piOverTwo - (2.0 * atan(exp(-extent.north * oneOverCentralBodySemimajorAxis)));
+        var geographicWest = extent.west * oneOverCentralBodySemimajorAxis;
+        var geographicSouth = piOverTwo - (2.0 * atan(exp(-extent.south * oneOverCentralBodySemimajorAxis)));
+        var geographicEast = extent.east * oneOverCentralBodySemimajorAxis;
+        var geographicNorth = piOverTwo - (2.0 * atan(exp(-extent.north * oneOverCentralBodySemimajorAxis)));
 
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
@@ -115,10 +115,10 @@ define([
             var kZ = radiiSquaredZ * nZ;
 
             // texture coordinates for geographic imagery
-            //var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
+            var geographicV = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
 
             // texture coordinates for web mercator imagery
-            var v = (height - row - 1) / (height - 1);
+            var webMercatorV = (height - row - 1) / (height - 1);
 
             for ( var col = 0; col < width; ++col) {
                 var longitude = extent.west + granularityX * col;
@@ -168,16 +168,20 @@ define([
 
                 if (generateTextureCoordinates) {
                     // texture coordinates for geographic imagery
-                    //var u = (longitude - geographicWest) / (geographicEast - geographicWest);
+                    var geographicU = (longitude - geographicWest) / (geographicEast - geographicWest);
 
                     // texture coordinates for web mercator imagery
-                    var u = col / (width - 1);
+                    var webMercatorU = col / (width - 1);
                     if (interleaveTextureCoordinates) {
-                        vertices[vertexArrayIndex++] = u;
-                        vertices[vertexArrayIndex++] = v;
+                        vertices[vertexArrayIndex++] = webMercatorU;
+                        vertices[vertexArrayIndex++] = webMercatorV;
+                        vertices[vertexArrayIndex++] = geographicU;
+                        vertices[vertexArrayIndex++] = geographicV;
                     } else {
-                        textureCoordinates[textureCoordinatesIndex++] = u;
-                        textureCoordinates[textureCoordinatesIndex++] = v;
+                        textureCoordinates[textureCoordinatesIndex++] = webMercatorU;
+                        textureCoordinates[textureCoordinatesIndex++] = webMercatorV;
+                        textureCoordinates[textureCoordinatesIndex++] = geographicU;
+                        textureCoordinates[textureCoordinatesIndex++] = geographicV;
                     }
                 }
             }
