@@ -1372,12 +1372,14 @@ define([
     PolylineBucket.prototype._getPositions = function(polyline) {
         if (this.mode === SceneMode.SCENE3D) {
             var positions = polyline.getPositions();
-            polyline.boundingVolume = BoundingSphere.fromPoints(positions);
 
-            if (typeof polyline._collection.boundingVolume === 'undefined') {
-                polyline._collection.boundingVolume = polyline.boundingVolume.clone();
-            } else {
-                polyline._collection.boundingVolume.expand(polyline.boundingVolume, polyline._collection.boundingVolume);
+            if (positions.length > 0) {
+                polyline.boundingVolume = BoundingSphere.fromPoints(positions);
+                if (typeof polyline._collection.boundingVolume === 'undefined') {
+                    polyline._collection.boundingVolume = polyline.boundingVolume.clone();
+                } else {
+                    polyline._collection.boundingVolume.expand(polyline.boundingVolume, polyline._collection.boundingVolume);
+                }
             }
 
             return positions;
@@ -1400,19 +1402,21 @@ define([
             }
         }
 
-        polyline.boundingVolume2D = BoundingSphere.fromPoints(newPositions);
-        polyline.boundingVolume2D.center = new Cartesian3(polyline.boundingVolume2D.center.z, polyline.boundingVolume2D.center.x, polyline.boundingVolume2D.center.y);
-        if (typeof polyline._collection.boundingVolume2D === 'undefined') {
-            polyline._collection.boundingVolume2D = polyline.boundingVolume2D.clone();
-        } else {
-            polyline._collection.boundingVolume2D.expand(polyline.boundingVolume2D, polyline._collection.boundingVolume2D);
-        }
+        if (newPositions.length > 0) {
+            polyline.boundingVolume2D = BoundingSphere.fromPoints(newPositions);
+            polyline.boundingVolume2D.center = new Cartesian3(polyline.boundingVolume2D.center.z, polyline.boundingVolume2D.center.x, polyline.boundingVolume2D.center.y);
+            if (typeof polyline._collection.boundingVolume2D === 'undefined') {
+                polyline._collection.boundingVolume2D = polyline.boundingVolume2D.clone();
+            } else {
+                polyline._collection.boundingVolume2D.expand(polyline.boundingVolume2D, polyline._collection.boundingVolume2D);
+            }
 
-        polyline.boundingRectangle = BoundingRectangle.fromPoints(newPositions);
-        if (typeof polyline._collection.boundingRectangle === 'undefined') {
-            polyline._collection.boundingRectangle = polyline.boundingRectangle.clone();
-        } else {
-            polyline._collection.boundingRectangle.expand(polyline.boundingRectangle, polyline._collection.boundingRectangle);
+            polyline.boundingRectangle = BoundingRectangle.fromPoints(newPositions);
+            if (typeof polyline._collection.boundingRectangle === 'undefined') {
+                polyline._collection.boundingRectangle = polyline.boundingRectangle.clone();
+            } else {
+                polyline._collection.boundingRectangle.expand(polyline.boundingRectangle, polyline._collection.boundingRectangle);
+            }
         }
 
         return newPositions;

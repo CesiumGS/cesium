@@ -117,26 +117,6 @@ defineSuite([
         expect(rectangle.height).toEqual(6);
     });
 
-    it('create axis aligned bounding rectangle from flat points', function() {
-        var positions = [
-             new Cartesian2(3, -1),
-             new Cartesian2(2, -2),
-             new Cartesian2(1, -3),
-             new Cartesian2(0, 0),
-             new Cartesian2(-1, 1),
-             new Cartesian2(-2, 2),
-             new Cartesian2(-3, 3)
-         ];
-        var flatPositions = [];
-        for (var i = 0; i < positions.length; i++) {
-            flatPositions.push(positions[i].x, positions[i].y);
-        }
-
-        var rect1 = BoundingRectangle.fromPoints(positions);
-        var rect2 = BoundingRectangle.fromFlatPoints(flatPositions);
-        expect(rect1).toEqual(rect2);
-    });
-
     it('create a bounding rectangle from an extent throws without an extent', function() {
         expect(function() {
             return BoundingRectangle.fromExtent();

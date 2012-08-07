@@ -439,9 +439,13 @@ define([
             mesh = MeshFilters.projectTo2D(mesh, this._projection);
 
             var projectedPositions = mesh.attributes.position2D.values;
-            this.boundingVolume2D = BoundingSphere.fromFlatPoints(projectedPositions);
+            var positions = [];
+            for (var i = 0; i < projectedPositions.length; i += 2) {
+                positions.push(new Cartesian3(projectedPositions[i], projectedPositions[i + 1], 0.0));
+            }
+            this.boundingVolume2D = BoundingSphere.fromPoints(positions);
             this.boundingVolume2D.center = new Cartesian3(0.0, this.boundingVolume2D.center.x, this.boundingVolume2D.center.y);
-            this.boundingRectangle = BoundingRectangle.fromFlatPoints(projectedPositions);
+            this.boundingRectangle = BoundingRectangle.fromPoints(positions);
         }
         meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
 

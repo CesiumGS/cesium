@@ -213,66 +213,6 @@ define([
     };
 
     /**
-     * Computes a bounding rectangle enclosing the list of flat 2D points.
-     *
-     * @memberof BoundingRectangle
-     *
-     * @param {Array} positions List of points that the bounding rectangle will enclose.
-     *
-     * @exception {DeveloperError} positions is required.
-     * @exception {DeveloperError} positions must have a length greater than three.
-     * @exception {DeveloperError} positions must have x and y coordinates (even length).
-     *
-     * @return {BoundingRectangle} A bounding rectangle computed from the positions. The rectangle is oriented with the corner at the bottom left.
-     */
-    BoundingRectangle.fromFlatPoints = function(positions) {
-        if (typeof positions === 'undefined') {
-            throw new DeveloperError('positions is required.');
-        }
-
-        if (typeof positions.length === 'undefined' || positions.length <= 3) {
-            throw new DeveloperError('positions must have a length greater than three.');
-        }
-
-        if (positions.length % 2 != 0) {
-            throw new DeveloperError('positions must have x and y coordinates (even length).');
-        }
-
-        var length = positions.length;
-
-        var minimumX = positions[0];
-        var minimumY = positions[1];
-
-        var maximumX = positions[0];
-        var maximumY = positions[1];
-
-        for ( var i = 2; i < length; i += 2) {
-            var x = positions[i];
-            var y = positions[i + 1];
-
-            if (x < minimumX) {
-                minimumX = x;
-            }
-
-            if (x > maximumX) {
-                maximumX = x;
-            }
-
-            if (y < minimumY) {
-                minimumY = y;
-            }
-
-            if (y > maximumY) {
-                maximumY = y;
-            }
-        }
-
-        var width = maximumX - minimumX;
-        var height = maximumY - minimumY;
-        return new BoundingRectangle(minimumX, minimumY, width, height);
-    };
-
-    /**
      * Creates a bounding rectangle from an extent.
      *
      * @memberof BoundingRectangle

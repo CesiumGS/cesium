@@ -268,8 +268,7 @@ defineSuite([
 
         var projectedPositions = [];
         for (var i = 0; i < positions.length; ++i) {
-            var position = positions[i];
-            projectedPositions.push(projection.project(position));
+            projectedPositions.push(projection.project(positions[i]));
         }
 
         var sphere = BoundingSphere.fromPoints(projectedPositions);
