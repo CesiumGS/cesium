@@ -201,8 +201,7 @@ require({
     var labels = new Cesium.LabelCollection(undefined);
     labels.add({
         position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
-        text     : 'Philadelphia',
-        horizontalOrigin : Cesium.HorizontalOrigin.RIGHT
+        text     : 'Philadelphia'
     });
     labels.add({
         position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.50, 35.14)),

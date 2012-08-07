@@ -123,9 +123,12 @@ define([
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
-        this._maxSize = 0;
-        this._baseRadius = 0;
-        this._baseRadius2D = 0;
+        this._maxSize = 0.0;
+        this._maxEyeOffset = 0.0;
+        this._maxScale = 1.0;
+
+        this._baseRadius = 0.0;
+        this._baseRadius2D = 0.0;
         this._baseRectangle = undefined;
 
         /**
@@ -786,6 +789,8 @@ define([
         var i = (billboard._index * 4);
         var eyeOffset = billboard.getEyeOffset();
         var scale = billboard.getScale();
+        this._maxEyeOffset = Math.max(this._maxEyeOffset, Math.abs(eyeOffset.x), Math.abs(eyeOffset.y), Math.abs(eyeOffset.z));
+        this._maxScale = Math.max(this._maxScale, scale);
 
         vafWriters[attributeIndices.eyeOffsetAndScale](i + 0, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
         vafWriters[attributeIndices.eyeOffsetAndScale](i + 1, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
@@ -1107,7 +1112,8 @@ define([
 
         this._uniforms = (sceneState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;
 
-        var sizeScale;
+        var pixelScale;
+        var size;
         var camera = sceneState.camera;
         var frustum = camera.frustum;
 
@@ -1117,25 +1123,30 @@ define([
 
             var toCenter = camera.getPositionWC().subtract(this.boundingVolume.center);
             var distance = Math.max(0.0, toCenter.magnitude() - this._baseRadius);
-            sizeScale = distance / d1;
+            pixelScale = distance / d1;
 
-            this.boundingVolume.radius = this._baseRadius + 2.0 * sizeScale * this._maxSize;
+            size = 2.0 * pixelScale * this._maxScale * this._maxSize;
+            this.boundingVolume.radius = this._baseRadius + size + this._maxEyeOffset;
         } else if (sceneState.mode === SceneMode.SCENE2D) {
-            sizeScale = (frustum.right - frustum.left);
+            pixelScale = (frustum.right - frustum.left);
 
-            this.boundingRectangle.x = this._baseRectangle.x - sizeScale * this._maxSize;
-            this.boundingRectangle.y = this._baseRectangle.y - sizeScale * this._maxSize;
-            this.boundingRectangle.width = 2.0 * (this._baseRectangle.width + sizeScale * this._maxSize);
-            this.boundingRectangle.height = 2.0 * (this._baseRectangle.height + sizeScale * this._maxSize);
+            size = pixelScale * this._maxScale * this._maxSize;
+            var offset = size + this._maxEyeOffset;
+
+            this.boundingRectangle.x = this._baseRectangle.x - offset;
+            this.boundingRectangle.y = this._baseRectangle.y - offset;
+            this.boundingRectangle.width = this._baseRectangle.width + 2.0 * offset;
+            this.boundingRectangle.height = this._baseRectangle.height + 2.0 * offset;
         } else if (typeof this.boundingVolume2D !== 'undefined') {
             var tanPhi = Math.tan(frustum.fovy * 0.5);
             var d1 = 1.0 / tanPhi;
 
             var toCenter = camera.getPositionWC().subtract(this.boundingVolume2D.center);
             var distance = Math.max(0.0, toCenter.magnitude() - this._baseRadius2D);
-            sizeScale = distance / d1;
+            pixelScale = distance / d1;
 
-            this.boundingVolume2D.radius = this._baseRadius2D + 2.0 * sizeScale * this._maxSize;
+            size = 2.0 * pixelScale * this._maxScale * this._maxSize;
+            this.boundingVolume2D.radius = this._baseRadius2D + size + this._maxEyeOffset;
         }
     };
 
