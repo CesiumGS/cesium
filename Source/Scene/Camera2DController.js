@@ -106,13 +106,15 @@ define([
         this._zoomAnimation = undefined;
         this._translateAnimation = undefined;
 
-        var maxZoomOut = 2.0;
-        this._frustum.right *= maxZoomOut;
-        this._frustum.left *= maxZoomOut;
-        this._frustum.top *= maxZoomOut;
-        this._frustum.bottom *= maxZoomOut;
-
+        this._frustum = this._camera.frustum.clone();
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO, 0.0));
+
+        var maxZoomOut = 2.0;
+        var ratio = this._frustum.top / this._frustum.right;
+        this._frustum.right = this._maxCoord.x * maxZoomOut;
+        this._frustum.left = -this._frustum.right;
+        this._frustum.top = ratio * this._frustum.right;
+        this._frustum.bottom = -this._frustum.top;
 
         this._maxZoomFactor = 2.5;
         this._maxTranslateFactor = 1.5;
