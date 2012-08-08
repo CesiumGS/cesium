@@ -26,6 +26,9 @@ require({
         name : 'Shaders',
         location : 'Source/Shaders'
     }, {
+        name : 'Workers',
+        location : 'Source/Workers'
+    }, {
         name : 'ThirdParty',
         location : 'Source/ThirdParty'
     }, {

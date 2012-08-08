@@ -110,6 +110,10 @@ define([
             numberOfLevelZeroTilesX : 1,
             numberOfLevelZeroTilesY : 1
         });
+        this.tilingScheme.extent = this.extent;
+
+        var ellipsoid = this.tilingScheme.ellipsoid;
+        this.tilingScheme.levelZeroMaximumGeometricError = ellipsoid.getRadii().x * (this.extent.east - this.extent.west) / 1024;
 
         this._currentTime = undefined;
         this._advancingTime = false;
@@ -235,6 +239,10 @@ define([
         this._currentTime = time;
 
         if (this._advancingTime) {
+            return;
+        }
+
+        if (typeof this._texture === 'undefined') {
             return;
         }
 

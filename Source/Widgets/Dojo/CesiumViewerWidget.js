@@ -33,14 +33,19 @@ define([
         '../../Core/Transforms',
         '../../Core/requestAnimationFrame',
         '../../Core/Color',
+        '../../Core/Math',
+        '../../Core/Extent',
         '../../Scene/ColorMaterial',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
-        '../../Scene/BingMapsTileProvider',
+        '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
         '../../Scene/SceneTransitioner',
-        '../../Scene/SingleTileProvider',
+        '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
+        '../../Scene/ArcGisImageServerTerrainProvider',
+        '../../Scene/WideAreaMotionImageryProvider',
+        '../../Scene/ImageryLayerCollection',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectCollection',
         '../../DynamicScene/VisualizerCollection',
@@ -79,14 +84,19 @@ define([
         Transforms,
         requestAnimationFrame,
         Color,
+        CesiumMath,
+        Extent,
         ColorMaterial,
         Scene,
         CentralBody,
-        BingMapsTileProvider,
+        BingMapsImageryProvider,
         BingMapsStyle,
         SceneTransitioner,
-        SingleTileProvider,
+        SingleTileImageryProvider,
         PerformanceDisplay,
+        ArcGisImageServerTerrainProvider,
+        WideAreaMotionImageryProvider,
+        ImageryLayerCollection,
         processCzml,
         DynamicObjectCollection,
         VisualizerCollection,
@@ -250,7 +260,7 @@ define([
                 clock.clockRange = ClockRange.LOOP;
             }
 
-            clock.multiplier = 60;
+            clock.multiplier = 1;
             clock.currentTime = clock.startTime;
             this.timelineControl.zoomTo(clock.startTime, clock.stopTime);
             this.updateSpeedIndicator();
@@ -307,21 +317,61 @@ define([
                 this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
             }
 
-            var centralBody = this.centralBody = new CentralBody(ellipsoid);
+            var terrainProvider = new ArcGisImageServerTerrainProvider({
+                url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+                token : 'sSx4k9KsEsh-ljsFJVqPCnKOp7lcZdhmAb4DQUlWw1yNh2pC-Qxd8i5E3eXnn3XaknS7SeWkVQu02U2E2psaMw..',
+                proxy : new DefaultProxy('/terrain/')
+            });
+
+            var imageryLayerCollection = new ImageryLayerCollection();
+
+            imageryLayerCollection.addImageryProvider(new BingMapsImageryProvider({
+                server : 'dev.virtualearth.net',
+                mapStyle : this.mapStyle,
+                // Some versions of Safari support WebGL, but don't correctly implement
+                // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
+            }));
+
+            var extent = new Extent(
+                    CesiumMath.toRadians(-78.964624075),
+                    CesiumMath.toRadians(43.861281680000005),
+                    CesiumMath.toRadians(-78.918912715),
+                    CesiumMath.toRadians(43.8953604));
+
+            this.wamiImageryProvider = new WideAreaMotionImageryProvider({
+                url : 'http://release.pixia.com/wami-soa-server/wami/IS',
+                cid : 'Whitby_Downtown_nmv_nui',
+                extent : extent,
+                proxy : new DefaultProxy('/proxy/')
+            });
+            imageryLayerCollection.addImageryProvider(this.wamiImageryProvider);
+
+            var centralBody = this.centralBody = new CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
             centralBody.showSkyAtmosphere = true;
             centralBody.showGroundAtmosphere = true;
-            // This logo is replicated by the imagery selector button, so it's hidden here.
-            centralBody.logoOffset = new Cartesian2(-100, -100);
+            centralBody.showNight = false;
+            centralBody.affectedByLighting = false;
 
-            this._configureCentralBodyImagery();
+//            // This logo is replicated by the imagery selector button, so it's hidden here.
+//            centralBody.logoOffset = new Cartesian2(-100, -100);
+//
+//            this._configureCentralBodyImagery();
+
+            centralBody.nightImageSource = this.nightImageUrl;
+            centralBody.specularMapSource = this.specularMapUrl;
+            centralBody.cloudsMapSource = this.cloudsMapUrl;
+            centralBody.bumpMapSource = this.bumpMapUrl;
 
             scene.getPrimitives().setCentralBody(centralBody);
 
             var camera = scene.getCamera(), maxRadii = ellipsoid.getRadii().getMaximumComponent();
 
             camera.position = camera.position.multiplyByScalar(1.5);
-            camera.frustum.near = 0.0002 * maxRadii;
-            camera.frustum.far = 50.0 * maxRadii;
+            camera.frustum.near = 100.0;
+            camera.frustum.far = 20000000.0;
+
+            scene.viewExtent(extent, ellipsoid);
 
             this.centralBodyCameraController = camera.getControllers().addCentralBody();
 
@@ -467,96 +517,96 @@ define([
             };
             timelineWidget.setupTimeline();
 
-            var viewHomeButton = widget.viewHomeButton;
-            var view2D = widget.view2D;
-            var view3D = widget.view3D;
-            var viewColumbus = widget.viewColumbus;
-            var viewFullScreen = widget.viewFullScreen;
-
-            view2D.set('checked', false);
-            view3D.set('checked', true);
-            viewColumbus.set('checked', false);
-
-            on(viewFullScreen, 'Click', function() {
-                if (FullScreen.isFullscreenEnabled()) {
-                    FullScreen.exitFullscreen();
-                } else {
-                    FullScreen.requestFullScreen(document.body);
-                }
-            });
-
-            on(viewHomeButton, 'Click', function() {
-                view2D.set('checked', false);
-                view3D.set('checked', true);
-                viewColumbus.set('checked', false);
-                transitioner.morphTo3D();
-                widget.viewHome();
-                widget.showSkyAtmosphere(true);
-                widget.showGroundAtmosphere(true);
-            });
-            on(view2D, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
-                view2D.set('checked', true);
-                view3D.set('checked', false);
-                viewColumbus.set('checked', false);
-                widget.showSkyAtmosphere(false);
-                widget.showGroundAtmosphere(false);
-                transitioner.morphTo2D();
-            });
-            on(view3D, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
-                view2D.set('checked', false);
-                view3D.set('checked', true);
-                viewColumbus.set('checked', false);
-                transitioner.morphTo3D();
-                widget.showSkyAtmosphere(true);
-                widget.showGroundAtmosphere(true);
-            });
-            on(viewColumbus, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
-                view2D.set('checked', false);
-                view3D.set('checked', false);
-                viewColumbus.set('checked', true);
-                widget.showSkyAtmosphere(false);
-                widget.showGroundAtmosphere(false);
-                transitioner.morphToColumbusView();
-            });
-
-            var cbLighting = widget.cbLighting;
-            on(cbLighting, 'Change', function(value) {
-                widget.centralBody.affectedByLighting = !value;
-            });
-
-            var imagery = widget.imagery;
-            var imageryAerial = widget.imageryAerial;
-            var imageryAerialWithLabels = widget.imageryAerialWithLabels;
-            var imageryRoad = widget.imageryRoad;
-            var imagerySingleTile = widget.imagerySingleTile;
-            var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
-            var bingHtml = imagery.containerNode.innerHTML;
-
-            imagery.startup();
-
-            function createImageryClickFunction(control, style) {
-                return function() {
-                    if (style) {
-                        widget.setStreamingImageryMapStyle(style);
-                        imagery.containerNode.innerHTML = bingHtml;
-                    } else {
-                        widget.enableStreamingImagery(false);
-                        imagery.containerNode.innerHTML = 'Imagery';
-                    }
-
-                    imageryOptions.forEach(function(o) {
-                        o.set('checked', o === control);
-                    });
-                };
-            }
-
-            on(imageryAerial, 'Click', createImageryClickFunction(imageryAerial, BingMapsStyle.AERIAL));
-            on(imageryAerialWithLabels, 'Click', createImageryClickFunction(imageryAerialWithLabels, BingMapsStyle.AERIAL_WITH_LABELS));
-            on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
-            on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
+//            var viewHomeButton = widget.viewHomeButton;
+//            var view2D = widget.view2D;
+//            var view3D = widget.view3D;
+//            var viewColumbus = widget.viewColumbus;
+//            var viewFullScreen = widget.viewFullScreen;
+//
+//            view2D.set('checked', false);
+//            view3D.set('checked', true);
+//            viewColumbus.set('checked', false);
+//
+//            on(viewFullScreen, 'Click', function() {
+//                if (FullScreen.isFullscreenEnabled()) {
+//                    FullScreen.exitFullscreen();
+//                } else {
+//                    FullScreen.requestFullScreen(document.body);
+//                }
+//            });
+//
+//            on(viewHomeButton, 'Click', function() {
+//                view2D.set('checked', false);
+//                view3D.set('checked', true);
+//                viewColumbus.set('checked', false);
+//                transitioner.morphTo3D();
+//                widget.viewHome();
+//                widget.showSkyAtmosphere(true);
+//                widget.showGroundAtmosphere(true);
+//            });
+//            on(view2D, 'Click', function() {
+//                widget.cameraCenteredObjectID = undefined;
+//                view2D.set('checked', true);
+//                view3D.set('checked', false);
+//                viewColumbus.set('checked', false);
+//                widget.showSkyAtmosphere(false);
+//                widget.showGroundAtmosphere(false);
+//                transitioner.morphTo2D();
+//            });
+//            on(view3D, 'Click', function() {
+//                widget.cameraCenteredObjectID = undefined;
+//                view2D.set('checked', false);
+//                view3D.set('checked', true);
+//                viewColumbus.set('checked', false);
+//                transitioner.morphTo3D();
+//                widget.showSkyAtmosphere(true);
+//                widget.showGroundAtmosphere(true);
+//            });
+//            on(viewColumbus, 'Click', function() {
+//                widget.cameraCenteredObjectID = undefined;
+//                view2D.set('checked', false);
+//                view3D.set('checked', false);
+//                viewColumbus.set('checked', true);
+//                widget.showSkyAtmosphere(false);
+//                widget.showGroundAtmosphere(false);
+//                transitioner.morphToColumbusView();
+//            });
+//
+//            var cbLighting = widget.cbLighting;
+//            on(cbLighting, 'Change', function(value) {
+//                widget.centralBody.affectedByLighting = !value;
+//            });
+//
+//            var imagery = widget.imagery;
+//            var imageryAerial = widget.imageryAerial;
+//            var imageryAerialWithLabels = widget.imageryAerialWithLabels;
+//            var imageryRoad = widget.imageryRoad;
+//            var imagerySingleTile = widget.imagerySingleTile;
+//            var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
+//            var bingHtml = imagery.containerNode.innerHTML;
+//
+//            imagery.startup();
+//
+//            function createImageryClickFunction(control, style) {
+//                return function() {
+//                    if (style) {
+//                        widget.setStreamingImageryMapStyle(style);
+//                        imagery.containerNode.innerHTML = bingHtml;
+//                    } else {
+//                        widget.enableStreamingImagery(false);
+//                        imagery.containerNode.innerHTML = 'Imagery';
+//                    }
+//
+//                    imageryOptions.forEach(function(o) {
+//                        o.set('checked', o === control);
+//                    });
+//                };
+//            }
+//
+//            on(imageryAerial, 'Click', createImageryClickFunction(imageryAerial, BingMapsStyle.AERIAL));
+//            on(imageryAerialWithLabels, 'Click', createImageryClickFunction(imageryAerialWithLabels, BingMapsStyle.AERIAL_WITH_LABELS));
+//            on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
+//            on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
 
             if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
@@ -614,20 +664,20 @@ define([
         showGroundAtmosphere : function(show) {
             this.centralBody.showGroundAtmosphere = show;
         },
-
-        enableStreamingImagery : function(value) {
-            this.useStreamingImagery = value;
-            this._configureCentralBodyImagery();
-        },
-
-        setStreamingImageryMapStyle : function(value) {
-            this.useStreamingImagery = true;
-
-            if (this.mapStyle !== value) {
-                this.mapStyle = value;
-                this._configureCentralBodyImagery();
-            }
-        },
+//
+//        enableStreamingImagery : function(value) {
+//            this.useStreamingImagery = value;
+//            this._configureCentralBodyImagery();
+//        },
+//
+//        setStreamingImageryMapStyle : function(value) {
+//            this.useStreamingImagery = true;
+//
+//            if (this.mapStyle !== value) {
+//                this.mapStyle = value;
+//                this._configureCentralBodyImagery();
+//            }
+//        },
 
         setLogoOffset : function(logoOffsetX, logoOffsetY) {
             var logoOffset = this.centralBody.logoOffset;
@@ -663,6 +713,8 @@ define([
         update : function(currentTime) {
             var cameraCenteredObjectID = this.cameraCenteredObjectID;
             var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
+
+            this.wamiImageryProvider.setTime(currentTime);
 
             this.timelineControl.updateFromClock();
             this.scene.setSunPosition(SunPosition.compute(currentTime).position);
@@ -705,27 +757,27 @@ define([
         render : function() {
             this.scene.render();
         },
-
-        _configureCentralBodyImagery : function() {
-            var centralBody = this.centralBody;
-
-            if (this.useStreamingImagery) {
-                centralBody.dayTileProvider = new BingMapsTileProvider({
-                    server : 'dev.virtualearth.net',
-                    mapStyle : this.mapStyle,
-                    // Some versions of Safari support WebGL, but don't correctly implement
-                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                });
-            } else {
-                centralBody.dayTileProvider = new SingleTileProvider(this.dayImageUrl);
-            }
-
-            centralBody.nightImageSource = this.nightImageUrl;
-            centralBody.specularMapSource = this.specularMapUrl;
-            centralBody.cloudsMapSource = this.cloudsMapUrl;
-            centralBody.bumpMapSource = this.bumpMapUrl;
-        },
+//
+//        _configureCentralBodyImagery : function() {
+//            var centralBody = this.centralBody;
+//
+//            if (this.useStreamingImagery) {
+//                centralBody.getImageLayers().addImageryProvider(new BingMapsImageryProvider({
+//                    server : 'dev.virtualearth.net',
+//                    mapStyle : this.mapStyle,
+//                    // Some versions of Safari support WebGL, but don't correctly implement
+//                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
+//                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
+//                }));
+//            } else {
+//                centralBody.getImageLayers().addImageryProvider(new SingleTileImageryProvider(this.dayImageUrl));
+//            }
+//
+//            centralBody.nightImageSource = this.nightImageUrl;
+//            centralBody.specularMapSource = this.specularMapUrl;
+//            centralBody.cloudsMapSource = this.cloudsMapUrl;
+//            centralBody.bumpMapSource = this.bumpMapUrl;
+//        },
 
         startRenderLoop : function() {
             var widget = this;

@@ -22,7 +22,7 @@ require({
 
     var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'Edf539842Ur_1PY_s1qSXiLA2AqMnTj6zrRhJi3xIbtbyUTSc7FF7VIkokvJvuDIzkKG_f1z3d80TdCYdWr1og..',
+        token : 'sSx4k9KsEsh-ljsFJVqPCnKOp7lcZdhmAb4DQUlWw1yNh2pC-Qxd8i5E3eXnn3XaknS7SeWkVQu02U2E2psaMw..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
@@ -40,29 +40,29 @@ require({
 //    });
 //    var wmsLayer = imageryLayerCollection.addImageryProvider(wmsImagery);
 
-    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-        proxy : new Cesium.DefaultProxy('/proxy/')
-    });
-    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
-    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
-
-    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
-        proxy : new Cesium.DefaultProxy('/proxy/')
-    });
-    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
-
-
-//    var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({
-//        server : 'dev.virtualearth.net',
-//        mapStyle : Cesium.BingMapsStyle.AERIAL,
-//        // Some versions of Safari support WebGL, but don't correctly implement
-//        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-//        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+//    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+//        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+//        proxy : new Cesium.DefaultProxy('/proxy/')
 //    });
-//    bingAerialImageryProvider.discardPolicy = bingAerialImageryProvider.createDiscardMissingTilePolicy();
-//    var bingAerialLayer = imageryLayerCollection.addImageryProvider(bingAerialImageryProvider);
+//    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
+//    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
+//
+//    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+//        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
+//        proxy : new Cesium.DefaultProxy('/proxy/')
+//    });
+//    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
+
+
+    var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({
+        server : 'dev.virtualearth.net',
+        mapStyle : Cesium.BingMapsStyle.AERIAL,
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+    });
+    bingAerialImageryProvider.discardPolicy = bingAerialImageryProvider.createDiscardMissingTilePolicy();
+    var bingAerialLayer = imageryLayerCollection.addImageryProvider(bingAerialImageryProvider);
 
 //    var bingRoadImageryProvider = new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
@@ -76,12 +76,13 @@ require({
 
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
-//    var testLayer = imageryLayerCollection.addImageryProvider(
-//            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png',
-//                                                 new Cesium.Extent(Cesium.Math.toRadians(-120),
-//                                                                   Cesium.Math.toRadians(37),
-//                                                                   Cesium.Math.toRadians(-119),
-//                                                                   Cesium.Math.toRadians(38))));
+    var extent = new Cesium.Extent(Cesium.Math.toRadians(-120),
+            Cesium.Math.toRadians(37),
+            Cesium.Math.toRadians(-119),
+            Cesium.Math.toRadians(38));
+    var testLayer = imageryLayerCollection.addImageryProvider(
+            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png',
+                                                 extent));
 
 //    var wamiLayer = imageryLayerCollection.addImageryProvider(new Cesium.WideAreaMotionImageryProvider({
 //        url : 'http://release.pixia.com/wami-soa-server/wami/IS',
@@ -93,71 +94,71 @@ require({
 //        proxy : new Cesium.DefaultProxy('/proxy/'),
 //        maxLevel : 22
 //    }));
-
-    var extent = new Cesium.Extent(Cesium.Math.toRadians(-78.96636445515142),
-          Cesium.Math.toRadians(43.8407889665306),
-          Cesium.Math.toRadians(-78.91621430830061),
-          Cesium.Math.toRadians(43.87779359890426));
-
-    function getUrl(frame){
-        var url = 'http://release.pixia.com/wami-soa-server/wami/IS?SERVICE=IS&VERSION=1.0.0&REQUEST=GetMap&CRS=EPSG:4326';
-        url += "&WIDTH=1024&HEIGHT=1024&CID=Whitby_Harbour_2012_12_01_nmv_nui";
-        url += "&TRANSPARENT=TRUE&BGCOLOR=0xFFFFFF&FORMAT=image/png";
-        url += '&BBOX=';
-        url += Cesium.Math.toDegrees(extent.west) + "," +
-               Cesium.Math.toDegrees(extent.south) + "," +
-               Cesium.Math.toDegrees(extent.east) + "," +
-               Cesium.Math.toDegrees(extent.north);
-
-        url += '&TIME=F' + frame;
-        return url;
-    }
-
-    var frame = 1;
-
-    var wamiImageryProvider = new Cesium.SingleTileImageryProvider(getUrl(frame), extent, new Cesium.DefaultProxy('/proxy/'));
-
-    wamiImageryProvider.createResources = function(context, tileImagery, texturePool) {
-        if (typeof this._texture === 'undefined') {
-            var texture = texturePool.createTexture2D(context, {
-                source : tileImagery.transformedImage
-            });
-
-            texture.setSampler({
-                wrapS : Cesium.TextureWrap.CLAMP,
-                wrapT : Cesium.TextureWrap.CLAMP,
-                minificationFilter : Cesium.TextureMinificationFilter.LINEAR,
-                magnificationFilter : Cesium.TextureMagnificationFilter.LINEAR,
-
-                // TODO: Remove Chrome work around
-                maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8
-            });
-
-            this._texture = texture;
-        }
-
-        tileImagery.texture = this._texture;
-        tileImagery.transformedImage = undefined;
-        tileImagery.state = Cesium.TileState.READY;
-    };
-
-    wamiImageryProvider.advance = function() {
-        if (!this.ready || this._reloading) {
-            return;
-        }
-        this._reloading = true;
-        this._url = getUrl(++frame);
-        var that = this;
-        Cesium.loadImage(this.buildImageUrl()).then(function(image) {
-            that._image = image;
-            that._texture.copyFrom(image);
-            that._reloading = false;
-        }, function() {
-            that._reloading = false;
-        });
-    };
-
-    var wamiLayer = imageryLayerCollection.addImageryProvider(wamiImageryProvider);
+//
+//    var extent = new Cesium.Extent(Cesium.Math.toRadians(-78.96636445515142),
+//          Cesium.Math.toRadians(43.8407889665306),
+//          Cesium.Math.toRadians(-78.91621430830061),
+//          Cesium.Math.toRadians(43.87779359890426));
+//
+//    function getUrl(frame){
+//        var url = 'http://release.pixia.com/wami-soa-server/wami/IS?SERVICE=IS&VERSION=1.0.0&REQUEST=GetMap&CRS=EPSG:4326';
+//        url += "&WIDTH=1024&HEIGHT=1024&CID=Whitby_Harbour_2012_12_01_nmv_nui";
+//        url += "&TRANSPARENT=TRUE&BGCOLOR=0xFFFFFF&FORMAT=image/png";
+//        url += '&BBOX=';
+//        url += Cesium.Math.toDegrees(extent.west) + "," +
+//               Cesium.Math.toDegrees(extent.south) + "," +
+//               Cesium.Math.toDegrees(extent.east) + "," +
+//               Cesium.Math.toDegrees(extent.north);
+//
+//        url += '&TIME=F' + frame;
+//        return url;
+//    }
+//
+//    var frame = 1;
+//
+//    var wamiImageryProvider = new Cesium.SingleTileImageryProvider(getUrl(frame), extent, new Cesium.DefaultProxy('/proxy/'));
+//
+//    wamiImageryProvider.createResources = function(context, tileImagery, texturePool) {
+//        if (typeof this._texture === 'undefined') {
+//            var texture = texturePool.createTexture2D(context, {
+//                source : tileImagery.transformedImage
+//            });
+//
+//            texture.setSampler({
+//                wrapS : Cesium.TextureWrap.CLAMP,
+//                wrapT : Cesium.TextureWrap.CLAMP,
+//                minificationFilter : Cesium.TextureMinificationFilter.LINEAR,
+//                magnificationFilter : Cesium.TextureMagnificationFilter.LINEAR,
+//
+//                // TODO: Remove Chrome work around
+//                maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8
+//            });
+//
+//            this._texture = texture;
+//        }
+//
+//        tileImagery.texture = this._texture;
+//        tileImagery.transformedImage = undefined;
+//        tileImagery.state = Cesium.TileState.READY;
+//    };
+//
+//    wamiImageryProvider.advance = function() {
+//        if (!this.ready || this._reloading) {
+//            return;
+//        }
+//        this._reloading = true;
+//        this._url = getUrl(++frame);
+//        var that = this;
+//        Cesium.loadImage(this.buildImageUrl()).then(function(image) {
+//            that._image = image;
+//            that._texture.copyFrom(image);
+//            that._reloading = false;
+//        }, function() {
+//            that._reloading = false;
+//        });
+//    };
+//
+//    var wamiLayer = imageryLayerCollection.addImageryProvider(wamiImageryProvider);
 
     var cb = new Cesium.CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
 
@@ -194,7 +195,7 @@ require({
     });
 
     (function tick() {
-        wamiImageryProvider.advance();
+//        wamiImageryProvider.advance();
 
         scene.render();
         Cesium.requestAnimationFrame(tick);
