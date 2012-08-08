@@ -139,6 +139,7 @@ define([
          * @type BoundingSphere
          */
         this.boundingVolume = undefined;
+        this._baseVolume = undefined;
 
         /**
          * A bounding sphere used for culling in Columbus view mode.
@@ -603,6 +604,12 @@ define([
         }
         for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
             properties[k] = 0;
+        }
+
+        if (sceneState.mode === SceneMode.SCENE3D && typeof this._baseVolume !== 'undefined') {
+            var center = new Cartesian4(this._baseVolume.center.x, this._baseVolume.center.y, this._baseVolume.center.z, 1.0);
+            center = this.modelMatrix.multiplyByVector(center);
+            this.boundingVolume = new BoundingSphere(Cartesian3.fromCartesian4(center), this._baseVolume.radius);
         }
     };
 
@@ -1375,10 +1382,10 @@ define([
 
             if (positions.length > 0) {
                 polyline.boundingVolume = BoundingSphere.fromPoints(positions);
-                if (typeof polyline._collection.boundingVolume === 'undefined') {
-                    polyline._collection.boundingVolume = polyline.boundingVolume.clone();
+                if (typeof polyline._collection._baseVolume === 'undefined') {
+                    polyline._collection._baseVolume = polyline.boundingVolume.clone();
                 } else {
-                    polyline._collection.boundingVolume.expand(polyline.boundingVolume, polyline._collection.boundingVolume);
+                    polyline._collection._baseVolume.expand(polyline.boundingVolume, polyline._collection._baseVolume);
                 }
             }
 
