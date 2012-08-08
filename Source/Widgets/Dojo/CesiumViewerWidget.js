@@ -41,7 +41,9 @@ define([
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileProvider',
         '../../Scene/PerformanceDisplay',
+        '../../DynamicScene/CzmlDefaults',
         '../../DynamicScene/processCzml',
+        '../../DynamicScene/CompositeDynamicObjectCollection',
         '../../DynamicScene/DynamicObjectCollection',
         '../../DynamicScene/VisualizerCollection',
         'dojo/text!./CesiumViewerWidget.html'
@@ -87,7 +89,9 @@ define([
         SceneTransitioner,
         SingleTileProvider,
         PerformanceDisplay,
+        CzmlDefaults,
         processCzml,
+        CompositeDynamicObjectCollection,
         DynamicObjectCollection,
         VisualizerCollection,
         template) {
@@ -239,7 +243,7 @@ define([
             this.animPause.set('checked', true);
             this.animPlay.set('checked', false);
 
-            var availability = this.dynamicObjectCollection.computeAvailability();
+            var availability = this.compositeDynamicObjectCollection.computeAvailability();
             if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
                 clock.startTime = new JulianDate();
                 clock.stopTime = clock.startTime.addDays(1);
@@ -268,9 +272,9 @@ define([
                 //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
                 //cache data indefinitely and removeAll is the only way to get rid of it.
                 //while there are no visual differences, removeAll cleans the cache and improves performance
-                widget.visualizers.removeAllPrimitives();
-                widget.dynamicObjectCollection.clear();
-                processCzml(JSON.parse(evt.target.result), widget.dynamicObjectCollection, f.name);
+                //widget.visualizers.removeAllPrimitives();
+                //widget.compositeDynamicObjectCollection.clear();
+                processCzml(JSON.parse(evt.target.result), widget.compositeDynamicObjectCollection, f.name, CzmlDefaults.updaters);
                 widget.setTimeFromBuffer();
             };
             reader.readAsText(f);
@@ -375,14 +379,15 @@ define([
             }
 
             var animationController = this.animationController;
-            var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
+            var baseDynamicObjectCollection = this.baseDynamicObjectCollection = new DynamicObjectCollection();
+            var compositeDynamicObjectCollection = this.compositeDynamicObjectCollection = new CompositeDynamicObjectCollection([baseDynamicObjectCollection]);
             var clock = this.clock;
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
-            this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
+            this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, compositeDynamicObjectCollection);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 getJson(widget.endUserOptions.source).then(function(czmlData) {
-                    processCzml(czmlData, widget.dynamicObjectCollection, widget.endUserOptions.source);
+                    processCzml(czmlData, widget.compositeDynamicObjectCollection, widget.endUserOptions.source, CzmlDefaults.updaters);
                     widget.setTimeFromBuffer();
                 },
                 function(error) {
@@ -677,7 +682,7 @@ define([
 
             // Update the camera to stay centered on the selected object, if any.
             if (cameraCenteredObjectID) {
-                var dynamicObject = this.dynamicObjectCollection.getObject(cameraCenteredObjectID);
+                var dynamicObject = this.compositeDynamicObjectCollection.getObject(cameraCenteredObjectID);
                 if (dynamicObject && dynamicObject.position) {
                     cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
                     if (typeof cameraCenteredObjectIDPosition !== 'undefined') {

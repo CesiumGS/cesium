@@ -6,6 +6,7 @@ define([
         './DynamicProperty',
         './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
+        './DynamicLayerProperty',
         './CzmlUnitQuaternion'
     ], function(
         createGuid,
@@ -14,6 +15,7 @@ define([
         DynamicProperty,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
+        DynamicLayerProperty,
         CzmlUnitQuaternion) {
     "use strict";
 
@@ -106,6 +108,11 @@ define([
          * The DynamicPyramid, if any, associated with this object.
          */
         this.pyramid = undefined;
+
+        /**
+         * The DynamicLayer, if any, associated with this object.
+         */
+        this.layer = undefined;
 
         /**
          * The DynamicVertexPositionsProperty, if any, associated with this object.
@@ -243,6 +250,35 @@ define([
             propertyCreated = typeof dynamicObject.availability === 'undefined';
             dynamicObject._setAvailability(interval);
         }
+        return propertyCreated;
+    };
+
+
+    /**
+     * Processes a single CZML packet and merges its data into the provided DynamicObject's layer
+     * property. This method is not normally called directly, but is part of the array of CZML processing
+     * functions that is passed into the DynamicObjectCollection constructor.
+     *
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the layer data.
+     * @param {Object} packet The CZML packet to process.
+     * @returns {Boolean} true if the property was newly created while processing the packet, false otherwise.
+     *
+     * @see DynamicPositionProperty
+     * @see DynamicObjectCollection
+     * @see CzmlDefaults#updaters
+     */
+    DynamicObject.processCzmlPacketLayer = function(dynamicObject, packet, dynamicObjectCollection, sourceUri, updaterFunctions) {
+        var layerData = packet.layer;
+        if (typeof layerData === 'undefined') {
+            return false;
+        }
+
+        var layer = dynamicObject.layer;
+        var propertyCreated = typeof layer === 'undefined';
+        if (propertyCreated) {
+            dynamicObject.layer = layer = new DynamicLayerProperty();
+        }
+        layer.processCzmlIntervals(layerData, layer, dynamicObjectCollection, sourceUri, updaterFunctions);
         return propertyCreated;
     };
 
