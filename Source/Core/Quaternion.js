@@ -230,15 +230,15 @@ define([
     };
 
     /**
-     * Computes norm squared for the provided quaternion.
+     * Computes magnitude squared for the provided quaternion.
      * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to conjugate.
-     * @return {Number} The norm squared.
+     * @return {Number} The magnitude squared.
      *
      * @exception {DeveloperError} quaternion is required.
      */
-    Quaternion.normSquared = function(quaternion) {
+    Quaternion.magnitudeSquared = function(quaternion) {
         if (typeof quaternion === 'undefined') {
             throw new DeveloperError('quaternion is required');
         }
@@ -246,19 +246,19 @@ define([
     };
 
     /**
-     * Computes norm for the provided quaternion.
+     * Computes magnitude for the provided quaternion.
      * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to conjugate.
-     * @return {Number} The norm.
+     * @return {Number} The magnitude.
      *
      * @exception {DeveloperError} quaternion is required.
      */
-    Quaternion.norm = function(quaternion) {
+    Quaternion.magnitude = function(quaternion) {
         if (typeof quaternion === 'undefined') {
             throw new DeveloperError('quaternion is required');
         }
-        return Math.sqrt(Quaternion.normSquared(quaternion));
+        return Math.sqrt(Quaternion.magnitudeSquared(quaternion));
     };
 
     /**
@@ -272,7 +272,7 @@ define([
      * @exception {DeveloperError} quaternion is required.
      */
     Quaternion.normalize = function(quaternion, result) {
-        var inverseMagnitude = 1.0 / Quaternion.norm(quaternion);
+        var inverseMagnitude = 1.0 / Quaternion.magnitude(quaternion);
         var x = quaternion.x * inverseMagnitude;
         var y = quaternion.y * inverseMagnitude;
         var z = quaternion.z * inverseMagnitude;
@@ -299,9 +299,9 @@ define([
      * @exception {DeveloperError} quaternion is required.
      */
     Quaternion.inverse = function(quaternion, result) {
-        var normSquared = Quaternion.normSquared(quaternion);
+        var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
         result = Quaternion.conjugate(quaternion, result);
-        return Quaternion.multiplyByScalar(result, 1.0 / normSquared, result);
+        return Quaternion.multiplyByScalar(result, 1.0 / magnitudeSquared, result);
     };
 
     /**
@@ -725,23 +725,23 @@ define([
     };
 
     /**
-     * Computes norm squared for this quaternion.
+     * Computes magnitude squared for this quaternion.
      * @memberof Quaternion
      *
-     * @return {Number} The norm squared.
+     * @return {Number} The magnitude squared.
      */
-    Quaternion.prototype.normSquared = function() {
-        return Quaternion.normSquared(this);
+    Quaternion.prototype.magnitudeSquared = function() {
+        return Quaternion.magnitudeSquared(this);
     };
 
     /**
-     * Computes norm for this quaternion.
+     * Computes magnitude for this quaternion.
      * @memberof Quaternion
      *
-     * @return {Number} The norm.
+     * @return {Number} The magnitude.
      */
-    Quaternion.prototype.norm = function() {
-        return Quaternion.norm(this);
+    Quaternion.prototype.magnitude = function() {
+        return Quaternion.magnitude(this);
     };
 
     /**
