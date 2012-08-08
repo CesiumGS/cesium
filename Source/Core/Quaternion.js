@@ -564,7 +564,7 @@ define([
         return 2.0 * Math.acos(quaternion.w);
     };
 
-    var lerpScratch = new Quaternion();
+    var lerpScratch;
     /**
      * Computes the linear interpolation or extrapolation at t using the provided quaternions.
      * @memberof Quaternion
@@ -589,14 +589,14 @@ define([
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
         }
-        Quaternion.multiplyByScalar(end, t, lerpScratch);
+        lerpScratch = Quaternion.multiplyByScalar(end, t, lerpScratch);
         result = Quaternion.multiplyByScalar(start, 1.0 - t, result);
         return Quaternion.add(lerpScratch, result, result);
     };
 
-    var slerpEndNegated = new Quaternion();
-    var slerpScaledP = new Quaternion();
-    var slerpScaledR = new Quaternion();
+    var slerpEndNegated;
+    var slerpScaledP;
+    var slerpScaledR;
     /**
      * Computes the spherical linear interpolation or extrapolation at t using the provided quaternions.
      * @memberof Quaternion
@@ -629,7 +629,7 @@ define([
         var r = end;
         if (dot < 0.0) {
             dot = -dot;
-            r = Quaternion.negate(end, slerpEndNegated);
+            r = slerpEndNegated = Quaternion.negate(end, slerpEndNegated);
         }
 
         // dot > 0, as the dot product approaches 1, the angle between the
@@ -639,8 +639,8 @@ define([
         }
 
         var theta = Math.acos(dot);
-        Quaternion.multiplyByScalar(start, Math.sin((1 - t) * theta), slerpScaledP);
-        Quaternion.multiplyByScalar(r, Math.sin(t * theta), slerpScaledR);
+        slerpScaledP = Quaternion.multiplyByScalar(start, Math.sin((1 - t) * theta), slerpScaledP);
+        slerpScaledR = Quaternion.multiplyByScalar(r, Math.sin(t * theta), slerpScaledR);
         result = Quaternion.add(slerpScaledP, slerpScaledR, result);
         return Quaternion.multiplyByScalar(result, 1.0 / Math.sin(theta), result);
     };
