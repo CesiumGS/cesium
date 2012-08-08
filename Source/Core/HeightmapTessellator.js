@@ -135,7 +135,7 @@ define([
                     heightSample = heightmap[terrainOffset];
                 } else {
                     heightSample = 0;
-                    for (var byteOffset = 0; i < bytesPerHeight; ++i) {
+                    for (var byteOffset = 0; byteOffset < bytesPerHeight; ++byteOffset) {
                         heightSample = (heightSample << 8) + heightmap[terrainOffset + byteOffset];
                     }
                 }
