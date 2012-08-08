@@ -9,12 +9,16 @@ defineSuite([
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Math',
+         'Core/Matrix3',
+         'Core/Matrix4',
          'Scene/Camera',
          'Scene/CentralBody',
          'Scene/LabelCollection',
          'Scene/HorizontalOrigin',
          'Scene/VerticalOrigin',
-         'Scene/Polygon'
+         'Scene/Polygon',
+         'Scene/SceneMode',
+         'Scene/OrthographicFrustum'
      ], function(
          CompositePrimitive,
          createContext,
@@ -25,12 +29,16 @@ defineSuite([
          Cartographic,
          Ellipsoid,
          CesiumMath,
+         Matrix3,
+         Matrix4,
          Camera,
          CentralBody,
          LabelCollection,
          HorizontalOrigin,
          VerticalOrigin,
-         Polygon) {
+         Polygon,
+         SceneMode,
+         OrthographicFrustum) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -53,7 +61,7 @@ defineSuite([
         camera = new Camera(context.getCanvas());
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.up = Cartesian3.UNIT_Z;
-        camera.direction = camera.position.negate();
+        camera.direction = camera.position.normalize().negate();
         camera.frustum.near = 0.01;
         camera.frustum.far = 10.0;
         camera.frustum.fovy = CesiumMath.toRadians(60.0);
@@ -640,5 +648,86 @@ defineSuite([
         expect(function() {
             primitives.sendToBack(p);
         }).toThrow();
+    });
+
+    it('frustum culls in 3D', function() {
+        var savedCamera = sceneState.camera;
+        sceneState.camera = camera;
+
+        var polygon = createPolygon();
+        primitives.add(polygon);
+
+        primitives.update(context, sceneState);
+        expect(primitives._renderList.length).toEqual(1);
+        primitives._renderList.length = 0;
+
+        camera.position = new Cartesian3(50.0, 0.0, 0.0);
+        camera.direction = camera.position.normalize();
+        camera.right = camera.direction.cross(camera.up);
+
+        primitives.update(context, sceneState);
+        expect(primitives._renderList.length).toEqual(0);
+        primitives._renderList.length = 0;
+
+        sceneState.camera = savedCamera;
+    });
+
+    it('frustum culls in Columbus view', function() {
+        var savedCamera = sceneState.camera;
+        sceneState.camera = camera;
+
+        var mode = sceneState.mode;
+        sceneState.mode = SceneMode.COLUMBUS_VIEW;
+
+        var polygon = createPolygon();
+        primitives.add(polygon);
+
+        primitives.update(context, sceneState);
+        expect(primitives._renderList.length).toEqual(1);
+        primitives._renderList.length = 0;
+
+        camera.position = new Cartesian3(8000000.0, 0.0, 0.0);
+        camera.direction = camera.position.normalize();
+        camera.right = camera.direction.cross(camera.up);
+
+        primitives.update(context, sceneState);
+        expect(primitives._renderList.length).toEqual(0);
+        primitives._renderList.length = 0;
+
+        sceneState.mode = mode;
+        sceneState.camera = savedCamera;
+    });
+
+    it('frustum culls in 2D', function() {
+        var savedCamera = sceneState.camera;
+        sceneState.camera = camera;
+
+        var orthoFrustum = new OrthographicFrustum();
+        orthoFrustum.right = 1.0;
+        orthoFrustum.left = -orthoFrustum.right;
+        orthoFrustum.top = orthoFrustum.right;
+        orthoFrustum.bottom = -orthoFrustum.top;
+        orthoFrustum.near = camera.frustum.near;
+        orthoFrustum.far = camera.frustum.far;
+        camera.frustum = orthoFrustum;
+
+        var mode = sceneState.mode;
+        sceneState.mode = SceneMode.SCENE2D;
+
+        var polygon = createPolygon();
+        primitives.add(polygon);
+
+        primitives.update(context, sceneState);
+        expect(primitives._renderList.length).toEqual(1);
+        primitives._renderList.length = 0;
+
+        camera.position = new Cartesian3(8000000.0, 0.0, 0.0);
+
+        primitives.update(context, sceneState);
+        expect(primitives._renderList.length).toEqual(0);
+        primitives._renderList.length = 0;
+
+        sceneState.mode = mode;
+        sceneState.camera = savedCamera;
     });
 });
