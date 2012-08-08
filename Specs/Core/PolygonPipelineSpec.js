@@ -499,25 +499,25 @@ defineSuite([
         ];
 
         var innerRings = [innerRing];
-        outerRing = PolygonPipeline.eliminateHole(outerRing, innerRings);
+        outerRing = PolygonPipeline._eliminateHole(outerRing, innerRings);
         expect(innerRings.length === 0).toEqual(true);
     });
 
     it('eliminateHole throws an exception without an outerRing', function() {
         expect(function() {
-            PolygonPipeline.eliminateHole();
+            PolygonPipeline._eliminateHole();
         }).toThrow();
     });
 
     it('eliminateHole throws an exception with an empty outerRing', function() {
         expect(function() {
-            PolygonPipeline.eliminateHole([]);
+            PolygonPipeline._eliminateHole([]);
         }).toThrow();
     });
 
     it('eliminateHole throws an exception without a second argument', function() {
         expect(function() {
-            PolygonPipeline.eliminateHole([new Cartesian3()]);
+            PolygonPipeline._eliminateHole([new Cartesian3()]);
         }).toThrow();
     });
 
@@ -539,7 +539,7 @@ defineSuite([
                       new Cartographic.fromDegrees(-121.99, 37.04)
          ]);
 
-         var positions = PolygonPipeline.eliminateHole(outerRing, [innerRing]);
+         var positions = PolygonPipeline._eliminateHole(outerRing, [innerRing]);
 
          expect(positions[0].equals(outerRing[0])).toEqual(true);
          expect(positions[1].equals(outerRing[1])).toEqual(true);
@@ -556,5 +556,47 @@ defineSuite([
          expect(positions[10].equals(outerRing[4])).toEqual(true);
          expect(positions[11].equals(outerRing[5])).toEqual(true);
          expect(positions[12].equals(outerRing[6])).toEqual(true);
+    });
+
+    it('eliminateHoles eliminates multiple holes', function() {
+        var outerRing = Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                         new Cartographic.fromDegrees(-122.0, 37.0),
+                                         new Cartographic.fromDegrees(-121.9, 37.0),
+                                         new Cartographic.fromDegrees(-121.9, 37.1),
+                                         new Cartographic.fromDegrees(-122.0, 37.1)
+                            ]);
+
+         var inner0 = Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                                                   new Cartographic.fromDegrees(-121.99, 37.01),
+                                                                   new Cartographic.fromDegrees(-121.99, 37.04),
+                                                                   new Cartographic.fromDegrees(-121.96, 37.04),
+                                                                   new Cartographic.fromDegrees(-121.96, 37.01)
+                                                      ]);
+         var inner1 = Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                                                    new Cartographic.fromDegrees(-121.94, 37.06),
+                                                                    new Cartographic.fromDegrees(-121.94, 37.09),
+                                                                    new Cartographic.fromDegrees(-121.91, 37.09),
+                                                                    new Cartographic.fromDegrees(-121.91, 37.06)
+
+                                                       ]);
+         var inner2 = Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                                                   new Cartographic.fromDegrees(-121.99, 37.06),
+                                                                   new Cartographic.fromDegrees(-121.99, 37.09),
+                                                                   new Cartographic.fromDegrees(-121.96, 37.09),
+                                                                   new Cartographic.fromDegrees(-121.96, 37.06)
+
+                                                      ]);
+         var inner3 = Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                                                     new Cartographic.fromDegrees(-121.94, 37.01),
+                                                                     new Cartographic.fromDegrees(-121.94, 37.04),
+                                                                     new Cartographic.fromDegrees(-121.91, 37.04),
+                                                                     new Cartographic.fromDegrees(-121.91, 37.01)
+                                                      ]);
+
+         var innerRings = [inner0, inner1, inner2, inner3];
+         var positions = PolygonPipeline.eliminateHoles(outerRing, innerRings);
+         expect(outerRing.length).toEqual(4);
+         expect(innerRings.length).toEqual(0);
+         expect(positions.length).toEqual(28);
     });
 });

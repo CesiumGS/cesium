@@ -724,7 +724,7 @@ define([
 
         /**
          * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
-         * a polygon with a hole added to it. The added hole is removed from <code>innerRings</code>.
+         * a polygon with the rightmost hole added to it. The added hole is removed from <code>innerRings</code>.
          *
          * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
          * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
@@ -735,14 +735,16 @@ define([
          * @exception {DeveloperError} <code>outerRing</code> must not be empty.
          * @exception {DeveloperError} <code>innerRings</code> is required.
          *
+         * @private
+         *
          * @example
          * // Simplifying a polygon with multiple holes.
          * while (innerRings.length !== 0) {
-         *     outerRing = PolygonPipeline.eliminateHole(outerRing, innerRings);
+         *     outerRing = PolygonPipeline._eliminateHole(outerRing, innerRings);
          * }
          * polygon.setPositions(outerRing);
          */
-        eliminateHole : function(outerRing, innerRings) {
+        _eliminateHole : function(outerRing, innerRings) {
             if (!outerRing) {
                 throw new DeveloperError('outerRing is required.');
             }
@@ -823,6 +825,32 @@ define([
 
             innerRings.splice(innerRingIndex, 1);
 
+            return newPolygonVertices;
+        },
+
+        /**
+         * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
+         * a polygon defined by the outer ring with the inner holes removed. <code>innerRings</code> will be empty after execution.
+         *
+         * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
+         * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+         *
+         * @return A single list of Cartesian points defining the polygon, including the eliminated inner ring.
+         *
+         * @exception {DeveloperError} <code>outerRing</code> is required.
+         * @exception {DeveloperError} <code>outerRing</code> must not be empty.
+         * @exception {DeveloperError} <code>innerRings</code> is required.
+         *
+         * @example
+         * // Simplifying a polygon with multiple holes.
+         * outerRing = PolygonPipeline.eliminateHoles(outerRing, innerRings);
+         * polygon.setPositions(outerRing);
+         */
+        eliminateHoles : function(outerRing, innerRings) {
+            var newPolygonVertices = outerRing;
+            while (innerRings.length > 0) {
+                newPolygonVertices = PolygonPipeline._eliminateHole(newPolygonVertices, innerRings);
+            }
             return newPolygonVertices;
         }
     };
