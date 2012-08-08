@@ -274,30 +274,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('tests if a point is inside a triangle', function() {
-        var a = new Cartesian3(0, 0, 0);
-        var b = new Cartesian3(0, 1, 0);
-        var c = new Cartesian3(1, 0, 0);
-
-        // p is on the boundary of the triangle
-        var p = new Cartesian3(0, 0, 0);
-        expect(PolygonPipeline._isPointInTriangle2D(p, a, b, c)).toEqual(true);
-
-        // p is inside the triangle
-        p = new Cartesian3(0.5, 0.25, 0);
-        expect(PolygonPipeline._isPointInTriangle2D(p, a, b, c)).toEqual(true);
-
-        // p is outside the triangle
-        p = new Cartesian3(1, 1, 0);
-        expect(PolygonPipeline._isPointInTriangle2D(p, a, b, c)).toEqual(false);
-    });
-
-    it('_isPointInTriangle2D throws an exception without arguments', function() {
-        expect(function() {
-            PolygonPipeline._isPointInTriangle2D();
-        }).toThrow();
-    });
-
     it('gets the rightmost vertex index', function() {
         var ring = [
             new Cartesian3(0.0, 1.0, 0.0),

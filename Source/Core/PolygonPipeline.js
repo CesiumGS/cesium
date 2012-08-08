@@ -5,6 +5,7 @@ define([
         './Cartesian3',
         './Ellipsoid',
         './EllipsoidTangentPlane',
+        './defaultValue',
         './pointInsideTriangle2D',
         './ComponentDatatype',
         './PrimitiveType',
@@ -16,6 +17,7 @@ define([
         Cartesian3,
         Ellipsoid,
         EllipsoidTangentPlane,
+        defaultValue,
         pointInsideTriangle2D,
         ComponentDatatype,
         PrimitiveType,
@@ -451,41 +453,6 @@ define([
         },
 
         /**
-         * Determines if a given point lies inside or on the boundary of the triangle formed by three points.
-         *
-         * @param {Cartesian} point
-         * @param {Cartesian} p0
-         * @param {Cartesian} p1
-         * @param {Cartesian} p2
-         * @returns {Boolean} <code>true</code> if <code>point</code> lies within or on the boundary of the triangle
-         * defined by points <code>p0</code>, <code>p1</code>, and <code>p2</code>.
-         *
-         * @private
-         */
-        _isPointInTriangle2D : function(point, p0, p1, p2) {
-            if (!point || !p0 || !p1 || !p2) {
-                throw new DeveloperError('point, p0, p1, and p2 are required.');
-            }
-
-            // Implementation from http://www.blackpawn.com/texts/pointinpoly/default.html.
-            var v0 = p2.subtract(p0);
-            var v1 = p1.subtract(p0);
-            var v2 = point.subtract(p0);
-
-            var dot00 = v0.dot(v0);
-            var dot01 = v0.dot(v1);
-            var dot02 = v0.dot(v2);
-            var dot11 = v1.dot(v1);
-            var dot12 = v1.dot(v2);
-
-            var q = 1.0 / (dot00 * dot11 - dot01 * dot01);
-            var u = (dot11 * dot02 - dot01 * dot12) * q;
-            var v = (dot00 * dot12 - dot01 * dot02) * q;
-
-            return (u >= 0) && (v >= 0) && (u + v < 1);
-        },
-
-        /**
          * Returns the index of the vertex with the maximum X value.
          *
          * @param {Array} vertices An array of the Cartesian points defining the polygon's vertices.
@@ -566,7 +533,6 @@ define([
                 throw new DeveloperException('polygon is required.');
             }
 
-            // Idea: Return a list of indices, rather than the vertices themselves.
             var reflexVertices = [];
             for (var i = 0; i < polygon.length; i++) {
                 var p0 = polygon[(i + 1) % polygon.length];
@@ -626,7 +592,7 @@ define([
             if (!ring) {
                 throw new DeveloperError('ring is required');
             }
-            edgeIndices = edgeIndices || [];
+            edgeIndices = defaultValue(edgeIndices, []);
 
             var minDistance = Number.MAX_VALUE;
             var rightmostVertexIndex = PolygonPipeline._getRightmostVertexIndex(ring);
@@ -722,14 +688,14 @@ define([
                 var reflexVertices = PolygonPipeline._getReflexVertices(outerRing);
                 var reflexIndex = reflexVertices.indexOf(p);
                 if (reflexIndex !== -1) {
-                    reflexVertices.splice(reflexIndex, 1); // Do not include p if it happens to be reflex.
+                    reflexVertices.splice(reflexIndex, 1);  // Do not include p if it happens to be reflex.
                 }
 
                 var pointsInside = [];
                 for (var i = 0; i < reflexVertices.length; i++)
                 {
                     var vertex = reflexVertices[i];
-                    if (PolygonPipeline._isPointInTriangle2D(vertex, innerRingVertex, intersection, p))
+                    if (pointInsideTriangle2D(vertex, innerRingVertex, intersection, p))
                     {
                         pointsInside.push(vertex);
                     }
@@ -772,8 +738,9 @@ define([
          * @example
          * // Simplifying a polygon with multiple holes.
          * while (innerRings.length !== 0) {
-         *     outerRing = Cesium.PolygonPipeline.eliminateHole(outerRing, innerRings);
+         *     outerRing = PolygonPipeline.eliminateHole(outerRing, innerRings);
          * }
+         * polygon.setPositions(outerRing);
          */
         eliminateHole : function(outerRing, innerRings) {
             if (!outerRing) {
@@ -786,12 +753,12 @@ define([
                 throw new DeveloperError('innerRings is required.');
             }
 
-            // Check that the holes are defined in the winding order opposite that of the outer ring
+            // Check that the holes are defined in the winding order opposite that of the outer ring.
             var windingOrder = PolygonPipeline.computeArea2D(outerRing) >= 0.0 ? 0 : 1;
             for (var i = 0; i < innerRings.length; i++) {
                 var ring = innerRings[i];
 
-                // Ensure each hole's first and last points are the same
+                // Ensure each hole's first and last points are the same.
                 if (!(ring[0]).equals(ring[ring.length - 1])) {
                     ring.push(ring[0]);
                 }
