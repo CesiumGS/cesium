@@ -35,7 +35,7 @@ void main()
     {
         if (i >= u_numberOfDayTextures)
             break;
-        vec2 baseCoordinates = u_dayTextureIsGeographic[i] ? v_geographicCoordinates : v_webMercatorCoordinates;
+        vec2 baseCoordinates = mix(v_webMercatorCoordinates, v_geographicCoordinates, float(u_dayTextureIsGeographic[i]));
         vec2 textureCoordinates = (baseCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
         if (textureCoordinates.x >= 0.0 && textureCoordinates.x <= 1.0 &&
             textureCoordinates.y >= 0.0 && textureCoordinates.y <= 1.0)

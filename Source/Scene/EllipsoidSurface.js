@@ -16,6 +16,7 @@ define([
         '../Core/Rectangle',
         '../Core/CubeMapEllipsoidTessellator',
         '../Core/MeshFilters',
+        './GeographicTilingScheme',
         './ImageryLayerCollection',
         './TerrainProvider',
         './TileState',
@@ -41,6 +42,7 @@ define([
         Rectangle,
         CubeMapEllipsoidTessellator,
         MeshFilters,
+        GeographicTilingScheme,
         ImageryLayerCollection,
         TerrainProvider,
         TileState,
@@ -410,7 +412,7 @@ define([
                     uniformMap.dayTextureTranslation[numberOfDayTextures] = tileImagery.textureTranslation;
                     uniformMap.dayTextureScale[numberOfDayTextures] = tileImagery.textureScale;
                     uniformMap.dayTextureAlpha[numberOfDayTextures] = tileImagery.imageryLayer.alpha;
-                    uniformMap.dayTextureIsGeographic[numberOfDayTextures] = false;
+                    uniformMap.dayTextureIsGeographic[numberOfDayTextures] = tileImagery.imageryLayer.imageryProvider.tilingScheme instanceof GeographicTilingScheme;
 
                     ++numberOfDayTextures;
                 }

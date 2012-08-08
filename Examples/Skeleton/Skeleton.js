@@ -102,7 +102,7 @@ require({
     scene.getCamera().frustum.far = 20000000.0;
     scene.getCamera().getControllers().addCentralBody();
 
-    //scene.viewExtent(testLayer.imageryProvider.extent, ellipsoid);
+    scene.viewExtent(testLayer.imageryProvider.extent, ellipsoid);
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 

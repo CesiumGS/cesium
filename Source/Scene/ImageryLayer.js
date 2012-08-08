@@ -148,15 +148,14 @@ define([
         }
 
         // Create TileImagery instances for each imagery tile overlapping this terrain tile.
-        // We need to do all texture coordinate computations in the terrain tile's tiling scheme.
-        var terrainExtent = geometryTilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
+        // We need to do all texture coordinate computations in the imagery tile's tiling scheme.
+        var terrainExtent = imageryTilingScheme.extentToNativeExtent(tile.extent);
         var terrainWidth = terrainExtent.east - terrainExtent.west;
         var terrainHeight = terrainExtent.north - terrainExtent.south;
 
         for ( var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
             for ( var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
-                var imageryExtent = imageryTilingScheme.tileXYToExtent(i, j, imageryLevel);
-                imageryExtent = geometryTilingScheme.extentToNativeExtent(imageryExtent);
+                var imageryExtent = imageryTilingScheme.tileXYToNativeExtent(i, j, imageryLevel);
                 var textureTranslation = new Cartesian2(
                         (imageryExtent.west - terrainExtent.west) / terrainWidth,
                         (imageryExtent.south - terrainExtent.south) / terrainHeight);
