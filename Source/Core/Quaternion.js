@@ -115,7 +115,16 @@ define([
         var m11 = matrix[Matrix3.COLUMN1ROW1];
         var m22 = matrix[Matrix3.COLUMN2ROW2];
 
-        switch (Math.max(m00, m11, m22)) {
+        var tmp = m00 * m11 * m22;
+        switch (Math.max(tmp, m00, m11, m22)) {
+        case tmp:
+            w = 0.5 * Math.sqrt(1.0 + m00 * m11 * m22);
+            factor = 1.0 / (4.0 * w);
+
+            x = factor * (matrix[Matrix3.COLUMN2ROW1] - matrix[Matrix3.COLUMN1ROW2]);
+            y = factor * (matrix[Matrix3.COLUMN0ROW2] - matrix[Matrix3.COLUMN2ROW0]);
+            z = factor * (matrix[Matrix3.COLUMN1ROW0] - matrix[Matrix3.COLUMN0ROW1]);
+            break;
         case m00:
             x = 0.5 * Math.sqrt(1.0 + m00 - m11 - m22);
             factor = 1.0 / (4.0 * x);
@@ -157,14 +166,6 @@ define([
 
             x = factor * (matrix[Matrix3.COLUMN2ROW0] + matrix[Matrix3.COLUMN0ROW2]);
             y = factor * (matrix[Matrix3.COLUMN2ROW1] + matrix[Matrix3.COLUMN1ROW2]);
-            break;
-        default:
-            w = 0.5 * Math.sqrt(1.0 + m00 * m11 * m22);
-            factor = 1.0 / (4.0 * w);
-
-            x = factor * (matrix[Matrix3.COLUMN2ROW1] - matrix[Matrix3.COLUMN1ROW2]);
-            y = factor * (matrix[Matrix3.COLUMN0ROW2] - matrix[Matrix3.COLUMN2ROW0]);
-            z = factor * (matrix[Matrix3.COLUMN1ROW0] - matrix[Matrix3.COLUMN0ROW1]);
             break;
         }
 
@@ -436,9 +437,9 @@ define([
         var rightZ = right.z;
         var rightW = right.w;
 
-        var x = leftY * rightZ - leftZ * rightY + leftX * rightW + leftW * rightX;
-        var y = leftZ * rightX - leftX * rightZ + leftY * rightW + leftW * rightY;
-        var z = leftX * rightY - leftY * rightX + leftZ * rightW + leftW * rightZ;
+        var x = leftW * rightX + leftX * rightW + leftY * rightZ - leftZ * rightY;
+        var y = leftW * rightY - leftX * rightZ + leftY * rightW + leftZ * rightX;
+        var z = leftW * rightZ + leftX * rightY - leftY * rightX + leftZ * rightW;
         var w = leftW * rightW - leftX * rightX - leftY * rightY - leftZ * rightZ;
 
         if (typeof result === 'undefined') {
@@ -593,9 +594,9 @@ define([
         return Quaternion.add(lerpScratch, result, result);
     };
 
+    var slerpEndNegated = new Quaternion();
     var slerpScaledP = new Quaternion();
     var slerpScaledR = new Quaternion();
-    var slerpEndNegated = new Quaternion();
     /**
      * Computes the spherical linear interpolation or extrapolation at t using the provided quaternions.
      * @memberof Quaternion
@@ -621,24 +622,25 @@ define([
             throw new DeveloperError('t is required and must be a number.');
         }
 
-        var dotProduct = Quaternion.dot(start, end);
+        var dot = Quaternion.dot(start, end);
 
-        // The angle between start and end must be acute. Since q and -q represent
+        // The angle between start must be acute. Since q and -q represent
         // the same rotation, negate q to get the acute angle.
-        if (dotProduct < 0.0) {
-            dotProduct = -dotProduct;
-            Quaternion.negate(end, slerpEndNegated);
+        var r = end;
+        if (dot < 0.0) {
+            dot = -dot;
+            r = Quaternion.negate(end, slerpEndNegated);
         }
 
         // dot > 0, as the dot product approaches 1, the angle between the
-        // quaternions vanishes, so use linear interpolation.
-        if (1.0 - dotProduct < CesiumMath.EPSILON6) {
-            return Quaternion.slerp(start, slerpEndNegated, t, result);
+        // quaternions vanishes. use linear interpolation.
+        if (1.0 - dot < CesiumMath.EPSILON6) {
+            return Quaternion.lerp(start, r, t);
         }
 
-        var theta = Math.acos(dotProduct);
-        Quaternion.multiplyByScalar(start, (Math.sin((1 - t) * theta)), slerpScaledP);
-        Quaternion.multiplyByScalar(slerpEndNegated, Math.sin(t * theta), slerpScaledR);
+        var theta = Math.acos(dot);
+        Quaternion.multiplyByScalar(start, Math.sin((1 - t) * theta), slerpScaledP);
+        Quaternion.multiplyByScalar(r, Math.sin(t * theta), slerpScaledR);
         result = Quaternion.add(slerpScaledP, slerpScaledR, result);
         return Quaternion.multiplyByScalar(result, 1.0 / Math.sin(theta), result);
     };
