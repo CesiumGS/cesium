@@ -17,7 +17,7 @@ require({
         var id = data.id;
         var parameters = data.parameters;
 
-        var vertices = new Float32Array(parameters.width * parameters.height * 5);
+        var vertices = new Float32Array(parameters.width * parameters.height * 7);
         parameters.vertices = vertices;
         parameters.generateTextureCoordinates = true;
         parameters.interleaveTextureCoordinates = true;

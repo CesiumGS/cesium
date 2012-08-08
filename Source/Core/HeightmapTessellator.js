@@ -7,7 +7,8 @@ define([
         './Extent',
         './Cartesian3',
         './ComponentDatatype',
-        './PrimitiveType'
+        './PrimitiveType',
+        './Math'
     ], function(
         defaultValue,
         getImagePixels,
@@ -16,7 +17,8 @@ define([
         Extent,
         Cartesian3,
         ComponentDatatype,
-        PrimitiveType) {
+        PrimitiveType,
+        CesiumMath) {
     "use strict";
 
     /**
@@ -38,7 +40,7 @@ define([
      * @param {Number} description.heightScale DOC_TBA
      * @param {Number} description.heightOffset DOC_TBA
      * @param {Number} description.bytesPerHeight DOC_TBA
-     * @param {Number} description.strideBytes DOC_TBA
+     * @param {Number} description.stride DOC_TBA
      * @param {Number} description.width The width of the heightmap image.
      * @param {Number} description.height The height of the heightmap image.
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
@@ -57,7 +59,7 @@ define([
         var heightScale = description.heightScale;
         var heightOffset = description.heightOffset;
         var bytesPerHeight = description.bytesPerHeight;
-        var strideBytes = description.strideBytes;
+        var stride = description.stride;
         var width = description.width;
         var height = description.height;
 
@@ -67,6 +69,9 @@ define([
         var generateTextureCoordinates = description.generateTextureCoordinates;
         var interleaveTextureCoordinates = description.interleaveTextureCoordinates;
         var relativeToCenter = description.relativeToCenter;
+        var isGeographic = description.isGeographic;
+        var voidIndicator = defaultValue(description.voidIndicator, -32768);
+        var voidFillValue = defaultValue(description.voidFillValue, 0);
 
         var vertices = description.vertices;
         var textureCoordinates = description.textureCoordinates;
@@ -85,6 +90,7 @@ define([
         var atan = Math.atan;
         var exp = Math.exp;
         var piOverTwo = Math.PI / 2.0;
+        var toRadians = CesiumMath.toRadians;
 
         var geographicWest = extent.west * oneOverCentralBodySemimajorAxis;
         var geographicSouth = piOverTwo - (2.0 * atan(exp(-extent.south * oneOverCentralBodySemimajorAxis)));
@@ -98,32 +104,46 @@ define([
         var maxHeight = -65536.0;
 
         for ( var row = 0; row < height; ++row) {
-            var y = extent.north - granularityY * row;
-            var latitude = piOverTwo - (2.0 * atan(exp(-y * oneOverCentralBodySemimajorAxis)));
+            var latitude = extent.north - granularityY * row;
+            if (!isGeographic) {
+                latitude = piOverTwo - (2.0 * atan(exp(-latitude * oneOverCentralBodySemimajorAxis)));
+            } else {
+                latitude = toRadians(latitude);
+            }
             var cosLatitude = cos(latitude);
             var nZ = sin(latitude);
             var kZ = radiiSquaredZ * nZ;
 
             // texture coordinates for geographic imagery
-            //var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
+            var geographicV = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
 
             // texture coordinates for web mercator imagery
-            var v = (height - row - 1) / (height - 1);
+            var webMercatorV = (height - row - 1) / (height - 1);
 
             for ( var col = 0; col < width; ++col) {
-                var x = extent.west + granularityX * col;
-                var longitude = x * oneOverCentralBodySemimajorAxis;
+                var longitude = extent.west + granularityX * col;
+                if (!isGeographic) {
+                    longitude = longitude * oneOverCentralBodySemimajorAxis;
+                } else {
+                    longitude = toRadians(longitude);
+                }
 
-                var terrainOffset = row * (width * strideBytes) + col * strideBytes;
-                var heightSample = heightmap[terrainOffset] << 16;
-                heightSample += heightmap[terrainOffset + 1] << 8;
-                heightSample += heightmap[terrainOffset + 2];
+                var terrainOffset = row * (width * stride) + col * stride;
 
-                if (bytesPerHeight === 4) {
-                    heightSample = (heightSample << 8) + heightmap[terrainOffset + 3];
+                var heightSample;
+                if (typeof bytesPerHeight === 'undefined') {
+                    heightSample = heightmap[terrainOffset];
+                } else {
+                    heightSample = 0;
+                    for (var byteOffset = 0; byteOffset < bytesPerHeight; ++byteOffset) {
+                        heightSample = (heightSample << 8) + heightmap[terrainOffset + byteOffset];
+                    }
                 }
 
                 heightSample = heightSample / heightScale - heightOffset;
+                if (heightSample === voidIndicator) {
+                    heightSample = voidFillValue;
+                }
 
                 maxHeight = Math.max(maxHeight, heightSample);
                 minHeight = Math.min(minHeight, heightSample);
@@ -148,16 +168,20 @@ define([
 
                 if (generateTextureCoordinates) {
                     // texture coordinates for geographic imagery
-                    //var u = (longitude - geographicWest) / (geographicEast - geographicWest);
+                    var geographicU = (longitude - geographicWest) / (geographicEast - geographicWest);
 
                     // texture coordinates for web mercator imagery
-                    var u = col / (width - 1);
+                    var webMercatorU = col / (width - 1);
                     if (interleaveTextureCoordinates) {
-                        vertices[vertexArrayIndex++] = u;
-                        vertices[vertexArrayIndex++] = v;
+                        vertices[vertexArrayIndex++] = webMercatorU;
+                        vertices[vertexArrayIndex++] = webMercatorV;
+                        vertices[vertexArrayIndex++] = geographicU;
+                        vertices[vertexArrayIndex++] = geographicV;
                     } else {
-                        textureCoordinates[textureCoordinatesIndex++] = u;
-                        textureCoordinates[textureCoordinatesIndex++] = v;
+                        textureCoordinates[textureCoordinatesIndex++] = webMercatorU;
+                        textureCoordinates[textureCoordinatesIndex++] = webMercatorV;
+                        textureCoordinates[textureCoordinatesIndex++] = geographicU;
+                        textureCoordinates[textureCoordinatesIndex++] = geographicV;
                     }
                 }
             }
@@ -199,7 +223,7 @@ define([
      * @param {Number} description.heightScale DOC_TBA
      * @param {Number} description.heightOffset DOC_TBA
      * @param {Number} description.bytesPerHeight DOC_TBA
-     * @param {Number} description.strideBytes DOC_TBA
+     * @param {Number} description.stride DOC_TBA
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Boolean} description.generateTextureCoordinates Whether to generate texture coordinates.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.

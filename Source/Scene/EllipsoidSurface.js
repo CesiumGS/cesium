@@ -16,6 +16,7 @@ define([
         '../Core/Rectangle',
         '../Core/CubeMapEllipsoidTessellator',
         '../Core/MeshFilters',
+        './GeographicTilingScheme',
         './ImageryLayerCollection',
         './TerrainProvider',
         './TileState',
@@ -41,6 +42,7 @@ define([
         Rectangle,
         CubeMapEllipsoidTessellator,
         MeshFilters,
+        GeographicTilingScheme,
         ImageryLayerCollection,
         TerrainProvider,
         TileState,
@@ -326,6 +328,9 @@ define([
         u_dayTextureAlpha : function() {
             return this.dayTextureAlpha;
         },
+        u_dayTextureIsGeographic : function() {
+            return this.dayTextureIsGeographic;
+        },
         u_cameraInsideBoundingSphere : function() {
             return this.cameraInsideBoundingSphere;
         },
@@ -341,6 +346,7 @@ define([
         dayTextureTranslation : [],
         dayTextureScale : [],
         dayTextureAlpha : [],
+        dayTextureIsGeographic : [],
         cameraInsideBoundingSphere : false,
         level : 0
     };
@@ -393,6 +399,7 @@ define([
                     uniformMap.dayTextureTranslation[numberOfDayTextures] = tileImagery.textureTranslation;
                     uniformMap.dayTextureScale[numberOfDayTextures] = tileImagery.textureScale;
                     uniformMap.dayTextureAlpha[numberOfDayTextures] = tileImagery.imageryLayer.alpha;
+                    uniformMap.dayTextureIsGeographic[numberOfDayTextures] = tileImagery.imageryLayer.imageryProvider.tilingScheme instanceof GeographicTilingScheme;
 
                     ++numberOfDayTextures;
                 }
@@ -402,11 +409,11 @@ define([
                 uniformMap.dayTextures.length = numberOfDayTextures;
                 uniformMap.numberOfDayTextures = numberOfDayTextures;
 
-                if (typeof tile.parent !== 'undefined' && tile.parent.cameraInsideBoundingSphere) {
-                    uniformMap.cameraInsideBoundingSphere = true;
-                } else {
-                    uniformMap.cameraInsideBoundingSphere = false;
-                }
+//                if (typeof tile.parent !== 'undefined' && tile.parent.cameraInsideBoundingSphere) {
+//                    uniformMap.cameraInsideBoundingSphere = true;
+//                } else {
+//                    uniformMap.cameraInsideBoundingSphere = false;
+//                }
 
                 context.continueDraw({
                     primitiveType : TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES,
@@ -753,7 +760,7 @@ define([
         var distance = Math.sqrt(distanceSquaredToTile(cameraPosition, cameraPositionCartographic, tile));
         tile.distance = distance;
 
-        tile.cameraInsideBoundingSphere = distance === 0.0;
+//        tile.cameraInsideBoundingSphere = distance === 0.0;
 
         var viewport = context.getViewport();
         var viewportHeight = viewport.height;

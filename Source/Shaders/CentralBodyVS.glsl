@@ -1,5 +1,6 @@
 attribute vec3 position3D;
-attribute vec2 textureCoordinates;
+attribute vec2 webMercatorCoordinates;
+attribute vec2 geographicCoordinates;
 attribute vec2 position2D;
 
 uniform float u_morphTime;
@@ -15,7 +16,8 @@ varying vec3 v_positionEC;
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 
-varying vec2 v_textureCoordinates;
+varying vec2 v_webMercatorCoordinates;
+varying vec2 v_geographicCoordinates;
 
 void main() 
 {
@@ -40,6 +42,7 @@ void main()
     v_positionMC = position3DWC;                                 // position in model coordinates
     v_mieColor = atmosphereColor.mie;
     v_rayleighColor = atmosphereColor.rayleigh;
-    v_textureCoordinates = textureCoordinates;
+    v_webMercatorCoordinates = webMercatorCoordinates;
+    v_geographicCoordinates = geographicCoordinates;
 }
 

@@ -238,7 +238,7 @@ define([
             heightScale : 1000.0,
             heightOffset : 1000.0,
             bytesPerHeight : 3,
-            strideBytes : 4,
+            stride : 4,
             width : width,
             height : height,
             extent : webMercatorExtent,
@@ -281,7 +281,7 @@ define([
         tile.transformedGeometry = undefined;
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = buffers.statistics.maxHeight;
-        tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
+        tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 7);
 
         var ellipsoid = this.tilingScheme.ellipsoid;
         tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSouthwest());
