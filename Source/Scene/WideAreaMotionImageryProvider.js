@@ -83,6 +83,8 @@ define([
          * @type {Extent}
          */
         this.extent = defaultValue(description.extent, Extent.MAX_VALUE);
+        this.currentExtent = this.extent;
+        this.nextExtent = this.extent;
 
         /**
          * The maximum level-of-detail that can be requested.
@@ -116,7 +118,8 @@ define([
         this.tilingScheme.levelZeroMaximumGeometricError = ellipsoid.getRadii().x * (this.extent.east - this.extent.west) / 1024;
 
         this._currentTime = undefined;
-        this._advancingTime = false;
+        this._nextTime = undefined;
+        this._replacingImage = false;
 
         /**
          * True if the provider is ready for use; otherwise, false.
@@ -130,11 +133,49 @@ define([
         this._tileUrl += '&WIDTH=' + 1024 + '&HEIGHT=' + 1024;
         this._tileUrl += '&CID=' + this.cid;
         this._tileUrl += '&TRANSPARENT=TRUE&BGCOLOR=0xFFFFFF&FORMAT=image/png';
-        this._tileUrl += '&BBOX=' +
-                         CesiumMath.toDegrees(this.extent.west) + "," +
-                         CesiumMath.toDegrees(this.extent.south) + "," +
-                         CesiumMath.toDegrees(this.extent.east) + "," +
-                         CesiumMath.toDegrees(this.extent.north);
+    };
+
+    WideAreaMotionImageryProvider.prototype.update = function(context, sceneState, tiles) {
+        if (this._replacingImage) {
+            return;
+        }
+
+        if (typeof this._texture === 'undefined') {
+            return;
+        }
+
+        if (typeof this._nextTime === 'undefined') {
+            return;
+        }
+
+        if (tiles.length === 0) {
+            return;
+        }
+
+        var tileExtent = tiles[0].extent;
+        var extent = new Extent(tileExtent.west, tileExtent.south, tileExtent.east, tileExtent.north);
+        for (var i = 1, len = tiles.length; i < len; ++i) {
+            tileExtent = tiles[i].extent;
+            extent = extent.unionWith(tileExtent);
+        }
+        this.nextExtent = extent.intersectWith(this.extent);
+
+        if ((typeof this._currentTime !== 'undefined' && this._nextTime.equals(this._currentTime)) &&
+            Extent.equals(this.nextExtent, this.currentExtent)) {
+
+            return;
+        }
+
+        var that = this;
+        this._replacingImage = true;
+        this.requestImage().then(function(image) {
+            that._texture.copyFrom(image);
+            that._replacingImage = false;
+            that.currentExtent = that.nextExtent;
+            that._currentTime = that._nextTime;
+        }, function() {
+            that._replacingImage = false;
+        });
     };
 
     /**
@@ -168,11 +209,17 @@ define([
     WideAreaMotionImageryProvider.prototype.requestImage = function(url) {
         var imageUrl = this._tileUrl;
 
-        if (typeof this._currentTime === 'undefined') {
+        if (typeof this._nextTime === 'undefined') {
             imageUrl += '&TIME=F1';
         } else {
-            imageUrl += '&TIME=' + this._currentTime.toDate().toISOString();
+            imageUrl += '&TIME=' + this._nextTime.toDate().toISOString();
         }
+
+        imageUrl += '&BBOX=' +
+            CesiumMath.toDegrees(this.nextExtent.west) + "," +
+            CesiumMath.toDegrees(this.nextExtent.south) + "," +
+            CesiumMath.toDegrees(this.nextExtent.east) + "," +
+            CesiumMath.toDegrees(this.nextExtent.north);
 
         if (typeof this._proxy !== 'undefined') {
             imageUrl = this._proxy.getURL(imageUrl);
@@ -232,28 +279,7 @@ define([
     };
 
     WideAreaMotionImageryProvider.prototype.setTime = function(time) {
-        if (typeof this._currentTime !== 'undefined' && this._currentTime.equals(time)) {
-            return;
-        }
-
-        this._currentTime = time;
-
-        if (this._advancingTime) {
-            return;
-        }
-
-        if (typeof this._texture === 'undefined') {
-            return;
-        }
-
-        var that = this;
-        this._advancingTime = true;
-        this.requestImage().then(function(image) {
-            that._texture.copyFrom(image);
-            that._advancingTime = false;
-        }, function() {
-            that._advancingTime = false;
-        });
+        this._nextTime = time;
     };
 
     return WideAreaMotionImageryProvider;

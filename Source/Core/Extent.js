@@ -192,6 +192,14 @@ define([
         return new Extent(west, south, east, north);
     };
 
+    Extent.prototype.unionWith = function(otherExtent) {
+        var north = Math.max(this.north, otherExtent.north);
+        var east = Math.max(this.east, otherExtent.east);
+        var south = Math.min(this.south, otherExtent.south);
+        var west = Math.min(this.west, otherExtent.west);
+        return new Extent(west, south, east, north);
+    };
+
     /**
      * DOC_TBA
      *
@@ -322,6 +330,16 @@ define([
                cartographicPosition.longitude <= this.east &&
                cartographicPosition.latitude >= this.south &&
                cartographicPosition.latitude <= this.north;
+    };
+
+    Extent.equals = function(left, right) {
+        return (left === right) ||
+            (typeof left !== 'undefined' &&
+             typeof right !== 'undefined' &&
+             left.west === right.west &&
+             left.south === right.south &&
+             left.east === right.east &&
+             left.north === right.north);
     };
 
     /**

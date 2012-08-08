@@ -169,6 +169,42 @@ define([
         return true;
     };
 
+    ImageryLayer.prototype.updateTiles = function(context, sceneState, tiles) {
+        var currentExtent = this.imageryProvider.currentExtent;
+        if (typeof currentExtent !== 'undefined') {
+            var imageryProvider = this.imageryProvider;
+            var imageryTilingScheme = imageryProvider.tilingScheme;
+
+            if (typeof imageryProvider.update !== 'undefined') {
+                imageryProvider.update(context, sceneState, tiles);
+            }
+
+            for (var tileIndex = 0, tilesLen = tiles.length; tileIndex < tilesLen; ++tileIndex) {
+                var tile = tiles[tileIndex];
+
+                var imageryList = tile.imagery;
+                for (var imageryIndex = 0, imageryLen = imageryList.length; imageryIndex < imageryLen; ++imageryIndex) {
+                    var imagery = imageryList[imageryIndex];
+                    if (imagery.imageryLayer !== this) {
+                        continue;
+                    }
+
+                    var terrainExtent = imageryTilingScheme.extentToNativeExtent(tile.extent);
+                    var terrainWidth = terrainExtent.east - terrainExtent.west;
+                    var terrainHeight = terrainExtent.north - terrainExtent.south;
+                    var imageryExtent = imageryTilingScheme.extentToNativeExtent(currentExtent);
+
+                    imagery.textureTranslation = new Cartesian2(
+                            (imageryExtent.west - terrainExtent.west) / terrainWidth,
+                            (imageryExtent.south - terrainExtent.south) / terrainHeight);
+                    imagery.textureScale = new Cartesian2(
+                            (imageryExtent.east - imageryExtent.west) / terrainWidth,
+                            (imageryExtent.north - imageryExtent.south) / terrainHeight);
+                }
+            }
+        }
+    };
+
     var activeTileImageRequests = {};
 
     ImageryLayer.prototype.requestImagery = function(tileImagery) {

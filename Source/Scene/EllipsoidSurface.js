@@ -297,6 +297,10 @@ define([
         }
 
         processTileLoadQueue(this, context, sceneState);
+
+        for (i = 0, len = imageryLayerCollection.getLength(); i < len; i++) {
+            imageryLayerCollection.get(i).updateTiles(context, sceneState, this._renderList);
+        }
     };
 
     EllipsoidSurface.prototype.toggleLodUpdate = function(sceneState) {

@@ -22,7 +22,7 @@ require({
 
     var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'sSx4k9KsEsh-ljsFJVqPCnKOp7lcZdhmAb4DQUlWw1yNh2pC-Qxd8i5E3eXnn3XaknS7SeWkVQu02U2E2psaMw..',
+        token : 'bROTErfveqDI_2EEjBE8ZG7h9bDifqOs_KjowZFG7EnR0r1XaOvCFKcqcCHDUUq_CZmS2UVvPCRE2phrfoL10g..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
@@ -76,10 +76,16 @@ require({
 
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
-    var extent = new Cesium.Extent(Cesium.Math.toRadians(-120),
-            Cesium.Math.toRadians(37),
-            Cesium.Math.toRadians(-119),
-            Cesium.Math.toRadians(38));
+    var extent = new Cesium.Extent(
+            Cesium.Math.toRadians(-78.964624075),
+            Cesium.Math.toRadians(43.861281680000005),
+            Cesium.Math.toRadians(-78.918912715),
+            Cesium.Math.toRadians(43.8953604));
+
+//    var extent = new Cesium.Extent(Cesium.Math.toRadians(-120),
+//            Cesium.Math.toRadians(37),
+//            Cesium.Math.toRadians(-119),
+//            Cesium.Math.toRadians(38));
     var testLayer = imageryLayerCollection.addImageryProvider(
             new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png',
                                                  extent));

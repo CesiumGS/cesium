@@ -46,6 +46,7 @@ define([
         '../../Scene/ArcGisImageServerTerrainProvider',
         '../../Scene/WideAreaMotionImageryProvider',
         '../../Scene/ImageryLayerCollection',
+        '../../Scene/TerrainProvider',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectCollection',
         '../../DynamicScene/VisualizerCollection',
@@ -97,6 +98,7 @@ define([
         ArcGisImageServerTerrainProvider,
         WideAreaMotionImageryProvider,
         ImageryLayerCollection,
+        TerrainProvider,
         processCzml,
         DynamicObjectCollection,
         VisualizerCollection,
@@ -303,6 +305,8 @@ define([
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
+            //TerrainProvider.wireframe = true;
+
             var maxTextureSize = scene.getContext().getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
@@ -319,7 +323,7 @@ define([
 
             var terrainProvider = new ArcGisImageServerTerrainProvider({
                 url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-                token : 'sSx4k9KsEsh-ljsFJVqPCnKOp7lcZdhmAb4DQUlWw1yNh2pC-Qxd8i5E3eXnn3XaknS7SeWkVQu02U2E2psaMw..',
+                token : 'bROTErfveqDI_2EEjBE8ZG7h9bDifqOs_KjowZFG7EnR0r1XaOvCFKcqcCHDUUq_CZmS2UVvPCRE2phrfoL10g..',
                 proxy : new DefaultProxy('/terrain/')
             });
 
