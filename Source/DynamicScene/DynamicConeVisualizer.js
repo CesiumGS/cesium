@@ -19,6 +19,8 @@ define([
          ColorMaterial) {
     "use strict";
 
+    var matrix3Scratch = new Matrix3();
+
     /**
      * A DynamicObject visualizer which maps the DynamicCone instance
      * in DynamicObject.cone to a ComplexConicSensor primitive.
@@ -231,7 +233,7 @@ define([
             cone.innerMaterial = new ColorMaterial();
             cone.intersectionColor = Color.YELLOW;
             cone.maximumClockAngle =  CesiumMath.TWO_PI;
-            cone.minimumClockAngle = -CesiumMath.TWO_PI;
+            cone.minimumClockAngle = 0;
             cone.outerMaterial = new ColorMaterial();
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
@@ -255,7 +257,7 @@ define([
             if (typeof maximumClockAngle !== 'undefined') {
                 cone.maximumClockAngle = maximumClockAngle;
             } else {
-                cone.maximumClockAngle = Math.pi;
+                cone.maximumClockAngle = CesiumMath.TWO_PI;
             }
         }
 
@@ -273,7 +275,7 @@ define([
             if (typeof outerHalfAngle !== 'undefined') {
                 cone.outerHalfAngle = outerHalfAngle;
             } else {
-                cone.outerHalfAngle = Math.pi;
+                cone.outerHalfAngle = Math.PI;
             }
         }
 
@@ -292,7 +294,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
-            cone.modelMatrix = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation)), position);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, cone.modelMatrix);
             position.clone(cone._visualizerPosition);
             orientation.clone(cone._visualizerOrientation);
         }

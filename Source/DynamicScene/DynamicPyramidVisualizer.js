@@ -17,6 +17,8 @@ define([
          ColorMaterial) {
     "use strict";
 
+    var matrix3Scratch = new Matrix3();
+
     /**
      * A DynamicObject visualizer which maps the DynamicPyramid instance
      * in DynamicObject.pyramid to a Pyramid primitive.
@@ -250,7 +252,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(pyramid._visualizerPosition) ||
              !orientation.equals(pyramid._visualizerOrientation))) {
-            pyramid.modelMatrix = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation)), position);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, pyramid.modelMatrix);
             position.clone(pyramid._visualizerPosition);
             orientation.clone(pyramid._visualizerOrientation);
         }

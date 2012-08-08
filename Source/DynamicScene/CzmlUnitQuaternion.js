@@ -77,20 +77,20 @@ define([
          */
         packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
             CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0Conjugate);
-            quaternion0Conjugate.conjugate(quaternion0Conjugate);
+            Quaternion.conjugate(quaternion0Conjugate, quaternion0Conjugate);
 
             for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
                 var offset = i * doublesPerCartesian;
                 CzmlUnitQuaternion.getValueFromArray(sourceArray, (firstIndex + i) * doublesPerQuaternion, tmpQuaternion);
 
-                tmpQuaternion.multiply(quaternion0Conjugate, tmpQuaternion);
+                Quaternion.multiply(tmpQuaternion, quaternion0Conjugate, tmpQuaternion);
 
                 if (tmpQuaternion.w < 0) {
-                    tmpQuaternion = tmpQuaternion.negate();
+                    tmpQuaternion.negate(tmpQuaternion);
                 }
 
-                tmpQuaternion.getAxis(axis);
-                var angle = tmpQuaternion.getAngle();
+                Quaternion.getAxis(tmpQuaternion, axis);
+                var angle = Quaternion.getAngle(tmpQuaternion);
                 destinationArray[offset] = axis.x * angle;
                 destinationArray[offset + 1] = axis.y * angle;
                 destinationArray[offset + 2] = axis.z * angle;
@@ -112,7 +112,7 @@ define([
             result.y = unwrappedInterval[1];
             result.z = unwrappedInterval[2];
             result.w = unwrappedInterval[3];
-            return result.normalize(result);
+            return Quaternion.normalize(result, result);
         },
 
         /**
@@ -131,7 +131,7 @@ define([
             result.y = array[startingIndex + 1];
             result.z = array[startingIndex + 2];
             result.w = array[startingIndex + 3];
-            return result.normalize(result);
+            return Quaternion.normalize(result, result);
         },
 
         /**
@@ -152,7 +152,7 @@ define([
             rotationVector.x = array[0];
             rotationVector.y = array[1];
             rotationVector.z = array[2];
-            var magnitude = rotationVector.magnitude();
+            var magnitude = Cartesian3.magnitude(rotationVector);
 
             CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0);
 
@@ -164,7 +164,7 @@ define([
                 Quaternion.fromAxisAngle(rotationVector, magnitude, tmpQuaternion);
             }
 
-            return result.normalize(tmpQuaternion.multiply(quaternion0, result));
+            return result.normalize(tmpQuaternion.multiply(quaternion0, result), result);
         }
     };
 
