@@ -1,8 +1,7 @@
 /*global define*/
 define([
         '../Core/createGuid',
-        '../Core/DeveloperError',
-        './CzmlDefaults'
+        '../Core/DeveloperError'
        ], function(
         createGuid,
         DeveloperError) {

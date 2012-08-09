@@ -15,7 +15,7 @@ define([
         DynamicProperty,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
-        DynamicLayerProperty,
+        DynamicExternalDocumentProperty,
         CzmlUnitQuaternion) {
     "use strict";
 
@@ -110,9 +110,9 @@ define([
         this.pyramid = undefined;
 
         /**
-         * The DynamicLayer, if any, associated with this object.
+         * The DynamicExternalDocument, if any, associated with this object.
          */
-        this.layer = undefined;
+        this.externalDocument = undefined;
 
         /**
          * The DynamicVertexPositionsProperty, if any, associated with this object.
@@ -255,11 +255,11 @@ define([
 
 
     /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's layer
+     * Processes a single CZML packet and merges its data into the provided DynamicObject's external
      * property. This method is not normally called directly, but is part of the array of CZML processing
      * functions that is passed into the DynamicObjectCollection constructor.
      *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the layer data.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the external data.
      * @param {Object} packet The CZML packet to process.
      * @returns {Boolean} true if the property was newly created while processing the packet, false otherwise.
      *
@@ -267,18 +267,18 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicObject.processCzmlPacketLayer = function(dynamicObject, packet, dynamicObjectCollection, sourceUri, updaterFunctions) {
-        var layerData = packet.layer;
-        if (typeof layerData === 'undefined') {
+    DynamicObject.processCzmlPacketExternalDocument = function(dynamicObject, packet, dynamicObjectCollection, sourceUri, updaterFunctions) {
+        var externalData = packet.external;
+        if (typeof externalData === 'undefined') {
             return false;
         }
 
-        var layer = dynamicObject.layer;
-        var propertyCreated = typeof layer === 'undefined';
+        var external = dynamicObject.external;
+        var propertyCreated = typeof external === 'undefined';
         if (propertyCreated) {
-            dynamicObject.layer = layer = new DynamicLayerProperty();
+            dynamicObject.external = external = new DynamicExternalDocumentProperty();
         }
-        layer.processCzmlIntervals(layerData, layer, dynamicObjectCollection, sourceUri, updaterFunctions);
+        external.processCzmlIntervals(externalData, external, dynamicObjectCollection, sourceUri, updaterFunctions);
         return propertyCreated;
     };
 

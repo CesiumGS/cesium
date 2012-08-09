@@ -64,7 +64,7 @@ define([
                     DynamicObject.processCzmlPacketOrientation,
                     DynamicObject.processCzmlPacketVertexPositions,
                     DynamicObject.processCzmlPacketAvailability,
-                    DynamicObject.processCzmlPacketLayer],
+                    DynamicObject.processCzmlPacketExternalDocument],
 
         /**
          * The standard set of mergers for processing CZML.  This array is the default
