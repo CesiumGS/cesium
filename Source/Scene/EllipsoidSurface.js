@@ -16,6 +16,7 @@ define([
         '../Core/Rectangle',
         '../Core/CubeMapEllipsoidTessellator',
         '../Core/MeshFilters',
+        './GeographicTilingScheme',
         './ImageryLayerCollection',
         './TerrainProvider',
         './TileState',
@@ -41,6 +42,7 @@ define([
         Rectangle,
         CubeMapEllipsoidTessellator,
         MeshFilters,
+        GeographicTilingScheme,
         ImageryLayerCollection,
         TerrainProvider,
         TileState,
@@ -326,6 +328,9 @@ define([
         u_dayTextureAlpha : function() {
             return this.dayTextureAlpha;
         },
+        u_dayTextureIsGeographic : function() {
+            return this.dayTextureIsGeographic;
+        },
         u_cameraInsideBoundingSphere : function() {
             return this.cameraInsideBoundingSphere;
         },
@@ -353,6 +358,7 @@ define([
         dayTextureTranslation : [],
         dayTextureScale : [],
         dayTextureAlpha : [],
+        dayTextureIsGeographic : [],
         cameraInsideBoundingSphere : false,
         level : 0,
         northLatitude : 0,
@@ -424,6 +430,7 @@ define([
                     uniformMap.dayTextureTranslation[numberOfDayTextures] = tileImagery.textureTranslation;
                     uniformMap.dayTextureScale[numberOfDayTextures] = tileImagery.textureScale;
                     uniformMap.dayTextureAlpha[numberOfDayTextures] = tileImagery.imageryLayer.alpha;
+                    uniformMap.dayTextureIsGeographic[numberOfDayTextures] = tileImagery.imageryLayer.imageryProvider.tilingScheme instanceof GeographicTilingScheme;
 
                     ++numberOfDayTextures;
                 }

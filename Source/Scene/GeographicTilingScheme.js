@@ -71,7 +71,7 @@ define([
          *
          * @type Number
          */
-        this.levelZeroMaximumGeometricError = this.ellipsoid.getRadii().x * 2 * Math.PI / 128;
+        this.levelZeroMaximumGeometricError = this.ellipsoid.getRadii().x * 2 * Math.PI / 512;
     }
 
     /**
@@ -113,13 +113,41 @@ define([
      * @param {Number} x The integer x coordinate of the tile.
      * @param {Number} y The integer y coordinate of the tile.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
-     * @param {Object} An object whose west, south, east, and north properties will be set
-     * with the native extent on return.
+     * @param {Object} [outputExtent] An object whose west, south, east, and north properties will be set
+     * with the native extent on return.  If this parameter is undefined, a new instance is
+     * allocated and returned.
      *
-     * @returns {Extent} The specified 'outputExtent', or a new object containing the extent
+     * @returns {Object} The specified 'outputExtent', or a new object containing the extent
      * if 'outputExtent' is undefined.
      */
     GeographicTilingScheme.prototype.tileXYToNativeExtent = function(x, y, level, outputExtent) {
+        if (typeof outputExtent === 'undefined') {
+            outputExtent = {};
+        }
+        var extentRadians = this.tileXYToExtent(x, y, level);
+        outputExtent.west = CesiumMath.toDegrees(extentRadians.west);
+        outputExtent.south = CesiumMath.toDegrees(extentRadians.south);
+        outputExtent.east = CesiumMath.toDegrees(extentRadians.east);
+        outputExtent.north = CesiumMath.toDegrees(extentRadians.north);
+        return outputExtent;
+    };
+
+    /**
+     * Converts tile x, y coordinates and level to a cartographic extent.
+     *
+     * @memberof GeographicTilingScheme
+     *
+     * @param {Number} x The integer x coordinate of the tile.
+     * @param {Number} y The integer y coordinate of the tile.
+     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
+     * @param {Extent} [outputExtent] An object whose west, south, east, and north properties will be set
+     * with the native extent on return.  If this parameter is undefined, a new instance is
+     * allocated and returned.
+     *
+     * @return {Extent} The specified 'outputExtent', or a new object containing the
+     * cartographic extent of the tile, with north, south, east and west properties in radians.
+     */
+    GeographicTilingScheme.prototype.tileXYToExtent = function(x, y, level, outputExtent) {
         if (typeof outputExtent === 'undefined') {
             outputExtent = new Extent(0.0, 0.0, 0.0, 0.0);
         }
@@ -140,20 +168,13 @@ define([
         return outputExtent;
     };
 
-    /**
-     * Converts tile x, y coordinates and level to a cartographic extent.
-     *
-     * @memberof GeographicTilingScheme
-     *
-     * @param {Number} x The integer x coordinate of the tile.
-     * @param {Number} y The integer y coordinate of the tile.
-     * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
-     *
-     * @return {Extent} The cartographic extent of the tile, with north, south, east and
-     * west properties in radians.
-     */
-    GeographicTilingScheme.prototype.tileXYToExtent = function(x, y, level) {
-        return this.tileXYToNativeExtent(x, y, level);
+    GeographicTilingScheme.prototype.extentToNativeExtent = function(extent) {
+        return {
+            west : CesiumMath.toDegrees(extent.west),
+            south : CesiumMath.toDegrees(extent.south),
+            east : CesiumMath.toDegrees(extent.east),
+            north : CesiumMath.toDegrees(extent.north)
+        };
     };
 
     /**

@@ -11,6 +11,7 @@ uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec2 u_dayTextureTranslation[TEXTURE_UNITS];
 uniform vec2 u_dayTextureScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
+uniform bool u_dayTextureIsGeographic[TEXTURE_UNITS];
 uniform bool u_cameraInsideBoundingSphere;
 uniform int u_level;
 
@@ -47,7 +48,8 @@ void main()
         if (i >= u_numberOfDayTextures)
             break;
         
-        vec2 textureCoordinates = (webMercatorUV - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
+        vec2 baseTextureCoordinates = mix(webMercatorUV, geographicUV, float(u_dayTextureIsGeographic[i]));
+        vec2 textureCoordinates = (baseTextureCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
         
         if (textureCoordinates.x >= 0.0 && textureCoordinates.x <= 1.0 &&
             textureCoordinates.y >= 0.0 && textureCoordinates.y <= 1.0)
