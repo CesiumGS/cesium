@@ -92,6 +92,80 @@ defineSuite([
         expect(polygon.getPositions()).toEqual(positions);
     });
 
+    it('get polygons from hierarchy', function() {
+        var hierarchy = {
+                positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                    new Cartographic.fromDegrees(-122.0, 37.0, 0.0),
+                    new Cartographic.fromDegrees(-121.5, 37.0, 0.0),
+                    new Cartographic.fromDegrees(-121.5, 37.1, 0.0),
+                    new Cartographic.fromDegrees(-122.0, 37.1, 0.0),
+                    new Cartographic.fromDegrees(-122.0, 37.0, 0.0)
+                ]),
+                holes : [
+                         {
+                             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                new Cartographic.fromDegrees(-121.98, 37.02, 0.0),
+                                new Cartographic.fromDegrees(-121.98, 37.08, 0.0),
+                                new Cartographic.fromDegrees(-121.92, 37.08, 0.0),
+                                new Cartographic.fromDegrees(-121.92, 37.02, 0.0),
+                                new Cartographic.fromDegrees(-121.98, 37.02, 0.0)
+                             ]),
+                             holes : [
+                                      {
+                                          positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                            new Cartographic.fromDegrees(-121.96, 37.04, 0.0),
+                                            new Cartographic.fromDegrees(-121.94, 37.04, 0.0),
+                                            new Cartographic.fromDegrees(-121.94, 37.06, 0.0),
+                                            new Cartographic.fromDegrees(-121.96, 37.06, 0.0),
+                                            new Cartographic.fromDegrees(-121.96, 37.04, 0.0)
+                                          ])
+                                      }
+                             ]
+                         },
+                         {
+                             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                new Cartographic.fromDegrees(-121.58, 37.02, 0.0),
+                                new Cartographic.fromDegrees(-121.58, 37.08, 0.0),
+                                new Cartographic.fromDegrees(-121.52, 37.08, 0.0),
+                                new Cartographic.fromDegrees(-121.52, 37.02, 0.0),
+                                new Cartographic.fromDegrees(-121.58, 37.02, 0.0)
+                             ]),
+                             holes : [
+                                      {
+                                          positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                            new Cartographic.fromDegrees(-121.56, 37.04, 0.0),
+                                            new Cartographic.fromDegrees(-121.54, 37.04, 0.0),
+                                            new Cartographic.fromDegrees(-121.54, 37.06, 0.0),
+                                            new Cartographic.fromDegrees(-121.56, 37.06, 0.0),
+                                            new Cartographic.fromDegrees(-121.56, 37.04, 0.0)
+                                          ])
+                                      }
+                             ]
+                         }
+                ]
+        };
+        var polygons = Polygon.getPolygonsFromHierarchy(hierarchy);
+        expect(polygons.length).toEqual(3);
+    });
+
+    it('getPolygonsFromHierarchy throws without a hierarchy', function() {
+        expect(function() {
+            Polygon.getPolygonsFromHierarchy();
+        }).toThrow();
+    });
+
+    it('getPolygonsFromHierarchy throws without a positions property', function() {
+        expect(function() {
+            Polygon.getPolygonsFromHierarchy({holes : []});
+        }).toThrow();
+    });
+
+    it('getPolygonsFromHierarchy throws without a holes property', function() {
+        expect(function() {
+            Polygon.getPolygonsFromHierarchy({positions : []});
+        }).toThrow();
+    });
+
     it('configures extent', function() {
         var extent = new Extent(
             0.0,

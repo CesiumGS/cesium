@@ -17,6 +17,7 @@ define([
         '../Core/PolygonPipeline',
         '../Core/WindingOrder',
         '../Core/ExtentTessellator',
+        '../Core/Queue',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
@@ -46,6 +47,7 @@ define([
         PolygonPipeline,
         WindingOrder,
         ExtentTessellator,
+        Queue,
         BlendingState,
         BufferUsage,
         CullFace,
@@ -266,6 +268,94 @@ define([
         };
         this._pickUniforms = undefined;
         this._drawUniforms = undefined;
+    };
+
+    /**
+     * Create a set of polygons with holes from a nested hierarchy.
+     *
+     * @memberof Polygon
+     *
+     * @param {Object} hierarchy An object defining the vertex positions of each nested polygon.
+     * For example, the following polygon has two holes, and one hole has a hole. <code>holes</code> is optional.
+     * Leaf nodes only have <code>positions</code>.
+     * <code>
+     * {
+     *  positions : [ ... ],    // The polygon's outer boundary
+     *  holes : [               // The polygon's inner holes
+     *    {
+     *      positions : [ ... ]
+     *    },
+     *    {
+     *      positions : [ ... ],
+     *      holes : [           // A polygon within a hole
+     *       {
+     *         positions : [ ... ]
+     *       }
+     *      ]
+     *    }
+     *  ]
+     * }
+     * </code>
+     * @param {double} [height=0.0]. The height of the polygon.
+     *
+     * @return {Array} An array of Polygons.
+     *
+     * @exception {DeveloperError} hierarchy is required.
+     * @exception {DeveloperError} hierarchy.positions is required.
+     * @exception {DeveloperError} hierarchy.holes is required.
+     */
+    Polygon.getPolygonsFromHierarchy = function(hierarchy, height) {
+        if (!hierarchy) {
+            throw new DeveloperError('hierarchy is required.');
+        }
+        if (!hierarchy.positions) {
+            throw new DeveloperError('hierarchy.positions is required.');
+        }
+        if (!hierarchy.holes) {
+            throw new DeveloperError('hierarchy.holes is required.');
+        }
+
+        // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+        var positions = [];
+        var queue = new Queue();
+        queue.enqueue(hierarchy);
+
+        while (queue.length !== 0) {
+            var outerNode = queue.dequeue();
+            var outerRing = outerNode.positions;
+            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
+
+            if (numChildren === 0) {
+                // The outer polygon is a simple polygon with no nested inner polygon.
+                positions.push(outerNode.positions);
+            } else {
+                // The outer polygon contains inner polygons
+                var holes = [];
+                for (var i = 0; i < numChildren; i++) {
+                    var hole = outerNode.holes[i];
+                    holes.push(hole.positions);
+
+                    var numGrandchildren = 0;
+                    if (hole.holes) {
+                        numGrandchildren = hole.holes.length;
+                    }
+
+                    for (var j = 0; j < numGrandchildren; j++) {
+                        queue.enqueue(hole.holes[j]);
+                    }
+                }
+                positions.push(PolygonPipeline.eliminateHoles(outerRing, holes));
+            }
+        }
+
+        var polygons = [];
+        for (var i = 0; i < positions.length; i++) {
+            var p = new Polygon();
+            p.setPositions(positions[i], height);
+            polygons.push(p);
+        }
+
+        return polygons;
     };
 
     /**
