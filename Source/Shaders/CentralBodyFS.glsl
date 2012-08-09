@@ -14,6 +14,11 @@ uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 uniform bool u_cameraInsideBoundingSphere;
 uniform int u_level;
 
+uniform float u_northLatitude;
+uniform float u_southLatitude;
+uniform float u_southMercatorY;
+uniform float u_oneOverMercatorHeight;
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 
@@ -28,12 +33,22 @@ void main()
     vec3 normalEC = normalize(agi_normal * normalMC);                                           // normalized surface normal in eye coordiantes
     
 #ifdef SHOW_DAY
+    vec2 geographicUV = v_textureCoordinates;
+    
+    float currentLatitude = mix(u_southLatitude, u_northLatitude, geographicUV.y);
+    float sinLatitude = sin(currentLatitude);
+    float mercatorY = 0.5 * log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+    
+    vec2 webMercatorUV = vec2(geographicUV.x, (mercatorY - u_southMercatorY) * u_oneOverMercatorHeight);
+
     vec3 startDayColor = vec3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
     for (int i = 0; i < TEXTURE_UNITS; ++i)
     {
         if (i >= u_numberOfDayTextures)
             break;
-        vec2 textureCoordinates = (v_textureCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
+        
+        vec2 textureCoordinates = (webMercatorUV - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
+        
         if (textureCoordinates.x >= 0.0 && textureCoordinates.x <= 1.0 &&
             textureCoordinates.y >= 0.0 && textureCoordinates.y <= 1.0)
         {
@@ -47,7 +62,7 @@ void main()
         startDayColor = mix(startDayColor, vec3(1.0, 0.0, 0.0), 0.2);
     }
 #endif
-    
+   
 #ifdef SHOW_LEVELS
     startDayColor = vec3(0.0, 0.0, 0.0);
     if (u_numberOfDayTextures > 0)

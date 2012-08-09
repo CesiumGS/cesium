@@ -254,6 +254,7 @@ define([
         }
 
         when(verticesPromise, function(result) {
+            console.log('Tile ' + tile.x + ', ' + tile.y + ', ' + tile.level + ' UDiff: ' + result.statistics.maxUDifference + ' VDiff: ' + result.statistics.maxVDifference);
             tile.geometry = undefined;
             tile.transformedGeometry = {
                 vertices : result.vertices,

@@ -332,6 +332,18 @@ define([
         u_level : function() {
             return this.level;
         },
+        u_northLatitude : function() {
+            return this.northLatitude;
+        },
+        u_southLatitude : function() {
+            return this.southLatitude;
+        },
+        u_southMercatorY : function() {
+            return this.southMercatorY;
+        },
+        u_oneOverMercatorHeight : function() {
+            return this.oneOverMercatorHeight;
+        },
 
         center3D : undefined,
         modifiedModelView : undefined,
@@ -342,7 +354,11 @@ define([
         dayTextureScale : [],
         dayTextureAlpha : [],
         cameraInsideBoundingSphere : false,
-        level : 0
+        level : 0,
+        northLatitude : 0,
+        southLatitude : 0,
+        southMercatorY : 0,
+        oneOverMercatorHeight : 0
     };
 
     EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, drawArguments) {
@@ -373,6 +389,21 @@ define([
 
             var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
             uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);
+
+//            northLatitude : 0,
+//            southLatitude : 0,
+//            minMLat : 0,
+//            maxMLat : 0
+
+            var extent = tile.extent;
+            uniformMap.northLatitude = extent.north;
+            uniformMap.southLatitude = extent.south;
+
+            var sinLatitude = Math.sin(extent.south);
+            uniformMap.southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+            sinLatitude = Math.sin(extent.north);
+            var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+            uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - uniformMap.southMercatorY);
 
             var tileImageryCollection = tile.imagery;
             var imageryIndex = 0;

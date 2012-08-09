@@ -97,6 +97,9 @@ define([
         var minHeight = 65536.0;
         var maxHeight = -65536.0;
 
+        var maxVDifference = 0.0;
+        var maxUDifference = 0.0;
+
         for ( var row = 0; row < height; ++row) {
             var y = extent.north - granularityY * row;
             var latitude = piOverTwo - (2.0 * atan(exp(-y * oneOverCentralBodySemimajorAxis)));
@@ -105,10 +108,15 @@ define([
             var kZ = radiiSquaredZ * nZ;
 
             // texture coordinates for geographic imagery
-            //var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
+            var geographicV = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
 
             // texture coordinates for web mercator imagery
-            var v = (height - row - 1) / (height - 1);
+            var mercatorV = (height - row - 1) / (height - 1);
+
+            var vDifference = Math.abs(mercatorV - geographicV);
+            maxVDifference = Math.max(vDifference, maxVDifference);
+
+            var v = geographicV;
 
             for ( var col = 0; col < width; ++col) {
                 var x = extent.west + granularityX * col;
@@ -148,10 +156,16 @@ define([
 
                 if (generateTextureCoordinates) {
                     // texture coordinates for geographic imagery
-                    //var u = (longitude - geographicWest) / (geographicEast - geographicWest);
+                    var geographicU = (longitude - geographicWest) / (geographicEast - geographicWest);
 
                     // texture coordinates for web mercator imagery
-                    var u = col / (width - 1);
+                    var mercatorU = col / (width - 1);
+
+                    var uDifference = Math.abs(mercatorU - geographicU);
+                    maxUDifference = Math.max(uDifference, maxUDifference);
+
+                    var u = geographicU;
+
                     if (interleaveTextureCoordinates) {
                         vertices[vertexArrayIndex++] = u;
                         vertices[vertexArrayIndex++] = v;
@@ -188,7 +202,9 @@ define([
 
         return {
             maxHeight : maxHeight,
-            minHeight : minHeight
+            minHeight : minHeight,
+            maxUDifference : maxUDifference,
+            maxVDifference : maxVDifference
         };
     };
 
