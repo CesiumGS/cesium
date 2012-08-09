@@ -11,6 +11,7 @@ define([
         './DynamicBillboardVisualizer',
         './DynamicConeVisualizerUsingCustomSensor', //CZML_TODO Replace with './DynamicConeVisualizer', once ComplexConicSensor works.
         './DynamicLabelVisualizer',
+        './DynamicPathVisualizer',
         './DynamicPointVisualizer',
         './DynamicPolygonVisualizer',
         './DynamicPolylineVisualizer',
@@ -27,6 +28,7 @@ define([
         DynamicBillboardVisualizer,
         DynamicConeVisualizer,
         DynamicLabelVisualizer,
+        DynamicPathVisualizer,
         DynamicPointVisualizer,
         DynamicPolygonVisualizer,
         DynamicPolylineVisualizer,
@@ -107,6 +109,7 @@ define([
             return [new DynamicBillboardVisualizer(scene),
                     new DynamicConeVisualizer(scene),
                     new DynamicLabelVisualizer(scene),
+                    new DynamicPathVisualizer(scene),
                     new DynamicPointVisualizer(scene),
                     new DynamicPolygonVisualizer(scene),
                     new DynamicPolylineVisualizer(scene),
