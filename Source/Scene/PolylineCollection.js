@@ -1192,39 +1192,41 @@ define([
             var polyline = polylines[i];
             var positions = polyline.getPositions();
             var positionsLength = positions.length;
-            for ( var j = 0; j < positionsLength; ++j) {
-                if (j !== positionsLength - 1) {
-                    if (indicesCount === SIXTYFOURK - 1) {
-                        vertexBufferOffset.push(1);
-                        indices = [];
-                        totalIndices.push(indices);
-                        indicesCount = 0;
-                        bucketLocator.count = count;
-                        count = 0;
-                        offset = 0;
-                        bucketLocator = new VertexArrayBucketLocator(0, 0, this);
-                        vertexArrayBuckets[++vaCount] = [bucketLocator];
+            if(positions.length > 0){
+                for ( var j = 0; j < positionsLength; ++j) {
+                    if (j !== positionsLength - 1) {
+                        if (indicesCount === SIXTYFOURK - 1) {
+                            vertexBufferOffset.push(1);
+                            indices = [];
+                            totalIndices.push(indices);
+                            indicesCount = 0;
+                            bucketLocator.count = count;
+                            count = 0;
+                            offset = 0;
+                            bucketLocator = new VertexArrayBucketLocator(0, 0, this);
+                            vertexArrayBuckets[++vaCount] = [bucketLocator];
+                        }
+                        count += 2;
+                        offset += 2;
+                        indices.push(indicesCount++);
+                        indices.push(indicesCount);
                     }
-                    count += 2;
-                    offset += 2;
-                    indices.push(indicesCount++);
-                    indices.push(indicesCount);
+                }
+                if (indicesCount < SIXTYFOURK - 1) {
+                    indicesCount++;
+                } else {
+                    vertexBufferOffset.push(0);
+                    indices = [];
+                    totalIndices.push(indices);
+                    indicesCount = 0;
+                    bucketLocator.count = count;
+                    offset = 0;
+                    count = 0;
+                    bucketLocator = new VertexArrayBucketLocator(0, 0, this);
+                    vertexArrayBuckets[++vaCount] = [bucketLocator];
                 }
             }
             polyline._clean();
-            if (indicesCount < SIXTYFOURK - 1) {
-                indicesCount++;
-            } else {
-                vertexBufferOffset.push(0);
-                indices = [];
-                totalIndices.push(indices);
-                indicesCount = 0;
-                bucketLocator.count = count;
-                offset = 0;
-                count = 0;
-                bucketLocator = new VertexArrayBucketLocator(0, 0, this);
-                vertexArrayBuckets[++vaCount] = [bucketLocator];
-            }
         }
         bucketLocator.count = count;
         return offset;
@@ -1249,47 +1251,50 @@ define([
             var polyline = polylines[i];
             var segments = polyline._segments;
             var numberOfSegments = segments.length;
-            for ( var k = 0; k < numberOfSegments; ++k) {
-                var segment = segments[k];
-                var segmentLength = segment.length;
-                var startN = ((k === 0) || (segmentLength === 2)) ? 0 : 1;
-                for ( var n = startN; n < segmentLength; ++n) {
-                    if (n !== segmentLength - 1) {
-                        if (indicesCount === SIXTYFOURK - 1) {
-                            vertexBufferOffset.push(1);
-                            indices = [];
-                            totalIndices.push(indices);
-                            indicesCount = 0;
-                            bucketLocator.count = count;
-                            count = 0;
-                            offset = 0;
-                            bucketLocator = new VertexArrayBucketLocator(0, 0, this);
-                            vertexArrayBuckets[++vaCount] = [bucketLocator];
+            if(numberOfSegments > 0){
+                for ( var k = 0; k < numberOfSegments; ++k) {
+                    var segment = segments[k];
+                    var segmentLength = segment.length;
+                    var startN = ((k === 0) || (segmentLength === 2)) ? 0 : 1;
+                    for ( var n = startN; n < segmentLength; ++n) {
+                        if (n !== segmentLength - 1) {
+                            if (indicesCount === SIXTYFOURK - 1) {
+                                vertexBufferOffset.push(1);
+                                indices = [];
+                                totalIndices.push(indices);
+                                indicesCount = 0;
+                                bucketLocator.count = count;
+                                count = 0;
+                                offset = 0;
+                                bucketLocator = new VertexArrayBucketLocator(0, 0, this);
+                                vertexArrayBuckets[++vaCount] = [bucketLocator];
+                            }
+                            count += 2;
+                            offset += 2;
+                            indices.push(indicesCount++);
+                            indices.push(indicesCount);
                         }
-                        count += 2;
-                        offset += 2;
-                        indices.push(indicesCount++);
-                        indices.push(indicesCount);
+                    }
+                    if (k !== numberOfSegments - 1) {
+                        indicesCount++;
                     }
                 }
-                if (k !== numberOfSegments - 1) {
+
+                if (indicesCount < SIXTYFOURK - 1) {
                     indicesCount++;
+                } else {
+                    vertexBufferOffset.push(0);
+                    indices = [];
+                    totalIndices.push(indices);
+                    indicesCount = 0;
+                    bucketLocator.count = count;
+                    offset = 0;
+                    count = 0;
+                    bucketLocator = new VertexArrayBucketLocator(0, 0, this);
+                    vertexArrayBuckets[++vaCount] = [bucketLocator];
                 }
             }
             polyline._clean();
-            if (indicesCount < SIXTYFOURK - 1) {
-                indicesCount++;
-            } else {
-                vertexBufferOffset.push(0);
-                indices = [];
-                totalIndices.push(indices);
-                indicesCount = 0;
-                bucketLocator.count = count;
-                offset = 0;
-                count = 0;
-                bucketLocator = new VertexArrayBucketLocator(0, 0, this);
-                vertexArrayBuckets[++vaCount] = [bucketLocator];
-            }
         }
         bucketLocator.count = count;
         return offset;
