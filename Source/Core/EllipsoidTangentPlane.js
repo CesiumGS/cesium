@@ -84,7 +84,7 @@ define([
 
             if (intersectionPoint) {
                 var v = intersectionPoint.subtract(this.origin);
-                return new Cartesian3(this.xAxis.dot(v), this.yAxis.dot(v));
+                return new Cartesian2(this.xAxis.dot(v), this.yAxis.dot(v));
             }
         }
     };
