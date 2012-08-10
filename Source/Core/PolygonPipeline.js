@@ -276,9 +276,9 @@ define([
             // If all reflexive vertices are outside the triangle formed by points
             // innerRingVertex, intersection and P, then P is the visible vertex.
             // Otherwise, return the reflex vertex that minimizes the angle between <1,0> and <k, reflex>.
-            var minAngle = Math.PI;
+            var minAngle = Number.MAX_VALUE;
             if (pointsInside.length > 0) {
-                var v1 = new Cartesian3(1.0, 0.0, 0.0);
+                var v1 = new Cartesian2(1.0, 0.0, 0.0);
                 for (var i = 0; i < pointsInside.length; i++) {
                     var v2 = pointsInside[i].subtract(innerRingVertex);
                     var denominator = v1.magnitude() * v2.magnitude();
