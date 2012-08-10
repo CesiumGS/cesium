@@ -22,7 +22,7 @@ require({
 
     var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'ZFq7ViAKfnaLage4SZwpTNKCKWtDY9oCqz6MabqCsOtTDFm_x3c3YL85HrB3IgjeZz4oyg9-2v2_1lbVfUqkgQ..',
+        token : 'vQBBqF3AYciKQyCjyfLUkAcRgqtpGcoz2pIg8sOkqZdEtT6aD5FYHlp08BL9XzHmqpRSlCy-NgujWeio0bSGwg..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
@@ -97,7 +97,7 @@ require({
     cb.affectedByLighting = false;
     primitives.setCentralBody(cb);
 
-    scene.getCamera().frustum.near = 100.0;
+    scene.getCamera().frustum.near = 10.0;
     scene.getCamera().frustum.far = 20000000.0;
     scene.getCamera().getControllers().addCentralBody();
 

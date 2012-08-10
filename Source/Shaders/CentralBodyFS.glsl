@@ -17,7 +17,8 @@ uniform int u_level;
 
 uniform float u_northLatitude;
 uniform float u_southLatitude;
-uniform float u_southMercatorY;
+uniform float u_southMercatorYHigh;
+uniform float u_southMercatorYLow;
 uniform float u_oneOverMercatorHeight;
 
 varying vec3 v_positionMC;
@@ -35,12 +36,23 @@ void main()
     
 #ifdef SHOW_DAY
     vec2 geographicUV = v_textureCoordinates;
+    vec2 webMercatorUV = geographicUV;
     
-    float currentLatitude = mix(u_southLatitude, u_northLatitude, geographicUV.y);
-    float sinLatitude = sin(currentLatitude);
-    float mercatorY = 0.5 * log((1.0 + sinLatitude) / (1.0 - sinLatitude));
-    
-    vec2 webMercatorUV = vec2(geographicUV.x, (mercatorY - u_southMercatorY) * u_oneOverMercatorHeight);
+    if (u_level < 14)
+    {
+	    float currentLatitude = mix(u_southLatitude, u_northLatitude, geographicUV.y);
+	    float sinLatitude = sin(currentLatitude);
+	    float mercatorY = 0.5 * log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+	    
+	    // mercatorY - u_southMercatorY in simulated double precision.
+	    float t1 = 0.0 - u_southMercatorYLow;
+	    float e = t1 - 0.0;
+	    float t2 = ((-u_southMercatorYLow - e) + (0.0 - (t1 - e))) + mercatorY - u_southMercatorYHigh;
+	    float highDifference = t1 + t2;
+	    float lowDifference = t2 - (highDifference - t1);
+	    
+	    webMercatorUV = vec2(geographicUV.x, highDifference * u_oneOverMercatorHeight + lowDifference * u_oneOverMercatorHeight);
+    }
 
     vec3 startDayColor = vec3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
     for (int i = 0; i < TEXTURE_UNITS; ++i)
