@@ -38,7 +38,7 @@ void main()
     vec2 geographicUV = v_textureCoordinates;
     vec2 webMercatorUV = geographicUV;
     
-    if (u_level < 14)
+    if (u_level < 12)
     {
 	    float currentLatitude = mix(u_southLatitude, u_northLatitude, geographicUV.y);
 	    float sinLatitude = sin(currentLatitude);
