@@ -2,8 +2,8 @@
 define([
         '../Core/defaultValue',
         '../Core/jsonp',
-        '../Core/loadImage',
-        '../Core/getImagePixels',
+        '../Core/loadArrayBuffer',
+        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/BoundingSphere',
@@ -21,8 +21,8 @@ define([
     ], function(
         defaultValue,
         jsonp,
-        loadImage,
-        getImagePixels,
+        loadArrayBuffer,
+        writeTextToCanvas,
         DeveloperError,
         CesiumMath,
         BoundingSphere,
@@ -80,11 +80,20 @@ define([
          *
          * @type TilingScheme
          */
-        this.tilingScheme = new WebMercatorTilingScheme();
-        this.projection = Projections.MERCATOR;
+        this.tilingScheme = new GeographicTilingScheme();
+        this.projection = Projections.WGS84;
         this.maxLevel = 18;
 
         this._proxy = description.proxy;
+
+        // Create the copyright message.
+        if (typeof description.copyrightText !== 'undefined') {
+            // Create the copyright message.
+            this._logo = writeTextToCanvas(description.copyrightText, {
+                font : '12px sans-serif'
+            });
+        }
+
         this.ready = true;
     }
 
@@ -139,7 +148,8 @@ define([
 
         var extent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
         var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
-        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=EPSG:3857&format=image%2Ftiff';
+        var srs = 'EPSG:4326';
+        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=64&height=64&srs=' + srs + '&format=application%2Fbil16';
         if (this.token) {
             url += '&token=' + this.token;
         }
@@ -147,8 +157,22 @@ define([
             url = this._proxy.getURL(url);
         }
 
-        when(loadImage(url, true), function(image) {
-            tile.geometry = image;
+        when(loadArrayBuffer(url), function(arrayBuffer) {
+            ++received;
+            if ((received % 10) === 0) {
+                console.log('received: ' + received);
+            }
+
+            var littleEndianBuffer = new ArrayBuffer(64 * 64 * 2);
+            if (arrayBuffer.byteLength === littleEndianBuffer.byteLength) {
+                var inView = new DataView(arrayBuffer);
+                var outView = new DataView(littleEndianBuffer);
+                for ( var i = 0; i < arrayBuffer.byteLength; i += 2) {
+                    outView.setInt16(i, inView.getInt16(i, false), true);
+                }
+            }
+
+            tile.geometry = new Int16Array(littleEndianBuffer);
             tile.state = TileState.RECEIVED;
             --requestsInFlight;
         }, function(e) {
@@ -170,35 +194,24 @@ define([
      * @param {Tile} tile The tile to transform geometry for.
      */
     WebMapServiceTerrainProvider.prototype.transformGeometry = function(context, tile) {
-        // Get the height data from the image by copying it to a canvas.
-        var image = tile.geometry;
-        var width = image.width;
-        var height = image.height;
-        var pixels = getImagePixels(image);
+        var width = 64;
+        var height = 64;
 
-        var southwest = this.tilingScheme.cartographicToWebMercator(tile.extent.west, tile.extent.south);
-        var northeast = this.tilingScheme.cartographicToWebMercator(tile.extent.east, tile.extent.north);
-        var webMercatorExtent = {
-            west : southwest.x,
-            south : southwest.y,
-            east : northeast.x,
-            north : northeast.y
-        };
-
+        var nativeExtent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
         tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
         var verticesPromise = taskProcessor.scheduleTask({
-            heightmap : pixels,
-            heightScale : 1000.0,
-            heightOffset : 1000.0,
-            bytesPerHeight : 3,
-            strideBytes : 4,
+            heightmap : tile.geometry,
+            heightScale : 1.0,
+            heightOffset : 0.0,
+            stride : 1,
             width : width,
             height : height,
-            extent : webMercatorExtent,
+            extent : nativeExtent,
             relativeToCenter : tile.center,
             radiiSquared : this.tilingScheme.ellipsoid.getRadiiSquared(),
-            oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x
+            oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x,
+            isGeographic : true
         });
 
         if (typeof verticesPromise === 'undefined') {

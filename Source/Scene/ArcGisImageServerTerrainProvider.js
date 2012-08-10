@@ -238,7 +238,7 @@ define([
             heightScale : 1000.0,
             heightOffset : 1000.0,
             bytesPerHeight : 3,
-            strideBytes : 4,
+            stride : 4,
             width : width,
             height : height,
             extent : webMercatorExtent,
