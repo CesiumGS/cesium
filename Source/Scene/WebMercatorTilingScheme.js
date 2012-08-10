@@ -207,8 +207,7 @@ define([
      * west properties in radians.
      */
     WebMercatorTilingScheme.prototype.tileXYToExtent = function(x, y, level) {
-        var nativeExtent = {};
-        this.tileXYToNativeExtent(x, y, level, nativeExtent);
+        var nativeExtent = this.tileXYToNativeExtent(x, y, level);
 
         var southwest = this.webMercatorToCartographic(nativeExtent.west, nativeExtent.south);
         var northeast = this.webMercatorToCartographic(nativeExtent.east, nativeExtent.north);

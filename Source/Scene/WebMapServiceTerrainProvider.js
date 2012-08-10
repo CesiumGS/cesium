@@ -146,8 +146,8 @@ define([
 
         ++requestsInFlight;
 
-        var extent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
-        var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
+        var nativeExtent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
+        var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
         var srs = 'EPSG:4326';
         var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=64&height=64&srs=' + srs + '&format=application%2Fbil16';
         if (this.token) {
@@ -158,11 +158,6 @@ define([
         }
 
         when(loadArrayBuffer(url), function(arrayBuffer) {
-            ++received;
-            if ((received % 10) === 0) {
-                console.log('received: ' + received);
-            }
-
             var littleEndianBuffer = new ArrayBuffer(64 * 64 * 2);
             if (arrayBuffer.byteLength === littleEndianBuffer.byteLength) {
                 var inView = new DataView(arrayBuffer);
@@ -181,7 +176,13 @@ define([
         });
     };
 
-    var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
+    var taskProcessor;
+    function getTaskProcessor() {
+        if (typeof taskProcessor === 'undefined') {
+            taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
+        }
+        return taskProcessor;
+    }
 
     /**
      * Transform the tile geometry from the format requested from the remote server
@@ -200,7 +201,7 @@ define([
         var nativeExtent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
         tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
-        var verticesPromise = taskProcessor.scheduleTask({
+        var verticesPromise = getTaskProcessor().scheduleTask({
             heightmap : tile.geometry,
             heightScale : 1.0,
             heightOffset : 0.0,

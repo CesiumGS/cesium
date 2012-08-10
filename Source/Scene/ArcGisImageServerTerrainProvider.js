@@ -203,7 +203,13 @@ define([
         });
     };
 
-    var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
+    var taskProcessor;
+    function getTaskProcessor() {
+        if (typeof taskProcessor === 'undefined') {
+            taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
+        }
+        return taskProcessor;
+    }
 
     /**
      * Transform the tile geometry from the format requested from the remote server
@@ -233,7 +239,7 @@ define([
 
         tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
-        var verticesPromise = taskProcessor.scheduleTask({
+        var verticesPromise = getTaskProcessor().scheduleTask({
             heightmap : pixels,
             heightScale : 1000.0,
             heightOffset : 1000.0,
