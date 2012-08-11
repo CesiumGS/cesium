@@ -2,7 +2,11 @@
 define([
         './DeveloperError',
         './Math',
+        './Cartesian2',
         './Cartesian3',
+        './Ellipsoid',
+        './EllipsoidTangentPlane',
+        './defaultValue',
         './pointInsideTriangle2D',
         './ComponentDatatype',
         './PrimitiveType',
@@ -11,7 +15,11 @@ define([
     ], function(
         DeveloperError,
         CesiumMath,
+        Cartesian2,
         Cartesian3,
+        Ellipsoid,
+        EllipsoidTangentPlane,
+        defaultValue,
         pointInsideTriangle2D,
         ComponentDatatype,
         PrimitiveType,
@@ -68,6 +76,299 @@ define([
             --this.length;
         }
     };
+
+    function isTipConvex(p0, p1, p2) {
+        var u = p1.subtract(p0);
+        var v = p2.subtract(p1);
+
+        // Use the sign of the z component of the cross product
+        return ((u.x * v.y) - (u.y * v.x)) >= 0.0;
+    }
+
+    /**
+     * Returns the index of the vertex with the maximum X value.
+     *
+     * @param {Array} positions An array of the Cartesian points defining the polygon's vertices.
+     * @returns {Number} The index of the positions with the maximum X value.
+     *
+     * @private
+     */
+    function getRightmostPositionIndex(positions) {
+        var maximumX = positions[0].x;
+        var rightmostPositionIndex = 0;
+        for ( var i = 0; i < positions.length; i++) {
+            if (positions[i].x > maximumX) {
+                maximumX = positions[i].x;
+                rightmostPositionIndex = i;
+            }
+        }
+        return rightmostPositionIndex;
+    }
+
+    /**
+     * Returns the index of the ring that contains the rightmost vertex.
+     *
+     * @param {Array} rings An array of arrays of Cartesians. Each array contains the vertices defining a polygon.
+     * @returns {Number} The index of the ring containing the rightmost vertex.
+     *
+     * @private
+     */
+    function getRightmostRingIndex(rings) {
+        var rightmostX = rings[0][0].x;
+        var rightmostRingIndex = 0;
+        for ( var ring = 0; ring < rings.length; ring++) {
+            var maximumX = rings[ring][getRightmostPositionIndex(rings[ring])].x;
+            if (maximumX > rightmostX) {
+                rightmostX = maximumX;
+                rightmostRingIndex = ring;
+            }
+        }
+
+        return rightmostRingIndex;
+    }
+
+    /**
+     * Returns a list containing the reflex vertices for a given polygon.
+     *
+     * @param {Array} polygon An array of Cartesian elements defining the polygon.
+     * @returns {Array}
+     *
+     * @private
+     */
+    function getReflexVertices(polygon) {
+        var reflexVertices = [];
+        for ( var i = 0; i < polygon.length; i++) {
+            var p0 = polygon[((i - 1) + polygon.length) % polygon.length];
+            var p1 = polygon[i];
+            var p2 = polygon[(i + 1) % polygon.length];
+
+            if (!isTipConvex(p0, p1, p2)) {
+                reflexVertices.push(p1);
+            }
+        }
+        return reflexVertices;
+    }
+
+    /**
+     * Returns true if the given point is contained in the list of positions.
+     *
+     * @param {Array} positions A list of Cartesian elements defining a polygon.
+     * @param {Cartesian} point The point to check.
+     * @returns {Boolean} <code>true></code> if <code>point</code> is found in <code>polygon</code>, <code>false</code> otherwise.
+     *
+     * @private
+     */
+    function isVertex(positions, point) {
+        for ( var i = 0; i < positions.length; i++) {
+            if (point.equals(positions[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Given a point inside a polygon, find the nearest point directly to the right that lies on one of the polygon's edges.
+     *
+     * @param {Cartesian} point A point inside the polygon defined by <code>ring</code>.
+     * @param {Array} ring A list of Cartesian points defining a polygon.
+     * @param {Array} [edgeIndices]  An array containing the indices two endpoints of the edge containing the intersection.
+     *
+     * @returns {Cartesian} The intersection point.
+     * @private
+     */
+    function intersectPointWithRing(point, ring, edgeIndices) {
+        edgeIndices = defaultValue(edgeIndices, []);
+
+        var minDistance = Number.MAX_VALUE;
+        var rightmostVertexIndex = getRightmostPositionIndex(ring);
+        var intersection = new Cartesian3(ring[rightmostVertexIndex].x, point.y, 0.0);
+        edgeIndices.push(rightmostVertexIndex);
+        edgeIndices.push((rightmostVertexIndex + 1) % ring.length);
+
+        var boundaryMinX = ring[0].x;
+        var boundaryMaxX = boundaryMinX;
+        for ( var i = 1; i < ring.length; ++i) {
+            if (ring[i].x < boundaryMinX) {
+                boundaryMinX = ring[i].x;
+            } else if (ring[i].x > boundaryMaxX) {
+                boundaryMaxX = ring[i].x;
+            }
+        }
+        boundaryMaxX += (boundaryMaxX - boundaryMinX);
+        var point2 = new Cartesian3(boundaryMaxX, point.y, 0.0);
+
+        // Find the nearest intersection.
+        for (i = 0; i < ring.length; i++) {
+            var v1 = ring[i];
+            var v2 = ring[(i + 1) % ring.length];
+
+            if (((v1.x >= point.x) || (v2.x >= point.x)) && (((v1.y >= point.y) && (v2.y <= point.y)) || ((v1.y <= point.y) && (v2.y >= point.y)))) {
+                var temp = ((v2.y - v1.y) * (point2.x - point.x)) - ((v2.x - v1.x) * (point2.y - point.y));
+                if (temp !== 0.0) {
+                    temp = 1.0 / temp;
+                    var ua = (((v2.x - v1.x) * (point.y - v1.y)) - ((v2.y - v1.y) * (point.x - v1.x))) * temp;
+                    var ub = (((point2.x - point.x) * (point.y - v1.y)) - ((point2.y - point.y) * (point.x - v1.x))) * temp;
+                    if ((ua >= 0.0) && (ua <= 1.0) && (ub >= 0.0) && (ub <= 1.0)) {
+                        var tempIntersection = new Cartesian2(point.x + ua * (point2.x - point.x), point.y + ua * (point2.y - point.y));
+                        var dist = tempIntersection.subtract(point);
+                        temp = dist.magnitudeSquared();
+                        if (temp < minDistance) {
+                            intersection = tempIntersection;
+                            minDistance = temp;
+                            edgeIndices[0] = i;
+                            edgeIndices[1] = (i + 1) % ring.length;
+                        }
+                    }
+                }
+            }
+        }
+
+        return intersection;
+    }
+
+    /**
+     * Given an outer ring and multiple inner rings, determine the point on the outer ring that is visible
+     * to the rightmost vertex of the rightmost inner ring.
+     *
+     * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
+     * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+     * @returns {Number} The index of the vertex in <code>outerRing</code> that is mutually visible to the rightmost vertex in <code>inenrRing</code>.
+     *
+     * @private
+     */
+    function getMutuallyVisibleVertexIndex(outerRing, innerRings) {
+        var innerRingIndex = getRightmostRingIndex(innerRings);
+        var innerRing = innerRings[innerRingIndex];
+        var innerRingVertexIndex = getRightmostPositionIndex(innerRing);
+        var innerRingVertex = innerRing[innerRingVertexIndex];
+        var edgeIndices = [];
+        var intersection = intersectPointWithRing(innerRingVertex, outerRing, edgeIndices);
+
+        var visibleVertex;
+        if (isVertex(outerRing, intersection)) {
+            visibleVertex = intersection;
+        } else {
+            // Set P to be the edge endpoint closest to the inner ring vertex
+            var d1 = (outerRing[edgeIndices[0]].subtract(innerRingVertex)).magnitudeSquared();
+            var d2 = (outerRing[edgeIndices[1]].subtract(innerRingVertex)).magnitudeSquared();
+            var p = (d1 < d2) ? outerRing[edgeIndices[0]] : outerRing[edgeIndices[1]];
+
+            var reflexVertices = getReflexVertices(outerRing);
+            var reflexIndex = reflexVertices.indexOf(p);
+            if (reflexIndex !== -1) {
+                reflexVertices.splice(reflexIndex, 1); // Do not include p if it happens to be reflex.
+            }
+
+            var pointsInside = [];
+            for ( var i = 0; i < reflexVertices.length; i++) {
+                var vertex = reflexVertices[i];
+                if (pointInsideTriangle2D(vertex, innerRingVertex, intersection, p)) {
+                    pointsInside.push(vertex);
+                }
+            }
+
+            // If all reflexive vertices are outside the triangle formed by points
+            // innerRingVertex, intersection and P, then P is the visible vertex.
+            // Otherwise, return the reflex vertex that minimizes the angle between <1,0> and <k, reflex>.
+            var minAngle = Number.MAX_VALUE;
+            if (pointsInside.length > 0) {
+                var v1 = new Cartesian2(1.0, 0.0, 0.0);
+                for (i = 0; i < pointsInside.length; i++) {
+                    var v2 = pointsInside[i].subtract(innerRingVertex);
+                    var denominator = v1.magnitude() * v2.magnitude();
+                    if (denominator !== 0) {
+                        var angle = Math.abs(Math.acos(v1.dot(v2) / denominator));
+                        if (angle < minAngle) {
+                            minAngle = angle;
+                            p = pointsInside[i];
+                        }
+                    }
+                }
+            }
+            visibleVertex = p;
+        }
+
+        return outerRing.indexOf(visibleVertex);
+    }
+
+    /**
+     * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
+     * a polygon with the rightmost hole added to it. The added hole is removed from <code>innerRings</code>.
+     *
+     * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
+     * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+     *
+     * @return A single list of Cartesian points defining the polygon, including the eliminated inner ring.
+     *
+     * @private
+     */
+    function eliminateHole(outerRing, innerRings) {
+        // Check that the holes are defined in the winding order opposite that of the outer ring.
+        var windingOrder = PolygonPipeline.computeWindingOrder2D(outerRing);
+        for ( var i = 0; i < innerRings.length; i++) {
+            var ring = innerRings[i];
+
+            // Ensure each hole's first and last points are the same.
+            if (!(ring[0]).equals(ring[ring.length - 1])) {
+                ring.push(ring[0]);
+            }
+
+            var innerWindingOrder = PolygonPipeline.computeWindingOrder2D(ring);
+            if (innerWindingOrder === windingOrder) {
+                ring.reverse();
+            }
+        }
+
+        // Project points onto a tangent plane to find the mutually visible vertex.
+        var tangentPlane = EllipsoidTangentPlane.create(Ellipsoid.WGS84, outerRing);
+        var tangentOuterRing = tangentPlane.projectPointsOntoPlane(outerRing);
+        var tangentInnerRings = [];
+        for (i = 0; i < innerRings.length; i++) {
+            tangentInnerRings.push(tangentPlane.projectPointsOntoPlane(innerRings[i]));
+        }
+
+        var visibleVertexIndex = getMutuallyVisibleVertexIndex(tangentOuterRing, tangentInnerRings);
+        var innerRingIndex = getRightmostRingIndex(tangentInnerRings);
+        var innerRingVertexIndex = getRightmostPositionIndex(tangentInnerRings[innerRingIndex]);
+
+        var innerRing = innerRings[innerRingIndex];
+        var newPolygonVertices = [];
+
+        for (i = 0; i < outerRing.length; i++) {
+            newPolygonVertices.push(outerRing[i]);
+        }
+
+        var j;
+        var holeVerticesToAdd = [];
+
+        // If the rightmost inner vertex is not the starting and ending point of the ring,
+        // then some other point is duplicated in the inner ring and should be skipped once.
+        if (innerRingVertexIndex !== 0) {
+            for (j = 0; j <= innerRing.length; j++) {
+                var index = (j + innerRingVertexIndex) % innerRing.length;
+                if (index !== 0) {
+                    holeVerticesToAdd.push(innerRing[index]);
+                }
+            }
+        } else {
+            for (j = 0; j < innerRing.length; j++) {
+                holeVerticesToAdd.push(innerRing[(j + innerRingVertexIndex) % innerRing.length]);
+            }
+        }
+
+        var lastVisibleVertexIndex = newPolygonVertices.lastIndexOf(outerRing[visibleVertexIndex]);
+
+        holeVerticesToAdd.push(outerRing[lastVisibleVertexIndex]);
+
+        var front = newPolygonVertices.slice(0, lastVisibleVertexIndex + 1);
+        var back = newPolygonVertices.slice(lastVisibleVertexIndex + 1);
+        newPolygonVertices = front.concat(holeVerticesToAdd, back);
+
+        innerRings.splice(innerRingIndex, 1);
+
+        return newPolygonVertices;
+    }
 
     /**
      * DOC_TBA
@@ -156,14 +457,6 @@ define([
          * @exception {DeveloperError} At least three positions are required.
          */
         earClip2D : function(positions) {
-            function isTipConvex(p0, p1, p2) {
-                var u = p1.subtract(p0);
-                var v = p2.subtract(p1);
-
-                // Use the sign of the z component of the cross product
-                return ((u.x * v.y) - (u.y * v.x)) >= 0.0;
-            }
-
             // PERFORMANCE_IDEA:  This is slow at n^3.  Make it faster with:
             //   * http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
             //   * http://cgm.cs.mcgill.ca/~godfried/publications/triangulation.held.ps.gz
@@ -203,9 +496,7 @@ define([
                 if (isTipConvex(p0, p1, p2)) {
                     var isEar = true;
 
-                    for (var n = (nextNode.next ? nextNode.next : remainingPositions.head);
-                             n !== previousNode;
-                             n = (n.next ? n.next : remainingPositions.head)) {
+                    for ( var n = (nextNode.next ? nextNode.next : remainingPositions.head); n !== previousNode; n = (n.next ? n.next : remainingPositions.head)) {
                         if (pointInsideTriangle2D(n.item.position, p0, p1, p2)) {
                             isEar = false;
                             break;
@@ -444,6 +735,51 @@ define([
             }
 
             return mesh;
+        },
+
+        /**
+         * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
+         * a polygon defined by the outer ring with the inner holes removed.
+         *
+         * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
+         * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+         *
+         * @return A single list of Cartesian points defining the polygon, including the eliminated inner ring.
+         *
+         * @exception {DeveloperError} <code>outerRing</code> is required.
+         * @exception {DeveloperError} <code>outerRing</code> must not be empty.
+         * @exception {DeveloperError} <code>innerRings</code> is required.
+         *
+         * @example
+         * // Simplifying a polygon with multiple holes.
+         * outerRing = PolygonPipeline.eliminateHoles(outerRing, innerRings);
+         * polygon.setPositions(outerRing);
+         */
+        eliminateHoles : function(outerRing, innerRings) {
+            if (typeof outerRing === 'undefined') {
+                throw new DeveloperError('outerRing is required.');
+            }
+            if (outerRing.length === 0) {
+                throw new DeveloperError('outerRing must not be empty.');
+            }
+            if (typeof innerRings === 'undefined') {
+                throw new DeveloperError('innerRings is required.');
+            }
+
+            var innerRingsCopy = [];
+            for ( var i = 0; i < innerRings.length; i++) {
+                var innerRing = [];
+                for ( var j = 0; j < innerRings[i].length; j++) {
+                    innerRing.push(Cartesian3.clone(innerRings[i][j]));
+                }
+                innerRingsCopy.push(innerRing);
+            }
+
+            var newPolygonVertices = outerRing;
+            while (innerRingsCopy.length > 0) {
+                newPolygonVertices = eliminateHole(newPolygonVertices, innerRingsCopy);
+            }
+            return newPolygonVertices;
         }
     };
 
