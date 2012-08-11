@@ -14,42 +14,6 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('constructor throws without x', function() {
-        expect(function() {
-            return new BoundingRectangle();
-        }).toThrow();
-    });
-
-    it('constructor throws without y', function() {
-        expect(function() {
-            return new BoundingRectangle(1.0);
-        }).toThrow();
-    });
-
-    it('constructor throws without width', function() {
-        expect(function() {
-            return new BoundingRectangle(1.0, 2.0);
-        }).toThrow();
-    });
-
-    it('constructor throws with width less than zero', function() {
-        expect(function() {
-            return new BoundingRectangle(1.0, 2.0, -1.0, 4.0);
-        }).toThrow();
-    });
-
-    it('constructor throws without height', function() {
-        expect(function() {
-            return new BoundingRectangle(1.0, 2.0, 3.0);
-        }).toThrow();
-    });
-
-    it('constructor throws with height less than zero', function() {
-        expect(function() {
-            return new BoundingRectangle(1.0, 2.0, 3.0, -1.0);
-        }).toThrow();
-    });
-
     it('constructs', function() {
         var rect = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         expect(rect.x).toEqual(1.0);
@@ -123,12 +87,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('create a bounding rectangle from an extent throws without a projection', function() {
-        expect(function() {
-            return BoundingRectangle.fromExtent(Extent.MAX_VALUE);
-        }).toThrow();
-    });
-
     it('create a bounding rectangle from an extent', function() {
         var extent = Extent.MAX_VALUE;
         var projection = new EquidistantCylindricalProjection(Ellipsoid.UNIT_SPHERE);
@@ -136,24 +94,24 @@ defineSuite([
         expect(BoundingRectangle.fromExtent(extent, projection)).toEqual(expected);
     });
 
-    it('rectangleIntersect throws with rect1', function() {
+    it('intersect throws with rect1', function() {
         expect(function() {
-            BoundingRectangle.rectangleIntersect();
+            BoundingRectangle.intersect();
         }).toThrow();
     });
 
-    it('rectangleIntersect throws with rect2', function() {
+    it('intersect throws with rect2', function() {
         expect(function() {
-            BoundingRectangle.rectangleIntersect(new BoundingRectangle(1.0, 2.0, 3.0, 4.0));
+            BoundingRectangle.intersect(new BoundingRectangle(1.0, 2.0, 3.0, 4.0));
         }).toThrow();
     });
 
-    it('rectangleIntersect', function() {
+    it('intersect', function() {
         var rect1 = new BoundingRectangle(0, 0, 4, 4);
         var rect2 = new BoundingRectangle(2, 2, 4, 4);
         var rect3 = new BoundingRectangle(5, 5, 4, 4);
-        expect(BoundingRectangle.rectangleIntersect(rect1, rect2)).toEqual(true);
-        expect(BoundingRectangle.rectangleIntersect(rect1, rect3)).toEqual(false);
+        expect(BoundingRectangle.intersect(rect1, rect2)).toEqual(true);
+        expect(BoundingRectangle.intersect(rect1, rect3)).toEqual(false);
     });
 
     it('static clone throws with no parameter', function() {
@@ -162,10 +120,10 @@ defineSuite([
         }).toThrow();
     });
 
-    it('expand throws without a rectangle', function() {
+    it('union throws without a rectangle', function() {
         expect(function() {
             var rect = new Rectangle(1.0, 2.0, 3.0, 4.0);
-            return rect.expand();
+            return rect.union();
         }).toThrow();
     });
 
@@ -173,6 +131,6 @@ defineSuite([
         var rect1 = new BoundingRectangle(2.0, 0.0, 1.0, 1.0);
         var rect2 = new BoundingRectangle(-2.0, 0.0, 1.0, 2.0);
         var expected = new BoundingRectangle(-2.0, 0.0, 5.0, 2.0);
-        expect(rect1.expand(rect2)).toEqual(expected);
+        expect(rect1.union(rect2)).toEqual(expected);
     });
 });

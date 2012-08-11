@@ -1385,7 +1385,7 @@ define([
                 if (typeof polyline._collection._baseVolume === 'undefined') {
                     polyline._collection._baseVolume = polyline.boundingVolume.clone();
                 } else {
-                    polyline._collection._baseVolume.expand(polyline.boundingVolume, polyline._collection._baseVolume);
+                    polyline._collection._baseVolume.union(polyline.boundingVolume, polyline._collection._baseVolume);
                 }
             }
 
@@ -1415,14 +1415,14 @@ define([
             if (typeof polyline._collection.boundingVolume2D === 'undefined') {
                 polyline._collection.boundingVolume2D = polyline.boundingVolume2D.clone();
             } else {
-                polyline._collection.boundingVolume2D.expand(polyline.boundingVolume2D, polyline._collection.boundingVolume2D);
+                polyline._collection.boundingVolume2D.union(polyline.boundingVolume2D, polyline._collection.boundingVolume2D);
             }
 
             polyline.boundingRectangle = BoundingRectangle.fromPoints(newPositions);
             if (typeof polyline._collection.boundingRectangle === 'undefined') {
                 polyline._collection.boundingRectangle = polyline.boundingRectangle.clone();
             } else {
-                polyline._collection.boundingRectangle.expand(polyline.boundingRectangle, polyline._collection.boundingRectangle);
+                polyline._collection.boundingRectangle.union(polyline.boundingRectangle, polyline._collection.boundingRectangle);
             }
         }
 

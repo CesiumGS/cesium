@@ -38,21 +38,21 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.minimum = minimumPoint.clone();
+        this.minimum = Cartesian3.clone(minimumPoint);
 
         /**
          * The maximum point defining the bounding box.
          *
          * @type {Cartesian3}
          */
-        this.maximum = maximumPoint.clone();
+        this.maximum = Cartesian3.clone(maximumPoint);
 
         /**
          * The center point of the bounding box.
          *
          * @type {Cartesian3}
          */
-        this.center = (minimumPoint.add(maximumPoint)).multiplyByScalar(0.5);
+        this.center = (this.minimum.add(this.maximum)).multiplyByScalar(0.5);
     };
 
     /**
@@ -184,7 +184,7 @@ define([
      * @exception {DeveloperError} box is required.
      * @exception {DeveloperError} plane is required.
      */
-    AxisAlignedBoundingBox.planeIntersect = function(box, plane) {
+    AxisAlignedBoundingBox.intersect = function(box, plane) {
         if (typeof box === 'undefined') {
             throw DeveloperError('box is required.');
         }
@@ -220,6 +220,25 @@ define([
      */
     AxisAlignedBoundingBox.prototype.clone = function(result) {
         return AxisAlignedBoundingBox.clone(this, result);
+    };
+
+    /**
+     * Determines which side of a plane the box is located.
+     *
+     * @memberof AxisAlignedBoundingBox
+     *
+     * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0 where the coefficients a, b, c, and d are the components x, y, z, and w of the {Cartesian4}, respectively.
+     *
+     * @return {Intersect} {Intersect.INSIDE} if the entire box is on the side of the plane the normal is pointing, {Intersect.OUTSIDE} if the entire box is on the opposite side, and {Intersect.INTERSETING} if the box intersects the plane.
+     *
+     * @exception {DeveloperError} plane is required.
+     */
+    AxisAlignedBoundingBox.prototype.intersect = function(plane) {
+        if (typeof plane === 'undefined') {
+            throw DeveloperError('plane is required.');
+        }
+
+        return AxisAlignedBoundingBox.intersect(this, plane);
     };
 
     /**

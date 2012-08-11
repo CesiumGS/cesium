@@ -321,10 +321,12 @@ define([
 
         var distance = occluderRadius / dot;
         var occludeePoint = occluderPosition.add(occluderPlaneNormal.multiplyByScalar(distance));
-        return {
-            occludeePoint : occludeePoint,
-            valid : valid
-        };
+
+        if (!valid) {
+            return undefined;
+        }
+
+        return occludeePoint;
     };
 
     /**
@@ -354,10 +356,8 @@ define([
         if (!ellipsoidCenter.equals(bs.center)) {
             return Occluder.getOccludeePoint(new BoundingSphere(ellipsoidCenter, ellipsoid.getMinimumRadius()), bs.center, positions);
         }
-        return {
-            valid : false,
-            occludeePoint : Cartesian3.ZERO
-        };
+
+        return undefined;
     };
 
     Occluder._anyRotationVector = function(occluderPosition, occluderPlaneNormal, occluderPlaneD) {

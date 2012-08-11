@@ -162,7 +162,7 @@ define([
             if (mode === SceneMode.SCENE3D) {
                 var boundingVolume = sensor.boundingVolume;
                 if (typeof boundingVolume === 'undefined' ||
-                        camera.getVisibility(boundingVolume, boundingVolume.constructor.planeIntersect) !== Intersect.OUTSIDE) {
+                        camera.getVisibility(boundingVolume) !== Intersect.OUTSIDE) {
                     this._renderList.push(sensor);
                 }
             }
@@ -178,7 +178,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             sensors[i].render(context);
         }
-        sensors.length = 0;
+        this._renderList.length = 0;
     };
 
     /**

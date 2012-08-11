@@ -915,11 +915,11 @@ define([
 
             var fRect = new BoundingRectangle(x, y, w, h);
 
-            return !BoundingRectangle.rectangleIntersect(bRect, fRect);
+            return !BoundingRectangle.intersect(bRect, fRect);
         }
 
         var boundingVolume = this._getTileBoundingSphere(tile, sceneState);
-        if (sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeIntersect) === Intersect.OUTSIDE) {
+        if (sceneState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
             return true;
         }
 
@@ -1457,8 +1457,8 @@ define([
                 CesiumMath.PI_OVER_TWO
             );
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
-            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeIntersect) === Intersect.OUTSIDE;
-            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid).occludeePoint;
+            frustumCull = sceneState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
             this._drawNorthPole = !frustumCull && !occluded;
@@ -1504,8 +1504,8 @@ define([
                 this._dayTileProvider.maxExtent.south
             );
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
-            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeIntersect) === Intersect.OUTSIDE;
-            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid).occludeePoint;
+            frustumCull = sceneState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
             this._drawSouthPole = !frustumCull && !occluded;

@@ -5,6 +5,7 @@ define([
         './Cartographic',
         './DeveloperError',
         './Ellipsoid',
+        './EquidistantCylindricalProjection',
         './Extent',
         './Intersect',
         './Math'
@@ -14,6 +15,7 @@ define([
         Cartographic,
         DeveloperError,
         Ellipsoid,
+        EquidistantCylindricalProjection,
         Extent,
         Intersect,
         CesiumMath) {
@@ -25,42 +27,31 @@ define([
      * @alias BoundingSphere
      * @constructor
      *
-     * @param {Cartesian3} center The center of the bounding sphere.
-     * @param {Number} radius The radius of the bounding sphere.
-     *
-     * @exception {DeveloperError} <code>center</code> is required.
-     * @exception {DeveloperError} <code>radius</code> is required.
+     * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the bounding sphere.
+     * @param {Number} [radius=0.0] The radius of the bounding sphere.
      *
      * @see AxisAlignedBoundingBox
      */
     var BoundingSphere = function(center, radius) {
-        if (typeof center === 'undefined') {
-            throw new DeveloperError('positions is required.');
-        }
-
-        if (typeof radius === 'undefined') {
-            throw new DeveloperError('radius is required.');
-        }
-
         /**
          * The center point of the sphere.
          *
          * @type {Cartesian3}
          */
-        this.center = center.clone();
+        this.center = (typeof center !== 'undefined') ? Cartesian3.clone(center) : Cartesian3.ZERO.clone();
         /**
          * The radius of the sphere.
          *
          * @type {Number}
          */
-        this.radius = radius;
+        this.radius = defaultValue(radius, 0.0);
     };
 
     /**
      * Creates a bounding sphere that contains both the left and right bounding spheres.
      * @memberof BoundingSphere
      *
-     * @param {BoundingSphere} left A sphere to enclose in bounding sphere.
+     * @param {BoundingSphere} left A sphere to enclose in a bounding sphere.
      * @param {BoundingSphere} right A sphere to enclose in a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      *
@@ -69,7 +60,7 @@ define([
      *
      * @return {BoundingSphere} A sphere that encloses both left and right bounding spheres.
      */
-    BoundingSphere.expand = function(left, right, result) {
+    BoundingSphere.union = function(left, right, result) {
         if (typeof left === 'undefined') {
             throw new DeveloperError('left is required.');
         }
@@ -79,7 +70,7 @@ define([
         }
 
         if (typeof result === 'undefined') {
-            result = new BoundingSphere(Cartesian3.ZERO.clone(), 0.0);
+            result = new BoundingSphere();
         }
 
         var center = left.center.add(right.center).multiplyByScalar(0.5);
@@ -276,10 +267,9 @@ define([
      * @memberof BoundingSphere
      *
      * @param {Extent} extent The extent used to create a bounding sphere.
-     * @param {Object} projection The projection used to project the extent into 2D.
+     * @param {Object} [projection=EquidistantCylindricalProjection] The projection used to project the extent into 2D.
      *
      * @exception {DeveloperError} extent is required.
-     * @exception {DeveloperError} projection is required.
      *
      * @returns {BoundingSphere} The bounding sphere containing the extent.
      */
@@ -288,9 +278,7 @@ define([
             throw new DeveloperError('extent is required.');
         }
 
-        if (typeof projection === 'undefined' || typeof projection.project === 'undefined') {
-            throw new DeveloperError('projection is required.');
-        }
+        projection = projection || new EquidistantCylindricalProjection();
 
         Extent.validate(extent);
 
@@ -420,7 +408,7 @@ define([
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} plane is required.
      */
-    BoundingSphere.planeIntersect = function(sphere, plane) {
+    BoundingSphere.intersect = function(sphere, plane) {
         if (typeof sphere === 'undefined') {
             throw DeveloperError('sphere is required.');
         }
@@ -454,12 +442,12 @@ define([
      *
      * @return {BoundingSphere} A sphere that encloses both this sphere and the argument sphere.
      */
-    BoundingSphere.prototype.expand = function(sphere, result) {
+    BoundingSphere.prototype.union = function(sphere, result) {
         if (typeof sphere === 'undefined') {
             throw new DeveloperError('sphere is required.');
         }
 
-        return BoundingSphere.expand(this, sphere, result);
+        return BoundingSphere.union(this, sphere, result);
     };
 
     /**
@@ -471,6 +459,25 @@ define([
      */
     BoundingSphere.prototype.clone = function(result) {
         return BoundingSphere.clone(this, result);
+    };
+
+    /**
+     * Determines which side of a plane the sphere is located.
+     *
+     * @memberof BoundingSphere
+     *
+     * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0 where the coefficients a, b, c, and d are the components x, y, z, and w of the {Cartesian4}, respectively.
+     *
+     * @return {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side, and {Intersect.INTERSETING} if the sphere intersects the plane.
+     *
+     * @exception {DeveloperError} plane is required.
+     */
+    BoundingSphere.prototype.intersect = function(plane) {
+        if (typeof plane === 'undefined') {
+            throw DeveloperError('plane is required.');
+        }
+
+        return BoundingSphere.intersect(this, plane);
     };
 
     /**

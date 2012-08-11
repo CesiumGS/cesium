@@ -32,18 +32,6 @@ defineSuite([
             ];
     }
 
-    it('throws an exception when constructed without a center', function() {
-        expect(function() {
-            return new BoundingSphere();
-        }).toThrow();
-    });
-
-    it('throws an exception when constructed without a radius', function() {
-        expect(function() {
-            return new BoundingSphere(Cartesian3.ZERO);
-        }).toThrow();
-    });
-
     it('can be constructed using a point and a radius', function() {
         var sphere = new BoundingSphere(new Cartesian3(0, 0, 0), 1);
         expect(sphere.center.equals(Cartesian3.ZERO)).toEqual(true);
@@ -143,12 +131,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('from extent 2d throws without a projection', function() {
-        expect(function() {
-            return BoundingSphere.fromExtent2D(Extent.MAX_VALUE);
-        }).toThrow();
-    });
-
     it('from extent 2d', function() {
         var extent = Extent.MAX_VALUE;
         var projection = new EquidistantCylindricalProjection(Ellipsoid.UNIT_SPHERE);
@@ -206,15 +188,15 @@ defineSuite([
         }).toThrow();
     });
 
-    it('planeIntersect throws without a sphere', function() {
+    it('intersect throws without a sphere', function() {
         expect(function() {
-            BoundingSphere.planeIntersect();
+            BoundingSphere.intersect();
         }).toThrow();
     });
 
-    it('planeIntersect throws without a plane', function() {
+    it('intersect throws without a plane', function() {
         expect(function() {
-            BoundingSphere.planeIntersect(new BoundingSphere(Cartesian3.ZERO, 1.0));
+            BoundingSphere.intersect(new BoundingSphere(Cartesian3.ZERO, 1.0));
         }).toThrow();
     });
 
@@ -223,7 +205,7 @@ defineSuite([
         var normal = Cartesian3.UNIT_X.negate();
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
-        expect(BoundingSphere.planeIntersect(sphere, plane)).toEqual(Intersect.INSIDE);
+        expect(sphere.intersect(plane)).toEqual(Intersect.INSIDE);
     });
 
     it('sphere on the negative side of a plane', function() {
@@ -231,7 +213,7 @@ defineSuite([
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
-        expect(BoundingSphere.planeIntersect(sphere, plane)).toEqual(Intersect.OUTSIDE);
+        expect(sphere.intersect(plane)).toEqual(Intersect.OUTSIDE);
     });
 
     it('sphere intersecting a plane', function() {
@@ -239,13 +221,13 @@ defineSuite([
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
-        expect(BoundingSphere.planeIntersect(sphere, plane)).toEqual(Intersect.INTERSECTING);
+        expect(sphere.intersect(plane)).toEqual(Intersect.INTERSECTING);
     });
 
-    it('expand throws without a sphere', function() {
+    it('union throws without a sphere', function() {
         expect(function() {
             var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
-            return bs.expand();
+            return bs.union();
         }).toThrow();
     });
 
@@ -253,6 +235,6 @@ defineSuite([
         var bs1 = new BoundingSphere(Cartesian3.UNIT_X.negate(), 1.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
         var expected = new BoundingSphere(Cartesian3.ZERO, 2.0);
-        expect(bs1.expand(bs2)).toEqual(expected);
+        expect(bs1.union(bs2)).toEqual(expected);
     });
 });

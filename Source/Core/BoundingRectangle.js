@@ -1,14 +1,18 @@
 /*global define*/
 define([
+        './defaultValue',
         './Cartesian2',
         './Cartographic',
         './DeveloperError',
+        './EquidistantCylindricalProjection',
         './Extent',
         './Math'
     ], function(
+        defaultValue,
         Cartesian2,
         Cartographic,
         DeveloperError,
+        EquidistantCylindricalProjection,
         Extent,
         CesiumMath) {
     "use strict";
@@ -19,64 +23,43 @@ define([
      * @alias BoundingRectangle
      * @constructor
      *
-     * @param {Number} x The x coordinate of the rectangle.
-     * @param {Number} y The y coordinate of the rectangle.
-     * @param {Number} width The width of the rectangle.
-     * @param {Number} height The height of the rectangle.
-     *
-     * @exception {DeveloperError} x is required.
-     * @exception {DeveloperError} y is required.
-     * @exception {DeveloperError} width is required to be greater than or equal to zero.
-     * @exception {DeveloperError} height is required to be greater than or equal to zero.
+     * @param {Number} [x=0.0] The x coordinate of the rectangle.
+     * @param {Number} [y=0.0] The y coordinate of the rectangle.
+     * @param {Number} [width=0.0] The width of the rectangle.
+     * @param {Number} [height=0.0] The height of the rectangle.
      */
     var BoundingRectangle = function(x, y, width, height) {
-        if (typeof x === 'undefined') {
-            throw new DeveloperError('x is required.');
-        }
-
-        if (typeof y === 'undefined') {
-            throw new DeveloperError('y is required.');
-        }
-
-        if (typeof width === 'undefined' || width < 0.0) {
-            throw new DeveloperError('width is required and must be greater than zero.');
-        }
-
-        if (typeof height === 'undefined' || height < 0.0) {
-            throw new DeveloperError('height is required and must be greater than zero.');
-        }
-
         /**
          * The x coordinate of the rectangle.
          *
          * @type Number
          */
-        this.x = x;
+        this.x = defaultValue(x, 0.0);
 
         /**
          * The y coordinate of the rectangle.
          *
          * @type Number
          */
-        this.y = y;
+        this.y = defaultValue(y, 0.0);
 
         /**
          * The width of the rectangle.
          *
          * @type Number
          */
-        this.width = width;
+        this.width = defaultValue(width, 0.0);
 
         /**
          * The height of the rectangle.
          *
          * @type Number
          */
-        this.height = height;
+        this.height = defaultValue(height, 0.0);
     };
 
     /**
-     * Creates a bounding rectangle that contains both the left and right bounding rectangles.
+     * Creates a bounding rectangle that is the union of the left and right bounding rectangles.
      * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} left A rectangle to enclose in bounding rectangle.
@@ -88,7 +71,7 @@ define([
      *
      * @return {BoundingRectangle} A rectangle that encloses both left and right bounding rectangles.
      */
-    BoundingRectangle.expand = function(left, right, result) {
+    BoundingRectangle.union = function(left, right, result) {
         if (typeof left === 'undefined') {
             throw new DeveloperError('left is required.');
         }
@@ -98,7 +81,7 @@ define([
         }
 
         if (typeof result === 'undefined') {
-            result = new BoundingRectangle(1.0, 1.0, 1.0, 1.0);
+            result = new BoundingRectangle();
         }
 
         var lowerLeft = new Cartesian2(Math.min(left.x, right.x), Math.min(left.y, right.y));
@@ -218,10 +201,9 @@ define([
      * @memberof BoundingRectangle
      *
      * @param {Extent} extent The extent used to create a bounding rectangle.
-     * @param {Object} projection The projection used to project the extent into 2D.
+     * @param {Object} [projection=EquidistantCylindricalProjection] The projection used to project the extent into 2D.
      *
      * @exception {DeveloperError} extent is required.
-     * @exception {DeveloperError} projection is required.
      *
      * @returns {BoundingRectangle} The bounding rectangle containing the extent.
      */
@@ -230,11 +212,9 @@ define([
             throw new DeveloperError('extent is required.');
         }
 
-        if (typeof projection === 'undefined' || typeof projection.project === 'undefined') {
-            throw new DeveloperError('projection is required.');
-        }
-
         Extent.validate(extent);
+
+        projection = projection || new EquidistantCylindricalProjection();
 
         var lowerLeft = projection.project(extent.getSouthwest());
         var upperRight = projection.project(extent.getNortheast());
@@ -256,7 +236,7 @@ define([
      * @exception {DeveloperError} rect1 is required.
      * @exception {DeveloperError} rect2 is required.
      */
-    BoundingRectangle.rectangleIntersect = function(rect1, rect2) {
+    BoundingRectangle.intersect = function(rect1, rect2) {
         if (typeof rect1 === 'undefined') {
             throw new DeveloperError('rect1 is required.');
         }
@@ -282,12 +262,31 @@ define([
      *
      * @return {BoundingRectangle} A rectangle that encloses both this rectangle and the argument rectangle.
      */
-    BoundingRectangle.prototype.expand = function(rectangle, result) {
+    BoundingRectangle.prototype.union = function(rectangle, result) {
         if (typeof rectangle === 'undefined') {
             throw new DeveloperError('rectangle is required.');
         }
 
-        return BoundingRectangle.expand(this, rectangle, result);
+        return BoundingRectangle.union(this, rectangle, result);
+    };
+
+    /**
+     * Determines if this rectangle intersects with another.
+     *
+     * @memberof BoundingRectangle
+     *
+     * @param {BoundingRectangle} rect A rectangle to check for intersection.
+     *
+     * @return {Boolean} <code>true</code> if the rectangles intersect, <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} rect is required.
+     */
+    BoundingRectangle.prototype.intersect = function(rect) {
+        if (typeof rect === 'undefined') {
+            throw new DeveloperError('rect is required.');
+        }
+
+        return BoundingRectangle.intersect(this, rect);
     };
 
     /**

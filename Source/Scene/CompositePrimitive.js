@@ -440,19 +440,19 @@ define([
                 if (mode === SceneMode.SCENE3D) {
                     var boundingVolume = primitive.boundingVolume;
                     if (typeof boundingVolume === 'undefined' ||
-                            camera.getVisibility(boundingVolume, boundingVolume.constructor.planeIntersect) !== Intersect.OUTSIDE) {
+                            camera.getVisibility(boundingVolume) !== Intersect.OUTSIDE) {
                         this._renderList.push(primitive);
                     }
                 } else if (mode === SceneMode.SCENE2D) {
                     var boundingRectangle = primitive.boundingRectangle;
                     if (typeof boundingRectangle === 'undefined' || typeof frustumRect === 'undefined' ||
-                            BoundingRectangle.rectangleIntersect(boundingRectangle, frustumRect)) {
+                            BoundingRectangle.intersect(boundingRectangle, frustumRect)) {
                         this._renderList.push(primitive);
                     }
                 } else {
                     var boundingVolume = primitive.boundingVolume2D;
                     if (typeof boundingVolume === 'undefined' ||
-                            camera.getVisibility(boundingVolume, boundingVolume.constructor.planeIntersect) !== Intersect.OUTSIDE) {
+                            camera.getVisibility(boundingVolume) !== Intersect.OUTSIDE) {
                         this._renderList.push(primitive);
                     }
                 }
@@ -477,7 +477,7 @@ define([
                 var primitive = primitives[i];
                 primitive.render(context);
             }
-            primitives.length = 0;
+            this._renderList.length = 0;
         }
     };
 

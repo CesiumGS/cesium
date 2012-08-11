@@ -151,8 +151,7 @@ defineSuite([
         var tileOccluderSphere = BoundingSphere.fromPoints(positions);
         var occludeePosition = tileOccluderSphere.center;
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
-        expect(result.valid).toEqual(true);
-        expect(result.occludeePoint.equalsEpsilon(new Cartesian3(0, 0, -5), CesiumMath.EPSILON1)).toEqual(true);
+        expect(result.equalsEpsilon(new Cartesian3(0, 0, -5), CesiumMath.EPSILON1)).toEqual(true);
     });
 
     it('can compute a rotation vector (major axis = 0)', function() {
@@ -230,9 +229,7 @@ defineSuite([
         var occludeePosition = tileOccluderSphere.center;
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
 
-        expect(result.valid).toEqual(true);
-
-        var bs = new BoundingSphere(result.occludeePoint, 0.0);
+        var bs = new BoundingSphere(result, 0.0);
 
         expect(occluder.isVisible(bs)).toEqual(false);
         expect(occluder.getVisibility(bs)).toEqual(Visibility.NONE);
@@ -246,8 +243,7 @@ defineSuite([
         var tileOccluderSphere = BoundingSphere.fromPoints(positions);
         var occludeePosition = tileOccluderSphere.center;
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
-        expect(result.valid).toEqual(true);
-        expect(occluder.isVisible(new BoundingSphere(result.occludeePoint, 0.0))).toEqual(true);
+        expect(occluder.isVisible(new BoundingSphere(result, 0.0))).toEqual(true);
     });
 
     it('compute occludee point from extent throws without an extent', function() {
@@ -258,7 +254,7 @@ defineSuite([
 
     it('compute invalid occludee point from extent', function() {
         var extent = Extent.MAX_VALUE;
-        expect(Occluder.computeOccludeePointFromExtent(extent).valid).toEqual(false);
+        expect(Occluder.computeOccludeePointFromExtent(extent)).toEqual(undefined);
     });
 
     it('compute valid occludee point from extent', function() {
@@ -267,9 +263,8 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var positions = BoundingSphere._computeExtentPositions(extent, ellipsoid);
         var bs = BoundingSphere.fromPoints(positions);
-        var point = Occluder.getOccludeePoint(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), bs.center, positions).occludeePoint;
+        var point = Occluder.getOccludeePoint(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), bs.center, positions);
         var actual = Occluder.computeOccludeePointFromExtent(extent);
-        expect(actual.valid).toEqual(true);
-        expect(actual.occludeePoint).toEqual(point);
+        expect(actual).toEqual(point);
     });
 });

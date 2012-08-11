@@ -1666,7 +1666,7 @@ defineSuite([
         expect(one.boundingVolume).toEqual(BoundingSphere.fromPoints(one.getPositions()));
         expect(two.boundingVolume).toEqual(BoundingSphere.fromPoints(two.getPositions()));
         expect(three.boundingVolume).toEqual(BoundingSphere.fromPoints(three.getPositions()));
-        expect(polylines.boundingVolume).toEqual(one.boundingVolume.expand(two.boundingVolume).expand(three.boundingVolume));
+        expect(polylines.boundingVolume).toEqual(one.boundingVolume.union(two.boundingVolume).union(three.boundingVolume));
     });
 
     it('computes bounding sphere in Columbus view', function() {
@@ -1711,7 +1711,7 @@ defineSuite([
         expect(two.boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
         expect(two.boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
-        expect(polylines.boundingVolume2D).toEqual(one.boundingVolume2D.expand(two.boundingVolume2D));
+        expect(polylines.boundingVolume2D).toEqual(one.boundingVolume2D.union(two.boundingVolume2D));
     });
 
     it('computes bounding rectangle in 2D', function() {
@@ -1758,7 +1758,7 @@ defineSuite([
         expect(two.boundingRectangle.width).toEqual(br.width);
         expect(two.boundingRectangle.height).toEqual(br.height);
 
-        expect(polylines.boundingRectangle).toEqual(one.boundingRectangle.expand(two.boundingRectangle));
+        expect(polylines.boundingRectangle).toEqual(one.boundingRectangle.union(two.boundingRectangle));
     });
 
     it('isDestroyed', function() {

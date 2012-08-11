@@ -117,15 +117,15 @@ defineSuite([
         }).toThrow();
     });
 
-    it('planeIntersect throws without a box', function() {
+    it('intersect throws without a box', function() {
         expect(function() {
-            AxisAlignedBoundingBox.planeIntersect();
+            AxisAlignedBoundingBox.intersect();
         }).toThrow();
     });
 
-    it('planeIntersect throws without a plane', function() {
+    it('intersect throws without a plane', function() {
         expect(function() {
-            AxisAlignedBoundingBox.planeIntersect(new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X));
+            AxisAlignedBoundingBox.intersect(new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X));
         }).toThrow();
     });
 
@@ -134,15 +134,14 @@ defineSuite([
         var normal = Cartesian3.UNIT_X.negate();
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
-        expect(AxisAlignedBoundingBox.planeIntersect(box, plane)).toEqual(Intersect.INSIDE);
-    });
+        expect(box.intersect(plane)).toEqual(Intersect.INSIDE);    });
 
     it('box on the negative side of a plane', function() {
         var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_X.negate(), Cartesian3.ZERO);
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
-        expect(AxisAlignedBoundingBox.planeIntersect(box, plane)).toEqual(Intersect.OUTSIDE);
+        expect(box.intersect(plane)).toEqual(Intersect.OUTSIDE);
     });
 
     it('box intersecting a plane', function() {
@@ -150,6 +149,6 @@ defineSuite([
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
-        expect(AxisAlignedBoundingBox.planeIntersect(box, plane)).toEqual(Intersect.INTERSECTING);
+        expect(box.intersect(plane)).toEqual(Intersect.INTERSECTING);
     });
 });

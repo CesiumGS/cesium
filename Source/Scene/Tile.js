@@ -123,6 +123,7 @@ define([
 
         this._boundingSphere3D = undefined;
         this._occludeePoint = undefined;
+        this._occludeePointComputed = false;
 
         this._projection = undefined;
         this._boundingSphere2D = undefined;
@@ -263,10 +264,11 @@ define([
      * @return {Cartesian3} The occludee point or undefined.
      */
     Tile.prototype.getOccludeePoint = function() {
-        if (!this._occludeePoint) {
+        if (!this._occludeePointComputed) {
             this._occludeePoint = Occluder.computeOccludeePointFromExtent(this.extent, this.ellipsoid);
+            this._occludeePointComputed = true;
         }
-        return ((this._occludeePoint.valid) ? this._occludeePoint.occludeePoint : undefined);
+        return this._occludeePoint;
     };
 
     Tile.prototype._compute2DBounds = function(projection) {
