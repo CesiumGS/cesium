@@ -57,7 +57,6 @@ define([
             }
             assignSpherical(i++, result, maximumClockAngle, outerHalfAngle);
             if (innerHalfAngle) {
-                assignSpherical(i++, result, maximumClockAngle, innerHalfAngle);
                 for (angle = maximumClockAngle; angle > minimumClockAngle; angle -= angleStep) {
                     assignSpherical(i++, result, angle, innerHalfAngle);
                 }
