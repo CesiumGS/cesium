@@ -161,17 +161,17 @@ defineSuite([
         expect(quaternion).toEqual(expected);
     });
 
-    it('normSquared computes correct result', function() {
+    it('magnitudeSquared computes correct result', function() {
         var expected = 2 * 2 + 3 * 3 + 4 * 4 + 5 * 5;
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var result = quaternion.normSquared();
+        var result = quaternion.magnitudeSquared();
         expect(result).toEqual(expected);
     });
 
     it('norm computes correct result', function() {
         var expected = Math.sqrt(2 * 2 + 3 * 3 + 4 * 4 + 5 * 5);
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var result = quaternion.norm();
+        var result = quaternion.magnitude();
         expect(result).toEqual(expected);
     });
 
@@ -201,16 +201,16 @@ defineSuite([
 
     it('inverse works without a result parameter', function() {
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var normSquared = quaternion.normSquared();
-        var expected = new Quaternion(-2.0 / normSquared, -3.0 / normSquared, -4.0 / normSquared, 5.0 / normSquared);
+        var magnitudeSquared = quaternion.magnitudeSquared();
+        var expected = new Quaternion(-2.0 / magnitudeSquared, -3.0 / magnitudeSquared, -4.0 / magnitudeSquared, 5.0 / magnitudeSquared);
         var returnedResult = quaternion.inverse();
         expect(returnedResult).toEqual(expected);
     });
 
     it('inverse works with a result parameter', function() {
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var normSquared = quaternion.normSquared();
-        var expected = new Quaternion(-2.0 / normSquared, -3.0 / normSquared, -4.0 / normSquared, 5.0 / normSquared);
+        var magnitudeSquared = quaternion.magnitudeSquared();
+        var expected = new Quaternion(-2.0 / magnitudeSquared, -3.0 / magnitudeSquared, -4.0 / magnitudeSquared, 5.0 / magnitudeSquared);
         var result = new Quaternion();
         var returnedResult = quaternion.inverse(result);
         expect(returnedResult).toEqual(expected);
@@ -219,8 +219,8 @@ defineSuite([
 
     it('inverse works with "this" result parameter', function() {
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var normSquared = quaternion.normSquared();
-        var expected = new Quaternion(-2.0 / normSquared, -3.0 / normSquared, -4.0 / normSquared, 5.0 / normSquared);
+        var magnitudeSquared = quaternion.magnitudeSquared();
+        var expected = new Quaternion(-2.0 / magnitudeSquared, -3.0 / magnitudeSquared, -4.0 / magnitudeSquared, 5.0 / magnitudeSquared);
         var returnedResult = quaternion.inverse(quaternion);
         expect(returnedResult).toEqual(expected);
         expect(returnedResult).toBe(quaternion);
@@ -606,15 +606,15 @@ defineSuite([
         }).toThrow();
     });
 
-    it('static normSquared throws with no parameter', function() {
+    it('static magnitudeSquared throws with no parameter', function() {
         expect(function() {
-            Quaternion.normSquared();
+            Quaternion.magnitudeSquared();
         }).toThrow();
     });
 
-    it('static norm throws with no parameter', function() {
+    it('static magnitude throws with no parameter', function() {
         expect(function() {
-            Quaternion.norm();
+            Quaternion.magnitude();
         }).toThrow();
     });
 
