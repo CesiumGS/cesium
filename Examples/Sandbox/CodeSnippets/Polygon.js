@@ -460,10 +460,6 @@
                             uniforms : {
                                 image : '../../Images/normalmap.png',
                                 strength : 0.6,
-                                repeat : {
-                                    x : 1,
-                                    y : 1
-                                }
                             }
                         }
                     },

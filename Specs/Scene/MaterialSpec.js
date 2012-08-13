@@ -636,6 +636,16 @@ defineSuite([
         }).toThrow();
     });
 
+    it('destroys material with texture', function() {
+
+        var material = Material.fromId(context, Material.DiffuseMapId);
+        material.uniforms.image = './Data/Images/Green.png';
+        var pixel = renderMaterial(material);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        material = material && material.destroy();
+        expect(material).toEqual(undefined);
+    });
+
     it('destroy suite', function() {
         destroyContext(context);
     });

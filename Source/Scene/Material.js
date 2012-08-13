@@ -8,6 +8,7 @@ define([
         '../Core/Color',
         '../Core/combine',
         '../Core/defaultValue',
+        '../Core/destroyObject',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -38,6 +39,7 @@ define([
         Color,
         combine,
         defaultValue,
+        destroyObject,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -313,6 +315,60 @@ define([
         });
     };
 
+    /**
+    * Returns true if this object was destroyed; otherwise, false.
+    * <br /><br />
+    * If this object was destroyed, it should not be used; calling any function other than
+    * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+    *
+    * @memberof Material
+    *
+    * @returns {Boolean} True if this object was destroyed; otherwise, false.
+    *
+    * @see Material#destroy
+    */
+   Material.prototype.isDestroyed = function() {
+       return false;
+   };
+
+   /**
+    * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+    * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+    * <br /><br />
+    * Once an object is destroyed, it should not be used; calling any function other than
+    * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+    * assign the return value (<code>undefined</code>) to the object as done in the example.
+    *
+    * @memberof Material
+    *
+    * @returns {undefined}
+    *
+    * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+    *
+    * @see Material#isDestroyed
+    *
+    * @example
+    * material = material && material.destroy();
+    */
+   Material.prototype.destroy = function() {
+       var materials = this.materials;
+       var uniforms = this.uniforms;
+       for (var uniformId in uniforms) {
+           if (uniforms.hasOwnProperty(uniformId)) {
+               var uniformValue = uniforms[uniformId];
+               if (uniformValue instanceof Texture || uniformValue instanceof CubeMap) {
+                   Material._textureCache.releaseTexture(this, uniformValue);
+               }
+           }
+       }
+       for (var material in materials) {
+           if (materials.hasOwnProperty(material)) {
+               material.destroy();
+           }
+       }
+       return destroyObject(this);
+   };
+
     var checkForTemplateErrors = function(material) {
         var template = material._template;
         var uniforms = material._template.uniforms;
@@ -421,7 +477,7 @@ define([
             if (uniformType === 'sampler2D') {
                 var imageDimensionsUniformName = uniformId + 'Dimensions';
                 if (getNumberOfTokens(material, imageDimensionsUniformName) > 0) {
-                    materialUniforms[imageDimensionsUniformName] = {'x' : 1.0, 'y' : 1.0};
+                    materialUniforms[imageDimensionsUniformName] = {type : 'ivec3', x : 1, y : 1};
                     createUniform(material, imageDimensionsUniformName);
                 }
             }
@@ -450,7 +506,7 @@ define([
 
             if (originalUniformType === 'sampler2D' && (uniformType === originalUniformType || uniformValue instanceof Texture)) {
                 if (uniformType === originalUniformType) {
-                    uniformValue = Material._textureCache.registerTextureToMaterial(material, uniformId, uniformValue);
+                    uniformValue = Material._textureCache.registerTexture2DToMaterial(material, uniformId, uniformValue);
                 }
                 // Since texture dimensions can't be updated manually, update them when the texture is updated.
                 var uniformDimensionsName = uniformId + 'Dimensions';
@@ -589,18 +645,44 @@ define([
                 var materialContainer = materialContainers[i];
                 var material = materialContainer.material;
                 var property = materialContainer.property;
+                this.releaseTexture(material, material.uniforms[property]);
                 material.uniforms[property] = texture;
+            }
+        },
+        releaseTexture : function(material, texture) {
+            var pathsToTexture = this._pathsToTextures;
+            for (var path in pathsToTexture) {
+                if (pathsToTexture[path] === texture) {
+                    var materialsWithTexture = this._pathsToMaterials[path];
+                    for (var i = 0; i < materialsWithTexture.length; i++) {
+                        if (materialsWithTexture[i].material === material) {
+                            materialsWithTexture.splice(i, 1);
+                            var numMaterialsWithTexture = materialsWithTexture.length;
+                            if (numMaterialsWithTexture === 0) {
+                                texture.destroy();
+                                delete pathsToTexture.path;
+                                delete materialsWithTexture.path;
+                            }
+                        }
+                    }
+                }
             }
         },
         registerCubeMapToMaterial : function(material, property, info) {
             var that = this;
-            var path = info.positiveX + info.negativeX + info.positiveY + info.negativeY + info.positiveZ + info.negativeZ;
-            var texture = this._pathsToTextures[path];
-            if (typeof texture === 'undefined') {
-                texture = (material.uniforms[property] instanceof CubeMap) ? material.uniforms[property] : material._context.getDefaultCubeMap();
-                if (info !== Material.DefaultCubeMapId) {
-                    this._pathsToMaterials[path] = defaultValue(this._pathsToMaterials[path], []);
-                    this._pathsToMaterials[path].push({'material' : material, 'property' : property});
+            var texture;
+            if (info === Material.DefaultCubeMapId) {
+                texture = material._context.getDefaultCubeMap();
+            }
+            else {
+                var path = info.positiveX + info.negativeX + info.positiveY + info.negativeY + info.positiveZ + info.negativeZ;
+                this._pathsToMaterials[path] = defaultValue(this._pathsToMaterials[path], []);
+                this._pathsToMaterials[path].push({'material' : material, 'property' : property});
+                texture = this._pathsToTextures[path];
+                if (typeof texture === 'undefined') {
+                    var oldTexture = material.uniforms[property];
+                    var hasOldTexture = oldTexture instanceof CubeMap;
+                    texture = hasOldTexture ? oldTexture : material._context.getDefaultCubeMap();
                     if (this._pathsToMaterials[path].length === 1) {
                         when.all([loadImage(info.positiveX), loadImage(info.negativeX), loadImage(info.positiveY), loadImage(info.negativeY), loadImage(info.positiveZ), loadImage(info.negativeZ)]).then(function(images) {
                             texture = material._context.createCubeMap({source : {positiveX : images[0], negativeX : images[1], positiveY : images[2], negativeY : images[3], positiveZ : images[4], negativeZ : images[5]}});
@@ -611,15 +693,21 @@ define([
             }
             return texture;
         },
-        registerTextureToMaterial : function(material, property, info) {
+        registerTexture2DToMaterial : function(material, property, info) {
             var that = this;
-            var path = info;
-            var texture = this._pathsToTextures[path];
-            if (typeof texture === 'undefined') {
-                texture = (material.uniforms[property] instanceof Texture) ? material.uniforms[property] : material._context.getDefaultTexture();
-                if (info !== Material.DefaultImageId) {
-                    this._pathsToMaterials[path] = defaultValue(this._pathsToMaterials[path], []);
-                    this._pathsToMaterials[path].push({'material' : material, 'property' : property});
+            var texture;
+            if (info === Material.DefaultImageId) {
+                texture = material._context.getDefaultTexture();
+            }
+            else {
+                var path = info;
+                this._pathsToMaterials[path] = defaultValue(this._pathsToMaterials[path], []);
+                this._pathsToMaterials[path].push({'material' : material, 'property' : property});
+                texture = this._pathsToTextures[path];
+                if (typeof texture === 'undefined') {
+                    var oldTexture = material.uniforms[property];
+                    var hasOldTexture = oldTexture instanceof Texture;
+                    texture = hasOldTexture ? oldTexture : material._context.getDefaultTexture();
                     if (this._pathsToMaterials[path].length === 1) {
                         when(loadImage(path), function(image) {
                             texture = material._context.createTexture2D({source : image});
