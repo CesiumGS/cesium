@@ -33,11 +33,10 @@ define([
         var spherical = array[index];
         if (typeof spherical === 'undefined') {
             array[index] = spherical = new Spherical();
-        } else {
-            spherical.clock = clock;
-            spherical.cone = cone;
-            spherical.magnitude = 1.0;
         }
+        spherical.clock = clock;
+        spherical.cone = cone;
+        spherical.magnitude = 1.0;
     }
 
     function computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle, result) {
