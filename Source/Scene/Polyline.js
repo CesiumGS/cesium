@@ -123,8 +123,9 @@ define([
      */
     Polyline.prototype.setPositions = function(value) {
         var length = 0;
-        if(value && typeof value !== 'undefined')
+        if (value && typeof value !== 'undefined') {
             length = value.length;
+        }
         if (this._positions.length !== length) {
             this._makeDirty(POSITION_SIZE_INDEX);
         }
