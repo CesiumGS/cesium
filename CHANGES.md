@@ -30,7 +30,7 @@ Beta Releases
             
     For more details, go to the [Fabric wiki page](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric).
 
-* ...
+* All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 
 ### b7 - 08/01/2012
 
@@ -103,8 +103,8 @@ Beta Releases
             Polyline polyline = polylineCollection.add();
             
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties.
-* All `Cartesian2` operations now have static versions that work with any objects exposing `x`, `y`, and `z` properties.
-* All `Cartesian3` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
+* All `Cartesian3` operations now have static versions that work with any objects exposing `x`, `y`, and `z` properties.
+* All `Cartesian4` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * All `Cartographic` operations now have static versions that work with any objects exposing `longitude`, `latitude`, and `height` properties.
 * All `Matrix` classes are now indexable like arrays.
 * All `Matrix` operations now have static versions of all prototype functions and anywhere we take a Matrix instance as input can now also take an Array or TypedArray.

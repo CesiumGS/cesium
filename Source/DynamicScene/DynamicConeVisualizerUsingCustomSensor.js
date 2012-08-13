@@ -44,7 +44,6 @@ define([
             }
             directions.push(new Spherical(maximumClockAngle, outerHalfAngle));
             if (innerHalfAngle) {
-                directions.push(new Spherical(maximumClockAngle, innerHalfAngle));
                 for (angle = maximumClockAngle; angle > minimumClockAngle; angle -= angleStep) {
                     directions.push(new Spherical(angle, innerHalfAngle));
                 }
