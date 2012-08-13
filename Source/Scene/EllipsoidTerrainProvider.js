@@ -73,13 +73,7 @@ define([
         tile.state = TileState.RECEIVED;
     };
 
-    var taskProcessor;
-    function getTaskProcessor() {
-        if (typeof taskProcessor === 'undefined') {
-            taskProcessor = new TaskProcessor('createVerticesFromExtent');
-        }
-        return taskProcessor;
-    }
+    var taskProcessor = new TaskProcessor('createVerticesFromExtent');
 
     EllipsoidTerrainProvider.prototype.transformGeometry = function(context, tile) {
         var tilingScheme = this.tilingScheme;
@@ -93,7 +87,7 @@ define([
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
 
-        var verticesPromise = getTaskProcessor().scheduleTask({
+        var verticesPromise = taskProcessor.scheduleTask({
             extent : extent,
             altitude : 0,
             width : width,

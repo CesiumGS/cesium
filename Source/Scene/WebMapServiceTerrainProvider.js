@@ -176,13 +176,7 @@ define([
         });
     };
 
-    var taskProcessor;
-    function getTaskProcessor() {
-        if (typeof taskProcessor === 'undefined') {
-            taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
-        }
-        return taskProcessor;
-    }
+    var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
 
     /**
      * Transform the tile geometry from the format requested from the remote server
@@ -201,7 +195,7 @@ define([
         var nativeExtent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
         tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
-        var verticesPromise = getTaskProcessor().scheduleTask({
+        var verticesPromise = taskProcessor.scheduleTask({
             heightmap : tile.geometry,
             heightScale : 1.0,
             heightOffset : 0.0,
