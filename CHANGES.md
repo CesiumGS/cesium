@@ -69,35 +69,35 @@ Beta Releases
      
             spindleController.constrainedAxis = Cartesian3.UNIT_Z;
    
-   * The `Camera2DController` constructor and `CameraControllerCollection.add2D` now require a projection instead of an ellipsoid.
-   * `Chain` has been removed.  `when` is now included as a more complete CommonJS Promises/A implementation.
-   * `Jobs.downloadImage` was replaced with `loadImage` to provide a promise that will asynchronously load an image.
-   * `jsonp` now returns a promise for the requested data, removing the need for a callback parameter.
-   * JulianDate.getTimeStandard() has been removed, dates are now always stored internally as TAI.
-   * LeapSeconds.setLeapSeconds now takes an array of LeapSecond instances instead of JSON.
-   * TimeStandard.convertUtcToTai and TimeStandard.convertTaiToUtc have been removed as they are no longer needed. 
-   * `Cartesian3.prototype.getXY()` was replaced with `Cartesian2.fromCartesian3`.  Code that previously looked like `cartesian3.getXY();` should now look like `Cartesian2.fromCartesian3(cartesian3);`.
-   * `Cartesian4.prototype.getXY()` was replaced with `Cartesian2.fromCartesian4`.  Code that previously looked like `cartesian4.getXY();` should now look like `Cartesian2.fromCartesian4(cartesian4);`.
-   * `Cartesian4.prototype.getXYZ()` was replaced with `Cartesian3.fromCartesian4`.  Code that previously looked like `cartesian4.getXYZ();` should now look like `Cartesian3.fromCartesian4(cartesian4);`.
-   * `Math.angleBetween` was removed because it was a duplicate of `Cartesian3.angleBetween`.  Simply replace calls of the former to the later.
-   * `Cartographic3` was renamed to `Cartographic`.
-   * `Cartographic2` was removed; use `Cartographic` instead.
-   * `Ellipsoid.toCartesian` was renamed to `Ellipsoid.cartographicToCartesian`.
-   * `Ellipsoid.toCartesians` was renamed to `Ellipsoid.cartographicArrayToCartesianArray`.
-   * `Ellipsoid.toCartographic2` was renamed to `Ellipsoid.cartesianToCartographic`.
-   * `Ellipsoid.toCartographic2s` was renamed to `Ellipsoid.cartesianArrayToCartographicArray`.
-   * `Ellipsoid.toCartographic3` was renamed to `Ellipsoid.cartesianToCartographic`.
-   * `Ellipsoid.toCartographic3s` was renamed to `Ellipsoid.cartesianArrayToCartographicArray`.
-   * `Ellipsoid.cartographicDegreesToCartesian` was removed.  Code that previously looked like `ellipsoid.cartographicDegreesToCartesian(new Cartographic(45, 50, 10))` should now look like `ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(45, 50, 10))`.
-   * `Math.cartographic3ToRadians`, `Math.cartographic2ToRadians`, `Math.cartographic2ToDegrees`, and `Math.cartographic3ToDegrees` were removed.  These functions are no longer needed because Cartographic instances are always represented in radians. 
-   * All functions starting with `multiplyWith` now start with `multiplyBy` to be consistent with functions starting with `divideBy`. 
-   * The `multiplyWithMatrix` function on each `Matrix` type was renamed to `multiply`.
-   * All three Matrix classes have been largely re-written for consistency and performance.  The `values` property has been eliminated and Matrices are no longer immutable.  Code that previously looked like `matrix = matrix.setColumn0Row0(12);` now looks like `matrix[Matrix2.COLUMN0ROW0] = 12;`.  Code that previously looked like `matrix.setColumn3(cartesian3);` now looked like `matrix.setColumn(3, cartesian3, matrix)`. 
-   * 'Polyline' is no longer externally creatable. To create a 'Polyline' use the 'PolylineCollection.add' method.
-   
+    * The `Camera2DController` constructor and `CameraControllerCollection.add2D` now require a projection instead of an ellipsoid.
+    * `Chain` has been removed.  `when` is now included as a more complete CommonJS Promises/A implementation.
+    * `Jobs.downloadImage` was replaced with `loadImage` to provide a promise that will asynchronously load an image.
+    * `jsonp` now returns a promise for the requested data, removing the need for a callback parameter.
+    * JulianDate.getTimeStandard() has been removed, dates are now always stored internally as TAI.
+    * LeapSeconds.setLeapSeconds now takes an array of LeapSecond instances instead of JSON.
+    * TimeStandard.convertUtcToTai and TimeStandard.convertTaiToUtc have been removed as they are no longer needed. 
+    * `Cartesian3.prototype.getXY()` was replaced with `Cartesian2.fromCartesian3`.  Code that previously looked like `cartesian3.getXY();` should now look like `Cartesian2.fromCartesian3(cartesian3);`.
+    * `Cartesian4.prototype.getXY()` was replaced with `Cartesian2.fromCartesian4`.  Code that previously looked like `cartesian4.getXY();` should now look like `Cartesian2.fromCartesian4(cartesian4);`.
+    * `Cartesian4.prototype.getXYZ()` was replaced with `Cartesian3.fromCartesian4`.  Code that previously looked like `cartesian4.getXYZ();` should now look like `Cartesian3.fromCartesian4(cartesian4);`.
+    * `Math.angleBetween` was removed because it was a duplicate of `Cartesian3.angleBetween`.  Simply replace calls of the former to the later.
+    * `Cartographic3` was renamed to `Cartographic`.
+    * `Cartographic2` was removed; use `Cartographic` instead.
+    * `Ellipsoid.toCartesian` was renamed to `Ellipsoid.cartographicToCartesian`.
+    * `Ellipsoid.toCartesians` was renamed to `Ellipsoid.cartographicArrayToCartesianArray`.
+    * `Ellipsoid.toCartographic2` was renamed to `Ellipsoid.cartesianToCartographic`.
+    * `Ellipsoid.toCartographic2s` was renamed to `Ellipsoid.cartesianArrayToCartographicArray`.
+    * `Ellipsoid.toCartographic3` was renamed to `Ellipsoid.cartesianToCartographic`.
+    * `Ellipsoid.toCartographic3s` was renamed to `Ellipsoid.cartesianArrayToCartographicArray`.
+    * `Ellipsoid.cartographicDegreesToCartesian` was removed.  Code that previously looked like `ellipsoid.cartographicDegreesToCartesian(new Cartographic(45, 50, 10))` should now look like `ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(45, 50, 10))`.
+    * `Math.cartographic3ToRadians`, `Math.cartographic2ToRadians`, `Math.cartographic2ToDegrees`, and `Math.cartographic3ToDegrees` were removed.  These functions are no longer needed because Cartographic instances are always represented in radians. 
+    * All functions starting with `multiplyWith` now start with `multiplyBy` to be consistent with functions starting with `divideBy`. 
+    * The `multiplyWithMatrix` function on each `Matrix` type was renamed to `multiply`.
+    * All three Matrix classes have been largely re-written for consistency and performance.  The `values` property has been eliminated and Matrices are no longer immutable.  Code that previously looked like `matrix = matrix.setColumn0Row0(12);` now looks like `matrix[Matrix2.COLUMN0ROW0] = 12;`.  Code that previously looked like `matrix.setColumn3(cartesian3);` now looked like `matrix.setColumn(3, cartesian3, matrix)`. 
+    * 'Polyline' is no longer externally creatable. To create a 'Polyline' use the 'PolylineCollection.add' method.
+    
             Polyline polyline = new Polyline();
             
-       to
+        to  
        
             PolylineCollection polylineCollection = new PolylineCollection();
             Polyline polyline = polylineCollection.add();
