@@ -6,6 +6,7 @@ define([
         './DeveloperError',
         './EquidistantCylindricalProjection',
         './Extent',
+        './Intersect',
         './Math'
     ], function(
         defaultValue,
@@ -14,6 +15,7 @@ define([
         DeveloperError,
         EquidistantCylindricalProjection,
         Extent,
+        Intersect,
         CesiumMath) {
     "use strict";
 
@@ -91,6 +93,51 @@ define([
         result.y = lowerLeft.y;
         result.width = upperRight.x - lowerLeft.x;
         result.height = upperRight.y - lowerLeft.y;
+        return result;
+    };
+
+    /**
+     * Creates a bounding rectangle that is sphere expanded to contain point.
+     * @memberof BoundingRectangle
+     *
+     * @param {BoundingRectangle} rect A rectangle to expand.
+     * @param {Cartesian2} point A point to enclose in a bounding rectangle.
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
+     *
+     * @exception {DeveloperError} rect is required.
+     * @exception {DeveloperError} point is required.
+     *
+     * @return {BoundingRectangle} A rectangle that encloses the point.
+     */
+    BoundingRectangle.expand = function(rect, point, result) {
+        if (typeof rect === 'undefined') {
+            throw new DeveloperError('rect is required.');
+        }
+
+        if (typeof point === 'undefined') {
+            throw new DeveloperError('point is required.');
+        }
+
+        point = Cartesian2.clone(point);
+        result = BoundingRectangle.clone(rect, result);
+
+        var width = point.x - result.x;
+        var height = point.y - result.y;
+
+        if (width > result.width) {
+            result.width = width;
+        } else if (width < 0) {
+            result.width -= width;
+            result.x = point.x;
+        }
+
+        if (height > result.height) {
+            result.height = height;
+        } else if (height < 0) {
+            result.height -= height;
+            result.y = point.y;
+        }
+
         return result;
     };
 
@@ -200,7 +247,7 @@ define([
      *
      * @memberof BoundingRectangle
      *
-     * @param {Extent} extent The extent used to create a bounding rectangle.
+     * @param {Extent} extent The valid extent used to create a bounding rectangle.
      * @param {Object} [projection=EquidistantCylindricalProjection] The projection used to project the extent into 2D.
      *
      * @exception {DeveloperError} extent is required.
@@ -211,8 +258,6 @@ define([
         if (typeof extent === 'undefined') {
             throw new DeveloperError('extent is required.');
         }
-
-        Extent.validate(extent);
 
         projection = projection || new EquidistantCylindricalProjection();
 
@@ -245,10 +290,14 @@ define([
             throw new DeveloperError('rect2 is required.');
         }
 
-        return !(rect1.x > rect2.x + rect2.width ||
-                 rect1.x + rect1.width < rect2.x ||
-                 rect1.y + rect1.height < rect2.y ||
-                 rect1.y > rect2.y + rect2.height);
+        if (!(rect1.x > rect2.x + rect2.width ||
+                rect1.x + rect1.width < rect2.x ||
+                rect1.y + rect1.height < rect2.y ||
+                rect1.y > rect2.y + rect2.height)) {
+            return Intersect.INTERSECTING;
+        }
+
+        return Intersect.OUTSIDE;
     };
 
     /**
@@ -268,6 +317,24 @@ define([
         }
 
         return BoundingRectangle.union(this, rectangle, result);
+    };
+
+    /**
+     * Creates a bounding rectangle that is rectangle expanded to contain point.
+     * @memberof BoundingRectangle
+     *
+     * @param {BoundingRectangle} point A point to enclose in a bounding rectangle.
+     *
+     * @exception {DeveloperError} point is required.
+     *
+     * @return {BoundingRectangle} A rectangle that encloses the point.
+     */
+    BoundingRectangle.prototype.expand = function(point, result) {
+        if (typeof point === 'undefined') {
+            throw new DeveloperError('point is required.');
+        }
+
+        return BoundingRectangle.expand(this, point, result);
     };
 
     /**

@@ -4,13 +4,15 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Ellipsoid',
          'Core/EquidistantCylindricalProjection',
-         'Core/Extent'
+         'Core/Extent',
+         'Core/Intersect'
      ], function(
          BoundingRectangle,
          Cartesian2,
          Ellipsoid,
          EquidistantCylindricalProjection,
-         Extent) {
+         Extent,
+         Intersect) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -110,8 +112,8 @@ defineSuite([
         var rect1 = new BoundingRectangle(0, 0, 4, 4);
         var rect2 = new BoundingRectangle(2, 2, 4, 4);
         var rect3 = new BoundingRectangle(5, 5, 4, 4);
-        expect(BoundingRectangle.intersect(rect1, rect2)).toEqual(true);
-        expect(BoundingRectangle.intersect(rect1, rect3)).toEqual(false);
+        expect(BoundingRectangle.intersect(rect1, rect2)).toEqual(Intersect.INTERSECTING);
+        expect(BoundingRectangle.intersect(rect1, rect3)).toEqual(Intersect.OUTSIDE);
     });
 
     it('static clone throws with no parameter', function() {

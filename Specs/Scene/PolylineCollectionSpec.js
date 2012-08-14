@@ -1661,12 +1661,12 @@ defineSuite([
             }]
         });
 
-        polylines.update(context, sceneState);
+        var boundingVolume = polylines.update(context, sceneState).boundingVolume;
 
-        expect(one.boundingVolume).toEqual(BoundingSphere.fromPoints(one.getPositions()));
-        expect(two.boundingVolume).toEqual(BoundingSphere.fromPoints(two.getPositions()));
-        expect(three.boundingVolume).toEqual(BoundingSphere.fromPoints(three.getPositions()));
-        expect(polylines.boundingVolume).toEqual(one.boundingVolume.union(two.boundingVolume).union(three.boundingVolume));
+        expect(one._boundingVolume).toEqual(BoundingSphere.fromPoints(one.getPositions()));
+        expect(two._boundingVolume).toEqual(BoundingSphere.fromPoints(two.getPositions()));
+        expect(three._boundingVolume).toEqual(BoundingSphere.fromPoints(three.getPositions()));
+        expect(boundingVolume).toEqual(one._boundingVolume.union(two._boundingVolume).union(three._boundingVolume));
     });
 
     it('computes bounding sphere in Columbus view', function() {
@@ -1688,7 +1688,7 @@ defineSuite([
 
         var mode = sceneState.mode;
         sceneState.mode = SceneMode.COLUMBUS_VIEW;
-        polylines.update(context, sceneState);
+        var boundingVolume = polylines.update(context, sceneState).boundingVolume;
         sceneState.mode = mode;
 
         var positions = one.getPositions();
@@ -1698,8 +1698,8 @@ defineSuite([
         }
         var bs = BoundingSphere.fromPoints(projectedPositions);
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
-        expect(one.boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
-        expect(one.boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
+        expect(one._boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
+        expect(one._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
         var positions = two.getPositions();
         var projectedPositions = [];
@@ -1708,10 +1708,10 @@ defineSuite([
         }
         bs = BoundingSphere.fromPoints(projectedPositions);
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
-        expect(two.boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
-        expect(two.boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
+        expect(two._boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
+        expect(two._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
-        expect(polylines.boundingVolume2D).toEqual(one.boundingVolume2D.union(two.boundingVolume2D));
+        expect(boundingVolume).toEqual(one._boundingVolume2D.union(two._boundingVolume2D));
     });
 
     it('computes bounding rectangle in 2D', function() {
@@ -1732,8 +1732,8 @@ defineSuite([
         });
 
         var mode = sceneState.mode;
-        sceneState.mode = SceneMode.COLUMBUS_VIEW;
-        polylines.update(context, sceneState);
+        sceneState.mode = SceneMode.SCENE2D;
+        var boundingVolume = polylines.update(context, sceneState).boundingVolume;
         sceneState.mode = mode;
 
         var positions = one.getPositions();
@@ -1742,10 +1742,10 @@ defineSuite([
             projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
         }
         var br = BoundingRectangle.fromPoints(projectedPositions);
-        expect(one.boundingRectangle.x).toEqual(br.x);
-        expect(one.boundingRectangle.y).toEqual(br.y);
-        expect(one.boundingRectangle.width).toEqual(br.width);
-        expect(one.boundingRectangle.height).toEqual(br.height);
+        expect(one._boundingRectangle.x).toEqual(br.x);
+        expect(one._boundingRectangle.y).toEqual(br.y);
+        expect(one._boundingRectangle.width).toEqual(br.width);
+        expect(one._boundingRectangle.height).toEqual(br.height);
 
         var positions = two.getPositions();
         var projectedPositions = [];
@@ -1753,12 +1753,12 @@ defineSuite([
             projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
         }
         var br = BoundingRectangle.fromPoints(projectedPositions);
-        expect(two.boundingRectangle.x).toEqual(br.x);
-        expect(two.boundingRectangle.y).toEqual(br.y);
-        expect(two.boundingRectangle.width).toEqual(br.width);
-        expect(two.boundingRectangle.height).toEqual(br.height);
+        expect(two._boundingRectangle.x).toEqual(br.x);
+        expect(two._boundingRectangle.y).toEqual(br.y);
+        expect(two._boundingRectangle.width).toEqual(br.width);
+        expect(two._boundingRectangle.height).toEqual(br.height);
 
-        expect(polylines.boundingRectangle).toEqual(one.boundingRectangle.union(two.boundingRectangle));
+        expect(boundingVolume).toEqual(one._boundingRectangle.union(two._boundingRectangle));
     });
 
     it('isDestroyed', function() {

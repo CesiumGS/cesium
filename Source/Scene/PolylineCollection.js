@@ -133,27 +133,9 @@ define([
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
 
-        /**
-         * A bounding sphere used for culling in 3D mode.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingVolume = undefined;
-        this._baseVolume = undefined;
-
-        /**
-         * A bounding sphere used for culling in Columbus view mode.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingVolume2D = undefined;
-
-        /**
-         * A bounding rectangle used for culling in 2D mode.
-         *
-         * @type BoundingRectangle
-         */
-        this.boundingRectangle = undefined;
+        this._boundingVolume = undefined;
+        this._boundingVolume2D = undefined;
+        this._boundingRectangle = undefined;
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -606,11 +588,24 @@ define([
             properties[k] = 0;
         }
 
-        if (sceneState.mode === SceneMode.SCENE3D && typeof this._baseVolume !== 'undefined') {
-            var center = new Cartesian4(this._baseVolume.center.x, this._baseVolume.center.y, this._baseVolume.center.z, 1.0);
-            center = this.modelMatrix.multiplyByVector(center);
-            this.boundingVolume = new BoundingSphere(Cartesian3.fromCartesian4(center), this._baseVolume.radius);
+        var boundingVolume;
+        var modelMatrix = Matrix4.IDENTITY;
+
+        if (sceneState.mode === SceneMode.SCENE3D) {
+            boundingVolume = this._boundingVolume && this._boundingVolume.clone();
+            modelMatrix = this.modelMatrix.clone();
+        } else if (sceneState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingVolume = this._boundingVolume2D && this._boundingVolume2D.clone();
+        } else if (sceneState.mode === SceneMode.SCENE2D) {
+            boundingVolume = this._boundingRectangle && this._boundingRectangle.clone();
+        } else {
+            boundingVolume = this._boundingVolume && this._boundingVolume2D && this._boundingVolume.union(this._boundingVolume2D);
         }
+
+        return {
+            boundingVolume : boundingVolume,
+            modelMatrix : modelMatrix
+        };
     };
 
     /**
@@ -1381,11 +1376,11 @@ define([
             var positions = polyline.getPositions();
 
             if (positions.length > 0) {
-                polyline.boundingVolume = BoundingSphere.fromPoints(positions);
-                if (typeof polyline._collection._baseVolume === 'undefined') {
-                    polyline._collection._baseVolume = polyline.boundingVolume.clone();
+                polyline._boundingVolume = BoundingSphere.fromPoints(positions);
+                if (typeof polyline._collection._boundingVolume === 'undefined') {
+                    polyline._collection._boundingVolume = polyline._boundingVolume.clone();
                 } else {
-                    polyline._collection._baseVolume.union(polyline.boundingVolume, polyline._collection._baseVolume);
+                    polyline._collection._boundingVolume.union(polyline._boundingVolume, polyline._collection._boundingVolume);
                 }
             }
 
@@ -1410,19 +1405,19 @@ define([
         }
 
         if (newPositions.length > 0) {
-            polyline.boundingVolume2D = BoundingSphere.fromPoints(newPositions);
-            polyline.boundingVolume2D.center = new Cartesian3(polyline.boundingVolume2D.center.z, polyline.boundingVolume2D.center.x, polyline.boundingVolume2D.center.y);
-            if (typeof polyline._collection.boundingVolume2D === 'undefined') {
-                polyline._collection.boundingVolume2D = polyline.boundingVolume2D.clone();
+            polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions);
+            polyline._boundingVolume2D.center = new Cartesian3(polyline._boundingVolume2D.center.z, polyline._boundingVolume2D.center.x, polyline._boundingVolume2D.center.y);
+            if (typeof polyline._collection._boundingVolume2D === 'undefined') {
+                polyline._collection._boundingVolume2D = polyline._boundingVolume2D.clone();
             } else {
-                polyline._collection.boundingVolume2D.union(polyline.boundingVolume2D, polyline._collection.boundingVolume2D);
+                polyline._collection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._collection._boundingVolume2D);
             }
 
-            polyline.boundingRectangle = BoundingRectangle.fromPoints(newPositions);
-            if (typeof polyline._collection.boundingRectangle === 'undefined') {
-                polyline._collection.boundingRectangle = polyline.boundingRectangle.clone();
+            polyline._boundingRectangle = BoundingRectangle.fromPoints(newPositions);
+            if (typeof polyline._collection._boundingRectangle === 'undefined') {
+                polyline._collection._boundingRectangle = polyline._boundingRectangle.clone();
             } else {
-                polyline._collection.boundingRectangle.union(polyline.boundingRectangle, polyline._collection.boundingRectangle);
+                polyline._collection._boundingRectangle.union(polyline._boundingRectangle, polyline._collection._boundingRectangle);
             }
         }
 

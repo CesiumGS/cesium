@@ -86,6 +86,39 @@ define([
     };
 
     /**
+     * Creates a bounding sphere that is sphere expanded to contain point.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere A sphere to expand.
+     * @param {Cartesian3} point A point to enclose in a bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     *
+     * @exception {DeveloperError} sphere is required.
+     * @exception {DeveloperError} point is required.
+     *
+     * @return {BoundingSphere} A sphere that encloses the point.
+     */
+    BoundingSphere.expand = function(sphere, point, result) {
+        if (typeof sphere === 'undefined') {
+            throw new DeveloperError('sphere is required.');
+        }
+
+        if (typeof point === 'undefined') {
+            throw new DeveloperError('point is required.');
+        }
+
+        point = Cartesian3.clone(point);
+        result = BoundingSphere.clone(sphere, result);
+
+        var radius = point.subtract(result.center).magnitude();
+        if (radius > result.radius) {
+            result.radius = radius;
+        }
+
+        return result;
+    };
+
+    /**
      * Duplicates a BoundingSphere instance.
      * @memberof BoundingSphere
      *
@@ -266,7 +299,7 @@ define([
      *
      * @memberof BoundingSphere
      *
-     * @param {Extent} extent The extent used to create a bounding sphere.
+     * @param {Extent} extent The valid extent used to create a bounding sphere.
      * @param {Object} [projection=EquidistantCylindricalProjection] The projection used to project the extent into 2D.
      *
      * @exception {DeveloperError} extent is required.
@@ -279,8 +312,6 @@ define([
         }
 
         projection = projection || new EquidistantCylindricalProjection();
-
-        Extent.validate(extent);
 
         var lowerLeft = projection.project(extent.getSouthwest());
         var upperRight = projection.project(extent.getNortheast());
@@ -346,7 +377,7 @@ define([
      *
      * @memberof BoundingSphere
      *
-     * @param {Extent} extent The extent used to create a bounding sphere.
+     * @param {Extent} extent The valid extent used to create a bounding sphere.
      * @param {Object} projection The projection used to project the extent into 2D.
      * @param {Number} time The morph time.
      *
@@ -369,7 +400,6 @@ define([
             throw new DeveloperError('time is required.');
         }
 
-        Extent.validate(extent);
         return BoundingSphere.fromPoints(BoundingSphere._computeExtentPositions(extent, projection.getEllipsoid(), time, projection));
     };
 
@@ -378,7 +408,7 @@ define([
      *
      * @memberof BoundingSphere
      *
-     * @param {Extent} extent The extent used to create a bounding sphere.
+     * @param {Extent} extent The valid extent used to create a bounding sphere.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
      *
      * @exception {DeveloperError} extent is required.
@@ -390,7 +420,6 @@ define([
             throw new DeveloperError('extent is required.');
         }
 
-        Extent.validate(extent);
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         return BoundingSphere.fromPoints(BoundingSphere._computeExtentPositions(extent, ellipsoid));
     };
@@ -448,6 +477,24 @@ define([
         }
 
         return BoundingSphere.union(this, sphere, result);
+    };
+
+    /**
+     * Creates a bounding sphere that is sphere expanded to contain point.
+     * @memberof BoundingSphere
+     *
+     * @param {Cartesian3} point A point to enclose in a bounding sphere.
+     *
+     * @exception {DeveloperError} point is required.
+     *
+     * @return {BoundingSphere} A sphere that encloses the point.
+     */
+    BoundingSphere.prototype.expand = function(point, result) {
+        if (typeof point === 'undefined') {
+            throw new DeveloperError('point is required.');
+        }
+
+        return BoundingSphere.expand(this, point, result);
     };
 
     /**

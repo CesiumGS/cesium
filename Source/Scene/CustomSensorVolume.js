@@ -67,6 +67,8 @@ define([
         this._pickId = undefined;
         this._pickIdThis = t._pickIdThis || this;
 
+        this._boundingVolume = undefined;
+
         /**
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
          *
@@ -156,17 +158,6 @@ define([
          */
         this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
 
-        /**
-         * DOC_TBA
-         *
-         * @type BoundingSphere
-         */
-        this.boundingVolume = undefined;
-
-        var center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
-        var radius = isFinite(this.radius) ? this.radius : FAR;
-        this.boundingVolume = new BoundingSphere(center, radius);
-
         var that = this;
         this._uniforms = {
             u_model : function() {
@@ -222,6 +213,8 @@ define([
         var positions = new Float32Array(3 * length);
         var r = isFinite(radius) ? radius : FAR;
 
+        var boundingVolumePositions = [Cartesian3.ZERO];
+
         for ( var i = length - 2, j = length - 1, k = 0; k < length; i = j++, j = k++) {
             // PERFORMANCE_IDEA:  We can avoid redundant operations for adjacent edges.
             var n0 = Cartesian3.fromSpherical(directions[i]);
@@ -236,7 +229,11 @@ define([
             positions[(j * 3) + 0] = p.x;
             positions[(j * 3) + 1] = p.y;
             positions[(j * 3) + 2] = p.z;
+
+            boundingVolumePositions.push(p);
         }
+
+        this._boundingVolume = BoundingSphere.fromPoints(boundingVolumePositions);
 
         return positions;
     };
@@ -370,11 +367,13 @@ define([
                 if (directions && (directions.length >= 3)) {
                     this._va = CustomSensorVolume._createVertexArray(context, directions, this.radius, this.bufferUsage);
                 }
-
-                this.boundingVolume.center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
-                this.boundingVolume.radius = isFinite(this.radius) ? this.radius : FAR;
             }
         }
+
+        return {
+            boundingVolume : this._boundingVolume.clone(),
+            modelMatrix : this.modelMatrix.clone()
+        };
     };
 
     /**

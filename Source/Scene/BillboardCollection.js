@@ -166,27 +166,6 @@ define([
          */
         this.morphTime = this._mode.morphTime;
 
-        /**
-         * A bounding sphere used for culling in 3D mode.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingVolume = undefined;
-
-        /**
-         * A bounding sphere used for culling in Columbus view mode.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingVolume2D = undefined;
-
-        /**
-         * A bounding rectangle used for culling in 2D mode.
-         *
-         * @type BoundingRectangle
-         */
-        this.boundingRectangle = undefined;
-
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
                               BufferUsage.STATIC_DRAW, // SHOW_INDEX
@@ -681,8 +660,10 @@ define([
 
         this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
 
-        this._update(context, sceneState);
+        var state = this._update(context, sceneState);
         this.update = this._update;
+
+        return state;
     };
 
     BillboardCollection.prototype.computeNewBuffersUsage = function() {
@@ -763,10 +744,7 @@ define([
         var position = billboard._getActualPosition();
 
         if (this._mode === SceneMode.SCENE3D) {
-            var radius = position.subtract(this._baseVolume.center).magnitude();
-            if (radius > this._baseVolume.radius) {
-                this._baseVolume.radius = radius;
-            }
+            this._baseVolume.expand(position, this._baseVolume);
         }
 
         vafWriters[attributeIndices.position](i + 0, position.x, position.y, position.z);
@@ -855,7 +833,7 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    BillboardCollection.prototype._updateScene2D = function(projection, billboards, recomputeBoundingSphere) {
+    BillboardCollection.prototype._updateScene2D = function(projection, billboards, recomputeBoundingVolume) {
         var length = billboards.length;
 
         var positions = [];
@@ -865,35 +843,19 @@ define([
             var projectedPoint = projection.project(projection.getEllipsoid().cartesianToCartographic(new Cartesian3(p.x, p.y, p.z)));
             b._setActualPosition(new Cartesian3(0.0, projectedPoint.x, projectedPoint.y));
 
-            if (recomputeBoundingSphere) {
+            if (recomputeBoundingVolume) {
                 positions.push(projectedPoint);
             } else {
-                var width = projectedPoint.x - this._baseRectangle.x;
-                var height = projectedPoint.y - this._baseRectangle.y;
-
-                if (width > this._baseRectangle.width) {
-                    this._baseRectangle.width = width;
-                } else if (width < 0) {
-                    this._baseRectangle.width -= width;
-                    this._baseRectangle.x = projectedPoint.x;
-                }
-
-                if (height > this._baseRectangle.height) {
-                    this._baseRectangle.height = height;
-                } else if (height < 0) {
-                    this._baseRectangle.height -= height;
-                    this._baseRectangle.y = projectedPoint.y;
-                }
+                this._baseRectangle.expand(projectedPoint, this._baseRectangle);
             }
         }
 
-        if (recomputeBoundingSphere) {
-            this.boundingRectangle = BoundingRectangle.fromPoints(positions);
-            this._baseRectangle = this.boundingRectangle.clone();
+        if (recomputeBoundingVolume) {
+            this._baseRectangle = BoundingRectangle.fromPoints(positions);
         }
     };
 
-    BillboardCollection.prototype._updateColumbusView = function(projection, billboards, recomputeBoundingSphere) {
+    BillboardCollection.prototype._updateColumbusView = function(projection, billboards, recomputeBoundingVolume) {
         var length = billboards.length;
 
         var positions = [];
@@ -904,19 +866,15 @@ define([
             var point = new Cartesian3(projectedPoint.z, projectedPoint.x, projectedPoint.y);
             b._setActualPosition(point);
 
-            if (recomputeBoundingSphere) {
+            if (recomputeBoundingVolume) {
                 positions.push(point);
             } else {
-                var radius = point.subtract(this._baseVolume2D.center).magnitude();
-                if (radius > this._baseVolume2D.radius) {
-                    this._baseVolume2D.radius = radius;
-                }
+                this._baseVolume2D.expand(point, this._baseVolume2D);
             }
         }
 
-        if (recomputeBoundingSphere) {
-            this.boundingVolume2D = BoundingSphere.fromPoints(positions);
-            this._baseVolume2D = this.boundingVolume2D.clone();
+        if (recomputeBoundingVolume) {
+            this._baseVolume2D = BoundingSphere.fromPoints(positions);
         }
     };
 
@@ -950,8 +908,7 @@ define([
                     b._setActualPosition(position);
                     positions.push(position);
                 }
-                this.boundingVolume = BoundingSphere.fromPoints(positions);
-                this._baseVolume = this.boundingVolume.clone();
+                this._baseVolume = BoundingSphere.fromPoints(positions);
                 break;
 
             case SceneMode.SCENE2D:
@@ -979,8 +936,7 @@ define([
                 positions.push(point);
             }
 
-            this.boundingVolume2D = BoundingSphere.fromPoints(positions);
-            this._baseVolume2D = this.boundingVolume2D.clone();
+            this._baseVolume2D = BoundingSphere.fromPoints(positions);
         } else if (mode === SceneMode.SCENE2D) {
             this._updateScene2D(projection, this._billboardsToUpdate);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
@@ -991,48 +947,53 @@ define([
     BillboardCollection.prototype._updateBoundingVolumes = function(sceneState) {
         var pixelScale;
         var size;
+        var boundingVolume;
 
         var camera = sceneState.camera;
         var frustum = camera.frustum;
         var mode = sceneState.mode;
 
         if (mode === SceneMode.SCENE3D) {
-            var center = new Cartesian4(this._baseVolume.center.x, this._baseVolume.center.y, this._baseVolume.center.z, 1.0);
-            center = this.modelMatrix.multiplyByVector(center);
-            this.boundingVolume.center = Cartesian3.fromCartesian4(center);
+            boundingVolume = new BoundingSphere();
+            boundingVolume.center = this._baseVolume.center.clone();
 
             var tanPhi = Math.tan(frustum.fovy * 0.5);
             var d1 = 1.0 / tanPhi;
 
-            var toCenter = camera.getPositionWC().subtract(this.boundingVolume.center);
+            var toCenter = camera.getPositionWC().subtract(this._baseVolume.center);
             var distance = Math.max(0.0, toCenter.magnitude() - this._baseVolume.radius);
             pixelScale = distance / d1;
 
             size = 2.0 * pixelScale * this._maxScale * this._maxSize;
-            this.boundingVolume.radius = this._baseVolume.radius + size + this._maxEyeOffset;
+            boundingVolume.radius = this._baseVolume.radius + size + this._maxEyeOffset;
         } else if (mode === SceneMode.SCENE2D) {
+            var boundingVolume = new BoundingRectangle();
+
             pixelScale = (frustum.right - frustum.left);
 
             size = pixelScale * this._maxScale * this._maxSize;
             var offset = size + this._maxEyeOffset;
 
-            this.boundingRectangle.x = this._baseRectangle.x - offset;
-            this.boundingRectangle.y = this._baseRectangle.y - offset;
-            this.boundingRectangle.width = this._baseRectangle.width + 2.0 * offset;
-            this.boundingRectangle.height = this._baseRectangle.height + 2.0 * offset;
-        } else if (typeof this.boundingVolume2D !== 'undefined') {
-            this.boundingVolume2D.center = this._baseVolume2D.center;
+            boundingVolume.x = this._baseRectangle.x - offset;
+            boundingVolume.y = this._baseRectangle.y - offset;
+            boundingVolume.width = this._baseRectangle.width + 2.0 * offset;
+            boundingVolume.height = this._baseRectangle.height + 2.0 * offset;
+        } else if (typeof this._baseVolume2D !== 'undefined') {
+            boundingVolume = new BoundingSphere();
+            boundingVolume.center = this._baseVolume2D.center.clone();
 
             var tanPhi = Math.tan(frustum.fovy * 0.5);
             var d1 = 1.0 / tanPhi;
 
-            var toCenter = camera.getPositionWC().subtract(this.boundingVolume2D.center);
+            var toCenter = camera.getPositionWC().subtract(this._baseVolume2D.center);
             var distance = Math.max(0.0, toCenter.magnitude() - this._baseVolume2D.radius);
             pixelScale = distance / d1;
 
             size = 2.0 * pixelScale * this._maxScale * this._maxSize;
-            this.boundingVolume2D.radius = this._baseVolume2D.radius + size + this._maxEyeOffset;
+            boundingVolume.radius = this._baseVolume2D.radius + size + this._maxEyeOffset;
         }
+
+        return boundingVolume;
     };
 
     BillboardCollection.prototype._update = function(context, sceneState) {
@@ -1159,7 +1120,17 @@ define([
 
         this._uniforms = (sceneState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;
 
-        this._updateBoundingVolumes(sceneState);
+        var boundingVolume = this._updateBoundingVolumes(sceneState);
+        var modelMatrix = Matrix4.IDENTITY;
+
+        if (sceneState.mode === SceneMode.SCENE3D) {
+            modelMatrix = this.modelMatrix.clone();
+        }
+
+        return {
+            boundingVolume : boundingVolume,
+            modelMatrix : modelMatrix
+        };
     };
 
     /**

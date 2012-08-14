@@ -134,13 +134,6 @@ define([
 
         t._pickIdThis = t._pickIdThis || this;
         this._customSensor = new CustomSensorVolume(t);
-
-        /**
-         * DOC_TBA
-         *
-         * @type BoundingSphere
-         */
-        this.boundingVolume = this._customSensor.boundingVolume;
     };
 
     /**
@@ -194,9 +187,7 @@ define([
             }]);
         }
 
-        s.update(context, sceneState);
-
-        this.boundingVolume = s.boundingVolume;
+        return s.update(context, sceneState);
     };
 
     /**

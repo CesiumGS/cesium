@@ -46,9 +46,9 @@ define([
         this._pickId = undefined;
         this._pickIdThis = p._pickIdThis;
 
-        this.boundingVolume = undefined;
-        this.boundingVolume2D = undefined;
-        this.boundingRectangle = undefined;
+        this._boundingVolume = undefined;
+        this._boundingVolume2D = undefined;
+        this._boundingRectangle = undefined;
     };
 
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;

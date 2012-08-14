@@ -242,8 +242,8 @@ defineSuite([
 
     it('test 3D bounding sphere from positions', function() {
         polygon = createPolygon();
-        polygon.update(context, sceneState);
-        expect(polygon.boundingVolume).toEqual(BoundingSphere.fromPoints(polygon._positions));
+        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
+        expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon._positions));
     });
 
     it('test 2D bounding sphere from positions', function() {
@@ -263,7 +263,7 @@ defineSuite([
 
         var mode = sceneState.mode;
         sceneState.mode = SceneMode.COLUMBUS_VIEW;
-        polygon.update(context, sceneState);
+        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
         sceneState.mode = mode;
 
         var projectedPositions = [];
@@ -273,8 +273,8 @@ defineSuite([
 
         var sphere = BoundingSphere.fromPoints(projectedPositions);
         sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
-        expect(polygon.boundingVolume2D.center.equalsEpsilon(sphere.center, CesiumMath.EPSILON9)).toEqual(true);
-        expect(polygon.boundingVolume2D.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON9);
+        expect(boundingVolume.center.equalsEpsilon(sphere.center, CesiumMath.EPSILON9)).toEqual(true);
+        expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON9);
     });
 
     it('test 2D bounding rectangle from positions', function() {
@@ -294,7 +294,7 @@ defineSuite([
 
         var mode = sceneState.mode;
         sceneState.mode = SceneMode.SCENE2D;
-        polygon.update(context, sceneState);
+        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
         sceneState.mode = mode;
 
         var projectedPositions = [];
@@ -304,10 +304,10 @@ defineSuite([
         }
 
         var rect = BoundingRectangle.fromPoints(projectedPositions);
-        expect(polygon.boundingRectangle.x).toEqualEpsilon(rect.x, CesiumMath.EPSILON10);
-        expect(polygon.boundingRectangle.y).toEqualEpsilon(rect.y, CesiumMath.EPSILON10);
-        expect(polygon.boundingRectangle.width).toEqualEpsilon(rect.width, CesiumMath.EPSILON10);
-        expect(polygon.boundingRectangle.height).toEqualEpsilon(rect.height, CesiumMath.EPSILON10);
+        expect(boundingVolume.x).toEqualEpsilon(rect.x, CesiumMath.EPSILON10);
+        expect(boundingVolume.y).toEqualEpsilon(rect.y, CesiumMath.EPSILON10);
+        expect(boundingVolume.width).toEqualEpsilon(rect.width, CesiumMath.EPSILON10);
+        expect(boundingVolume.height).toEqualEpsilon(rect.height, CesiumMath.EPSILON10);
     });
 
     it('test 3D bounding sphere from extent', function() {
@@ -322,8 +322,8 @@ defineSuite([
         polygon.ellipsoid = ellipsoid;
         polygon.configureExtent(extent);
 
-        polygon.update(context, sceneState);
-        expect(polygon.boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent, ellipsoid));
+        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
+        expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent, ellipsoid));
     });
 
     it('test 2D bounding sphere from extent', function() {
@@ -341,12 +341,12 @@ defineSuite([
 
         var mode = sceneState.mode;
         sceneState.mode = SceneMode.COLUMBUS_VIEW;
-        polygon.update(context, sceneState);
+        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
         sceneState.mode = mode;
 
         var sphere = BoundingSphere.fromExtent2D(extent, projection);
         sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
-        expect(polygon.boundingVolume2D).toEqual(sphere);
+        expect(boundingVolume).toEqual(sphere);
     });
 
     it('test 2D bounding rectangle from extent', function() {
@@ -363,11 +363,11 @@ defineSuite([
         polygon.configureExtent(extent);
 
         var mode = sceneState.mode;
-        sceneState.mode = SceneMode.COLUMBUS_VIEW;
-        polygon.update(context, sceneState);
+        sceneState.mode = SceneMode.SCENE2D;
+        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
         sceneState.mode = mode;
 
         var rect = BoundingRectangle.fromExtent(extent, projection);
-        expect(polygon.boundingRectangle).toEqual(rect);
+        expect(boundingVolume).toEqual(rect);
     });
 });

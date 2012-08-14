@@ -1,17 +1,25 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/destroyObject',
         '../Core/createGuid',
+        '../Core/defaultValue',
+        '../Core/destroyObject',
         '../Core/BoundingRectangle',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/DeveloperError',
         '../Core/Intersect',
+        '../Core/Matrix4',
         './SceneMode'
     ], function(
-        DeveloperError,
-        destroyObject,
         createGuid,
+        defaultValue,
+        destroyObject,
         BoundingRectangle,
+        Cartesian3,
+        Cartesian4,
+        DeveloperError,
         Intersect,
+        Matrix4,
         SceneMode) {
     "use strict";
 
@@ -435,27 +443,28 @@ define([
             var length = primitives.length;
             for ( var i = 0; i < length; ++i) {
                 var primitive = primitives[i];
-                primitive.update(context, sceneState);
+                var renderState = primitive.update(context, sceneState);
 
-                if (mode === SceneMode.SCENE3D) {
-                    var boundingVolume = primitive.boundingVolume;
-                    if (typeof boundingVolume === 'undefined' ||
-                            camera.getVisibility(boundingVolume) !== Intersect.OUTSIDE) {
-                        this._renderList.push(primitive);
-                    }
-                } else if (mode === SceneMode.SCENE2D) {
-                    var boundingRectangle = primitive.boundingRectangle;
-                    if (typeof boundingRectangle === 'undefined' || typeof frustumRect === 'undefined' ||
-                            BoundingRectangle.intersect(boundingRectangle, frustumRect)) {
-                        this._renderList.push(primitive);
-                    }
-                } else {
-                    var boundingVolume = primitive.boundingVolume2D;
-                    if (typeof boundingVolume === 'undefined' ||
-                            camera.getVisibility(boundingVolume) !== Intersect.OUTSIDE) {
-                        this._renderList.push(primitive);
+                if (typeof renderState !== 'undefined') {
+                    var boundingVolume = renderState.boundingVolume;
+                    var modelMatrix = defaultValue(renderState.modelMatrix, Matrix4.IDENTITY);
+
+                    if (typeof boundingVolume !== 'undefined') {
+                        if (mode !== SceneMode.SCENE2D) {
+                            var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
+                            boundingVolume.center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
+                            if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+                                continue;
+                            }
+                        } else {
+                            if (typeof frustumRect !== 'undefined' && boundingVolume.intersect(frustumRect) === Intersect.OUTSIDE) {
+                                continue;
+                            }
+                        }
                     }
                 }
+
+                this._renderList.push(primitive);
             }
         }
     };

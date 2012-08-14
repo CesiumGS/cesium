@@ -1185,12 +1185,12 @@ defineSuite([
             text : 'two'
         });
 
-        labels.update(context, sceneState);
+        var actual = labels.update(context, sceneState).boundingVolume;
 
         var positions = [one.getPosition(), two.getPosition()];
         var bs = BoundingSphere.fromPoints(positions);
-        expect(labels.boundingVolume.center).toEqual(bs.center);
-        expect(labels.boundingVolume.radius > bs.radius).toEqual(true);
+        expect(actual.center).toEqual(bs.center);
+        expect(actual.radius > bs.radius).toEqual(true);
     });
 
     it('computes bounding sphere in Columbus view', function() {
@@ -1208,7 +1208,7 @@ defineSuite([
 
         var mode = sceneState.mode;
         sceneState.mode = SceneMode.COLUMBUS_VIEW;
-        labels.update(context, sceneState);
+        var actual = labels.update(context, sceneState).boundingVolume;
         sceneState.mode = mode;
 
         var projectedPositions = [
@@ -1217,8 +1217,8 @@ defineSuite([
         ];
         var bs = BoundingSphere.fromPoints(projectedPositions);
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
-        expect(labels.boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
-        expect(labels.boundingVolume2D.radius > bs.radius).toEqual(true);
+        expect(actual.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
+        expect(actual.radius > bs.radius).toEqual(true);
     });
 
     it('computes bounding rectangle in 2D', function() {
@@ -1249,7 +1249,7 @@ defineSuite([
         sceneState.mode = SceneMode.SCENE2D;
         camera.frustum = orthoFrustum;
 
-        labels.update(context, sceneState);
+        var actual = labels.update(context, sceneState).boundingVolume;
 
         camera.frustum = frustum;
         sceneState.mode = mode;
@@ -1259,9 +1259,9 @@ defineSuite([
             projection.project(ellipsoid.cartesianToCartographic(two.getPosition()))
         ];
         var br = BoundingRectangle.fromPoints(projectedPositions);
-        expect(labels.boundingRectangle.x < br.x).toEqual(true);
-        expect(labels.boundingRectangle.y < br.y).toEqual(true);
-        expect(labels.boundingRectangle.width > br.width).toEqual(true);
-        expect(labels.boundingRectangle.height > br.height).toEqual(true);
+        expect(actual.x < br.x).toEqual(true);
+        expect(actual.y < br.y).toEqual(true);
+        expect(actual.width > br.width).toEqual(true);
+        expect(actual.height > br.height).toEqual(true);
     });
 });

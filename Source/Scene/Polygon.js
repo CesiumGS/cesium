@@ -149,6 +149,10 @@ define([
         this._vertices = new PositionVertices();
         this._pickId = null;
 
+        this._boundingVolume = undefined;
+        this._boundingVolume2D = undefined;
+        this._boundingRectangle = undefined;
+
         /**
          * DOC_TBA
          */
@@ -253,27 +257,6 @@ define([
          * @type Number
          */
         this.morphTime = this._mode.morphTime;
-
-        /**
-         * A bounding sphere used for culling in 3D mode.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingVolume = undefined;
-
-        /**
-         * A bounding sphere used for culling in Columbus view mode.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingVolume2D = undefined;
-
-        /**
-         * A bounding rectangle used for culling in 2D mode.
-         *
-         * @type BoundingRectangle
-         */
-        this.boundingRectangle = undefined;
 
         var that = this;
         this._uniforms = {
@@ -398,11 +381,11 @@ define([
         if(typeof this._extent !== 'undefined'){
             mesh = ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true});
 
-            this.boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid);
+            this._boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid);
             if (this._mode !== SceneMode.SCENE3D) {
-                this.boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection);
-                this.boundingVolume2D.center = new Cartesian3(0.0, this.boundingVolume2D.center.x, this.boundingVolume2D.center.y);
-                this.boundingRectangle = BoundingRectangle.fromExtent(this._extent, this._projection);
+                this._boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection);
+                this._boundingVolume2D.center = new Cartesian3(0.0, this._boundingVolume2D.center.x, this._boundingVolume2D.center.y);
+                this._boundingRectangle = BoundingRectangle.fromExtent(this._extent, this._projection);
             }
         }
         else if(typeof this._positions !== 'undefined'){
@@ -420,7 +403,7 @@ define([
             // PERFORMANCE_IDEA:  Only compute texture coordinates if the material requires them.
             mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
 
-            this.boundingVolume = BoundingSphere.fromPoints(this._positions);
+            this._boundingVolume = BoundingSphere.fromPoints(this._positions);
         }
         else {
             return undefined;
@@ -443,9 +426,9 @@ define([
             for (var i = 0; i < projectedPositions.length; i += 2) {
                 positions.push(new Cartesian3(projectedPositions[i], projectedPositions[i + 1], 0.0));
             }
-            this.boundingVolume2D = BoundingSphere.fromPoints(positions);
-            this.boundingVolume2D.center = new Cartesian3(0.0, this.boundingVolume2D.center.x, this.boundingVolume2D.center.y);
-            this.boundingRectangle = BoundingRectangle.fromPoints(positions);
+            this._boundingVolume2D = BoundingSphere.fromPoints(positions);
+            this._boundingVolume2D.center = new Cartesian3(0.0, this._boundingVolume2D.center.x, this._boundingVolume2D.center.y);
+            this._boundingRectangle = BoundingRectangle.fromPoints(positions);
         }
         meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
 
@@ -565,6 +548,21 @@ define([
 
             this._drawUniforms = combine(this._uniforms, this._material._uniforms);
         }
+
+        var boundingVolume;
+        if (mode === SceneMode.SCENE3D) {
+            boundingVolume = this._boundingVolume.clone();
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            boundingVolume = this._boundingVolume2D.clone();
+        } else if (mode === SceneMode.SCENE2D) {
+            boundingVolume = this._boundingRectangle.clone();
+        } else {
+            boundingVolume = this._boundingVolume.union(this._boundingVolume2D);
+        }
+
+        return {
+            boundingVolume : boundingVolume
+        };
     };
 
     /**

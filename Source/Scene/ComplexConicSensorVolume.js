@@ -75,6 +75,8 @@ define([
         this._spPick = undefined;
         this._pickId = undefined;
 
+        this._boundingVolume = undefined;
+
         /**
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
          *
@@ -208,17 +210,6 @@ define([
          * @type Number
          */
         this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
-
-        /**
-         * DOC_TBA
-         *
-         * @type BoundingSphere
-         */
-        this.boundingVolume = undefined;
-
-        var center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
-        var radius = isFinite(this.radius) ? this.radius : FAR;
-        this.boundingVolume = new BoundingSphere(center, radius);
 
         var that = this;
         this._uniforms = {
@@ -363,8 +354,7 @@ define([
                     bufferUsage : BufferUsage.STATIC_DRAW
                 });
 
-                this.boundingVolume.center = Cartesian3.fromCartesian4(this.modelMatrix.getColumn(3));
-                this.boundingVolume.radius = isFinite(this._radius) ? this._radius : FAR;
+                this._boundingVolume = new BoundingSphere(Cartesian3.ZERO, isFinite(this._radius) ? this._radius : FAR);
             }
 
             // Recompile shader when material changes
@@ -417,6 +407,11 @@ define([
             // Does not read or write depth
             });
         }
+
+        return {
+            boundingVolume : this._boundingVolume.clone(),
+            modelMatrix : this.modelMatrix.clone()
+        };
     };
 
     /**
