@@ -44,7 +44,6 @@ define([
             }
             directions.push(new Spherical(maximumClockAngle, outerHalfAngle));
             if (innerHalfAngle) {
-                directions.push(new Spherical(maximumClockAngle, innerHalfAngle));
                 for (angle = maximumClockAngle; angle > minimumClockAngle; angle -= angleStep) {
                     directions.push(new Spherical(angle, innerHalfAngle));
                 }
@@ -278,7 +277,7 @@ define([
             // CZML_TODO Determine official defaults
             cone.innerHalfAngle = 0;
             cone.outerHalfAngle = Math.PI;
-            cone.material = Material.fromId(context, 'Color');
+            cone.material = Material.fromId(context, Material.ColorId);
             cone.intersectionColor = Color.YELLOW;
             cone.minimumClockAngle = -CesiumMath.TWO_PI;
             cone.maximumClockAngle =  CesiumMath.TWO_PI;

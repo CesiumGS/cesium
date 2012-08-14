@@ -23,6 +23,7 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     vec3 normalEC = materialInput.tangentToEyeMatrix * normalTangentSpace;
  
     material.normal = normalEC;
+    material.diffuse = vec3(0.01);
     
     return material;
 }

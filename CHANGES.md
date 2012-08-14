@@ -4,10 +4,9 @@ Change Log
 Beta Releases
 -------------
 
-### b7 - xx/xx/2012
+### b8 - xx/xx/2012
 
 * Breaking changes:
-    * Removed keyboard input handling from `EventHandler`.
     * Materials are now created through a centralized Material class using a JSON schema called Fabric. Change:
             
             polygon.material = new BlobMaterial({repeat : 10.0});
@@ -27,10 +26,16 @@ Beta Releases
                         repeat : 10.0
                     }
                 }
-            });
+            }); 
             
     For more details, go to the [Fabric wiki page](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric).
-    
+
+* All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
+
+### b7 - 08/01/2012
+
+* Breaking changes:
+    * Removed keyboard input handling from `EventHandler`.
     * `TextureAtlas` takes an object literal in its constructor instead of separate parameters.  Code that previously looked like:
 
             context.createTextureAtlas(images, pixelFormat, borderWidthInPixels);
@@ -88,9 +93,18 @@ Beta Releases
     * All functions starting with `multiplyWith` now start with `multiplyBy` to be consistent with functions starting with `divideBy`. 
     * The `multiplyWithMatrix` function on each `Matrix` type was renamed to `multiply`.
     * All three Matrix classes have been largely re-written for consistency and performance.  The `values` property has been eliminated and Matrices are no longer immutable.  Code that previously looked like `matrix = matrix.setColumn0Row0(12);` now looks like `matrix[Matrix2.COLUMN0ROW0] = 12;`.  Code that previously looked like `matrix.setColumn3(cartesian3);` now looked like `matrix.setColumn(3, cartesian3, matrix)`. 
+    * 'Polyline' is no longer externally creatable. To create a 'Polyline' use the 'PolylineCollection.add' method.
+    
+            Polyline polyline = new Polyline();
+            
+        to  
+       
+            PolylineCollection polylineCollection = new PolylineCollection();
+            Polyline polyline = polylineCollection.add();
+            
 * All `Cartesian2` operations now have static versions that work with any objects exposing `x` and `y` properties.
-* All `Cartesian2` operations now have static versions that work with any objects exposing `x`, `y`, and `z` properties.
-* All `Cartesian3` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
+* All `Cartesian3` operations now have static versions that work with any objects exposing `x`, `y`, and `z` properties.
+* All `Cartesian4` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * All `Cartographic` operations now have static versions that work with any objects exposing `longitude`, `latitude`, and `height` properties.
 * All `Matrix` classes are now indexable like arrays.
 * All `Matrix` operations now have static versions of all prototype functions and anywhere we take a Matrix instance as input can now also take an Array or TypedArray.
@@ -115,6 +129,7 @@ Beta Releases
     * The right mouse button and mouse wheel zoom in and out.
     * The middle mouse button rotates around the point clicked on the central body.
 * Added `computeTemeToPseudoFixedMatrix` function to `Transforms`.
+* Added 'PolylineCollection' to manage numerous polylines. 'PolylineCollection' dramatically improves rendering speed when using polylines.
 
 ### b6a - 06/20/2012
 

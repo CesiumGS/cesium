@@ -370,38 +370,38 @@
                 outerMaterial : new Cesium.Material({
                     context : scene.getContext(),
                     fabric : {
-                        "id" : "TieDye",
-                        "uniforms" : {
-                            "lightColor" : lightColor,
-                            "darkColor" : darkColor
+                        id : 'TieDye',
+                        uniforms : {
+                            lightColor : lightColor,
+                            darkColor : darkColor
                         }
                     }
                 }),
                 innerMaterial : new Cesium.Material({
                     context : scene.getContext(),
                     fabric : {
-                        "id" : "Dot",
-                        "uniforms" : {
-                            "lightColor" : lightColor,
-                            "darkColor" : darkColor
+                        id : 'Dot',
+                        uniforms : {
+                            lightColor : lightColor,
+                            darkColor : darkColor
                         }
                     }
                 }),
                 capMaterial : new Cesium.Material({
                     context : scene.getContext(),
                     fabric : {
-                        "id" : "Color",
-                        "uniforms" : {
-                            "color" : new Cesium.Color(1.0, 1.0, 0.0, 0.75)
+                        id : 'Color',
+                        uniforms : {
+                            color : new Cesium.Color(1.0, 1.0, 0.0, 0.75)
                         }
                     }
                 }),
                 silhouetteMaterial: new Cesium.Material({
                     context : scene.getContext(),
                     fabric : {
-                        "id" : "Color",
-                        "uniforms" : {
-                            "color" : new Cesium.Color(0.5, 0.5, 0.5, 0.75)
+                        id : 'Color',
+                        uniforms : {
+                            color : new Cesium.Color(0.5, 0.5, 0.5, 0.75)
                         }
                     }
                 })

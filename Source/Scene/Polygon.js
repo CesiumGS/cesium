@@ -229,7 +229,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = Material.fromId(undefined, 'Color');
+        this.material = Material.fromId(undefined, Material.ColorId);
         this.material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
         this._material = undefined;
 
@@ -505,7 +505,7 @@ define([
             this._material !== this.material ||
             this._affectedByLighting !== this.affectedByLighting) {
 
-            this.material = this.material || Material.fromId(context, 'Color');
+            this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromId(context, Material.ColorId);
             this._material = this.material;
             this._affectedByLighting = this.affectedByLighting;
 

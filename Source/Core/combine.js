@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        './DeveloperError'
+        './DeveloperError',
+        './defaultValue'
     ], function(
-        DeveloperError) {
+        DeveloperError,
+        defaultValue) {
     "use strict";
 
     /**
@@ -47,6 +49,16 @@ define([
      * @exception {DeveloperError} Duplicate member.
      */
 
+    var combine = function(objects, deep, allowDuplicates) {
+        deep = defaultValue(deep, true);
+        allowDuplicates = defaultValue(allowDuplicates, true);
+
+        var combined = {};
+        for (var i = 0; i < objects.length; i++) {
+            combineTwoObjects(combined, objects[i], deep, allowDuplicates);
+        }
+        return combined;
+    };
     var combineTwoObjects = function(object1, object2, deep, allowDuplicates) {
         for (var property in object2) {
             if (object2.hasOwnProperty(property)) {
@@ -63,17 +75,6 @@ define([
                 }
             }
         }
-    };
-
-    var combine = function(objects, deep, allowDuplicates) {
-        deep = (typeof deep !== 'undefined') ? deep : true;
-        allowDuplicates = (typeof allowDuplicates !== 'undefined') ? allowDuplicates : true;
-
-        var combined = {};
-        for (var i = 0; i < objects.length; i++) {
-            combineTwoObjects(combined, objects[i], deep, allowDuplicates);
-        }
-        return combined;
     };
 
     return combine;

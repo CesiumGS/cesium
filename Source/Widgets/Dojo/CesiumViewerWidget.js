@@ -347,7 +347,7 @@ define([
             }
 
             if (typeof this.highlightMaterial === 'undefined') {
-                this.highlightMaterial = new Material.fromId(scene.getContext(), 'Color');
+                this.highlightMaterial = Material.fromId(scene.getContext(), Material.ColorId);
                 this.highlightMaterial.uniforms.color = this.highlightColor;
             }
 

@@ -48,7 +48,7 @@ define([
     };
 
     /**
-     * Get's a Color Material that represents this dynamic material at the provided time.
+     * Gets a Color Material that represents this dynamic material at the provided time.
      *
      * @param {JulianDate} time The desired time.
      * @param {Context} context The context in which this material exists.
@@ -56,8 +56,8 @@ define([
      * @returns The modified existingMaterial parameter or a new Color Material instance if existingMaterial was undefined or not a Color Material.
      */
     DynamicColorMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (typeof existingMaterial === 'undefined' || (existingMaterial.getId() !== 'Color')) {
-            existingMaterial = Material.fromId(context, 'Color');
+        if (typeof existingMaterial === 'undefined' || (existingMaterial.id !== Material.ColorId)) {
+            existingMaterial = Material.fromId(context, Material.ColorId);
         }
         existingMaterial.uniforms.color = this.color.getValue(time, existingMaterial.uniforms.color);
         return existingMaterial;

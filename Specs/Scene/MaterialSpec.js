@@ -72,7 +72,7 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "id" : id
+                id : id
             }
         });
         var pixel = renderMaterial(material, context);
@@ -172,19 +172,19 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "id" : "Color"
+                id : 'Color'
             }
         });
-        expect(material.getId()).toEqual("Color");
+        expect(material.id).toEqual('Color');
     });
     it('creates a new material type and builds off of it', function() {
         var material1 = new Material({
             context : context,
             strict : true,
             fabric : {
-                "id" : "New",
-                "components" : {
-                    "diffuse" : "vec3(0.0, 0.0, 0.0)"
+                id : 'New',
+                components : {
+                    diffuse : 'vec3(0.0, 0.0, 0.0)'
                 }
             }
         });
@@ -193,13 +193,13 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "materials" : {
-                    "first" : {
-                        "id" : "New"
+                materials : {
+                    first : {
+                        id : 'New'
                     }
                 },
-                "components" : {
-                    "diffuse" : "first.diffuse"
+                components : {
+                    diffuse : 'first.diffuse'
                 }
             }
         });
@@ -215,20 +215,20 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "materials" : {
-                    "first" : {
-                        "id" : "DiffuseMap"
+                materials : {
+                    first : {
+                        id : 'DiffuseMap'
                     }
                 },
-                "uniforms" : {
-                    "value" : {
-                        "x" : 0.0,
-                        "y" : 0.0,
-                        "z" : 0.0
+                uniforms : {
+                    value : {
+                        x : 0.0,
+                        y : 0.0,
+                        z : 0.0
                     }
                 },
-                "components" : {
-                    "diffuse" : "value + first.diffuse"
+                components : {
+                    diffuse : 'value + first.diffuse'
                 }
             }
         });
@@ -244,22 +244,22 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "materials" : {
-                    "first" : {
-                        "materials" : {
-                            "second" : {
-                                "components" : {
-                                    "diffuse" : "vec3(0.0, 0.0, 0.0)"
+                materials : {
+                    first : {
+                        materials : {
+                            second : {
+                                components : {
+                                    diffuse : 'vec3(0.0, 0.0, 0.0)'
                                 }
                             }
                         },
-                        "components" : {
-                            "diffuse" : "second.diffuse"
+                        components : {
+                            diffuse : 'second.diffuse'
                         }
                     }
                 },
-                "components" : {
-                    "diffuse" : "first.diffuse"
+                components : {
+                    diffuse : 'first.diffuse'
                 }
             }
         });
@@ -272,9 +272,9 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "id" : "DiffuseMap",
-                "uniforms" : {
-                    "image" :  "./Data/Images/Blue.png"
+                id : 'DiffuseMap',
+                uniforms : {
+                    image :  './Data/Images/Blue.png'
                 }
             }
         });
@@ -287,15 +287,15 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "id" : "Reflection",
-                "uniforms" : {
-                    "cubeMap" : {
-                        "positiveX" : "./Data/Images/Blue.png",
-                        "negativeX" : "./Data/Images/Blue.png",
-                        "positiveY" : "./Data/Images/Blue.png",
-                        "negativeY" : "./Data/Images/Blue.png",
-                        "positiveZ" : "./Data/Images/Blue.png",
-                        "negativeZ" : "./Data/Images/Blue.png"
+                id : 'Reflection',
+                uniforms : {
+                    cubeMap : {
+                        positiveX : './Data/Images/Blue.png',
+                        negativeX : './Data/Images/Blue.png',
+                        positiveY : './Data/Images/Blue.png',
+                        negativeY : './Data/Images/Blue.png',
+                        positiveZ : './Data/Images/Blue.png',
+                        negativeZ : './Data/Images/Blue.png'
                     }
                 }
             }
@@ -308,11 +308,11 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "uniforms" : {
-                    "value" : true
+                uniforms : {
+                    value : true
                 },
-                "components" : {
-                    "diffuse" : "float(value) * vec3(1.0)"
+                components : {
+                    diffuse : 'float(value) * vec3(1.0)'
                 }
             }
         });
@@ -325,12 +325,12 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "uniforms" : {
-                    "value" : [0.5, 0.5, 0.5, 0.5]
+                uniforms : {
+                    value : [0.5, 0.5, 0.5, 0.5]
                 },
-                "components" : {
-                    "diffuse" : "vec3(value[0][0], value[0][1], value[1][0])",
-                    "alpha" : "value[1][1]"
+                components : {
+                    diffuse : 'vec3(value[0][0], value[0][1], value[1][0])',
+                    alpha : 'value[1][1]'
                 }
             }
         });
@@ -341,12 +341,12 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "uniforms" : {
-                    "value" : [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+                uniforms : {
+                    value : [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
                 },
-                "components" : {
-                    "diffuse" : "vec3(value[0][0], value[0][1], value[1][0])",
-                    "alpha" : "value[2][2]"
+                components : {
+                    diffuse : 'vec3(value[0][0], value[0][1], value[1][0])',
+                    alpha : 'value[2][2]'
                 }
             }
         });
@@ -357,12 +357,12 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "uniforms" : {
-                    "value" : [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
+                uniforms : {
+                    value : [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
                 },
-                "components" : {
-                    "diffuse" : "vec3(value[0][0], value[0][1], value[1][0])",
-                    "alpha" : "value[3][3]"
+                components : {
+                    diffuse : 'vec3(value[0][0], value[0][1], value[1][0])',
+                    alpha : 'value[3][3]'
                 }
             }
         });
@@ -375,20 +375,20 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                "uniforms" : {
-                    "i" : 0.5
+                uniforms : {
+                    i : 0.5
                 },
-                "materials" : {
-                    "d" : {
-                        "id" : "ColorMaterial"
+                materials : {
+                    d : {
+                        id : 'Color'
                     },
-                    "diffuse" : {
-                        "id" : "ColorMaterial"
+                    diffuse : {
+                        id : 'Color'
                     }
                 },
-                "components" : {
-                    "diffuse" : "(d.diffuse + diffuse.diffuse)*i",
-                    "specular" : "i"
+                components : {
+                    diffuse : '(d.diffuse + diffuse.diffuse)*i',
+                    specular : 'i'
                 }
             }
         });
@@ -407,7 +407,7 @@ defineSuite([
             return new Material({
                 context : undefined,
                 fabric : {
-                    "id" : "DiffuseMap"
+                    id : 'DiffuseMap'
                 }
             });
         }).toThrow();
@@ -419,12 +419,12 @@ defineSuite([
                 context : context,
                 strict : true,
                 fabric : {
-                    "components" : {
-                        "diffuse" : "vec3(0.0, 0.0, 0.0)"
+                    components : {
+                        diffuse : 'vec3(0.0, 0.0, 0.0)'
                     },
-                    "source" : "agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n" +
-                               "agi_material material = agi_getDefaultMaterial(materialInput);\n" +
-                               "return material;\n}\n"
+                    source : 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n' +
+                             'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
+                             'return material;\n}\n'
                 }
             });
         }).toThrow();
@@ -434,9 +434,9 @@ defineSuite([
                 context : context,
                 strict : true,
                 fabric : {
-                    "id" : "DiffuseMap",
-                    "components" : {
-                        "diffuse" : "vec3(0.0, 0.0, 0.0)"
+                    id : 'DiffuseMap',
+                    components : {
+                        diffuse : 'vec3(0.0, 0.0, 0.0)'
                     }
                 }
             });
@@ -449,12 +449,12 @@ defineSuite([
                 context : context,
                 strict : false,
                 fabric : {
-                    "uniforms" : {
-                        "first" : 0.0,
-                        "second" : 0.0
+                    uniforms : {
+                        first : 0.0,
+                        second : 0.0
                     },
-                    "materials" : {
-                        "second" : {}
+                    materials : {
+                        second : {}
                     }
                 }
             });
@@ -467,7 +467,7 @@ defineSuite([
                 context : context,
                 strict : true,
                 fabric : {
-                    "invalid" : 3.0
+                    invalid : 3.0
                 }
             });
         }).toThrow();
@@ -479,8 +479,8 @@ defineSuite([
                 context : context,
                 strict : true,
                 fabric : {
-                    "components" : {
-                        "difuse" : "vec3(0.0, 0.0, 0.0)"
+                    components : {
+                        difuse : 'vec3(0.0, 0.0, 0.0)'
                     }
                 }
             });
@@ -493,13 +493,13 @@ defineSuite([
                 context : context,
                 strict : true,
                 fabric : {
-                    "uniforms" : {
-                        "value" : {
-                            "x" : 0.0,
-                            "y" : 0.0,
-                            "z" : 0.0,
-                            "w" : 0.0,
-                            "t" : 0.0
+                    uniforms : {
+                        value : {
+                            x : 0.0,
+                            y : 0.0,
+                            z : 0.0,
+                            w : 0.0,
+                            t : 0.0
                         }
                     }
                 }
@@ -511,26 +511,22 @@ defineSuite([
                 context : context,
                 strict : true,
                 fabric : {
-                    "uniforms" : {
-                        "value" : [0.0, 0.0, 0.0, 0.0, 0.0]
+                    uniforms : {
+                        value : [0.0, 0.0, 0.0, 0.0, 0.0]
                     }
                 }
             });
         }).toThrow();
     });
 
-    it('throws with unused uniform string', function() {
+    it('throws with unused channels', function() {
         expect(function() {
             return new Material({
                 context : context,
                 strict : true,
                 fabric : {
-                    "uniforms" : {
-                        "image" : "agi_defaultImage",
-                        "nonexistant" : "value"
-                    },
-                    "components" : {
-                        "diffuse" : "texture2D(image, materialInput.st).rgb"
+                    uniforms : {
+                        nonexistant : 'rgb'
                     }
                 }
             });
@@ -541,12 +537,8 @@ defineSuite([
             context : context,
             strict : false,
             fabric : {
-                "uniforms" : {
-                    "image" : "agi_defaultImage",
-                    "channels" : "rgb"
-                },
-                "components" : {
-                    "diffuse" : "texture2D(image, materialInput.st).rgb"
+                uniforms : {
+                    nonexistant : 'rgb'
                 }
             }
         });
@@ -560,11 +552,11 @@ defineSuite([
                 context : context,
                 strict : true,
                 fabric : {
-                    "uniforms" : {
-                        "first" : {
-                            "x" : 0.0,
-                            "y" : 0.0,
-                            "z" : 0.0
+                    uniforms : {
+                        first : {
+                            x : 0.0,
+                            y : 0.0,
+                            z : 0.0
                         }
                     }
                 }
@@ -576,11 +568,11 @@ defineSuite([
             context : context,
             strict : false,
             fabric : {
-                "uniforms" : {
-                    "first" : {
-                        "x" : 0.0,
-                        "y" : 0.0,
-                        "z" : 0.0
+                uniforms : {
+                    first : {
+                        x : 0.0,
+                        y : 0.0,
+                        z : 0.0
                     }
                 }
             }
@@ -595,9 +587,9 @@ defineSuite([
                 context : context,
                 strict : true,
                 fabric : {
-                    "materials" : {
-                        "first" : {
-                            "id" : "DiffuseMap"
+                    materials : {
+                        first : {
+                            id : 'DiffuseMap'
                         }
                     }
                 }
@@ -609,9 +601,9 @@ defineSuite([
             context : context,
             strict : false,
             fabric : {
-                "materials" : {
-                    "first" : {
-                        "id" : "DiffuseMap"
+                materials : {
+                    first : {
+                        id : 'DiffuseMap'
                     }
                 }
             }
@@ -620,10 +612,38 @@ defineSuite([
         expect(pixel).not.toEqual([0, 0, 0, 0]);
     });
 
+    it('throws with invalid uniform set after creation', function() {
+        expect(function() {
+            var material = new Material({
+                context : context,
+                strict : true,
+                fabric : {
+                    uniforms : {
+                        value : 0.5
+                    },
+                    components : {
+                        diffuse : 'vec3(value)'
+                    }
+                }
+            });
+            material.uniforms.value = {x : 0.5, y : 0.5};
+            renderMaterial(material);
+        }).toThrow();
+    });
     it('throws with invalid id sent to fromId', function() {
         expect(function() {
-            return Material.fromId(context, "Nothing");
+            return Material.fromId(context, 'Nothing');
         }).toThrow();
+    });
+
+    it('destroys material with texture', function() {
+
+        var material = Material.fromId(context, Material.DiffuseMapId);
+        material.uniforms.image = './Data/Images/Green.png';
+        var pixel = renderMaterial(material);
+        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        material = material && material.destroy();
+        expect(material).toEqual(undefined);
     });
 
     it('destroy suite', function() {

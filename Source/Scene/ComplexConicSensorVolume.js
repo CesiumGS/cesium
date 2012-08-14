@@ -16,7 +16,6 @@ define([
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
         './Material',
-        './combineMaterials',
         '../Shaders/Noise',
         '../Shaders/Ray',
         '../Shaders/ConstructiveSolidGeometry',
@@ -41,7 +40,6 @@ define([
         BlendEquation,
         BlendFunction,
         Material,
-        combineMaterials,
         ShadersNoise,
         ShadersRay,
         ShadersConstructiveSolidGeometry,
@@ -174,25 +172,25 @@ define([
         /**
          * DOC_TBA
          */
-        this.outerMaterial = t.outerMaterial || Material.fromId(undefined, 'Color');
+        this.outerMaterial = (typeof t.outerMaterial !== 'undefined') ? t.outerMaterial : Material.fromId(undefined, Material.ColorId);
         this._outerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.innerMaterial = t.innerMaterial || Material.fromId(undefined, 'Color');
+        this.innerMaterial = (typeof t.innerMaterial !== 'undefined') ? t.innerMaterial : Material.fromId(undefined, Material.ColorId);
         this._innerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.capMaterial = t.capMaterial || Material.fromId(undefined, 'Color');
+        this.capMaterial = (typeof t.capMaterial !== 'undefined') ? t.capMaterial : Material.fromId(undefined, Material.ColorId);
         this._capMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.silhouetteMaterial = t.silhouetteMaterial || Material.fromId(undefined, 'Color');
+        this.silhouetteMaterial = (typeof t.silhouetteMaterial !== 'undefined') ? t.silhouetteMaterial : Material.fromId(undefined, Material.ColorId);
         this._silhouetteMaterial = undefined;
 
         /**
@@ -293,30 +291,36 @@ define([
     ComplexConicSensorVolume.prototype._combineMaterials = function() {
         // On older/mobile hardware, we could do one pass per material to avoid
         // going over the maximum uniform limit
-        return combineMaterials({
-            material : this.outerMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getOuterMaterial');
+
+        this.outerMaterial.shaderSource = this.outerMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getOuterMaterial');
+        this.innerMaterial.shaderSource = this.innerMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getInnerMaterial');
+        this.capMaterial.shaderSource = this.capMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getCapMaterial');
+        this.silhouetteMaterial.shaderSource = this.silhouetteMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getSilhouetteMaterial');
+        var materials = [this.outerMaterial, this.innerMaterial, this.capMaterial, this.silhouetteMaterial];
+
+        var combinedUniforms = {};
+        var concatenatedSource = '';
+        for (var i = 0; i < materials.length; i++) {
+            var material = materials[i];
+            var materialSource = material.shaderSource;
+            var materialUniforms = material._uniforms;
+            for (var uniformName in materialUniforms) {
+                if (materialUniforms.hasOwnProperty(uniformName)) {
+                    var count = 1;
+                    var newUniformName = uniformName;
+                    while (combinedUniforms.hasOwnProperty(newUniformName)) {
+                        newUniformName = uniformName + count;
+                        count += 1;
+                    }
+                    combinedUniforms[newUniformName] = materialUniforms[uniformName];
+                }
             }
-        },
-        {
-            material : this.innerMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getInnerMaterial');
-            }
-        },
-        {
-            material : this.capMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getCapMaterial');
-            }
-        },
-        {
-            material : this.silhouetteMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterial', 'g'), 'agi_getSilhouetteMaterial');
-            }
-        });
+            concatenatedSource += materialSource;
+        }
+        return {
+            _uniforms : combinedUniforms,
+            shaderSource : concatenatedSource
+        };
     };
 
     /**
@@ -360,10 +364,10 @@ define([
                 (!this._capMaterial || (this._capMaterial !== this.capMaterial)) ||
                 (!this._silhouetteMaterial || (this._silhouetteMaterial !== this.silhouetteMaterial))) {
 
-                this._outerMaterial = this.outerMaterial || Material.fromId(context, 'Color');
-                this._innerMaterial = this.innerMaterial || Material.fromId(context, 'Color');
-                this._capMaterial = this.capMaterial || Material.fromId(context, 'Color');
-                this._silhouetteMaterial = this.silhouetteMaterial || Material.fromId(context, 'Color');
+                this._outerMaterial = (typeof this.outerMaterial !== 'undefined') ? this.outerMaterial : Material.fromId(context, Material.ColorId);
+                this._innerMaterial = (typeof this.innerMaterial !== 'undefined') ? this.innerMaterial : Material.fromId(context, Material.ColorId);
+                this._capMaterial = (typeof this.capMaterial !== 'undefined') ? this.capMaterial : Material.fromId(context, Material.ColorId);
+                this._silhouetteMaterial = (typeof this.silhouetteMaterial !== 'undefined') ? this.silhouetteMaterial : Material.fromId(context, Material.ColorId);
 
                 var material = this._combineMaterials();
                 this._drawUniforms = combine([this._uniforms, material._uniforms], false, false);

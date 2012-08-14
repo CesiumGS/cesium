@@ -139,7 +139,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = t.material || Material.fromId(undefined, 'Color');
+        this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromId(undefined, Material.ColorId);
         this._material = undefined;
 
         /**
@@ -328,7 +328,8 @@ define([
             // Recompile shader when material changes
             if (!this._material || (this._material !== this.material)) {
 
-                this.material = this.material || Material.fromId(context, 'Color');
+
+                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromId(context, Material.ColorId);
                 this._material = this.material;
 
                 var fsSource =
