@@ -13,7 +13,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
-        './ColorMaterial',
+        './Material',
         '../Shaders/Noise',
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
@@ -33,7 +33,7 @@ define([
         BufferUsage,
         BlendEquation,
         BlendFunction,
-        ColorMaterial,
+        Material,
         ShadersNoise,
         ShadersSensorVolume,
         CustomSensorVolumeVS,
@@ -139,7 +139,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = t.material || new ColorMaterial();
+        this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
 
         /**
@@ -328,7 +328,8 @@ define([
             // Recompile shader when material changes
             if (!this._material || (this._material !== this.material)) {
 
-                this.material = this.material || new ColorMaterial();
+
+                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
                 this._material = this.material;
 
                 var fsSource =
@@ -337,14 +338,14 @@ define([
                     '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +
-                    this._material._getShaderSource() +
+                    this._material.shaderSource +
                     '#line 0\n' +
                     CustomSensorVolumeFS;
 
                 this._sp = this._sp && this._sp.release();
                 this._sp = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
 
-                this._drawUniforms = combine(this._uniforms, this._material._uniforms);
+                this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
             }
 
             // Recreate vertex buffer when directions change
@@ -395,14 +396,12 @@ define([
             this._pickId = context.createPickId(this._pickIdThis);
 
             var that = this;
-            this._pickUniforms = combine(this._uniforms, {
+            this._pickUniforms = combine([this._uniforms, {
                 u_pickColor : function() {
                     return that._pickId.normalizedRgba;
                 }
-            });
-
-            this.updateForPick = function(context) {
-            };
+            }], false, false);
+            this.updateForPick = function(context) {};
         }
     };
 
