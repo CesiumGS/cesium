@@ -11,36 +11,50 @@ define([
          PolylineCollection) {
     "use strict";
 
-    function samplePositions(availability, startTime, stopTime, currentTime, positionProperty) {
+    function samplePositions(currentTime, positionProperty, availability, leadTime, trailTime, result) {
         var hasAvailability = typeof availability !== 'undefined';
-        var hasStartTime = typeof startTime !== 'undefined';
-        var hasStopTime = typeof stopTime !== 'undefined';
+        var hasLeadTime = typeof leadTime !== 'undefined';
+        var hasTrailTime = typeof trailTime !== 'undefined';
 
-        if (!hasAvailability && (!hasStartTime || !hasStopTime)) {
-            return [];
+        if (!hasAvailability && (!hasLeadTime || !hasTrailTime)) {
+            return undefined;
         }
 
-        var actualStart = startTime;
-        if (hasAvailability && !hasStartTime) {
-            actualStart = availability.start;
-        } else if (startTime.greaterThan(availability.start)) {
-            actualStart = availability.start;
+        var sampleStart;
+        var sampleStop;
+        if (hasTrailTime) {
+            sampleStart = currentTime.addSeconds(-trailTime);
+            if (hasAvailability && availability.start.greaterThan(sampleStart)) {
+                sampleStart = availability.start;
+            }
+        } else {
+            sampleStart = availability.start;
         }
 
-        var actualStop = stopTime;
-        if (hasAvailability && !hasStopTime) {
-            actualStop = availability.stop;
-        } else if (stopTime.greaterThan(availability.stop)) {
-            actualStop = availability.stop;
+        if (hasLeadTime) {
+            sampleStop = currentTime.addSeconds(leadTime);
+            if (hasAvailability && availability.stop.lessThan(sampleStop)) {
+                sampleStop = availability.stop;
+            }
+        } else {
+            sampleStop = availability.stop;
         }
 
-        var totalSeconds = actualStart.getSecondsDifference(actualStop);
-        var step = totalSeconds / 50;
+        var totalSeconds = sampleStart.getSecondsDifference(sampleStop);
+        var numPts = 100;
+        result.length = numPts;
+        var step = totalSeconds / numPts;
 
-        var stepTime = actualStart;
-        var result = new Array(50);
-        for ( var i = 0; i < 50; i++) {
-            result[i] = positionProperty.getValueCartesian(stepTime);
+        var steppedOnNow = false;
+        var stepTime = sampleStart;
+        for ( var i = 0; i < numPts; i++) {
+            stepTime = i === numPts - 1 ? sampleStop : stepTime;
+            if (!steppedOnNow && stepTime.greaterThanOrEquals(currentTime)) {
+                result[i] = positionProperty.getValueCartesian(currentTime);
+                steppedOnNow = true;
+            } else {
+                result[i] = positionProperty.getValueCartesian(stepTime);
+            }
             stepTime = stepTime.addSeconds(step);
         }
         return result;
@@ -48,7 +62,7 @@ define([
 
     /**
      * A DynamicObject visualizer which maps the DynamicPath instance
-     * in DynamicObject.polyline to a Polyline primitive.
+     * in DynamicObject.path to a Polyline primitive.
      * @alias DynamicPathVisualizer
      * @constructor
      *
@@ -58,6 +72,7 @@ define([
      * @exception {DeveloperError} scene is required.
      *
      * @see DynamicPath
+     * @see Polyline
      * @see Scene
      * @see DynamicObject
      * @see DynamicObjectCollection
@@ -68,7 +83,6 @@ define([
      * @see DynamicConeVisualizerUsingCustomSensorr
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolylineVisualizer
      * @see DynamicPolygonVisualizer
      * @see DynamicPyramidVisualizer
      *
@@ -202,8 +216,7 @@ define([
     };
 
     DynamicPathVisualizer.prototype._updateObject = function(time, dynamicObject) {
-        //var dynamicPath = dynamicObject.path;
-        var dynamicPath = {};
+        var dynamicPath = dynamicObject.path;
         if (typeof dynamicPath === 'undefined') {
             return;
         }
@@ -252,7 +265,34 @@ define([
         }
 
         polyline.setShow(true);
-        polyline.setPositions(samplePositions(dynamicObject.availability, undefined, undefined, time, positionProperty));
+
+        polyline.setPositions(samplePositions(time, positionProperty, dynamicObject.availability, dynamicPath.leadTime, dynamicPath.trailTime, polyline.getPositions()));
+
+        var property = dynamicPath.color;
+        if (typeof property !== 'undefined') {
+            polyline.setColor(property.getValue(time, polyline.getColor()));
+        }
+
+        property = dynamicPath.outlineColor;
+        if (typeof property !== 'undefined') {
+            polyline.setOutlineColor(property.getValue(time, polyline.getOutlineColor()));
+        }
+
+        property = dynamicPath.outlineWidth;
+        if (typeof property !== 'undefined') {
+            var outlineWidth = property.getValue(time);
+            if (typeof outlineWidth !== 'undefined') {
+                polyline.setOutlineWidth(outlineWidth);
+            }
+        }
+
+        property = dynamicPath.width;
+        if (typeof property !== 'undefined') {
+            var width = property.getValue(time);
+            if (typeof width !== 'undefined') {
+                polyline.setWidth(width);
+            }
+        }
     };
 
     DynamicPathVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {

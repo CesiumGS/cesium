@@ -23,33 +23,13 @@ define([
     var Polyline = function(polylineTemplate, polylineCollection) {
         var p = polylineTemplate || {};
 
-        this._boundingVolume = undefined;
-
-        this._positions = [];
-        if (typeof p.positions !== 'undefined') {
-            var newPositions = p.positions;
-            var length = newPositions.length;
-            var positions = this._positions;
-            for ( var i = 0; i < length; ++i) {
-                var position = newPositions[i];
-                positions.push(new Cartesian3(position.x, position.y, position.z));
-            }
-
-            if (positions.length > 0) {
-                this._boundingVolume = BoundingSphere.fromPoints(positions);
-            }
-        }
-        this._show = (typeof p.show === 'undefined') ? true : p.show;
-        this._width = (typeof p.width === 'undefined') ? 1.0 : p.width;
-        this._outlineWidth = (typeof p.outlineWidth === 'undefined') ? 0.0 : p.outlineWidth;
-        this._color = (typeof p.color === 'undefined') ?
-                new Color(1.0, 1.0, 1.0, 1.0) :
-                Color.clone(p.color);
-
-        this._outlineColor = (typeof p.outlineColor === 'undefined') ?
-                new Color(1.0, 1.0, 1.0, 1.0) :
-                Color.clone(p.outlineColor);
-
+        this._positions = typeof p.positions !== 'undefined' ? p.positions : [];
+        this._positionsLength = this._positions.length;
+        this._show = typeof p.show === 'undefined' ? true : p.show;
+        this._width = typeof p.width === 'undefined' ? 1.0 : p.width;
+        this._outlineWidth = typeof p.outlineWidth === 'undefined' ? 0.0 : p.outlineWidth;
+        this._color = typeof p.color === 'undefined' ? new Color(1.0, 1.0, 1.0, 1.0) : Color.clone(p.color);
+        this._outlineColor = (typeof p.outlineColor === 'undefined') ? new Color(1.0, 1.0, 1.0, 1.0) : Color.clone(p.outlineColor);
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
         this._collection = polylineCollection;
         this._dirty = false;
@@ -57,6 +37,11 @@ define([
         this._pickIdThis = p._pickIdThis;
         this._segments = undefined;
         this._actualLength = this._positions.length;
+        
+        this._boundingVolume = undefined;
+        if (this._positionsLength > 0) {
+            this._boundingVolume = BoundingSphere.fromPoints(this._positions);
+        }
     };
 
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
@@ -97,7 +82,7 @@ define([
         if ((typeof value !== 'undefined') && (this._show !== value)) {
             this._show = value;
             this._makeDirty(SHOW_INDEX);
-                }
+        }
     };
 
     /**
@@ -129,23 +114,17 @@ define([
     *                          new Cartographic3(...))
     * );
      */
-    Polyline.prototype.setPositions = function(value) {
-        var length = 0;
-        if (value && typeof value !== 'undefined') {
-            length = value.length;
+    Polyline.prototype.setPositions = function(positions) {
+        if (typeof positions === 'undefined') {
+            positions = [];
         }
-        if (this._positions.length !== length) {
+        if (this._positionsLength !== positions.length) {
             this._makeDirty(POSITION_SIZE_INDEX);
-        }
-        var positions = [];
-        for ( var i = 0; i < length; ++i) {
-            var position = value[i];
-            positions.push(new Cartesian3(position.x, position.y, position.z));
         }
         this._positions = positions;
 
-        if (positions.length > 0) {
-            this._boundingVolume = BoundingSphere.fromPoints(positions);
+        if (this._positionsLength > 0) {
+            this._boundingVolume = BoundingSphere.fromPoints(this._positions);
         } else {
             this._boundingVolume = undefined;
         }
@@ -167,64 +146,64 @@ define([
         return this._color;
     };
 
-        /**
-     * Sets the color of the polyline.
+    /**
+    * Sets the color of the polyline.
+    *
+    * @memberof Polyline
+    *
+    * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+    *
+    * @param {Color} value. The color of the polyline.
      *
-     * @memberof Polyline
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @param {Color} value. The color of the polyline.
-         *
-     * @see Polyline#getColor
-         */
+    * @see Polyline#getColor
+     */
     Polyline.prototype.setColor = function(value) {
         var c = this._color;
 
         if ((typeof value !== 'undefined') && ((c.red !== value.red) || (c.green !== value.green) || (c.blue !== value.blue) || (c.alpha !== value.alpha))) {
             this._color = new Color(value.red, value.green, value.blue, value.alpha);
             this._makeDirty(COLOR_INDEX);
-            }
-        };
+        }
+    };
 
-        /**
-         * <br /><br />
-         * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
-         * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
-         * {@link Context#getMaximumAliasedLineWidth}.
-         *
-         * @type Number
-         *
+    /**
+    * <br /><br />
+    * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
+    * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
+    * {@link Context#getMaximumAliasedLineWidth}.
+    *
+    * @type Number
+    *
     * @see Polyline#width
-         * @see Context#getMinimumAliasedLineWidth
-         * @see Context#getMaximumAliasedLineWidth
-         *
-         * @example
-         * // 3 pixel total width, 1 pixel interior width
-         * polyline.width = 1.0;
-         * polyline.outlineWidth = 3.0;
-         */
+    * @see Context#getMinimumAliasedLineWidth
+    * @see Context#getMaximumAliasedLineWidth
+    *
+    * @example
+    * // 3 pixel total width, 1 pixel interior width
+    * polyline.width = 1.0;
+    * polyline.outlineWidth = 3.0;
+    */
     Polyline.prototype.getWidth = function() {
         return this._width;
     };
 
-        /**
-         * <br /><br />
-         * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
-         * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
-         * {@link Context#getMaximumAliasedLineWidth}.
-         *
-         * @type Number
-         *
-         * @see Polyline#width
-         * @see Context#getMinimumAliasedLineWidth
-         * @see Context#getMaximumAliasedLineWidth
-         *
-         * @example
-         * // 3 pixel total width, 1 pixel interior width
-         * polyline.width = 1.0;
-         * polyline.outlineWidth = 3.0;
-         */
+    /**
+     * <br /><br />
+     * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
+     * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
+     * {@link Context#getMaximumAliasedLineWidth}.
+     *
+     * @type Number
+     *
+     * @see Polyline#width
+     * @see Context#getMinimumAliasedLineWidth
+     * @see Context#getMaximumAliasedLineWidth
+     *
+     * @example
+     * // 3 pixel total width, 1 pixel interior width
+     * polyline.width = 1.0;
+     * polyline.outlineWidth = 3.0;
+     */
     Polyline.prototype.setWidth = function(value) {
         var width = this._width;
 
@@ -232,66 +211,66 @@ define([
             this._width = value;
             this._makeDirty(WIDTH_INDEX);
         }
-        };
+    };
 
-        /**
+    /**
     * <br /><br />
     * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
     * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
     * {@link Context#getMaximumAliasedLineWidth}.
-         *
+    *
     * @type Number
     *
     * @see Polyline#outlineWidth
     * @see Context#getMinimumAliasedLineWidth
     * @see Context#getMaximumAliasedLineWidth
-     *
+    *
     * @example
     * // 3 pixel total width, 1 pixel interior width
     * polyline.width = 1.0;
     * polyline.outlineWidth = 3.0;
-         */
+     */
     Polyline.prototype.getOutlineWidth = function() {
         return this._outlineWidth;
-        };
+    };
 
-        /**
+    /**
     * <br /><br />
     * The actual width used is clamped to the minimum and maximum width supported by the WebGL implementation.
     * These can be queried with {@link Context#getMinimumAliasedLineWidth} and
     * {@link Context#getMaximumAliasedLineWidth}.
-         *
+     *
     * @type Number
-         *
+     *
     * @see Polyline#outlineWidth
     * @see Context#getMinimumAliasedLineWidth
     * @see Context#getMaximumAliasedLineWidth
-         *
-         * @example
+    *
+    * @example
     * // 3 pixel total width, 1 pixel interior width
     * polyline.width = 1.0;
     * polyline.outlineWidth = 3.0;
-         */
+    */
     Polyline.prototype.setOutlineWidth = function(value) {
         var width = this._outlineWidth;
 
         if ((typeof value !== 'undefined') && (value !== width)) {
             this._outlineWidth = value;
             this._makeDirty(OUTLINE_WIDTH_INDEX);
-            }
-        };
+        }
+    };
 
-        /**
-     * Returns the outline color of the polyline.
-     *
-     * @memberof Polyline
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @return {Color}
-     *
-     * @see Polyline#setOutlineColor
-     */
+    /**
+    * Returns the outline color of the polyline.
+    *
+    * @memberof Polyline
+    *
+    * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+    *
+    * @return {Color}
+    *
+    * @see Polyline#setOutlineColor
+    */
     Polyline.prototype.getOutlineColor = function() {
         return this._outlineColor;
     };
