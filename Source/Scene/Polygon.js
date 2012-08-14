@@ -22,7 +22,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
         '../Renderer/VertexLayout',
-        './ColorMaterial',
+        './Material',
         './SceneMode',
         '../Shaders/Noise',
         '../Shaders/PolygonVS',
@@ -52,7 +52,7 @@ define([
         BufferUsage,
         CullFace,
         VertexLayout,
-        ColorMaterial,
+        Material,
         SceneMode,
         Noise,
         PolygonVS,
@@ -127,7 +127,7 @@ define([
      *
      * @example
      * var polygon = new Polygon();
-     * polygon.material.color = {
+     * polygon.material.uniforms.color = {
      *   red   : 1.0,
      *   green : 0.0,
      *   blue  : 0.0,
@@ -234,9 +234,8 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = new ColorMaterial({
-            color : new Color(1.0, 1.0, 0.0, 0.5)
-        });
+        this.material = Material.fromType(undefined, Material.ColorType);
+        this.material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
         this._material = undefined;
 
         /**
@@ -476,17 +475,17 @@ define([
 
     Polygon.prototype._createMeshFromPositions = function (positions) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
-        var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
+            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
+            var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
 
-        var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-        if (originalWindingOrder === WindingOrder.CLOCKWISE) {
-            positions2D.reverse();
-            cleanedPositions.reverse();
-        }
-        var indices = PolygonPipeline.earClip2D(positions2D);
+            var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+            if (originalWindingOrder === WindingOrder.CLOCKWISE) {
+                positions2D.reverse();
+                cleanedPositions.reverse();
+            }
+            var indices = PolygonPipeline.earClip2D(positions2D);
         var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
-        mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
+            mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
         return mesh;
     };
 
@@ -512,19 +511,19 @@ define([
         var processedMeshes = [];
         for (i = 0; i < meshes.length; i++) {
             var mesh = meshes[i];
-            mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
-            mesh = MeshFilters.reorderForPostVertexCache(mesh);
-            mesh = MeshFilters.reorderForPreVertexCache(mesh);
+        mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
+        mesh = MeshFilters.reorderForPostVertexCache(mesh);
+        mesh = MeshFilters.reorderForPreVertexCache(mesh);
 
-            if (this._mode === SceneMode.SCENE3D) {
-                mesh.attributes.position2D = { // Not actually used in shader
-                        value : [0.0, 0.0]
-                    };
-                mesh.attributes.position3D = mesh.attributes.position;
-                delete mesh.attributes.position;
-            } else {
-                mesh = MeshFilters.projectTo2D(mesh, this._projection);
-            }
+        if (this._mode === SceneMode.SCENE3D) {
+            mesh.attributes.position2D = { // Not actually used in shader
+                    value : [0.0, 0.0]
+                };
+            mesh.attributes.position3D = mesh.attributes.position;
+            delete mesh.attributes.position;
+        } else {
+            mesh = MeshFilters.projectTo2D(mesh, this._projection);
+        }
             processedMeshes = processedMeshes.concat(MeshFilters.fitToUnsignedShortIndices(mesh));
         }
 
@@ -626,7 +625,7 @@ define([
             this._material !== this.material ||
             this._affectedByLighting !== this.affectedByLighting) {
 
-            this.material = this.material || new ColorMaterial();
+            this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
             this._material = this.material;
             this._affectedByLighting = this.affectedByLighting;
 
@@ -634,7 +633,7 @@ define([
                 '#line 0\n' +
                 Noise +
                 '#line 0\n' +
-                this._material._getShaderSource() +
+                this._material.shaderSource +
                 (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                 '#line 0\n' +
                 PolygonFS;
@@ -642,7 +641,7 @@ define([
             this._sp = this._sp && this._sp.release();
             this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
 
-            this._drawUniforms = combine(this._uniforms, this._material._uniforms);
+            this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
         }
     };
 

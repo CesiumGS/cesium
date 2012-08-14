@@ -8,7 +8,7 @@ define([
         '../Core/Matrix4',
         '../Core/Spherical',
         '../Scene/CustomSensorVolume',
-        '../Scene/ColorMaterial'
+        '../Scene/Material'
        ], function(
          DeveloperError,
          destroyObject,
@@ -18,7 +18,7 @@ define([
          Matrix4,
          Spherical,
          CustomSensorVolume,
-         ColorMaterial) {
+         Material) {
     "use strict";
 
     //CZML_TODO DynamicConeVisualizerUsingCustomSensor is a temporary workaround
@@ -27,32 +27,45 @@ define([
     //DynamicConeVisualizer is a drop in replacement that already does things
     //"the right way".
 
-    function computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle) {
+    var matrix3Scratch = new Matrix3();
+
+    function assignSpherical(index, array, clock, cone) {
+        var spherical = array[index];
+        if (typeof spherical === 'undefined') {
+            array[index] = spherical = new Spherical();
+        }
+        spherical.clock = clock;
+        spherical.cone = cone;
+        spherical.magnitude = 1.0;
+    }
+
+    function computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle, result) {
         var angle;
-        var directions = [];
+        var i = 0;
         var angleStep = CesiumMath.toRadians(2.0);
         if (minimumClockAngle === 0.0 && maximumClockAngle === CesiumMath.TWO_PI) {
             // No clock angle limits, so this is just a circle.
             // There might be a hole but we're ignoring it for now.
             for (angle = 0.0; angle < CesiumMath.TWO_PI; angle += angleStep) {
-                directions.push(new Spherical(angle, outerHalfAngle));
+                assignSpherical(i++, result, angle, outerHalfAngle);
             }
         } else {
             // There are clock angle limits.
             for (angle = minimumClockAngle; angle < maximumClockAngle; angle += angleStep) {
-                directions.push(new Spherical(angle, outerHalfAngle));
+                assignSpherical(i++, result, angle, outerHalfAngle);
             }
-            directions.push(new Spherical(maximumClockAngle, outerHalfAngle));
+            assignSpherical(i++, result, maximumClockAngle, outerHalfAngle);
             if (innerHalfAngle) {
                 for (angle = maximumClockAngle; angle > minimumClockAngle; angle -= angleStep) {
-                    directions.push(new Spherical(angle, innerHalfAngle));
+                    assignSpherical(i++, result, angle, innerHalfAngle);
                 }
-                directions.push(new Spherical(minimumClockAngle, innerHalfAngle));
+                assignSpherical(i++, result, minimumClockAngle, innerHalfAngle);
             } else {
-                directions.push(new Spherical(maximumClockAngle, 0.0));
+                assignSpherical(i++, result, maximumClockAngle, 0.0);
             }
         }
-        return directions;
+        result.length = i;
+        return result;
     }
 
     /**
@@ -90,6 +103,7 @@ define([
         this._primitives = scene.getPrimitives();
         this._coneCollection = [];
         this._dynamicObjectCollection = undefined;
+        this._directionsScratch = [];
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 
@@ -214,18 +228,9 @@ define([
     var orientation;
     var intersectionColor;
     DynamicConeVisualizerUsingCustomSensor.prototype._updateObject = function(time, dynamicObject) {
+        var context = this._scene.getContext();
         var dynamicCone = dynamicObject.cone;
         if (typeof dynamicCone === 'undefined') {
-            return;
-        }
-
-        var maximumClockAngleProperty = dynamicCone.maximumClockAngle;
-        if (typeof maximumClockAngleProperty === 'undefined') {
-            return;
-        }
-
-        var outerHalfAngleProperty = dynamicCone.outerHalfAngle;
-        if (typeof outerHalfAngleProperty === 'undefined') {
             return;
         }
 
@@ -263,10 +268,7 @@ define([
                 cone = this._coneCollection[coneVisualizerIndex];
             } else {
                 coneVisualizerIndex = this._coneCollection.length;
-                //cone = new ComplexConicSensorVolume();
                 cone = new CustomSensorVolume();
-                cone.innerHalfAngle = 0;
-                cone.minimumClockAngle = 0;
                 this._coneCollection.push(cone);
                 this._primitives.add(cone);
             }
@@ -274,12 +276,8 @@ define([
             cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            cone.innerHalfAngle = 0;
-            cone.outerHalfAngle = Math.PI;
-            cone.material = new ColorMaterial();
+            cone.material = Material.fromType(context, Material.ColorType);
             cone.intersectionColor = Color.YELLOW;
-            cone.minimumClockAngle = -CesiumMath.TWO_PI;
-            cone.maximumClockAngle =  CesiumMath.TWO_PI;
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
         } else {
@@ -288,36 +286,47 @@ define([
 
         cone.show = true;
 
-        var innerHalfAngle = 0;
-        var outerHalfAngle = Math.PI;
-        var maximumClockAngle =  CesiumMath.TWO_PI;
-        var minimumClockAngle = -CesiumMath.TWO_PI;
-
+        var minimumClockAngle;
         var property = dynamicCone.minimumClockAngle;
         if (typeof property !== 'undefined') {
-            var tmpClock = property.getValue(time);
-            if (typeof tmpClock !== 'undefined') {
-                minimumClockAngle = tmpClock;
-            }
+            minimumClockAngle = property.getValue(time);
+        }
+        if (typeof minimumClockAngle === 'undefined') {
+            minimumClockAngle = 0;
         }
 
-        maximumClockAngle = maximumClockAngleProperty.getValue(time) || Math.pi;
+        var maximumClockAngle;
+        property = dynamicCone.maximumClockAngle;
+        if (typeof property !== 'undefined') {
+            maximumClockAngle = property.getValue(time);
+        }
+        if (typeof maximumClockAngle === 'undefined') {
+            maximumClockAngle = CesiumMath.TWO_PI;
+        }
 
+        var innerHalfAngle;
         property = dynamicCone.innerHalfAngle;
         if (typeof property !== 'undefined') {
-            var tmpAngle = property.getValue(time);
-            if (typeof tmpAngle !== 'undefined') {
-                innerHalfAngle = tmpAngle;
-            }
+            innerHalfAngle = property.getValue(time);
+        }
+        if (typeof innerHalfAngle === 'undefined') {
+            innerHalfAngle = 0;
         }
 
-        outerHalfAngle = outerHalfAngleProperty.getValue(time) || Math.pi;
+        var outerHalfAngle;
+        property = dynamicCone.outerHalfAngle;
+        if (typeof property !== 'undefined') {
+            outerHalfAngle = property.getValue(time);
+        }
+        if (typeof outerHalfAngle === 'undefined') {
+            outerHalfAngle = Math.PI;
+        }
 
         if (minimumClockAngle !== cone.minimumClockAngle ||
             maximumClockAngle !== cone.maximumClockAngle ||
             innerHalfAngle !== cone.innerHalfAngle ||
             outerHalfAngle !== cone.outerHalfAngle) {
-            cone.setDirections(computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle));
+            cone.setDirections(computeDirections(minimumClockAngle, maximumClockAngle, innerHalfAngle, outerHalfAngle, this._directionsScratch));
             cone.innerHalfAngle = innerHalfAngle;
             cone.maximumClockAngle = maximumClockAngle;
             cone.outerHalfAngle = outerHalfAngle;
@@ -339,12 +348,11 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
-            cone.modelMatrix = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation)), position);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, cone.modelMatrix);
             position.clone(cone._visualizerPosition);
             orientation.clone(cone._visualizerOrientation);
         }
 
-        var context = this._scene.getContext();
         var material = dynamicCone.outerMaterial;
         if (typeof material !== 'undefined') {
             cone.material = material.getValue(time, context, cone.material);
