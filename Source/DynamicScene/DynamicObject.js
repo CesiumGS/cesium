@@ -88,6 +88,11 @@ define([
         this.label = undefined;
 
         /**
+         * The DynamicPath, if any, associated with this object.
+         */
+        this.path = undefined;
+
+        /**
          * The DynamicPoint, if any, associated with this object.
          */
         this.point = undefined;
