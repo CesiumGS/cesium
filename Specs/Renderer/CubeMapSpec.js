@@ -255,6 +255,54 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 127, 127]);
     });
 
+    it('draws the context default cube map', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'uniform samplerCube u_texture;' +
+            'uniform mediump vec3 u_direction;' +
+            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+        sp = context.createShaderProgram(vs, fs, {
+            position : 0
+        });
+        sp.getAllUniforms().u_texture.value = context.getDefaultCubeMap();
+
+        va = context.createVertexArray();
+        va.addAttribute({
+            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 4
+        });
+
+        var da = {
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va
+        };
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(1, 0, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(-1, 0, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, 1, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, -1, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, 1);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, -1);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+    });
+
     it('creates a cube map with typed arrays', function() {
         cubeMap = context.createCubeMap({
             source : {

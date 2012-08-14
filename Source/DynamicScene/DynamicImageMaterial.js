@@ -3,39 +3,13 @@ define([
         './DynamicProperty',
         './CzmlImage',
         './CzmlNumber',
-        '../Scene/DiffuseMapMaterial',
-        '../Renderer/PixelFormat'
+        '../Scene/Material'
     ], function(
          DynamicProperty,
          CzmlImage,
          CzmlNumber,
-         DiffuseMapMaterial,
-         PixelFormat) {
+         Material) {
     "use strict";
-
-    //CZML_TODO Cesium doesn't currently provide any sort of 'default' texture or image
-    //when you default construct something with a texture.  This means that as soon as we create
-    //our image material, we have to assign a texture to it or else we will crash
-    //on the next draw.  Once we change Cesium to have built in texture defaults,
-    //this code can be removed.  If we decide Cesium shouldn't have built in defaults,
-    //this code should be changes so at least all CZML visualization has defaults.
-    function createDefaultTexture() {
-        var canvas = document.createElement('canvas');
-        canvas.height = '64';
-        canvas.width = '64';
-
-        var context = canvas.getContext('2d');
-        context.fillStyle = '#FFFFFF';
-        context.font = '64px sans-serif';
-        context.textBaseline = 'top';
-        context.fillText('?', 16, 0);
-        context.font = '64px sans-serif';
-        context.strokeStyle = '#000000';
-        context.strokeText('?', 16, 0);
-        return canvas;
-    }
-
-    var defaultTexture = createDefaultTexture();
 
     /**
      * A utility class for processing CZML image materials.
@@ -97,16 +71,16 @@ define([
     };
 
     /**
-     * Get's a DiffuseMapMaterial that represents this dynamic material at the provided time.
+     * Gets an Image Material that represents this dynamic material at the provided time.
      *
      * @param {JulianDate} time The desired time.
      * @param {Context} context The context in which this material exists.
-     * @param {DiffuseMapMaterial} [existingMaterial] An existing material to be modified.  If the material is undefined or not a DiffuseMapMaterial, a new instance is created.
-     * @returns The modified existingMaterial parameter or a new DiffuseMapMaterial instance if existingMaterial was undefined or not a DiffuseMapMaterial.
+     * @param {Material} [existingMaterial] An existing material to be modified.  If the material is undefined or not an Image Material, a new instance is created.
+     * @returns The modified existingMaterial parameter or a new Image Material instance if existingMaterial was undefined or not a Image Material.
      */
     DynamicImageMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (typeof existingMaterial === 'undefined' || !(existingMaterial instanceof DiffuseMapMaterial)) {
-            existingMaterial = new DiffuseMapMaterial();
+        if (typeof existingMaterial === 'undefined' || (existingMaterial.type !== Material.ImageType)) {
+            existingMaterial = Material.fromType(context, Material.ImageType);
         }
 
         var tRepeat;
@@ -114,7 +88,7 @@ define([
         if (typeof property !== 'undefined') {
             tRepeat = property.getValue(time);
             if (typeof tRepeat !== 'undefined') {
-                existingMaterial.tRepeat = tRepeat;
+                existingMaterial.uniforms.repeat.x = tRepeat;
             }
         }
 
@@ -123,7 +97,7 @@ define([
         if (typeof property !== 'undefined') {
             sRepeat = property.getValue(time);
             if (typeof value !== 'undefined') {
-                existingMaterial.sRepeat = sRepeat;
+                existingMaterial.uniforms.repeat.y = sRepeat;
             }
         }
 
@@ -132,21 +106,8 @@ define([
             var url = this.image.getValue(time);
             if (typeof url !== 'undefined' && existingMaterial.currentUrl !== url) {
                 existingMaterial.currentUrl = url;
-                var image = new Image();
-                image.onload = function() {
-                    if (existingMaterial.currentUrl === url) {
-                        existingMaterial.texture = context.createTexture2D({
-                            source : image
-                        });
-                    }
-                };
-                image.src = url;
+                existingMaterial.uniforms.image = url;
             }
-        }
-        if (!existingMaterial.texture) {
-            existingMaterial.texture = context.createTexture2D({
-                source : defaultTexture
-            });
         }
         return existingMaterial;
     };
