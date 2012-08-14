@@ -11,6 +11,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Intersect',
         '../Core/Math',
+        '../Core/Matrix4',
         '../Core/Occluder',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
@@ -37,6 +38,7 @@ define([
         Ellipsoid,
         Intersect,
         CesiumMath,
+        Matrix4,
         Occluder,
         PrimitiveType,
         Rectangle,
@@ -313,6 +315,9 @@ define([
         u_modifiedModelView : function() {
             return this.modifiedModelView;
         },
+        u_modifiedModelViewProjection : function() {
+            return this.modifiedModelViewProjection;
+        },
         u_numberOfDayTextures : function() {
             return this.numberOfDayTextures;
         },
@@ -355,6 +360,7 @@ define([
 
         center3D : undefined,
         modifiedModelView : undefined,
+        modifiedModelViewProjection : undefined,
 
         numberOfDayTextures : 0,
         dayTextures : [],
@@ -385,6 +391,7 @@ define([
 
         var uniformState = context.getUniformState();
         var mv = uniformState.getModelView();
+        var projection = uniformState.getProjection();
 
         context.beginDraw(drawArguments);
 
@@ -401,11 +408,7 @@ define([
 
             var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
             uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);
-
-//            northLatitude : 0,
-//            southLatitude : 0,
-//            minMLat : 0,
-//            maxMLat : 0
+            uniformMap.modifiedModelViewProjection = Matrix4.multiply(projection, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
 
             var extent = tile.extent;
             uniformMap.northLatitude = extent.north;

@@ -8,6 +8,7 @@ uniform int u_mode;
 uniform vec3 u_center3D;
 uniform vec2 u_center2D;
 uniform mat4 u_modifiedModelView;
+uniform mat4 u_modifiedModelViewProjection;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -22,7 +23,7 @@ void main()
     vec3 position3DWC = position3D + u_center3D;
     if (u_mode == 0) {
         v_positionEC = (u_modifiedModelView * vec4(position3D, 1.0)).xyz;  // position in eye coordinates
-        gl_Position = agi_projection * (u_modifiedModelView * vec4(position3D, 1.0));
+        gl_Position = u_modifiedModelViewProjection * vec4(position3D, 1.0);
     }
     else if (u_mode == 1) {
         v_positionEC = (agi_modelView * vec4(position3DWC, 1.0)).xyz;  // position in eye coordinates
