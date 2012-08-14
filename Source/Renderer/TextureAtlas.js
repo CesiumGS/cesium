@@ -128,14 +128,14 @@ define([
                     texCoord.width *= widthRatio;
                     texCoord.height *= heightRatio;
                 }
-        }
+            }
 
             // Copy larger texture.
             var newTexture = this._context.createTexture2D({
                 width : atlasWidth,
                 height : atlasHeight,
                 pixelFormat : this._pixelFormat
-        });
+            });
 
             // Copy old texture into new using an fbo.
             var framebuffer = this._context.createFramebuffer({colorTexture:this._texture});

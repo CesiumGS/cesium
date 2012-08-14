@@ -8,7 +8,7 @@ define([
         '../Core/Matrix4',
         '../Core/Spherical',
         '../Scene/CustomSensorVolume',
-        '../Scene/ColorMaterial'
+        '../Scene/Material'
        ], function(
          DeveloperError,
          destroyObject,
@@ -18,7 +18,7 @@ define([
          Matrix4,
          Spherical,
          CustomSensorVolume,
-         ColorMaterial) {
+         Material) {
     "use strict";
 
     //CZML_TODO DynamicConeVisualizerUsingCustomSensor is a temporary workaround
@@ -228,6 +228,7 @@ define([
     var orientation;
     var intersectionColor;
     DynamicConeVisualizerUsingCustomSensor.prototype._updateObject = function(time, dynamicObject) {
+        var context = this._scene.getContext();
         var dynamicCone = dynamicObject.cone;
         if (typeof dynamicCone === 'undefined') {
             return;
@@ -275,7 +276,7 @@ define([
             cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            cone.material = new ColorMaterial();
+            cone.material = Material.fromType(context, Material.ColorType);
             cone.intersectionColor = Color.YELLOW;
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
@@ -352,7 +353,6 @@ define([
             orientation.clone(cone._visualizerOrientation);
         }
 
-        var context = this._scene.getContext();
         var material = dynamicCone.outerMaterial;
         if (typeof material !== 'undefined') {
             cone.material = material.getValue(time, context, cone.material);
