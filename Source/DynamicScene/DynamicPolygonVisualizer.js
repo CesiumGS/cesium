@@ -213,7 +213,7 @@ define([
             polygon.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polygon.material = Material.fromId(context, Material.ColorId);
+            polygon.material = Material.fromType(context, Material.ColorType);
 
         } else {
             polygon = this._polygonCollection[polygonVisualizerIndex];

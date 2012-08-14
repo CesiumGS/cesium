@@ -172,25 +172,25 @@ define([
         /**
          * DOC_TBA
          */
-        this.outerMaterial = (typeof t.outerMaterial !== 'undefined') ? t.outerMaterial : Material.fromId(undefined, Material.ColorId);
+        this.outerMaterial = (typeof t.outerMaterial !== 'undefined') ? t.outerMaterial : Material.fromType(undefined, Material.ColorType);
         this._outerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.innerMaterial = (typeof t.innerMaterial !== 'undefined') ? t.innerMaterial : Material.fromId(undefined, Material.ColorId);
+        this.innerMaterial = (typeof t.innerMaterial !== 'undefined') ? t.innerMaterial : Material.fromType(undefined, Material.ColorType);
         this._innerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.capMaterial = (typeof t.capMaterial !== 'undefined') ? t.capMaterial : Material.fromId(undefined, Material.ColorId);
+        this.capMaterial = (typeof t.capMaterial !== 'undefined') ? t.capMaterial : Material.fromType(undefined, Material.ColorType);
         this._capMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.silhouetteMaterial = (typeof t.silhouetteMaterial !== 'undefined') ? t.silhouetteMaterial : Material.fromId(undefined, Material.ColorId);
+        this.silhouetteMaterial = (typeof t.silhouetteMaterial !== 'undefined') ? t.silhouetteMaterial : Material.fromType(undefined, Material.ColorType);
         this._silhouetteMaterial = undefined;
 
         /**
@@ -292,30 +292,34 @@ define([
         // On older/mobile hardware, we could do one pass per material to avoid
         // going over the maximum uniform limit
 
-        this.outerMaterial.shaderSource = this.outerMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getOuterMaterial');
-        this.innerMaterial.shaderSource = this.innerMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getInnerMaterial');
-        this.capMaterial.shaderSource = this.capMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getCapMaterial');
-        this.silhouetteMaterial.shaderSource = this.silhouetteMaterial.shaderSource.replace(/agi_getMaterial/g, 'agi_getSilhouetteMaterial');
-        var materials = [this.outerMaterial, this.innerMaterial, this.capMaterial, this.silhouetteMaterial];
+        var materials = {
+            'agi_getOuterMaterial' : this.outerMaterial,
+            'agi_getInnerMaterial' : this.innerMaterial,
+            'agi_getCapMaterial' : this.capMaterial,
+            'agi_getSilhouetteMaterial' : this.silhouetteMaterial
+        };
 
         var combinedUniforms = {};
         var concatenatedSource = '';
-        for (var i = 0; i < materials.length; i++) {
-            var material = materials[i];
-            var materialSource = material.shaderSource;
-            var materialUniforms = material._uniforms;
-            for (var uniformName in materialUniforms) {
-                if (materialUniforms.hasOwnProperty(uniformName)) {
-                    var count = 1;
-                    var newUniformName = uniformName;
-                    while (combinedUniforms.hasOwnProperty(newUniformName)) {
-                        newUniformName = uniformName + count;
-                        count += 1;
+        for (var materialId in materials) {
+            if (materials.hasOwnProperty(materialId)) {
+                var material = materials[materialId];
+                var materialSource = material.shaderSource.replace(/agi_getMaterial/g, materialId);
+                var materialUniforms = material._uniforms;
+                for (var uniformName in materialUniforms) {
+                    if (materialUniforms.hasOwnProperty(uniformName)) {
+                        var count = 1;
+                        var newUniformName = uniformName;
+                        while (combinedUniforms.hasOwnProperty(newUniformName)) {
+                            newUniformName = uniformName + count;
+                            count += 1;
+                        }
+                        materialSource = materialSource.replace(uniformName, newUniformName);
+                        combinedUniforms[newUniformName] = materialUniforms[uniformName];
                     }
-                    combinedUniforms[newUniformName] = materialUniforms[uniformName];
                 }
+                concatenatedSource += materialSource;
             }
-            concatenatedSource += materialSource;
         }
         return {
             _uniforms : combinedUniforms,
@@ -364,10 +368,10 @@ define([
                 (!this._capMaterial || (this._capMaterial !== this.capMaterial)) ||
                 (!this._silhouetteMaterial || (this._silhouetteMaterial !== this.silhouetteMaterial))) {
 
-                this._outerMaterial = (typeof this.outerMaterial !== 'undefined') ? this.outerMaterial : Material.fromId(context, Material.ColorId);
-                this._innerMaterial = (typeof this.innerMaterial !== 'undefined') ? this.innerMaterial : Material.fromId(context, Material.ColorId);
-                this._capMaterial = (typeof this.capMaterial !== 'undefined') ? this.capMaterial : Material.fromId(context, Material.ColorId);
-                this._silhouetteMaterial = (typeof this.silhouetteMaterial !== 'undefined') ? this.silhouetteMaterial : Material.fromId(context, Material.ColorId);
+                this._outerMaterial = (typeof this.outerMaterial !== 'undefined') ? this.outerMaterial : Material.fromType(context, Material.ColorType);
+                this._innerMaterial = (typeof this.innerMaterial !== 'undefined') ? this.innerMaterial : Material.fromType(context, Material.ColorType);
+                this._capMaterial = (typeof this.capMaterial !== 'undefined') ? this.capMaterial : Material.fromType(context, Material.ColorType);
+                this._silhouetteMaterial = (typeof this.silhouetteMaterial !== 'undefined') ? this.silhouetteMaterial : Material.fromType(context, Material.ColorType);
 
                 var material = this._combineMaterials();
                 this._drawUniforms = combine([this._uniforms, material._uniforms], false, false);

@@ -3,7 +3,7 @@
     "description": "A material composed of uniforms, an agi_getMaterial GLSL function, and potentially other materials.",
     "type": "object",
 	"properties": {
-		"id": {
+		"type": {
 			"type": "string",
 			"description": "A unique identifier for this material type."
 		},

@@ -149,7 +149,7 @@
             var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
-            var material = Cesium.Material.fromId(scene.getContext(), 'Stripe');    // Use default colors
+            var material = Cesium.Material.fromType(scene.getContext(), 'Stripe');    // Use default colors
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
             sensors.addComplexConic({
@@ -225,7 +225,7 @@
             var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
-            var material = Cesium.Material.fromId(scene.getContext(), 'Checkerboard');
+            var material = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
             material.uniforms.lightColor = new Cesium.Color(1.0, 1.0, 0.0, 0.75);
             material.uniforms.darkColor = new Cesium.Color(0.0, 1.0, 1.0, 0.25);
 
@@ -250,7 +250,7 @@
             var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
-            var material = Cesium.Material.fromId(scene.getContext(), 'Dot');
+            var material = Cesium.Material.fromType(scene.getContext(), 'Dot');
             material.uniforms.lightColor = new Cesium.Color(1.0, 1.0, 0.0, 0.75);
             material.uniforms.darkColor = new Cesium.Color(0.0, 1.0, 1.0, 0.25);
 
@@ -275,7 +275,7 @@
             var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
-            var material = Cesium.Material.fromId(scene.getContext(), 'TieDye'); // Use default colors
+            var material = Cesium.Material.fromType(scene.getContext(), 'TieDye'); // Use default colors
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
             sensors.addComplexConic({
@@ -298,7 +298,7 @@
             var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
-            var material = Cesium.Material.fromId(scene.getContext(), 'Facet'); // Use default colors
+            var material = Cesium.Material.fromType(scene.getContext(), 'Facet'); // Use default colors
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
             sensors.addComplexConic({
@@ -321,7 +321,7 @@
             var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
-            var material = Cesium.Material.fromId(scene.getContext(), 'Blob'); // Use default colors
+            var material = Cesium.Material.fromType(scene.getContext(), 'Blob'); // Use default colors
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
             sensors.addComplexConic({
@@ -370,7 +370,7 @@
                 outerMaterial : new Cesium.Material({
                     context : scene.getContext(),
                     fabric : {
-                        id : 'TieDye',
+                        type : 'TieDye',
                         uniforms : {
                             lightColor : lightColor,
                             darkColor : darkColor
@@ -380,7 +380,7 @@
                 innerMaterial : new Cesium.Material({
                     context : scene.getContext(),
                     fabric : {
-                        id : 'Dot',
+                        type : 'Dot',
                         uniforms : {
                             lightColor : lightColor,
                             darkColor : darkColor
@@ -390,7 +390,7 @@
                 capMaterial : new Cesium.Material({
                     context : scene.getContext(),
                     fabric : {
-                        id : 'Color',
+                        type : 'Color',
                         uniforms : {
                             color : new Cesium.Color(1.0, 1.0, 0.0, 0.75)
                         }
@@ -399,7 +399,7 @@
                 silhouetteMaterial: new Cesium.Material({
                     context : scene.getContext(),
                     fabric : {
-                        id : 'Color',
+                        type : 'Color',
                         uniforms : {
                             color : new Cesium.Color(0.5, 0.5, 0.5, 0.75)
                         }
@@ -422,7 +422,7 @@
             var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
-            var material = Cesium.Material.fromId(scene.getContext(), 'Checkerboard');
+            var material = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
             var sensor = sensors.addComplexConic({
@@ -447,7 +447,7 @@
             var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
-            var material = Cesium.Material.fromId(scene.getContext(), 'Checkerboard');
+            var material = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
             var sensor = sensors.addRectangularPyramid({
@@ -472,7 +472,7 @@
             var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
             modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
 
-            var material = Cesium.Material.fromId(scene.getContext(), 'Stripe'); // Use default colors
+            var material = Cesium.Material.fromType(scene.getContext(), 'Stripe'); // Use default colors
 
             var sensors = new Cesium.SensorVolumeCollection(undefined);
             sensors.addRectangularPyramid({

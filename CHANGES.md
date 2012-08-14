@@ -13,7 +13,7 @@ Beta Releases
             
         to:
         
-            polygon.material = Material.fromId(context, 'Blob');
+            polygon.material = Material.fromType(context, 'Blob');
             polygon.material.repeat = 10.0;
             
         or:   
@@ -21,7 +21,7 @@ Beta Releases
             polygon.material = new Material({
                 context : context, 
                 fabric : {
-                    id : 'Blob',
+                    type : 'Blob',
                     uniforms : {
                         repeat : 10.0
                     }

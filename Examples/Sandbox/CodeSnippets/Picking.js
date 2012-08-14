@@ -257,7 +257,7 @@
             polygon.setPositions(Cesium.Shapes.computeCircleBoundary(
                 ellipsoid, ellipsoid.cartographicToCartesian(
                         Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)), 800000.0));
-            polygon.material = Cesium.Material.fromId(scene.getContext(), 'Checkerboard');
+            polygon.material = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
             polygon.material.uniforms.lightColor = {
                 red : outside.lightColorRed,
                 green : outside.lightColorGreen,
