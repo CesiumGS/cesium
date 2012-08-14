@@ -14,7 +14,8 @@ defineSuite([
              'Core/Quaternion',
              'Core/Cartesian3',
              'Core/Color',
-             'Scene/Scene'
+             'Scene/Scene',
+             'Core/Math'
             ], function(
               DynamicConeVisualizerUsingCustomSensor,
               Matrix3,
@@ -30,7 +31,8 @@ defineSuite([
               Quaternion,
               Cartesian3,
               Color,
-              Scene) {
+              Scene,
+              CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -169,6 +171,28 @@ defineSuite([
         cone.show.value = false;
         visualizer.update(time);
         expect(c.show).toEqual(testObject.cone.show.getValue(time));
+    });
+
+    it('An empty DynamicCone causes a ComplexConicSensor to be created with CZML defaults.', function() {
+        var time = new JulianDate();
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+
+        testObject.cone = new DynamicCone();
+        visualizer.update(time);
+
+        expect(scene.getPrimitives().getLength()).toEqual(1);
+        var c = scene.getPrimitives().get(0);
+        expect(c.minimumClockAngle).toEqual(0.0);
+        expect(c.maximumClockAngle).toEqual(CesiumMath.TWO_PI);
+        expect(c.innerHalfAngle).toEqual(0);
+        expect(c.outerHalfAngle).toEqual(Math.PI);
+        expect(isFinite(c.radius)).toEqual(false);
+        expect(c.show).toEqual(true);
     });
 
     it('clear hides cones.', function() {
