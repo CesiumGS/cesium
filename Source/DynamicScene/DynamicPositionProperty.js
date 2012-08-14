@@ -108,6 +108,61 @@ define([
         return result;
     };
 
+    DynamicPositionProperty.prototype.sampleValueRangeCartesian = function(sampleStart, sampleStop, currentTime, result) {
+        var propertyIntervals = this._propertyIntervals;
+
+        var startIndex = typeof sampleStart === 'undefined' ? 0 : propertyIntervals.indexOf(sampleStart);
+        if (startIndex < 0) {
+            startIndex = ~startIndex;
+        }
+
+        var stopIndex = typeof sampleStop === 'undefined' ? propertyIntervals.length - 1 : propertyIntervals.indexOf(sampleStop);
+        if (stopIndex < 0) {
+            stopIndex = ~stopIndex;
+        }
+
+        var r = 0;
+        var steppedOnNow = false;
+
+        //Always step exactly on start.
+        result[r++] = this.getValueCartesian(sampleStart, result[r]);
+
+        for ( var i = startIndex; i < stopIndex + 1; i++) {
+            var interval = propertyIntervals.get(i);
+            var property = interval.data;
+            var currentInterval = property._intervals.get(0);
+            var times = currentInterval.data.times;
+            if (typeof times !== 'undefined') {
+                for ( var t = 0; t < times.length; t++) {
+                    var current = times[t];
+                    //When we cross from past into future positions, sample
+                    //at the current time.
+                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
+                        result[r++] = this.getValueCartesian(currentTime, result[r]);
+                        steppedOnNow = true;
+                    }
+                    if (current.greaterThan(sampleStart) && current.lessThan(sampleStop)) {
+                        result[r++] = this.getValueCartesian(current, result[r]);
+                    }
+                }
+            } else {
+                //If times is undefined, it's because the interval contains a single position
+                //at which it stays for the duration of the interval.
+                if (!steppedOnNow && interval.start.greaterThanOrEquals(currentTime)) {
+                    result[r++] = this.getValueCartesian(currentTime, result[r]);
+                    steppedOnNow = true;
+                }
+                result[r++] = this.getValueCartesian(interval.start, result[r]);
+            }
+        }
+
+        //Always step exactly on stop.
+        result[r++] = this.getValueCartesian(sampleStop, result[r]);
+
+        result.length = r;
+        return result;
+    };
+
     /**
      * Retrieves the value of the object at the supplied time as a Cartesian3.
      * @memberof DynamicPositionProperty
