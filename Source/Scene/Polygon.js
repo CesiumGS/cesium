@@ -191,6 +191,8 @@ define([
         this._positions = undefined;
         this._extent = undefined;
         this._polygonHierarchy = undefined;
+        this._textureCoordinateOrigin = undefined;
+        this._boundingRectangle = undefined;
         this._createVertexArray = false;
 
         /**
@@ -311,6 +313,9 @@ define([
         }
         this.height = height || 0.0;
         this._extent = undefined;
+        this._polygonHierarchy = undefined;
+        this._textureCoordinateOrigin = undefined;
+        this._boundingRectangle = undefined;
         this._positions = positions;
         this._createVertexArray = true;
     };
@@ -399,9 +404,11 @@ define([
             }
         }
 
-        this._polygonHierarchy = polygons;
-        this._positions = undefined;
         this.height = height || 0.0;
+        this._positions = undefined;
+        this._textureCoordinateOrigin = undefined;
+        this._boundingRectangle = undefined;
+        this._polygonHierarchy = polygons;
         this._createVertexArray = true;
     };
 
@@ -430,8 +437,15 @@ define([
     };
 
     Polygon._appendTextureCoordinates = function(tangentPlane, positions2D, mesh) {
-        var boundingRectangle = new Rectangle.createAxisAlignedBoundingRectangle(positions2D);
-        var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
+        if(typeof this._boundingRectangle === 'undefined') {
+            this._boundingRectangle = new Rectangle.createAxisAlignedBoundingRectangle(positions2D);
+        }
+        var boundingRectangle = this._boundingRectangle;
+
+        if(typeof this._textureCoordinateOrigin === 'undefined') {
+            this._textureCoordinateOrigin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
+        }
+        var origin = this._textureCoordinateOrigin;
 
         var positions = mesh.attributes.position.values;
         var length = positions.length;
