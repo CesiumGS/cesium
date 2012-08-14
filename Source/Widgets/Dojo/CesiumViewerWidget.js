@@ -249,10 +249,6 @@ define([
         setTimeFromBuffer : function() {
             var clock = this.clock;
 
-            this.animReverse.set('checked', false);
-            this.animPause.set('checked', true);
-            this.animPlay.set('checked', false);
-
             var availability = this.dynamicObjectCollection.computeAvailability();
             if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
                 clock.startTime = new JulianDate();
@@ -268,6 +264,7 @@ define([
             clock.currentTime = clock.startTime;
             this.timelineControl.zoomTo(clock.startTime, clock.stopTime);
             this.updateSpeedIndicator();
+            this.animationController.play();
         },
 
         handleDrop : function(e) {
@@ -345,13 +342,23 @@ define([
                     CesiumMath.toRadians(-78.918912715),
                     CesiumMath.toRadians(43.8953604));
 
-            this.wamiImageryProvider = new WideAreaMotionImageryProvider({
+            var wamiImageryProvider = this.wamiImageryProvider = new WideAreaMotionImageryProvider({
                 url : 'http://release.pixia.com/wami-soa-server/wami/IS',
                 cid : 'Whitby_Downtown_nmv_nui',
                 extent : extent,
                 proxy : new DefaultProxy('/proxy/')
             });
-            imageryLayerCollection.addImageryProvider(this.wamiImageryProvider);
+            var wamiLayer = imageryLayerCollection.addImageryProvider(wamiImageryProvider);
+
+            document.addEventListener('keydown', function(e) {
+                switch (e.keyCode) {
+                case 'W'.charCodeAt(0):
+                    if (imageryLayerCollection.contains(wamiLayer)) {
+                        imageryLayerCollection.remove(wamiLayer, false);
+                    }
+                    break;
+                }
+            }, false);
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
             centralBody.showSkyAtmosphere = true;
@@ -374,7 +381,7 @@ define([
             var camera = scene.getCamera(), maxRadii = ellipsoid.getRadii().getMaximumComponent();
 
             camera.position = camera.position.multiplyByScalar(1.5);
-            camera.frustum.near = 100.0;
+            camera.frustum.near = 10.0;
             camera.frustum.far = 20000000.0;
 
             scene.viewExtent(extent, ellipsoid);
@@ -414,11 +421,11 @@ define([
                 on(dropBox, 'dragexit', event.stop);
             }
 
-            var currentTime = new JulianDate();
+            var currentTime = JulianDate.fromIso8601('2011-05-11T19:11:54Z');
             if (typeof this.animationController === 'undefined') {
                 if (typeof this.clock === 'undefined') {
                     this.clock = new Clock({
-                        startTime : currentTime.addDays(-0.5),
+                        startTime : currentTime,
                         stopTime : currentTime.addDays(0.5),
                         currentTime : currentTime,
                         clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
@@ -431,6 +438,8 @@ define([
             }
 
             var animationController = this.animationController;
+            animationController.pause();
+
             var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
             var clock = this.clock;
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
