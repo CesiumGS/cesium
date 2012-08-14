@@ -298,13 +298,11 @@ define([
      * </code>
      * @param {double} [height=0.0]. The height of the polygon.
      *
-     * @return {Array} An array of Polygons.
-     *
      * @exception {DeveloperError} hierarchy is required.
      * @exception {DeveloperError} hierarchy.positions is required.
      * @exception {DeveloperError} hierarchy.holes is required.
      */
-    Polygon.getPolygonsFromHierarchy = function(hierarchy, height) {
+    Polygon.prototype.configureFromPolygonHierarchy  = function(hierarchy, height) {
         if (!hierarchy) {
             throw new DeveloperError('hierarchy is required.');
         }
@@ -344,18 +342,14 @@ define([
                         queue.enqueue(hole.holes[j]);
                     }
                 }
-                positions.push(PolygonPipeline.eliminateHoles(outerRing, holes));
+                var combinedPositions = PolygonPipeline.eliminateHoles(outerRing, holes);
+                positions.push(combinedPositions);
             }
         }
 
-        var polygons = [];
-        for (var i = 0; i < positions.length; i++) {
-            var p = new Polygon();
-            p.setPositions(positions[i], height);
-            polygons.push(p);
-        }
-
-        return polygons;
+        this._numberOfPolygons = positions.length;
+        this._positions = positions;
+        this.height = height || 0.0;
     };
 
     /**
@@ -457,48 +451,63 @@ define([
         return mesh;
     };
 
+    Polygon.prototype._createMeshFromPositions = function (positions) {
+        var cleanedPositions = PolygonPipeline.cleanUp(positions);
+        var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
+
+        var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+        if (originalWindingOrder === WindingOrder.CLOCKWISE) {
+            positions2D.reverse();
+            cleanedPositions.reverse();
+        }
+        var indices = PolygonPipeline.earClip2D(positions2D);
+        var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
+        mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
+        return mesh;
+    };
+
     Polygon.prototype._createMeshes = function() {
         // PERFORMANCE_IDEA:  Move this to a web-worker.
-        var mesh;
-        var meshes = null;
+        var meshes = [];
 
         if(typeof this._extent !== 'undefined'){
-            mesh = ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true});
+            meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true}));
+
         }
         else if(typeof this._positions !== 'undefined'){
-            var cleanedPositions = PolygonPipeline.cleanUp(this._positions);
-            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
-            var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
-
-            var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (originalWindingOrder === WindingOrder.CLOCKWISE) {
-                positions2D.reverse();
-                cleanedPositions.reverse();
+            if (this._numberOfPolygons > 0) {
+                for (var i = 0; i < this._numberOfPolygons; i++) {
+                     meshes.push(this._createMeshFromPositions(this._positions[i]));
+                }
+            } else {
+                meshes.push(this._createMeshFromPositions(this._positions));
             }
-            var indices = PolygonPipeline.earClip2D(positions2D);
-            mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
-            // PERFORMANCE_IDEA:  Only compute texture coordinates if the material requires them.
-            mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
         }
         else {
             return undefined;
         }
-        mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
-        mesh = MeshFilters.reorderForPostVertexCache(mesh);
-        mesh = MeshFilters.reorderForPreVertexCache(mesh);
 
-        if (this._mode === SceneMode.SCENE3D) {
-            mesh.attributes.position2D = { // Not actually used in shader
-                    value : [0.0, 0.0]
-                };
-            mesh.attributes.position3D = mesh.attributes.position;
-            delete mesh.attributes.position;
-        } else {
-            mesh = MeshFilters.projectTo2D(mesh, this._projection);
+        var processedMeshes = [];
+        for (var i = 0; i < meshes.length; i++) {
+            var mesh = meshes[i];
+            mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
+            mesh = MeshFilters.reorderForPostVertexCache(mesh);
+            mesh = MeshFilters.reorderForPreVertexCache(mesh);
+
+            if (this._mode === SceneMode.SCENE3D) {
+                mesh.attributes.position2D = { // Not actually used in shader
+                        value : [0.0, 0.0]
+                    };
+                mesh.attributes.position3D = mesh.attributes.position;
+                delete mesh.attributes.position;
+            } else {
+                mesh = MeshFilters.projectTo2D(mesh, this._projection);
+            }
+            processedMeshes = processedMeshes.concat(MeshFilters.fitToUnsignedShortIndices(mesh));
         }
-        meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
 
-        return meshes;
+        return processedMeshes;
     };
 
     Polygon.prototype._getGranularity = function(mode) {
