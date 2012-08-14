@@ -400,7 +400,7 @@ if (oldContents !== contents) {
 		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
 		 listenOnAllAddresses: Set to true if you want the server to listen to all addresses, not just localhost.
 		-->
-		<server proxyContextPath="/proxy" allowedHostList="server.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
+		<server proxyContextPath="/proxy" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
 	</target>
 
 	<target name="buildApps">
