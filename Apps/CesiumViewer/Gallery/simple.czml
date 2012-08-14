@@ -73,6 +73,15 @@
       "text":"Geoeye1",
       "verticalOrigin":"CENTER"
     },
+    "path":{
+      "color":{
+        "rgba":[
+          0,255,0,255
+        ]
+      },
+      "outlineWidth":0.0,
+      "width":1.0
+    },
     "position":{
       "interpolationAlgorithm":"LAGRANGE",
       "interpolationDegree":5,
@@ -409,6 +418,15 @@
       "style":"FILL",
       "text":"ISS",
       "verticalOrigin":"CENTER"
+    },
+    "path":{
+      "color":{
+        "rgba":[
+          255,0,255,255
+        ]
+      },
+      "outlineWidth":0.0,
+      "width":1.0
     },
     "position":{
       "interpolationAlgorithm":"LAGRANGE",
@@ -753,6 +771,15 @@
       "text":"Landsat7",
       "verticalOrigin":"CENTER"
     },
+    "path":{
+      "color":{
+        "rgba":[
+          255,255,255,255
+        ]
+      },
+      "outlineWidth":0.0,
+      "width":1.0
+    },
     "position":{
       "interpolationAlgorithm":"LAGRANGE",
       "interpolationDegree":5,
@@ -1057,7 +1084,7 @@
     }
   },
   {
-    "id":"/Application/STK/Scenario/simple/Satellite/MOLNIYA-27707",
+    "id":"/Application/STK/Scenario/simple/Satellite/MOLNIYA_1-92_27707",
     "availability":"2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
     "billboard":{
       "horizontalOrigin":"CENTER",
@@ -1087,8 +1114,17 @@
       "scale":1.0,
       "show":true,
       "style":"FILL",
-      "text":"MOLNIYA-27707",
+      "text":"MOLNIYA_1-92_27707",
       "verticalOrigin":"CENTER"
+    },
+    "path":{
+      "color":{
+        "rgba":[
+          255,255,0,255
+        ]
+      },
+      "outlineWidth":0.0,
+      "width":1.0
     },
     "position":{
       "interpolationAlgorithm":"LAGRANGE",
