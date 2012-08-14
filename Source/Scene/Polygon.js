@@ -369,7 +369,7 @@ define([
             } else {
                 // The outer polygon contains inner polygons
                 var holes = [];
-                for (var i = 0; i < numChildren; i++) {
+                for ( var i = 0; i < numChildren; i++) {
                     var hole = outerNode.holes[i];
                     holes.push(hole.positions);
 
@@ -378,7 +378,7 @@ define([
                         numGrandchildren = hole.holes.length;
                     }
 
-                    for (var j = 0; j < numGrandchildren; j++) {
+                    for ( var j = 0; j < numGrandchildren; j++) {
                         queue.enqueue(hole.holes[j]);
                     }
                 }

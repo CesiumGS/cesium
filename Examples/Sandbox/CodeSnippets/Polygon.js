@@ -43,28 +43,28 @@
                         new Cesium.Cartographic.fromDegrees(-109.0, 40.0, 0.0)
                     ]),
                     holes : [{
-                            positions : ellipsoid.cartographicArrayToCartesianArray([
-                                new Cesium.Cartographic.fromDegrees(-107.0, 36.0, 0.0),
-                                new Cesium.Cartographic.fromDegrees(-107.0, 39.0, 0.0),
-                                new Cesium.Cartographic.fromDegrees(-97.0, 39.0, 0.0),
-                                new Cesium.Cartographic.fromDegrees(-97.0, 36.0, 0.0)
-                            ]),
-                            holes : [{
-                                    positions : ellipsoid.cartographicArrayToCartesianArray([
-                                        new Cesium.Cartographic.fromDegrees(-105.0, 36.5, 0.0),
-                                        new Cesium.Cartographic.fromDegrees(-99.0, 36.5, 0.0),
-                                        new Cesium.Cartographic.fromDegrees(-99.0, 38.5, 0.0),
-                                        new Cesium.Cartographic.fromDegrees(-105.0, 38.5, 0.0)
-                                    ]),
-                                    holes : [{
+                                positions : ellipsoid.cartographicArrayToCartesianArray([
+                                    new Cesium.Cartographic.fromDegrees(-107.0, 36.0, 0.0),
+                                    new Cesium.Cartographic.fromDegrees(-107.0, 39.0, 0.0),
+                                    new Cesium.Cartographic.fromDegrees(-97.0, 39.0, 0.0),
+                                    new Cesium.Cartographic.fromDegrees(-97.0, 36.0, 0.0)
+                                ]),
+                                holes : [{
                                             positions : ellipsoid.cartographicArrayToCartesianArray([
-                                                new Cesium.Cartographic.fromDegrees(-103.0, 37.25, 0.0),
-                                                new Cesium.Cartographic.fromDegrees(-101.0, 37.25, 0.0),
-                                                new Cesium.Cartographic.fromDegrees(-101.0, 37.75, 0.0),
-                                                new Cesium.Cartographic.fromDegrees(-103.0, 37.75, 0.0)
-                                            ])
-                                    }]
-                            }]
+                                                new Cesium.Cartographic.fromDegrees(-105.0, 36.5, 0.0),
+                                                new Cesium.Cartographic.fromDegrees(-99.0, 36.5, 0.0),
+                                                new Cesium.Cartographic.fromDegrees(-99.0, 38.5, 0.0),
+                                                new Cesium.Cartographic.fromDegrees(-105.0, 38.5, 0.0)
+                                            ]),
+                                            holes : [{
+                                                        positions : ellipsoid.cartographicArrayToCartesianArray([
+                                                            new Cesium.Cartographic.fromDegrees(-103.0, 37.25, 0.0),
+                                                            new Cesium.Cartographic.fromDegrees(-101.0, 37.25, 0.0),
+                                                            new Cesium.Cartographic.fromDegrees(-101.0, 37.75, 0.0),
+                                                            new Cesium.Cartographic.fromDegrees(-103.0, 37.75, 0.0)
+                                                        ])
+                                            }]
+                                }]
                     }]
             };
             var polygon = new Cesium.Polygon();
