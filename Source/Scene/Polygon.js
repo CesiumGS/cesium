@@ -190,6 +190,7 @@ define([
 
         this._positions = undefined;
         this._extent = undefined;
+        this._polygonHierarchy = undefined;
         this._createVertexArray = false;
 
         /**
@@ -344,30 +345,39 @@ define([
      * </pre>
      * @param {double} [height=0.0] The height of the polygon.
      *
-     * @exception {DeveloperError} hierarchy is required.
-     * @exception {DeveloperError} hierarchy.positions is required.
+     * @exception {DeveloperError} At least three positions are required.
+     *
+     * @example
+     * // A triangle within a triangle
+     * var hierarchy = {
+     *     positions : [new Cartesian3(-634066.5629045101,-4608738.034138676,4348640.761750969),
+     *                  new Cartesian3(-1321523.0597310204,-5108871.981065817,3570395.2500986718),
+     *                  new Cartesian3(46839.74837473363,-5303481.972379478,3530933.5841716)],
+     *     holes : [{
+     *         positions :[new Cartesian3(-646079.44483647,-4811233.11175887,4123187.2266941597),
+     *                     new Cartesian3(-1024015.4454943262,-5072141.413164587,3716492.6173834214),
+     *                     new Cartesian3(-234678.22583880965,-5189078.820849883,3688809.059214336)]
+     *      }]
+     *  };
      */
     Polygon.prototype.configureFromPolygonHierarchy  = function(hierarchy, height) {
-        if (typeof hierarchy === 'undefined') {
-            throw new DeveloperError('hierarchy is required.');
-        }
-        if (typeof hierarchy.positions === 'undefined') {
-            throw new DeveloperError('hierarchy.positions is required.');
-        }
-
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-        var positions = [];
+        var polygons = [];
         var queue = new Queue();
         queue.enqueue(hierarchy);
 
         while (queue.length !== 0) {
             var outerNode = queue.dequeue();
             var outerRing = outerNode.positions;
-            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
 
+            if (typeof outerRing !== 'undefined' && (outerRing.length < 3)) {
+                throw new DeveloperError('At least three positions are required.');
+            }
+
+            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
             if (numChildren === 0) {
                 // The outer polygon is a simple polygon with no nested inner polygon.
-                positions.push(outerNode.positions);
+                polygons.push(outerNode.positions);
             } else {
                 // The outer polygon contains inner polygons
                 var holes = [];
@@ -384,14 +394,15 @@ define([
                         queue.enqueue(hole.holes[j]);
                     }
                 }
-                var combinedPositions = PolygonPipeline.eliminateHoles(outerRing, holes);
-                positions.push(combinedPositions);
+                var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, holes);
+                polygons.push(combinedPolygon);
             }
         }
 
-        this._numberOfPolygons = positions.length;
-        this._positions = positions;
+        this._polygonHierarchy = polygons;
+        this._positions = undefined;
         this.height = height || 0.0;
+        this._createVertexArray = true;
     };
 
     /**
@@ -473,12 +484,11 @@ define([
             meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true}));
         }
         else if(typeof this._positions !== 'undefined'){
-            if (this._numberOfPolygons > 0) {
-                for (i = 0; i < this._numberOfPolygons; i++) {
-                     meshes.push(this._createMeshFromPositions(this._positions[i]));
-                }
-            } else {
-                meshes.push(this._createMeshFromPositions(this._positions));
+            meshes.push(this._createMeshFromPositions(this._positions));
+        }
+        else if(typeof this._polygonHierarchy !== 'undefined') {
+            for (i = 0; i < this._polygonHierarchy.length; i++) {
+                 meshes.push(this._createMeshFromPositions(this._polygonHierarchy[i]));
             }
         }
         else {

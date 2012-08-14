@@ -125,7 +125,7 @@ defineSuite([
         };
 
         polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(polygon._numberOfPolygons).toEqual(2);
+        expect(polygon._polygonHierarchy).toBeDefined();
         expect(function() {
             polygon._vertices.update(context, polygon._createMeshes(), polygon.bufferUsage);
         }).not.toThrow();
@@ -158,21 +158,20 @@ defineSuite([
         };
 
         polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(polygon._numberOfPolygons).toEqual(2);
+        expect(polygon._polygonHierarchy).toBeDefined();
         expect(function() {
             polygon._vertices.update(context, polygon._createMeshes(), polygon.bufferUsage);
         }).not.toThrow();
     });
 
-    it('configureFromPolygonHierarchy throws without a hierarchy', function() {
+    it('configureFromPolygonHierarchy throws with less than three positions', function() {
+        var hierarchy = {
+                positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                    new Cartographic()
+                ])
+        };
         expect(function() {
-            polygon.configureFromPolygonHierarchy();
-        }).toThrow();
-    });
-
-    it('configureFromPolygonHierarchy throws without a positions property', function() {
-        expect(function() {
-            polygon.configureFromPolygonHierarchy({holes : []});
+            polygon.configureFromPolygonHierarchy(hierarchy);
         }).toThrow();
     });
 
