@@ -108,25 +108,46 @@ define([
         return result;
     };
 
-    DynamicPositionProperty.prototype.sampleValueRangeCartesian = function(sampleStart, sampleStop, currentTime, result) {
+    /**
+     * Retrieves all values in the provided time range.  Rather than sampling, this
+     * method returns the actual data points used in the source data.
+     *
+     * @param {JulianDate} start The first time to retrieve values for.
+     * @param {JulianDate} stop The last time to retrieve values for .
+     * @param {JulianDate} [currentTime] If provided, causes the algorithm to always sample the provided time.
+     * @param {Array} [result] The array into which to store the result.
+     * @returns The modified result array or a new instance if none was provided.
+     */
+    DynamicPositionProperty.prototype.getValueRangeCartesian = function(start, stop, currentTime, result) {
+        if (typeof start === 'undefined') {
+            throw new DeveloperError('start is required');
+        }
+
+        if (typeof stop === 'undefined') {
+            throw new DeveloperError('stop is required');
+        }
+
+        if (typeof result === 'undefined') {
+            result = [];
+        }
+
         var propertyIntervals = this._propertyIntervals;
 
-        var startIndex = typeof sampleStart === 'undefined' ? 0 : propertyIntervals.indexOf(sampleStart);
+        var startIndex = typeof start === 'undefined' ? 0 : propertyIntervals.indexOf(start);
         if (startIndex < 0) {
             startIndex = ~startIndex;
         }
 
-        var stopIndex = typeof sampleStop === 'undefined' ? propertyIntervals.length - 1 : propertyIntervals.indexOf(sampleStop);
+        var stopIndex = typeof stop === 'undefined' ? propertyIntervals.length - 1 : propertyIntervals.indexOf(stop);
         if (stopIndex < 0) {
             stopIndex = ~stopIndex;
         }
 
         var r = 0;
-        var steppedOnNow = false;
-
         //Always step exactly on start.
-        result[r++] = this.getValueCartesian(sampleStart, result[r]);
+        result[r++] = this.getValueCartesian(start, result[r]);
 
+        var steppedOnNow = typeof currentTime === 'undefined';
         for ( var i = startIndex; i < stopIndex + 1; i++) {
             var interval = propertyIntervals.get(i);
             var property = interval.data;
@@ -141,7 +162,7 @@ define([
                         result[r++] = this.getValueCartesian(currentTime, result[r]);
                         steppedOnNow = true;
                     }
-                    if (current.greaterThan(sampleStart) && current.lessThan(sampleStop)) {
+                    if (current.greaterThan(start) && current.lessThan(stop)) {
                         result[r++] = this.getValueCartesian(current, result[r]);
                     }
                 }
@@ -157,7 +178,7 @@ define([
         }
 
         //Always step exactly on stop.
-        result[r++] = this.getValueCartesian(sampleStop, result[r]);
+        result[r++] = this.getValueCartesian(stop, result[r]);
 
         result.length = r;
         return result;

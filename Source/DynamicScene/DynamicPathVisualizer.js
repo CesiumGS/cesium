@@ -36,7 +36,7 @@ define([
             sampleStop = availability.stop;
         }
 
-        return positionProperty.sampleValueRangeCartesian(sampleStart, sampleStop, currentTime, result);
+        return positionProperty.getValueRangeCartesian(sampleStart, sampleStop, currentTime, result);
     }
 
     /**
