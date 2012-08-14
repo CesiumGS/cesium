@@ -24,68 +24,19 @@ define([
         var sampleStop;
         if (hasTrailTime) {
             sampleStart = currentTime.addSeconds(-trailTime);
-            if (hasAvailability && availability.start.greaterThan(sampleStart)) {
-                sampleStart = availability.start;
-            }
-        } else {
+        }
+        if (hasAvailability && (!hasTrailTime || availability.start.greaterThan(sampleStart))) {
             sampleStart = availability.start;
         }
 
         if (hasLeadTime) {
             sampleStop = currentTime.addSeconds(leadTime);
-            if (hasAvailability && availability.stop.lessThan(sampleStop)) {
-                sampleStop = availability.stop;
-            }
-        } else {
+        }
+        if (hasAvailability && (!hasLeadTime || availability.stop.lessThan(sampleStop))) {
             sampleStop = availability.stop;
         }
 
-        var propertyIntervals = positionProperty._propertyIntervals;
-        var startIndex = propertyIntervals.indexOf(sampleStart);
-        if (startIndex < 0) {
-            startIndex = ~startIndex;
-        }
-        var stopIndex = propertyIntervals.indexOf(sampleStop);
-        if (stopIndex < 0) {
-            stopIndex = ~stopIndex;
-        }
-
-        if (startIndex === propertyIntervals.length) {
-            result.length = 0;
-            return result;
-        }
-
-        var q = 0;
-        var steppedOnNow = false;
-        result[q++] = positionProperty.getValueCartesian(sampleStart, result[q]);
-        for ( var i = startIndex; i < stopIndex + 1; i++) {
-            var interval = propertyIntervals.get(i);
-            var property = interval.data;
-            var asd = property._intervals;
-            var times = asd.get(0).data.times;
-            if (typeof times !== 'undefined') {
-                for ( var t = 0; t < times.length; t++) {
-                    var current = times[t];
-                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                        result[q++] = positionProperty.getValueCartesian(currentTime, result[q]);
-                        steppedOnNow = true;
-                    }
-                    if (current.greaterThan(sampleStart) && current.lessThan(sampleStop)) {
-                        result[q++] = positionProperty.getValueCartesian(current, result[q]);
-                    }
-                }
-            }
-            else {
-                if (!steppedOnNow && asd.get(0).start.greaterThanOrEquals(currentTime)) {
-                    result[q++] = positionProperty.getValueCartesian(currentTime, result[q]);
-                    steppedOnNow = true;
-                }
-                result[q++] = positionProperty.getValueCartesian(asd.get(0), result[q]);
-            }
-        }
-        result[q++] = positionProperty.getValueCartesian(sampleStop, result[q]);
-        result.length = q;
-        return result;
+        return positionProperty.sampleValueRangeCartesian(sampleStart, sampleStop, currentTime, result);
     }
 
     /**
