@@ -21,17 +21,18 @@ varying vec2 v_textureCoordinates;
 void main() 
 {
     vec3 position3DWC = position3D + u_center3D;
-    if (u_mode == 0) {
-        v_positionEC = (u_modifiedModelView * vec4(position3D, 1.0)).xyz;  // position in eye coordinates
-        gl_Position = u_modifiedModelViewProjection * vec4(position3D, 1.0);
+    if (u_mode == agi_scene3D) {
+        vec4 position3D4 = vec4(position3D, 1.0);
+        v_positionEC = (u_modifiedModelView * position3D4).xyz;
+        gl_Position = u_modifiedModelViewProjection * position3D4;
     }
-    else if (u_mode == 1) {
-        v_positionEC = (agi_modelView * vec4(position3DWC, 1.0)).xyz;  // position in eye coordinates
+    else if (u_mode == agi_scene2D) {
+        v_positionEC = (agi_modelView * vec4(position3DWC, 1.0)).xyz;
         gl_Position = agi_projection * (u_modifiedModelView * vec4(0.0, position2D.x, position2D.y, 1.0));
     }
     else {
         vec3 position2DWC = vec3(0.0, position2D.x + u_center2D.x, position2D.y + u_center2D.y);
-        v_positionEC = (agi_modelView * vec4(position3DWC, 1.0)).xyz;  // position in eye coordinates
+        v_positionEC = (agi_modelView * vec4(position3DWC, 1.0)).xyz;
         vec4 position = agi_columbusViewMorph(position2DWC, position3DWC, u_morphTime);
         gl_Position = agi_modelViewProjection * position;
     }
