@@ -1,16 +1,24 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/DeveloperError',
         '../Core/Intersect',
+        '../Core/Matrix4',
         './ComplexConicSensorVolume',
         './CustomSensorVolume',
         './RectangularPyramidSensorVolume',
         './SceneMode'
     ], function(
-        DeveloperError,
+        defaultValue,
         destroyObject,
+        Cartesian3,
+        Cartesian4,
+        DeveloperError,
         Intersect,
+        Matrix4,
         ComplexConicSensorVolume,
         CustomSensorVolume,
         RectangularPyramidSensorVolume,
@@ -153,19 +161,25 @@ define([
         var sensors = this._sensors;
         var length = sensors.length;
         var camera = sceneState.camera;
-        var mode = sceneState.mode;
 
         for ( var i = 0; i < length; ++i) {
             var sensor = sensors[i];
-            sensor.update(context, sceneState);
+            var renderState = sensor.update(context, sceneState);
 
-            if (mode === SceneMode.SCENE3D) {
-                var boundingVolume = sensor.boundingVolume;
-                if (typeof boundingVolume === 'undefined' ||
-                        camera.getVisibility(boundingVolume) !== Intersect.OUTSIDE) {
-                    this._renderList.push(sensor);
+            if (typeof renderState !== 'undefined') {
+                var boundingVolume = renderState.boundingVolume;
+                var modelMatrix = defaultValue(renderState.modelMatrix, Matrix4.IDENTITY);
+
+                if (typeof boundingVolume !== 'undefined') {
+                    var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.x, boundingVolume.center.x, 1.0);
+                    boundingVolume.center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
+                    if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+                        continue;
+                    }
                 }
             }
+
+            this._renderList.push(sensor);
         }
     };
 

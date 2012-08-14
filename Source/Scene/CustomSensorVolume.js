@@ -208,10 +208,11 @@ define([
         return this._directions;
     };
 
-    CustomSensorVolume._computePositions = function(directions, radius) {
+    CustomSensorVolume.prototype._computePositions = function() {
+        var directions = this._directions;
         var length = directions.length;
         var positions = new Float32Array(3 * length);
-        var r = isFinite(radius) ? radius : FAR;
+        var r = isFinite(this.radius) ? this.radius : FAR;
 
         var boundingVolumePositions = [Cartesian3.ZERO];
 
@@ -238,10 +239,10 @@ define([
         return positions;
     };
 
-    CustomSensorVolume._createVertexArray = function(context, directions, radius, bufferUsage) {
-        var positions = this._computePositions(directions, radius);
+    CustomSensorVolume.prototype._createVertexArray = function(context) {
+        var positions = this._computePositions();
 
-        var length = directions.length;
+        var length = this._directions.length;
         var vertices = new Float32Array(2 * 3 * 3 * length);
 
         var k = 0;
@@ -272,7 +273,7 @@ define([
             vertices[k++] = n.z;
         }
 
-        var vertexBuffer = context.createVertexBuffer(new Float32Array(vertices), bufferUsage);
+        var vertexBuffer = context.createVertexBuffer(new Float32Array(vertices), this.bufferUsage);
         var stride = 2 * 3 * Float32Array.BYTES_PER_ELEMENT;
 
         var attributes = [{
@@ -366,13 +367,13 @@ define([
 
                 var directions = this._directions;
                 if (directions && (directions.length >= 3)) {
-                    this._va = CustomSensorVolume._createVertexArray(context, directions, this.radius, this.bufferUsage);
+                    this._va = this._createVertexArray(context);
                 }
             }
         }
 
         return {
-            boundingVolume : this._boundingVolume.clone(),
+            boundingVolume : (typeof this._boundingVolume !== 'undefined') ? this._boundingVolume.clone() : undefined,
             modelMatrix : this.modelMatrix.clone()
         };
     };
