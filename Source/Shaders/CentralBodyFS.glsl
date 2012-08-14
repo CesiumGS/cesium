@@ -15,14 +15,19 @@ uniform bool u_dayTextureIsGeographic[TEXTURE_UNITS];
 uniform bool u_cameraInsideBoundingSphere;
 uniform int u_level;
 
+uniform float u_northLatitude;
+uniform float u_southLatitude;
+uniform float u_southMercatorYHigh;
+uniform float u_southMercatorYLow;
+uniform float u_oneOverMercatorHeight;
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 
-varying vec2 v_webMercatorCoordinates;
-varying vec2 v_geographicCoordinates;
+varying vec2 v_textureCoordinates;
 
 void main()
 {
@@ -30,13 +35,34 @@ void main()
     vec3 normalEC = normalize(agi_normal * normalMC);                                           // normalized surface normal in eye coordiantes
     
 #ifdef SHOW_DAY
+    vec2 geographicUV = v_textureCoordinates;
+    vec2 webMercatorUV = geographicUV;
+    
+    if (u_level < 12)
+    {
+	    float currentLatitude = mix(u_southLatitude, u_northLatitude, geographicUV.y);
+	    float sinLatitude = sin(currentLatitude);
+	    float mercatorY = 0.5 * log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+	    
+	    // mercatorY - u_southMercatorY in simulated double precision.
+	    float t1 = 0.0 - u_southMercatorYLow;
+	    float e = t1 - 0.0;
+	    float t2 = ((-u_southMercatorYLow - e) + (0.0 - (t1 - e))) + mercatorY - u_southMercatorYHigh;
+	    float highDifference = t1 + t2;
+	    float lowDifference = t2 - (highDifference - t1);
+	    
+	    webMercatorUV = vec2(geographicUV.x, highDifference * u_oneOverMercatorHeight + lowDifference * u_oneOverMercatorHeight);
+    }
+
     vec3 startDayColor = vec3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
     for (int i = 0; i < TEXTURE_UNITS; ++i)
     {
         if (i >= u_numberOfDayTextures)
             break;
-        vec2 baseCoordinates = mix(v_webMercatorCoordinates, v_geographicCoordinates, float(u_dayTextureIsGeographic[i]));
-        vec2 textureCoordinates = (baseCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
+        
+        vec2 baseTextureCoordinates = mix(webMercatorUV, geographicUV, float(u_dayTextureIsGeographic[i]));
+        vec2 textureCoordinates = (baseTextureCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
+        
         if (textureCoordinates.x >= 0.0 && textureCoordinates.x <= 1.0 &&
             textureCoordinates.y >= 0.0 && textureCoordinates.y <= 1.0)
         {
@@ -50,7 +76,7 @@ void main()
         startDayColor = mix(startDayColor, vec3(1.0, 0.0, 0.0), 0.2);
     }
 #endif
-    
+   
 #ifdef SHOW_LEVELS
     startDayColor = vec3(0.0, 0.0, 0.0);
     if (u_numberOfDayTextures > 0)
@@ -77,8 +103,8 @@ void main()
 #endif
     
 #ifdef SHOW_TILE_BOUNDARIES
-    if (v_webMercatorCoordinates.x < (1.0/256.0) || v_webMercatorCoordinates.x > (255.0/256.0) ||
-        v_webMercatorCoordinates.y < (1.0/256.0) || v_webMercatorCoordinates.y > (255.0/256.0))
+    if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
+        v_textureCoordinates.y < (1.0/256.0) || v_textureCoordinates.y > (255.0/256.0))
     {
         startDayColor = vec3(1.0, 0.0, 0.0);
     }

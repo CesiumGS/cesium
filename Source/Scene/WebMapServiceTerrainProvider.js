@@ -113,13 +113,6 @@ define([
         return maxErrorRadians;
     }
 
-    var requesting = 0;
-    var received = 0;
-    var transforming = 0;
-    var transformed = 0;
-    var creating = 0;
-    var ready = 0;
-
     var requestsInFlight = 0;
     // Creating the geometry will require a request to the ImageServer, which will complete
     // asynchronously.  The question is, what do we do in the meantime?  The best thing to do is
@@ -153,13 +146,8 @@ define([
 
         ++requestsInFlight;
 
-        ++requesting;
-        if ((requesting % 10) === 0) {
-            console.log('requesting: ' + requesting);
-        }
-
-        var extent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
-        var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
+        var nativeExtent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
+        var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
         var srs = 'EPSG:4326';
         var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=64&height=64&srs=' + srs + '&format=application%2Fbil16';
         if (this.token) {
@@ -168,12 +156,8 @@ define([
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
         }
-        return when(loadArrayBuffer(url), function(arrayBuffer) {
-            ++received;
-            if ((received % 10) === 0) {
-                console.log('received: ' + received);
-            }
 
+        when(loadArrayBuffer(url), function(arrayBuffer) {
             var littleEndianBuffer = new ArrayBuffer(64 * 64 * 2);
             if (arrayBuffer.byteLength === littleEndianBuffer.byteLength) {
                 var inView = new DataView(arrayBuffer);
@@ -186,6 +170,9 @@ define([
             tile.geometry = new Int16Array(littleEndianBuffer);
             tile.state = TileState.RECEIVED;
             --requestsInFlight;
+        }, function(e) {
+            /*global console*/
+            console.error('failed to load metadata: ' + e);
         });
     };
 
@@ -202,11 +189,6 @@ define([
      * @param {Tile} tile The tile to transform geometry for.
      */
     WebMapServiceTerrainProvider.prototype.transformGeometry = function(context, tile) {
-        ++transforming;
-        if ((transforming % 10) === 0) {
-            console.log('transforming: ' + transforming);
-        }
-
         var width = 64;
         var height = 64;
 
@@ -233,12 +215,7 @@ define([
             return;
         }
 
-        return when(verticesPromise, function(result) {
-            ++transformed;
-            if ((transformed % 10) === 0) {
-                console.log('transformed: ' + transformed);
-            }
-
+        when(verticesPromise, function(result) {
             tile.geometry = undefined;
             tile.transformedGeometry = {
                 vertices : result.vertices,
@@ -246,6 +223,9 @@ define([
                 indices : TerrainProvider.getRegularGridIndices(width, height)
             };
             tile.state = TileState.TRANSFORMED;
+        }, function(e) {
+            /*global console*/
+            console.error('failed to load metadata: ' + e);
         });
     };
 
@@ -259,11 +239,6 @@ define([
      * @param {Tile} tile The tile to create resources for.
      */
     WebMapServiceTerrainProvider.prototype.createResources = function(context, tile) {
-        ++creating;
-        if ((creating % 10) === 0) {
-            console.log('creating: ' + creating);
-        }
-
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
@@ -283,10 +258,6 @@ define([
         tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, scratch)).normalize();
 
         tile.state = TileState.READY;
-        ++ready;
-        if ((ready % 10) === 0) {
-            console.log('ready: ' + ready);
-        }
     };
 
     /**

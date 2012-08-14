@@ -11,6 +11,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Intersect',
         '../Core/Math',
+        '../Core/Matrix4',
         '../Core/Occluder',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
@@ -37,6 +38,7 @@ define([
         Ellipsoid,
         Intersect,
         CesiumMath,
+        Matrix4,
         Occluder,
         PrimitiveType,
         Rectangle,
@@ -317,6 +319,9 @@ define([
         u_modifiedModelView : function() {
             return this.modifiedModelView;
         },
+        u_modifiedModelViewProjection : function() {
+            return this.modifiedModelViewProjection;
+        },
         u_numberOfDayTextures : function() {
             return this.numberOfDayTextures;
         },
@@ -341,9 +346,25 @@ define([
         u_level : function() {
             return this.level;
         },
+        u_northLatitude : function() {
+            return this.northLatitude;
+        },
+        u_southLatitude : function() {
+            return this.southLatitude;
+        },
+        u_southMercatorYLow : function() {
+            return this.southMercatorYLow;
+        },
+        u_southMercatorYHigh : function() {
+            return this.southMercatorYHigh;
+        },
+        u_oneOverMercatorHeight : function() {
+            return this.oneOverMercatorHeight;
+        },
 
         center3D : undefined,
         modifiedModelView : undefined,
+        modifiedModelViewProjection : undefined,
 
         numberOfDayTextures : 0,
         dayTextures : [],
@@ -352,8 +373,15 @@ define([
         dayTextureAlpha : [],
         dayTextureIsGeographic : [],
         cameraInsideBoundingSphere : false,
-        level : 0
+        level : 0,
+        northLatitude : 0,
+        southLatitude : 0,
+        southMercatorYHigh : 0,
+        southMercatorYLow : 0,
+        oneOverMercatorHeight : 0
     };
+
+    var float32ArrayScratch = new Float32Array(1);
 
     EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, drawArguments) {
         var renderList = this._renderList;
@@ -367,6 +395,7 @@ define([
 
         var uniformState = context.getUniformState();
         var mv = uniformState.getModelView();
+        var projection = uniformState.getProjection();
 
         context.beginDraw(drawArguments);
 
@@ -383,6 +412,20 @@ define([
 
             var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
             uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);
+            uniformMap.modifiedModelViewProjection = Matrix4.multiply(projection, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
+
+            var extent = tile.extent;
+            uniformMap.northLatitude = extent.north;
+            uniformMap.southLatitude = extent.south;
+
+            var sinLatitude = Math.sin(extent.south);
+            var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+            float32ArrayScratch[0] = southMercatorY;
+            uniformMap.southMercatorYHigh = float32ArrayScratch[0];
+            uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
+            sinLatitude = Math.sin(extent.north);
+            var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+            uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
 
             var tileImageryCollection = tile.imagery;
             var imageryIndex = 0;

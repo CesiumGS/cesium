@@ -196,8 +196,8 @@ define([
      *                          if the URL needs to be built asynchronously.
      */
     WebMapServiceImageryProvider.prototype.buildImageUrl = function(x, y, level) {
-        var extent = this.tilingScheme.tileXYToNativeExtent(x, y, level);
-        var bbox = extent.west + '%2C' + extent.south + '%2C' + extent.east + '%2C' + extent.north;
+        var nativeExtent = this.tilingScheme.tileXYToNativeExtent(x, y, level);
+        var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
         var srs = 'EPSG:4326';
         var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=' + srs + '&format=image%2Fjpeg';
 

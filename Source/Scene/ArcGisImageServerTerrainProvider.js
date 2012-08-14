@@ -254,6 +254,7 @@ define([
         }
 
         when(verticesPromise, function(result) {
+            console.log('Tile ' + tile.x + ', ' + tile.y + ', ' + tile.level + ' UDiff: ' + result.statistics.maxUDifference + ' VDiff: ' + result.statistics.maxVDifference);
             tile.geometry = undefined;
             tile.transformedGeometry = {
                 vertices : result.vertices,
@@ -281,7 +282,7 @@ define([
         tile.transformedGeometry = undefined;
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = buffers.statistics.maxHeight;
-        tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 7);
+        tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
 
         var ellipsoid = this.tilingScheme.ellipsoid;
         tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSouthwest());

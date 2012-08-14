@@ -113,8 +113,9 @@ define([
      * @param {Number} x The integer x coordinate of the tile.
      * @param {Number} y The integer y coordinate of the tile.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
-     * @param {Object} An object whose west, south, east, and north properties will be set
-     * with the native extent on return.
+     * @param {Object} [outputExtent] An object whose west, south, east, and north properties will be set
+     * with the native extent on return.  If this parameter is undefined, a new instance is
+     * allocated and returned.
      *
      * @returns {Object} The specified 'outputExtent', or a new object containing the extent
      * if 'outputExtent' is undefined.
@@ -139,11 +140,12 @@ define([
      * @param {Number} x The integer x coordinate of the tile.
      * @param {Number} y The integer y coordinate of the tile.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
-     * @param {Object} An object whose west, south, east, and north properties will be set
-     * with the native extent on return.
+     * @param {Extent} [outputExtent] An object whose west, south, east, and north properties will be set
+     * with the native extent on return.  If this parameter is undefined, a new instance is
+     * allocated and returned.
      *
-     * @return {Extent} The cartographic extent of the tile, with north, south, east and
-     * west properties in radians.
+     * @return {Extent} The specified 'outputExtent', or a new object containing the
+     * cartographic extent of the tile, with north, south, east and west properties in radians.
      */
     GeographicTilingScheme.prototype.tileXYToExtent = function(x, y, level, outputExtent) {
         if (typeof outputExtent === 'undefined') {

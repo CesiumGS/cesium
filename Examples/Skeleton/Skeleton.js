@@ -22,7 +22,7 @@ require({
 
     var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'bROTErfveqDI_2EEjBE8ZG7h9bDifqOs_KjowZFG7EnR0r1XaOvCFKcqcCHDUUq_CZmS2UVvPCRE2phrfoL10g..',
+        token : 'PmPpMpIzg4oNlwWawtPsOfzkMUAd4R15phcTy2Afaa9nSa9xEOdwhBeyHybelEotUQSrXkAYfIamGqZHqjN8dg..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
@@ -83,8 +83,8 @@ require({
             Cesium.Math.toRadians(43.8953604));
 
 //    var extent = new Cesium.Extent(Cesium.Math.toRadians(-120),
-//            Cesium.Math.toRadians(37),
-//            Cesium.Math.toRadians(-119),
+//                                                                   Cesium.Math.toRadians(37),
+//                                                                   Cesium.Math.toRadians(-119),
 //            Cesium.Math.toRadians(38));
     var testLayer = imageryLayerCollection.addImageryProvider(
             new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png',
@@ -180,9 +180,9 @@ require({
     cb.affectedByLighting = false;
     primitives.setCentralBody(cb);
 
-    scene.getCamera().frustum.near = 100.0;
+    scene.getCamera().frustum.near = 10.0;
     scene.getCamera().frustum.far = 20000000.0;
-    var centralBodyCameraController = scene.getCamera().getControllers().addCentralBody();
+    scene.getCamera().getControllers().addCentralBody();
 
     scene.viewExtent(extent, ellipsoid);
 
@@ -305,17 +305,17 @@ require({
                 imageryLayerCollection.add(testLayer);
             }
             break;
-        case "3".charCodeAt(0): // "3" -> 3D globe
+        case "3".charCodeAt(0):  // "3" -> 3D globe
             cb.showSkyAtmosphere = true;
             cb.showGroundAtmosphere = true;
             transitioner.morphTo3D();
             break;
-        case "2".charCodeAt(0): // "2" -> Columbus View
+        case "2".charCodeAt(0):  // "2" -> Columbus View
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphToColumbusView();
             break;
-        case "1".charCodeAt(0): // "1" -> 2D map
+        case "1".charCodeAt(0):  // "1" -> 2D map
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphTo2D();

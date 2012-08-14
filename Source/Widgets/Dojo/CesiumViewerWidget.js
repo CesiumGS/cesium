@@ -323,7 +323,7 @@ define([
 
             var terrainProvider = new ArcGisImageServerTerrainProvider({
                 url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-                token : 'bROTErfveqDI_2EEjBE8ZG7h9bDifqOs_KjowZFG7EnR0r1XaOvCFKcqcCHDUUq_CZmS2UVvPCRE2phrfoL10g..',
+                token : 'PmPpMpIzg4oNlwWawtPsOfzkMUAd4R15phcTy2Afaa9nSa9xEOdwhBeyHybelEotUQSrXkAYfIamGqZHqjN8dg..',
                 proxy : new DefaultProxy('/terrain/')
             });
 

@@ -4,9 +4,9 @@ importScripts('../../ThirdParty/requirejs-1.0.8/require.js');
 require({
         baseUrl : '..'
     }, [
-        'Core/HeightmapTessellator'
+        'Core/ExtentTessellator'
     ], function(
-        HeightmapTessellator) {
+        ExtentTessellator) {
     "use strict";
     /*global self*/
 
@@ -22,13 +22,12 @@ require({
         parameters.generateTextureCoordinates = true;
         parameters.interleaveTextureCoordinates = true;
 
-        var statistics = HeightmapTessellator.computeVertices(parameters);
+        ExtentTessellator.computeVertices(parameters);
 
         postMessage({
             id : id,
             result : {
-                vertices : vertices,
-                statistics : statistics
+                vertices : vertices
             }
         }, [vertices.buffer]);
     };
