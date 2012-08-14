@@ -13,6 +13,8 @@
                 this._rs = undefined;
                 this._pickId = undefined;
 
+                this._boundingVolume = undefined;
+
                 this.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
 
                 var that = this;
@@ -41,9 +43,19 @@
                 fs += '}';
 
                 var zLength = this._ellipsoid.getRadii().getMaximumComponent() * 0.1;
+                var x = zLength * 0.1;
+                var y = zLength * 0.5;
+                var z = zLength;
+
+                this._boundingVolume = Cesium.BoundingSphere.fromPoints([
+                    new Cesium.Cartesian3(x, 0.0, 0.0),
+                    new Cesium.Cartesian3(0.0, y, 0.0),
+                    new Cesium.Cartesian3(0.0, 0.0, z)
+                ]);
+
                 var mesh = Cesium.MeshFilters.toWireframeInPlace(
                                Cesium.BoxTessellator.compute({
-                                  dimensions : new Cesium.Cartesian3(zLength * 0.1, zLength * 0.5, zLength)
+                                  dimensions : new Cesium.Cartesian3(x, y, z)
                                 }));
                 var attributeIndices = Cesium.MeshFilters.createAttributeIndices(mesh);
 
@@ -61,7 +73,15 @@
                     }
                 });
 
-                this.update = function() {};
+                this.update = this._update;
+                return this._update(context, sceneState);
+            };
+
+            Sandbox.ExamplePrimitive.prototype._update = function(context, sceneState) {
+                return {
+                    boundingVolume : this._boundingVolume,
+                    modelMatrix : this._modelMatrix
+                };
             };
 
             Sandbox.ExamplePrimitive.prototype.render = function(context) {
