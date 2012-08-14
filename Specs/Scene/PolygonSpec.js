@@ -92,77 +92,54 @@ defineSuite([
         expect(polygon.getPositions()).toEqual(positions);
     });
 
-    it('get polygons from hierarchy', function() {
+    it('setPositions throws with less than three positions', function() {
+        expect(function() {
+            polygon.setPositions([new Cartesian3()]);
+        }).toThrow();
+    });
+
+    it('configure polygon from hierarchy', function() {
         var hierarchy = {
                 positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                    new Cartographic.fromDegrees(-122.0, 37.0, 0.0),
-                    new Cartographic.fromDegrees(-121.5, 37.0, 0.0),
-                    new Cartographic.fromDegrees(-121.5, 37.1, 0.0),
-                    new Cartographic.fromDegrees(-122.0, 37.1, 0.0),
-                    new Cartographic.fromDegrees(-122.0, 37.0, 0.0)
+                    new Cartographic.fromDegrees(-124.0, 35.0, 0.0),
+                    new Cartographic.fromDegrees(-110.0, 35.0, 0.0),
+                    new Cartographic.fromDegrees(-110.0, 40.0, 0.0),
+                    new Cartographic.fromDegrees(-124.0, 40.0, 0.0)
                 ]),
-                holes : [
-                         {
-                             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                                new Cartographic.fromDegrees(-121.98, 37.02, 0.0),
-                                new Cartographic.fromDegrees(-121.98, 37.08, 0.0),
-                                new Cartographic.fromDegrees(-121.92, 37.08, 0.0),
-                                new Cartographic.fromDegrees(-121.92, 37.02, 0.0),
-                                new Cartographic.fromDegrees(-121.98, 37.02, 0.0)
-                             ]),
-                             holes : [
-                                      {
-                                          positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                                            new Cartographic.fromDegrees(-121.96, 37.04, 0.0),
-                                            new Cartographic.fromDegrees(-121.94, 37.04, 0.0),
-                                            new Cartographic.fromDegrees(-121.94, 37.06, 0.0),
-                                            new Cartographic.fromDegrees(-121.96, 37.06, 0.0),
-                                            new Cartographic.fromDegrees(-121.96, 37.04, 0.0)
-                                          ])
-                                      }
-                             ]
-                         },
-                         {
-                             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                                new Cartographic.fromDegrees(-121.58, 37.02, 0.0),
-                                new Cartographic.fromDegrees(-121.58, 37.08, 0.0),
-                                new Cartographic.fromDegrees(-121.52, 37.08, 0.0),
-                                new Cartographic.fromDegrees(-121.52, 37.02, 0.0),
-                                new Cartographic.fromDegrees(-121.58, 37.02, 0.0)
-                             ]),
-                             holes : [
-                                      {
-                                          positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                                            new Cartographic.fromDegrees(-121.56, 37.04, 0.0),
-                                            new Cartographic.fromDegrees(-121.54, 37.04, 0.0),
-                                            new Cartographic.fromDegrees(-121.54, 37.06, 0.0),
-                                            new Cartographic.fromDegrees(-121.56, 37.06, 0.0),
-                                            new Cartographic.fromDegrees(-121.56, 37.04, 0.0)
-                                          ])
-                                      }
-                             ]
-                         }
-                ]
+                holes : [{
+                        positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                            new Cartographic.fromDegrees(-122.0, 36.0, 0.0),
+                            new Cartographic.fromDegrees(-122.0, 39.0, 0.0),
+                            new Cartographic.fromDegrees(-112.0, 39.0, 0.0),
+                            new Cartographic.fromDegrees(-112.0, 36.0, 0.0)
+                        ]),
+                        holes : [{
+                                positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                    new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
+                                    new Cartographic.fromDegrees(-114.0, 36.5, 0.0),
+                                    new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
+                                    new Cartographic.fromDegrees(-120.0, 38.5, 0.0)
+                                ])
+                        }]
+                }]
         };
-        var polygons = Polygon.getPolygonsFromHierarchy(hierarchy);
-        expect(polygons.length).toEqual(3);
+
+        polygon.configureFromPolygonHierarchy(hierarchy);
+        expect(polygon._numberOfPolygons).toEqual(2);
+        expect(function() {
+            polygon._vertices.update(context, polygon._createMeshes(), polygon.bufferUsage);
+        }).not.toThrow();
     });
 
-    it('getPolygonsFromHierarchy throws without a hierarchy', function() {
+    it('configureFromPolygonHierarchy throws without a hierarchy', function() {
         expect(function() {
-            Polygon.getPolygonsFromHierarchy();
+            polygon.configureFromPolygonHierarchy();
         }).toThrow();
     });
 
-    it('getPolygonsFromHierarchy throws without a positions property', function() {
+    it('configureFromPolygonHierarchy throws without a positions property', function() {
         expect(function() {
-            Polygon.getPolygonsFromHierarchy({holes : []});
-        }).toThrow();
-    });
-
-    it('getPolygonsFromHierarchy throws without a holes property', function() {
-        expect(function() {
-            Polygon.getPolygonsFromHierarchy({positions : []});
+            polygon.configureFromPolygonHierarchy({holes : []});
         }).toThrow();
     });
 
@@ -306,5 +283,12 @@ defineSuite([
 
         var pickedObject = pick(context, polygon, 0, 0);
         expect(pickedObject).not.toBeDefined();
+    });
+
+    it('isDestroyed', function() {
+        var p = new Polygon();
+        expect(p.isDestroyed()).toEqual(false);
+        p.destroy();
+        expect(p.isDestroyed()).toEqual(true);
     });
 });
