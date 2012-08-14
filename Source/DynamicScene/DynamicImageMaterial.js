@@ -79,8 +79,8 @@ define([
      * @returns The modified existingMaterial parameter or a new Image Material instance if existingMaterial was undefined or not a Image Material.
      */
     DynamicImageMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (typeof existingMaterial === 'undefined' || (existingMaterial.id !== Material.ImageId)) {
-            existingMaterial = Material.fromId(context, Material.ImageId);
+        if (typeof existingMaterial === 'undefined' || (existingMaterial.type !== Material.ImageType)) {
+            existingMaterial = Material.fromType(context, Material.ImageType);
         }
 
         var tRepeat;

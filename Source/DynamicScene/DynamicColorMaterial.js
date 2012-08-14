@@ -56,8 +56,8 @@ define([
      * @returns The modified existingMaterial parameter or a new Color Material instance if existingMaterial was undefined or not a Color Material.
      */
     DynamicColorMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (typeof existingMaterial === 'undefined' || (existingMaterial.id !== Material.ColorId)) {
-            existingMaterial = Material.fromId(context, Material.ColorId);
+        if (typeof existingMaterial === 'undefined' || (existingMaterial.type !== Material.ColorType)) {
+            existingMaterial = Material.fromType(context, Material.ColorType);
         }
         existingMaterial.uniforms.color = this.color.getValue(time, existingMaterial.uniforms.color);
         return existingMaterial;

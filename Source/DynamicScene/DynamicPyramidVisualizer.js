@@ -231,7 +231,7 @@ define([
             pyramid.radius = Number.POSITIVE_INFINITY;
             pyramid.showIntersection = true;
             pyramid.intersectionColor = Color.YELLOW;
-            pyramid.material = Material.fromId(context, Material.ColorId);
+            pyramid.material = Material.fromType(context, Material.ColorType);
         } else {
             pyramid = this._pyramidCollection[pyramidVisualizerIndex];
         }

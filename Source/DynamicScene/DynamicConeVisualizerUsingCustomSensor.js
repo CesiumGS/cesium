@@ -277,7 +277,7 @@ define([
             // CZML_TODO Determine official defaults
             cone.innerHalfAngle = 0;
             cone.outerHalfAngle = Math.PI;
-            cone.material = Material.fromId(context, Material.ColorId);
+            cone.material = Material.fromType(context, Material.ColorType);
             cone.intersectionColor = Color.YELLOW;
             cone.minimumClockAngle = -CesiumMath.TWO_PI;
             cone.maximumClockAngle =  CesiumMath.TWO_PI;

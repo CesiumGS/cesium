@@ -67,12 +67,12 @@ defineSuite([
         return context.readPixels();
     };
 
-    function verifyMaterial(id) {
+    function verifyMaterial(type) {
         var material = new Material({
             context : context,
             strict : true,
             fabric : {
-                id : id
+                type : type
             }
         });
         var pixel = renderMaterial(material, context);
@@ -167,22 +167,22 @@ defineSuite([
         verifyMaterial('Blob');
     });
 
-    it('gets the material id', function() {
+    it('gets the material type', function() {
         var material = new Material({
             context : context,
             strict : true,
             fabric : {
-                id : 'Color'
+                type : 'Color'
             }
         });
-        expect(material.id).toEqual('Color');
+        expect(material.type).toEqual('Color');
     });
     it('creates a new material type and builds off of it', function() {
         var material1 = new Material({
             context : context,
             strict : true,
             fabric : {
-                id : 'New',
+                type : 'New',
                 components : {
                     diffuse : 'vec3(0.0, 0.0, 0.0)'
                 }
@@ -195,7 +195,7 @@ defineSuite([
             fabric : {
                 materials : {
                     first : {
-                        id : 'New'
+                        type : 'New'
                     }
                 },
                 components : {
@@ -217,7 +217,7 @@ defineSuite([
             fabric : {
                 materials : {
                     first : {
-                        id : 'DiffuseMap'
+                        type : 'DiffuseMap'
                     }
                 },
                 uniforms : {
@@ -272,7 +272,7 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                id : 'DiffuseMap',
+                type : 'DiffuseMap',
                 uniforms : {
                     image :  './Data/Images/Blue.png'
                 }
@@ -287,7 +287,7 @@ defineSuite([
             context : context,
             strict : true,
             fabric : {
-                id : 'Reflection',
+                type : 'Reflection',
                 uniforms : {
                     cubeMap : {
                         positiveX : './Data/Images/Blue.png',
@@ -380,10 +380,10 @@ defineSuite([
                 },
                 materials : {
                     d : {
-                        id : 'Color'
+                        type : 'Color'
                     },
                     diffuse : {
-                        id : 'Color'
+                        type : 'Color'
                     }
                 },
                 components : {
@@ -396,8 +396,8 @@ defineSuite([
         expect(pixel).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('create a material using fromId', function () {
-        var material = Material.fromId(context, 'Color');
+    it('create a material using fromType', function () {
+        var material = Material.fromType(context, 'Color');
         var pixel = renderMaterial(material);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
     });
@@ -407,7 +407,7 @@ defineSuite([
             return new Material({
                 context : undefined,
                 fabric : {
-                    id : 'DiffuseMap'
+                    type : 'DiffuseMap'
                 }
             });
         }).toThrow();
@@ -434,7 +434,7 @@ defineSuite([
                 context : context,
                 strict : true,
                 fabric : {
-                    id : 'DiffuseMap',
+                    type : 'DiffuseMap',
                     components : {
                         diffuse : 'vec3(0.0, 0.0, 0.0)'
                     }
@@ -589,7 +589,7 @@ defineSuite([
                 fabric : {
                     materials : {
                         first : {
-                            id : 'DiffuseMap'
+                            type : 'DiffuseMap'
                         }
                     }
                 }
@@ -603,7 +603,7 @@ defineSuite([
             fabric : {
                 materials : {
                     first : {
-                        id : 'DiffuseMap'
+                        type : 'DiffuseMap'
                     }
                 }
             }
@@ -630,15 +630,15 @@ defineSuite([
             renderMaterial(material);
         }).toThrow();
     });
-    it('throws with invalid id sent to fromId', function() {
+    it('throws with invalid type sent to fromType', function() {
         expect(function() {
-            return Material.fromId(context, 'Nothing');
+            return Material.fromType(context, 'Nothing');
         }).toThrow();
     });
 
     it('destroys material with texture', function() {
 
-        var material = Material.fromId(context, Material.DiffuseMapId);
+        var material = Material.fromType(context, Material.DiffuseMapType);
         material.uniforms.image = './Data/Images/Green.png';
         var pixel = renderMaterial(material);
         expect(pixel).not.toEqual([0, 0, 0, 0]);

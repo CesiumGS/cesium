@@ -197,7 +197,7 @@ define([
      * @exception {DeveloperError} fabric: uniform has invalid type.
      * @exception {DeveloperError} fabric: uniforms and materials cannot share the same property.
      * @exception {DeveloperError} fabric: cannot have source and components in the same section.
-     * @exception {DeveloperError} fabric: property name is not valid. It should be 'id', 'materials', 'uniforms', 'components', or 'source'.
+     * @exception {DeveloperError} fabric: property name is not valid. It should be 'type', 'materials', 'uniforms', 'components', or 'source'.
      * @exception {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'normal', 'emission', or 'alpha'.
      * @exception {DeveloperError} image: context is not defined.
      * @exception {DeveloperError} strict: shader source does not use string.
@@ -205,8 +205,8 @@ define([
      * @exception {DeveloperError} strict: shader source does not use material.
      *
      * @example
-     * // Create a color material with fromID:
-     * polygon.material = Material.fromID(context, 'Color');
+     * // Create a color material with fromType:
+     * polygon.material = Material.fromType(context, 'Color');
      * polygon.material.uniforms.color = {
      *     red : 1.0,
      *     green : 1.0,
@@ -221,7 +221,7 @@ define([
      * polygon.material = new Material({
      *     context : context,
      *     fabric : {
-     *         id : 'Color',
+     *         type : 'Color',
      *         uniforms : {
      *             color : {
      *                 red : 1.0,
@@ -246,10 +246,10 @@ define([
         this._template.materials = defaultValue(this._template.materials, {});
 
         /**
-         * The material id. Can be an existing id or a new id. If no id is specified in fabric, id is undefined.
+         * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is undefined.
          * @type String
          */
-        Object.defineProperty(this, 'id', { value : this._template.id, writable : false});
+        Object.defineProperty(this, 'type', { value : this._template.type, writable : false});
         /**
          * The glsl shader source for this material.
          * @type String
@@ -267,8 +267,8 @@ define([
         this.uniforms = {};
         this._uniforms = {};
 
-        // If the cache contains this material id, build the material template off of the stored template.
-        var oldMaterialTemplate = Material._materialCache.getMaterial(this.id);
+        // If the cache contains this material type, build the material template off of the stored template.
+        var oldMaterialTemplate = Material._materialCache.getMaterial(this.type);
         if (typeof oldMaterialTemplate !== 'undefined') {
             this._template = combine([this._template, oldMaterialTemplate]);
         }
@@ -276,9 +276,9 @@ define([
         // Make sure the template has no obvious errors. More error checking happens later.
         checkForTemplateErrors(this);
 
-        // If the material has a new id, add it to the cache.
-        if ((typeof oldMaterialTemplate === 'undefined') && (typeof this.id !== 'undefined')){
-            Material._materialCache.addMaterial(this.id, this._template);
+        // If the material has a new type, add it to the cache.
+        if ((typeof oldMaterialTemplate === 'undefined') && (typeof this.type !== 'undefined')){
+            Material._materialCache.addMaterial(this.type, this._template);
         }
 
         createMethodDefinition(this);
@@ -287,30 +287,30 @@ define([
     };
 
     /**
-     * Creates a new material using an existing materialId.
+     * Creates a new material using an existing material type.
      * <br /><br />
-     * Shorthand for: new Material({context : context, fabric : {id : materialId}});
+     * Shorthand for: new Material({context : context, fabric : {type : type}});
      *
      * @param {Context} context The context used to create textures if the material uses them.
-     * @param {String} materialId The base material id.
+     * @param {String} type The base material type.
      *
      * @returns {Material} New material object.
      *
-     * @exception {DeveloperError} material with that id does not exist.
+     * @exception {DeveloperError} material with that type does not exist.
      *
      * @example
-     * var material = Material.fromId(context, 'Color');
+     * var material = Material.fromType(context, 'Color');
      * material.uniforms.color = vec4(1.0, 0.0, 0.0, 1.0);
      */
 
-    Material.fromId = function(context, materialId) {
-        if (typeof Material._materialCache.getMaterial(materialId) === 'undefined') {
-            throw new DeveloperError('material with id \'' + materialId + '\' does not exist.');
+    Material.fromType = function(context, type) {
+        if (typeof Material._materialCache.getMaterial(type) === 'undefined') {
+            throw new DeveloperError('material with type \'' + type + '\' does not exist.');
         }
         return new Material({
             context : context,
             fabric : {
-                id : materialId
+                type : type
             }
         });
     };
@@ -403,7 +403,7 @@ define([
             }
             throw new DeveloperError(errorString);
         };
-        checkForValidProperties(template, ['id', 'materials', 'uniforms', 'components', 'source'], invalidNameError, true);
+        checkForValidProperties(template, ['type', 'materials', 'uniforms', 'components', 'source'], invalidNameError, true);
         checkForValidProperties(components,  ['diffuse', 'specular', 'normal', 'emission', 'alpha'], invalidNameError, true);
 
         // Make sure uniforms and materials do not share any of the same names.
@@ -721,20 +721,20 @@ define([
     };
     Material._materialCache = {
         _materials : {},
-        addMaterial : function (materialId, materialTemplate) {
-            this._materials[materialId] = materialTemplate;
+        addMaterial : function (type, materialTemplate) {
+            this._materials[type] = materialTemplate;
         },
-        getMaterial : function (materialId) {
-            return this._materials[materialId];
+        getMaterial : function (type) {
+            return this._materials[type];
         }
     };
 
     Material.DefaultImageId = 'agi_defaultImage';
     Material.DefaultCubeMapId = 'agi_defaultCubeMap';
 
-    Material.ColorId = 'Color';
-    Material._materialCache.addMaterial(Material.ColorId, {
-        id : Material.ColorId,
+    Material.ColorType = 'Color';
+    Material._materialCache.addMaterial(Material.ColorType, {
+        type : Material.ColorType,
         uniforms : {
             color : new Color(1.0, 0.0, 0.0, 0.5)
         },
@@ -744,9 +744,9 @@ define([
         }
     });
 
-    Material.ImageId = 'Image';
-    Material._materialCache.addMaterial(Material.ImageId, {
-        id : Material.ImageId,
+    Material.ImageType = 'Image';
+    Material._materialCache.addMaterial(Material.ImageType, {
+        type : Material.ImageType,
         uniforms : {
             image : Material.DefaultImageId,
             repeat : {
@@ -760,9 +760,9 @@ define([
         }
     });
 
-    Material.DiffuseMapId = 'DiffuseMap';
-    Material._materialCache.addMaterial(Material.DiffuseMapId, {
-        id : Material.DiffuseMapId,
+    Material.DiffuseMapType = 'DiffuseMap';
+    Material._materialCache.addMaterial(Material.DiffuseMapType, {
+        type : Material.DiffuseMapType,
         uniforms : {
             image : Material.DefaultImageId,
             channels : 'rgb',
@@ -776,9 +776,9 @@ define([
         }
     });
 
-    Material.AlphaMapId = 'AlphaMap';
-    Material._materialCache.addMaterial(Material.AlphaMapId, {
-        id : Material.AlphaMapId,
+    Material.AlphaMapType = 'AlphaMap';
+    Material._materialCache.addMaterial(Material.AlphaMapType, {
+        type : Material.AlphaMapType,
         uniforms : {
             image : Material.DefaultImageId,
             channel : 'a',
@@ -792,9 +792,9 @@ define([
         }
     });
 
-    Material.SpecularMapId = 'SpecularMap';
-    Material._materialCache.addMaterial(Material.SpecularMapId , {
-        id : Material.SpecularMapId,
+    Material.SpecularMapType = 'SpecularMap';
+    Material._materialCache.addMaterial(Material.SpecularMapType , {
+        type : Material.SpecularMapType,
         uniforms : {
             image : Material.DefaultImageId,
             channel : 'r',
@@ -808,9 +808,9 @@ define([
         }
     });
 
-    Material.EmissionMapId = 'EmissionMap';
-    Material._materialCache.addMaterial(Material.EmissionMapId , {
-        id : Material.EmissionMapId,
+    Material.EmissionMapType = 'EmissionMap';
+    Material._materialCache.addMaterial(Material.EmissionMapType , {
+        type : Material.EmissionMapType,
         uniforms : {
             image : Material.DefaultImageId,
             channels : 'rgb',
@@ -824,9 +824,9 @@ define([
         }
     });
 
-    Material.BumpMapId = 'BumpMap';
-    Material._materialCache.addMaterial(Material.BumpMapId , {
-        id : Material.BumpMapId,
+    Material.BumpMapType = 'BumpMap';
+    Material._materialCache.addMaterial(Material.BumpMapType , {
+        type : Material.BumpMapType,
         uniforms : {
             image : Material.DefaultImageId,
             channel : 'r',
@@ -839,9 +839,9 @@ define([
         source : BumpMapMaterial
     });
 
-    Material.NormalMapId = 'NormalMap';
-    Material._materialCache.addMaterial(Material.NormalMapId, {
-        id : Material.NormalMapId,
+    Material.NormalMapType = 'NormalMap';
+    Material._materialCache.addMaterial(Material.NormalMapType, {
+        type : Material.NormalMapType,
         uniforms : {
             image : Material.DefaultImageId,
             channels : 'rgb',
@@ -854,9 +854,9 @@ define([
         source : NormalMapMaterial
     });
 
-    Material.ReflectionId = 'Reflection';
-    Material._materialCache.addMaterial(Material.ReflectionId, {
-        id : Material.ReflectionId,
+    Material.ReflectionType = 'Reflection';
+    Material._materialCache.addMaterial(Material.ReflectionType, {
+        type : Material.ReflectionType,
         uniforms : {
             cubeMap : Material.DefaultCubeMapId,
             channels : 'rgb'
@@ -864,9 +864,9 @@ define([
         source : ReflectionMaterial
     });
 
-    Material.RefractionId = 'Refraction';
-    Material._materialCache.addMaterial(Material.RefractionId, {
-        id : Material.RefractionId,
+    Material.RefractionType = 'Refraction';
+    Material._materialCache.addMaterial(Material.RefractionType, {
+        type : Material.RefractionType,
         uniforms : {
             cubeMap : Material.DefaultCubeMapId,
             channels : 'rgb',
@@ -875,23 +875,23 @@ define([
         source : RefractionMaterial
     });
 
-    Material.FresnelId = 'Fresnel';
-    Material._materialCache.addMaterial(Material.FresnelId , {
-        id : Material.FresnelId,
+    Material.FresnelType = 'Fresnel';
+    Material._materialCache.addMaterial(Material.FresnelType , {
+        type : Material.FresnelType,
         materials : {
             reflection : {
-                id : Material.ReflectionId
+                type : Material.ReflectionType
             },
             refraction : {
-                id : Material.RefractionId
+                type : Material.RefractionType
             }
         },
         source : FresnelMaterial
     });
 
-    Material.BrickId = 'Brick';
-    Material._materialCache.addMaterial(Material.BrickId, {
-        id : Material.BrickId,
+    Material.BrickType = 'Brick';
+    Material._materialCache.addMaterial(Material.BrickType, {
+        type : Material.BrickType,
         uniforms : {
             brickColor : {
                 red: 0.6,
@@ -919,9 +919,9 @@ define([
         source : BrickMaterial
     });
 
-    Material.WoodId = 'Wood';
-    Material._materialCache.addMaterial(Material.WoodId, {
-        id : Material.WoodId,
+    Material.WoodType = 'Wood';
+    Material._materialCache.addMaterial(Material.WoodType, {
+        type : Material.WoodType,
         uniforms : {
             lightWoodColor : {
                 red : 0.6,
@@ -945,9 +945,9 @@ define([
         source : WoodMaterial
     });
 
-    Material.AsphaltId = 'Asphalt';
-    Material._materialCache.addMaterial(Material.AsphaltId, {
-        id : Material.AsphaltId,
+    Material.AsphaltType = 'Asphalt';
+    Material._materialCache.addMaterial(Material.AsphaltType, {
+        type : Material.AsphaltType,
         uniforms : {
             asphaltColor : {
                 red : 0.15,
@@ -961,9 +961,9 @@ define([
         source : AsphaltMaterial
     });
 
-    Material.CementId = 'Cement';
-    Material._materialCache.addMaterial(Material.CementId, {
-        id : Material.CementId,
+    Material.CementType = 'Cement';
+    Material._materialCache.addMaterial(Material.CementType, {
+        type : Material.CementType,
         uniforms : {
             cementColor : {
                 red : 0.95,
@@ -977,9 +977,9 @@ define([
         source : CementMaterial
     });
 
-    Material.GrassId = 'Grass';
-    Material._materialCache.addMaterial(Material.GrassId, {
-        id : Material.GrassId,
+    Material.GrassType = 'Grass';
+    Material._materialCache.addMaterial(Material.GrassType, {
+        type : Material.GrassType,
         uniforms : {
             grassColor : {
                 red : 0.25,
@@ -998,9 +998,9 @@ define([
         source : GrassMaterial
     });
 
-    Material.StripeId = 'Stripe';
-    Material._materialCache.addMaterial(Material.StripeId, {
-        id : Material.StripeId,
+    Material.StripeType = 'Stripe';
+    Material._materialCache.addMaterial(Material.StripeType, {
+        type : Material.StripeType,
         uniforms : {
             horizontal : true,
             lightColor : {
@@ -1021,9 +1021,9 @@ define([
         source : StripeMaterial
     });
 
-    Material.CheckerboardId = 'Checkerboard';
-    Material._materialCache.addMaterial(Material.CheckerboardId, {
-        id : Material.CheckerboardId,
+    Material.CheckerboardType = 'Checkerboard';
+    Material._materialCache.addMaterial(Material.CheckerboardType, {
+        type : Material.CheckerboardType,
         uniforms : {
             lightColor : {
                 red : 1.0,
@@ -1045,9 +1045,9 @@ define([
         source : CheckerboardMaterial
     });
 
-    Material.DotId = 'Dot';
-    Material._materialCache.addMaterial(Material.DotId, {
-        id : Material.DotId,
+    Material.DotType = 'Dot';
+    Material._materialCache.addMaterial(Material.DotType, {
+        type : Material.DotType,
         uniforms : {
             lightColor : {
                 red : 1.0,
@@ -1069,9 +1069,9 @@ define([
         source : DotMaterial
     });
 
-    Material.TyeDyeId = 'TieDye';
-    Material._materialCache.addMaterial(Material.TyeDyeId, {
-        id : Material.TyeDyeId,
+    Material.TyeDyeType = 'TieDye';
+    Material._materialCache.addMaterial(Material.TyeDyeType, {
+        type : Material.TyeDyeType,
         uniforms : {
             lightColor : {
                 red : 1.0,
@@ -1090,9 +1090,9 @@ define([
         source : TieDyeMaterial
     });
 
-    Material.FacetId = 'Facet';
-    Material._materialCache.addMaterial(Material.FacetId, {
-        id : Material.FacetId,
+    Material.FacetType = 'Facet';
+    Material._materialCache.addMaterial(Material.FacetType, {
+        type : Material.FacetType,
         uniforms : {
             lightColor : {
                 red : 0.25,
@@ -1111,9 +1111,9 @@ define([
         source : FacetMaterial
     });
 
-    Material.BlobId = 'Blob';
-    Material._materialCache.addMaterial(Material.BlobId, {
-        id : Material.BlobId,
+    Material.BlobType = 'Blob';
+    Material._materialCache.addMaterial(Material.BlobType, {
+        type : Material.BlobType,
         uniforms : {
             lightColor : {
                 red : 1.0,

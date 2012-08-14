@@ -118,7 +118,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromId(undefined, Material.ColorId);
+        this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromType(undefined, Material.ColorType);
 
         /**
          * DOC_TBA

@@ -139,7 +139,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromId(undefined, Material.ColorId);
+        this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
 
         /**
@@ -329,7 +329,7 @@ define([
             if (!this._material || (this._material !== this.material)) {
 
 
-                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromId(context, Material.ColorId);
+                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
                 this._material = this.material;
 
                 var fsSource =
