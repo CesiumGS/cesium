@@ -22,7 +22,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
         '../Renderer/VertexLayout',
-        './ColorMaterial',
+        './Material',
         './SceneMode',
         '../Shaders/Noise',
         '../Shaders/PolygonVS',
@@ -52,7 +52,7 @@ define([
         BufferUsage,
         CullFace,
         VertexLayout,
-        ColorMaterial,
+        Material,
         SceneMode,
         Noise,
         PolygonVS,
@@ -127,7 +127,7 @@ define([
      *
      * @example
      * var polygon = new Polygon();
-     * polygon.material.color = {
+     * polygon.material.uniforms.color = {
      *   red   : 1.0,
      *   green : 0.0,
      *   blue  : 0.0,
@@ -235,9 +235,8 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = new ColorMaterial({
-            color : new Color(1.0, 1.0, 0.0, 0.5)
-        });
+        this.material = Material.fromType(undefined, Material.ColorType);
+        this.material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
         this._material = undefined;
 
         /**
@@ -530,7 +529,7 @@ define([
             this._material !== this.material ||
             this._affectedByLighting !== this.affectedByLighting) {
 
-            this.material = this.material || new ColorMaterial();
+            this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
             this._material = this.material;
             this._affectedByLighting = this.affectedByLighting;
 
@@ -538,7 +537,7 @@ define([
                 '#line 0\n' +
                 Noise +
                 '#line 0\n' +
-                this._material._getShaderSource() +
+                this._material.shaderSource +
                 (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                 '#line 0\n' +
                 PolygonFS;
@@ -546,7 +545,7 @@ define([
             this._sp = this._sp && this._sp.release();
             this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
 
-            this._drawUniforms = combine(this._uniforms, this._material._uniforms);
+            this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
         }
 
         var boundingVolume;

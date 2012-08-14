@@ -1,9 +1,8 @@
 <project name="Cesium" default="combine">
 	<target name="build" description="A developer build that runs in-place.">
-		<glslToJavascript destination="${shadersDirectory}" stripcomments="${build.minification}">
-			<fileset dir="${shadersDirectory}" includes="*.glsl" />
+		<glslToJavascript stripcomments="${build.minification}">
+			<fileset dir="${shadersDirectory}" includes="**/*.glsl" />
 		</glslToJavascript>
-
 		<parallel>
 			<createCesiumJs output="${sourceDirectory}/Cesium.js">
 				<fileset dir="${sourceDirectory}">
@@ -14,7 +13,6 @@
 					<exclude name="**/*.profile.js" />
 				</fileset>
 			</createCesiumJs>
-
 			<createSpecList output="${specsDirectory}/SpecList.js">
 				<fileset dir="${specsDirectory}" includes="**/*.js" excludes="*.js" />
 			</createSpecList>
@@ -64,7 +62,7 @@
 		<delete includeEmptyDirs="true" failonerror="false">
 			<fileset dir="${buildDirectory}" defaultexcludes="false" />
 			<fileset dir="${instrumentedDirectory}" defaultexcludes="false" />
-			<fileset dir="${shadersDirectory}" includes="*.js" excludes="*.profile.js" />
+			<fileset dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
 			<fileset dir="${specsDirectory}" includes="SpecList.js" />
 			<fileset dir="." includes="Cesium-*.zip" />
 		</delete>
@@ -102,7 +100,6 @@
 
 	<scriptdef name="glslToJavascript" language="javascript">
 		<!-- Scott Hunter is my hero. - Cozzi -->
-		<attribute name="destination" />
 		<attribute name="stripcomments" />
 		<element name="fileset" type="fileset" />
 		<![CDATA[
@@ -114,20 +111,17 @@ importClass(Packages.org.apache.tools.ant.util.FileUtils);
 importClass(Packages.org.apache.tools.ant.filters.StripJavaComments);
 
 var stripComments = attributes.get("stripcomments");
-var destination = attributes.get("destination");
 var filesets = elements.get("fileset");
 for (var i = 0; i < filesets.size(); i++) {
   var fileset = filesets.get(i);
   var basedir  = fileset.getDir(project);
   var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
 
-  var glslDoc = "";	
-  	
   for (var j = 0; j < filenames.length; j++) {
     var filename = filenames[j];
 
     var file = new File(basedir, filename);
-    var targetFile = new File(destination, file.getName().replace('.glsl', '.js'));
+    var targetFile = new File(basedir, filename.replace('.glsl', '.js'));
     if (file.lastModified() < targetFile.lastModified()) {
       continue;
     }
@@ -137,12 +131,7 @@ for (var i = 0; i < filesets.size(); i++) {
     reader.close();
 
     contents = contents.replace(/\r\n/gm, '\n');
-	
-    var docComments = contents.match(/\/\*\*[\s\S]*?\*\//gm) || [];
-    if (docComments.length > 0) {
-        glslDoc = glslDoc + docComments.join('\n');
-    }		
-			
+
     var copyrightComments = contents.match(/\/\*\!(?:.|\n)*?\*\//gm) || [];
 
     if (stripComments) {
@@ -163,8 +152,43 @@ for (var i = 0; i < filesets.size(); i++) {
     writer.write(contents);
     writer.close();
   }
-		
-  var glslDocFile = new File(destination, 'glslComments.js');
+}
+]]>
+	</scriptdef>
+
+	<scriptdef name="extractShaderComments" language="javascript">
+		<element name="fileset" type="fileset" />
+		<![CDATA[
+importClass(java.io.File);
+importClass(java.io.FileReader);
+importClass(java.io.FileWriter);
+importClass(Packages.org.apache.tools.ant.util.FileUtils);
+
+var filesets = elements.get("fileset");
+for (var i = 0; i < filesets.size(); i++) {
+  var fileset = filesets.get(i);
+  var basedir  = fileset.getDir(project);
+  var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
+
+  var glslDoc = "";
+
+  for (var j = 0; j < filenames.length; j++) {
+    var filename = filenames[j];
+
+    var file = new File(basedir, filename);
+    var reader = new FileReader(file);
+    var contents = String(FileUtils.readFully(reader));
+    reader.close();
+
+    contents = contents.replace(/\r\n/gm, '\n');
+
+    var docComments = contents.match(/\/\*\*[\s\S]*?\*\//gm) || [];
+    if (docComments.length > 0) {
+        glslDoc = glslDoc + docComments.join('\n');
+    }
+  }
+
+  var glslDocFile = new File(basedir, 'glslComments.js');
   var glslDocWriter = new FileWriter(glslDocFile);
   glslDocWriter.write(glslDoc);
   glslDocWriter.close();
@@ -181,7 +205,7 @@ importClass(java.io.FileReader);
 importClass(java.io.FileWriter);
 importClass(Packages.org.apache.tools.ant.util.FileUtils);
 
-var moduleIDs = [];
+var moduleIds = [];
 var parameters = [];
 var assignments = [];
 
@@ -195,18 +219,18 @@ for (var i = 0, len = filesets.size(); i < len; i++) {
     var relativePath = filenames[j];
     var file = new File(basedir, relativePath);
 
-    var moduleID = relativePath.replace('\\', '/');
-    moduleID = moduleID.substring(0, moduleID.lastIndexOf('.'));
+    var moduleId = relativePath.replace('\\', '/');
+    moduleId = moduleId.substring(0, moduleId.lastIndexOf('.'));
 
     var baseName = file.getName();
 	var assignmentName = baseName.substring(0, baseName.lastIndexOf('.'));
-    if (/Shaders\//.test(moduleID)) {
+    if (/Shaders\//.test(moduleId)) {
       assignmentName = '_shaders.' + assignmentName;
     }
 
-    var parameterName = moduleID.replace('/', '_');
+    var parameterName = moduleId.replace('/', '_');
 
-    moduleIDs.push("'" + moduleID + "'");
+    moduleIds.push("'" + moduleId + "'");
     parameters.push(parameterName);
     assignments.push('Cesium.' + assignmentName + ' = ' + parameterName + ';');
   }
@@ -220,7 +244,7 @@ if (new File(output).exists()) {
 }
 
 var contents = '/*global define*/\n' +
-               'define([' + moduleIDs.join(', ') + '], function (' + parameters.join(', ') + ') {\n' +
+               'define([' + moduleIds.join(', ') + '], function (' + parameters.join(', ') + ') {\n' +
                '  "use strict";\n' +
                '  var Cesium = { _shaders : {} };\n  ' +
                assignments.join('\n  ') + '\n' +
@@ -365,6 +389,10 @@ if (oldContents !== contents) {
 	</target>
 
 	<target name="generateDocumentation">
+		<extractShaderComments>
+			<fileset dir="${shadersDirectory}" includes="**/*.glsl" />
+		</extractShaderComments>
+
 		<!--
 		These needs to be a relative path because Rhino doesn't work properly with Windows
 		absolute paths:

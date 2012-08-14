@@ -1,0 +1,3 @@
+{
+	"source" : "agi_material agi_getMaterial(agi_materialInput m) { return agi_getDefaultMaterial(m); }"
+}

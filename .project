@@ -104,9 +104,9 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1334962574946</id>
+			<id>1338843689105</id>
 			<name>Source/Shaders</name>
-			<type>6</type>
+			<type>22</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-*.js</arguments>
