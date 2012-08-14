@@ -43,7 +43,8 @@ define([
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
-        '../../Scene/ArcGisImageServerTerrainProvider',
+        '../../Scene/EllipsoidTerrainProvider',
+        '../../Scene/WebMercatorTilingScheme',
         '../../Scene/WideAreaMotionImageryProvider',
         '../../Scene/ImageryLayerCollection',
         '../../Scene/TerrainProvider',
@@ -95,7 +96,8 @@ define([
         SceneTransitioner,
         SingleTileImageryProvider,
         PerformanceDisplay,
-        ArcGisImageServerTerrainProvider,
+        EllipsoidTerrainProvider,
+        WebMercatorTilingScheme,
         WideAreaMotionImageryProvider,
         ImageryLayerCollection,
         TerrainProvider,
@@ -321,11 +323,11 @@ define([
                 this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
             }
 
-            var terrainProvider = new ArcGisImageServerTerrainProvider({
-                url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-                token : 'PmPpMpIzg4oNlwWawtPsOfzkMUAd4R15phcTy2Afaa9nSa9xEOdwhBeyHybelEotUQSrXkAYfIamGqZHqjN8dg..',
-                proxy : new DefaultProxy('/terrain/')
-            });
+            var terrainProvider = new EllipsoidTerrainProvider(new WebMercatorTilingScheme({
+                ellipsoid : ellipsoid,
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 2
+            }));
 
             var imageryLayerCollection = new ImageryLayerCollection();
 
