@@ -191,8 +191,6 @@ define([
         this._positions = undefined;
         this._extent = undefined;
         this._polygonHierarchy = undefined;
-        this._textureCoordinateOrigin = undefined;
-        this._boundingRectangle = undefined;
         this._createVertexArray = false;
 
         /**
@@ -374,7 +372,7 @@ define([
             var outerNode = queue.dequeue();
             var outerRing = outerNode.positions;
 
-            if (typeof outerRing !== 'undefined' && (outerRing.length < 3)) {
+            if (outerRing.length < 3) {
                 throw new DeveloperError('At least three positions are required.');
             }
 
@@ -436,15 +434,8 @@ define([
     };
 
     Polygon._appendTextureCoordinates = function(tangentPlane, positions2D, mesh) {
-        if(typeof this._boundingRectangle === 'undefined') {
-            this._boundingRectangle = new Rectangle.createAxisAlignedBoundingRectangle(positions2D);
-        }
-        var boundingRectangle = this._boundingRectangle;
-
-        if(typeof this._textureCoordinateOrigin === 'undefined') {
-            this._textureCoordinateOrigin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
-        }
-        var origin = this._textureCoordinateOrigin;
+        var boundingRectangle = new Rectangle.createAxisAlignedBoundingRectangle(positions2D);
+        var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
 
         var positions = mesh.attributes.position.values;
         var length = positions.length;
@@ -475,17 +466,22 @@ define([
 
     Polygon.prototype._createMeshFromPositions = function (positions) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
-            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
-            var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
+        var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
 
-            var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (originalWindingOrder === WindingOrder.CLOCKWISE) {
-                positions2D.reverse();
-                cleanedPositions.reverse();
-            }
-            var indices = PolygonPipeline.earClip2D(positions2D);
+        var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+        if (originalWindingOrder === WindingOrder.CLOCKWISE) {
+            positions2D.reverse();
+            cleanedPositions.reverse();
+        }
+        var indices = PolygonPipeline.earClip2D(positions2D);
         var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
+        if (typeof this._polygonHierarchy !== 'undefined') {
+            var outerPositions2D = tangentPlane.projectPointsOntoPlane(this._polygonHierarchy[0]);
+            mesh = Polygon._appendTextureCoordinates(tangentPlane, outerPositions2D, mesh);
+        } else {
             mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
+        }
         return mesh;
     };
 
