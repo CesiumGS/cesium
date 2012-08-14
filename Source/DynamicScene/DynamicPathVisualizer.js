@@ -244,7 +244,7 @@ define([
         }
 
         polyline.setShow(true);
-        polyline.setPositions(samplePositions(time, positionProperty, dynamicObject.availability, dynamicPath.leadTime, dynamicPath.trailTime, polyline.getPositions()));
+        polyline.setPositions(samplePositions(time, positionProperty, dynamicObject.availability, dynamicPath.leadTime.getValue(time), dynamicPath.trailTime.getValue(time), polyline.getPositions()));
 
         var property = dynamicPath.color;
         if (typeof property !== 'undefined') {
