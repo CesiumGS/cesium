@@ -322,6 +322,7 @@ define([
      * @param {Object} hierarchy An object defining the vertex positions of each nested polygon.
      * For example, the following polygon has two holes, and one hole has a hole. <code>holes</code> is optional.
      * Leaf nodes only have <code>positions</code>.
+     * <pre>
      * <code>
      * {
      *  positions : [ ... ],    // The polygon's outer boundary
@@ -340,7 +341,8 @@ define([
      *  ]
      * }
      * </code>
-     * @param {double} [height=0.0]. The height of the polygon.
+     * </pre>
+     * @param {double} [height=0.0] The height of the polygon.
      *
      * @exception {DeveloperError} hierarchy is required.
      * @exception {DeveloperError} hierarchy.positions is required.
@@ -465,14 +467,14 @@ define([
 
     Polygon.prototype._createMeshes = function() {
         // PERFORMANCE_IDEA:  Move this to a web-worker.
+        var i;
         var meshes = [];
-
         if(typeof this._extent !== 'undefined'){
             meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true}));
         }
         else if(typeof this._positions !== 'undefined'){
             if (this._numberOfPolygons > 0) {
-                for (var i = 0; i < this._numberOfPolygons; i++) {
+                for (i = 0; i < this._numberOfPolygons; i++) {
                      meshes.push(this._createMeshFromPositions(this._positions[i]));
                 }
             } else {
@@ -484,7 +486,7 @@ define([
         }
 
         var processedMeshes = [];
-        for (var i = 0; i < meshes.length; i++) {
+        for (i = 0; i < meshes.length; i++) {
             var mesh = meshes[i];
             mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
             mesh = MeshFilters.reorderForPostVertexCache(mesh);
