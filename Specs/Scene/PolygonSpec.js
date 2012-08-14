@@ -131,6 +131,39 @@ defineSuite([
         }).not.toThrow();
     });
 
+    it('configure polygon from clockwise hierarchy', function() {
+        var hierarchy = {
+                positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                    new Cartographic.fromDegrees(-124.0, 35.0, 0.0),
+                    new Cartographic.fromDegrees(-124.0, 40.0, 0.0),
+                    new Cartographic.fromDegrees(-110.0, 40.0, 0.0),
+                    new Cartographic.fromDegrees(-110.0, 35.0, 0.0)
+                ]),
+                holes : [{
+                        positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                            new Cartographic.fromDegrees(-122.0, 36.0, 0.0),
+                            new Cartographic.fromDegrees(-112.0, 36.0, 0.0),
+                            new Cartographic.fromDegrees(-112.0, 39.0, 0.0),
+                            new Cartographic.fromDegrees(-122.0, 39.0, 0.0)
+                        ]),
+                        holes : [{
+                                positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                    new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
+                                    new Cartographic.fromDegrees(-120.0, 38.5, 0.0),
+                                    new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
+                                    new Cartographic.fromDegrees(-114.0, 36.5, 0.0)
+                                ])
+                        }]
+                }]
+        };
+
+        polygon.configureFromPolygonHierarchy(hierarchy);
+        expect(polygon._numberOfPolygons).toEqual(2);
+        expect(function() {
+            polygon._vertices.update(context, polygon._createMeshes(), polygon.bufferUsage);
+        }).not.toThrow();
+    });
+
     it('configureFromPolygonHierarchy throws without a hierarchy', function() {
         expect(function() {
             polygon.configureFromPolygonHierarchy();

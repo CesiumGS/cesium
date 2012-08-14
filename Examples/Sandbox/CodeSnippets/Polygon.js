@@ -32,8 +32,6 @@
     };
 
     Sandbox.NestedPolygon = function(scene, ellipsoid, primitives) {
-        var handler;
-
         this.code = function () {
             var hierarchy = {
                     positions : ellipsoid.cartographicArrayToCartesianArray([
@@ -71,40 +69,12 @@
             polygon.configureFromPolygonHierarchy(hierarchy);
             primitives.add(polygon);
 
-            // Picking code
-            handler = new Cesium.EventHandler(scene.getCanvas());
-            handler.setMouseAction(
-                function (movement) {
-                    var pickedObject = scene.pick(movement.endPosition);
-                    if (pickedObject === polygon) {
-                        polygon.material.color = {
-                                red: 1.0,
-                                green: 0.0,
-                                blue: 0.0,
-                                alpha: 0.75
-                            };
-                    }
-                    else if (polygon) {
-                        polygon.material.color = {
-                                red: 0.0,
-                                green: 0.0,
-                                blue: 1.0,
-                                alpha: 0.75
-                            };
-                    }
-                },
-                Cesium.MouseEventType.MOVE
-            );
         };
 
         this.camera = {
             eye : new Cesium.Cartesian3(-1280476.6605044599, -6108296.327862781, 4770090.478198281),
             target : new Cesium.Cartesian3(0.16300940344701773, 0.7776086602705017, -0.6072501180404701),
             up : new Cesium.Cartesian3(0.12458922984093211, 0.5943317505129697, 0.7945107262585154)
-        };
-
-        this.clear = function () {
-            handler = handler && handler.destroy();
         };
     };
 
