@@ -247,22 +247,32 @@ define([
     ComplexConicSensorVolume.prototype._getBoundingVolume = function() {
         var r = isFinite(this.radius) ? this.radius : FAR;
 
+        var mesh;
+        var minimumCorner;
+        var maximumCorner;
         if (this.outerHalfAngle <= CesiumMath.toRadians(45.0)) {
             // Bound sensor with a frustum
             var l = Math.tan(this.outerHalfAngle) * r;
 
-            return {
+            var positions = [
+                Cartesian3.ZERO,           // Sensor vertex
+                new Cartesian3(l, -l, r),  // Sensor cap: ( x, -y)
+                new Cartesian3(l, l, r),   // Sensor cap: ( x,  y)
+                new Cartesian3(-l, l, r),  // Sensor cap: (-x,  y)
+                new Cartesian3(-l, -l, r)  // Sensor cap: (-x, -y)
+            ];
+
+            var values = [];
+            for (var i = 0; i < positions.length; ++i) {
+                values.push(positions[i].x, positions[i].y, positions[i].z);
+            }
+
+            mesh = {
                 attributes : {
                     position : {
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
-                        values : [
-                                  0.0, 0.0, 0.0, // Sensor vertex
-                                    l,  -l,   r, // Sensor cap: ( x, -y)
-                                    l,   l,   r, // Sensor cap: ( x,  y)
-                                   -l,   l,   r, // Sensor cap: (-x,  y)
-                                   -l,  -l,   r // Sensor cap: (-x, -y)
-                              ]
+                        values : values
                     }
                 },
                 indexLists : [{
@@ -277,19 +287,33 @@ define([
                           ]
                 }]
             };
+
+            this._boundingVolume = BoundingSphere.fromPoints(positions);
         } else if (this.outerHalfAngle <= CesiumMath.toRadians(90.0)) {
-            // Bound sensor with box in the +z half-space
-            return BoxTessellator.compute({
-                minimumCorner : new Cartesian3(-r, -r, 0.0),
-                maximumCorner : new Cartesian3(r, r, r)
+         // Bound sensor with box in the +z half-space
+            minimumCorner = new Cartesian3(-r, -r, 0.0);
+            maximumCorner = new Cartesian3(r, r, r);
+
+            mesh = BoxTessellator.compute({
+                minimumCorner : minimumCorner,
+                maximumCorner : maximumCorner
             });
+
+            this._boundingVolume = BoundingSphere.fromPoints([minimumCorner, maximumCorner]);
+        } else {
+            // Bound sensor with box
+            minimumCorner = new Cartesian3(-r, -r, -r);
+            maximumCorner = new Cartesian3(r, r, r);
+
+            mesh = BoxTessellator.compute({
+                minimumCorner : minimumCorner,
+                maximumCorner : maximumCorner
+            });
+
+            this._boundingVolume = BoundingSphere.fromPoints([minimumCorner, maximumCorner]);
         }
 
-        // Bound sensor with box
-        return BoxTessellator.compute({
-            minimumCorner : new Cartesian3(-r, -r, -r),
-            maximumCorner : new Cartesian3(r, r, r)
-        });
+        return mesh;
     };
 
     ComplexConicSensorVolume.prototype._combineMaterials = function() {
@@ -364,8 +388,6 @@ define([
                     attributeIndices : attributeIndices,
                     bufferUsage : BufferUsage.STATIC_DRAW
                 });
-
-                this._boundingVolume = new BoundingSphere(Cartesian3.ZERO, isFinite(this._radius) ? this._radius : FAR);
             }
 
             // Recompile shader when material changes
