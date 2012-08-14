@@ -375,7 +375,7 @@ defineSuite([
             new Cartographic.fromDegrees(-121.99, 37.01),
             new Cartographic.fromDegrees(-121.99, 37.04),
             new Cartographic.fromDegrees(-121.96, 37.04),
-            new Cartographic.fromDegrees(-121.96, 37.01),
+            new Cartographic.fromDegrees(-121.96, 37.01)
         ]);
 
         var positions = PolygonPipeline.eliminateHoles(outerRing, [innerRing]);

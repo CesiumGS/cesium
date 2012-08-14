@@ -102,7 +102,7 @@ define([
         var i = this._findIndex(time);
         var u = (time - this._points[i].time) / (this._points[i + 1].time - this._points[i].time);
 
-        return this._points[i].orientation.slerp(u, this._points[i + 1].orientation);
+        return this._points[i].orientation.slerp(this._points[i + 1].orientation, u);
     };
 
     return OrientationInterpolator;

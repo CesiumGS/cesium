@@ -94,9 +94,9 @@ define([
      * @private
      */
     function getRightmostPositionIndex(positions) {
-       var maximumX = positions[0].x;
+        var maximumX = positions[0].x;
         var rightmostPositionIndex = 0;
-        for (var i = 0; i < positions.length; i++) {
+        for ( var i = 0; i < positions.length; i++) {
             if (positions[i].x > maximumX) {
                 maximumX = positions[i].x;
                 rightmostPositionIndex = i;
@@ -116,7 +116,7 @@ define([
     function getRightmostRingIndex(rings) {
         var rightmostX = rings[0][0].x;
         var rightmostRingIndex = 0;
-        for (var ring = 0; ring < rings.length; ring++) {
+        for ( var ring = 0; ring < rings.length; ring++) {
             var maximumX = rings[ring][getRightmostPositionIndex(rings[ring])].x;
             if (maximumX > rightmostX) {
                 rightmostX = maximumX;
@@ -137,7 +137,7 @@ define([
      */
     function getReflexVertices(polygon) {
         var reflexVertices = [];
-        for (var i = 0; i < polygon.length; i++) {
+        for ( var i = 0; i < polygon.length; i++) {
             var p0 = polygon[((i - 1) + polygon.length) % polygon.length];
             var p1 = polygon[i];
             var p2 = polygon[(i + 1) % polygon.length];
@@ -159,8 +159,8 @@ define([
      * @private
      */
     function isVertex(positions, point) {
-        for (var i = 0; i < positions.length; i++) {
-            if (point.equals(positions[i])){
+        for ( var i = 0; i < positions.length; i++) {
+            if (point.equals(positions[i])) {
                 return true;
             }
         }
@@ -188,8 +188,7 @@ define([
 
         var boundaryMinX = ring[0].x;
         var boundaryMaxX = boundaryMinX;
-        for (var i = 1; i < ring.length; ++i)
-        {
+        for ( var i = 1; i < ring.length; ++i) {
             if (ring[i].x < boundaryMinX) {
                 boundaryMinX = ring[i].x;
             } else if (ring[i].x > boundaryMaxX) {
@@ -200,13 +199,11 @@ define([
         var point2 = new Cartesian3(boundaryMaxX, point.y, 0.0);
 
         // Find the nearest intersection.
-        for (var i = 0; i < ring.length; i++)
-        {
+        for (i = 0; i < ring.length; i++) {
             var v1 = ring[i];
             var v2 = ring[(i + 1) % ring.length];
 
-            if (((v1.x >= point.x) || (v2.x >= point.x)) && (((v1.y >= point.y) && (v2.y <= point.y)) ||
-                    ((v1.y <= point.y) && (v2.y >= point.y)))) {
+            if (((v1.x >= point.x) || (v2.x >= point.x)) && (((v1.y >= point.y) && (v2.y <= point.y)) || ((v1.y <= point.y) && (v2.y >= point.y)))) {
                 var temp = ((v2.y - v1.y) * (point2.x - point.x)) - ((v2.x - v1.x) * (point2.y - point.y));
                 if (temp !== 0.0) {
                     temp = 1.0 / temp;
@@ -260,15 +257,13 @@ define([
             var reflexVertices = getReflexVertices(outerRing);
             var reflexIndex = reflexVertices.indexOf(p);
             if (reflexIndex !== -1) {
-                reflexVertices.splice(reflexIndex, 1);  // Do not include p if it happens to be reflex.
+                reflexVertices.splice(reflexIndex, 1); // Do not include p if it happens to be reflex.
             }
 
             var pointsInside = [];
-            for (var i = 0; i < reflexVertices.length; i++)
-            {
+            for ( var i = 0; i < reflexVertices.length; i++) {
                 var vertex = reflexVertices[i];
-                if (pointInsideTriangle2D(vertex, innerRingVertex, intersection, p))
-                {
+                if (pointInsideTriangle2D(vertex, innerRingVertex, intersection, p)) {
                     pointsInside.push(vertex);
                 }
             }
@@ -279,7 +274,7 @@ define([
             var minAngle = Number.MAX_VALUE;
             if (pointsInside.length > 0) {
                 var v1 = new Cartesian2(1.0, 0.0, 0.0);
-                for (var i = 0; i < pointsInside.length; i++) {
+                for (i = 0; i < pointsInside.length; i++) {
                     var v2 = pointsInside[i].subtract(innerRingVertex);
                     var denominator = v1.magnitude() * v2.magnitude();
                     if (denominator !== 0) {
@@ -311,7 +306,7 @@ define([
     function eliminateHole(outerRing, innerRings) {
         // Check that the holes are defined in the winding order opposite that of the outer ring.
         var windingOrder = PolygonPipeline.computeWindingOrder2D(outerRing);
-        for (var i = 0; i < innerRings.length; i++) {
+        for ( var i = 0; i < innerRings.length; i++) {
             var ring = innerRings[i];
 
             // Ensure each hole's first and last points are the same.
@@ -329,8 +324,7 @@ define([
         var tangentPlane = EllipsoidTangentPlane.create(Ellipsoid.WGS84, outerRing);
         var tangentOuterRing = tangentPlane.projectPointsOntoPlane(outerRing);
         var tangentInnerRings = [];
-        for (var i = 0; i < innerRings.length; i++)
-        {
+        for (i = 0; i < innerRings.length; i++) {
             tangentInnerRings.push(tangentPlane.projectPointsOntoPlane(innerRings[i]));
         }
 
@@ -341,30 +335,24 @@ define([
         var innerRing = innerRings[innerRingIndex];
         var newPolygonVertices = [];
 
-        for (var i = 0; i < outerRing.length; i++)
-        {
+        for (i = 0; i < outerRing.length; i++) {
             newPolygonVertices.push(outerRing[i]);
         }
 
+        var j;
         var holeVerticesToAdd = [];
 
         // If the rightmost inner vertex is not the starting and ending point of the ring,
         // then some other point is duplicated in the inner ring and should be skipped once.
-        if (innerRingVertexIndex !== 0)
-        {
-            for (var j = 0; j <= innerRing.length; j++)
-            {
+        if (innerRingVertexIndex !== 0) {
+            for (j = 0; j <= innerRing.length; j++) {
                 var index = (j + innerRingVertexIndex) % innerRing.length;
-                if (index !== 0)
-                {
+                if (index !== 0) {
                     holeVerticesToAdd.push(innerRing[index]);
                 }
             }
-        }
-        else
-        {
-            for (var j = 0; j < innerRing.length; j++)
-            {
+        } else {
+            for (j = 0; j < innerRing.length; j++) {
                 holeVerticesToAdd.push(innerRing[(j + innerRingVertexIndex) % innerRing.length]);
             }
         }
@@ -508,9 +496,7 @@ define([
                 if (isTipConvex(p0, p1, p2)) {
                     var isEar = true;
 
-                    for (var n = (nextNode.next ? nextNode.next : remainingPositions.head);
-                             n !== previousNode;
-                             n = (n.next ? n.next : remainingPositions.head)) {
+                    for ( var n = (nextNode.next ? nextNode.next : remainingPositions.head); n !== previousNode; n = (n.next ? n.next : remainingPositions.head)) {
                         if (pointInsideTriangle2D(n.item.position, p0, p1, p2)) {
                             isEar = false;
                             break;
@@ -781,9 +767,9 @@ define([
             }
 
             var innerRingsCopy = [];
-            for (var i = 0; i < innerRings.length; i++) {
+            for ( var i = 0; i < innerRings.length; i++) {
                 var innerRing = [];
-                for (var j = 0; j < innerRings[i].length; j++) {
+                for ( var j = 0; j < innerRings[i].length; j++) {
                     innerRing.push(Cartesian3.clone(innerRings[i][j]));
                 }
                 innerRingsCopy.push(innerRing);
