@@ -40,23 +40,51 @@ define([
             sampleStop = availability.stop;
         }
 
-        var totalSeconds = sampleStart.getSecondsDifference(sampleStop);
-        var numPts = 100;
-        result.length = numPts;
-        var step = totalSeconds / numPts;
-
-        var steppedOnNow = false;
-        var stepTime = sampleStart;
-        for ( var i = 0; i < numPts; i++) {
-            stepTime = i === numPts - 1 ? sampleStop : stepTime;
-            if (!steppedOnNow && stepTime.greaterThanOrEquals(currentTime)) {
-                result[i] = positionProperty.getValueCartesian(currentTime);
-                steppedOnNow = true;
-            } else {
-                result[i] = positionProperty.getValueCartesian(stepTime);
-            }
-            stepTime = stepTime.addSeconds(step);
+        var propertyIntervals = positionProperty._propertyIntervals;
+        var startIndex = propertyIntervals.indexOf(sampleStart);
+        if (startIndex < 0) {
+            startIndex = ~startIndex;
         }
+        var stopIndex = propertyIntervals.indexOf(sampleStop);
+        if (stopIndex < 0) {
+            stopIndex = ~stopIndex;
+        }
+
+        if (startIndex === propertyIntervals.length) {
+            result.length = 0;
+            return result;
+        }
+
+        var q = 0;
+        var steppedOnNow = false;
+        result[q++] = positionProperty.getValueCartesian(sampleStart, result[q]);
+        for ( var i = startIndex; i < stopIndex + 1; i++) {
+            var interval = propertyIntervals.get(i);
+            var property = interval.data;
+            var asd = property._intervals;
+            var times = asd.get(0).data.times;
+            if (typeof times !== 'undefined') {
+                for ( var t = 0; t < times.length; t++) {
+                    var current = times[t];
+                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
+                        result[q++] = positionProperty.getValueCartesian(currentTime, result[q]);
+                        steppedOnNow = true;
+                    }
+                    if (current.greaterThan(sampleStart) && current.lessThan(sampleStop)) {
+                        result[q++] = positionProperty.getValueCartesian(current, result[q]);
+                    }
+                }
+            }
+            else {
+                if (!steppedOnNow && asd.get(0).start.greaterThanOrEquals(currentTime)) {
+                    result[q++] = positionProperty.getValueCartesian(currentTime, result[q]);
+                    steppedOnNow = true;
+                }
+                result[q++] = positionProperty.getValueCartesian(asd.get(0), result[q]);
+            }
+        }
+        result[q++] = positionProperty.getValueCartesian(sampleStop, result[q]);
+        result.length = q;
         return result;
     }
 
@@ -229,7 +257,7 @@ define([
         var polyline;
         var showProperty = dynamicPath.show;
         var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
+        var show = (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
@@ -265,7 +293,6 @@ define([
         }
 
         polyline.setShow(true);
-
         polyline.setPositions(samplePositions(time, positionProperty, dynamicObject.availability, dynamicPath.leadTime, dynamicPath.trailTime, polyline.getPositions()));
 
         var property = dynamicPath.color;

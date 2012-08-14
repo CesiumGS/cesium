@@ -108,6 +108,7 @@ define([
             positions = [];
         }
         if (this._positionsLength !== positions.length) {
+            this._positionsLength = positions.length;
             this._makeDirty(POSITION_SIZE_INDEX);
         }
         this._positions = positions;
