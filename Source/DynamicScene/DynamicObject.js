@@ -6,7 +6,7 @@ define([
         './DynamicProperty',
         './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
-        './DynamicLayerProperty',
+        './DynamicExternalProperty',
         './CzmlUnitQuaternion'
     ], function(
         createGuid,
@@ -15,7 +15,7 @@ define([
         DynamicProperty,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
-        DynamicExternalDocumentProperty,
+        DynamicExternalProperty,
         CzmlUnitQuaternion) {
     "use strict";
 
@@ -110,9 +110,9 @@ define([
         this.pyramid = undefined;
 
         /**
-         * The DynamicExternalDocument, if any, associated with this object.
+         * The DynamicExternal, if any, associated with this object.
          */
-        this.externalDocument = undefined;
+        this.external = undefined;
 
         /**
          * The DynamicVertexPositionsProperty, if any, associated with this object.
@@ -267,7 +267,7 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicObject.processCzmlPacketExternalDocument = function(dynamicObject, packet, dynamicObjectCollection, sourceUri, updaterFunctions) {
+    DynamicObject.processCzmlPacketExternal = function(dynamicObject, packet, dynamicObjectCollection, sourceUri, updaterFunctions) {
         var externalData = packet.external;
         if (typeof externalData === 'undefined') {
             return false;
@@ -276,7 +276,7 @@ define([
         var external = dynamicObject.external;
         var propertyCreated = typeof external === 'undefined';
         if (propertyCreated) {
-            dynamicObject.external = external = new DynamicExternalDocumentProperty();
+            dynamicObject.external = external = new DynamicExternalProperty();
         }
         external.processCzmlIntervals(externalData, external, dynamicObjectCollection, sourceUri, updaterFunctions);
         return propertyCreated;
