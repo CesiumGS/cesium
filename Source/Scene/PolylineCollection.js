@@ -13,6 +13,7 @@ define([
         '../Core/Color',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
+        '../Core/Intersect',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         './SceneMode',
@@ -35,6 +36,7 @@ define([
         Color,
         BoundingRectangle,
         BoundingSphere,
+        Intersect,
         BlendingState,
         BufferUsage,
         SceneMode,
@@ -1141,8 +1143,14 @@ define([
         if (this.mode === SceneMode.SCENE3D) {
             return polyline.getPositions().length;
         }
+
+        if (Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) > 0 || polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) !== Intersect.INTERSECTING) {
+            return polyline.getPositions().length;
+        }
+
         var ellipsoid = this.ellipsoid;
         var positions = polyline.getPositions();
+
         var segments = PolylinePipeline.wrapLongitude(ellipsoid, positions);
         polyline._segments = segments;
         var numberOfSegments = segments.length;
@@ -1203,16 +1211,28 @@ define([
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
             var positions = polyline.getPositions();
-            var segments = PolylinePipeline.wrapLongitude(this.ellipsoid, positions);
-            var numberOfSegments = segments.length;
-            for ( var j = 0; j < numberOfSegments; ++j) {
-                var segment = segments[j];
-                var segmentLength = segment.length;
-                var startN = ((j === 0) || (segmentLength === 2)) ? 0 : 1;
-                for ( var n = startN; n < segmentLength; ++n) {
-                    positionArray[positionIndex] = positions[segment[n].index].x;
-                    positionArray[positionIndex + 1] = positions[segment[n].index].y;
-                    positionArray[positionIndex + 2] = positions[segment[n].index].z;
+
+            if (Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) < 0 && polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) === Intersect.INTERSECTING) {
+                var segments = PolylinePipeline.wrapLongitude(this.ellipsoid, positions);
+
+                var numberOfSegments = segments.length;
+                for ( var j = 0; j < numberOfSegments; ++j) {
+                    var segment = segments[j];
+                    var segmentLength = segment.length;
+                    var startN = ((j === 0) || (segmentLength === 2)) ? 0 : 1;
+                    for ( var n = startN; n < segmentLength; ++n) {
+                        positionArray[positionIndex] = positions[segment[n].index].x;
+                        positionArray[positionIndex + 1] = positions[segment[n].index].y;
+                        positionArray[positionIndex + 2] = positions[segment[n].index].z;
+                        positionIndex += 3;
+                    }
+                }
+            } else {
+                var numberOfSegments = positions.length;
+                for ( var j = 0; j < numberOfSegments; ++j) {
+                    positionArray[positionIndex] = positions[j].x;
+                    positionArray[positionIndex + 1] = positions[j].y;
+                    positionArray[positionIndex + 2] = positions[j].z;
                     positionIndex += 3;
                 }
             }
@@ -1293,14 +1313,42 @@ define([
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
+
             var segments = polyline._segments;
-            var numberOfSegments = segments.length;
-            for ( var k = 0; k < numberOfSegments; ++k) {
-                var segment = segments[k];
-                var segmentLength = segment.length;
-                var startN = ((k === 0) || (segmentLength === 2)) ? 0 : 1;
-                for ( var n = startN; n < segmentLength; ++n) {
-                    if (n !== segmentLength - 1) {
+            if (typeof segments !== 'undefined') {
+                var numberOfSegments = segments.length;
+                for ( var k = 0; k < numberOfSegments; ++k) {
+                    var segment = segments[k];
+                    var segmentLength = segment.length;
+                    var startN = ((k === 0) || (segmentLength === 2)) ? 0 : 1;
+                    for ( var n = startN; n < segmentLength; ++n) {
+                        if (n !== segmentLength - 1) {
+                            if (indicesCount === SIXTYFOURK - 1) {
+                                vertexBufferOffset.push(1);
+                                indices = [];
+                                totalIndices.push(indices);
+                                indicesCount = 0;
+                                bucketLocator.count = count;
+                                count = 0;
+                                offset = 0;
+                                bucketLocator = new VertexArrayBucketLocator(0, 0, this);
+                                vertexArrayBuckets[++vaCount] = [bucketLocator];
+                            }
+                            count += 2;
+                            offset += 2;
+                            indices.push(indicesCount++);
+                            indices.push(indicesCount);
+                        }
+                    }
+                    if (k !== numberOfSegments - 1) {
+                        indicesCount++;
+                    }
+                }
+            } else {
+                var positions = polyline.getPositions();
+                var positionsLength = positions.length;
+                for ( var j = 0; j < positionsLength; ++j) {
+                    if (j !== positionsLength - 1) {
                         if (indicesCount === SIXTYFOURK - 1) {
                             vertexBufferOffset.push(1);
                             indices = [];
@@ -1317,9 +1365,6 @@ define([
                         indices.push(indicesCount++);
                         indices.push(indicesCount);
                     }
-                }
-                if (k !== numberOfSegments - 1) {
-                    indicesCount++;
                 }
             }
             polyline._clean();
@@ -1372,33 +1417,43 @@ define([
      * @private
      */
     PolylineBucket.prototype._getPositions = function(polyline) {
-        if (this.mode === SceneMode.SCENE3D) {
-            var positions = polyline.getPositions();
+        var positions = polyline.getPositions();
 
-            if (positions.length > 0) {
-                polyline._boundingVolume = BoundingSphere.fromPoints(positions);
-                if (typeof polyline._collection._boundingVolume === 'undefined') {
-                    polyline._collection._boundingVolume = polyline._boundingVolume.clone();
-                } else {
-                    polyline._collection._boundingVolume.union(polyline._boundingVolume, polyline._collection._boundingVolume);
-                }
+        if (positions.length > 0) {
+            polyline._boundingVolume = BoundingSphere.fromPoints(positions);
+            if (typeof polyline._collection._boundingVolume === 'undefined') {
+                polyline._collection._boundingVolume = polyline._boundingVolume.clone();
+            } else {
+                polyline._collection._boundingVolume.union(polyline._boundingVolume, polyline._collection._boundingVolume);
             }
+        }
 
+        if (this.mode === SceneMode.SCENE3D) {
             return positions;
         }
         var ellipsoid = this.ellipsoid;
         var projection = this.projection;
         var newPositions = [];
         var modelMatrix = this.modelMatrix;
-        var segments = polyline._segments;
-        var numberOfSegments = segments.length;
 
-        for ( var i = 0; i < numberOfSegments; ++i) {
-            var segment = segments[i];
-            var segmentLength = segment.length;
-            var startN = ((i === 0) || (segmentLength === 2)) ? 0 : 1;
-            for ( var n = startN; n < segmentLength; ++n) {
-                var position = segment[n].cartesian;
+        var segments = polyline._segments;
+        if (typeof segments !== 'undefined') {
+            var numberOfSegments = segments.length;
+
+            for ( var i = 0; i < numberOfSegments; ++i) {
+                var segment = segments[i];
+                var segmentLength = segment.length;
+                var startN = ((i === 0) || (segmentLength === 2)) ? 0 : 1;
+                for ( var n = startN; n < segmentLength; ++n) {
+                    var position = segment[n].cartesian;
+                    var p = modelMatrix.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+                    newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
+                }
+            }
+        } else {
+            var length = positions.length;
+            for ( var n = 0; n < length; ++n) {
+                var position = positions[n];
                 var p = modelMatrix.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
                 newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
             }
