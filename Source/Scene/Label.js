@@ -1,25 +1,109 @@
 /*global define*/
 define([
-        '../Core/Color',
-        '../Core/shallowEquals',
+        '../Core/defaultValue',
+        '../Core/destroyObject',
+        '../Core/writeTextToCanvas',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../ThirdParty/measureText',
+        '../Core/Color',
         './Billboard',
         './LabelStyle',
         './HorizontalOrigin',
         './VerticalOrigin'
     ], function(
-        Color,
-        shallowEquals,
+        defaultValue,
+        destroyObject,
+        writeTextToCanvas,
         Cartesian2,
         Cartesian3,
-        measureText,
+        Color,
         Billboard,
         LabelStyle,
         HorizontalOrigin,
         VerticalOrigin) {
     "use strict";
+
+    function recreateBillboards(label) {
+        var labelCollection = label._labelCollection;
+        var billboardCollection = label._billboardCollection;
+
+        var billboards = label._billboards;
+        for ( var i = 0, len = billboards.length; i < len; i++) {
+            billboardCollection.remove(billboards[i]);
+        }
+
+        billboards.length = 0;
+
+        function onCanvasCreated() {
+            labelCollection._setUpdateTextureAtlas(true);
+        }
+
+        var text = label._text;
+        var length = text.length;
+        for (i = 0; i < length; i++) {
+            var charValue = text.charAt(i);
+            var billboard = billboardCollection.add({
+                show : label._show,
+                position : label._position,
+                eyeOffset : label._eyeOffset,
+                horizontalOrigin : HorizontalOrigin.LEFT,
+                verticalOrigin : label._verticalOrigin,
+                scale : label._scale,
+                _pickIdThis : label
+            });
+
+            var canvasContainer = labelCollection._canvasContainer;
+            var index = canvasContainer.add(charValue, label, onCanvasCreated);
+            billboard.setImageIndex(index);
+            billboard._labelDimensions = canvasContainer.getItem(index).dimensions;
+            billboards.push(billboard);
+        }
+
+        setPixelOffsets(label);
+    }
+
+    function setPixelOffsets(label) {
+        var billboards = label._billboards;
+
+        var scale = label._scale;
+        var pixelOffset = label._pixelOffset;
+        var horizontalOrigin = label._horizontalOrigin;
+        var verticalOrigin = label._verticalOrigin;
+
+        var dimensions;
+        var totalWidth = 0;
+        var maxHeight = 0;
+        for ( var i = 0, len = billboards.length; i < len; i++) {
+            dimensions = billboards[i]._labelDimensions;
+            totalWidth += dimensions.width;
+            maxHeight = Math.max(maxHeight, dimensions.height);
+        }
+
+        var widthOffset = 0;
+        if (horizontalOrigin === HorizontalOrigin.CENTER) {
+            widthOffset -= totalWidth / 2 * scale;
+        } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
+            widthOffset -= totalWidth * scale;
+        }
+
+        var billboardPixelOffset = new Cartesian2(pixelOffset.x + widthOffset, 0.0);
+        for (i = 0; i < len; i++) {
+            var billboard = billboards[i];
+            dimensions = billboard._labelDimensions;
+
+            if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxHeight) {
+                billboardPixelOffset.y = pixelOffset.y - dimensions.descent * scale;
+            } else if (verticalOrigin === VerticalOrigin.TOP) {
+                billboardPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) * scale - dimensions.descent * scale;
+            } else if (verticalOrigin === VerticalOrigin.CENTER) {
+                billboardPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
+            }
+
+            billboard.setPixelOffset(billboardPixelOffset);
+
+            billboardPixelOffset.x += dimensions.width * scale;
+        }
+    }
 
     /**
      * DOC_TBA
@@ -33,30 +117,27 @@ define([
      *
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/#2dcontext'>HTML canvas 2D context</a>
      */
-    var Label = function(labelTemplate, labelCollection) {
-        var l = labelTemplate || {};
-        var show = (typeof l.show === 'undefined') ? true : l.show;
-        var billboardCollection = labelCollection._getCollection();
+    var Label = function(description, labelCollection) {
+        description = defaultValue(description, {});
 
-        this._text = l.text || '';
-        this._font = l.font || '30px sans-serif';
-        this._fillColor = (typeof l.fillColor !== 'undefined') ? Color.clone(l.fillColor) : new Color(1.0, 1.0, 1.0, 1.0);
-        this._outlineColor = (typeof l.outlineColor !== 'undefined') ? Color.clone(l.outlineColor) : new Color(0.0, 0.0, 0.0, 1.0);
-        this._style = l.style || LabelStyle.FILL;
-        this._verticalOrigin = l.verticalOrigin || VerticalOrigin.BOTTOM;
-        this._horizontalOrigin = l.horizontalOrigin || HorizontalOrigin.LEFT;
-        this._pixelOffset = l.pixelOffset ? new Cartesian2(l.pixelOffset.x, l.pixelOffset.y) : Cartesian2.ZERO.clone();
-        this._eyeOffset = l.eyeOffset ? new Cartesian3(l.eyeOffset.x, l.eyeOffset.y, l.eyeOffset.z) : Cartesian3.ZERO.clone();
+        this._show = defaultValue(description.show, true);
+        this._text = defaultValue(description.text, '');
+        this._font = defaultValue(description.font, '30px sans-serif');
+        this._fillColor = Color.clone(defaultValue(description.fillColor, Color.WHITE));
+        this._outlineColor = Color.clone(defaultValue(description.outlineColor, Color.BLACK));
+        this._style = defaultValue(description.style, LabelStyle.FILL);
+        this._verticalOrigin = defaultValue(description.verticalOrigin, VerticalOrigin.BOTTOM);
+        this._horizontalOrigin = defaultValue(description.horizontalOrigin, HorizontalOrigin.LEFT);
+        this._pixelOffset = Cartesian2.clone(defaultValue(description.pixelOffset, Cartesian2.ZERO));
+        this._eyeOffset = Cartesian3.clone(defaultValue(description.eyeOffset, Cartesian3.ZERO));
+        this._position = Cartesian3.clone(defaultValue(description.position, Cartesian3.ZERO));
+        this._scale = defaultValue(description.scale, 1.0);
 
-        this._position = l.position ? new Cartesian3(l.position.x, l.position.y, l.position.z) : Cartesian3.ZERO.clone();
-        this._scale = (typeof l.scale === 'undefined') ? 1.0 : l.scale;
-        this._show = show;
-
-        this._billboardCollection = billboardCollection;
+        this._billboardCollection = labelCollection._getCollection();
         this._labelCollection = labelCollection;
-        this._billboards = undefined;
+        this._billboards = [];
 
-        this._createBillboards();
+        recreateBillboards(this);
     };
 
     /**
@@ -84,12 +165,11 @@ define([
      * @see Label#getShow
      */
     Label.prototype.setShow = function(value) {
-        if ((typeof value !== 'undefined') && (value !== this._show)) {
+        if (typeof value !== 'undefined' && value !== this._show) {
             this._show = value;
 
             var billboards = this._billboards;
-            var length = this._billboards ? this._billboards.length : 0;
-            for ( var i = 0; i < length; i++) {
+            for ( var i = 0, len = billboards.length; i < len; i++) {
                 billboards[i].setShow(value);
             }
         }
@@ -132,21 +212,17 @@ define([
      * l.setPosition({
      *   x : 1.0,
      *   y : 2.0,
-     *   z : 3.0});
+     *   z : 3.0
+     * });
      */
     Label.prototype.setPosition = function(value) {
-        var p = this._position;
+        var position = this._position;
 
-        if ((typeof value !== 'undefined') &&
-            ((p.x !== value.x) || (p.y !== value.y) || (p.z !== value.z))) {
-
-            p.x = value.x;
-            p.y = value.y;
-            p.z = value.z;
+        if (typeof value !== 'undefined' && !Cartesian3.equals(position, value)) {
+            Cartesian3.clone(value, position);
 
             var billboards = this._billboards;
-            var length = this._billboards ? this._billboards.length : 0;
-            for ( var i = 0; i < length; i++) {
+            for ( var i = 0, len = billboards.length; i < len; i++) {
                 billboards[i].setPosition(value);
             }
         }
@@ -171,9 +247,10 @@ define([
      * @see Label#getText
      */
     Label.prototype.setText = function(value) {
-        if ((typeof value !== 'undefined') && (value !== this._text)) {
+        if (typeof value !== 'undefined' && value !== this._text) {
             this._text = value;
-            this._createBillboards();
+
+            recreateBillboards(this);
         }
     };
 
@@ -200,9 +277,10 @@ define([
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/#dom-context-2d-font'>HTML canvas 2D context font</a>
      */
     Label.prototype.setFont = function(value) {
-        if ((typeof value !== 'undefined') && (this._font !== value)) {
+        if (typeof value !== 'undefined' && this._font !== value) {
             this._font = value;
-            this._createBillboards();
+
+            recreateBillboards(this);
         }
     };
 
@@ -229,10 +307,11 @@ define([
      * @see Label#setFont
      */
     Label.prototype.setFillColor = function(value) {
-        var c = this._fillColor;
-        if ((typeof value !== 'undefined') && !Color.equals(c, value)) {
-            Color.clone(value, this._fillColor);
-            this._createBillboards();
+        var fillColor = this._fillColor;
+        if (typeof value !== 'undefined' && !Color.equals(fillColor, value)) {
+            Color.clone(value, fillColor);
+
+            recreateBillboards(this);
         }
     };
 
@@ -259,10 +338,11 @@ define([
      * @see Label#setFont
      */
     Label.prototype.setOutlineColor = function(value) {
-        var c = this._outlineColor;
-        if ((typeof value !== 'undefined') && !Color.equals(c, value)) {
-            Color.clone(value, this._outlineColor);
-            this._createBillboards();
+        var outlineColor = this._outlineColor;
+        if (typeof value !== 'undefined' && !Color.equals(outlineColor, value)) {
+            Color.clone(value, outlineColor);
+
+            recreateBillboards(this);
         }
     };
 
@@ -289,9 +369,10 @@ define([
      * @see Label#setFillColor
      */
     Label.prototype.setStyle = function(value) {
-        if ((typeof value !== 'undefined') && (this._style !== value)) {
+        if (typeof value !== 'undefined' && this._style !== value) {
             this._style = value;
-            this._createBillboards();
+
+            recreateBillboards(this);
         }
     };
 
@@ -335,11 +416,11 @@ define([
      * @see Billboard#setPixelOffset
      */
     Label.prototype.setPixelOffset = function(value) {
-        var p = this._pixelOffset;
-        if ((typeof value !== 'undefined') && ((p.x !== value.x) || (p.y !== value.y))) {
-            p.x = value.x;
-            p.y = value.y;
-            this._setPixelOffsets();
+        var pixelOffset = this._pixelOffset;
+        if (typeof value !== 'undefined' && !Cartesian2.equals(pixelOffset, value)) {
+            Cartesian2.clone(value, pixelOffset);
+
+            setPixelOffsets(this);
         }
     };
 
@@ -388,23 +469,13 @@ define([
      * @see Label#getEyeOffset
      */
     Label.prototype.setEyeOffset = function(value) {
-        var e = this._eyeOffset;
+        var eyeOffset = this._eyeOffset;
+        if (typeof value !== 'undefined' && !Cartesian3.equals(eyeOffset, value)) {
+            Cartesian3.clone(value, eyeOffset);
 
-        if ((typeof value !== 'undefined') &&
-            ((e.x !== value.x) || (e.y !== value.y) || (e.z !== value.z))) {
-            e.x = value.x;
-            e.y = value.y;
-            e.z = value.z;
             var billboards = this._billboards;
-            var length = this._billboards ? this._billboards.length : 0;
-            for ( var i = 0; i < length; i++) {
-                var b = billboards[i];
-                var eyeOffset = b.getEyeOffset();
-                b.setEyeOffset({
-                    x : this._eyeOffset.x + eyeOffset.x,
-                    y : this._eyeOffset.y + eyeOffset.y,
-                    z : this._eyeOffset.z + eyeOffset.z
-                });
+            for ( var i = 0, len = billboards.length; i < len; i++) {
+                billboards[i].setEyeOffset(value);
             }
         }
     };
@@ -443,9 +514,10 @@ define([
      * l.setVerticalOrigin(VerticalOrigin.TOP);
      */
     Label.prototype.setHorizontalOrigin = function(value) {
-        if ((typeof value !== 'undefined') && (this._horizontalOrigin !== value)) {
+        if (typeof value !== 'undefined' && this._horizontalOrigin !== value) {
             this._horizontalOrigin = value;
-            this._createBillboards();
+
+            recreateBillboards(this);
         }
     };
 
@@ -483,9 +555,10 @@ define([
      * l.setVerticalOrigin(VerticalOrigin.TOP);
      */
     Label.prototype.setVerticalOrigin = function(value) {
-        if ((typeof value !== 'undefined') && (this._verticalOrigin !== value)) {
+        if (typeof value !== 'undefined' && this._verticalOrigin !== value) {
             this._verticalOrigin = value;
-            this._createBillboards();
+
+            recreateBillboards(this);
         }
     };
 
@@ -525,14 +598,15 @@ define([
      * @see Label#setFont
      */
     Label.prototype.setScale = function(value) {
-        if ((typeof value !== 'undefined') && (this._scale !== value)) {
+        if (typeof value !== 'undefined' && this._scale !== value) {
             this._scale = value;
+
             var billboards = this._billboards;
-            var length = this._billboards ? this._billboards.length : 0;
-            for ( var i = 0; i < length; i++) {
+            for ( var i = 0, len = billboards.length; i < len; i++) {
                 billboards[i].setScale(value);
             }
-            this._setPixelOffsets();
+
+            setPixelOffsets(this);
         }
     };
 
@@ -561,7 +635,7 @@ define([
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
         var billboards = this._billboards;
-        var position = (this._billboards.length !== 0) ? billboards[0]._getActualPosition() : this._position;
+        var position = (billboards.length !== 0) ? billboards[0]._getActualPosition() : this._position;
 
         return Billboard._computeScreenSpacePosition(this._labelCollection.modelMatrix, position, this._eyeOffset, this._pixelOffset, uniformState);
     };
@@ -577,238 +651,87 @@ define([
      * @return {Boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
      */
     Label.prototype.equals = function(other) {
-        return other &&
-               (this.getShow() === other.getShow()) &&
-               (this.getPosition().equals(other.getPosition())) &&
-               (this.getPixelOffset().equals(other.getPixelOffset())) &&
-               (this.getEyeOffset().equals(other.getEyeOffset())) &&
-               (this.getHorizontalOrigin().value === other.getHorizontalOrigin().value) &&
-               (this.getVerticalOrigin().value === other.getVerticalOrigin().value) &&
-               (this.getScale() === other.getScale()) &&
-               (this._text === other._text) &&
-               (this._font === other._font) &&
-               (shallowEquals(this._fillColor, other._fillColor)) &&
-               (shallowEquals(this._outlineColor, other._outlineColor)) &&
-               (this._style === other._style);
+        return this === other ||
+               (typeof other !== 'undefined' &&
+                this._show === other._show &&
+                this._scale === other._scale &&
+                this._style === other._style &&
+                this._verticalOrigin === other._verticalOrigin &&
+                this._horizontalOrigin === other._horizontalOrigin &&
+                this._text === other._text &&
+                this._font === other._font &&
+                Cartesian3.equals(this._position, other._position) &&
+                Color.equals(this._fillColor, other._fillColor) &&
+                Color.equals(this._outlineColor, other._outlineColor) &&
+                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
+                Cartesian3.equals(this._eyeOffset, other._eyeOffset));
+    };
+
+    Label.prototype.isDestroyed = function() {
+        return false;
     };
 
     Label.prototype._destroy = function() {
         var billboardCollection = this._billboardCollection;
         var billboards = this._billboards;
-        var length = this._billboards ? this._billboards.length : 0;
-        for ( var i = 0; i < length; i++) {
+        for ( var i = 0, len = billboards.length; i < len; i++) {
             billboardCollection.remove(billboards[i]);
         }
-        this._billboards = null;
-        this._billboardCollection = null;
-        this._labelCollection = null;
+        destroyObject(this);
     };
 
     Label.prototype._getCollection = function() {
         return this._labelCollection;
     };
 
-    Label.prototype._getBillboards = function() {
-        return this._billboards;
-    };
-
-    Label.prototype._createBillboards = function() {
-        var i;
-        var length = this._billboards ? this._billboards.length : 0;
-        for (i = 0; i < length; i++) {
-            this._billboardCollection.remove(this._billboards[i]);
-        }
-
-        this._billboards = [];
-        var text = this._text;
-        length = text.length;
-        var self = this;
-
-        var onCanvasCreated = function() {
-            self._setUpdateTextureAtlas(true);
-        };
-
-        for (i = 0; i < length; i++) {
-            var charValue = text.charAt(i);
-            var billboard = this._billboardCollection.add({
-                show : this._show,
-                position : this._position,
-                eyeOffset : this._eyeOffset,
-                horizontalOrigin : HorizontalOrigin.LEFT,
-                verticalOrigin : this._verticalOrigin,
-                scale : this._scale,
-                _pickIdThis : this
-            });
-
-            var canvasContainer = this._labelCollection._canvasContainer;
-            var index = canvasContainer.add(charValue, this, onCanvasCreated);
-            billboard.setImageIndex(index);
-            billboard._labelDimension = canvasContainer.getItem(index)._dimension;
-            this._billboards.push(billboard);
-        }
-        this._setPixelOffsets();
-    };
-
     Label.prototype._createId = function(charValue) {
-        return JSON.stringify({
-            fillColor : this._fillColor.red.toString() + ',' + this._fillColor.green.toString() + ',' + this._fillColor.blue.toString() + ',' + this._fillColor.alpha.toString(),
-            font : this._font,
-            outlineColor : this._outlineColor.red.toString() + ',' + this._outlineColor.green.toString() + ',' + this._outlineColor.blue.toString() + ',' + this._outlineColor.alpha.toString(),
-            style : this._style,
-            verticalOrigin : this._verticalOrigin,
-            value : charValue
-        });
+        return JSON.stringify([
+                               charValue,
+                               this._fillColor.toString(),
+                               this._font,
+                               this._outlineColor.toString(),
+                               this._style,
+                               this._verticalOrigin
+                              ]);
     };
 
     Label.prototype._createCanvas = function(charValue) {
         var font = this._font;
-
-        var canvas = document.createElement('canvas');
-        canvas.width = canvas.height = 1;
-        canvas.style.font = font;
-        canvas.style.display = 'hidden';
-
-        var context2D = canvas.getContext('2d');
-        context2D.font = font;
-
-
-        //the vertical origin needs to be set before the measureText call. It won't work otherwise.
-        //It's magic.
+        var fillColor = this._fillColor;
+        var outlineColor = this._outlineColor;
         var verticalOrigin = this._verticalOrigin;
-        if (verticalOrigin === VerticalOrigin.BOTTOM) {
-            context2D.textBaseline = 'bottom';
-        } else if (verticalOrigin === VerticalOrigin.TOP) {
-            context2D.textBaseline = 'top';
-        } else {// VerticalOrigin.CENTER
-            context2D.textBaseline = 'middle';
-        }
-
-        //in order for measureText to calculate style, the canvas has to be
-        //(temporarily) added to the DOM.
-        document.body.appendChild(canvas);
-        var dimensions = measureText(context2D, charValue);
-        document.body.removeChild(canvas);
-        var baseline = dimensions.height - dimensions.ascent;
-        canvas.width = dimensions.width;
-        canvas.height = dimensions.height;
-        context2D.font = font;
-        // font must be explicitly set again after changing width and height
-        context2D.fillStyle = 'rgba(' + this._fillColor.red * 255 + ', ' + this._fillColor.green * 255 + ', ' + this._fillColor.blue * 255 + ', ' + this._fillColor.alpha + ')';
-        context2D.strokeStyle = 'rgba(' + this._outlineColor.red * 255 + ', ' + this._outlineColor.green * 255 + ', ' + this._outlineColor.blue * 255 + ', ' + this._outlineColor.alpha + ')';
-
-        var y = canvas.height - baseline;
         var style = this._style;
 
-        canvas._dimension = {
-            width : canvas.width,
-            height : canvas.height,
-            descent : dimensions.descent
-        };
-
-        if (style === LabelStyle.FILL) {
-            context2D.fillText(charValue, 0, y);
-        } else if (style === LabelStyle.OUTLINE) {
-            context2D.strokeText(charValue, 0, y);
-        } else {// LabelStyle.FILL_AND_OUTLINE
-            context2D.fillText(charValue, 0, y);
-            context2D.strokeText(charValue, 0, y);
+        var textBaseline;
+        if (verticalOrigin === VerticalOrigin.BOTTOM) {
+            textBaseline = 'bottom';
+        } else if (verticalOrigin === VerticalOrigin.TOP) {
+            textBaseline = 'top';
+        } else {
+            // VerticalOrigin.CENTER
+            textBaseline = 'middle';
         }
+
+        var fill = false;
+        if (style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE) {
+            fill = true;
+        }
+
+        var stroke = false;
+        if (style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE) {
+            stroke = true;
+        }
+
+        var canvas = writeTextToCanvas(charValue, {
+            font : font,
+            textBaseline : textBaseline,
+            fill : fill,
+            fillColor : fillColor,
+            stroke : stroke,
+            strokeColor : outlineColor
+        });
+
         return canvas;
-    };
-
-    Label.prototype._getMaxHeight = function() {
-        var i;
-        var billboards = this._billboards;
-        var length = billboards.length;
-        var maxHeight = 0;
-        for (i = 0; i < length; i++) {
-            var billboard = billboards[i];
-            maxHeight = Math.max(maxHeight, billboard._labelDimension.height);
-        }
-        return maxHeight;
-    };
-
-    Label.prototype._getWidth = function(){
-        var i;
-        var billboards = this._billboards;
-        var length = billboards.length;
-        var width = 0;
-        for (i = 0; i < length; i++) {
-            var billboard = billboards[i];
-            width += billboard._labelDimension.width;
-        }
-        return width;
-    };
-
-    Label.prototype._setPixelOffsets = function() {
-        var billboards = this._billboards;
-        var maxHeight = 0;
-        var i;
-        var length = billboards.length;
-        var thisPixelOffset = this._pixelOffset;
-        var thisVerticalOrigin = this._verticalOrigin;
-        var thisHorizontalOrigin = this._horizontalOrigin;
-        var totalWidth = this._getWidth();
-        var widthOffset = 0;
-        var scale = this._scale;
-        var dimension;
-        var billboard;
-        if(thisHorizontalOrigin === HorizontalOrigin.CENTER){
-            widthOffset -= totalWidth / 2 * scale;
-        }
-        else if(thisHorizontalOrigin === HorizontalOrigin.RIGHT){
-            widthOffset -= totalWidth * scale;
-        }
-        if (thisVerticalOrigin === VerticalOrigin.TOP) {
-            maxHeight = this._getMaxHeight();
-            for (i = 0; i < length; i++) {
-                billboard = billboards[i];
-                dimension = billboard._labelDimension;
-                if (dimension.height < maxHeight) {
-                    billboard.setPixelOffset({
-                        x : thisPixelOffset.x + widthOffset,
-                        y : thisPixelOffset.y - ((maxHeight - dimension.height) * scale) - (dimension.descent * scale)
-                    });
-                } else {
-                    billboard.setPixelOffset({
-                        x : thisPixelOffset.x + widthOffset,
-                        y : thisPixelOffset.y - (dimension.descent * scale)
-                    });
-                }
-                widthOffset += dimension.width * scale;
-            }
-        } else if (thisVerticalOrigin === VerticalOrigin.CENTER) {
-            maxHeight = this._getMaxHeight();
-            for (i = 0; i < length; i++) {
-                billboard = billboards[i];
-                dimension = billboard._labelDimension;
-                if (dimension.height < maxHeight) {
-                    billboard.setPixelOffset({
-                        x : thisPixelOffset.x + widthOffset,
-                        y : thisPixelOffset.y - (((maxHeight - billboard._labelDimension.height) / 2) * scale) - dimension.descent * scale
-                    });
-                } else {
-                    billboard.setPixelOffset({
-                        x : thisPixelOffset.x + widthOffset,
-                        y : thisPixelOffset.y - billboard._labelDimension.descent * scale
-                    });
-                }
-                widthOffset += dimension.width * scale;
-            }
-        } else if (thisVerticalOrigin === VerticalOrigin.BOTTOM) {
-            for (i = 0; i < length; i++) {
-                billboard = billboards[i];
-                billboard.setPixelOffset({
-                    x : thisPixelOffset.x + widthOffset,
-                    y : thisPixelOffset.y - billboard._labelDimension.descent * scale
-                });
-                widthOffset += billboard._labelDimension.width * scale;
-            }
-        }
-    };
-
-    Label.prototype._setUpdateTextureAtlas = function(value) {
-        this._labelCollection._setUpdateTextureAtlas(value);
     };
 
     return Label;

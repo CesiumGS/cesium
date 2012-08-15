@@ -223,7 +223,7 @@ define([
     };
 
     /**
-     * Removes a label from the collection.
+     * Removes a label from the collection.  Once removed, a label is no longer usable.
      *
      * @memberof LabelCollection
      *
