@@ -70,121 +70,171 @@ define([
      * behind-the-scenes. Check out the <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>wiki page</a>
      * for more details on Fabric.
      * <br /><br />
-     * Base material types:
-     * <table border='1' cellpadding='1'><tr>
-     * <td>Color</td>
-     * <td>color: rgba color object.</td>
-     * </tr><tr>
-     * <td>Image</td>
-     * <td>image: path to image.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.</td>
-     * </tr><tr>
-     * <td>DiffuseMap</td>
-     * <td>image: path to image.
-     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired image channels.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.</td>
-     * </tr><tr>
-     * <td>AlphaMap</td>
-     * <td>image: path to image.
-     * <br />channel: One character string containing r, g, b, or a for selecting the desired image channel.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.</td>
-     * </tr><tr>
-     * <td>SpecularMap</td>
-     * <td>image: path to image.
-     * <br />channel: One character string containing r, g, b, or a for selecting the desired image channel.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.</td>
-     * </tr><tr>
-     * <td>EmissionMap</td>
-     * <td>image: path to image.
-     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired image channels.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.</td>
-     * </tr><tr>
-     * <td>BumpMap</td>
-     * <td>image: path to image.
-     * <br />channel: One character string containing r, g, b, or a for selecting the desired image channel.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.
-     * <br />strength: Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps. </td>
-     * </tr><tr>
-     * <td>NormalMap</td>
-     * <td> image: path to image.
-     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired image channels.
-     * <br />repeat: Object with x and y values specifying the number of times to repeat the image.
-     * <br />strength: Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps. </td>
-     * </tr><tr>
-     * <td>Reflection</td>
-     * <td>cubeMap: Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths.
-     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired image channels. </td>
-     * </tr><tr>
-     * <td>Refraction</td>
-     * <td>cubeMap: Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths.
-     * <br />channels: Three character string containing any combination of r, g, b, and a for selecting the desired image channels.
-     * <br />indexOfRefractionRatio: Number representing the refraction strength where 1.0 is the lowest and 0.0 is the highest. </td>
-     * </tr><tr>
-     * <td>Fresnel</td>
-     * <td>reflection: Reflection Material.
-     * <br />refraction: Refraction Material. </td>
-     * </tr><tr>
-     * <td>Brick</td>
-     * <td>brickColor: rgba color object for the brick color.
-     * <br />mortarColor: rgba color object for the mortar color.
-     * <br />brickSize: Number between 0.0 and 1.0 where 0.0 is many small bricks and 1.0 is one large brick.
-     * <br />brickPct: Number for the ratio of brick to mortar where 0.0 is all mortar and 1.0 is all brick.
-     * <br />brickRoughness: Number between 0.0 and 1.0 representing how rough the brick looks.
-     * <br />mortarRoughness: Number between 0.0 and 1.0 representing how rough the mortar looks. </td>
-     * </tr><tr>
-     * <td>Wood</td>
-     * <td>lightWoodColor: rgba color object for the wood's base color.
-     * <br />darkWoodColor: rgba color object for the color of rings in the wood.
-     * <br />ringFrequency: Number for the frequency of rings in the wood.
-     * <br />noiseScale: Object with x and y values specifying the noisiness of the ring patterns in both directions. </td>
-     * </tr><tr>
-     * <td>Asphalt</td>
-     * <td>asphaltColor: rgba color object for the asphalt's color.
-     * <br />bumpSize: Number for the size of the asphalt's bumps.
-     * <br />roughness: Number that controls how rough the asphalt looks. </td>
-     * </tr><tr>
-     * <td>Cement</td>
-     * <td>cementColor: rgba color object for the cement's color.
-     * <br />grainScale: Number for the size of rock grains in the cement.
-     * <br />roughness: Number that controls how rough the cement looks. </td>
-     * </tr><tr>
-     * <td>Grass</td>
-     * <td>grassColor: rgba color object for the grass' color.
-     * <br />dirtColor: rgba color object for the dirt's color.
-     * <br />patchiness: Number that controls the size of the color patches in the grass. </td>
-     * </tr><tr>
-     * <td>Stripe</td>
-     * <td>horizontal: Boolean that determines if the stripes are horizontal or vertical.
-     * <br />lightColor: rgba color object for the stripe's light alternating color.
-     * <br />darkColor: rgba color object for the stripe's dark alternating color.
-     * <br />offset: Number that controls the stripe offset from the edge.
-     * <br />repeat: Number that controls the total number of stripes, half light and half dark. </td>
-     * </tr><tr>
-     * <td>Checkerboard</td>
-     * <td>lightColor: rgba color object for the checkerboard's light alternating color.
-     * <br />darkColor: rgba color object for the checkerboard's dark alternating color.
-     * <br />repeat: Object with x and y values specifying the number of columns and rows respectively. </td>
-     * </tr><tr>
-     * <td>Dot</td>
-     * <td>lightColor: rgba color object for the dot color.
-     * <br />darkColor: rgba color object for the background color.
-     * <br />repeat: Object with x and y values specifying the number of columns and rows of dots respectively. </td>
-     * </tr><tr>
-     * <td>TieDye</td>
-     * <td>lightColor: rgba color object for the light color.
-     * <br />darkColor: rgba color object for the dark color.
-     * <br />frequency: Number that controls the frequency of the pattern. </td>
-     * </tr><tr>
-     * <td>Facet</td>
-     * <td>lightColor: rgba color object for the light color.
-     * <br />darkColor: rgba color object for the dark color.
-     * <br />frequency: Number that controls the frequency of the pattern. </td>
-     * </tr><tr>
-     * <td>Blob</td>
-     * <td>lightColor: rgba color object for the light color.
-     * <br />darkColor: rgba color object for the dark color.
-     * <br />frequency: Number that controls the frequency of the pattern. </td>
-     * </tr></table>
+     * <style type="text/css">
+     *  #materialDescriptions code {
+     *      font-weight: normal;
+     *      font-family: Consolas, 'Lucida Console', Monaco, monospace;
+     *      color: #A35A00;
+     *  }
+     *  #materialDescriptions ul, #materialDescriptions ul ul {
+     *      list-style-type: none;
+     *  }
+     *  #materialDescriptions ul ul {
+     *      margin-bottom: 10px;
+     *  }
+     *  #materialDescriptions ul ul li {
+     *      font-weight: normal;
+     *      color: #000000;
+     *      text-indent: -2em;
+     *      margin-left: 2em;
+     *
+     *  }
+     *  #materialDescriptions ul li {
+     *      font-weight: bold;
+     *      color: #0053CF;
+     *  }
+     * </style>
+     *
+     * Base material types and their uniforms:
+     * <div id='materialDescriptions'>
+     * <ul>
+     *  <li>Color</li>
+     *  <ul>
+     *      <li><code>color</code>:  rgba color object.</li>
+     *  </ul>
+     *  <li>Image</li>
+     *  <ul>
+     *      <li><code>image</code>:  path to image.</li>
+     *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+     *  </ul>
+     *  <li>DiffuseMap</li>
+     *  <ul>
+     *      <li><code>image</code>:  path to image.</li>
+     *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels.</li>
+     *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+     *  </ul>
+     *  <li>AlphaMap</li>
+     *  <ul>
+     *      <li><code>image</code>:  path to image.</li>
+     *      <li><code>channel</code>:  One character string containing r, g, b, or a for selecting the desired image channel. </li>
+     *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+     *  </ul>
+     *  <li>SpecularMap</li>
+     *  <ul>
+     *      <li><code>image</code>: path to image.</li>
+     *      <li><code>channel</code>: One character string containing r, g, b, or a for selecting the desired image channel. </li>
+     *      <li><code>repeat</code>: Object with x and y values specifying the number of times to repeat the image.</li>
+     *  </ul>
+     *  <li>EmissionMap</li>
+     *  <ul>
+     *      <li><code>image</code>:  path to image.</li>
+     *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels. </li>
+     *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+     *  </ul>
+     *  <li>BumpMap</li>
+     *  <ul>
+     *      <li><code>image</code>:  path to image.</li>
+     *      <li><code>channel</code>:  One character string containing r, g, b, or a for selecting the desired image channel. </li>
+     *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+     *      <li><code>strength</code>:  Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps.</li>
+     *  </ul>
+     *  <li>NormalMap</li>
+     *  <ul>
+     *      <li><code>image</code>:  path to image.</li>
+     *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels. </li>
+     *      <li><code>repeat</code>:  Object with x and y values specifying the number of times to repeat the image.</li>
+     *      <li><code>strength</code>:  Bump strength value between 0.0 and 1.0 where 0.0 is small bumps and 1.0 is large bumps.</li>
+     *  </ul>
+     *  <li>Reflection</li>
+     *  <ul>
+     *      <li><code>cubeMap</code>:  Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths. </li>
+     *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels.</li>
+     *  </ul>
+     *  <li>Refraction</li>
+     *  <ul>
+     *      <li><code>cubeMap</code>:  Object with positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ image paths. </li>
+     *      <li><code>channels</code>:  Three character string containing any combination of r, g, b, and a for selecting the desired image channels.</li>
+     *      <li><code>indexOfRefractionRatio</code>:  Number representing the refraction strength where 1.0 is the lowest and 0.0 is the highest.</li>
+     *  </ul>
+     *  <li>Fresnel</li>
+     *  <ul>
+     *      <li><code>reflection</code>:  Reflection Material.</li>
+     *      <li><code>refraction</code>:  Refraction Material.</li>
+     *  </ul>
+     *  <li>Brick</li>
+     *  <ul>
+     *      <li><code>brickColor</code>:  rgba color object for the brick color.</li>
+     *      <li><code>mortarColor</code>:  rgba color object for the mortar color.</li>
+     *      <li><code>brickSize</code>:  Number between 0.0 and 1.0 where 0.0 is many small bricks and 1.0 is one large brick.</li>
+     *      <li><code>brickPct</code>:  Number for the ratio of brick to mortar where 0.0 is all mortar and 1.0 is all brick.</li>
+     *      <li><code>brickRoughness</code>:  Number between 0.0 and 1.0 representing how rough the brick looks.</li>
+     *      <li><code>mortarRoughness</code>:  Number between 0.0 and 1.0 representing how rough the mortar looks.</li>
+     *  </ul>
+     *  <li>Wood</li>
+     *  <ul>
+     *      <li><code>lightWoodColor</code>:  rgba color object for the wood's base color.</li>
+     *      <li><code>darkWoodColor</code>:  rgba color object for the color of rings in the wood.</li>
+     *      <li><code>ringFrequency</code>:  Number for the frequency of rings in the wood.</li>
+     *      <li><code>noiseScale</code>:  Object with x and y values specifying the noisiness of the ring patterns in both directions.</li>
+     *  </ul>
+     *  <li>Asphalt</li>
+     *  <ul>
+     *      <li><code>asphaltColor</code>:  rgba color object for the asphalt's color.</li>
+     *      <li><code>bumpSize</code>:  Number for the size of the asphalt's bumps.</li>
+     *      <li><code>roughness</code>:  Number that controls how rough the asphalt looks.</li>
+     *  </ul>
+     *  <li>Cement</li>
+     *  <ul>
+     *  <li><code>cementColor</code>:  rgba color object for the cement's color. </li>
+     *  <li><code>grainScale</code>:  Number for the size of rock grains in the cement. </li>
+     *  <li><code>roughness</code>:  Number that controls how rough the cement looks.</li>
+     *  </ul>
+     *  <li>Grass</li>
+     *  <ul>
+     *      <li><code>grassColor</code>:  rgba color object for the grass' color. </li>
+     *      <li><code>dirtColor</code>:  rgba color object for the dirt's color. </li>
+     *      <li><code>patchiness</code>:  Number that controls the size of the color patches in the grass.</li>
+     *  </ul>
+     *  <li>Stripe</li>
+     *  <ul>
+     *      <li><code>horizontal</code>:  Boolean that determines if the stripes are horizontal or vertical.</li>
+     *      <li><code>lightColor</code>:  rgba color object for the stripe's light alternating color.</li>
+     *      <li><code>darkColor</code>:  rgba color object for the stripe's dark alternating color.</li>
+     *      <li><code>offset</code>:  Number that controls the stripe offset from the edge.</li>
+     *      <li><code>repeat</code>:  Number that controls the total number of stripes, half light and half dark.</li>
+     *  </ul>
+     *  <li>Checkerboard</li>
+     *  <ul>
+     *      <li><code>lightColor</code>:  rgba color object for the checkerboard's light alternating color.</li>
+     *      <li><code>darkColor</code>: rgba color object for the checkerboard's dark alternating color.</li>
+     *      <li><code>repeat</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
+     *  </ul>
+     *  <li>Dot</li>
+     *  <ul>
+     *      <li><code>lightColor</code>:  rgba color object for the dot color.</li>
+     *      <li><code>darkColor</code>:  rgba color object for the background color.</li>
+     *      <li><code>repeat</code>:  Object with x and y values specifying the number of columns and rows of dots respectively.</li>
+     *  </ul>
+     *  <li>TieDye</li>
+     *  <ul>
+     *      <li><code>lightColor</code>:  rgba color object for the light color.</li>
+     *      <li><code>darkColor</code>:  rgba color object for the dark color.</li>
+     *      <li><code>frequency</code>:  Number that controls the frequency of the pattern.</li>
+     *  </ul>
+     *  <li>Facet</li>
+     *  <ul>
+     *      <li><code>lightColor</code>:  rgba color object for the light color.</li>
+     *      <li><code>darkColor</code>:  rgba color object for the dark color.</li>
+     *      <li><code>frequency</code>:  Number that controls the frequency of the pattern.</li>
+     *  </ul>
+     *  <li>Blob</li>
+     *  <ul>
+     *      <li><code>lightColor</code>:  rgba color object for the light color.</li>
+     *      <li><code>darkColor</code>:  rgba color object for the dark color.</li>
+     *      <li><code>frequency</code>:  Number that controls the frequency of the pattern.</li>
+     *  </ul>
+     * </ul>
+     * </div>
      *
      * @alias Material
      *
@@ -236,7 +286,6 @@ define([
      * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric wiki page</a> for a more detailed description of Fabric.
      *
      */
-
     var Material = function(description) {
         this._description = defaultValue(description, {});
         this._context = this._description.context;
