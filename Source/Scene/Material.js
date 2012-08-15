@@ -87,7 +87,6 @@ define([
      *      color: #000000;
      *      text-indent: -2em;
      *      margin-left: 2em;
-     *
      *  }
      *  #materialDescriptions ul li {
      *      font-weight: bold;
@@ -284,7 +283,6 @@ define([
      * });
      *
      * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric wiki page</a> for a more detailed description of Fabric.
-     *
      */
     var Material = function(description) {
         this._description = defaultValue(description, {});
@@ -351,7 +349,6 @@ define([
      * var material = Material.fromType(context, 'Color');
      * material.uniforms.color = vec4(1.0, 0.0, 0.0, 1.0);
      */
-
     Material.fromType = function(context, type) {
         if (typeof Material._materialCache.getMaterial(type) === 'undefined') {
             throw new DeveloperError('material with type \'' + type + '\' does not exist.');
@@ -399,24 +396,24 @@ define([
     * @example
     * material = material && material.destroy();
     */
-   Material.prototype.destroy = function() {
-       var materials = this.materials;
-       var uniforms = this.uniforms;
-       for (var uniformId in uniforms) {
-           if (uniforms.hasOwnProperty(uniformId)) {
-               var uniformValue = uniforms[uniformId];
-               if (uniformValue instanceof Texture || uniformValue instanceof CubeMap) {
-                   Material._textureCache.releaseTexture(this, uniformValue);
-               }
-           }
-       }
-       for (var material in materials) {
-           if (materials.hasOwnProperty(material)) {
-               material.destroy();
-           }
-       }
-       return destroyObject(this);
-   };
+    Material.prototype.destroy = function() {
+        var materials = this.materials;
+        var uniforms = this.uniforms;
+        for (var uniformId in uniforms) {
+            if (uniforms.hasOwnProperty(uniformId)) {
+                var uniformValue = uniforms[uniformId];
+                if (uniformValue instanceof Texture || uniformValue instanceof CubeMap) {
+                    Material._textureCache.releaseTexture(this, uniformValue);
+                }
+            }
+        }
+        for (var material in materials) {
+            if (materials.hasOwnProperty(material)) {
+                material.destroy();
+            }
+        }
+        return destroyObject(this);
+    };
 
     var checkForTemplateErrors = function(material) {
         var template = material._template;
@@ -498,6 +495,7 @@ define([
             }
         }
     };
+
     // Writes uniform declarations to the shader file and connects uniform values with
     // corresponding material properties through the returnUniforms function.
     var createUniform = function(material, uniformId) {
@@ -545,6 +543,7 @@ define([
             material._uniforms[newUniformId] = returnUniform(material, uniformId, uniformType);
         }
     };
+
     // Checks for updates to material values to refresh the uniforms.
     var matrixMap = {'mat2' : Matrix2, 'mat3' : Matrix3, 'mat4' : Matrix4};
     var returnUniform = function (material, uniformId, originalUniformType) {
@@ -582,6 +581,7 @@ define([
             return uniforms[uniformId];
         };
     };
+
     // Determines the uniform type based on the uniform in the template.
     var getUniformType = function(uniformValue) {
         var uniformType = uniformValue.type;
@@ -675,6 +675,7 @@ define([
         });
         return count;
     };
+
     var getNumberOfTokens = function(material, token, excludePeriod) {
         return replaceToken(material, token, token, excludePeriod);
     };
@@ -686,7 +687,9 @@ define([
 
     Material._textureCache = {
         _pathsToMaterials : {},
+
         _pathsToTextures : {},
+
         _updateMaterialsOnLoad : function(texture, path) {
             this._pathsToTextures[path] = texture;
             var materialContainers = this._pathsToMaterials[path];
@@ -698,6 +701,7 @@ define([
                 material.uniforms[property] = texture;
             }
         },
+
         releaseTexture : function(material, texture) {
             var pathsToTexture = this._pathsToTextures;
             for (var path in pathsToTexture) {
@@ -717,6 +721,7 @@ define([
                 }
             }
         },
+
         registerCubeMapToMaterial : function(material, property, info) {
             var that = this;
             var texture;
@@ -742,6 +747,7 @@ define([
             }
             return texture;
         },
+
         registerTexture2DToMaterial : function(material, property, info) {
             var that = this;
             var texture;
@@ -768,6 +774,7 @@ define([
             return texture;
         }
     };
+
     Material._materialCache = {
         _materials : {},
         addMaterial : function (type, materialTemplate) {
