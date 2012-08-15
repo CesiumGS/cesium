@@ -1144,12 +1144,12 @@ define([
             return polyline.getPositions().length;
         }
 
+        var ellipsoid = this.ellipsoid;
+        var positions = polyline.getPositions();
+
         if (Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) > 0 || polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) !== Intersect.INTERSECTING) {
             return polyline.getPositions().length;
         }
-
-        var ellipsoid = this.ellipsoid;
-        var positions = polyline.getPositions();
 
         var segments = PolylinePipeline.wrapLongitude(ellipsoid, positions);
         polyline._segments = segments;
@@ -1420,7 +1420,6 @@ define([
         var positions = polyline.getPositions();
 
         if (positions.length > 0) {
-            polyline._boundingVolume = BoundingSphere.fromPoints(positions);
             if (typeof polyline._collection._boundingVolume === 'undefined') {
                 polyline._collection._boundingVolume = polyline._boundingVolume.clone();
             } else {

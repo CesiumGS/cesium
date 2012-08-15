@@ -2,11 +2,13 @@
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color'
     ], function(
         DeveloperError,
         destroyObject,
+        BoundingSphere,
         Cartesian3,
         Color) {
     "use strict";
@@ -19,6 +21,10 @@ define([
     var Polyline = function(polylineTemplate, polylineCollection) {
         var p = polylineTemplate || {};
 
+        this._boundingVolume = undefined;
+        this._boundingVolume2D = undefined;
+        this._boundingRectangle = undefined;
+
         this._positions = [];
         if (typeof p.positions !== 'undefined') {
             var newPositions = p.positions;
@@ -27,6 +33,10 @@ define([
             for ( var i = 0; i < length; ++i) {
                 var position = newPositions[i];
                 positions.push(new Cartesian3(position.x, position.y, position.z));
+            }
+
+            if (positions.length > 0) {
+                this._boundingVolume = BoundingSphere.fromPoints(positions);
             }
         }
         this._show = (typeof p.show === 'undefined') ? true : p.show;
@@ -45,10 +55,6 @@ define([
         this._dirty = false;
         this._pickId = undefined;
         this._pickIdThis = p._pickIdThis;
-
-        this._boundingVolume = undefined;
-        this._boundingVolume2D = undefined;
-        this._boundingRectangle = undefined;
     };
 
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
@@ -135,6 +141,12 @@ define([
             positions.push(new Cartesian3(position.x, position.y, position.z));
         }
         this._positions = positions;
+
+        if (positions.length > 0) {
+            this._boundingVolume = BoundingSphere.fromPoints(positions);
+        } else {
+            this._boundingVolume = undefined;
+        }
         this._makeDirty(POSITION_INDEX);
     };
 
