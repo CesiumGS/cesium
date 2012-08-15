@@ -45,7 +45,6 @@ define([
             if(xmlHttp.status === 200){
                 var text = JSON.parse(xmlHttp.responseText);
                 if(doc.compositeCollection){
-                    doc.clear();
                     processCzml(text, doc, source, updaterFunctions);
                 }else{
                     var collections = doc.getCollections();
