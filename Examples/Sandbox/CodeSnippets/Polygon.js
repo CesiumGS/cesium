@@ -459,7 +459,7 @@
                             type : 'NormalMap',
                             uniforms : {
                                 image : '../../Images/normalmap.png',
-                                strength : 0.6,
+                                strength : 0.6
                             }
                         }
                     },
