@@ -237,4 +237,11 @@ defineSuite([
         var expected = new BoundingSphere(Cartesian3.ZERO, 2.0);
         expect(bs1.union(bs2)).toEqual(expected);
     });
+
+    it('expands to contain another point', function() {
+        var bs = new BoundingSphere(Cartesian3.UNIT_X.negate(), 1.0);
+        var point = Cartesian3.UNIT_X;
+        var expected = new BoundingSphere(Cartesian3.UNIT_X.negate(), 2.0);
+        expect(bs.expand(point)).toEqual(expected);
+    });
 });

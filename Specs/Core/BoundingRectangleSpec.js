@@ -135,4 +135,11 @@ defineSuite([
         var expected = new BoundingRectangle(-2.0, 0.0, 5.0, 2.0);
         expect(rect1.union(rect2)).toEqual(expected);
     });
+
+    it('expands to contain a another point', function() {
+        var rect = new BoundingRectangle(2.0, 0.0, 1.0, 1.0);
+        var point = Cartesian2.ZERO;
+        var expected = new BoundingRectangle(0.0, 0.0, 3.0, 1.0);
+        expect(rect.expand(point)).toEqual(expected);
+    });
 });
