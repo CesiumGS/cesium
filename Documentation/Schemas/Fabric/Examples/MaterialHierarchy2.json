@@ -1,0 +1,26 @@
+{
+	"materials" : {
+		"hot" : {
+			"uniforms" : {
+				"hot": "hot.jpg"
+			},
+			"components" : {
+				"diffuse" : "texture2D(hot, materialInput.st).rgb"
+			}		
+		},
+		"cold" : {
+			"uniforms" : {
+				"cold": "cold.jpg"
+			},
+			"components" : {
+				"diffuse" : "texture2D(cold, materialInput.st).rgb"
+			}		
+		}
+	},
+	"uniforms" : {
+	    "temperature" : 0.5
+	},
+    "components" : {
+        "diffuse" : "mix(cold.diffuse, hot.diffuse, temperature)"
+    }
+}

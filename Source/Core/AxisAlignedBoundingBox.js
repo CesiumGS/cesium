@@ -11,7 +11,7 @@ define([
 
     /**
      * Creates an instance of an AxisAlignedBoundingBox. The box is determined by finding the points spaced the
-     * furthest apart on the x-, y-, and z-axes.
+     * farthest apart on the x-, y-, and z-axes.
      *
      * @alias AxisAlignedBoundingBox
      *

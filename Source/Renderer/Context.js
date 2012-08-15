@@ -70,6 +70,7 @@ define([
         VertexArray,
         VertexLayout) {
     "use strict";
+    /*global Uint8Array*/
 
     function _errorToString(gl, error) {
         var message = 'OpenGL Error:  ';
@@ -243,6 +244,9 @@ define([
         this._us = new UniformState(this);
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
+
+        this._defaultTexture = undefined;
+        this._defaultCubeMap = undefined;
     };
 
     Context.prototype._enableOrDisable = function(glEnum, enable) {
@@ -1044,6 +1048,60 @@ define([
      */
     Context.prototype.setLogShaderCompilation = function(value) {
         this._logShaderCompilation = value;
+    };
+
+    /**
+     * Returns a 1x1 RGBA texture initialized to [255, 255, 255, 255].  This can
+     * be used as a placeholder texture while other textures are downloaded.
+     *
+     * @return {Texture}
+     *
+     * @memberof Context
+     */
+    Context.prototype.getDefaultTexture = function() {
+        if (this._defaultTexture === undefined) {
+            this._defaultTexture = this.createTexture2D({
+                source : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint8Array([255, 255, 255, 255])
+                }
+            });
+        }
+
+        return this._defaultTexture;
+    };
+
+    /**
+     * Returns a cube map, where each face is a 1x1 RGBA texture initialized to
+     * [255, 255, 255, 255].  This can be used as a placeholder cube map while
+     * other cube maps are downloaded.
+     *
+     * @return {CubeMap}
+     *
+     * @memberof Context
+     */
+    Context.prototype.getDefaultCubeMap = function() {
+        if (this._defaultCubeMap === undefined) {
+            var face = {
+                width : 1,
+                height : 1,
+                arrayBufferView : new Uint8Array([255, 255, 255, 255])
+            };
+
+            this._defaultCubeMap = this.createCubeMap({
+                source : {
+                    positiveX : face,
+                    negativeX : face,
+                    positiveY : face,
+                    negativeY : face,
+                    positiveZ : face,
+                    negativeZ : face
+                }
+            });
+        }
+
+        return this._defaultCubeMap;
     };
 
     /**
@@ -2703,6 +2761,9 @@ define([
 
     Context.prototype.destroy = function() {
         this._shaderCache = this._shaderCache.destroy();
+        this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
+        this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
+
         return destroyObject(this);
     };
 
