@@ -31,6 +31,7 @@ Beta Releases
     For more details, go to the [Fabric wiki page](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric).
 
 * All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
+* Added support for nested polygons with holes. See `Polygon.configureFromPolygonHierarchy`.
 
 ### b7 - 08/01/2012
 
