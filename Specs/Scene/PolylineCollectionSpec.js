@@ -374,6 +374,31 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
+    it('renders polylines. one polyline with no positions', function() {
+        var positions = [];
+        for ( var i = 0; i < 100; ++i) {
+            positions.push({x:0, y:-1, z:0});
+            positions.push({x:0, y:1, z:0});
+        }
+
+        polylines.add({
+            positions : positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+        polylines.add();
+        polylines.add({
+            positions: positions,
+            color:{red:1, green:0, blue:0, alpha:1}
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        polylines.update(context, sceneState);
+        polylines.render(context, us);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+    });
+
     it('renders 64K vertexes of same polyline', function() {
         var positions = [];
         for ( var i = 0; i < (64 * 1024) / 2; ++i) {
