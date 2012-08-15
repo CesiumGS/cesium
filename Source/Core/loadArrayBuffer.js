@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        './defaultValue',
         './DeveloperError',
         '../ThirdParty/when'
     ], function(
-        defaultValue,
         DeveloperError,
         when) {
     "use strict";
@@ -31,7 +29,7 @@ define([
      *     // an error occurred
      * });
      */
-    var loadImage = function(url) {
+    var loadArrayBuffer = function(url) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
@@ -57,5 +55,5 @@ define([
         });
     };
 
-    return loadImage;
+    return loadArrayBuffer;
 });
