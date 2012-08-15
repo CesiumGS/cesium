@@ -186,6 +186,7 @@
 
     var adv = tree.addNode('Advanced', '', null, 'Advanced');
     tree.addNode('Draw a box using custom rendering', [new Sandbox.CustomRendering(scene, ellipsoid, primitives)], adv, 'Advanced');
+    tree.addNode('Draw a box across all scene modes using custom rendering', [new Sandbox.CustomRenderingAcrossModes(scene, ellipsoid, primitives)], adv, 'Advanced');
 
     tree.publish();
 
