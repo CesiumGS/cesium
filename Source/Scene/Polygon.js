@@ -311,8 +311,6 @@ define([
         this.height = height || 0.0;
         this._extent = undefined;
         this._polygonHierarchy = undefined;
-        this._textureCoordinateOrigin = undefined;
-        this._boundingRectangle = undefined;
         this._positions = positions;
         this._createVertexArray = true;
     };
@@ -403,8 +401,7 @@ define([
 
         this.height = height || 0.0;
         this._positions = undefined;
-        this._textureCoordinateOrigin = undefined;
-        this._boundingRectangle = undefined;
+        this._extent = undefined;
         this._polygonHierarchy = polygons;
         this._createVertexArray = true;
     };
@@ -430,6 +427,7 @@ define([
         this._extent = extent;
         this.height = height || 0.0;
         this._positions = undefined;
+        this._polygonHierarchy = undefined;
         this._createVertexArray = true;
     };
 
@@ -464,7 +462,7 @@ define([
         return mesh;
     };
 
-    Polygon.prototype._createMeshFromPositions = function (positions) {
+    Polygon.prototype._createMeshFromPositions = function (positions, outerPositions2D) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
         var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
         var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
@@ -476,12 +474,8 @@ define([
         }
         var indices = PolygonPipeline.earClip2D(positions2D);
         var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
-        if (typeof this._polygonHierarchy !== 'undefined') {
-            var outerPositions2D = tangentPlane.projectPointsOntoPlane(this._polygonHierarchy[0]);
-            mesh = Polygon._appendTextureCoordinates(tangentPlane, outerPositions2D, mesh);
-        } else {
-            mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
-        }
+        var boundary2D = outerPositions2D || positions2D;
+        mesh = Polygon._appendTextureCoordinates(tangentPlane, boundary2D, mesh);
         return mesh;
     };
 
@@ -496,8 +490,10 @@ define([
             meshes.push(this._createMeshFromPositions(this._positions));
         }
         else if(typeof this._polygonHierarchy !== 'undefined') {
+            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, this._polygonHierarchy[0]);
+            var outerPositions2D = tangentPlane.projectPointsOntoPlane(this._polygonHierarchy[0]);
             for (i = 0; i < this._polygonHierarchy.length; i++) {
-                 meshes.push(this._createMeshFromPositions(this._polygonHierarchy[i]));
+                 meshes.push(this._createMeshFromPositions(this._polygonHierarchy[i], outerPositions2D));
             }
         }
         else {
@@ -507,19 +503,19 @@ define([
         var processedMeshes = [];
         for (i = 0; i < meshes.length; i++) {
             var mesh = meshes[i];
-        mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
-        mesh = MeshFilters.reorderForPostVertexCache(mesh);
-        mesh = MeshFilters.reorderForPreVertexCache(mesh);
+            mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
+            mesh = MeshFilters.reorderForPostVertexCache(mesh);
+            mesh = MeshFilters.reorderForPreVertexCache(mesh);
 
-        if (this._mode === SceneMode.SCENE3D) {
-            mesh.attributes.position2D = { // Not actually used in shader
-                    value : [0.0, 0.0]
-                };
-            mesh.attributes.position3D = mesh.attributes.position;
-            delete mesh.attributes.position;
-        } else {
-            mesh = MeshFilters.projectTo2D(mesh, this._projection);
-        }
+            if (this._mode === SceneMode.SCENE3D) {
+                mesh.attributes.position2D = { // Not actually used in shader
+                        value : [0.0, 0.0]
+                    };
+                mesh.attributes.position3D = mesh.attributes.position;
+                delete mesh.attributes.position;
+            } else {
+                mesh = MeshFilters.projectTo2D(mesh, this._projection);
+            }
             processedMeshes = processedMeshes.concat(MeshFilters.fitToUnsignedShortIndices(mesh));
         }
 
