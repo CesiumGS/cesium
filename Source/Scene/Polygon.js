@@ -490,8 +490,9 @@ define([
             meshes.push(this._createMeshFromPositions(this._positions));
         }
         else if(typeof this._polygonHierarchy !== 'undefined') {
-            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, this._polygonHierarchy[0]);
-            var outerPositions2D = tangentPlane.projectPointsOntoPlane(this._polygonHierarchy[0]);
+            var outerPositions =  this._polygonHierarchy[0];
+            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, outerPositions);
+            var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions);
             for (i = 0; i < this._polygonHierarchy.length; i++) {
                  meshes.push(this._createMeshFromPositions(this._polygonHierarchy[i], outerPositions2D));
             }
