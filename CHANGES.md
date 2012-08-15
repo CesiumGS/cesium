@@ -7,7 +7,7 @@ Beta Releases
 ### b8 - xx/xx/2012
 
 * Breaking changes:
-    * Materials are now created through a centralized Material class using a JSON schema called Fabric. Change:
+    * Materials are now created through a centralized Material class using a JSON schema called [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric). For example, change:
             
             polygon.material = new BlobMaterial({repeat : 10.0});
             
@@ -28,8 +28,6 @@ Beta Releases
                 }
             }); 
             
-    For more details, go to the [Fabric wiki page](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric).
-
 * All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * Added support for nested polygons with holes. See `Polygon.configureFromPolygonHierarchy`.
 
