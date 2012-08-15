@@ -68,38 +68,6 @@ define([
     }
 
     /**
-     * Gets the maximum geometric error allowed in a tile at a given level.
-     *
-     * @memberof TilingScheme
-     *
-     * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number}
-     */
-    TilingScheme.prototype.getLevelMaximumGeometricError = function(level) {
-        return this.levelZeroMaximumGeometricError / (this.numberOfLevelZeroTilesX << level);
-    };
-
-    /**
-     * Gets the level with the specified quantity of geometric error or less.
-     *
-     * @memberof TilingScheme
-     *
-     * @param {Number} geometricError The geometric error for which to find a corresponding level.
-     * @returns {Number} The level with the specified geometric error or less.
-     */
-    TilingScheme.prototype.getLevelWithMaximumGeometricError = function(geometricError) {
-        var twoToTheLevelPower = this.levelZeroMaximumGeometricError / (this.numberOfLevelZeroTilesX * geometricError);
-        var level = Math.log(twoToTheLevelPower) / Math.log(2);
-
-        // Round the level up, unless it's really close to the lower integer.
-        var ceiling = Math.ceil(level);
-        if (ceiling - level > 0.99) {
-            ceiling -= 1;
-        }
-        return ceiling | 0;
-    };
-
-    /**
      * Creates the tile or tiles at level of detail zero, the coarsest, least detailed level.
      *
      * @memberof TilingScheme

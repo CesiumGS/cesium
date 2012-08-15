@@ -64,15 +64,6 @@ define([
          */
         this.extent = undefined;
 
-        /**
-         * The maximum error, in meters, that can exist in the surface geometry at tile level zero.
-         * Tile level one is assumed to have half this error, level two is assumed to have
-         * half the error of level one, and so on down the tile pyramid.
-         *
-         * @type Number
-         */
-        this.levelZeroMaximumGeometricError = this.ellipsoid.getRadii().x * 2 * Math.PI / 512;
-
         if (typeof description.extentSouthwestInMeters !== 'undefined' &&
             typeof description.extentNortheastInMeters !== 'undefined') {
             this._extentSouthwestInMeters = description.extentSouthwestInMeters;
@@ -88,26 +79,6 @@ define([
         this.extent = new Extent(southwest.longitude, southwest.latitude,
                                  northeast.longitude, northeast.latitude);
     }
-
-    /**
-     * Gets the maximum geometric error allowed in a tile at a given level.
-     *
-     * @memberof WebMercatorTilingScheme
-     *
-     * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number}
-     */
-    WebMercatorTilingScheme.prototype.getLevelMaximumGeometricError = TilingScheme.prototype.getLevelMaximumGeometricError;
-
-    /**
-     * Gets the level with the specified quantity of geometric error or less.
-     *
-     * @memberof WebMercatorTilingScheme
-     *
-     * @param {Number} geometricError The geometric error for which to find a corresponding level.
-     * @returns {Number} The level with the specified geometric error or less.
-     */
-    WebMercatorTilingScheme.prototype.getLevelWithMaximumGeometricError = TilingScheme.prototype.getLevelWithMaximumGeometricError;
 
     /**
      * Creates the tile or tiles at level of detail zero, the coarsest, least detailed level.

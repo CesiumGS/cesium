@@ -79,9 +79,14 @@ define([
          *
          * @type TilingScheme
          */
-        this.tilingScheme = new WebMercatorTilingScheme();
+        this.tilingScheme = new WebMercatorTilingScheme({
+            numberOfLevelZeroTilesX : 2,
+            numberOfLevelZeroTilesY : 2
+        });
         this.projection = Projections.MERCATOR;
         this.maxLevel = 25;
+        this.heightmapWidth = 64;
+        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, this.heightmapWidth, this.tilingScheme.numberOfLevelZeroTilesX);
 
         this._proxy = description.proxy;
 
@@ -134,6 +139,14 @@ define([
         });
     }
 
+    /**
+     * Gets the maximum geometric error allowed in a tile at a given level.
+     *
+     * @param {Number} level The tile level for which to get the maximum geometric error.
+     * @returns {Number} The maximum geometric error.
+     */
+    ArcGisImageServerTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
+
     function computeDesiredGranularity(tilingScheme, tile) {
         var ellipsoid = tilingScheme.ellipsoid;
         var level = tile.level;
@@ -185,7 +198,7 @@ define([
 
         var extent = this.tilingScheme.tileXYToExtent(tile.x, tile.y, tile.level);
         var bbox = CesiumMath.toDegrees(extent.west) + '%2C' + CesiumMath.toDegrees(extent.south) + '%2C' + CesiumMath.toDegrees(extent.east) + '%2C' + CesiumMath.toDegrees(extent.north);
-        var url = this.url + '/exportImage?format=tiff&f=image&size=128%2C128&bboxSR=4326&imageSR=3857&bbox=' + bbox;
+        var url = this.url + '/exportImage?format=tiff&f=image&size=' + this.heightmapWidth + '%2C' + this.heightmapWidth + '&bboxSR=4326&imageSR=3857&bbox=' + bbox;
         if (this.token) {
             url += '&token=' + this.token;
         }

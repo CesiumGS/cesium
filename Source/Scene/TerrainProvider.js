@@ -29,6 +29,8 @@ define([
          */
         this.tilingScheme = undefined;
 
+        this.levelZeroMaximumGeometricError = undefined;
+
         throw new DeveloperError('This type should not be instantiated directly.');
     }
 
@@ -179,6 +181,46 @@ define([
 
         tile.vertexArray = context.createVertexArray(attributes, indexBuffer);
     };
+
+    /**
+     * Specifies the quality of terrain created from heightmaps.  A value of 1.0 will
+     * ensure that adjacent heightmap vertices are separated by no more than
+     * {@link EllipsoidSurface.maxScreenSpaceError} screen pixels and will probably go very slowly.
+     * A value of 0.5 will cut the estimated level zero geometric error in half, allowing twice the
+     * screen pixels between adjacent heightmap vertices and thus rendering more quickly.
+     */
+    TerrainProvider.heightmapTerrainQuality = 0.25;
+
+    /**
+     * Determines an appropriate geometric error estimate when the geometry comes from a heightmap.
+     *
+     * @param ellipsoid The ellipsoid to which the terrain is attached.
+     * @param tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
+     * @param numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
+     * @returns {Number} An estimated geometric error.
+     */
+    TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
+        return ellipsoid.getMaximumRadius() * 2 * Math.PI * TerrainProvider.heightmapTerrainQuality / (tileImageWidth * numberOfTilesAtLevelZero);
+    };
+
+    /**
+     * Gets the maximum geometric error allowed in a tile at a given level.
+     *
+     * @param {Number} level The tile level for which to get the maximum geometric error.
+     * @returns {Number} The maximum geometric error.
+     */
+    TerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
+        return this.levelZeroMaximumGeometricError / (1 << level);
+    };
+
+    /**
+     * Gets the level with the specified quantity of geometric error or less.
+     *
+     * @memberof TilingScheme
+     *
+     * @param {Number} geometricError The geometric error for which to find a corresponding level.
+     * @returns {Number} The level with the specified geometric error or less.
+     */
 
     // Is there a limit on 'level' of the tile that can be passed in?  It seems
     // natural to have a maxLevel, but this would cause problems if we have hi-res imagery

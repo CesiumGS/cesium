@@ -116,10 +116,9 @@ define([
         var newNextLayer = this._imageryLayerCollection.get(index + 1);
 
         // create TileImagerys for this layer for all previously loaded tiles
-        var terrainProviderTilingScheme = this.terrainProvider.tilingScheme;
         var tile = this._tileReplacementQueue.head;
         while (typeof tile !== 'undefined') {
-            if (layer.createTileImagerySkeletons(tile, terrainProviderTilingScheme)) {
+            if (layer.createTileImagerySkeletons(tile, this.terrainProvider)) {
                 tile.doneLoading = false;
             }
 
@@ -482,6 +481,7 @@ define([
 
             var centerEye2 = mv.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
             uniformMap.modifiedModelView = mv.setColumn(3, centerEye2, uniformMap.modifiedModelView);
+            uniformMap.modifiedModelViewProjection = Matrix4.multiply(projection, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
 
             context.continueDraw({
                 primitiveType : PrimitiveType.LINES,
@@ -774,7 +774,7 @@ define([
     }
 
     function screenSpaceError(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) {
-        var maxGeometricError = surface._tilingScheme.getLevelMaximumGeometricError(tile.level);
+        var maxGeometricError = surface.terrainProvider.getLevelMaximumGeometricError(tile.level);
 
         //var boundingVolume = tile.get3DBoundingSphere();
         var camera = sceneState.camera;
@@ -870,9 +870,8 @@ define([
                     surface._tileReplacementQueue.trimTiles(100);
 
                     var imageryLayerCollection = surface._imageryLayerCollection;
-                    var terrainProviderTilingScheme = terrainProvider.tilingScheme;
                     for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-                        imageryLayerCollection.get(i).createTileImagerySkeletons(tile, terrainProviderTilingScheme);
+                        imageryLayerCollection.get(i).createTileImagerySkeletons(tile, terrainProvider);
                     }
                 }
             }

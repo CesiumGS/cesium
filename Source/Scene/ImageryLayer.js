@@ -93,9 +93,38 @@ define([
          * @type {Number}
          */
         this.failedTileRetryTime = 5.0;
+
+        this._levelZeroMaximumTexelSpacing = undefined;
     }
 
-    ImageryLayer.prototype.createTileImagerySkeletons = function(tile, geometryTilingScheme) {
+    /**
+     * Gets the level with the specified world coordinate spacing between texels, or less.
+     *
+     * @param {Number} texelSpacing The texel spacing for which to find a corresponding level.
+     * @returns {Number} The level with the specified texel spacing or less.
+     */
+    ImageryLayer.prototype._getLevelWithMaximumTexelSpacing = function(texelSpacing) {
+        var levelZeroMaximumTexelSpacing = this._levelZeroMaximumTexelSpacing;
+        if (typeof levelZeroMaximumTexelSpacing === 'undefined') {
+            var imageryProvider = this.imageryProvider;
+            var tilingScheme = imageryProvider.tilingScheme;
+            var ellipsoid = tilingScheme.ellipsoid;
+            levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * 2 * Math.PI / (imageryProvider.tileWidth * tilingScheme.numberOfLevelZeroTilesX);
+            this._levelZeroMaximumTexelSpacing = levelZeroMaximumTexelSpacing;
+        }
+
+        var twoToTheLevelPower = this._levelZeroMaximumTexelSpacing / texelSpacing;
+        var level = Math.log(twoToTheLevelPower) / Math.log(2);
+
+        // Round the level up, unless it's really close to the lower integer.
+        var ceiling = Math.ceil(level);
+        if (ceiling - level > 0.99) {
+            ceiling -= 1;
+        }
+        return ceiling | 0;
+    };
+
+    ImageryLayer.prototype.createTileImagerySkeletons = function(tile, terrainProvider) {
         var imageryProvider = this.imageryProvider;
         var imageryTilingScheme = imageryProvider.tilingScheme;
 
@@ -115,9 +144,9 @@ define([
 
         // Compute the required level in the imagery tiling scheme.
         // TODO: this should be imagerySSE / terrainSSE.
-        var errorRatio = 0.5;
-        var targetGeometricError = errorRatio * geometryTilingScheme.getLevelMaximumGeometricError(tile.level);
-        var imageryLevel = imageryTilingScheme.getLevelWithMaximumGeometricError(targetGeometricError);
+        var errorRatio = 1.0;
+        var targetGeometricError = errorRatio * terrainProvider.getLevelMaximumGeometricError(tile.level);
+        var imageryLevel = this._getLevelWithMaximumTexelSpacing(targetGeometricError);
         imageryLevel = Math.max(0, Math.min(imageryProvider.maxLevel, imageryLevel));
 
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);

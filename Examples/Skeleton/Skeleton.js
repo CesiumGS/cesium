@@ -47,11 +47,11 @@ require({
     esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
     var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
 
-    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
-        proxy : new Cesium.DefaultProxy('/proxy/')
-    });
-    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
+//    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+//        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
+//        proxy : new Cesium.DefaultProxy('/proxy/')
+//    });
+//    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
 
 
 //    var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({

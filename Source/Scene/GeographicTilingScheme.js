@@ -63,36 +63,7 @@ define([
          * @type Number
          */
         this.numberOfLevelZeroTilesY = defaultValue(description.numberOfLevelZeroTilesY, 1);
-
-        /**
-         * The maximum error, in meters, that can exist in the surface geometry at tile level zero.
-         * Tile level one is assumed to have half this error, level two is assumed to have
-         * half the error of level one, and so on down the tile pyramid.
-         *
-         * @type Number
-         */
-        this.levelZeroMaximumGeometricError = this.ellipsoid.getRadii().x * 2 * Math.PI / 512;
     }
-
-    /**
-     * Gets the maximum geometric error allowed in a tile at a given level.
-     *
-     * @memberof GeographicTilingScheme
-     *
-     * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number}
-     */
-    GeographicTilingScheme.prototype.getLevelMaximumGeometricError = TilingScheme.prototype.getLevelMaximumGeometricError;
-
-    /**
-     * Gets the level with the specified quantity of geometric error or less.
-     *
-     * @memberof GeographicTilingScheme
-     *
-     * @param {Number} geometricError The geometric error for which to find a corresponding level.
-     * @returns {Number} The level with the specified geometric error or less.
-     */
-    GeographicTilingScheme.prototype.getLevelWithMaximumGeometricError = TilingScheme.prototype.getLevelWithMaximumGeometricError;
 
     /**
      * Creates the tile or tiles at level of detail zero, the coarsest, least detailed level.
