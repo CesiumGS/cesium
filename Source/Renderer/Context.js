@@ -227,9 +227,10 @@ define([
         this._viewport = gl.getParameter(gl.VIEWPORT);
 
         // Query and initialize extensions
-        var textureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
-
         this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
+        this._depthTexture = gl.getExtension('WEBKIT_WEBGL_depth_texture') || gl.getExtension('MOZ_WEBGL_depth_texture');
+
+        var textureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._maximumTextureFilterAnisotropy = textureFilterAnisotropic ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
@@ -925,6 +926,20 @@ define([
      */
     Context.prototype.getStandardDerivatives = function() {
         return !!this._standardDerivatives;
+    };
+
+    /**
+     * Returns <code>true</code> if WEBGL_depth_texture is supported.  This extension provides
+     * access to depth textures that, for example, can be attached to framebuffers for shadow mapping.
+     *
+     * @memberof Context
+     *
+     * @returns {Boolean} <code>true</code> if WEBGL_depth_texture is supported; otherwise, <code>false</code>.
+     *
+     * @see <a href='http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/'>WEBGL_depth_texture</a>
+     */
+    Context.prototype.getDepthTexture = function() {
+        return !!this._depthTexture;
     };
 
     /**
