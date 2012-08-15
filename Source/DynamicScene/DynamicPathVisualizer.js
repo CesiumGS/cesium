@@ -244,9 +244,22 @@ define([
         }
 
         polyline.setShow(true);
-        polyline.setPositions(samplePositions(time, positionProperty, dynamicObject.availability, dynamicPath.leadTime.getValue(time), dynamicPath.trailTime.getValue(time), polyline.getPositions()));
 
-        var property = dynamicPath.color;
+        var property = dynamicPath.leadTime;
+        var leadTime;
+        if (typeof property !== 'undefined') {
+            leadTime = property.getValue(time);
+        }
+
+        property = dynamicPath.trailTime;
+        var trailTime;
+        if (typeof property !== 'undefined') {
+            trailTime = property.getValue(time);
+        }
+
+        polyline.setPositions(samplePositions(time, positionProperty, dynamicObject.availability, leadTime, trailTime, polyline.getPositions()));
+
+        property = dynamicPath.color;
         if (typeof property !== 'undefined') {
             polyline.setColor(property.getValue(time, polyline.getColor()));
         }
