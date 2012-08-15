@@ -7,7 +7,7 @@ defineSuite([
              'DynamicScene/DynamicCone',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
-             'Scene/ColorMaterial',
+             'Scene/Material',
              'Core/JulianDate',
              'Core/Quaternion',
              'Core/Cartesian3',
@@ -23,7 +23,7 @@ defineSuite([
               DynamicCone,
               DynamicObjectCollection,
               DynamicObject,
-              ColorMaterial,
+              Material,
               JulianDate,
               Quaternion,
               Cartesian3,
@@ -138,10 +138,19 @@ defineSuite([
         cone.showIntersection = new MockProperty(true);
         cone.radius = new MockProperty(123.5);
         cone.show = new MockProperty(true);
-        cone.capMaterial = new MockProperty(new ColorMaterial(Color.RED));
-        cone.innerMaterial = new MockProperty(new ColorMaterial(Color.WHITE));
-        cone.outerMaterial = new MockProperty(new ColorMaterial(Color.BLUE));
-        cone.silhouetteMaterial = new MockProperty(new ColorMaterial(Color.YELLOW));
+
+        var redMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        redMaterial.uniforms.color = Color.RED;
+        var whiteMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        whiteMaterial.uniforms.color = Color.WHITE;
+        var blueMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        blueMaterial.uniforms.color = Color.BLUE;
+        var yellowMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        yellowMaterial.uniforms.color = Color.YELLOW;
+        cone.capMaterial = new MockProperty(redMaterial);
+        cone.innerMaterial = new MockProperty(whiteMaterial);
+        cone.outerMaterial = new MockProperty(blueMaterial);
+        cone.silhouetteMaterial = new MockProperty(yellowMaterial);
         visualizer.update(time);
 
         expect(scene.getPrimitives().getLength()).toEqual(1);

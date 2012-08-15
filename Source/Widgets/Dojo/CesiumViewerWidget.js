@@ -33,7 +33,7 @@ define([
         '../../Core/Transforms',
         '../../Core/requestAnimationFrame',
         '../../Core/Color',
-        '../../Scene/ColorMaterial',
+        '../../Scene/Material',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
         '../../Scene/BingMapsTileProvider',
@@ -81,7 +81,7 @@ define([
         Transforms,
         requestAnimationFrame,
         Color,
-        ColorMaterial,
+        Material,
         Scene,
         CentralBody,
         BingMapsTileProvider,
@@ -346,8 +346,8 @@ define([
             }
 
             if (typeof this.highlightMaterial === 'undefined') {
-                this.highlightMaterial = new ColorMaterial();
-                this.highlightMaterial.color = this.highlightColor;
+                this.highlightMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+                this.highlightMaterial.uniforms.color = this.highlightColor;
             }
 
             if (typeof this.onObjectRightClickSelected === 'undefined') {
