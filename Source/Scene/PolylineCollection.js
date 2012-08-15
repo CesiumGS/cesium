@@ -1100,15 +1100,17 @@ define([
     /**
      * @private
      */
-    PolylineBucket.segmentsLengthChanged = function(segments, polyline){
+    PolylineBucket.segmentsLengthChanged = function(segments, polyline) {
         var pSegments = polyline._segments;
-        if(typeof pSegments !== 'undefined'){
+        if (typeof pSegments !== 'undefined') {
             var numberOfSegments = segments.length;
-            if(numberOfSegments !== pSegments.length)
+            if (numberOfSegments !== pSegments.length) {
                 return true;
-            for(var i = 0; i < numberOfSegments; ++i){
-                if(segments[i].length !== pSegments[i].length)
+            }
+            for ( var i = 0; i < numberOfSegments; ++i) {
+                if (segments[i].length !== pSegments[i].length) {
                     return true;
+                }
             }
             return false;
         }
