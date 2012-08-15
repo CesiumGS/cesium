@@ -324,47 +324,119 @@ mat3 agi_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * DOC_TBA
+ * Used as input to every material's agi_getMaterial function. 
  *
- * @name agi_lightIntensity
- * @glslFunction
+ * @name agi_materialInput
+ * @glslStruct
+ *
+ * @property {float} s 1D texture coordinates.
+ * @property {vec2} st 2D texture coordinates.
+ * @property {vec3} str 3D texture coordinates.
+ * @property {vec3} normalEC Unperturbed surface normal in eye coordinates.
+ * @property {mat3} tangentToEyeMatrix Matrix for converting a tangent space normal to eye space.
+ * @property {vec3} positionToEyeWC Direction from the fragment to the eye.
+ * @property {vec3} positionMC Position in model coordinates.
  */
-float agi_lightIntensity(vec3 normal, vec3 toLight, vec3 toEye)
+struct agi_materialInput
 {
-    // TODO: where does this come from?
-    vec4 diffuseSpecularAmbientShininess = vec4(0.8, 0.1, 0.1, 10.0);
-    
-    vec3 toReflectedLight = reflect(-toLight, normal);
+    float s;
+    vec2 st;
+    vec3 str;
+    vec3 normalEC;
+    mat3 tangentToEyeMatrix;
+    vec3 positionToEyeWC;
+    vec3 positionMC;
+};
 
-    float diffuse = max(dot(toLight, normal), 0.0);
-    float specular = max(dot(toReflectedLight, toEye), 0.0);
-    specular = pow(specular, diffuseSpecularAmbientShininess.w);
+/**
+ * Holds material information that can be used for lighting. Returned by all agi_getMaterial functions.
+ *
+ * @name agi_material
+ * @glslStruct
+ *
+ * @property {vec3} diffuse Incoming light that scatters evenly in all directions.
+ * @property {float} specular Intensity of incoming light reflecting in a single direction.
+ * @property {vec3} normal Surface's normal in tangent coordinates. It is used for effects such as normal mapping. The default is the surface's unmodified normal.
+ * @property {vec3} emission Light emitted by the material equally in all directions. The default is vec3(0.0), which emits no light.
+ * @property {float} alpha Opacity of this material. 0.0 is completely transparent; 1.0 is completely opaque.
+ */
+struct agi_material
+{
+    vec3 diffuse;
+    float specular;
+    vec3 normal;
+    vec3 emission;
+    float alpha;
+};
 
-    return (diffuseSpecularAmbientShininess.x * diffuse) +
-           (diffuseSpecularAmbientShininess.y * specular) +
-            diffuseSpecularAmbientShininess.z;
+/**
+ * An agi_material with default values. Every material's agi_getMaterial
+ * should use this default material as a base for the material it returns.
+ * The default normal value is given by materialInput.normalEC.
+ *
+ * @name agi_getDefaultMaterial
+ * @glslFunction 
+ *
+ * @param {agi_materialInput} input The input used to construct the default material.
+ * 
+ * @returns {agi_material} The default material.
+ *
+ * @see agi_materialInput
+ * @see agi_material
+ * @see agi_getMaterial
+ */
+agi_material agi_getDefaultMaterial(agi_materialInput materialInput)
+{
+    agi_material material;
+    material.diffuse = vec3(0.0);
+    material.specular = 0.0;
+    material.normal = materialInput.normalEC;
+    material.emission = vec3(0.0);
+    material.alpha = 1.0;
+    return material;
 }
 
 /**
- * DOC_TBA
+ * Fast phong light computation.
  *
- * @name agi_twoSidedLightIntensity
+ * @name agi_lightValuePhong
  * @glslFunction
+ *
+ * @param {vec3} toLight Direction to light in eye coordinates.
+ * @param {vec3} toEye Direction to eye in eye coordinates.
+ * @param {agi_material} material Material value used for light computation.
+ *
+ * @returns {vec4} Final rgba light value.
+ *
+ * @see agi_material
  */
-float agi_twoSidedLightIntensity(vec3 normal, vec3 toLight, vec3 toEye)
+
+vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, agi_material material)
 {
-    // TODO: This is temporary.
-    vec4 diffuseSpecularAmbientShininess = vec4(0.8, 0.1, 0.1, 10.0);
-    
+    vec3 diffuseColor = material.diffuse;
+    float specularIntensity = material.specular;
+    vec3 normal = material.normal;
+    vec3 emissionColor = material.emission;
+    float alpha = material.alpha;
+
+    float cosAngIncidence = clamp(dot(normal, toLight), 0.0, 1.0);    
     vec3 toReflectedLight = reflect(-toLight, normal);
+    float diffuseAmount = clamp(dot(toLight, normal), 0.0, 1.0);
+    float specularAmount = clamp(dot(toReflectedLight, toEye), 0.0, 1.0);
+    specularAmount = cosAngIncidence != 0.0 ? specularAmount : 0.0;
+    specularAmount = specularIntensity != 0.0 ? pow(specularAmount, 1.0/specularIntensity) : 0.0;
 
-    float diffuse = abs(dot(toLight, normal));
-    float specular = abs(dot(toReflectedLight, toEye));
-    specular = pow(specular, diffuseSpecularAmbientShininess.w);
-
-    return (diffuseSpecularAmbientShininess.x * diffuse) +
-           (diffuseSpecularAmbientShininess.y * specular) +
-            diffuseSpecularAmbientShininess.z;
+    //x, y, z : diffuse ambient
+    //w : specular strength
+    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 1.0);
+    
+    vec3 lighting = ambientLight.xyz + emissionColor;
+    lighting += diffuseColor * diffuseAmount;
+    lighting += specularAmount * ambientLight.w;
+    lighting = clamp(lighting, 0.0, 1.0);
+    
+    vec4 finalLighting = vec4(lighting, alpha);
+    return finalLighting;
 }
 
 /**

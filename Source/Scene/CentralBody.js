@@ -645,7 +645,7 @@ define([
 
         // PERFORMANCE_IDEA:  Only combine these if showing the atmosphere.  Maybe this is too much of a micro-optimization.
         // http://jsperf.com/object-property-access-propcount
-        this._drawUniforms = combine(uniforms, atmosphereUniforms);
+        this._drawUniforms = combine([uniforms, atmosphereUniforms], false, false);
     };
 
     CentralBody.prototype._attributeIndices = {
@@ -927,19 +927,19 @@ define([
         };
 
         if (typeof this._northPoleUniforms === 'undefined') {
-            this._northPoleUniforms = combine(drawUniforms, this._drawUniforms, {
+            this._northPoleUniforms = combine([drawUniforms, this._drawUniforms, {
                 u_color : function() {
                     return that.northPoleColor;
                 }
-            });
+            }], false, false);
         }
 
         if (typeof this._southPoleUniforms === 'undefined') {
-            this._southPoleUniforms = combine(drawUniforms, this._drawUniforms, {
+            this._southPoleUniforms = combine([drawUniforms, this._drawUniforms, {
                 u_color : function() {
                     return that.southPoleColor;
                 }
-            });
+            }], false, false);
         }
     };
 

@@ -22,7 +22,7 @@ require({
 
     var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'p2ouU8aIMszwd4wo8KuhqwPtADPLCxS7AEE5oxhvTXe-iSJXzs9yZqYAEXDBurUZXiQZ_X2zJ84b_YLBkNT8Ug..',
+        token : 'wbSUQqrcnztS5oJwxxiwCFKotHPxoaOATDUAMPqT4nCu94Nz9-b5GWt6PxVJXr3i6ZAdo9nCCvU-gaRur7ZPHA..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 

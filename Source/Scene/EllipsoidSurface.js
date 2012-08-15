@@ -395,7 +395,7 @@ define([
 
         context.beginDraw(drawArguments);
 
-        var uniformMap = combine(uniformMapTemplate, centralBodyUniformMap);
+        var uniformMap = combine([uniformMapTemplate, centralBodyUniformMap], false, false);
 
         var maxTextures = context.getMaximumTextureImageUnits();
 

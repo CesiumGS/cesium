@@ -9,7 +9,7 @@ defineSuite([
              'DynamicScene/DynamicPyramid',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
-             'Scene/ColorMaterial',
+             'Scene/Material',
              'Core/JulianDate',
              'Core/Quaternion',
              'Core/Cartesian3',
@@ -26,7 +26,7 @@ defineSuite([
               DynamicPyramid,
               DynamicObjectCollection,
               DynamicObject,
-              ColorMaterial,
+              Material,
               JulianDate,
               Quaternion,
               Cartesian3,
@@ -135,7 +135,9 @@ defineSuite([
         pyramid.showIntersection = new MockProperty(true);
         pyramid.radius = new MockProperty(123.5);
         pyramid.show = new MockProperty(true);
-        pyramid.material = new MockProperty(new ColorMaterial(Color.RED));
+        var redMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        redMaterial.uniforms.color = Color.RED;
+        pyramid.material = new MockProperty(redMaterial);
         visualizer.update(time);
 
         expect(scene.getPrimitives().getLength()).toEqual(1);
