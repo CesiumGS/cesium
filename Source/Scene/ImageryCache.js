@@ -1,9 +1,15 @@
 /*global define*/
 define([
+        '../Core/DeveloperError',
         '../Renderer/Texture'
     ],function(
+        DeveloperError,
         Texture) {
     "use strict";
+
+    function CacheItem() {
+        this.texture = undefined;
+    }
 
     function ReferenceCountedTexture(texture, url, cache) {
         this._texture = texture;
@@ -35,17 +41,30 @@ define([
     };
 
     ImageryCache.prototype.get = function(url) {
-        var texture = this[url];
-        if (typeof texture !== 'undefined') {
-            texture._referenceCount++;
+        var cacheItem = this[url];
+        if (typeof cacheItem !== 'undefined' && typeof cacheItem.texture !== 'undefined') {
+            cacheItem.texture._referenceCount++;
         }
+        return cacheItem;
+    };
+
+    ImageryCache.prototype.beginAdd = function(url) {
+        this[url] = new CacheItem();
+    };
+
+    ImageryCache.prototype.finishAdd = function(url, texture) {
+        var cacheItem = this[url];
+        if (typeof cacheItem === 'undefined') {
+            throw new DeveloperError('beginAdd must be called before finishAdd.');
+        }
+
+        texture = new ReferenceCountedTexture(texture, url, this);
+        cacheItem.texture = texture;
         return texture;
     };
 
-    ImageryCache.prototype.add = function(url, texture) {
-        texture = new ReferenceCountedTexture(texture, url, this);
-        this[url] = texture;
-        return texture;
+    ImageryCache.prototype.abortAdd = function(url) {
+        this[url] = undefined;
     };
 
     return ImageryCache;

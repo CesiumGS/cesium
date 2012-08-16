@@ -774,7 +774,16 @@ define([
     }
 
     function screenSpaceError(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) {
-        var maxGeometricError = surface.terrainProvider.getLevelMaximumGeometricError(tile.level);
+        var extent = tile.extent;
+        var latitudeClosestToEquator = 0.0;
+        if (extent.south > 0.0) {
+            latitudeClosestToEquator = extent.south;
+        } else if (extent.north < 0.0) {
+            latitudeClosestToEquator = extent.north;
+        }
+
+        var latitudeFactor = Math.cos(latitudeClosestToEquator);
+        var maxGeometricError = latitudeFactor * surface.terrainProvider.getLevelMaximumGeometricError(tile.level);
 
         //var boundingVolume = tile.get3DBoundingSphere();
         var camera = sceneState.camera;

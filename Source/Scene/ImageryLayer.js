@@ -101,27 +101,32 @@ define([
      * Gets the level with the specified world coordinate spacing between texels, or less.
      *
      * @param {Number} texelSpacing The texel spacing for which to find a corresponding level.
+     * @param {Number} latitudeClosestToEquator The latitude closest to the equator that we're concerned with.
      * @returns {Number} The level with the specified texel spacing or less.
      */
-    ImageryLayer.prototype._getLevelWithMaximumTexelSpacing = function(texelSpacing) {
+    ImageryLayer.prototype._getLevelWithMaximumTexelSpacing = function(texelSpacing, latitudeClosestToEquator) {
         var levelZeroMaximumTexelSpacing = this._levelZeroMaximumTexelSpacing;
-        if (typeof levelZeroMaximumTexelSpacing === 'undefined') {
+        //if (typeof levelZeroMaximumTexelSpacing === 'undefined') {
             var imageryProvider = this.imageryProvider;
             var tilingScheme = imageryProvider.tilingScheme;
             var ellipsoid = tilingScheme.ellipsoid;
-            levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * 2 * Math.PI / (imageryProvider.tileWidth * tilingScheme.numberOfLevelZeroTilesX);
+            var latitudeFactor = Math.cos(latitudeClosestToEquator);
+            //var latitudeFactor = 1.0;
+            levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * 2 * Math.PI * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.numberOfLevelZeroTilesX);
             this._levelZeroMaximumTexelSpacing = levelZeroMaximumTexelSpacing;
-        }
+        //}
 
         var twoToTheLevelPower = this._levelZeroMaximumTexelSpacing / texelSpacing;
         var level = Math.log(twoToTheLevelPower) / Math.log(2);
 
         // Round the level up, unless it's really close to the lower integer.
-        var ceiling = Math.ceil(level);
-        if (ceiling - level > 0.99) {
-            ceiling -= 1;
-        }
-        return ceiling | 0;
+//        var ceiling = Math.ceil(level);
+//        if (ceiling - level > 0.99) {
+//            ceiling -= 1;
+//        }
+//        return ceiling | 0;
+        var rounded = Math.round(level);
+        return rounded | 0;
     };
 
     ImageryLayer.prototype.createTileImagerySkeletons = function(tile, terrainProvider) {
@@ -142,11 +147,18 @@ define([
             return false;
         }
 
+        var latitudeClosestToEquator = 0.0;
+        if (extent.south > 0.0) {
+            latitudeClosestToEquator = extent.south;
+        } else if (extent.north < 0.0) {
+            latitudeClosestToEquator = extent.north;
+        }
+
         // Compute the required level in the imagery tiling scheme.
         // TODO: this should be imagerySSE / terrainSSE.
         var errorRatio = 1.0;
         var targetGeometricError = errorRatio * terrainProvider.getLevelMaximumGeometricError(tile.level);
-        var imageryLevel = this._getLevelWithMaximumTexelSpacing(targetGeometricError);
+        var imageryLevel = this._getLevelWithMaximumTexelSpacing(targetGeometricError, latitudeClosestToEquator);
         imageryLevel = Math.max(0, Math.min(imageryProvider.maxLevel, imageryLevel));
 
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
@@ -206,10 +218,14 @@ define([
         var hostname;
 
         when(imageryProvider.buildImageUrl(tileImagery.x, tileImagery.y, tileImagery.level), function(imageUrl) {
-            var texture = imageryCache.get(imageUrl);
-            if (typeof texture !== 'undefined') {
-                tileImagery.texture = texture;
-                tileImagery.state = TileState.READY;
+            var cacheItem = imageryCache.get(imageUrl);
+            if (typeof cacheItem !== 'undefined') {
+                if (typeof cacheItem.texture === 'undefined') {
+                    tileImagery.state = TileState.UNLOADED;
+                } else {
+                    tileImagery.texture = cacheItem.texture;
+                    tileImagery.state = TileState.READY;
+                }
                 return false;
             }
 
@@ -229,6 +245,8 @@ define([
                 activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
             }
 
+            imageryCache.beginAdd(imageUrl);
+
             tileImagery.imageUrl = imageUrl;
             return imageryProvider.requestImage(imageUrl);
         }).then(function(image) {
@@ -242,6 +260,7 @@ define([
 
             if (typeof image === 'undefined') {
                 tileImagery.state = TileState.INVALID;
+                imageryCache.abortAdd(tileImagery.imageUrl);
                 return;
             }
 
@@ -250,6 +269,7 @@ define([
             /*global console*/
             console.error('failed to load imagery: ' + e);
             tileImagery.state = TileState.FAILED;
+            imageryCache.abortAdd(tileImagery.imageUrl);
         });
     };
 
@@ -261,7 +281,7 @@ define([
         this.imageryProvider.createResources(context, tileImagery, this._texturePool);
 
         if (tileImagery.state === TileState.READY) {
-            tileImagery.texture = this._imageryCache.add(tileImagery.imageUrl, tileImagery.texture);
+            tileImagery.texture = this._imageryCache.finishAdd(tileImagery.imageUrl, tileImagery.texture);
             tileImagery.imageUrl = undefined;
         }
     };
