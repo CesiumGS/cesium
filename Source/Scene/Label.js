@@ -23,87 +23,7 @@ define([
         VerticalOrigin) {
     "use strict";
 
-    function recreateBillboards(label) {
-        var labelCollection = label._labelCollection;
-        var billboardCollection = label._billboardCollection;
-
-        var billboards = label._billboards;
-        for ( var i = 0, len = billboards.length; i < len; i++) {
-            billboardCollection.remove(billboards[i]);
-        }
-
-        billboards.length = 0;
-
-        function onCanvasCreated() {
-            labelCollection._setUpdateTextureAtlas(true);
-        }
-
-        var text = label._text;
-        var length = text.length;
-        for (i = 0; i < length; i++) {
-            var charValue = text.charAt(i);
-            var billboard = billboardCollection.add({
-                show : label._show,
-                position : label._position,
-                eyeOffset : label._eyeOffset,
-                horizontalOrigin : HorizontalOrigin.LEFT,
-                verticalOrigin : label._verticalOrigin,
-                scale : label._scale,
-                _pickIdThis : label
-            });
-
-            var canvasContainer = labelCollection._canvasContainer;
-            var index = canvasContainer.add(charValue, label, onCanvasCreated);
-            billboard.setImageIndex(index);
-            billboard._labelDimensions = canvasContainer.getItem(index).dimensions;
-            billboards.push(billboard);
-        }
-
-        setPixelOffsets(label);
-    }
-
-    function setPixelOffsets(label) {
-        var billboards = label._billboards;
-
-        var scale = label._scale;
-        var pixelOffset = label._pixelOffset;
-        var horizontalOrigin = label._horizontalOrigin;
-        var verticalOrigin = label._verticalOrigin;
-
-        var dimensions;
-        var totalWidth = 0;
-        var maxHeight = 0;
-        for ( var i = 0, len = billboards.length; i < len; i++) {
-            dimensions = billboards[i]._labelDimensions;
-            totalWidth += dimensions.width;
-            maxHeight = Math.max(maxHeight, dimensions.height);
-        }
-
-        var widthOffset = 0;
-        if (horizontalOrigin === HorizontalOrigin.CENTER) {
-            widthOffset -= totalWidth / 2 * scale;
-        } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
-            widthOffset -= totalWidth * scale;
-        }
-
-        var billboardPixelOffset = new Cartesian2(pixelOffset.x + widthOffset, 0.0);
-        for (i = 0; i < len; i++) {
-            var billboard = billboards[i];
-            dimensions = billboard._labelDimensions;
-
-            if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxHeight) {
-                billboardPixelOffset.y = pixelOffset.y - dimensions.descent * scale;
-            } else if (verticalOrigin === VerticalOrigin.TOP) {
-                billboardPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) * scale - dimensions.descent * scale;
-            } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                billboardPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
-            }
-
-            billboard.setPixelOffset(billboardPixelOffset);
-
-            billboardPixelOffset.x += dimensions.width * scale;
-        }
-    }
+    var EMPTY_OBJECT = {};
 
     /**
      * DOC_TBA
@@ -117,11 +37,11 @@ define([
      *
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/#2dcontext'>HTML canvas 2D context</a>
      */
-    var Label = function(description, labelCollection) {
-        description = defaultValue(description, {});
+    var Label = function(description, labelCollection, index) {
+        description = defaultValue(description, EMPTY_OBJECT);
 
-        this._show = defaultValue(description.show, true);
         this._text = defaultValue(description.text, '');
+        this._show = defaultValue(description.show, true);
         this._font = defaultValue(description.font, '30px sans-serif');
         this._fillColor = Color.clone(defaultValue(description.fillColor, Color.WHITE));
         this._outlineColor = Color.clone(defaultValue(description.outlineColor, Color.BLACK));
@@ -133,11 +53,13 @@ define([
         this._position = Cartesian3.clone(defaultValue(description.position, Cartesian3.ZERO));
         this._scale = defaultValue(description.scale, 1.0);
 
-        this._billboardCollection = labelCollection._getCollection();
         this._labelCollection = labelCollection;
-        this._billboards = [];
+        this._index = index;
+        this._glyphs = [];
 
-        recreateBillboards(this);
+        this._textChanged = true;
+        this._rebindAllGlyphs = true;
+        this._repositionAllGlyphs = true;
     };
 
     /**
@@ -168,9 +90,9 @@ define([
         if (typeof value !== 'undefined' && value !== this._show) {
             this._show = value;
 
-            var billboards = this._billboards;
-            for ( var i = 0, len = billboards.length; i < len; i++) {
-                billboards[i].setShow(value);
+            var glyphs = this._glyphs;
+            for ( var i = 0, len = glyphs.length; i < len; i++) {
+                glyphs[i].setShow(value);
             }
         }
     };
@@ -221,9 +143,9 @@ define([
         if (typeof value !== 'undefined' && !Cartesian3.equals(position, value)) {
             Cartesian3.clone(value, position);
 
-            var billboards = this._billboards;
-            for ( var i = 0, len = billboards.length; i < len; i++) {
-                billboards[i].setPosition(value);
+            var glyphs = this._glyphs;
+            for ( var i = 0, len = glyphs.length; i < len; i++) {
+                glyphs[i].setPosition(value);
             }
         }
     };
@@ -249,8 +171,7 @@ define([
     Label.prototype.setText = function(value) {
         if (typeof value !== 'undefined' && value !== this._text) {
             this._text = value;
-
-            recreateBillboards(this);
+            this._textChanged = true;
         }
     };
 
@@ -279,8 +200,7 @@ define([
     Label.prototype.setFont = function(value) {
         if (typeof value !== 'undefined' && this._font !== value) {
             this._font = value;
-
-            recreateBillboards(this);
+            this._rebindAllGlyphs = true;
         }
     };
 
@@ -310,8 +230,7 @@ define([
         var fillColor = this._fillColor;
         if (typeof value !== 'undefined' && !Color.equals(fillColor, value)) {
             Color.clone(value, fillColor);
-
-            recreateBillboards(this);
+            this._rebindAllGlyphs = true;
         }
     };
 
@@ -341,8 +260,7 @@ define([
         var outlineColor = this._outlineColor;
         if (typeof value !== 'undefined' && !Color.equals(outlineColor, value)) {
             Color.clone(value, outlineColor);
-
-            recreateBillboards(this);
+            this._rebindAllGlyphs = true;
         }
     };
 
@@ -371,8 +289,7 @@ define([
     Label.prototype.setStyle = function(value) {
         if (typeof value !== 'undefined' && this._style !== value) {
             this._style = value;
-
-            recreateBillboards(this);
+            this._rebindAllGlyphs = true;
         }
     };
 
@@ -419,8 +336,7 @@ define([
         var pixelOffset = this._pixelOffset;
         if (typeof value !== 'undefined' && !Cartesian2.equals(pixelOffset, value)) {
             Cartesian2.clone(value, pixelOffset);
-
-            setPixelOffsets(this);
+            this._repositionAllGlyphs = true;
         }
     };
 
@@ -473,9 +389,9 @@ define([
         if (typeof value !== 'undefined' && !Cartesian3.equals(eyeOffset, value)) {
             Cartesian3.clone(value, eyeOffset);
 
-            var billboards = this._billboards;
-            for ( var i = 0, len = billboards.length; i < len; i++) {
-                billboards[i].setEyeOffset(value);
+            var glyphs = this._glyphs;
+            for ( var i = 0, len = glyphs.length; i < len; i++) {
+                glyphs[i].setEyeOffset(value);
             }
         }
     };
@@ -516,8 +432,7 @@ define([
     Label.prototype.setHorizontalOrigin = function(value) {
         if (typeof value !== 'undefined' && this._horizontalOrigin !== value) {
             this._horizontalOrigin = value;
-
-            recreateBillboards(this);
+            this._repositionAllGlyphs = true;
         }
     };
 
@@ -557,8 +472,7 @@ define([
     Label.prototype.setVerticalOrigin = function(value) {
         if (typeof value !== 'undefined' && this._verticalOrigin !== value) {
             this._verticalOrigin = value;
-
-            recreateBillboards(this);
+            this._repositionAllGlyphs = true;
         }
     };
 
@@ -601,12 +515,12 @@ define([
         if (typeof value !== 'undefined' && this._scale !== value) {
             this._scale = value;
 
-            var billboards = this._billboards;
-            for ( var i = 0, len = billboards.length; i < len; i++) {
-                billboards[i].setScale(value);
+            var glyphs = this._glyphs;
+            for ( var i = 0, len = glyphs.length; i < len; i++) {
+                glyphs[i].setScale(value);
             }
 
-            setPixelOffsets(this);
+            this._repositionAllGlyphs = true;
         }
     };
 
@@ -634,8 +548,8 @@ define([
     Label.prototype.computeScreenSpacePosition = function(uniformState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
-        var billboards = this._billboards;
-        var position = (billboards.length !== 0) ? billboards[0]._getActualPosition() : this._position;
+        var glyphs = this._glyphs;
+        var position = (glyphs.length !== 0) ? glyphs[0]._getActualPosition() : this._position;
 
         return Billboard._computeScreenSpacePosition(this._labelCollection.modelMatrix, position, this._eyeOffset, this._pixelOffset, uniformState);
     };
@@ -669,69 +583,6 @@ define([
 
     Label.prototype.isDestroyed = function() {
         return false;
-    };
-
-    Label.prototype._destroy = function() {
-        var billboardCollection = this._billboardCollection;
-        var billboards = this._billboards;
-        for ( var i = 0, len = billboards.length; i < len; i++) {
-            billboardCollection.remove(billboards[i]);
-        }
-        destroyObject(this);
-    };
-
-    Label.prototype._getCollection = function() {
-        return this._labelCollection;
-    };
-
-    Label.prototype._createId = function(charValue) {
-        return JSON.stringify([
-                               charValue,
-                               this._fillColor.toString(),
-                               this._font,
-                               this._outlineColor.toString(),
-                               this._style,
-                               this._verticalOrigin
-                              ]);
-    };
-
-    Label.prototype._createCanvas = function(charValue) {
-        var font = this._font;
-        var fillColor = this._fillColor;
-        var outlineColor = this._outlineColor;
-        var verticalOrigin = this._verticalOrigin;
-        var style = this._style;
-
-        var textBaseline;
-        if (verticalOrigin === VerticalOrigin.BOTTOM) {
-            textBaseline = 'bottom';
-        } else if (verticalOrigin === VerticalOrigin.TOP) {
-            textBaseline = 'top';
-        } else {
-            // VerticalOrigin.CENTER
-            textBaseline = 'middle';
-        }
-
-        var fill = false;
-        if (style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE) {
-            fill = true;
-        }
-
-        var stroke = false;
-        if (style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE) {
-            stroke = true;
-        }
-
-        var canvas = writeTextToCanvas(charValue, {
-            font : font,
-            textBaseline : textBaseline,
-            fill : fill,
-            fillColor : fillColor,
-            stroke : stroke,
-            strokeColor : outlineColor
-        });
-
-        return canvas;
     };
 
     return Label;
