@@ -17,81 +17,46 @@ package com.agi;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.client.Address;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpExchange;
 import org.eclipse.jetty.continuation.Continuation;
 import org.eclipse.jetty.continuation.ContinuationSupport;
+import org.eclipse.jetty.http.HttpHeaders;
 import org.eclipse.jetty.io.Buffer;
 import org.eclipse.jetty.io.EofException;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 public final class ProxyHandler extends AbstractHandler {
-	private final Pattern allowedHosts;
-	private HttpClient client;
+	private final HostChecker hostChecker;
+	private final HttpClient client;
 
-	private final HashSet<String> dontProxyHeaders = new HashSet<String>();
-	{
-		dontProxyHeaders.add("proxy-connection");
-		dontProxyHeaders.add("connection");
-		dontProxyHeaders.add("keep-alive");
-		dontProxyHeaders.add("transfer-encoding");
-		dontProxyHeaders.add("te");
-		dontProxyHeaders.add("trailer");
-		dontProxyHeaders.add("proxy-authorization");
-		dontProxyHeaders.add("proxy-authenticate");
-		dontProxyHeaders.add("upgrade");
+	private static final HashSet<String> dontProxyHeaders = new HashSet<String>();
+	static {
+		dontProxyHeaders.add(HttpHeaders.PROXY_CONNECTION.toLowerCase());
+		dontProxyHeaders.add(HttpHeaders.CONNECTION.toLowerCase());
+		dontProxyHeaders.add(HttpHeaders.KEEP_ALIVE.toLowerCase());
+		dontProxyHeaders.add(HttpHeaders.TRANSFER_ENCODING.toLowerCase());
+		dontProxyHeaders.add(HttpHeaders.TE.toLowerCase());
+		dontProxyHeaders.add(HttpHeaders.TRAILER.toLowerCase());
+		dontProxyHeaders.add(HttpHeaders.PROXY_AUTHORIZATION.toLowerCase());
+		dontProxyHeaders.add(HttpHeaders.PROXY_AUTHENTICATE.toLowerCase());
+		dontProxyHeaders.add(HttpHeaders.UPGRADE.toLowerCase());
 	}
 
-	public ProxyHandler(String allowedHostList, String upstreamProxyHost, Integer upstreamProxyPort, String noUpstreamProxyHostList) throws Exception {
-		allowedHosts = hostListToPattern(allowedHostList);
-
-		client = new HttpClient();
-
-		if (upstreamProxyHost != null && upstreamProxyHost.length() > 0) {
-			if (upstreamProxyPort == null)
-				upstreamProxyPort = 80;
-
-			client.setProxy(new Address(upstreamProxyHost, upstreamProxyPort));
-
-			if (noUpstreamProxyHostList != null) {
-				HashSet<String> set = new HashSet<String>();
-				for (String noUpstreamProxyHost : noUpstreamProxyHostList.split(",")) {
-					set.add(noUpstreamProxyHost.trim());
-				}
-				client.setNoProxy(set);
-			}
-		}
-
-		client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
-		client.start();
-	}
-
-	private static final Pattern hostListToPattern(String hosts) {
-		// build a regex that matches any of the given hosts
-		StringBuilder pattern = new StringBuilder();
-		for (String allowedHost : hosts.split(",")) {
-			pattern.append("(?:");
-			pattern.append(allowedHost.trim().replace(".", "\\.").replace("*", ".*"));
-			pattern.append(")|");
-		}
-
-		// trim trailing |
-		if (pattern.length() > 0)
-			pattern.setLength(pattern.length() - 1);
-
-		return Pattern.compile(pattern.toString(), Pattern.CASE_INSENSITIVE);
+	public ProxyHandler(HostChecker hostChecker, HttpClient client) {
+		this.hostChecker = hostChecker;
+		this.client = client;
 	}
 
 	public void handle(String target, Request baseRequest, final HttpServletRequest request, final HttpServletResponse response) throws IOException, ServletException {
@@ -108,7 +73,7 @@ public final class ProxyHandler extends AbstractHandler {
 			throw new ServletException(e);
 		}
 
-		if (!allowedHosts.matcher(uri.getHost()).matches()) {
+		if (!hostChecker.allowHost(uri.getHost())) {
 			response.sendError(400, "Host not in list of allowed hosts.");
 			return;
 		}
@@ -117,7 +82,7 @@ public final class ProxyHandler extends AbstractHandler {
 
 		final OutputStream out = response.getOutputStream();
 		final Continuation continuation = ContinuationSupport.getContinuation(request);
-		if (!continuation.isInitial()) {
+		if (continuation.isExpired()) {
 			response.sendError(HttpServletResponse.SC_GATEWAY_TIMEOUT);
 			return;
 		}
@@ -136,20 +101,7 @@ public final class ProxyHandler extends AbstractHandler {
 			}
 
 			protected void onResponseHeader(Buffer name, Buffer value) throws IOException {
-				String nameStr = name.toString();
-				String valueStr = value.toString();
-				String nameLower = nameStr.toLowerCase();
-
-				if ("location".equals(nameLower)) {
-					StringBuffer url = request.getRequestURL();
-					url.append("?");
-					url.append(URLEncoder.encode(valueStr, "UTF-8"));
-					valueStr = url.toString();
-				}
-
-				if (!dontProxyHeaders.contains(nameLower)) {
-					response.addHeader(nameStr, valueStr);
-				}
+				writeProxiedHeader(request, response, name.toString(), value.toString());
 			}
 
 			protected void onConnectionFailed(Throwable ex) {
@@ -160,9 +112,11 @@ public final class ProxyHandler extends AbstractHandler {
 				if (ex instanceof EofException) {
 					return;
 				}
+
 				if (!response.isCommitted())
 					response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				continuation.complete();
+				if (!continuation.isInitial())
+					continuation.complete();
 			}
 
 			protected void onExpire() {
@@ -172,15 +126,40 @@ public final class ProxyHandler extends AbstractHandler {
 			}
 		};
 
-		exchange.setMethod(request.getMethod());
+		configureExchangeForProxying(request, uri, exchange);
+
+		continuation.suspend(response);
+		client.send(exchange);
+	}
+
+	public static void writeProxiedHeader(HttpServletRequest request, HttpServletResponse response, String name, String value) {
+		if (HttpHeaders.LOCATION.equalsIgnoreCase(name)) {
+			StringBuffer url = request.getRequestURL();
+			url.append("?");
+			try {
+				url.append(URLEncoder.encode(value, "UTF-8"));
+				value = url.toString();
+			} catch (UnsupportedEncodingException e) {}
+		} else if (HttpHeaders.CONTENT_TYPE.equalsIgnoreCase(name)) {
+			// some servers return incorrect mime types for JPEG data
+			value = value.replace("image/jpg", "image/jpeg");
+		}
+
+		if (!dontProxyHeaders.contains(name.toLowerCase())) {
+			response.addHeader(name, value);
+		}
+	}
+
+	public static void configureExchangeForProxying(HttpServletRequest request, URI uri, HttpExchange exchange) {
 		exchange.setURI(uri);
+		exchange.setMethod(request.getMethod());
 		exchange.setVersion(request.getProtocol());
 
-		String connectionHdr = request.getHeader("Connection");
-		if (connectionHdr != null) {
-			connectionHdr = connectionHdr.toLowerCase();
-			if (connectionHdr.indexOf("keep-alive") < 0 && connectionHdr.indexOf("close") < 0)
-				connectionHdr = null;
+		String connectionHeader = request.getHeader("Connection");
+		if (connectionHeader != null) {
+			connectionHeader = connectionHeader.toLowerCase();
+			if (connectionHeader.indexOf("keep-alive") < 0 && connectionHeader.indexOf("close") < 0)
+				connectionHeader = null;
 		}
 
 		exchange.setRequestHeader("Host", uri.getHost());
@@ -192,7 +171,7 @@ public final class ProxyHandler extends AbstractHandler {
 
 			if (dontProxyHeaders.contains(lowerHeader))
 				continue;
-			if (connectionHdr != null && connectionHdr.indexOf(lowerHeader) >= 0)
+			if (connectionHeader != null && connectionHeader.indexOf(lowerHeader) >= 0)
 				continue;
 			if ("host".equals(lowerHeader))
 				continue;
@@ -212,8 +191,5 @@ public final class ProxyHandler extends AbstractHandler {
 		exchange.addRequestHeader("X-Forwarded-Proto", request.getScheme());
 		exchange.addRequestHeader("X-Forwarded-Host", request.getServerName());
 		exchange.addRequestHeader("X-Forwarded-Server", request.getLocalName());
-
-		continuation.suspend(response);
-		client.send(exchange);
 	}
 }

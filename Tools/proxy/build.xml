@@ -3,9 +3,8 @@
 	<property name="build.dir" value="bin" />
 	<property name="jar.file" value="proxy.jar" />
 
-	<path id="classpath">
+	<path id="task.classpath">
 		<fileset dir="jetty" includes="*.jar" />
-		<pathelement location="../apache-ant-1.8.2/lib/ant.jar" />
 	</path>
 
 	<target name="clean">
@@ -15,7 +14,13 @@
 
 	<target name="compile">
 		<mkdir dir="${build.dir}" />
-		<javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="classpath" debug="on" includeantruntime="false" />
+		<javac destdir="${build.dir}" debug="on" includeantruntime="false">
+			<src path="${src.dir}" />
+			<classpath>
+				<path refid="task.classpath" />
+				<pathelement location="../apache-ant-1.8.2/lib/ant.jar" />
+			</classpath>
+		</javac>
 	</target>
 
 	<target name="jar" depends="compile">
@@ -27,11 +32,18 @@
 	<target name="test" depends="jar">
 		<taskdef name="server" classname="com.agi.ServerTask">
 			<classpath>
-				<path refid="classpath" />
+				<path refid="task.classpath" />
 				<pathelement location="${jar.file}" />
 			</classpath>
 		</taskdef>
 
-		<server contextPath="/proxy" allowedHostList="dev.virtualearth.net" port="8080" baseDir="." />
+		<!--
+         Other server options:
+         upstreamProxyHost: a standard proxy server that the local server will use to retrieve data
+         upstreamProxyPort: the port number of the upstream proxy, default 80
+         noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
+         listenOnAllAddresses: Set to true if you want the server to listen to all addresses, not just localhost
+        -->
+		<server proxyContextPath="/proxy" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
 	</target>
 </project>
