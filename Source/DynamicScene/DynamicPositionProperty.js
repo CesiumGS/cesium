@@ -109,118 +109,6 @@ define([
     };
 
     /**
-     * Retrieves all values in the provided time range.  Rather than sampling, this
-     * method returns the actual data points used in the source data, with the exception
-     * of start, stop and currentTime parameters, which will be sampled.
-     *
-     * @param {JulianDate} start The first time to retrieve values for.
-     * @param {JulianDate} stop The last time to retrieve values for .
-     * @param {JulianDate} [currentTime] If provided, causes the algorithm to always sample the provided time.
-     * @param {Array} [result] The array into which to store the result.
-     * @returns The modified result array or a new instance if none was provided.
-     */
-    DynamicPositionProperty.prototype.getValueRangeCartesian = function(start, stop, currentTime, result) {
-        if (typeof start === 'undefined') {
-            throw new DeveloperError('start is required');
-        }
-
-        if (typeof stop === 'undefined') {
-            throw new DeveloperError('stop is required');
-        }
-
-        if (typeof result === 'undefined') {
-            result = [];
-        }
-
-        var propertyIntervals = this._propertyIntervals;
-
-        var startIndex = typeof start === 'undefined' ? 0 : propertyIntervals.indexOf(start);
-        if (startIndex < 0) {
-            startIndex = ~startIndex;
-        }
-
-        var stopIndex = typeof stop === 'undefined' ? propertyIntervals.length - 1 : propertyIntervals.indexOf(stop);
-        if (stopIndex < 0) {
-            stopIndex = ~stopIndex;
-        }
-
-        var r = 0;
-        //Always step exactly on start.
-        result[r++] = this.getValueCartesian(start, result[r]);
-
-        var scratchCartographic;
-        var steppedOnNow = typeof currentTime === 'undefined';
-        for ( var i = startIndex; i < stopIndex + 1; i++) {
-            var current;
-            var interval = propertyIntervals.get(i);
-            var property = interval.data;
-            var valueType = property.valueType;
-            var currentInterval = property._intervals.get(0);
-            var times = currentInterval.data.times;
-            if (typeof times !== 'undefined') {
-                //Iterate over all interval times and add the ones that fall in our
-                //time range.  Note that times can contain data outside of
-                //the intervals range.  This is by design for use with interpolation.
-                var t;
-                if (valueType === CzmlCartesian3) {
-                    for (t = 0; t < times.length; t++) {
-                        current = times[t];
-                        if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                            result[r++] = property.getValue(currentTime, result[r]);
-                            steppedOnNow = true;
-                        }
-                        if (current.greaterThan(start) && current.lessThan(stop)) {
-                            result[r++] = property.getValue(current, result[r]);
-                        }
-                    }
-                } else {
-                    for (t = 0; t < times.length; t++) {
-                        current = times[t];
-                        if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                            scratchCartographic = property.getValue(currentTime, scratchCartographic);
-                            result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
-                            steppedOnNow = true;
-                        }
-                        if (current.greaterThan(start) && current.lessThan(stop)) {
-                            scratchCartographic = property.getValue(current, scratchCartographic);
-                            result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
-                        }
-                    }
-                }
-            } else {
-                //If times is undefined, it's because the interval contains a single position
-                //at which it stays for the duration of the interval.
-                current = interval.stop;
-                if (valueType === CzmlCartesian3) {
-                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                        result[r++] = property.getValue(currentTime, result[r]);
-                        steppedOnNow = true;
-                    }
-                    if (current.greaterThan(start) && current.lessThan(stop)) {
-                        result[r++] = property.getValue(current, result[r]);
-                    }
-                } else {
-                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                        scratchCartographic = property.getValue(currentTime, scratchCartographic);
-                        result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
-                        steppedOnNow = true;
-                    }
-                    if (current.greaterThan(start) && current.lessThan(stop)) {
-                        scratchCartographic = property.getValue(current, scratchCartographic);
-                        result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
-                    }
-                }
-            }
-        }
-
-        //Always step exactly on stop.
-        result[r++] = this.getValueCartesian(stop, result[r]);
-
-        result.length = r;
-        return result;
-    };
-
-    /**
      * Retrieves the value of the object at the supplied time as a Cartesian3.
      * @memberof DynamicPositionProperty
      *
@@ -254,6 +142,119 @@ define([
         if (typeof result !== 'undefined') {
             result = wgs84.cartographicToCartesian(result);
         }
+        return result;
+    };
+
+    /**
+     * Retrieves all values in the provided time range.  Rather than sampling, this
+     * method returns the actual data points used in the source data, with the exception
+     * of start, stop and currentTime parameters, which will be sampled.
+     *
+     * @param {JulianDate} start The first time to retrieve values for.
+     * @param {JulianDate} stop The last time to retrieve values for .
+     * @param {JulianDate} [currentTime] If provided, causes the algorithm to always sample the provided time.
+     * @param {Array} [result] The array into which to store the result.
+     * @returns The modified result array or a new instance if none was provided.
+     */
+    DynamicPositionProperty.prototype.getValueRangeCartesian = function(start, stop, currentTime, result) {
+        if (typeof start === 'undefined') {
+            throw new DeveloperError('start is required');
+        }
+
+        if (typeof stop === 'undefined') {
+            throw new DeveloperError('stop is required');
+        }
+
+        if (typeof result === 'undefined') {
+            result = [];
+        }
+
+        var propertyIntervals = this._propertyIntervals;
+
+        var startIndex = typeof start === 'undefined' ? 0 : propertyIntervals.indexOf(start);
+        var stopIndex = typeof stop === 'undefined' ? propertyIntervals.length - 1 : propertyIntervals.indexOf(stop);
+        if (startIndex < 0) {
+            startIndex = ~startIndex;
+        }
+
+        if (stopIndex < 0 || startIndex === propertyIntervals.getLength()) {
+            result.length = 0;
+            return result;
+        }
+
+        var r = 0;
+        //Always step exactly on start.
+        result[r] = this.getValueCartesian(start, result[r++]);
+
+        var scratchCartographic;
+        var steppedOnNow = typeof currentTime === 'undefined';
+        for ( var i = startIndex; i < stopIndex + 1; i++) {
+            var current;
+            var interval = propertyIntervals.get(i);
+            var property = interval.data;
+            var valueType = property.valueType;
+            var currentInterval = property._intervals.get(0);
+            var times = currentInterval.data.times;
+            if (typeof times !== 'undefined') {
+                //Iterate over all interval times and add the ones that fall in our
+                //time range.  Note that times can contain data outside of
+                //the intervals range.  This is by design for use with interpolation.
+                var t;
+                if (valueType === CzmlCartesian3) {
+                    for (t = 0; t < times.length; t++) {
+                        current = times[t];
+                        if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
+                            result[r] = property.getValue(currentTime, result[r++]);
+                            steppedOnNow = true;
+                        }
+                        if (current.greaterThan(start) && current.lessThan(stop)) {
+                            result[r] = property.getValue(current, result[r++]);
+                        }
+                    }
+                } else {
+                    for (t = 0; t < times.length; t++) {
+                        current = times[t];
+                        if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
+                            scratchCartographic = property.getValue(currentTime, scratchCartographic);
+                            result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
+                            steppedOnNow = true;
+                        }
+                        if (current.greaterThan(start) && current.lessThan(stop)) {
+                            scratchCartographic = property.getValue(current, scratchCartographic);
+                            result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
+                        }
+                    }
+                }
+            } else {
+                //If times is undefined, it's because the interval contains a single position
+                //at which it stays for the duration of the interval.
+                current = interval.stop;
+                if (valueType === CzmlCartesian3) {
+                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
+                        result[r] = property.getValue(currentTime, result[r++]);
+                        steppedOnNow = true;
+                    }
+                    if (current.greaterThan(start) && current.lessThan(stop)) {
+                        result[r] = property.getValue(current, result[r++]);
+                    }
+                } else {
+                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
+                        scratchCartographic = property.getValue(currentTime, scratchCartographic);
+                        result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
+                        steppedOnNow = true;
+                    }
+                    if (current.greaterThan(start) && current.lessThan(stop)) {
+                        scratchCartographic = property.getValue(current, scratchCartographic);
+                        result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
+                    }
+                }
+            }
+        }
+
+        //Always step exactly on stop.
+        result[r] = this.getValueCartesian(stop, result[r++]);
+
+        result.length = r;
         return result;
     };
 

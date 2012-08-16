@@ -113,11 +113,11 @@ define([
             return [new DynamicBillboardVisualizer(scene),
                     new DynamicConeVisualizer(scene),
                     new DynamicLabelVisualizer(scene),
-                    new DynamicPathVisualizer(scene),
                     new DynamicPointVisualizer(scene),
                     new DynamicPolygonVisualizer(scene),
                     new DynamicPolylineVisualizer(scene),
-                    new DynamicPyramidVisualizer(scene)];
+                    new DynamicPyramidVisualizer(scene),
+                    new DynamicPathVisualizer(scene)];
         }
     };
 
