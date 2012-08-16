@@ -152,7 +152,7 @@ define([
      *
      * @param {JulianDate} start The first time to retrieve values for.
      * @param {JulianDate} stop The last time to retrieve values for .
-     * @param {JulianDate} [currentTime] If provided, causes the algorithm to always sample the provided time.
+     * @param {JulianDate} [currentTime] If provided, causes the algorithm to always sample the provided time, assuming it is between start and stop.
      * @param {Array} [result] The array into which to store the result.
      * @returns The modified result array or a new instance if none was provided.
      */
@@ -177,9 +177,18 @@ define([
             startIndex = ~startIndex;
         }
 
-        if (stopIndex < 0 || startIndex === propertyIntervals.getLength()) {
+        if (startIndex === propertyIntervals.getLength()) {
             result.length = 0;
             return result;
+        }
+
+        if (stopIndex < 0) {
+            stopIndex = ~stopIndex;
+            if (stopIndex !== propertyIntervals.getLength()) {
+                result.length = 0;
+                return result;
+            }
+            stopIndex -= 1;
         }
 
         var r = 0;
@@ -191,6 +200,11 @@ define([
         for ( var i = startIndex; i < stopIndex + 1; i++) {
             var current;
             var interval = propertyIntervals.get(i);
+            var nextInterval = propertyIntervals.get(i + 1);
+            var loopStop = stop;
+            if (typeof nextInterval !== 'undefined' && stop.greaterThan(nextInterval.start)) {
+                loopStop = nextInterval.start;
+            }
             var property = interval.data;
             var valueType = property.valueType;
             var currentInterval = property._intervals.get(0);
@@ -207,7 +221,7 @@ define([
                             result[r] = property.getValue(currentTime, result[r++]);
                             steppedOnNow = true;
                         }
-                        if (current.greaterThan(start) && current.lessThan(stop)) {
+                        if (current.greaterThan(start) && current.lessThan(loopStop)) {
                             result[r] = property.getValue(current, result[r++]);
                         }
                     }
@@ -219,7 +233,7 @@ define([
                             result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
                             steppedOnNow = true;
                         }
-                        if (current.greaterThan(start) && current.lessThan(stop)) {
+                        if (current.greaterThan(start) && current.lessThan(loopStop)) {
                             scratchCartographic = property.getValue(current, scratchCartographic);
                             result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
                         }
@@ -228,13 +242,13 @@ define([
             } else {
                 //If times is undefined, it's because the interval contains a single position
                 //at which it stays for the duration of the interval.
-                current = interval.stop;
+                current = interval.start;
                 if (valueType === CzmlCartesian3) {
                     if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
                         result[r] = property.getValue(currentTime, result[r++]);
                         steppedOnNow = true;
                     }
-                    if (current.greaterThan(start) && current.lessThan(stop)) {
+                    if (current.greaterThan(start) && current.lessThan(loopStop)) {
                         result[r] = property.getValue(current, result[r++]);
                     }
                 } else {
@@ -243,7 +257,7 @@ define([
                         result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
                         steppedOnNow = true;
                     }
-                    if (current.greaterThan(start) && current.lessThan(stop)) {
+                    if (current.greaterThan(start) && current.lessThan(loopStop)) {
                         scratchCartographic = property.getValue(current, scratchCartographic);
                         result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
                     }
@@ -296,21 +310,9 @@ define([
                 valueType = potentialTypes[i];
                 unwrappedInterval = valueType.unwrapInterval(czmlInterval);
                 if (typeof unwrappedInterval !== 'undefined') {
-                    property = undefined;
-                    //Found a valid valueType, but lets check to see if we already have a property with that valueType
-                    for ( var q = 0, lenQ = this._dynamicProperties.length; q < lenQ; q++) {
-                        if (this._dynamicProperties[q].valueType === valueType) {
-                            property = this._dynamicProperties[q];
-                            break;
-                        }
-                    }
-                    //If we don't have the property, create it.
-                    if (typeof property === 'undefined') {
-                        property = new DynamicProperty(valueType);
-                        this._dynamicProperties.push(property);
-                        //Save the property in our interval.
-                        existingInterval.data = property;
-                    }
+                    property = new DynamicProperty(valueType);
+                    this._dynamicProperties.push(property);
+                    existingInterval.data = property;
                     break;
                 }
             }
