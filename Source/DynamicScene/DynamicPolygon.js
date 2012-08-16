@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
+        '../Core/defaultValue',
         './CzmlBoolean',
         './DynamicProperty',
         './DynamicMaterialProperty'
     ], function(
          TimeInterval,
+         defaultValue,
          CzmlBoolean,
          DynamicProperty,
          DynamicMaterialProperty) {
@@ -29,10 +31,12 @@ define([
     var DynamicPolygon = function() {
         /**
          * A DynamicProperty of type CzmlBoolean which determines the polygon's visibility.
+         * @type DynamicProperty
          */
         this.show = undefined;
         /**
          * A DynamicMaterialProperty which determines the polygon's material.
+         * @type DynamicMaterialProperty
          */
         this.material = undefined;
     };
@@ -112,8 +116,8 @@ define([
                 targetObject.polygon = targetPolygon = new DynamicPolygon();
             }
 
-            targetPolygon.show = targetPolygon.show || polygonToMerge.show;
-            targetPolygon.material = targetPolygon.material || polygonToMerge.material;
+            targetPolygon.show = defaultValue(targetPolygon.show, polygonToMerge.show);
+            targetPolygon.material = defaultValue(targetPolygon.material, polygonToMerge.material);
         }
     };
 

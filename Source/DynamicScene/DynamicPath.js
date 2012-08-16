@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
+        '../Core/defaultValue',
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
         './DynamicProperty'],
 function(
         TimeInterval,
+        defaultValue,
         CzmlBoolean,
         CzmlNumber,
         CzmlColor,
@@ -31,26 +33,38 @@ function(
     var DynamicPath = function() {
         /**
          * A DynamicProperty of type CzmlColor which determines the line's color.
+         * @type DynamicProperty
          */
         this.color = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the line's outline color.
+         * @type DynamicProperty
          */
         this.outlineColor = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the line's outline width.
+         * @type DynamicProperty
          */
         this.outlineWidth = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the lines's visibility.
+         * @type DynamicProperty
          */
         this.show = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the line's width.
+         * @type DynamicProperty
          */
         this.width = undefined;
-
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the number of seconds in front of the object to show.
+         * @type DynamicProperty
+         */
         this.leadTime = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the the number of seconds behind the object to show.
+         * @type DynamicProperty
+         */
         this.trailTime = undefined;
     };
 
@@ -173,13 +187,13 @@ function(
                 targetObject.path = targetpath = new DynamicPath();
             }
 
-            targetpath.color = targetpath.color || pathToMerge.color;
-            targetpath.width = targetpath.width || pathToMerge.width;
-            targetpath.outlineColor = targetpath.outlineColor || pathToMerge.outlineColor;
-            targetpath.outlineWidth = targetpath.outlineWidth || pathToMerge.outlineWidth;
-            targetpath.show = targetpath.show || pathToMerge.show;
-            targetpath.leadTime = targetpath.leadTime || pathToMerge.leadTime;
-            targetpath.trailTime = targetpath.trailTime || pathToMerge.trailTime;
+            targetpath.color = defaultValue(targetpath.color, pathToMerge.color);
+            targetpath.width = defaultValue(targetpath.width, pathToMerge.width);
+            targetpath.outlineColor = defaultValue(targetpath.outlineColor, pathToMerge.outlineColor);
+            targetpath.outlineWidth = defaultValue(targetpath.outlineWidth, pathToMerge.outlineWidth);
+            targetpath.show = defaultValue(targetpath.show, pathToMerge.show);
+            targetpath.leadTime = defaultValue(targetpath.leadTime, pathToMerge.leadTime);
+            targetpath.trailTime = defaultValue(targetpath.trailTime, pathToMerge.trailTime);
         }
     };
 
