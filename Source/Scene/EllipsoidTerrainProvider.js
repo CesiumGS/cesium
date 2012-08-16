@@ -51,23 +51,18 @@ define([
          * @type TilingScheme
          */
         this.tilingScheme = defaultValue(tilingScheme, new WebMercatorTilingScheme());
+
+        // Note: the 64 below does NOT need to match the actual vertex dimensions.
+        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, 64, this.tilingScheme.numberOfLevelZeroTilesX);
     }
 
-    function computeDesiredGranularity(tilingScheme, tile) {
-        var ellipsoid = tilingScheme.ellipsoid;
-        var level = tile.level;
-
-        // The more vertices we use to tessellate the extent, the less geometric error
-        // in the tile.  We only need to use enough vertices to be at or below the
-        // geometric error expected for this level.
-        var maxErrorMeters = tilingScheme.getLevelMaximumGeometricError(level);
-
-        // Convert the max error in meters to radians at the equator.
-        // TODO: we should take the latitude into account to avoid over-tessellation near the poles.
-        var maxErrorRadians = maxErrorMeters / ellipsoid.getRadii().x;
-
-        return maxErrorRadians * 10;
-    }
+    /**
+     * Gets the maximum geometric error allowed in a tile at a given level.
+     *
+     * @param {Number} level The tile level for which to get the maximum geometric error.
+     * @returns {Number} The maximum geometric error.
+     */
+    EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
 
     EllipsoidTerrainProvider.prototype.requestTileGeometry = function(tile) {
         tile.state = TileState.RECEIVED;
@@ -80,12 +75,10 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
         var extent = tile.extent;
 
-        var granularity = computeDesiredGranularity(tilingScheme, tile);
-
         tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
-        var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
-        var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
+        var width = 16;
+        var height = 16;
 
         var verticesPromise = taskProcessor.scheduleTask({
             extent : extent,
