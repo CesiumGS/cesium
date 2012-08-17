@@ -520,7 +520,7 @@ define([
                         glyph.setPosition(label._position);
                         glyph.setEyeOffset(label._eyeOffset);
                         glyph.setHorizontalOrigin(HorizontalOrigin.LEFT);
-                        glyph.setVerticalOrigin(VerticalOrigin.BOTTOM);
+                        glyph.setVerticalOrigin(label._verticalOrigin);
                         glyph.setScale(label._scale);
                         glyph._pickIdThis = label;
                         glyph._character = undefined;
