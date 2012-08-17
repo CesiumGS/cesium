@@ -15,7 +15,7 @@ define([
         './SceneMode',
         './SceneState',
         './ViewportQuad',
-        '../Shaders/PostFX/LumianceFS'
+        '../Shaders/PostFX/LuminanceFS'
     ], function(
         Color,
         destroyObject,
@@ -32,7 +32,7 @@ define([
         SceneMode,
         SceneState,
         ViewportQuad,
-        LumianceFS) {
+        LuminanceFS) {
     "use strict";
 
     /**
@@ -86,7 +86,7 @@ define([
         this.morphTime = 1.0;
 
         this._framebuffer = undefined;
-        this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), LumianceFS);
+        this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), LuminanceFS);
     };
 
     /**
