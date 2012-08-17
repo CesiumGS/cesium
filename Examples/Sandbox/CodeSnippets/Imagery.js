@@ -5,7 +5,7 @@
     Sandbox.BingMaps = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // Bing Maps
-            var bing = new Cesium.BingMapsTileProvider({
+            var bing = new Cesium.BingMapsImageryProvider({
                 server : 'dev.virtualearth.net',
                 mapStyle : Cesium.BingMapsStyle.AERIAL,
                 // Some versions of Safari support WebGL, but don't correctly implement
@@ -20,10 +20,8 @@
     Sandbox.ArcGIS = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // ArcGIS World Street Maps
-            var arcgis = new Cesium.ArcGISTileProvider({
-                host : 'server.arcgisonline.com',
-                root : 'ArcGIS/rest',
-                service : 'World_Street_Map',
+            var arcgis = new Cesium.ArcGisMapServerImageryProvider({
+                url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
                 proxy : new Cesium.DefaultProxy('/proxy/')
             });
 
@@ -86,7 +84,7 @@
     Sandbox.Single = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // Single texture
-            var single = new Cesium.SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
+            var single = new Cesium.SingleTileImageryProvider('Images/NE2_50M_SR_W_4096.jpg');
 
             primitives.getCentralBody().dayTileProvider = single;
         };
@@ -95,7 +93,7 @@
     Sandbox.CompositeTiler = function (scene, ellipsoid, primitives) {
         this.code = function () {
             // Bing Maps
-            var bing = new Cesium.BingMapsTileProvider({
+            var bing = new Cesium.BingMapsImageryProvider({
                 server : 'dev.virtualearth.net',
                 mapStyle : Cesium.BingMapsStyle.AERIAL,
                 // Some versions of Safari support WebGL, but don't correctly implement
@@ -104,7 +102,7 @@
             });
 
             // Single texture
-            var single = new Cesium.SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
+            var single = new Cesium.SingleTileImageryProvider('Images/NE2_50M_SR_W_4096.jpg');
 
             // Composite tile provider
             var composite = new Cesium.CompositeTileProvider([{

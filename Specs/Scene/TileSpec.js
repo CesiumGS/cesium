@@ -2,11 +2,13 @@
 defineSuite([
          'Scene/Tile',
          'Core/Extent',
-         'Core/Math'
+         'Core/Math',
+         'Scene/WebMercatorTilingScheme'
      ], function(
          Tile,
          Extent,
-         CesiumMath) {
+         CesiumMath,
+         WebMercatorTilingScheme) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -52,14 +54,15 @@ defineSuite([
     });
 
     it('creates extent on construction', function() {
-        var desc = {x : 0, y : 0, zoom : 0};
+        var desc = {tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, zoom : 0};
         var tile = new Tile(desc);
-        var extent = Tile.tileXYToExtent(desc.x, desc.y, desc.zoom);
+        var extent = desc.tilingScheme.tileXYToExtent(desc.x, desc.y, desc.zoom);
         expect(tile.extent).toEqual(extent);
     });
 
     it('creates x, y, zoom on construction', function() {
         var desc = {
+            tilingScheme : new WebMercatorTilingScheme(),
             extent : new Extent(
                     -CesiumMath.PI,
                     CesiumMath.toRadians(-85.05112878),
@@ -69,7 +72,7 @@ defineSuite([
             zoom : 0
         };
         var tile = new Tile(desc);
-        var coords = Tile.extentToTileXY(desc.extent, desc.zoom);
+        var coords = desc.tilingScheme.extentToTileXY(desc.extent, desc.zoom);
         expect(tile.x).toEqual(coords.x);
         expect(tile.y).toEqual(coords.y);
     });

@@ -13,7 +13,7 @@ var Sandbox = Sandbox || {};
         var ellipsoid = Cesium.Ellipsoid.WGS84;
 
         // TODO: make multiple tile providers available
-        var bing = new Cesium.BingMapsTileProvider({
+        var bing = new Cesium.BingMapsImageryProvider({
             server : 'dev.virtualearth.net',
             mapStyle : Cesium.BingMapsStyle.AERIAL,
             // Some versions of Safari support WebGL, but don't correctly implement

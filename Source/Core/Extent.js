@@ -184,6 +184,14 @@ define([
         return positions;
     }
 
+    Extent.prototype.intersectWith = function(otherExtent) {
+        var north = Math.min(this.north, otherExtent.north);
+        var east = Math.min(this.east, otherExtent.east);
+        var south = Math.max(this.south, otherExtent.south);
+        var west = Math.max(this.west, otherExtent.west);
+        return new Extent(west, south, east, north);
+    };
+
     /**
      * DOC_TBA
      *
@@ -300,6 +308,20 @@ define([
      */
     Extent.prototype.getSoutheast = function() {
         return new Cartographic(this.east, this.south);
+    };
+
+    /**
+     * Gets a {@link Cartographic} containing the center of this extent.
+     */
+    Extent.prototype.getCenter = function() {
+        return new Cartographic((this.west + this.east) / 2.0, (this.south + this.north) / 2.0);
+    };
+
+    Extent.prototype.contains = function(cartographicPosition) {
+        return cartographicPosition.longitude >= this.west &&
+               cartographicPosition.longitude <= this.east &&
+               cartographicPosition.latitude >= this.south &&
+               cartographicPosition.latitude <= this.north;
     };
 
     /**

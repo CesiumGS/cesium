@@ -461,6 +461,30 @@ vec3 agi_multiplyWithColorBalance(vec3 left, vec3 right)
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Specifies a flat, 2D map.
+ *
+ * @name agi_scene2D
+ * @glslConstant 
+ */
+const int agi_scene2D = 0;
+
+/**
+ * Specifies 2.D Columbus View.
+ *
+ * @name agi_columbusView
+ * @glslConstant 
+ */
+const int agi_columbusView = 1;
+
+/**
+ * Specifies a 3D globe.
+ *
+ * @name agi_scene3D
+ * @glslConstant 
+ */
+const int agi_scene3D = 2;
+
+/**
  * DOC_TBA
  *
  * @name agi_columbusViewMorph

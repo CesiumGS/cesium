@@ -36,7 +36,7 @@ define([
         this.vertexShader = ViewportQuadVS;
         this.fragmentShader = defaultValue(fsSource, ViewportQuadFS);
 
-        this._texture = null;
+        this._texture = undefined;
         this._destroyTexture = true;
 
         this._framebuffer = null;

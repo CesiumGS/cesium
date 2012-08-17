@@ -21,18 +21,18 @@ define([
      * @exception {DeveloperError} A non-empty list is required.
      * @exception {DeveloperError} camera is required.
      *
-     * @see SingleTileProvider
-     * @see ArcGISTileProvider
+     * @see SingleTileImageryProvider
+     * @see ArcGisMapServerImageryProvider
      * @see OpenStreetMapTileProvider
-     * @see BingMapsTileProvider
+     * @see BingMapsImageryProvider
      *
      * @example
-     * // Create a CompositeTileProvider from a SingleTileProvider and BingMapsTileProvider
+     * // Create a CompositeTileProvider from a SingleTileImageryProvider and BingMapsImageryProvider
      *
      * // Single
-     *  var single = new SingleTileProvider('Images/NE2_50M_SR_W_4096.jpg');
+     *  var single = new SingleTileImageryProvider('Images/NE2_50M_SR_W_4096.jpg');
      *  // Bing Maps
-     *  var bing = new BingMapsTileProvider({
+     *  var bing = new BingMapsImageryProvider({
      *      server : 'dev.virtualearth.net',
      *      mapStyle : BingMapsStyle.AERIAL
      *  });
@@ -62,29 +62,21 @@ define([
         this._currentProviderIndex = 0;
 
         /**
-         * The cartographic extent of the base tile, with north, south, east and
-         * west properties in radians.
+         * The cartographic extent of this provider's imagery,
+         * with north, south, east and west properties in radians.
          *
          * @constant
          * @type {Extent}
          */
-        this.maxExtent = this._list[0].provider.maxExtent;
+        this.extent = this._list[0].provider.extent;
 
         /**
-         * The minimum zoom level that can be requested.
+         * The maximum level that can be requested.
          *
          * @constant
          * @type {Number}
          */
-        this.zoomMin = this._list[0].provider.zoomMin;
-
-        /**
-         * The maximum zoom level that can be requested.
-         *
-         * @constant
-         * @type {Number}
-         */
-        this.zoomMax = this._list[this._list.length - 1].provider.zoomMax;
+        this.maxLevel = this._list[this._list.length - 1].provider.maxLevel;
 
         /**
          * The smallest width of any image loaded.
@@ -99,6 +91,13 @@ define([
          * @type {Number}
          */
         this.tileHeight = Number.MAX_VALUE;
+
+        /**
+         * True if the tile provider is ready for use; otherwise, false.
+         *
+         * @type {Boolean}
+         */
+        this.ready = true;
 
         // TODO: good idea?
         for ( var i = 0; i < this._list.length; ++i) {
@@ -164,12 +163,12 @@ define([
      * @param {Function} onerror A function that will be called if there is an error loading the image.
      * @param {Function} oninvalid A function that will be called if the image loaded is not valid.
      *
-     * @exception {DeveloperError} <code>tile.zoom</code> is less than <code>zoomMin</code>
-     * or greater than <code>zoomMax</code>.
+     * @exception {DeveloperError} <code>level</code> is less than zero
+     * or greater than <code>maxLevel</code>.
      */
-    CompositeTileProvider.prototype.loadTileImage = function(tile, onload, onerror, oninvalid) {
-        if (tile.zoom < this.zoomMin || tile.zoom > this.zoomMax) {
-            throw new DeveloperError('tile.zoom must be between in [zoomMin, zoomMax].');
+    CompositeTileProvider.prototype.requestImage = function(tile, onload, onerror, oninvalid) {
+        if (tile.level < 0 || tile.level > this.maxLevel) {
+            throw new DeveloperError('tile.level must in the range [0, maxLevel].');
         }
 
         var height = this._camera.position.magnitude() - this._radius;
@@ -177,8 +176,8 @@ define([
         var provider = this._list[this._currentProviderIndex].provider;
         var image = null;
 
-        if (tile.zoom >= provider.zoomMin && tile.zoom <= provider.zoomMax) {
-            image = provider.loadTileImage(tile, onload, onerror, oninvalid);
+        if (tile.level <= provider.maxLevel) {
+            image = provider.requestImage(tile, onload, onerror, oninvalid);
             tile.projection = provider.projection;
         } else {
             if (oninvalid && typeof oninvalid === 'function') {

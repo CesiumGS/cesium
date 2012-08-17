@@ -1,13 +1,13 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
         '../Renderer/Texture'
     ], function(
-        DeveloperError,
         destroyObject,
+        DeveloperError,
         PixelDatatype,
         PixelFormat,
         Texture) {
@@ -33,7 +33,12 @@ define([
         if (typeof freeList === 'undefined') {
             freeList = this._pool._free[this._textureTypeKey] = [];
         }
-        freeList.push(this);
+
+        if (freeList.length >= 8) {
+            this._texture.destroy();
+        } else {
+            freeList.push(this);
+        }
     };
 
     /**
@@ -45,16 +50,9 @@ define([
      * @alias Texture2DPool
      * @constructor
      *
-     * @param {Context} context The context to use to create textures when needed.
-     *
      * @see Texture
      */
-    var Texture2DPool = function(context) {
-        if (typeof context === 'undefined') {
-            throw new DeveloperError('context is required.');
-        }
-
-        this._context = context;
+    var TexturePool = function() {
         this._free = {};
     };
 
@@ -63,13 +61,15 @@ define([
      * but may return a pooled texture if there are any available.  If a pooled texture is re-used,
      * and no source is provided, the new texture will still retain its old contents.
      *
-     * @memberof Texture2DPool
+     * @memberof TexturePool
+     *
+     * @param {Context} context The context to use to create textures when needed.
      *
      * @exception {DeveloperError} description is required.
      *
      * @see Context#createTexture2D
      */
-    Texture2DPool.prototype.createTexture2D = function(description) {
+    TexturePool.prototype.createTexture2D = function(context, description) {
         if (!description) {
             throw new DeveloperError('description is required.');
         }
@@ -93,7 +93,7 @@ define([
             return texture;
         }
 
-        return new PooledTexture(this._context.createTexture2D(description), textureTypeKey, this);
+        return new PooledTexture(context.createTexture2D(description), textureTypeKey, this);
     };
 
     /**
@@ -102,13 +102,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Texture2DPool
+     * @memberof TexturePool
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see Texture2DPool#destroy
+     * @see TexturePool#destroy
      */
-    Texture2DPool.prototype.isDestroyed = function() {
+    TexturePool.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -120,18 +120,18 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof Texture2DPool
+     * @memberof TexturePool
      *
      * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Texture2DPool#isDestroyed
+     * @see TexturePool#isDestroyed
      *
      * @example
      * pool = pool && pool.destroy();
      */
-    Texture2DPool.prototype.destroy = function() {
+    TexturePool.prototype.destroy = function() {
         var free = this._free;
         Object.keys(free).forEach(function(textureTypeKey) {
             free[textureTypeKey].forEach(function(texture) {
@@ -141,5 +141,5 @@ define([
         return destroyObject(this);
     };
 
-    return Texture2DPool;
+    return TexturePool;
 });

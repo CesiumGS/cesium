@@ -439,7 +439,11 @@ define([
                 return function() {
                     for ( var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
-                        _gl.uniform2f(_locations[i], v.x, v.y);
+                        if (typeof v !== 'undefined') {
+                            _gl.uniform2f(_locations[i], v.x, v.y);
+                        } else {
+                            _gl.uniform2f(_locations[i], 0.0, 0.0);
+                        }
                     }
                 };
             case _gl.FLOAT_VEC3:
@@ -524,10 +528,13 @@ define([
         if ((activeUniform.type === _gl.SAMPLER_2D) || (activeUniform.type === _gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
                 for ( var i = 0; i < _locations.length; ++i) {
-                    var index = textureUnitIndex + i;
-                    _gl.activeTexture(_gl.TEXTURE0 + index);
-                    _gl.bindTexture(this.value[i]._getTarget(), this.value[i]._getTexture());
-                    _gl.uniform1i(_locations[i], index);
+                    var value = this.value[i];
+                    if (typeof value !== 'undefined') {
+                        var index = textureUnitIndex + i;
+                        _gl.activeTexture(_gl.TEXTURE0 + index);
+                        _gl.bindTexture(value._getTarget(), value._getTexture());
+                        _gl.uniform1i(_locations[i], index);
+                    }
                 }
 
                 return textureUnitIndex + _locations.length;
@@ -535,8 +542,11 @@ define([
 
             this._clearSampler = function(textureUnitIndex) {
                 for ( var i = 0; i < _locations.length; ++i) {
-                    _gl.activeTexture(_gl.TEXTURE0 + textureUnitIndex + i);
-                    _gl.bindTexture(this.value[i]._getTarget(), null);
+                    var value = this.value[i];
+                    if (typeof value !== 'undefined') {
+                        _gl.activeTexture(_gl.TEXTURE0 + textureUnitIndex + i);
+                        _gl.bindTexture(value._getTarget(), null);
+                    }
                 }
 
                 return textureUnitIndex + _locations.length;
