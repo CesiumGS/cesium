@@ -40,6 +40,9 @@ define([
         this._depthTexture = undefined;
         this._destroyTexture = true;
 
+// TODO: Don't hardcode a uniform like this.
+        this.t = 1.0;
+
         this._framebuffer = null;
         this._destroyFramebuffer = false;
 
@@ -50,6 +53,10 @@ define([
 
         var that = this;
         this.uniforms = {
+            u_t : function() {
+                return that.t;
+            },
+
             u_texture : function() {
                 return that._texture;
             },

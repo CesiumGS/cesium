@@ -254,6 +254,21 @@ require({
             var up = new Cesium.Cartesian3(-0.31881470184216937, -0.44294118336776583, 0.8379500545772692);
             var camera = scene.getCamera();
             camera.lookAt(position, position.add(direction), up);
+
+        case 40:        // Down
+            scene.nextPostFX();
+            break;
+        case 38:        // Up
+            scene.prevPostFX();
+            break;
+        case 37:        // Left
+            scene.incT();
+            break;
+        case 39:        // Right
+            scene.decT();
+            break;
+
+        default:
             break;
         }
     }
