@@ -98,13 +98,25 @@ define([
         this.morphTime = 1.0;
 
         this._framebuffer = undefined;
-        this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), LuminanceFS);
-        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), BlackAndWhite);
-        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), EightBit);
-        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), NightVision);
-        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Brightness);
-        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Contrast);
-        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Toon);
+
+        this._postFXIndex = 0;
+        this._postFXs = [
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), LuminanceFS),
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), BlackAndWhite),
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), EightBit),
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), NightVision),
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Brightness),
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Contrast),
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Toon)
+        ];
+    };
+
+    Scene.prototype.nextPostFX = function() {
+        this._postFXIndex = (this._postFXIndex === this._postFXs.length - 1) ? 0 : (this._postFXIndex + 1);
+    };
+
+    Scene.prototype.prevPostFX = function() {
+        this._postFXIndex = (this._postFXIndex === 0) ? this._postFXs.length - 1 : (this._postFXIndex - 1);
     };
 
     /**
@@ -252,7 +264,7 @@ define([
 
 // TODO: _postFX doesn't use sceneState so we pull off this hack.
         var sceneState = undefined;
-        var postFX = this._postFX;
+        var postFX = this._postFXs[this._postFXIndex];
 
 // TODO: if width or height changes, ViewQuad needs to be recreated
         postFX.setTexture(this._framebuffer.getColorTexture());
