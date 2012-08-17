@@ -81,7 +81,7 @@ define([
          */
         this.morphTime = 1.0;
 
-        this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, 400.0, 200.0), LumianceFS);
+        this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), LumianceFS);
     };
 
     /**
@@ -209,6 +209,7 @@ define([
         var sceneState = undefined;
         var postFX = this._postFX;
 
+// TODO: if width or height changes, ViewQuad needs to be recreated
         postFX.setTexture(this._context.createTexture2DFromFramebuffer());
         postFX.update(this._context, sceneState);
         postFX.render(this._context);
