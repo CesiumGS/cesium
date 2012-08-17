@@ -29,6 +29,127 @@ define([
         VerticalOrigin) {
     "use strict";
 
+    function createGlyphCanvas(character, font, fillColor, outlineColor, style, verticalOrigin) {
+        var textBaseline;
+        if (verticalOrigin === VerticalOrigin.BOTTOM) {
+            textBaseline = 'bottom';
+        } else if (verticalOrigin === VerticalOrigin.TOP) {
+            textBaseline = 'top';
+        } else {
+            // VerticalOrigin.CENTER
+            textBaseline = 'middle';
+        }
+
+        var fill = false;
+        if (style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE) {
+            fill = true;
+        }
+
+        var stroke = false;
+        if (style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE) {
+            stroke = true;
+        }
+
+        return writeTextToCanvas(character, {
+            font : font,
+            textBaseline : textBaseline,
+            fill : fill,
+            fillColor : fillColor,
+            stroke : stroke,
+            strokeColor : outlineColor
+        });
+    }
+
+    function rebindGlyph(glyph, label, glyphCache, textureAtlas) {
+        var character = glyph._character;
+        var font = label._font;
+        var fillColor = label._fillColor;
+        var outlineColor = label._outlineColor;
+        var style = label._style;
+        var verticalOrigin = label._verticalOrigin;
+        var id = JSON.stringify([
+                                 character,
+                                 font,
+                                 fillColor.toString(),
+                                 outlineColor.toString(),
+                                 style.toString(),
+                                 verticalOrigin.toString()
+                                ]);
+
+        var glyphInfo = glyphCache[id];
+        if (typeof glyphInfo === 'undefined') {
+            var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, style, verticalOrigin);
+            var index = textureAtlas.addImage(canvas);
+
+            glyphCache[id] = glyphInfo = {
+                index : index,
+                dimensions : canvas.dimensions
+            };
+        }
+
+        glyph.setImageIndex(glyphInfo.index);
+        glyph._dimensions = glyphInfo.dimensions;
+    }
+
+    // reusable Cartesian2 instance
+    var glyphPixelOffset = new Cartesian2();
+
+    function repositionGlyphs(label, glyphs) {
+        var glyph;
+        var dimensions;
+        var totalWidth = 0;
+        var maxHeight = 0;
+
+        var glyphIndex = 0;
+        var glyphLength = glyphs.length;
+        for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
+            glyph = glyphs[glyphIndex];
+            dimensions = glyph._dimensions;
+            totalWidth += dimensions.width;
+            maxHeight = Math.max(maxHeight, dimensions.height);
+        }
+
+        var scale = label._scale;
+        var horizontalOrigin = label._horizontalOrigin;
+        var widthOffset = 0;
+        if (horizontalOrigin === HorizontalOrigin.CENTER) {
+            widthOffset -= totalWidth / 2 * scale;
+        } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
+            widthOffset -= totalWidth * scale;
+        }
+
+        var pixelOffset = label._pixelOffset;
+
+        glyphPixelOffset.x = pixelOffset.x + widthOffset;
+        glyphPixelOffset.y = 0;
+
+        var verticalOrigin = label._verticalOrigin;
+        for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
+            glyph = glyphs[glyphIndex];
+            dimensions = glyph._dimensions;
+
+            if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxHeight) {
+                glyphPixelOffset.y = pixelOffset.y - dimensions.descent * scale;
+            } else if (verticalOrigin === VerticalOrigin.TOP) {
+                glyphPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) * scale - dimensions.descent * scale;
+            } else if (verticalOrigin === VerticalOrigin.CENTER) {
+                glyphPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
+            }
+
+            glyph.setPixelOffset(glyphPixelOffset);
+
+            glyphPixelOffset.x += dimensions.width * scale;
+        }
+    }
+
+    function destroyLabel(label, billboardCollection) {
+        var glyphs = label._glyphs;
+        for ( var i = 0, len = glyphs.length; i < len; ++i) {
+            billboardCollection.remove(glyphs[i]);
+        }
+        destroyObject(label);
+    }
+
     /**
      * A renderable collection of labels.  Labels are viewport-aligned text positioned in the 3D scene.
      * Each label can have a different font, color, scale, etc.
@@ -222,7 +343,7 @@ define([
 
         if (label._labelCollection === this) {
             this._labels.splice(label._index, 1);
-            destroyObject(label);
+            destroyLabel(label, this._billboardCollection);
 
             return true;
         }
@@ -253,13 +374,14 @@ define([
         var labels = this._labels;
 
         for ( var i = 0, len = labels.length; i < len; ++i) {
-            destroyObject(labels[i]);
+            destroyLabel(labels[i], this._billboardCollection);
         }
 
         labels.length = 0;
         if (typeof this._textureAtlas !== 'undefined') {
             this._textureAtlas.destroy();
             this._textureAtlas = undefined;
+            this._glyphCache = {};
         }
     };
 
@@ -352,118 +474,6 @@ define([
     LabelCollection.prototype.getLength = function() {
         return this._labels.length;
     };
-
-    function createGlyphCanvas(character, font, fillColor, outlineColor, style, verticalOrigin) {
-        var textBaseline;
-        if (verticalOrigin === VerticalOrigin.BOTTOM) {
-            textBaseline = 'bottom';
-        } else if (verticalOrigin === VerticalOrigin.TOP) {
-            textBaseline = 'top';
-        } else {
-            // VerticalOrigin.CENTER
-            textBaseline = 'middle';
-        }
-
-        var fill = false;
-        if (style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE) {
-            fill = true;
-        }
-
-        var stroke = false;
-        if (style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE) {
-            stroke = true;
-        }
-
-        return writeTextToCanvas(character, {
-            font : font,
-            textBaseline : textBaseline,
-            fill : fill,
-            fillColor : fillColor,
-            stroke : stroke,
-            strokeColor : outlineColor
-        });
-    }
-    function rebindGlyph(glyph, label, glyphCache, textureAtlas) {
-        var character = glyph._character;
-        var font = label._font;
-        var fillColor = label._fillColor;
-        var outlineColor = label._outlineColor;
-        var style = label._style;
-        var verticalOrigin = label._verticalOrigin;
-        var id = JSON.stringify([
-                                 character,
-                                 font,
-                                 fillColor.toString(),
-                                 outlineColor.toString(),
-                                 style.toString(),
-                                 verticalOrigin.toString()
-                                ]);
-
-        var glyphInfo = glyphCache[id];
-        if (typeof glyphInfo === 'undefined') {
-            var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, style, verticalOrigin);
-            var index = textureAtlas.addImage(canvas);
-
-            glyphCache[id] = glyphInfo = {
-                index : index,
-                dimensions : canvas.dimensions
-            };
-        }
-
-        glyph.setImageIndex(glyphInfo.index);
-        glyph._dimensions = glyphInfo.dimensions;
-    }
-
-    // reusable Cartesian2 instance
-    var glyphPixelOffset = new Cartesian2();
-
-    function repositionGlyphs(label, glyphs) {
-        var glyph;
-        var dimensions;
-        var totalWidth = 0;
-        var maxHeight = 0;
-
-        var glyphIndex = 0;
-        var glyphLength = glyphs.length;
-        for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-            glyph = glyphs[glyphIndex];
-            dimensions = glyph._dimensions;
-            totalWidth += dimensions.width;
-            maxHeight = Math.max(maxHeight, dimensions.height);
-        }
-
-        var scale = label._scale;
-        var horizontalOrigin = label._horizontalOrigin;
-        var widthOffset = 0;
-        if (horizontalOrigin === HorizontalOrigin.CENTER) {
-            widthOffset -= totalWidth / 2 * scale;
-        } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
-            widthOffset -= totalWidth * scale;
-        }
-
-        var pixelOffset = label._pixelOffset;
-
-        glyphPixelOffset.x = pixelOffset.x + widthOffset;
-        glyphPixelOffset.y = 0;
-
-        var verticalOrigin = label._verticalOrigin;
-        for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-            glyph = glyphs[glyphIndex];
-            dimensions = glyph._dimensions;
-
-            if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxHeight) {
-                glyphPixelOffset.y = pixelOffset.y - dimensions.descent * scale;
-            } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) * scale - dimensions.descent * scale;
-            } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
-            }
-
-            glyph.setPixelOffset(glyphPixelOffset);
-
-            glyphPixelOffset.x += dimensions.width * scale;
-        }
-    }
 
     /**
      * @private
