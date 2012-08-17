@@ -20,7 +20,8 @@ define([
         '../Shaders/PostFX/EightBit',
         '../Shaders/PostFX/NightVision',
         '../Shaders/PostFX/Brightness',
-        '../Shaders/PostFX/Contrast'
+        '../Shaders/PostFX/Contrast',
+        '../Shaders/PostFX/Toon'
     ], function(
         Color,
         destroyObject,
@@ -42,7 +43,8 @@ define([
         EightBit,
         NightVision,
         Brightness,
-        Contrast) {
+        Contrast,
+        Toon) {
     "use strict";
 
     /**
@@ -101,7 +103,8 @@ define([
         //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), EightBit);
         //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), NightVision);
         //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Brightness);
-        this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Contrast);
+        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Contrast);
+        this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Toon);
     };
 
     /**
