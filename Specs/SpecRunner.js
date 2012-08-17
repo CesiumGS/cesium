@@ -112,7 +112,7 @@ var afterAll;
         var lastIndex = suite.queue.blocks.length - 1;
         // check to see if all the remaining specs will be skipped
         // in which case this the last spec
-        while (i < lastIndex && !env.specFilter(specs[i + 1])) {
+        while (i < lastIndex && !env.specFilter(suite.queue.blocks[i + 1])) {
             ++i;
         }
         var lastSpec = i === lastIndex;
