@@ -22,7 +22,11 @@ define([
         '../Shaders/PostFX/NightVision',
         '../Shaders/PostFX/Brightness',
         '../Shaders/PostFX/Contrast',
-        '../Shaders/PostFX/Toon'
+        '../Shaders/PostFX/Toon',
+        '../Shaders/PostFX/Fog',
+        '../Shaders/PostFX/DepthOfField',
+        '../Shaders/PostFX/AmbientOcclusion',
+        '../Shaders/PostFX/CombinedEffects'
     ], function(
         Color,
         destroyObject,
@@ -46,7 +50,11 @@ define([
         NightVision,
         Brightness,
         Contrast,
-        Toon) {
+        Toon,
+        Fog,
+        DepthOfField,
+        AmbientOcclusion,
+        CombinedEffects) {
     "use strict";
 
     /**
@@ -110,7 +118,11 @@ define([
             new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), NightVision),
             new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Brightness),
             new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Contrast),
-            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Toon)
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Toon),
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Fog),
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), DepthOfField),
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), AmbientOcclusion),
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), CombinedEffects)
         ];
     };
 
