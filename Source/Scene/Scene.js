@@ -15,7 +15,13 @@ define([
         './SceneMode',
         './SceneState',
         './ViewportQuad',
-        '../Shaders/PostFX/LuminanceFS'
+        '../Shaders/PostFX/LuminanceFS',
+        '../Shaders/PostFX/BlackAndWhite',
+        '../Shaders/PostFX/EightBit',
+        '../Shaders/PostFX/NightVision',
+        '../Shaders/PostFX/Brightness',
+        '../Shaders/PostFX/Contrast',
+        '../Shaders/PostFX/Toon'
     ], function(
         Color,
         destroyObject,
@@ -32,7 +38,13 @@ define([
         SceneMode,
         SceneState,
         ViewportQuad,
-        LuminanceFS) {
+        LuminanceFS,
+        BlackAndWhite,
+        EightBit,
+        NightVision,
+        Brightness,
+        Contrast,
+        Toon) {
     "use strict";
 
     /**
@@ -87,6 +99,12 @@ define([
 
         this._framebuffer = undefined;
         this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), LuminanceFS);
+        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), BlackAndWhite);
+        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), EightBit);
+        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), NightVision);
+        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Brightness);
+        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Contrast);
+        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), Toon);
     };
 
     /**

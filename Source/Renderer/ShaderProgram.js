@@ -20,6 +20,8 @@ define([
     "use strict";
     /*global console*/
 
+var timeHack = 0.0;
+
     function getUniformDatatype(gl, activeUniformType) {
         switch (activeUniformType) {
         case gl.FLOAT:
@@ -1415,6 +1417,30 @@ define([
                         return {
                             _set : function(uniformState) {
                                 uniform.value = uniformState.getInverseView().getTranslation();
+                            }
+                        };
+                    }
+                },
+
+                /**
+                 * DOC_TBA
+                 */
+                agi_time : {
+                    getSize : function() {
+                        return 1;
+                    },
+
+                    getDatatype : function() {
+                        return UniformDatatype.FLOAT;
+                    },
+
+                    create : function(uniform) {
+                        return {
+                            _set : function(uniformState) {
+// TODO: way better logic for deal with time.
+                                uniform.value = timeHack;
+
+                                timeHack += 0.0001;
                             }
                         };
                     }
