@@ -98,7 +98,7 @@ require({
     primitives.setCentralBody(cb);
 
     scene.getCamera().frustum.near = 10.0;
-    scene.getCamera().frustum.far = 20000000.0;
+    scene.getCamera().frustum.far = 200000.0;
     scene.getCamera().getControllers().addCentralBody();
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
@@ -257,6 +257,14 @@ require({
             break;
         }
     }
+
+// HACK ///////////////////////////////////////////////////////////////////////
+    var position = new Cesium.Cartesian3(-2444822.7410362503, -4495391.442027786, 3800016.0770029235);
+    var direction = new Cesium.Cartesian3(0.2306406390807245, 0.8212545213405562, 0.5218677100397503);
+    var up = new Cesium.Cartesian3(-0.31881470184216937, -0.44294118336776583, 0.8379500545772692);
+    var camera = scene.getCamera();
+    camera.lookAt(position, position.add(direction), up);
+///////////////////////////////////////////////////////////////////////////////
 
     document.addEventListener('keydown', keydownHandler, false);
 

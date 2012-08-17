@@ -238,7 +238,7 @@ define([
 
 // TODO: if width or height changes, ViewQuad needs to be recreated
         postFX.setTexture(this._framebuffer.getColorTexture());
-        //postFX.setTexture(this._framebuffer.getDepthTexture());
+        postFX.setDepthTexture(this._framebuffer.getDepthTexture());
         postFX.update(this._context, sceneState);
         postFX.render(this._context);
     };

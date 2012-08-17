@@ -1422,12 +1422,12 @@ define([
     CentralBody.prototype.render = function(context) {
         if (this.show) {
             // clear FBO
-            clearState.framebuffer = this._fb;
+//            clearState.framebuffer = this._fb;
             context.clear(context.createClearState(clearState));
 
             if (this.showSkyAtmosphere) {
                 context.draw({
-                    framebuffer : this._fb,
+//                    framebuffer : this._fb,
                     primitiveType : PrimitiveType.TRIANGLES,
                     shaderProgram : this._spSky,
                     uniformMap : this._drawUniforms,
@@ -1437,16 +1437,16 @@ define([
             }
 
             this._surface.render(context, this._drawUniforms, {
-                framebuffer : this._fb,
+//                framebuffer : this._fb,
                 shaderProgram : this._sp,
                 renderState : this._rsColor
             });
 
             // render quad with vertical gaussian blur with second-pass texture attached to FBO
-            this._quadV.render(context);
+//            this._quadV.render(context);
 
             // render quad with horizontal gaussian blur
-            this._quadH.render(context);
+//            this._quadH.render(context);
 
             // render quads to fill the poles
             if (this._mode === SceneMode.SCENE3D) {
@@ -1470,6 +1470,7 @@ define([
                 }
             }
 
+/*
             // render depth plane
             if (this._mode === SceneMode.SCENE3D) {
                 context.draw({
@@ -1479,6 +1480,7 @@ define([
                     renderState : this._rsDepth
                 });
             }
+*/
 
             this._surface._renderLogos(context);
         }

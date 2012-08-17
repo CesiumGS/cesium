@@ -37,6 +37,7 @@ define([
         this.fragmentShader = defaultValue(fsSource, ViewportQuadFS);
 
         this._texture = undefined;
+        this._depthTexture = undefined;
         this._destroyTexture = true;
 
         this._framebuffer = null;
@@ -51,6 +52,9 @@ define([
         this.uniforms = {
             u_texture : function() {
                 return that._texture;
+            },
+            u_depthTexture : function() {
+                return that._depthTexture;
             }
         };
     };
@@ -93,6 +97,25 @@ define([
         if (this._texture !== value) {
             this._texture = this._destroyTexture && this._texture && this._texture.destroy();
             this._texture = value;
+        }
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof ViewportQuad
+     */
+    ViewportQuad.prototype.getDepthTexture = function() {
+        return this._depthTexture;
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof ViewportQuad
+     */
+    ViewportQuad.prototype.setDepthTexture = function(value) {
+        if (this._depthTexture !== value) {
+            this._depthTexture = this._destroyTexture && this._depthTexture && this._depthTexture.destroy();
+            this._depthTexture = value;
         }
     };
 
@@ -251,7 +274,9 @@ define([
     ViewportQuad.prototype.destroy = function() {
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.release();
-        this._texture = this._destroyTexture && this._texture && this._texture.destroy();
+// TODO: Our framebuffer is also destroying these
+//        this._texture = this._destroyTexture && this._texture && this._texture.destroy();
+//        this._depthTexture = this._depthTexture && this._texture && this._depthTexture.destroy();
         this._framebuffer = this._destroyFramebuffer && this._framebuffer && this._framebuffer.destroy();
 
         return destroyObject(this);
