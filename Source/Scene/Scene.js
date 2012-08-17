@@ -119,6 +119,14 @@ define([
         this._postFXIndex = (this._postFXIndex === 0) ? this._postFXs.length - 1 : (this._postFXIndex - 1);
     };
 
+    Scene.prototype.incT = function() {
+        this._postFXs[this._postFXIndex].t -= 0.05; // more bright/contrast
+    };
+
+    Scene.prototype.decT = function() {
+        this._postFXs[this._postFXIndex].t += 0.05;
+    };
+
     /**
      * DOC_TBA
      * @memberof Scene
