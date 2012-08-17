@@ -761,6 +761,16 @@ defineSuite([
         }).toThrow();
     });
 
+    it('throws during creation if pixel format is depth or depth-stencil', function() {
+        expect(function() {
+            cubeMap = context.createCubeMap({
+                width : 16,
+                height : 16,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT
+            });
+        }).toThrow();
+    });
+
     it('fails to create (pixelDatatype)', function() {
         expect(function() {
             cubeMap = context.createCubeMap({

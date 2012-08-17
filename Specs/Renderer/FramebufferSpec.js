@@ -4,6 +4,8 @@ defineSuite([
          '../Specs/destroyContext',
          'Core/Cartesian4',
          'Core/PrimitiveType',
+         'Renderer/PixelFormat',
+         'Renderer/PixelDatatype',
          'Renderer/BufferUsage',
          'Renderer/DepthFunction',
          'Renderer/RenderbufferFormat',
@@ -14,6 +16,8 @@ defineSuite([
          destroyContext,
          Cartesian4,
          PrimitiveType,
+         PixelFormat,
+         PixelDatatype,
          BufferUsage,
          DepthFunction,
          RenderbufferFormat,
@@ -41,7 +45,7 @@ defineSuite([
         framebuffer = framebuffer && framebuffer.destroy();
     });
 
-    it('has a color attachment', function() {
+    it('has a color texture attachment', function() {
         var colorTexture = context.createTexture2D({
             width : 1,
             height : 1
@@ -52,7 +56,30 @@ defineSuite([
         expect(framebuffer.getColorTexture()).toEqual(colorTexture);
     });
 
-    it('has a depth attachment', function() {
+    it('has a color renderbuffer attachment', function() {
+        var renderbuffer = context.createRenderbuffer({
+            format : RenderbufferFormat.RGBA4
+        });
+
+        framebuffer = context.createFramebuffer();
+        framebuffer.setColorRenderbuffer(renderbuffer);
+        expect(framebuffer.getColorRenderbuffer()).toEqual(renderbuffer);
+    });
+
+    it('has a depth texture attachment', function() {
+        var depthTexture = context.createTexture2D({
+            width : 1,
+            height : 1,
+            pixelFormat : PixelFormat.DEPTH_COMPONENT,
+            pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+        });
+
+        framebuffer = context.createFramebuffer();
+        framebuffer.setDepthTexture(depthTexture);
+        expect(framebuffer.getDepthTexture()).toEqual(depthTexture);
+    });
+
+    it('has a depth renderbuffer attachment', function() {
         var renderbuffer = context.createRenderbuffer({
             format : RenderbufferFormat.DEPTH_COMPONENT16
         });
@@ -62,7 +89,7 @@ defineSuite([
         expect(framebuffer.getDepthRenderbuffer()).toEqual(renderbuffer);
     });
 
-    it('has a stencil attachment', function() {
+    it('has a stencil renderbuffer attachment', function() {
         var renderbuffer = context.createRenderbuffer({
             format : RenderbufferFormat.Stencil8
         });
@@ -72,7 +99,20 @@ defineSuite([
         expect(framebuffer.getStencilRenderbuffer()).toEqual(renderbuffer);
     });
 
-    it('has a depth-stencil attachment', function() {
+    it('has a depth-stencil texture attachment', function() {
+        var texture = context.createTexture2D({
+            width : 1,
+            height : 1,
+            pixelFormat : PixelFormat.DEPTH_STENCIL,
+            pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
+        });
+
+        framebuffer = context.createFramebuffer();
+        framebuffer.setDepthStencilTexture(texture);
+        expect(framebuffer.getDepthStencilTexture()).toEqual(texture);
+    });
+
+    it('has a depth-stencil renderbuffer attachment', function() {
         var renderbuffer = context.createRenderbuffer({
             format : RenderbufferFormat.DEPTH_STENCIL
         });
@@ -240,6 +280,139 @@ defineSuite([
         sp2 = sp2.destroy();
     });
 
+    it('draws to a depth texture attachment', function() {
+        if (context.getDepthTexture()) {
+            var colorTexture = context.createTexture2D({
+                width : 1,
+                height : 1
+            });
+            var depthTexture = context.createTexture2D({
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+
+            framebuffer = context.createFramebuffer({
+                colorTexture : colorTexture,
+                depthTexture : depthTexture
+            });
+
+            context.clear();
+
+            // 1 of 3.  Render green point into color attachment.
+            var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+            var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
+            sp = context.createShaderProgram(vs, fs);
+
+            va = context.createVertexArray();
+            va.addAttribute({
+                index : sp.getVertexAttributes().position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            });
+
+            context.draw({
+                primitiveType : PrimitiveType.POINTS,
+                shaderProgram : sp,
+                vertexArray : va,
+                framebuffer : framebuffer,
+                renderState : context.createRenderState({
+                    depthTest : {
+                        enabled : true
+                    }
+                })
+            });
+
+            // 2 of 3.  Verify default color buffer is still black.
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            // 3 of 3.  Render green to default color buffer by reading from previous color attachment
+            var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+            var fs2 = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)).rrrr; }';
+            var sp2 = context.createShaderProgram(vs2, fs2, {
+                position : 0
+            });
+            sp2.getAllUniforms().u_texture.value = depthTexture;
+
+            context.draw({
+                primitiveType : PrimitiveType.POINTS,
+                shaderProgram : sp2,
+                vertexArray : va
+            });
+            expect(context.readPixels()).toEqual([128, 128, 128, 128]);
+
+            sp2 = sp2.destroy();
+        }
+    });
+
+// TODO: remove duplication with above function.
+    it('draws to a depth-stencil texture attachment', function() {
+        if (context.getDepthTexture()) {
+            var colorTexture = context.createTexture2D({
+                width : 1,
+                height : 1
+            });
+            var depthStencilTexture = context.createTexture2D({
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.DEPTH_STENCIL,
+                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
+            });
+
+            framebuffer = context.createFramebuffer({
+                colorTexture : colorTexture,
+                depthStencilTexture : depthStencilTexture
+            });
+
+            context.clear();
+
+            // 1 of 3.  Render green point into color attachment.
+            var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+            var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
+            sp = context.createShaderProgram(vs, fs);
+
+            va = context.createVertexArray();
+            va.addAttribute({
+                index : sp.getVertexAttributes().position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            });
+
+            context.draw({
+                primitiveType : PrimitiveType.POINTS,
+                shaderProgram : sp,
+                vertexArray : va,
+                framebuffer : framebuffer,
+                renderState : context.createRenderState({
+                    depthTest : {
+                        enabled : true
+                    }
+                })
+            });
+
+            // 2 of 3.  Verify default color buffer is still black.
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            // 3 of 3.  Render green to default color buffer by reading from previous color attachment
+            var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+            var fs2 = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)).rrrr; }';
+            var sp2 = context.createShaderProgram(vs2, fs2, {
+                position : 0
+            });
+            sp2.getAllUniforms().u_texture.value = depthStencilTexture;
+
+            context.draw({
+                primitiveType : PrimitiveType.POINTS,
+                shaderProgram : sp2,
+                vertexArray : va
+            });
+            expect(context.readPixels()).toEqual([128, 128, 128, 128]);
+
+            sp2 = sp2.destroy();
+        }
+    });
+
     it('draws with a depth attachment', function() {
         framebuffer = context.createFramebuffer({
             colorTexture : context.createTexture2D({
@@ -401,29 +574,56 @@ defineSuite([
         expect(f.isDestroyed()).toEqual(true);
     });
 
-    it('fails to create (depth and depth-stencil)', function() {
+    it('throws when created with color texture and color renderbuffer attachments', function() {
         expect(function() {
             framebuffer = context.createFramebuffer({
-                depthRenderbuffer : 'not null',
-                depthStencilRenderbuffer : 'not null'
+                colorTexture : 'not undefined',
+                colorRenderbuffer : 'not undefined'
             });
         }).toThrow();
     });
 
-    it('fails to create (stencil and depth-stencil)', function() {
+    it('throws when created with depth texture and depth renderbuffer attachments', function() {
+      expect(function() {
+            framebuffer = context.createFramebuffer({
+                depthTexture : 'not undefined',
+                depthRenderbuffer : 'not undefined'
+            });
+      }).toThrow();
+    });
+
+    it('throws when created with depth-stencil texture and depth-stencil renderbuffer attachments', function() {
+      expect(function() {
+            framebuffer = context.createFramebuffer({
+                depthStencilTexture : 'not undefined',
+                depthStencilRenderbuffer : 'not undefined'
+            });
+      }).toThrow();
+    });
+
+    it('throws when created with depth and depth-stencil attachments', function() {
         expect(function() {
             framebuffer = context.createFramebuffer({
-                stencilRenderbuffer : 'not null',
-                depthStencilRenderbuffer : 'not null'
+                depthRenderbuffer : 'not undefined',
+                depthStencilRenderbuffer : 'not undefined'
             });
         }).toThrow();
     });
 
-    it('fails to create (depth and stencil)', function() {
+    it('throws when created with stencil and depth-stencil attachments', function() {
         expect(function() {
             framebuffer = context.createFramebuffer({
-                depthRenderbuffer : 'not null',
-                stencilRenderbuffer : 'not null'
+                stencilRenderbuffer : 'not undefined',
+                depthStencilRenderbuffer : 'not undefined'
+            });
+        }).toThrow();
+    });
+
+    it('throws when created with depth and stencil attachments', function() {
+        expect(function() {
+            framebuffer = context.createFramebuffer({
+                depthRenderbuffer : 'not undefined',
+                stencilRenderbuffer : 'not undefined'
             });
         }).toThrow();
     });

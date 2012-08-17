@@ -15,6 +15,17 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @type {Enumeration}
          */
         DEPTH_COMPONENT : new Enumeration(0x1902, 'DEPTH_COMPONENT'),
+
+// TODO: Put depth formats elsewhere?
+
+        /**
+         * DOC_TBA
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        DEPTH_STENCIL : new Enumeration(0x84F9, 'DEPTH_STENCIL'),
+
         /**
          * DOC_TBA
          *
@@ -22,6 +33,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @type {Enumeration}
          */
         ALPHA : new Enumeration(0x1906, 'ALPHA'),
+
         /**
          * DOC_TBA
          *
@@ -29,6 +41,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @type {Enumeration}
          */
         RGB : new Enumeration(0x1907, 'RGB'),
+
         /**
          * DOC_TBA
          *
@@ -36,6 +49,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @type {Enumeration}
          */
         RGBA : new Enumeration(0x1908, 'RGBA'),
+
         /**
          * DOC_TBA
          *
@@ -43,6 +57,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @type {Enumeration}
          */
         LUMINANCE : new Enumeration(0x1909, 'LUMINANCE'),
+
         /**
          * DOC_TBA
          *
@@ -60,6 +75,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          */
         validate : function(pixelFormat) {
             return ((pixelFormat === PixelFormat.DEPTH_COMPONENT) ||
+                    (pixelFormat === PixelFormat.DEPTH_STENCIL) ||
                     (pixelFormat === PixelFormat.ALPHA) ||
                     (pixelFormat === PixelFormat.RGB) ||
                     (pixelFormat === PixelFormat.RGBA) ||

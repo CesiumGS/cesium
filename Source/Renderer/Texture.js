@@ -3,6 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian2',
+        './PixelFormat',
         './MipmapHint',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
@@ -11,6 +12,7 @@ define([
         DeveloperError,
         destroyObject,
         Cartesian2,
+        PixelFormat,
         MipmapHint,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -51,6 +53,7 @@ define([
      * @param {Number} xOffset optional
      * @param {Number} yOffset optional
      *
+     * @exception {DeveloperError} Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} source is required.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
@@ -68,6 +71,10 @@ define([
 
         var width = source.width;
         var height = source.height;
+
+        if ((this._pixelFormat === PixelFormat.DEPTH_COMPONENT) || (this._pixelFormat === PixelFormat.DEPTH_STENCIL)) {
+            throw new DeveloperError('Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
 
         if (xOffset < 0) {
             throw new DeveloperError('xOffset must be greater than or equal to zero.');
@@ -116,6 +123,7 @@ define([
      * @param {Number} width optional
      * @param {Number} height optional
      *
+     * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
@@ -131,6 +139,10 @@ define([
         framebufferYOffset = framebufferYOffset || 0;
         width = width || this._width;
         height = height || this._height;
+
+        if ((this._pixelFormat === PixelFormat.DEPTH_COMPONENT) || (this._pixelFormat === PixelFormat.DEPTH_STENCIL)) {
+            throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
 
         if (xOffset < 0) {
             throw new DeveloperError('xOffset must be greater than or equal to zero.');
@@ -172,12 +184,17 @@ define([
      *
      * @param {MipmapHint} hint optional.
      *
+     * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} hint is invalid.
      * @exception {DeveloperError} This texture's width must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This texture's height must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      */
     Texture.prototype.generateMipmap = function(hint) {
+        if ((this._pixelFormat === PixelFormat.DEPTH_COMPONENT) || (this._pixelFormat === PixelFormat.DEPTH_STENCIL)) {
+            throw new DeveloperError('Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
+
         if ((this._width > 1) && (this._width % 2 !== 0)) {
             throw new DeveloperError('width must be a power of two to call generateMipmap().');
         } else if ((this._height > 1) && (this._height % 2 !== 0)) {
