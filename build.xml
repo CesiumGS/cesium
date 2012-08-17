@@ -427,8 +427,9 @@ if (oldContents !== contents) {
 		 upstreamProxyHost: a standard proxy server that the local server will use to retrieve data
 		 upstreamProxyPort: the port number of the upstream proxy, default 80
 		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
+		 listenOnAllAddresses: Set to true if you want the server to listen to all addresses, not just localhost.
 		-->
-		<server proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" allowedHostList="*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,localhost" port="8080" baseDir="${basedir}" />
+		<server proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
 	</target>
 
 	<target name="buildApps">

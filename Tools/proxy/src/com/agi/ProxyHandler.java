@@ -82,7 +82,7 @@ public final class ProxyHandler extends AbstractHandler {
 
 		final OutputStream out = response.getOutputStream();
 		final Continuation continuation = ContinuationSupport.getContinuation(request);
-		if (!continuation.isInitial()) {
+		if (continuation.isExpired()) {
 			response.sendError(HttpServletResponse.SC_GATEWAY_TIMEOUT);
 			return;
 		}
@@ -112,9 +112,11 @@ public final class ProxyHandler extends AbstractHandler {
 				if (ex instanceof EofException) {
 					return;
 				}
+
 				if (!response.isCommitted())
 					response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-				continuation.complete();
+				if (!continuation.isInitial())
+					continuation.complete();
 			}
 
 			protected void onExpire() {
