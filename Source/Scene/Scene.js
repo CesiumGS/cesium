@@ -16,7 +16,8 @@ define([
         './SceneState',
         './ViewportQuad',
         '../Shaders/PostFX/LuminanceFS',
-        '../Shaders/PostFX/BlackAndWhite'
+        '../Shaders/PostFX/BlackAndWhite',
+        '../Shaders/PostFX/EightBit'
     ], function(
         Color,
         destroyObject,
@@ -34,7 +35,8 @@ define([
         SceneState,
         ViewportQuad,
         LuminanceFS,
-        BlackAndWhite) {
+        BlackAndWhite,
+        EightBit) {
     "use strict";
 
     /**
@@ -88,8 +90,9 @@ define([
         this.morphTime = 1.0;
 
         this._framebuffer = undefined;
-        this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), BlackAndWhite);
         //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), LuminanceFS);
+        //this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), BlackAndWhite);
+        this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), EightBit);
     };
 
     /**
