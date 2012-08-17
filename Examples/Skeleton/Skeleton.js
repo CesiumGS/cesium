@@ -82,6 +82,18 @@ require({
             cb.showGroundAtmosphere = false;
             transitioner.morphTo2D();
             break;
+
+        case 40:        // Down
+            scene.nextPostFX();
+            break;
+        case 38:        // Up
+            scene.prevPostFX();
+            break;
+        case 37:        // Left
+            break;
+        case 39:        // Right
+            break;
+
         default:
             break;
         }
