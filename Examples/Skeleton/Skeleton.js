@@ -90,8 +90,10 @@ require({
             scene.prevPostFX();
             break;
         case 37:        // Left
+            scene.incT();
             break;
         case 39:        // Right
+            scene.decT();
             break;
 
         default:
