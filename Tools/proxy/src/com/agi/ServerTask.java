@@ -1,10 +1,13 @@
 package com.agi;
 
 import java.io.File;
+import java.util.HashSet;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
+import org.eclipse.jetty.client.Address;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -20,16 +23,40 @@ public class ServerTask extends Task {
 	private String upstreamProxyHost;
 	private Integer upstreamProxyPort;
 	private String noUpstreamProxyHostList;
+	private boolean listenOnAllAddresses;
 
 	public void execute() throws BuildException {
 		try {
 			Server server = new Server();
 			SelectChannelConnector connector = new SelectChannelConnector();
-			connector.setHost("localhost");
-			connector.setPort(this.port);
+			if (!listenOnAllAddresses) {
+				connector.setHost("localhost");
+			}
+			connector.setPort(port);
 			server.addConnector(connector);
 
-			ProxyHandler proxyHandler = new ProxyHandler(this.allowedHostList, this.upstreamProxyHost, this.upstreamProxyPort, this.noUpstreamProxyHostList);
+			HostChecker hostChecker = new HostChecker(allowedHostList);
+			HttpClient client = new HttpClient();
+
+			if (upstreamProxyHost != null && upstreamProxyHost.length() > 0) {
+				if (upstreamProxyPort == null)
+					upstreamProxyPort = 80;
+
+				client.setProxy(new Address(upstreamProxyHost, upstreamProxyPort));
+
+				if (noUpstreamProxyHostList != null) {
+					HashSet<String> set = new HashSet<String>();
+					for (String noUpstreamProxyHost : noUpstreamProxyHostList.split(",")) {
+						set.add(noUpstreamProxyHost.trim());
+					}
+					client.setNoProxy(set);
+				}
+			}
+
+			client.setConnectorType(HttpClient.CONNECTOR_SELECT_CHANNEL);
+			client.start();
+
+			ProxyHandler proxyHandler = new ProxyHandler(hostChecker, client);
 			ContextHandler proxyContextHandler = new ContextHandler(this.proxyContextPath);
 			proxyContextHandler.setHandler(proxyHandler);
 
@@ -52,7 +79,7 @@ public class ServerTask extends Task {
 			server.setHandler(contexts);
 			server.start();
 
-			getProject().log("Server listening.  Connect to http://localhost:8080 to browse examples.", Project.MSG_INFO);
+			getProject().log("Server listening.  Connect to http://localhost:" + port + " to browse examples.", Project.MSG_INFO);
 
 			server.join();
 		} catch (Exception e) {
@@ -86,5 +113,9 @@ public class ServerTask extends Task {
 
 	public void setNoUpstreamProxyHostList(String value) {
 		this.noUpstreamProxyHostList = value;
+	}
+
+	public void setListenOnAllAddresses(boolean value) {
+		this.listenOnAllAddresses = value;
 	}
 }
