@@ -229,7 +229,6 @@ define([
         // Query and initialize extensions
         this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
         this._depthTexture = gl.getExtension('WEBKIT_WEBGL_depth_texture') || gl.getExtension('MOZ_WEBGL_depth_texture');
-
         var textureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._maximumTextureFilterAnisotropy = textureFilterAnisotropic ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
@@ -1477,13 +1476,14 @@ define([
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
 
-        // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
         if (source) {
+            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
             if (source.arrayBufferView) {
                 // Source: typed array
                 gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
@@ -1671,9 +1671,6 @@ define([
         var textureTarget = gl.TEXTURE_CUBE_MAP;
         var texture = gl.createTexture();
 
-        // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
@@ -1686,6 +1683,10 @@ define([
         }
 
         if (source) {
+            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
             createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX);
             createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX);
             createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source.positiveY);
