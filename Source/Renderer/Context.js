@@ -2130,7 +2130,7 @@ define([
             stencilMask : (typeof cs.stencilMask === 'undefined') ? ~0 : cs.stencilMask,
             dither : (typeof cs.dither === 'undefined') ? true : cs.dither,
 
-            framebuffer : cs.framebuffer,
+            framebuffer : cs.framebuffer || this._HACK_framebuffer,
 
             color : Color.clone(color),
             depth : depth,
@@ -2220,7 +2220,7 @@ define([
         this._applyStencilMask(clearState.stencilMask);
         this._applyDither(clearState.dither);
 
-        var framebuffer = clearState.framebuffer;
+        var framebuffer = clearState.framebuffer || this._HACK_framebuffer;
 
         if (framebuffer) {
             framebuffer._bind();
@@ -2305,7 +2305,7 @@ define([
             throw new DeveloperError('drawArguments.shaderProgram is required.');
         }
 
-        var framebuffer = drawArguments.framebuffer;
+        var framebuffer = drawArguments.framebuffer || this._HACK_framebuffer;
         var sp = drawArguments.shaderProgram;
         var rs = drawArguments.renderState || this.createRenderState();
 
@@ -2416,7 +2416,8 @@ define([
         var y = Math.max(readState.y || 0, 0);
         var width = readState.width || this._canvas.clientWidth;
         var height = readState.height || this._canvas.clientHeight;
-        var framebuffer = readState.framebuffer || null;
+//        var framebuffer = readState.framebuffer || null;
+        var framebuffer = readState.framebuffer || this._HACK_framebuffer;
 
         if (width <= 0) {
             throw new DeveloperError('readState.width must be greater than zero.');

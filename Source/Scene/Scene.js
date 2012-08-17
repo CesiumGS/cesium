@@ -7,6 +7,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Rectangle',
         '../Renderer/Context',
+        '../Renderer/PixelFormat',
+        '../Renderer/PixelDatatype',
         './Camera',
         './CompositePrimitive',
         './AnimationCollection',
@@ -22,6 +24,8 @@ define([
         DeveloperError,
         Rectangle,
         Context,
+        PixelFormat,
+        PixelDatatype,
         Camera,
         CompositePrimitive,
         AnimationCollection,
@@ -81,6 +85,7 @@ define([
          */
         this.morphTime = 1.0;
 
+        this._framebuffer = undefined;
         this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), LumianceFS);
     };
 
@@ -202,15 +207,38 @@ define([
     Scene.prototype.render = function() {
         this._update();
 
+// TODO: recreate if width or height changes
+        if (!this._framebuffer) {
+            var width = this._canvas.clientWidth;
+            var height = this._canvas.clientHeight;
+
+            this._framebuffer = this._context.createFramebuffer({
+                colorTexture : this._context.createTexture2D({
+                    width : width,
+                    height : height
+                }),
+                depthTexture : this._context.createTexture2D({
+                    width : width,
+                    height : height,
+                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                })
+            });
+        }
+        this._context._HACK_framebuffer = this._framebuffer;
+
         this._context.clear(this._clearState);
         this._primitives.render(this._context);
+
+        this._context._HACK_framebuffer = undefined;
 
 // TODO: _postFX doesn't use sceneState so we pull off this hack.
         var sceneState = undefined;
         var postFX = this._postFX;
 
 // TODO: if width or height changes, ViewQuad needs to be recreated
-        postFX.setTexture(this._context.createTexture2DFromFramebuffer());
+        postFX.setTexture(this._framebuffer.getColorTexture());
+        //postFX.setTexture(this._framebuffer.getDepthTexture());
         postFX.update(this._context, sceneState);
         postFX.render(this._context);
     };
