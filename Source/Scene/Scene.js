@@ -15,6 +15,7 @@ define([
         './SceneMode',
         './SceneState',
         './ViewportQuad',
+        '../Shaders/PostFX/PassThrough',
         '../Shaders/PostFX/LuminanceFS',
         '../Shaders/PostFX/BlackAndWhite',
         '../Shaders/PostFX/EightBit',
@@ -38,6 +39,7 @@ define([
         SceneMode,
         SceneState,
         ViewportQuad,
+        PassThrough,
         LuminanceFS,
         BlackAndWhite,
         EightBit,
@@ -101,6 +103,7 @@ define([
 
         this._postFXIndex = 0;
         this._postFXs = [
+            new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), PassThrough),
             new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), LuminanceFS),
             new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), BlackAndWhite),
             new ViewportQuad(new Rectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), EightBit),
