@@ -29,7 +29,7 @@ define([
         this._depthStencilRenderbuffer = undefined;
 
         if (description) {
-            // Throw if a texture and render-buffer are attached to the same point.  This won't
+            // Throw if a texture and renderbuffer are attached to the same point.  This won't
             // cause a WebGL error (because only one will be attached), but is likely a developer error.
 
             if (description.colorTexture && description.colorRenderbuffer) {
@@ -167,7 +167,7 @@ define([
         this._bind();
         var gl = this._gl;
 
-// TODO: can this be a cube map face?
+// TODO: remove duplication with similar functions
 // TODO: clear previous _depthTexture?
 // TODO: clear _depthRenderbuffer?
 // TODO: validate texture format?

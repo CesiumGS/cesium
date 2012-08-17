@@ -16,8 +16,6 @@ define(['../Core/Enumeration'], function(Enumeration) {
          */
         DEPTH_COMPONENT : new Enumeration(0x1902, 'DEPTH_COMPONENT'),
 
-// TODO: Put depth formats elsewhere?
-
         /**
          * DOC_TBA
          *

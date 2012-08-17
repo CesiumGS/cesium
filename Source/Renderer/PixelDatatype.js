@@ -16,7 +16,6 @@ define(['../Core/Enumeration'], function(Enumeration) {
          */
         UNSIGNED_BYTE : new Enumeration(0x1401, 'UNSIGNED_BYTE'),
 
-// TODO: other depth formats!
 // TODO: separate create function for depth textures?
 
         /**
