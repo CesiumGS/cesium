@@ -570,18 +570,7 @@ define([
      * @memberof PolylineCollection
      */
     PolylineCollection.prototype.updateForPick = function(context) {
-        var useDepthTest = (this.morphTime !== 0.0);
-        var polylineBuckets = this._polylineBuckets;
-        for ( var x in polylineBuckets) {
-            if (polylineBuckets.hasOwnProperty(x)) {
-                var obj = polylineBuckets[x];
-                var rs = obj.rsPick || context.createRenderState();
-                rs.depthTest.enabled = useDepthTest;
-                rs.lineWidth = obj.width + obj.outlineWidth;
-                rs.depthMask = !useDepthTest;
-                obj.rsPick = rs;
-            }
-        }
+        //render state for picking is set up during update.
     };
 
     /**
@@ -1088,6 +1077,12 @@ define([
         rsThree.lineWidth = this.width + this.outlineWidth;
         rsThree.depthTest.enabled = useDepthTest;
         this.rsThree = rsThree;
+
+        var rsPick = this.rsPick || context.createRenderState();
+        rsPick.depthTest.enabled = useDepthTest;
+        rsPick.lineWidth = this.width + this.outlineWidth;
+        rsPick.depthMask = !useDepthTest;
+        this.rsPick = rsPick;
     };
 
     /**
