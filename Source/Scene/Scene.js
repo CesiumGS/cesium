@@ -5,24 +5,30 @@ define([
         '../Core/EquidistantCylindricalProjection',
         '../Core/Ellipsoid',
         '../Core/DeveloperError',
+        '../Core/Rectangle',
         '../Renderer/Context',
         './Camera',
         './CompositePrimitive',
         './AnimationCollection',
         './SceneMode',
-        './SceneState'
+        './SceneState',
+        './ViewportQuad',
+        '../Shaders/PostFX/LumianceFS'
     ], function(
         Color,
         destroyObject,
         EquidistantCylindricalProjection,
         Ellipsoid,
         DeveloperError,
+        Rectangle,
         Context,
         Camera,
         CompositePrimitive,
         AnimationCollection,
         SceneMode,
-        SceneState) {
+        SceneState,
+        ViewportQuad,
+        LumianceFS) {
     "use strict";
 
     /**
@@ -74,6 +80,8 @@ define([
          * @type Number
          */
         this.morphTime = 1.0;
+
+        this._postFX = new ViewportQuad(new Rectangle(0.0, 0.0, 400.0, 200.0), LumianceFS);
     };
 
     /**
@@ -196,6 +204,14 @@ define([
 
         this._context.clear(this._clearState);
         this._primitives.render(this._context);
+
+// TODO: _postFX doesn't use sceneState so we pull off this hack.
+        var sceneState = undefined;
+        var postFX = this._postFX;
+
+        postFX.setTexture(this._context.createTexture2DFromFramebuffer());
+        postFX.update(this._context, sceneState);
+        postFX.render(this._context);
     };
 
     /**
@@ -290,6 +306,7 @@ define([
      * @memberof Scene
      */
     Scene.prototype.destroy = function() {
+        this._postFX = this._postFX && this._postFX.destroy();
         this._camera = this._camera && this._camera.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();

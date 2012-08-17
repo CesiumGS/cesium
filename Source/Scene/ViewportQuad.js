@@ -4,6 +4,7 @@ define([
         '../Core/Rectangle',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
+        '../Core/defaultValue',
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
         '../Shaders/ViewportQuadVS',
@@ -13,6 +14,7 @@ define([
         Rectangle,
         ComponentDatatype,
         PrimitiveType,
+        defaultValue,
         BufferUsage,
         BlendingState,
         ViewportQuadVS,
@@ -25,13 +27,14 @@ define([
      * @alias ViewportQuad
      * @constructor
      */
-    var ViewportQuad = function(rectangle) {
+    var ViewportQuad = function(rectangle, fsSource) {
         this.renderState = null;
         this._sp = null;
         this._va = null;
 
+// TODO: this is not a good architecture
         this.vertexShader = ViewportQuadVS;
-        this.fragmentShader = ViewportQuadFS;
+        this.fragmentShader = defaultValue(fsSource, ViewportQuadFS);
 
         this._texture = null;
         this._destroyTexture = true;
