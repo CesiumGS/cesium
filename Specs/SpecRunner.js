@@ -80,11 +80,21 @@ var afterAll;
     jasmine.Spec.prototype.addBeforesAndAftersToQueue = function() {
         originalAddBeforesAndAftersToQueue.apply(this);
 
-        var runner = this.env.currentRunner();
-        var i;
+        var env = this.env;
+        var runner = env.currentRunner();
 
         var suite = this.suite;
-        if (suite.queue.index === 0) {
+        var specs = suite.specs();
+        var i = suite.queue.index;
+
+        // check to see if all the previous specs were skipped
+        // in which case this is the first spec
+        while (i > 0 && specs[i - 1].results().skipped) {
+            --i;
+        }
+        var firstSpec = i === 0;
+
+        if (firstSpec) {
             if (typeof suite.beforeAll_ !== 'undefined') {
                 for (i = 0; i < suite.beforeAll_.length; i++) {
                     this.queue.addBefore(new jasmine.Block(this.env, suite.beforeAll_[i], this));
@@ -98,7 +108,16 @@ var afterAll;
             }
         }
 
-        if (suite.queue.index === suite.queue.blocks.length - 1) {
+        i = suite.queue.index;
+        var lastIndex = suite.queue.blocks.length - 1;
+        // check to see if all the remaining specs will be skipped
+        // in which case this the last spec
+        while (i < lastIndex && !env.specFilter(specs[i + 1])) {
+            ++i;
+        }
+        var lastSpec = i === lastIndex;
+
+        if (lastSpec) {
             if (typeof suite.afterAll_ !== 'undefined') {
                 for (i = 0; i < suite.afterAll_.length; i++) {
                     this.queue.add(new jasmine.Block(this.env, suite.afterAll_[i], this));
