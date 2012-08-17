@@ -1,3 +1,4 @@
+/*
 uniform sampler2D u_texture;
 
 varying vec2 v_textureCoordinates;
@@ -11,9 +12,8 @@ void main(void)
 
     gl_FragColor = vec4(vec3(luminance), 1.0);
 }
+*/
 
-
-/*
 uniform sampler2D u_texture;
 uniform sampler2D u_depthTexture;
 
@@ -40,4 +40,3 @@ void main(void)
     }
     
 }
-*/

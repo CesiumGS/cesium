@@ -1412,7 +1412,7 @@ define([
     var clearState = {
         framebuffer : undefined,
         color : new Color(0.0, 0.0, 0.0, 0.0),
-        depth : true
+        depth : 1.0
     };
 
     /**
