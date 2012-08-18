@@ -79,14 +79,15 @@ require([
 
         var ellipsoid = widget.ellipsoid;
         var primitives = widget.scene.getPrimitives();
+        var polylines = new Cesium.PolylineCollection();
 
-        var polyline = new Cesium.Polyline();
+        var polyline = polylines.add();
         Sandcastle.declare(polyline);
         polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
             new Cesium.Cartographic.fromDegrees(-75.10, 39.57), // Philadelphia
             new Cesium.Cartographic.fromDegrees(-80.12, 25.46) // Miami
         ]));
-        primitives.add(polyline);
+        primitives.add(polylines);
 
     }
 

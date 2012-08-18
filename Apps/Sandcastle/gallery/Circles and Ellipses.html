@@ -80,6 +80,7 @@ require([
         var scene = widget.scene;
         var ellipsoid = widget.ellipsoid;
         var primitives = scene.getPrimitives();
+        var polylines = new Cesium.PolylineCollection();
 
         // Fill circle
         var circle = new Cesium.Polygon();
@@ -90,12 +91,12 @@ require([
         primitives.add(circle);
 
         // Outline circle
-        var outline = new Cesium.Polyline();
+        var outline = polylines.add();
         Sandcastle.declare(outline);
         outline.setPositions(Cesium.Shapes.computeCircleBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
                 new Cesium.Cartographic.fromDegrees(-82.0, 37.0)), 300000.0));
-        primitives.add(outline);
+        primitives.add(polylines);
 
         // Apply a material to a filled circle
         var circle2 = new Cesium.Polygon();
