@@ -196,6 +196,31 @@ defineSuite([
         expect(result[2]).toBe(existingCartesian2);
     });
 
+    it('getValueRangeCartesian does not sample currentTime outside of start/stop time', function() {
+        var property = new DynamicPositionProperty();
+        property.processCzmlIntervals(cartesianForgetValueRangeCartesian);
+        var start = JulianDate.fromIso8601(cartesianForgetValueRangeCartesian.epoch).addSeconds(0);
+        var stop = JulianDate.fromIso8601(cartesianForgetValueRangeCartesian.epoch).addSeconds(2);
+        var currentTime = JulianDate.fromIso8601(cartesianForgetValueRangeCartesian.epoch).addSeconds(30);
+        var result = property.getValueRangeCartesian(start, stop, currentTime);
+        expect(result.length).toEqual(3);
+        expect(result[0]).toEqual(cartesian0);
+        expect(result[1]).toEqual(cartesian1);
+        expect(result[2]).toEqual(cartesian2);
+    });
+
+    it('getValueRangeCartesian does not sample start/stop if outside of data', function() {
+        var property = new DynamicPositionProperty();
+        property.processCzmlIntervals(cartesianForgetValueRangeCartesian);
+        var start = JulianDate.fromIso8601(cartesianForgetValueRangeCartesian.epoch).addSeconds(-100);
+        var stop = JulianDate.fromIso8601(cartesianForgetValueRangeCartesian.epoch).addSeconds(+200);
+        var result = property.getValueRangeCartesian(start, stop);
+        expect(result.length).toEqual(3);
+        expect(result[0]).toEqual(cartesian0);
+        expect(result[1]).toEqual(cartesian1);
+        expect(result[2]).toEqual(cartesian2);
+    });
+
     it('getValueRangeCartesian works with single cartographic interval', function() {
         var property = new DynamicPositionProperty();
         property.processCzmlIntervals(cartographicForgetValueRangeCartesian);

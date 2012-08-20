@@ -192,11 +192,15 @@ define([
         }
 
         var r = 0;
-        //Always step exactly on start.
-        result[r] = this.getValueCartesian(start, result[r++]);
+        //Always step exactly on start (but only use it if it exists.)
+        var tmp;
+        tmp = this.getValueCartesian(start, result[r]);
+        if (typeof tmp !== 'undefined') {
+            result[r++] = tmp;
+        }
 
         var scratchCartographic;
-        var steppedOnNow = typeof currentTime === 'undefined';
+        var steppedOnNow = typeof currentTime === 'undefined' || currentTime.lessThan(start) || currentTime.greaterThan(stop);
         for ( var i = startIndex; i < stopIndex + 1; i++) {
             var current;
             var interval = propertyIntervals.get(i);
@@ -243,21 +247,16 @@ define([
                 //If times is undefined, it's because the interval contains a single position
                 //at which it stays for the duration of the interval.
                 current = interval.start;
-                if (valueType === CzmlCartesian3) {
-                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                        result[r] = property.getValue(currentTime, result[r++]);
-                        steppedOnNow = true;
-                    }
-                    if (current.greaterThan(start) && current.lessThan(loopStop)) {
+
+                //We don't need to actually step on now in this case, since the next value
+                //will be the same; but we do still need to check for it.
+                steppedOnNow = steppedOnNow || current.greaterThanOrEquals(currentTime);
+
+                //Finally, get the value at this non-sampled interval.
+                if (current.lessThan(loopStop)) {
+                    if (valueType === CzmlCartesian3) {
                         result[r] = property.getValue(current, result[r++]);
-                    }
-                } else {
-                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                        scratchCartographic = property.getValue(currentTime, scratchCartographic);
-                        result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
-                        steppedOnNow = true;
-                    }
-                    if (current.greaterThan(start) && current.lessThan(loopStop)) {
+                    } else {
                         scratchCartographic = property.getValue(current, scratchCartographic);
                         result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
                     }
@@ -265,8 +264,11 @@ define([
             }
         }
 
-        //Always step exactly on stop.
-        result[r] = this.getValueCartesian(stop, result[r++]);
+        //Always step exactly on stop (but only use it if it exists.)
+        tmp = this.getValueCartesian(stop, result[r]);
+        if (typeof tmp !== 'undefined') {
+            result[r++] = tmp;
+        }
 
         result.length = r;
         return result;
