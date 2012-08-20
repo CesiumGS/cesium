@@ -211,7 +211,7 @@ define([
         extent.north += ySpacing * 0.5;
 
         var bbox = CesiumMath.toDegrees(extent.west) + '%2C' + CesiumMath.toDegrees(extent.south) + '%2C' + CesiumMath.toDegrees(extent.east) + '%2C' + CesiumMath.toDegrees(extent.north);
-        var url = this.url + '/exportImage?format=tiff&f=image&size=' + this.heightmapWidth + '%2C' + this.heightmapWidth + '&bboxSR=4326&imageSR=3857&bbox=' + bbox;
+        var url = this.url + '/exportImage?interpolation=RSP_BilinearInterpolation&format=tiff&f=image&size=' + this.heightmapWidth + '%2C' + this.heightmapWidth + '&bboxSR=4326&imageSR=3857&bbox=' + bbox;
         if (this.token) {
             url += '&token=' + this.token;
         }
