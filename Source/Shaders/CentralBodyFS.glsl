@@ -63,30 +63,11 @@ void main()
         vec2 baseTextureCoordinates = mix(webMercatorUV, geographicUV, float(u_dayTextureIsGeographic[i]));
         vec2 textureCoordinates = (baseTextureCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
         
-        if (textureCoordinates.x >= 0.0 && textureCoordinates.x <= 1.0 &&
-            textureCoordinates.y >= 0.0 && textureCoordinates.y <= 1.0)
+        if (textureCoordinates.x >= -0.0003 && textureCoordinates.x <= 1.0003 &&
+            textureCoordinates.y >= -0.0003 && textureCoordinates.y <= 1.0003)
         {
 	        vec4 color = texture2D(u_dayTextures[i], textureCoordinates);
 	        startDayColor = mix(startDayColor, color.rgb, color.a * u_dayTextureAlpha[i]);
-        }
-        else
-        {
-            if (textureCoordinates.x < 0.0 && textureCoordinates.x > -1.0e-3)
-                textureCoordinates.x = 0.0;
-            else if (textureCoordinates.x > 1.0 && textureCoordinates.x - 1.0 < 1.0e-3)
-                textureCoordinates.x = 1.0;
-
-            if (textureCoordinates.y < 0.0 && textureCoordinates.y > -1.0e-3)
-                textureCoordinates.y = 0.0;
-            else if (textureCoordinates.y > 1.0 && textureCoordinates.y - 1.0 < 1.0e-3)
-                textureCoordinates.y = 1.0;
-
-	        if (textureCoordinates.x >= 0.0 && textureCoordinates.x <= 1.0 &&
-	            textureCoordinates.y >= 0.0 && textureCoordinates.y <= 1.0)
-	        {
-	            vec4 color = texture2D(u_dayTextures[i], textureCoordinates);
-	            startDayColor = mix(startDayColor, color.rgb, color.a * u_dayTextureAlpha[i]);
-	        }
         }
     }
 #ifdef SHOW_CAMERA_INSIDE_BOUNDING_SPHERE
