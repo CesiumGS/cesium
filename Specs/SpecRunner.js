@@ -32,7 +32,7 @@ var afterAll;
         if (this.currentSuite) {
             this.currentSuite.beforeAll(beforeAllFunction);
         } else {
-            this.currentRunner_.beforeAll(beforeAllFunction);
+            throw 'Must call beforeAll while defining a suite.';
         }
     };
 
@@ -40,24 +40,8 @@ var afterAll;
         if (this.currentSuite) {
             this.currentSuite.afterAll(afterAllFunction);
         } else {
-            this.currentRunner_.afterAll(afterAllFunction);
+            throw 'Must call beforeAll while defining a suite.';
         }
-    };
-
-    jasmine.Runner.prototype.beforeAll = function(beforeAllFunction) {
-        beforeAllFunction.typeName = 'beforeAll';
-        if (typeof this.beforeAll_ === 'undefined') {
-            this.beforeAll_ = [];
-        }
-        this.beforeAll_.splice(0, 0, beforeAllFunction);
-    };
-
-    jasmine.Runner.prototype.afterAll = function(afterAllFunction) {
-        afterAllFunction.typeName = 'afterAll';
-        if (typeof this.afterAll_ === 'undefined') {
-            this.afterAll_ = [];
-        }
-        this.afterAll_.splice(0, 0, afterAllFunction);
     };
 
     jasmine.Suite.prototype.beforeAll = function(beforeAllFunction) {
@@ -76,42 +60,41 @@ var afterAll;
         this.afterAll_.unshift(afterAllFunction);
     };
 
-    var originalAddBeforesAndAftersToQueue = jasmine.Spec.prototype.addBeforesAndAftersToQueue;
-    jasmine.Spec.prototype.addBeforesAndAftersToQueue = function() {
-        originalAddBeforesAndAftersToQueue.apply(this);
+    jasmine.Suite.prototype.execute = (function(originalExecute) {
+        return function(onComplete) {
+            var i, len;
 
-        var runner = this.env.currentRunner();
-        var i;
+            var block, results;
 
-        var suite = this.suite;
-        if (suite.queue.index === 0) {
-            if (typeof suite.beforeAll_ !== 'undefined') {
-                for (i = 0; i < suite.beforeAll_.length; i++) {
-                    this.queue.addBefore(new jasmine.Block(this.env, suite.beforeAll_[i], this));
+            var beforeAll = this.beforeAll_;
+            if (typeof beforeAll !== 'undefined') {
+                var beforeSpec = new jasmine.Spec(this.env, this, 'beforeAll');
+                results = function() {
+                    return beforeSpec.results();
+                };
+                for (i = 0, len = beforeAll.length; i < len; i++) {
+                    block = new jasmine.Block(this.env, beforeAll[i], beforeSpec);
+                    block.results = results;
+                    this.queue.addBefore(block);
                 }
             }
 
-            if (typeof runner.beforeAll_ !== 'undefined' && runner.queue.index === 0) {
-                for (i = 0; i < runner.beforeAll_.length; i++) {
-                    this.queue.addBefore(new jasmine.Block(this.env, runner.beforeAll_[i], this));
+            var afterAll = this.afterAll_;
+            if (typeof afterAll !== 'undefined') {
+                var afterSpec = new jasmine.Spec(this.env, this, 'afterAll');
+                results = function() {
+                    return afterSpec.results();
+                };
+                for (i = 0, len = afterAll.length; i < len; i++) {
+                    block = new jasmine.Block(this.env, afterAll[i], afterSpec);
+                    block.results = results;
+                    this.queue.add(block);
                 }
             }
-        }
 
-        if (suite.queue.index === suite.queue.blocks.length - 1) {
-            if (typeof suite.afterAll_ !== 'undefined') {
-                for (i = 0; i < suite.afterAll_.length; i++) {
-                    this.queue.add(new jasmine.Block(this.env, suite.afterAll_[i], this));
-                }
-            }
-
-            if (typeof runner.beforeAll_ !== 'undefined' && runner.queue.index === runner.queue.blocks.length - 1) {
-                for (i = 0; i < runner.afterAll_.length; i++) {
-                    this.queue.add(new jasmine.Block(this.env, runner.afterAll_[i], this));
-                }
-            }
-        }
-    };
+            originalExecute.call(this, onComplete);
+        };
+    })(jasmine.Suite.prototype.execute);
 
     beforeAll = function(beforeAllFunction) {
         jasmine.getEnv().beforeAll(beforeAllFunction);
