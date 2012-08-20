@@ -135,6 +135,7 @@ define([
         this._spGroundFromAtmosphere = undefined;
         this._sp = undefined; // Reference to without-atmosphere, ground-from-space, or ground-from-atmosphere
         this._rsColor = undefined;
+        this._rsColorWithoutDepthTest = undefined;
 
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
@@ -145,11 +146,6 @@ define([
         this._spDepth = undefined;
         this._vaDepth = undefined;
         this._rsDepth = undefined;
-
-        this._quadH = undefined;
-        this._quadV = undefined;
-
-        this._fb = undefined;
 
         this._vaNorthPole = undefined;
         this._vaSouthPole = undefined;
@@ -911,9 +907,6 @@ define([
 
         var that = this;
         var drawUniforms = {
-            u_fbTexture : function() {
-                return that._fb.getColorTexture();
-            },
             u_dayIntensity : function() {
                 var baseLayer = getBaseLayer(that);
                 if (typeof baseLayer !== 'undefined') {
@@ -953,63 +946,6 @@ define([
         if (width === 0 || height === 0) {
             return;
         }
-
-        var createFBO = !this._fb || this._fb.isDestroyed();
-        var fboDimensionsChanged = this._fb && (this._fb.getColorTexture().getWidth() !== width || this._fb.getColorTexture().getHeight() !== height);
-
-        if (createFBO || fboDimensionsChanged ||
-            (!this._quadV || this._quadV.isDestroyed()) ||
-            (!this._quadH || this._quadH.isDestroyed())) {
-
-            this._fb = this._fb && this._fb.destroy();
-            this._quadV = this._quadV && this._quadV.destroy();
-            this._quadH = this._quadH && this._quadH.destroy();
-
-            // create FBO and texture render targets
-            this._fb = context.createFramebuffer({
-                colorTexture : context.createTexture2D({
-                    width : width,
-                    height : height,
-                    pixelFormat : PixelFormat.RGBA
-                }),
-                depthRenderbuffer : context.createRenderbuffer({
-                    format : RenderbufferFormat.DEPTH_COMPONENT16,
-                    width : width,
-                    height : height
-                })
-            });
-
-            // create viewport quad for vertical gaussian blur pass
-            this._quadV = new ViewportQuad(new Rectangle(0.0, 0.0, width, height));
-            this._quadV.vertexShader = '#define VERTICAL 1\n' + CentralBodyVSFilter;
-            this._quadV.fragmentShader = CentralBodyFSFilter;
-            this._quadV.uniforms.u_height = function() {
-                return height;
-            };
-            this._quadV.setTexture(this._fb.getColorTexture());
-            this._quadV.setDestroyTexture(false);
-            this._quadV.setFramebuffer(context.createFramebuffer({
-                colorTexture : context.createTexture2D({
-                    width : width,
-                    height : height,
-                    pixelFormat : PixelFormat.RGBA
-                })
-            }));
-            this._quadV.setDestroyFramebuffer(true);
-
-            // create viewport quad for horizontal gaussian blur pass
-            this._quadH = new ViewportQuad(new Rectangle(0.0, 0.0, width, height));
-            this._quadH.vertexShader = CentralBodyVSFilter;
-            this._quadH.fragmentShader = CentralBodyFSFilter;
-            this._quadH.uniforms.u_width = function() {
-                return width;
-            };
-            this._quadH.setTexture(this._quadV.getFramebuffer().getColorTexture());
-            this._quadH.setDestroyTexture(false);
-        }
-
-        this._quadV.update(context, sceneState);
-        this._quadH.update(context, sceneState);
 
         var vs;
         var fs;
@@ -1057,12 +993,20 @@ define([
 
         if (this._isModeTransition(this._mode, mode) || this._projection !== projection) {
             if (mode === SceneMode.SCENE3D) {
-                this._rsColor = context.createRenderState({ // Write color, not depth
+                this._rsColor = context.createRenderState({ // Write color and depth
                     cull : {
                         enabled : true
                     },
                     depthTest : {
                         enabled : true
+                    }
+                });
+                this._rsColorWithoutDepthTest = context.createRenderState({ // Write color, not depth
+                    cull : {
+                        enabled : true
+                    },
+                    depthTest : {
+                        enabled : false
                     }
                 });
                 this._rsDepth = context.createRenderState({ // Write depth, not color
@@ -1082,6 +1026,7 @@ define([
                 });
             } else {
                 this._rsColor = context.createRenderState();
+                this._rsColorWithoutDepthTest = context.createRenderState();
                 this._rsDepth = context.createRenderState();
             }
         }
@@ -1090,6 +1035,7 @@ define([
         //this._rsColor.depthTest.enabled = (mode === SceneMode.MORPHING);  // Depth test during morph
         var cull = (mode === SceneMode.SCENE3D) || (mode === SceneMode.MORPHING);
         this._rsColor.cull.enabled = cull;
+        this._rsColorWithoutDepthTest.cull.enabled = cull;
         this._rsDepth.cull.enabled = cull;
 
         // update scisor/depth plane
@@ -1117,9 +1063,8 @@ define([
             }
         }
         this._rsColor.scissorTest = scissorTest;
-        this._rsDepth.scissorTest = scissorTest;
-        this._quadV.renderState.scissorTest = scissorTest;
-        this._quadH.renderState.scissorTest = scissorTest;*/
+        this._rsColorWithoutDepth.scissorTest = scissorTest;
+        this._rsDepth.scissorTest = scissorTest;*/
 
         // depth plane
         if (!this._vaDepth) {
@@ -1422,12 +1367,10 @@ define([
     CentralBody.prototype.render = function(context) {
         if (this.show) {
             // clear FBO
-            //clearState.framebuffer = this._fb;
             context.clear(context.createClearState(clearState));
 
             if (this.showSkyAtmosphere) {
                 context.draw({
-                    //framebuffer : this._fb,
                     primitiveType : PrimitiveType.TRIANGLES,
                     shaderProgram : this._spSky,
                     uniformMap : this._drawUniforms,
@@ -1435,18 +1378,6 @@ define([
                     renderState : this._rsSky
                 });
             }
-
-            this._surface.render(context, this._drawUniforms, {
-                //framebuffer : this._fb,
-                shaderProgram : this._sp,
-                renderState : this._rsColor
-            });
-
-            // render quad with vertical gaussian blur with second-pass texture attached to FBO
-            //this._quadV.render(context);
-
-            // render quad with horizontal gaussian blur
-            //this._quadH.render(context);
 
             // render quads to fill the poles
             if (this._mode === SceneMode.SCENE3D) {
@@ -1456,7 +1387,7 @@ define([
                         shaderProgram : this._spPoles,
                         uniformMap : this._northPoleUniforms,
                         vertexArray : this._vaNorthPole,
-                        renderState : this._rsColor
+                        renderState : this._rsColorWithoutDepthTest
                     });
                 }
                 if (this._drawSouthPole) {
@@ -1465,10 +1396,15 @@ define([
                         shaderProgram : this._spPoles,
                         uniformMap : this._southPoleUniforms,
                         vertexArray : this._vaSouthPole,
-                        renderState : this._rsColor
+                        renderState : this._rsColorWithoutDepthTest
                     });
                 }
             }
+
+            this._surface.render(context, this._drawUniforms, {
+                shaderProgram : this._sp,
+                renderState : this._rsColor
+            });
 
             // render depth plane
             if (this._mode === SceneMode.SCENE3D) {
@@ -1540,10 +1476,6 @@ define([
      * centralBody = centralBody && centralBody.destroy();
      */
     CentralBody.prototype.destroy = function() {
-        this._fb = this._fb && this._fb.destroy();
-        this._quadV = this._quadV && this._quadV.destroy();
-        this._quadH = this._quadH && this._quadH.destroy();
-
         this._vaNorthPole = this._vaNorthPole && this._vaNorthPole.destroy();
         this._vaSouthPole = this._vaSouthPole && this._vaSouthPole.destroy();
 

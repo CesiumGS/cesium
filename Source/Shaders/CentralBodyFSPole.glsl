@@ -1,14 +1,9 @@
-uniform sampler2D u_fbTexture;
 uniform vec3 u_color;
 
 varying vec2 v_textureCoordinates;
 
 void main()
 {
-    vec4 color = texture2D(u_fbTexture, v_textureCoordinates);
-    if (color.a == 1.0)
-        discard;
-    
     // TODO: make arbitrary ellipsoid
     agi_ellipsoid ellipsoid = agi_getWgs84EllipsoidEC();
     vec3 direction = normalize(agi_windowToEyeCoordinates(gl_FragCoord).xyz);
