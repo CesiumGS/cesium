@@ -63,8 +63,11 @@ void main()
         vec2 baseTextureCoordinates = mix(webMercatorUV, geographicUV, float(u_dayTextureIsGeographic[i]));
         vec2 textureCoordinates = (baseTextureCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
         
-        if (textureCoordinates.x >= -0.0003 && textureCoordinates.x <= 1.0003 &&
-            textureCoordinates.y >= -0.0003 && textureCoordinates.y <= 1.0003)
+        // Make sure the computed texture coordinates are within the bounds of
+        // the texture.  But allow them to be outside by up to about 1/10 of a texel
+        // (assuming a 256x256 texture) to avoid black pixels due to rounding errors.
+        if (textureCoordinates.x >= -0.00039 && textureCoordinates.x <= 1.00039 &&
+            textureCoordinates.y >= -0.00039 && textureCoordinates.y <= 1.00039)
         {
 	        vec4 color = texture2D(u_dayTextures[i], textureCoordinates);
 	        startDayColor = mix(startDayColor, color.rgb, color.a * u_dayTextureAlpha[i]);
