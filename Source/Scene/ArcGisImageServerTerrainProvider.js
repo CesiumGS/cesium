@@ -197,6 +197,19 @@ define([
         ++requestsInFlight;
 
         var extent = this.tilingScheme.tileXYToExtent(tile.x, tile.y, tile.level);
+
+        // Each pixel in the heightmap represents the height at the center of that
+        // pixel.  So expand the extent by half a sample spacing in each direction
+        // so that the first height is on the edge of the extent we need rather than
+        // half a sample spacing into the extent.
+        var xSpacing = (extent.east - extent.west) / (this.heightmapWidth - 1);
+        var ySpacing = (extent.north - extent.south) / (this.heightmapWidth - 1);
+
+        extent.west -= xSpacing * 0.5;
+        extent.east += xSpacing * 0.5;
+        extent.south -= ySpacing * 0.5;
+        extent.north += ySpacing * 0.5;
+
         var bbox = CesiumMath.toDegrees(extent.west) + '%2C' + CesiumMath.toDegrees(extent.south) + '%2C' + CesiumMath.toDegrees(extent.east) + '%2C' + CesiumMath.toDegrees(extent.north);
         var url = this.url + '/exportImage?format=tiff&f=image&size=' + this.heightmapWidth + '%2C' + this.heightmapWidth + '&bboxSR=4326&imageSR=3857&bbox=' + bbox;
         if (this.token) {
@@ -258,7 +271,7 @@ define([
             relativeToCenter : tile.center,
             radiiSquared : this.tilingScheme.ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x,
-            skirtHeight : 1000.0
+            skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0)
         });
 
         if (typeof verticesPromise === 'undefined') {
