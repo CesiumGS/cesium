@@ -72,6 +72,7 @@ define([
         var isGeographic = description.isGeographic;
         var voidIndicator = defaultValue(description.voidIndicator, -32768);
         var voidFillValue = defaultValue(description.voidFillValue, 0);
+        var skirtHeight = defaultValue(description.skirtHeight, 0);
 
         var vertices = description.vertices;
         var textureCoordinates = description.textureCoordinates;
@@ -106,13 +107,35 @@ define([
         var maxVDifference = 0.0;
         var maxUDifference = 0.0;
 
-        for ( var row = 0; row < height; ++row) {
+        var startRow = 0;
+        var endRow = height;
+        var startCol = 0;
+        var endCol = width;
+
+        if (skirtHeight > 0) {
+            --startRow;
+            ++endRow;
+            --startCol;
+            ++endCol;
+        }
+
+        for ( var rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
+            var row = rowIndex;
+            if (row < 0) {
+                row = 0;
+            }
+            if (row >= height) {
+                row = height - 1;
+            }
+
             var latitude = extent.north - granularityY * row;
+
             if (!isGeographic) {
                 latitude = piOverTwo - (2.0 * atan(exp(-latitude * oneOverCentralBodySemimajorAxis)));
             } else {
                 latitude = toRadians(latitude);
             }
+
             var cosLatitude = cos(latitude);
             var nZ = sin(latitude);
             var kZ = radiiSquaredZ * nZ;
@@ -127,9 +150,23 @@ define([
             maxVDifference = Math.max(vDifference, maxVDifference);
 
             var v = geographicV;
+            if (v < 0.0) {
+                v = 0.0;
+            } else if (v > 1.0) {
+                v = 1.0;
+            }
 
-            for ( var col = 0; col < width; ++col) {
+            for ( var colIndex = startCol; colIndex < endCol; ++colIndex) {
+                var col = colIndex;
+                if (col < 0) {
+                    col = 0;
+                }
+                if (col >= width) {
+                    col = width - 1;
+                }
+
                 var longitude = extent.west + granularityX * col;
+
                 if (!isGeographic) {
                     longitude = longitude * oneOverCentralBodySemimajorAxis;
                 } else {
@@ -155,6 +192,10 @@ define([
 
                 maxHeight = Math.max(maxHeight, heightSample);
                 minHeight = Math.min(minHeight, heightSample);
+
+                if (colIndex !== col || rowIndex !== row) {
+                    heightSample -= skirtHeight;
+                }
 
                 var nX = cosLatitude * cos(longitude);
                 var nY = cosLatitude * sin(longitude);
@@ -183,6 +224,15 @@ define([
                     maxUDifference = Math.max(uDifference, maxUDifference);
 
                     var u = geographicU;
+                    if (u < 0.0) {
+                        u = 0.0;
+                    } else if (u > 1.0) {
+                        u = 1.0;
+                    }
+
+                    if (u > 1.0 || u < 0.0 || v > 1.0 || v < 0.0) {
+                        console.log('wtf');
+                    }
 
                     if (interleaveTextureCoordinates) {
                         vertices[vertexArrayIndex++] = u;
@@ -196,12 +246,20 @@ define([
         }
 
         if (typeof indices !== 'undefined') {
+            var adjustedWidth = width;
+            var adjustedHeight = height;
+
+            if (skirtHeight > 0) {
+                adjustedWidth += 2;
+                adjustedHeight += 2;
+            }
+
             var index = 0;
             var indicesIndex = 0;
-            for ( var i = 0; i < height - 1; ++i) {
-                for ( var j = 0; j < width - 1; ++j) {
+            for ( var i = 0; i < adjustedWidth - 1; ++i) {
+                for ( var j = 0; j < adjustedHeight - 1; ++j) {
                     var upperLeft = index;
-                    var lowerLeft = upperLeft + width;
+                    var lowerLeft = upperLeft + adjustedWidth;
                     var lowerRight = lowerLeft + 1;
                     var upperRight = upperLeft + 1;
 

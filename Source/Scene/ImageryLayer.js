@@ -200,9 +200,23 @@ define([
                 var textureTranslation = new Cartesian2(
                         (imageryExtent.west - terrainExtent.west) / terrainWidth,
                         (imageryExtent.south - terrainExtent.south) / terrainHeight);
+
+//                if (Math.abs(textureTranslation.x) < CesiumMath.EPSILON10) {
+//                    textureTranslation.x = 0.0;
+//                } else if (Math.abs(textureTranslation.x - 1.0) < CesiumMath.EPSILON10) {
+//                    textureTranslation.x = 1.0;
+//                }
+//
+//                if (Math.abs(textureTranslation.y) < CesiumMath.EPSILON10) {
+//                    textureTranslation.y = 0.0;
+//                } else if (Math.abs(textureTranslation.y - 1.0) < CesiumMath.EPSILON10) {
+//                    textureTranslation.y = 1.0;
+//                }
+
                 var textureScale = new Cartesian2(
                         (imageryExtent.east - imageryExtent.west) / terrainWidth,
                         (imageryExtent.north - imageryExtent.south) / terrainHeight);
+
                 tile.imagery.push(new TileImagery(this, i, j, imageryLevel, textureTranslation, textureScale));
             }
         }

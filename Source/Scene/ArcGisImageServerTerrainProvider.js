@@ -257,7 +257,8 @@ define([
             extent : webMercatorExtent,
             relativeToCenter : tile.center,
             radiiSquared : this.tilingScheme.ellipsoid.getRadiiSquared(),
-            oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x
+            oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x,
+            skirtHeight : 1000.0
         });
 
         if (typeof verticesPromise === 'undefined') {
@@ -272,7 +273,7 @@ define([
             tile.transformedGeometry = {
                 vertices : result.vertices,
                 statistics : result.statistics,
-                indices : TerrainProvider.getRegularGridIndices(width, height)
+                indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
             };
             tile.state = TileState.TRANSFORMED;
         }, function(e) {

@@ -163,10 +163,10 @@ define([
                 var south = north - levelZeroResolution * rows;
 
                 that.projection = Projections.MERCATOR;
-                that.tilingScheme = new WebMercatorTilingScheme({
+                that.tilingScheme = new WebMercatorTilingScheme(/*{
                     extentSouthwestInMeters : new Cartesian2(west, south),
                     extentNortheastInMeters : new Cartesian2(east, north)
-                });
+                }*/);
                 that.extent = that.tilingScheme.extent;
             } else if (data.tileInfo.spatialReference.wkid === 4326) {
                 that.projection = Projections.WGS84;
