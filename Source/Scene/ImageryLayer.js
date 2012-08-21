@@ -194,30 +194,39 @@ define([
         var terrainWidth = terrainExtent.east - terrainExtent.west;
         var terrainHeight = terrainExtent.north - terrainExtent.south;
 
-        for ( var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
-            for ( var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
-                var imageryExtent = imageryTilingScheme.tileXYToNativeExtent(i, j, imageryLevel);
+        var imageryExtent = imageryTilingScheme.tileXYToExtent(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
+
+        var minU;
+        var maxU = Math.min(1.0, (imageryExtent.west - tile.extent.west) / (tile.extent.east - tile.extent.west));
+
+        var minV = Math.max(0.0, (imageryExtent.north - tile.extent.south) / (tile.extent.north - tile.extent.south));
+        var maxV;
+
+        for (var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
+            minU = maxU;
+
+            imageryExtent = imageryTilingScheme.tileXYToExtent(i, northwestTileCoordinates.y, imageryLevel);
+            maxU = Math.min(1.0, (imageryExtent.east - tile.extent.west) / (tile.extent.east - tile.extent.west));
+
+            for (var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
+                maxV = minV;
+
+                imageryExtent = imageryTilingScheme.tileXYToExtent(i, j, imageryLevel);
+                minV = Math.max(0.0, (imageryExtent.south - tile.extent.south) / (tile.extent.north - tile.extent.south));
+
+                imageryExtent = imageryTilingScheme.tileXYToNativeExtent(i, j, imageryLevel);
                 var textureTranslation = new Cartesian2(
                         (imageryExtent.west - terrainExtent.west) / terrainWidth,
                         (imageryExtent.south - terrainExtent.south) / terrainHeight);
-
-//                if (Math.abs(textureTranslation.x) < CesiumMath.EPSILON10) {
-//                    textureTranslation.x = 0.0;
-//                } else if (Math.abs(textureTranslation.x - 1.0) < CesiumMath.EPSILON10) {
-//                    textureTranslation.x = 1.0;
-//                }
-//
-//                if (Math.abs(textureTranslation.y) < CesiumMath.EPSILON10) {
-//                    textureTranslation.y = 0.0;
-//                } else if (Math.abs(textureTranslation.y - 1.0) < CesiumMath.EPSILON10) {
-//                    textureTranslation.y = 1.0;
-//                }
 
                 var textureScale = new Cartesian2(
                         (imageryExtent.east - imageryExtent.west) / terrainWidth,
                         (imageryExtent.north - imageryExtent.south) / terrainHeight);
 
-                tile.imagery.push(new TileImagery(this, i, j, imageryLevel, textureTranslation, textureScale));
+                var minTexCoords = new Cartesian2(minU, minV);
+                var maxTexCoords = new Cartesian2(maxU, maxV);
+
+                tile.imagery.push(new TileImagery(this, i, j, imageryLevel, textureTranslation, textureScale, minTexCoords, maxTexCoords));
             }
         }
 

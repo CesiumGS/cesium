@@ -19,13 +19,15 @@ define([
         TileState) {
     "use strict";
 
-    var TileImagery = function(imageryLayer, x, y, level, textureTranslation, textureScale) {
+    var TileImagery = function(imageryLayer, x, y, level, textureTranslation, textureScale, minTexCoords, maxTexCoords) {
         this.imageryLayer = imageryLayer;
         this.x = x;
         this.y = y;
         this.level = level;
         this.textureTranslation = textureTranslation;
         this.textureScale = textureScale;
+        this.minTexCoords = minTexCoords;
+        this.maxTexCoords = maxTexCoords;
         this.extent = imageryLayer.imageryProvider.tilingScheme.tileXYToExtent(x, y, level);
 
         this.state = TileState.UNLOADED;

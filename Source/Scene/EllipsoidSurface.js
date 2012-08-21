@@ -329,6 +329,12 @@ define([
         u_dayTextureScale : function() {
             return this.dayTextureScale;
         },
+        u_dayTextureMinTexCoords : function() {
+            return this.dayTextureMinTexCoords;
+        },
+        u_dayTextureMaxTexCoords : function() {
+            return this.dayTextureMaxTexCoords;
+        },
         u_dayTextureAlpha : function() {
             return this.dayTextureAlpha;
         },
@@ -365,6 +371,8 @@ define([
         dayTextures : [],
         dayTextureTranslation : [],
         dayTextureScale : [],
+        dayTextureMinTexCoords : [],
+        dayTextureMaxTexCoords : [],
         dayTextureAlpha : [],
         dayTextureIsGeographic : [],
         cameraInsideBoundingSphere : false,
@@ -440,6 +448,8 @@ define([
                     uniformMap.dayTextures[numberOfDayTextures] = tileImagery.texture;
                     uniformMap.dayTextureTranslation[numberOfDayTextures] = tileImagery.textureTranslation;
                     uniformMap.dayTextureScale[numberOfDayTextures] = tileImagery.textureScale;
+                    uniformMap.dayTextureMinTexCoords[numberOfDayTextures] = tileImagery.minTexCoords;
+                    uniformMap.dayTextureMaxTexCoords[numberOfDayTextures] = tileImagery.maxTexCoords;
                     uniformMap.dayTextureAlpha[numberOfDayTextures] = tileImagery.imageryLayer.alpha;
                     uniformMap.dayTextureIsGeographic[numberOfDayTextures] = tileImagery.imageryLayer.imageryProvider.tilingScheme instanceof GeographicTilingScheme;
 

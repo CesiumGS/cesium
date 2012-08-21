@@ -12,6 +12,9 @@ uniform vec2 u_dayTextureTranslation[TEXTURE_UNITS];
 uniform vec2 u_dayTextureScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 uniform bool u_dayTextureIsGeographic[TEXTURE_UNITS];
+uniform vec2 u_dayTextureMinTexCoords[TEXTURE_UNITS];
+uniform vec2 u_dayTextureMaxTexCoords[TEXTURE_UNITS];
+
 uniform bool u_cameraInsideBoundingSphere;
 uniform int u_level;
 
@@ -35,7 +38,11 @@ void main()
     vec3 normalEC = normalize(agi_normal * normalMC);                                           // normalized surface normal in eye coordiantes
     
 #ifdef SHOW_DAY
-    vec2 geographicUV = v_textureCoordinates;
+    // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
+    // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
+    // fragments on the edges of tiles even though the vertex shader is outputting
+    // coordinates strictly in the 0-1 range.
+    vec2 geographicUV = clamp(v_textureCoordinates, 0.0, 1.0);
     vec2 webMercatorUV = geographicUV;
     
     if (u_level < 12)
@@ -59,17 +66,19 @@ void main()
     {
         if (i >= u_numberOfDayTextures)
             break;
-        
-        vec2 baseTextureCoordinates = mix(webMercatorUV, geographicUV, float(u_dayTextureIsGeographic[i]));
-        vec2 textureCoordinates = (baseTextureCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
-        
-        // Make sure the computed texture coordinates are within the bounds of
-        // the texture.  But allow them to be outside by up to about 1/10 of a texel
-        // (assuming a 256x256 texture) to avoid black pixels due to rounding errors.
-        if (textureCoordinates.x >= -0.00039 && textureCoordinates.x <= 1.00039 &&
-            textureCoordinates.y >= -0.00039 && textureCoordinates.y <= 1.00039)
+            
+        vec2 minTexCoords = u_dayTextureMinTexCoords[i];
+        vec2 maxTexCoords = u_dayTextureMaxTexCoords[i];
+            
+        if (geographicUV.x >= minTexCoords.x &&
+            geographicUV.x <= maxTexCoords.x &&
+            geographicUV.y >= minTexCoords.y &&
+            geographicUV.y <= maxTexCoords.y)
         {
-	        vec4 color = texture2D(u_dayTextures[i], textureCoordinates);
+	        vec2 baseTextureCoordinates = mix(webMercatorUV, geographicUV, float(u_dayTextureIsGeographic[i]));
+	        vec2 textureCoordinates = (baseTextureCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
+	        
+            vec4 color = texture2D(u_dayTextures[i], textureCoordinates);
 	        startDayColor = mix(startDayColor, color.rgb, color.a * u_dayTextureAlpha[i]);
         }
     }
