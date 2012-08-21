@@ -67,16 +67,18 @@ defineSuite([
     });
 
     it('has a depth texture attachment', function() {
-        var depthTexture = context.createTexture2D({
-            width : 1,
-            height : 1,
-            pixelFormat : PixelFormat.DEPTH_COMPONENT,
-            pixelDatatype : PixelDatatype.UNSIGNED_SHORT
-        });
+        if (context.getDepthTexture()) {
+            var depthTexture = context.createTexture2D({
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
 
-        framebuffer = context.createFramebuffer();
-        framebuffer.setDepthTexture(depthTexture);
-        expect(framebuffer.getDepthTexture()).toEqual(depthTexture);
+            framebuffer = context.createFramebuffer();
+            framebuffer.setDepthTexture(depthTexture);
+            expect(framebuffer.getDepthTexture()).toEqual(depthTexture);
+        }
     });
 
     it('has a depth renderbuffer attachment', function() {
@@ -100,16 +102,18 @@ defineSuite([
     });
 
     it('has a depth-stencil texture attachment', function() {
-        var texture = context.createTexture2D({
-            width : 1,
-            height : 1,
-            pixelFormat : PixelFormat.DEPTH_STENCIL,
-            pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
-        });
+        if (context.getDepthTexture()) {
+            var texture = context.createTexture2D({
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.DEPTH_STENCIL,
+                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
+            });
 
-        framebuffer = context.createFramebuffer();
-        framebuffer.setDepthStencilTexture(texture);
-        expect(framebuffer.getDepthStencilTexture()).toEqual(texture);
+            framebuffer = context.createFramebuffer();
+            framebuffer.setDepthStencilTexture(texture);
+            expect(framebuffer.getDepthStencilTexture()).toEqual(texture);
+        }
     });
 
     it('has a depth-stencil renderbuffer attachment', function() {

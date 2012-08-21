@@ -1416,6 +1416,7 @@ define([
      *
      * @return {Texture} DOC_TBA.
      *
+     * @exception {RuntimeError} When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
      * @exception {DeveloperError} description is required.
      * @exception {DeveloperError} description requires a source field to create an initialized texture or width and height fields to create a blank texture.
      * @exception {DeveloperError} Width must be greater than zero.
@@ -1480,8 +1481,14 @@ define([
             throw new DeveloperError('When description.pixelFormat is DEPTH_STENCIL, description.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
         }
 
-        if (((pixelFormat === PixelFormat.DEPTH_COMPONENT) || (pixelFormat === PixelFormat.DEPTH_STENCIL)) && source) {
-            throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
+        if ((pixelFormat === PixelFormat.DEPTH_COMPONENT) || (pixelFormat === PixelFormat.DEPTH_STENCIL)) {
+            if (source) {
+                throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
+            }
+
+            if (!this.getDepthTexture()) {
+                throw new RuntimeError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check getDepthTexture().');
+            }
         }
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
