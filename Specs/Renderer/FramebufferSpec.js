@@ -597,6 +597,41 @@ defineSuite([
         }).toThrow();
     });
 
+    it('throws when created with a color texture with a non-color pixel format', function() {
+        expect(function() {
+            framebuffer = context.createFramebuffer({
+                colorTexture : context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                })
+            });
+        }).toThrow();
+    });
+
+    it('throws when created with a depth texture without a DEPTH_COMPONENT pixel format', function() {
+      expect(function() {
+          framebuffer = context.createFramebuffer({
+              depthTexture : context.createTexture2D({
+                  width : 1,
+                  height : 1
+              })
+          });
+      }).toThrow();
+    });
+
+    it('throws when created with a depth-stencil texture without a DEPTH_STENCIL pixel format', function() {
+      expect(function() {
+          framebuffer = context.createFramebuffer({
+              depthStencilTexture : context.createTexture2D({
+                  width : 1,
+                  height : 1
+              })
+          });
+      }).toThrow();
+    });
+
     it('throws when the depth test is enabled without an appropriate attachment', function() {
         framebuffer = context.createFramebuffer({
             colorTexture : context.createTexture2D({

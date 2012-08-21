@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/destroyObject'
+        '../Core/destroyObject',
+        './PixelFormat'
     ], function(
         DeveloperError,
-        destroyObject) {
+        destroyObject,
+        PixelFormat) {
     "use strict";
 
     /**
@@ -129,9 +131,14 @@ define([
     /**
      * DOC_TBA.
      *
+     * @exception {DeveloperError} The color-texture pixel-format must be a color format.
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setColorTexture = function(texture) {
+        if (texture && !PixelFormat.isColorFormat(texture.getPixelFormat())) {
+            throw new DeveloperError('The color-texture pixel-format must be a color format.');
+        }
+
         attachTexture(this, this._gl.COLOR_ATTACHMENT0, texture);
         this._colorTexture = texture;
     };
@@ -167,12 +174,17 @@ define([
     /**
      * DOC_TBA.
      *
+     * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setDepthTexture = function(texture) {
 // TODO: clear previous _depthTexture?
 // TODO: clear _depthRenderbuffer?
-// TODO: validate texture format?
+
+        if (texture && (texture.getPixelFormat() !== PixelFormat.DEPTH_COMPONENT)) {
+            throw new DeveloperError('The depth-texture pixel-format must be DEPTH_COMPONENT.');
+        }
+
         attachTexture(this, this._gl.DEPTH_ATTACHMENT, texture);
         this._depthTexture = texture;
     };
@@ -227,10 +239,16 @@ define([
     /**
      * DOC_TBA.
      *
+     * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setDepthStencilTexture = function(texture) {
 // TODO: see TODOs in setDepthTexture
+
+        if (texture && (texture.getPixelFormat() !== PixelFormat.DEPTH_STENCIL)) {
+            throw new DeveloperError('The depth-stencil pixel-format must be DEPTH_STENCIL.');
+        }
+
         attachTexture(this, this._gl.DEPTH_STENCIL_ATTACHMENT, texture);
         this._depthStencilTexture = texture;
     };

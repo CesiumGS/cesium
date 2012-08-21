@@ -82,6 +82,21 @@ define(['../Core/Enumeration'], function(Enumeration) {
         },
 
         /**
+         * Returns true if the pixel format is a color format.
+         *
+         * @param {PixelFormat} pixelFormat The pixel format to test.
+         *
+         * @returns {Boolean} Returns true if the pixel format is a color format; otherwise false.
+         */
+        isColorFormat : function(pixelFormat) {
+            return ((pixelFormat === PixelFormat.ALPHA) ||
+                    (pixelFormat === PixelFormat.RGB) ||
+                    (pixelFormat === PixelFormat.RGBA) ||
+                    (pixelFormat === PixelFormat.LUMINANCE) ||
+                    (pixelFormat === PixelFormat.LUMINANCE_ALPHA));
+        },
+
+        /**
          * Returns true if the pixel format is a depth format.
          *
          * @param {PixelFormat} pixelFormat The pixel format to test.

@@ -1754,6 +1754,10 @@ define([
      * @exception {DeveloperError} Cannot have both a depth and depth-stencil renderbuffer.
      * @exception {DeveloperError} Cannot have both a stencil and depth-stencil renderbuffer.
      * @exception {DeveloperError} Cannot have both a depth and stencil renderbuffer.
+     * @exception {DeveloperError} The color-texture pixel-format must be a color format.
+     * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
+     * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
+     *
      *
      * @see Context#createTexture2D
      * @see Context#createCubeMap

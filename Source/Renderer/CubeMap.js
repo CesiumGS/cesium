@@ -171,6 +171,10 @@ define([
                 that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_POSITIVE_X, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
             },
 
+            getPixelFormat : function() {
+                return that._pixelFormat;
+            },
+
             _getTexture : function() {
                 return that._texture;
             },
@@ -194,6 +198,10 @@ define([
 
             copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
                 that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_X, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
+            },
+
+            getPixelFormat : function() {
+                return that._pixelFormat;
             },
 
             _getTexture : function() {
@@ -221,6 +229,10 @@ define([
                 that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_POSITIVE_Y, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
             },
 
+            getPixelFormat : function() {
+                return that._pixelFormat;
+            },
+
             _getTexture : function() {
                 return that._texture;
             },
@@ -244,6 +256,10 @@ define([
 
             copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
                 that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
+            },
+
+            getPixelFormat : function() {
+                return that._pixelFormat;
             },
 
             _getTexture : function() {
@@ -271,6 +287,10 @@ define([
                 that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_POSITIVE_Z, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
             },
 
+            getPixelFormat : function() {
+                return that._pixelFormat;
+            },
+
             _getTexture : function() {
                 return that._texture;
             },
@@ -294,6 +314,10 @@ define([
 
             copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
                 that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
+            },
+
+            getPixelFormat : function() {
+                return that._pixelFormat;
             },
 
             _getTexture : function() {

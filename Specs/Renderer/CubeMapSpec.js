@@ -66,13 +66,27 @@ defineSuite([
         }, 'Load .png file(s) for texture test.', 3000);
     });
 
-    it('creates with defaults', function() {
+    it('gets the pixel format', function() {
         cubeMap = context.createCubeMap({
             width : 16,
             height : 16
         });
 
         expect(cubeMap.getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getPositiveX().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getNegativeX().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getPositiveY().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getNegativeY().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getPositiveZ().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getNegativeZ().getPixelFormat()).toEqual(PixelFormat.RGBA);
+    });
+
+    it('gets the pixel datatype', function() {
+        cubeMap = context.createCubeMap({
+            width : 16,
+            height : 16
+        });
+
         expect(cubeMap.getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
     });
 
