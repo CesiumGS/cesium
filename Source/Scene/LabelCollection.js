@@ -65,35 +65,26 @@ define([
         }
     };
 
+    // reusable object for calling writeTextToCanvas
+    var writeTextToCanvasParameters = {};
     function createGlyphCanvas(character, font, fillColor, outlineColor, style, verticalOrigin) {
-        var textBaseline;
+        writeTextToCanvasParameters.font = font;
+        writeTextToCanvasParameters.fillColor = fillColor;
+        writeTextToCanvasParameters.strokeColor = outlineColor;
+
         if (verticalOrigin === VerticalOrigin.BOTTOM) {
-            textBaseline = 'bottom';
+            writeTextToCanvasParameters.textBaseline = 'bottom';
         } else if (verticalOrigin === VerticalOrigin.TOP) {
-            textBaseline = 'top';
+            writeTextToCanvasParameters.textBaseline = 'top';
         } else {
             // VerticalOrigin.CENTER
-            textBaseline = 'middle';
+            writeTextToCanvasParameters.textBaseline = 'middle';
         }
 
-        var fill = false;
-        if (style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE) {
-            fill = true;
-        }
+        writeTextToCanvasParameters.fill = style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE;
+        writeTextToCanvasParameters.stroke = style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE;
 
-        var stroke = false;
-        if (style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE) {
-            stroke = true;
-        }
-
-        return writeTextToCanvas(character, {
-            font : font,
-            textBaseline : textBaseline,
-            fill : fill,
-            fillColor : fillColor,
-            stroke : stroke,
-            strokeColor : outlineColor
-        });
+        return writeTextToCanvas(character, writeTextToCanvasParameters);
     }
 
     function unbindGlyph(labelCollection, glyph) {
