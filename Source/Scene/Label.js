@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/DeveloperError',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -10,6 +11,7 @@ define([
         './VerticalOrigin'
     ], function(
         defaultValue,
+        DeveloperError,
         Cartesian2,
         Cartesian3,
         Color,
@@ -22,16 +24,14 @@ define([
     var EMPTY_OBJECT = {};
 
     /**
-     * DOC_TBA
+     * A Label draws viewport-aligned text positioned in the 3D scene.  This constructor
+     * should not be used directly, instead create labels by calling {@link LabelCollection#add}.
      *
      * @alias Label
      * @internalConstructor
      *
      * @see LabelCollection
      * @see LabelCollection#add
-     * @see Billboard
-     *
-     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/#2dcontext'>HTML canvas 2D context</a>
      */
     var Label = function(description, labelCollection, index) {
         description = defaultValue(description, EMPTY_OBJECT);
@@ -79,10 +79,16 @@ define([
      *
      * @param {Boolean} value Indicates if this label will be shown.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Label#getShow
      */
     Label.prototype.setShow = function(value) {
-        if (typeof value !== 'undefined' && value !== this._show) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (value !== this._show) {
             this._show = value;
 
             var glyphs = this._glyphs;
@@ -120,6 +126,8 @@ define([
      *
      * @param {Cartesian3} value The Cartesian position.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Label#getPosition
      *
      * @example
@@ -136,9 +144,12 @@ define([
      * });
      */
     Label.prototype.setPosition = function(value) {
-        var position = this._position;
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
 
-        if (typeof value !== 'undefined' && !Cartesian3.equals(position, value)) {
+        var position = this._position;
+        if (!Cartesian3.equals(position, value)) {
             Cartesian3.clone(value, position);
 
             var glyphs = this._glyphs;
@@ -152,7 +163,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Gets the text of this label.
      *
      * @memberof Label
      *
@@ -163,110 +174,142 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Sets the text of this label.
      *
      * @memberof Label
+     *
+     * @param {String} value The text.
+     *
+     * @exception {DeveloperError} value is required.
      *
      * @see Label#getText
      */
     Label.prototype.setText = function(value) {
-        if (typeof value !== 'undefined' && value !== this._text) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (value !== this._text) {
             this._text = value;
             this._rebindAllGlyphs = true;
         }
     };
 
     /**
-     * DOC_TBA
+     * Gets the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
      *
      * @memberof Label
      *
      * @see Label#setFont
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles'>HTML canvas 2D context text styles</a>
      */
     Label.prototype.getFont = function() {
         return this._font;
     };
 
     /**
-     * DOC_TBA
-     * CSS font-family
+     * Sets the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
      *
      * @memberof Label
+     *
+     * @param {String} value The font.
+     *
+     * @exception {DeveloperError} value is required.
      *
      * @see Label#getFont
      * @see Label#setFillColor
      * @see Label#setOutlineColor
-     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/#dom-context-2d-font'>HTML canvas 2D context font</a>
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles'>HTML canvas 2D context text styles</a>
      */
     Label.prototype.setFont = function(value) {
-        if (typeof value !== 'undefined' && this._font !== value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (this._font !== value) {
             this._font = value;
             this._rebindAllGlyphs = true;
         }
     };
 
     /**
-     * DOC_TBA
+     * Gets the fill color of this label.
      *
      * @memberof Label
      *
      * @see Label#setFillColor
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
      */
     Label.prototype.getFillColor = function() {
         return this._fillColor;
     };
 
     /**
-     * DOC_TBA
-     *
-     * CSS <color> values
+     * Sets the fill color of this label.
      *
      * @memberof Label
+     *
+     * @param {Color} value The fill color.
+     *
+     * @exception {DeveloperError} value is required.
      *
      * @see Label#getFillColor
      * @see Label#setOutlineColor
      * @see Label#setFont
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
      */
     Label.prototype.setFillColor = function(value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
         var fillColor = this._fillColor;
-        if (typeof value !== 'undefined' && !Color.equals(fillColor, value)) {
+        if (!Color.equals(fillColor, value)) {
             Color.clone(value, fillColor);
             this._rebindAllGlyphs = true;
         }
     };
 
     /**
-     * DOC_TBA
+     * Gets the outline color of this label.
      *
      * @memberof Label
      *
      * @see Label#setOutlineColor
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
      */
     Label.prototype.getOutlineColor = function() {
         return this._outlineColor;
     };
 
     /**
-     * DOC_TBA
-     *
-     * CSS <color> values
+     * Sets the outline color of this label.
      *
      * @memberof Label
+     *
+     * @param {Color} value The fill color.
+     *
+     * @exception {DeveloperError} value is required.
      *
      * @see Label#getOutlineColor
      * @see Label#setFillColor
      * @see Label#setFont
+     * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
      */
     Label.prototype.setOutlineColor = function(value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
         var outlineColor = this._outlineColor;
-        if (typeof value !== 'undefined' && !Color.equals(outlineColor, value)) {
+        if (!Color.equals(outlineColor, value)) {
             Color.clone(value, outlineColor);
             this._rebindAllGlyphs = true;
         }
     };
 
     /**
-     * DOC_TBA
+     * Gets the style of this label.
      *
      * @memberof Label
      *
@@ -277,18 +320,24 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Sets the style of this label.
      *
      * @memberof Label
      *
-     * @param {LabelStyle} value DOC_TBA
+     * @param {LabelStyle} value The style.
+     *
+     * @exception {DeveloperError} value is required.
      *
      * @see Label#getStyle
      * @see Label#setOutlineColor
      * @see Label#setFillColor
      */
     Label.prototype.setStyle = function(value) {
-        if (typeof value !== 'undefined' && this._style !== value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (this._style !== value) {
             this._style = value;
             this._rebindAllGlyphs = true;
         }
@@ -330,12 +379,18 @@ define([
      *
      * @param {Cartesian2} value The 2D Cartesian pixel offset.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Label#getPixelOffset
      * @see Billboard#setPixelOffset
      */
     Label.prototype.setPixelOffset = function(value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
         var pixelOffset = this._pixelOffset;
-        if (typeof value !== 'undefined' && !Cartesian2.equals(pixelOffset, value)) {
+        if (!Cartesian2.equals(pixelOffset, value)) {
             Cartesian2.clone(value, pixelOffset);
             this._repositionAllGlyphs = true;
         }
@@ -383,11 +438,17 @@ define([
      *
      * @param {Cartesian3} value The 3D Cartesian offset in eye coordinates.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Label#getEyeOffset
      */
     Label.prototype.setEyeOffset = function(value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
         var eyeOffset = this._eyeOffset;
-        if (typeof value !== 'undefined' && !Cartesian3.equals(eyeOffset, value)) {
+        if (!Cartesian3.equals(eyeOffset, value)) {
             Cartesian3.clone(value, eyeOffset);
 
             var glyphs = this._glyphs;
@@ -414,7 +475,7 @@ define([
     };
 
     /**
-     * Sets the horizontal origin of this label, which determines if the label is
+     * Sets the horizontal origin of this label, which determines if the label is drawn
      * to the left, center, or right of its position.
      * <br /><br />
      * <div align='center'>
@@ -425,6 +486,8 @@ define([
      *
      * @param {HorizontalOrigin} value The horizontal origin.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Label#getHorizontalOrigin
      * @see Label#setVerticalOrigin
      *
@@ -434,7 +497,11 @@ define([
      * l.setVerticalOrigin(VerticalOrigin.TOP);
      */
     Label.prototype.setHorizontalOrigin = function(value) {
-        if (typeof value !== 'undefined' && this._horizontalOrigin !== value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (this._horizontalOrigin !== value) {
             this._horizontalOrigin = value;
             this._repositionAllGlyphs = true;
         }
@@ -465,6 +532,8 @@ define([
      *
      * @param {VerticalOrigin} value The vertical origin.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Label#getVerticalOrigin
      * @see Label#setHorizontalOrigin
      *
@@ -474,7 +543,11 @@ define([
      * l.setVerticalOrigin(VerticalOrigin.TOP);
      */
     Label.prototype.setVerticalOrigin = function(value) {
-        if (typeof value !== 'undefined' && this._verticalOrigin !== value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (this._verticalOrigin !== value) {
             this._verticalOrigin = value;
             this._repositionAllGlyphs = true;
         }
@@ -512,11 +585,17 @@ define([
      *
      * @param {Number} value The scale used to size the label.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Label#getScale
      * @see Label#setFont
      */
     Label.prototype.setScale = function(value) {
-        if (typeof value !== 'undefined' && this._scale !== value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (this._scale !== value) {
             this._scale = value;
 
             var glyphs = this._glyphs;
@@ -543,17 +622,23 @@ define([
      *
      * @return {Cartesian2} The screen-space position of the label.
      *
-     * @exception {DeveloperError} Label must be in a collection.
      * @exception {DeveloperError} uniformState is required.
+     * @exception {DeveloperError} sceneState is required.
      *
      * @see Label#setEyeOffset
      * @see Label#setPixelOffset
-     * @see LabelCollection#render
      *
      * @example
      * console.log(l.computeScreenSpacePosition(scene.getUniformState(), scene.getSceneState()).toString());
      */
     Label.prototype.computeScreenSpacePosition = function(uniformState, sceneState) {
+        if (typeof uniformState === 'undefined') {
+            throw new DeveloperError('uniformState is required.');
+        }
+        if (typeof sceneState === 'undefined') {
+            throw new DeveloperError('sceneState is required.');
+        }
+
         var labelCollection = this._labelCollection;
         var modelMatrix = labelCollection.modelMatrix;
         var actualPosition = Billboard._computeActualPosition(this._position, sceneState, labelCollection.morphTime, modelMatrix);
@@ -588,6 +673,16 @@ define([
                 Cartesian3.equals(this._eyeOffset, other._eyeOffset));
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof Label
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     */
     Label.prototype.isDestroyed = function() {
         return false;
     };
