@@ -26,7 +26,8 @@ Beta Releases
                         repeat : 10.0
                     }
                 }
-            }); 
+            });
+    * `Label.computeScreenSpacePosition` now requires the current scene state as a parameter.
             
 * All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * Added support for nested polygons with holes. See `Polygon.configureFromPolygonHierarchy`.

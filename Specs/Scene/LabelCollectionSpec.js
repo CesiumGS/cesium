@@ -288,10 +288,6 @@ defineSuite([
         expect(labels.contains(undefined)).toEqual(false);
     });
 
-    it('has a default buffer usage', function() {
-        expect(labels.bufferUsage).toEqual(BufferUsage.STATIC_DRAW);
-    });
-
     it('does not render when constructed', function() {
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -566,7 +562,6 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.bufferUsage = BufferUsage.STREAM_DRAW;
         labels.update(context, sceneState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
@@ -927,7 +922,7 @@ defineSuite([
                 }
             });
 
-            expect(label.computeScreenSpacePosition(us).equals(new Cartesian2(0.5, 0.5)));
+            expect(label.computeScreenSpacePosition(us, sceneState).equals(new Cartesian2(0.5, 0.5)));
         });
 
         it('can compute screen space position (2)', function() {
@@ -943,7 +938,7 @@ defineSuite([
                 }
             });
 
-            expect(label.computeScreenSpacePosition(us).equals(new Cartesian2(1.5, 2.5)));
+            expect(label.computeScreenSpacePosition(us, sceneState).equals(new Cartesian2(1.5, 2.5)));
         });
 
         it('can compute screen space position (3)', function() {
@@ -960,7 +955,7 @@ defineSuite([
                 }
             });
 
-            var p = label.computeScreenSpacePosition(us);
+            var p = label.computeScreenSpacePosition(us, sceneState);
             expect(p.x).toBeGreaterThan(0.5);
             expect(p.y).toBeGreaterThan(0.5);
         });

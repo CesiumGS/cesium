@@ -539,6 +539,7 @@ define([
      * @memberof Label
      *
      * @param {UniformState} uniformState The same state object passed to {@link LabelCollection#render}.
+     * @param {SceneState} sceneState The same state object passed to {@link LabelCollection#update}.
      *
      * @return {Cartesian2} The screen-space position of the label.
      *
@@ -550,21 +551,14 @@ define([
      * @see LabelCollection#render
      *
      * @example
-     * console.log(l.computeScreenSpacePosition(scene.getUniformState()).toString());
+     * console.log(l.computeScreenSpacePosition(scene.getUniformState(), scene.getSceneState()).toString());
      */
-    Label.prototype.computeScreenSpacePosition = function(uniformState) {
-        var position = this._position;
+    Label.prototype.computeScreenSpacePosition = function(uniformState, sceneState) {
+        var labelCollection = this._labelCollection;
+        var modelMatrix = labelCollection.modelMatrix;
+        var actualPosition = Billboard._computeActualPosition(this._position, sceneState, labelCollection.morphTime, modelMatrix);
 
-        var glyphs = this._glyphs;
-        for ( var i = 0, len = glyphs.length; i < len; ++i) {
-            var glyph = glyphs[i];
-            if (typeof glyph.billboard !== 'undefined') {
-                position = glyph.billboard._getActualPosition();
-                break;
-            }
-        }
-
-        return Billboard._computeScreenSpacePosition(this._labelCollection.modelMatrix, position, this._eyeOffset, this._pixelOffset, uniformState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, uniformState);
     };
 
     /**
