@@ -82,7 +82,7 @@
             var polyline1;
             var polyline2;
 
-            // If the mouse is over the billboard, change its scale and color
+            // If the mouse is over the polyline, change its width, outlineWidth and color
             handler = new Cesium.EventHandler(scene.getCanvas());
             handler.setMouseAction(
 
@@ -295,7 +295,7 @@
                 polygon.highlighted = !polygon.highlighted;
             }
 
-            // If the mouse is over the billboard, change its scale and color
+            // If the mouse is over the polygon, start the animation to highlight it.
             handler = new Cesium.EventHandler(scene.getCanvas());
             handler.setMouseAction(
                 function (movement) {
@@ -363,7 +363,7 @@
             var sensor;
             var eroding = false;
 
-            // If the mouse is over the billboard, change its scale and color
+            // If the mouse is over the sensor, change start the erosion animation.
             handler = new Cesium.EventHandler(scene.getCanvas());
             handler.setMouseAction(
                 function (movement) {
