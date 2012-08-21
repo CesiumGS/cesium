@@ -6,7 +6,7 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
-        './ColorMaterial',
+        './Material',
         './CustomSensorVolume'
     ], function(
         DeveloperError,
@@ -15,7 +15,7 @@ define([
         CesiumMath,
         Matrix4,
         BufferUsage,
-        ColorMaterial,
+        Material,
         CustomSensorVolume) {
     "use strict";
 
@@ -79,7 +79,7 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
-        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY;
+        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY.clone();
 
         /**
          * DOC_TBA
@@ -118,7 +118,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = t.material || new ColorMaterial();
+        this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromType(undefined, Material.ColorType);
 
         /**
          * DOC_TBA

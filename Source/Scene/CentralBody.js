@@ -797,7 +797,7 @@ define([
 
         // PERFORMANCE_IDEA:  Only combine these if showing the atmosphere.  Maybe this is too much of a micro-optimization.
         // http://jsperf.com/object-property-access-propcount
-        this._drawUniforms = combine(uniforms, atmosphereUniforms);
+        this._drawUniforms = combine([uniforms, atmosphereUniforms], false, false);
     };
 
     /**
@@ -1186,7 +1186,7 @@ define([
                     return tile.mode;
                 }
             };
-            tile._drawUniforms = combine(drawUniforms, this._drawUniforms);
+            tile._drawUniforms = combine([drawUniforms, this._drawUniforms], false, false);
 
             tile._mode = mode;
         }
@@ -1549,21 +1549,21 @@ define([
         };
 
         if (typeof this._northPoleUniforms === 'undefined') {
-            this._northPoleUniforms = combine(drawUniforms, {
+            this._northPoleUniforms = combine([drawUniforms, {
                 u_color : function() {
                     return that.northPoleColor;
                 }
-            });
-            this._northPoleUniforms = combine(this._northPoleUniforms, this._drawUniforms);
+            }], false, false);
+            this._northPoleUniforms = combine([this._northPoleUniforms, this._drawUniforms], false, false);
         }
 
         if (typeof this._southPoleUniforms === 'undefined') {
-            this._southPoleUniforms = combine(drawUniforms, {
+            this._southPoleUniforms = combine([drawUniforms, {
                 u_color : function() {
                     return that.southPoleColor;
                 }
-            });
-            this._southPoleUniforms = combine(this._southPoleUniforms, this._drawUniforms);
+            }], false, false);
+            this._southPoleUniforms = combine([this._southPoleUniforms, this._drawUniforms], false, false);
         }
     };
 
@@ -1773,7 +1773,8 @@ define([
         // update scisor/depth plane
         var depthQuad = this._computeDepthQuad(sceneState);
 
-        var scissorTest = { enabled : false };
+        // TODO: Re-enable scissor test.
+        /*var scissorTest = { enabled : false };
         if (mode === SceneMode.SCENE3D) {
             var uniformState = context.getUniformState();
             var mvp = uniformState.getModelViewProjection();
@@ -1796,7 +1797,7 @@ define([
         this._rsColor.scissorTest = scissorTest;
         this._rsDepth.scissorTest = scissorTest;
         this._quadV.renderState.scissorTest = scissorTest;
-        this._quadH.renderState.scissorTest = scissorTest;
+        this._quadH.renderState.scissorTest = scissorTest;*/
 
         // depth plane
         if (!this._vaDepth) {
