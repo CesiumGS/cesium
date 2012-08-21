@@ -1018,7 +1018,7 @@ defineSuite([
             expect(label.equals(undefined)).toEqual(false);
         });
 
-        it('should have a number of billboards equal to the number of characters', function() {
+        it('should have a number of glyphs equal to the number of characters', function() {
             var label = labels.add({
                 text : 'abc'
             });
@@ -1036,6 +1036,20 @@ defineSuite([
             label = labels.add();
             labels.update(context, sceneState);
             expect(label._glyphs.length).toEqual(0);
+        });
+
+        it('does not create billboards for spaces', function() {
+            var label = labels.add({
+                text : 'abc'
+            });
+            labels.update(context, sceneState);
+            expect(label._glyphs.length).toEqual(3);
+            expect(labels._billboardCollection.getLength()).toEqual(3);
+
+            label.setText(' ab c');
+            labels.update(context, sceneState);
+            expect(label._glyphs.length).toEqual(5);
+            expect(labels._billboardCollection.getLength()).toEqual(3);
         });
 
         function getGlyphBillboardPixelOffset(label, index) {
