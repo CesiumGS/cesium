@@ -42,6 +42,7 @@ define([
         '../../Scene/SingleTileProvider',
         '../../Scene/PerformanceDisplay',
         '../../DynamicScene/processCzml',
+        '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
         '../../DynamicScene/VisualizerCollection',
         'dojo/text!./CesiumViewerWidget.html'
@@ -88,6 +89,7 @@ define([
         SingleTileProvider,
         PerformanceDisplay,
         processCzml,
+        DynamicObjectView,
         DynamicObjectCollection,
         VisualizerCollection,
         template) {
@@ -137,11 +139,18 @@ define([
             this.scene.getCamera().frustum.aspectRatio = width / height;
         },
 
+        viewFromTo : undefined,
+
         centerCameraOnObject : function(selectedObject) {
             if (selectedObject && selectedObject.dynamicObject) {
-                this.cameraCenteredObjectID = selectedObject.dynamicObject.id;
+                var viewFromTo = this.viewFromTo;
+                if (typeof viewFromTo === 'undefined') {
+                    this.viewFromTo = viewFromTo = new DynamicObjectView(selectedObject.dynamicObject, this.scene, this.ellipsoid);
+                } else {
+                    viewFromTo.dynamicObject = selectedObject.dynamicObject;
+                }
             } else {
-                this.cameraCenteredObjectID = undefined;
+                this.viewFromTo = undefined;
             }
         },
 
@@ -495,7 +504,6 @@ define([
                 widget.showGroundAtmosphere(true);
             });
             on(view2D, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', true);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', false);
@@ -504,7 +512,6 @@ define([
                 transitioner.morphTo2D();
             });
             on(view3D, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
@@ -513,7 +520,6 @@ define([
                 widget.showGroundAtmosphere(true);
             });
             on(viewColumbus, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', true);
@@ -658,11 +664,7 @@ define([
             }
         },
 
-        _cameraCenteredObjectIDPosition : new Cartesian3(),
-
         update : function(currentTime) {
-            var cameraCenteredObjectID = this.cameraCenteredObjectID;
-            var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
 
             this.timelineControl.updateFromClock();
             this.scene.setSunPosition(SunPosition.compute(currentTime).position);
@@ -676,30 +678,10 @@ define([
             }
 
             // Update the camera to stay centered on the selected object, if any.
-            if (cameraCenteredObjectID) {
-                var dynamicObject = this.dynamicObjectCollection.getObject(cameraCenteredObjectID);
-                if (dynamicObject && dynamicObject.position) {
-                    cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
-                    if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
-                        // If we're centering on an object for the first time, zoom to within 2km of it.
-                        if (this._lastCameraCenteredObjectID !== cameraCenteredObjectID) {
-                            var camera = this.scene.getCamera();
-                            camera.position = camera.position.normalize().multiplyByScalar(5000.0);
-
-                            var controllers = camera.getControllers();
-                            controllers.removeAll();
-                            this.objectSpindleController = controllers.addSpindle();
-                            this.objectSpindleController.constrainedAxis = Cartesian3.UNIT_Z;
-                        }
-
-                        if (typeof spindleController !== 'undefined' && !this.objectSpindleController.isDestroyed()) {
-                            var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, this.ellipsoid);
-                            this.objectSpindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
-                        }
-                    }
-                }
+            var viewFromTo = this.viewFromTo;
+            if (typeof viewFromTo !== 'undefined') {
+                viewFromTo.update(currentTime);
             }
-            this._lastCameraCenteredObjectID = cameraCenteredObjectID;
         },
 
         render : function() {
