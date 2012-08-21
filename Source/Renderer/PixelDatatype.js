@@ -16,10 +16,8 @@ define(['../Core/Enumeration'], function(Enumeration) {
          */
         UNSIGNED_BYTE : new Enumeration(0x1401, 'UNSIGNED_BYTE'),
 
-// TODO: separate create function for depth textures?
-
         /**
-         * DOC_TBA
+         * An unsigned short pixel datatype used for depth textures with 16-bit depth values.
          *
          * @constant
          * @type {Enumeration}
@@ -27,7 +25,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
         UNSIGNED_SHORT : new Enumeration(0x1403, 'UNSIGNED_SHORT'),
 
         /**
-         * DOC_TBA
+         * An unsigned int pixel datatype used for depth textures with 32-bit depth values.
          *
          * @constant
          * @type {Enumeration}
@@ -35,20 +33,12 @@ define(['../Core/Enumeration'], function(Enumeration) {
         UNSIGNED_INT : new Enumeration(0x1405, 'UNSIGNED_INT'),
 
         /**
-         * DOC_TBA
+         * An unsigned int pixel datatype used for depth-stencil textures with 24-bit depth and 8-bit stencil values.
          *
          * @constant
          * @type {Enumeration}
          */
         UNSIGNED_INT_24_8_WEBGL : new Enumeration(0x84FA, 'UNSIGNED_INT_24_8_WEBGL'),
-
-        /**
-         * DOC_TBA
-         *
-         * @constant
-         * @type {Enumeration}
-         */
-        DEPTH_STENCIL : new Enumeration(0x84F9, 'DEPTH_STENCIL'),
 
         /**
          * DOC_TBA
