@@ -102,22 +102,37 @@ define([
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     };
 
+    function attachTexture(framebuffer, attachment, texture) {
+        framebuffer._bind();
+        var gl = framebuffer._gl;
+
+        if (texture) {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment, texture._getTarget(), texture._getTexture(), 0);
+        } else {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment, gl.TEXTURE_2D, null, 0);
+        }
+        framebuffer._unBind();
+    }
+
+    function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
+        framebuffer._bind();
+        var gl = framebuffer._gl;
+
+        if (renderbuffer) {
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment, gl.RENDERBUFFER, renderbuffer._getRenderbuffer());
+        } else {
+            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachment, gl.RENDERBUFFER, null);
+        }
+        framebuffer._unBind();
+    }
+
     /**
      * DOC_TBA.
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setColorTexture = function(texture) {
-        this._bind();
-        var gl = this._gl;
-
-        if (texture) {
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture._getTarget(), texture._getTexture(), 0);
-        } else {
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0);
-        }
-        this._unBind();
-
+        attachTexture(this, this._gl.COLOR_ATTACHMENT0, texture);
         this._colorTexture = texture;
     };
 
@@ -136,16 +151,7 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setColorRenderbuffer = function(renderbuffer) {
-        this._bind();
-        var gl = this._gl;
-
-        if (renderbuffer) {
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, renderbuffer._getRenderbuffer());
-        } else {
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, null);
-        }
-        this._unBind();
-
+        attachRenderbuffer(this, this._gl.COLOR_ATTACHMENT0, renderbuffer);
         this._colorRenderbuffer = renderbuffer;
     };
 
@@ -164,21 +170,10 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setDepthTexture = function(texture) {
-        this._bind();
-        var gl = this._gl;
-
-// TODO: remove duplication with similar functions
 // TODO: clear previous _depthTexture?
 // TODO: clear _depthRenderbuffer?
 // TODO: validate texture format?
-
-        if (texture) {
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, texture._getTarget(), texture._getTexture(), 0);
-        } else {
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, null, 0);
-        }
-        this._unBind();
-
+        attachTexture(this, this._gl.DEPTH_ATTACHMENT, texture);
         this._depthTexture = texture;
     };
 
@@ -197,16 +192,7 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setDepthRenderbuffer = function(renderbuffer) {
-        this._bind();
-        var gl = this._gl;
-
-        if (renderbuffer) {
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer._getRenderbuffer());
-        } else {
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, null);
-        }
-        this._unBind();
-
+        attachRenderbuffer(this, this._gl.DEPTH_ATTACHMENT, renderbuffer);
         this._depthRenderbuffer = renderbuffer;
     };
 
@@ -225,16 +211,7 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setStencilRenderbuffer = function(renderbuffer) {
-        this._bind();
-        var gl = this._gl;
-
-        if (renderbuffer) {
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.STENCIL_ATTACHMENT, gl.RENDERBUFFER, renderbuffer._getRenderbuffer());
-        } else {
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.STENCIL_ATTACHMENT, gl.RENDERBUFFER, null);
-        }
-        this._unBind();
-
+        attachRenderbuffer(this, this._gl.STENCIL_ATTACHMENT, renderbuffer);
         this._stencilRenderbuffer = renderbuffer;
     };
 
@@ -253,18 +230,8 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setDepthStencilTexture = function(texture) {
-        this._bind();
-        var gl = this._gl;
-
 // TODO: see TODOs in setDepthTexture
-
-        if (texture) {
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, texture._getTarget(), texture._getTexture(), 0);
-        } else {
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, null, 0);
-        }
-        this._unBind();
-
+        attachTexture(this, this._gl.DEPTH_STENCIL_ATTACHMENT, texture);
         this._depthStencilTexture = texture;
     };
 
@@ -283,16 +250,7 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setDepthStencilRenderbuffer = function(renderbuffer) {
-        this._bind();
-        var gl = this._gl;
-
-        if (renderbuffer) {
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, renderbuffer._getRenderbuffer());
-        } else {
-            gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, null);
-        }
-        this._unBind();
-
+        attachRenderbuffer(this, this._gl.DEPTH_STENCIL_ATTACHMENT, renderbuffer);
         this._depthStencilRenderbuffer = renderbuffer;
     };
 
