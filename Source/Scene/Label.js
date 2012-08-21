@@ -553,8 +553,6 @@ define([
      * console.log(l.computeScreenSpacePosition(scene.getUniformState()).toString());
      */
     Label.prototype.computeScreenSpacePosition = function(uniformState) {
-        // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
-
         var position = this._position;
 
         var glyphs = this._glyphs;

@@ -297,14 +297,12 @@ define([
      * @constructor
      *
      * @performance For best performance, prefer a few collections, each with many labels, to
-     * many collections with only a few labels each.  Also set the buffer usage via
-     * {@link LabelCollection#bufferUsage} based on your expected update pattern.
-     * Avoid having collections where some labels change every frame and others do not; instead,
-     * create one or more collections for static labels, and one or more collections for dynamic labels.
+     * many collections with only a few labels each.  Avoid having collections where some
+     * labels change every frame and others do not; instead, create one or more collections
+     * for static labels, and one or more collections for dynamic labels.
      *
      * @see LabelCollection#add
      * @see LabelCollection#remove
-     * @see LabelCollection#bufferUsage
      * @see Label
      * @see BillboardCollection
      *
@@ -366,7 +364,7 @@ define([
          *   text     : 'Up'
          * });
          */
-        this.modelMatrix = Matrix4.IDENTITY;
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -375,20 +373,6 @@ define([
          * @type Number
          */
         this.morphTime = 1.0;
-
-        /**
-         * The usage hint for the collection's vertex buffer.
-         *
-         * @performance If <code>bufferUsage</code> changes, the next time
-         * {@link LabelCollection#update} is called, the collection's vertex buffer
-         * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
-         * For best performance, it is important to provide the proper usage hint.  If the collection
-         * and labels will not change over several frames, use <code>BufferUsage.STATIC_DRAW</code>.
-         * If all labels will change every frame or labels are added/removed every frame, use
-         * <code>BufferUsage.STREAM_DRAW</code>.  If a subset of labels change every frame, use
-         * <code>BufferUsage.DYNAMIC_DRAW</code>.
-         */
-        this.bufferUsage = BufferUsage.STATIC_DRAW;
     };
 
     /**
@@ -615,7 +599,6 @@ define([
 
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.morphTime = this.morphTime;
-        billboardCollection.bufferUsage = this.bufferUsage;
 
         if (++this._frameCount % 100 === 0) {
             this._frameCount = 0;
