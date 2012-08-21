@@ -126,6 +126,17 @@ defineSuite([
         expect(framebuffer.getDepthStencilRenderbuffer()).toEqual(renderbuffer);
     });
 
+    it('has a depth attachment', function() {
+        framebuffer = context.createFramebuffer();
+        expect(framebuffer.hasDepthAttachment()).toEqual(false);
+
+        var renderbuffer = context.createRenderbuffer({
+            format : RenderbufferFormat.DEPTH_COMPONENT16
+        });
+        framebuffer.setDepthRenderbuffer(renderbuffer);
+        expect(framebuffer.hasDepthAttachment()).toEqual(true);
+    });
+
     it('clears a color attachment', function() {
         // 1 of 4.  Clear default color buffer to black.
         context.clear();

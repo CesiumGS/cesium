@@ -2317,9 +2317,7 @@ define([
         var rs = drawArguments.renderState || this.createRenderState();
 
         if (framebuffer && rs.depthTest) {
-            if (rs.depthTest.enabled &&
-                !(framebuffer.getDepthTexture() || framebuffer.getDepthRenderbuffer()) &&
-                !(framebuffer.getDepthStencilTexture() || framebuffer.getDepthStencilRenderbuffer())) {
+            if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
                 throw new DeveloperError('The depth test can not be enabled (drawArguments.renderState.depthTest.enabled) because the framebuffer (drawArguments.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }

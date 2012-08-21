@@ -306,6 +306,19 @@ define([
     };
 
     /**
+     * Returns true if the framebuffer has a depth attachment.  Depth attachments include
+     * depth and depth-stencil textures, and depth and depth-stencil renderbuffers.  When
+     * rendering to a framebuffer, a depth attachment is required for the depth test to have effect.
+     *
+     * @return {Boolean} Returns true if the framebuffer has a depth attachment; otherwise, false.
+     *
+     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
+     */
+    Framebuffer.prototype.hasDepthAttachment = function() {
+        return !!(this.getDepthTexture() || this.getDepthRenderbuffer() || this.getDepthStencilTexture() || this.getDepthStencilRenderbuffer());
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
