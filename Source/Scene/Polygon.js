@@ -18,6 +18,7 @@ define([
         '../Core/PolygonPipeline',
         '../Core/WindingOrder',
         '../Core/ExtentTessellator',
+        '../Core/Queue',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
@@ -48,6 +49,7 @@ define([
         PolygonPipeline,
         WindingOrder,
         ExtentTessellator,
+        Queue,
         BlendingState,
         BufferUsage,
         CullFace,
@@ -194,6 +196,7 @@ define([
 
         this._positions = undefined;
         this._extent = undefined;
+        this._polygonHierarchy = undefined;
         this._createVertexArray = false;
 
         /**
@@ -313,7 +316,99 @@ define([
         }
         this.height = height || 0.0;
         this._extent = undefined;
+        this._polygonHierarchy = undefined;
         this._positions = positions;
+        this._createVertexArray = true;
+    };
+
+    /**
+     * Create a set of polygons with holes from a nested hierarchy.
+     *
+     * @memberof Polygon
+     *
+     * @param {Object} hierarchy An object defining the vertex positions of each nested polygon.
+     * For example, the following polygon has two holes, and one hole has a hole. <code>holes</code> is optional.
+     * Leaf nodes only have <code>positions</code>.
+     * <pre>
+     * <code>
+     * {
+     *  positions : [ ... ],    // The polygon's outer boundary
+     *  holes : [               // The polygon's inner holes
+     *    {
+     *      positions : [ ... ]
+     *    },
+     *    {
+     *      positions : [ ... ],
+     *      holes : [           // A polygon within a hole
+     *       {
+     *         positions : [ ... ]
+     *       }
+     *      ]
+     *    }
+     *  ]
+     * }
+     * </code>
+     * </pre>
+     * @param {double} [height=0.0] The height of the polygon.
+     *
+     * @exception {DeveloperError} At least three positions are required.
+     *
+     * @example
+     * // A triangle within a triangle
+     * var hierarchy = {
+     *     positions : [new Cartesian3(-634066.5629045101,-4608738.034138676,4348640.761750969),
+     *                  new Cartesian3(-1321523.0597310204,-5108871.981065817,3570395.2500986718),
+     *                  new Cartesian3(46839.74837473363,-5303481.972379478,3530933.5841716)],
+     *     holes : [{
+     *         positions :[new Cartesian3(-646079.44483647,-4811233.11175887,4123187.2266941597),
+     *                     new Cartesian3(-1024015.4454943262,-5072141.413164587,3716492.6173834214),
+     *                     new Cartesian3(-234678.22583880965,-5189078.820849883,3688809.059214336)]
+     *      }]
+     *  };
+     */
+    Polygon.prototype.configureFromPolygonHierarchy  = function(hierarchy, height) {
+        // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+        var polygons = [];
+        var queue = new Queue();
+        queue.enqueue(hierarchy);
+
+        while (queue.length !== 0) {
+            var outerNode = queue.dequeue();
+            var outerRing = outerNode.positions;
+
+            if (outerRing.length < 3) {
+                throw new DeveloperError('At least three positions are required.');
+            }
+
+            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
+            if (numChildren === 0) {
+                // The outer polygon is a simple polygon with no nested inner polygon.
+                polygons.push(outerNode.positions);
+            } else {
+                // The outer polygon contains inner polygons
+                var holes = [];
+                for ( var i = 0; i < numChildren; i++) {
+                    var hole = outerNode.holes[i];
+                    holes.push(hole.positions);
+
+                    var numGrandchildren = 0;
+                    if (hole.holes) {
+                        numGrandchildren = hole.holes.length;
+                    }
+
+                    for ( var j = 0; j < numGrandchildren; j++) {
+                        queue.enqueue(hole.holes[j]);
+                    }
+                }
+                var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, holes);
+                polygons.push(combinedPolygon);
+            }
+        }
+
+        this.height = height || 0.0;
+        this._positions = undefined;
+        this._extent = undefined;
+        this._polygonHierarchy = polygons;
         this._createVertexArray = true;
     };
 
@@ -338,6 +433,7 @@ define([
         this._extent = extent;
         this.height = height || 0.0;
         this._positions = undefined;
+        this._polygonHierarchy = undefined;
         this._createVertexArray = true;
     };
 
@@ -372,13 +468,29 @@ define([
         return mesh;
     };
 
+    Polygon.prototype._createMeshFromPositions = function (positions, outerPositions2D) {
+        var cleanedPositions = PolygonPipeline.cleanUp(positions);
+        var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
+
+        var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+        if (originalWindingOrder === WindingOrder.CLOCKWISE) {
+            positions2D.reverse();
+            cleanedPositions.reverse();
+        }
+        var indices = PolygonPipeline.earClip2D(positions2D);
+        var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
+        var boundary2D = outerPositions2D || positions2D;
+        mesh = Polygon._appendTextureCoordinates(tangentPlane, boundary2D, mesh);
+        return mesh;
+    };
+
     Polygon.prototype._createMeshes = function() {
         // PERFORMANCE_IDEA:  Move this to a web-worker.
-        var mesh;
-        var meshes = null;
-
-        if(typeof this._extent !== 'undefined'){
-            mesh = ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true});
+        var i;
+        var meshes = [];
+        if (typeof this._extent !== 'undefined') {
+            meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true}));
 
             this._boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid);
             if (this._mode !== SceneMode.SCENE3D) {
@@ -386,52 +498,55 @@ define([
                 this._boundingVolume2D.center = new Cartesian3(0.0, this._boundingVolume2D.center.x, this._boundingVolume2D.center.y);
                 this._boundingRectangle = BoundingRectangle.fromExtent(this._extent, this._projection);
             }
-        }
-        else if(typeof this._positions !== 'undefined'){
-            var cleanedPositions = PolygonPipeline.cleanUp(this._positions);
-            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
-            var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
-
-            var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (originalWindingOrder === WindingOrder.CLOCKWISE) {
-                positions2D.reverse();
-                cleanedPositions.reverse();
-            }
-            var indices = PolygonPipeline.earClip2D(positions2D);
-            mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
-            // PERFORMANCE_IDEA:  Only compute texture coordinates if the material requires them.
-            mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
-
+        } else if (typeof this._positions !== 'undefined') {
+            meshes.push(this._createMeshFromPositions(this._positions));
             this._boundingVolume = BoundingSphere.fromPoints(this._positions);
-        }
-        else {
+        } else if (typeof this._polygonHierarchy !== 'undefined') {
+            var outerPositions =  this._polygonHierarchy[0];
+            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, outerPositions);
+            var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions);
+            for (i = 0; i < this._polygonHierarchy.length; i++) {
+                 meshes.push(this._createMeshFromPositions(this._polygonHierarchy[i], outerPositions2D));
+            }
+            this._boundingVolume = BoundingSphere.fromPoints(outerPositions);
+        } else {
             return undefined;
         }
-        mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
-        mesh = MeshFilters.reorderForPostVertexCache(mesh);
-        mesh = MeshFilters.reorderForPreVertexCache(mesh);
 
-        if (this._mode === SceneMode.SCENE3D) {
-            mesh.attributes.position2D = { // Not actually used in shader
-                    value : [0.0, 0.0]
-                };
-            mesh.attributes.position3D = mesh.attributes.position;
-            delete mesh.attributes.position;
-        } else {
-            mesh = MeshFilters.projectTo2D(mesh, this._projection);
+        var processedMeshes = [];
+        for (i = 0; i < meshes.length; i++) {
+            var mesh = meshes[i];
+            mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
+            mesh = MeshFilters.reorderForPostVertexCache(mesh);
+            mesh = MeshFilters.reorderForPreVertexCache(mesh);
 
+            if (this._mode === SceneMode.SCENE3D) {
+                mesh.attributes.position2D = { // Not actually used in shader
+                        value : [0.0, 0.0]
+                    };
+                mesh.attributes.position3D = mesh.attributes.position;
+                delete mesh.attributes.position;
+            } else {
+                mesh = MeshFilters.projectTo2D(mesh, this._projection);
+            }
+            processedMeshes = processedMeshes.concat(MeshFilters.fitToUnsignedShortIndices(mesh));
+        }
+
+        if (this._mode !== SceneMode.SCENE3D) {
+            mesh = meshes[0];
             var projectedPositions = mesh.attributes.position2D.values;
             var positions = [];
+
             for (var i = 0; i < projectedPositions.length; i += 2) {
                 positions.push(new Cartesian3(projectedPositions[i], projectedPositions[i + 1], 0.0));
             }
+
             this._boundingVolume2D = BoundingSphere.fromPoints(positions);
             this._boundingVolume2D.center = new Cartesian3(0.0, this._boundingVolume2D.center.x, this._boundingVolume2D.center.y);
             this._boundingRectangle = BoundingRectangle.fromPoints(positions);
         }
-        meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
 
-        return meshes;
+        return processedMeshes;
     };
 
     Polygon.prototype._getGranularity = function(mode) {
