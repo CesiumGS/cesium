@@ -63,6 +63,8 @@ define([
             throw new DeveloperError('projection is required.');
         }
 
+        this.zoomOnly = false;
+
         this._canvas = canvas;
         this._camera = camera;
         this._projection = projection;
@@ -325,7 +327,7 @@ define([
         var translate = this._translateHandler;
         var rightZoom = this._zoomHandler;
         var wheelZoom = this._zoomWheel;
-        var translating = translate.isMoving() && translate.getMovement();
+        var translating = translate.isMoving() && translate.getMovement() && !this.zoomOnly;
         var rightZooming = rightZoom.isMoving();
         var wheelZooming = wheelZoom.isMoving();
 
@@ -337,7 +339,7 @@ define([
             this._translate(translate.getMovement());
         }
 
-        if (!translating && this.inertiaTranslate < 1.0) {
+        if (!translating && !this.zoomOnly && this.inertiaTranslate < 1.0) {
             maintainInertia(translate, this.inertiaTranslate, this._translate, this, '_lastInertiaTranslateMovement');
         }
 

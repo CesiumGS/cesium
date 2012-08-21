@@ -30,6 +30,8 @@ define([
         this._controller2d = undefined;
         this._controller3d = undefined;
         this._controllerColumbusView = undefined;
+        this._lastCartographic = undefined;
+        this._lastCartesian = undefined;
     };
 
     /**
@@ -43,27 +45,22 @@ define([
 
         var scene = this.scene;
         if (typeof scene === 'undefined') {
-            throw new DeveloperError('scene is required.');
+            throw new DeveloperError('DynamicObjectView.scene is required.');
         }
 
         var dynamicObject = this.dynamicObject;
         if (typeof dynamicObject === 'undefined') {
-            throw new DeveloperError('dynamicObject is required.');
+            throw new DeveloperError('DynamicObjectView.dynamicObject is required.');
         }
 
         var ellipsoid = this.ellipsoid;
         if (typeof ellipsoid === 'undefined') {
-            throw new DeveloperError('ellipsoid Object is required.');
+            throw new DeveloperError('DynamicObjectView.ellipsoid is required.');
         }
 
-        var position = this.dynamicObject.position;
-        if (typeof position === 'undefined') {
+        var positionProperty = this.dynamicObject.position;
+        if (typeof positionProperty === 'undefined') {
             throw new DeveloperError('dynamicObject.position is required.');
-        }
-
-        position = position.getValueCartesian(time, this._lastPosition);
-        if (typeof position === 'undefined') {
-            return;
         }
 
         var objectChanged = dynamicObject !== this._lastDynamicObject;
@@ -78,8 +75,6 @@ define([
             this._controllerColumbusView = undefined;
             this._lastScene = scene;
             this._camera = this.scene.getCamera();
-            if (objectChanged) {
-            }
         }
 
         var camera = this._camera;
@@ -93,27 +88,35 @@ define([
                 controllers = camera.getControllers();
                 controllers.removeAll();
                 this._lastController = this._controller2d = controller = controllers.add2D(scene.scene2D.projection);
+                controller.zoomOnly = true;
             }
-            camera.position = position;
+            var cartographic = this._lastCartographic = positionProperty.getValueCartographic(time, this._lastCartographic);
+            if (typeof cartographic !== 'undefined') {
+                camera.position = scene.scene2D.projection.project(cartographic);
+            }
             break;
         case SceneMode.SCENE3D:
             controller = this._controller3d;
-            if (typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController) {
+            if (objectChanged || typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController) {
                 controllers = camera.getControllers();
                 controllers.removeAll();
                 this._lastController = this._controller3d = controller = controllers.addSpindle();
                 controller.constrainedAxis = Cartesian3.UNIT_Z;
-
-                //TODO Use bounding sphere to determine camerae distance.
-                camera.position = camera.position.normalize().multiplyByScalar(20000.0);
+                camera.direction = Cartesian3.UNIT_Y.negate();
+                camera.position = new Cartesian3(0, 20000, 0);
             }
-            var transform = Transforms.eastNorthUpToFixedFrame(position, ellipsoid);
-            controller.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+            var cartesian = this._lastCartesian = positionProperty.getValueCartesian(time, this._lastCartesian);
+            if (typeof cartesian !== 'undefined') {
+                var transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid);
+                controller.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+            }
             break;
         case SceneMode.COLUMBUS_VIEW:
             controller = this._controllerColumbusView;
-            if (typeof controller === 'undefined' || controller.isDestroyed()) {
-                this._lastController = this._controller3d = controller;
+            if (objectChanged || typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController) {
+                controllers = camera.getControllers();
+                controllers.removeAll();
+                this._lastController = this._controller3d = controller = controllers.addColumbusView();
             }
             break;
         }
