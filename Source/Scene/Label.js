@@ -1,8 +1,6 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/destroyObject',
-        '../Core/writeTextToCanvas',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -12,8 +10,6 @@ define([
         './VerticalOrigin'
     ], function(
         defaultValue,
-        destroyObject,
-        writeTextToCanvas,
         Cartesian2,
         Cartesian3,
         Color,
@@ -57,7 +53,6 @@ define([
         this._index = index;
         this._glyphs = [];
 
-        this._textChanged = true;
         this._rebindAllGlyphs = true;
         this._repositionAllGlyphs = true;
     };
@@ -92,7 +87,10 @@ define([
 
             var glyphs = this._glyphs;
             for ( var i = 0, len = glyphs.length; i < len; i++) {
-                glyphs[i].setShow(value);
+                var glyph = glyphs[i];
+                if (typeof glyph.billboard !== 'undefined') {
+                    glyph.billboard.setShow(value);
+                }
             }
         }
     };
@@ -145,7 +143,10 @@ define([
 
             var glyphs = this._glyphs;
             for ( var i = 0, len = glyphs.length; i < len; i++) {
-                glyphs[i].setPosition(value);
+                var glyph = glyphs[i];
+                if (typeof glyph.billboard !== 'undefined') {
+                    glyph.billboard.setPosition(value);
+                }
             }
         }
     };
@@ -171,7 +172,7 @@ define([
     Label.prototype.setText = function(value) {
         if (typeof value !== 'undefined' && value !== this._text) {
             this._text = value;
-            this._textChanged = true;
+            this._rebindAllGlyphs = true;
         }
     };
 
@@ -391,7 +392,10 @@ define([
 
             var glyphs = this._glyphs;
             for ( var i = 0, len = glyphs.length; i < len; i++) {
-                glyphs[i].setEyeOffset(value);
+                var glyph = glyphs[i];
+                if (typeof glyph.billboard !== 'undefined') {
+                    glyph.billboard.setEyeOffset(value);
+                }
             }
         }
     };
@@ -517,7 +521,10 @@ define([
 
             var glyphs = this._glyphs;
             for ( var i = 0, len = glyphs.length; i < len; i++) {
-                glyphs[i].setScale(value);
+                var glyph = glyphs[i];
+                if (typeof glyph.billboard !== 'undefined') {
+                    glyph.billboard.setScale(value);
+                }
             }
 
             this._repositionAllGlyphs = true;
@@ -548,8 +555,16 @@ define([
     Label.prototype.computeScreenSpacePosition = function(uniformState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
+        var position = this._position;
+
         var glyphs = this._glyphs;
-        var position = (glyphs.length !== 0) ? glyphs[0]._getActualPosition() : this._position;
+        for ( var i = 0, len = glyphs.length; i < len; ++i) {
+            var glyph = glyphs[i];
+            if (typeof glyph.billboard !== 'undefined') {
+                position = glyph.billboard._getActualPosition();
+                break;
+            }
+        }
 
         return Billboard._computeScreenSpacePosition(this._labelCollection.modelMatrix, position, this._eyeOffset, this._pixelOffset, uniformState);
     };

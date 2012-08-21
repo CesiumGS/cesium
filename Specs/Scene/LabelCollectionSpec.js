@@ -136,12 +136,12 @@ defineSuite([
     it('can specify font using units other than pixels', function() {
         var label = labels.add({
             font : '12pt Arial',
-            text : 'Hello'
+            text : 'Hello there'
         });
         labels.update(context, sceneState);
 
-        var dimension = label._glyphs[0]._dimensions;
-        expect(dimension.height).toBeGreaterThan(0);
+        var dimensions = label._glyphs[0].dimensions;
+        expect(dimensions.height).toBeGreaterThan(0);
     });
 
     it('has zero labels when constructed', function() {
@@ -434,6 +434,49 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
+    it('can render after removing and adding a label', function() {
+        var label = labels.add({
+            position : {
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            },
+            text : 'x',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        labels.update(context, sceneState);
+        labels.render(context, us);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        labels.remove(label);
+
+        context.clear();
+        labels.update(context, sceneState);
+        labels.render(context, us);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        labels.add({
+            position : {
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            },
+            text : 'x',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+
+        context.clear();
+        labels.update(context, sceneState);
+        labels.render(context, us);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+    });
+
     it('can render after removing all labels', function() {
         labels.add({
             position : {
@@ -684,39 +727,39 @@ defineSuite([
             text : 'a'
         });
         labels.update(context, sceneState);
-        expect(Object.keys(labels._glyphCache).length).toEqual(1);
+        expect(labels._textureCount).toEqual(1);
 
         labels.add({
             text : 'a'
         });
         labels.update(context, sceneState);
-        expect(Object.keys(labels._glyphCache).length).toEqual(1);
+        expect(labels._textureCount).toEqual(1);
 
         labels.add({
             text : 'abcd'
         });
         labels.update(context, sceneState);
-        expect(Object.keys(labels._glyphCache).length).toEqual(4);
+        expect(labels._textureCount).toEqual(4);
 
         labels.add({
             text : 'abc'
         });
         labels.update(context, sceneState);
-        expect(Object.keys(labels._glyphCache).length).toEqual(4);
+        expect(labels._textureCount).toEqual(4);
 
         var label = labels.add({
             text : 'de'
         });
         labels.update(context, sceneState);
-        expect(Object.keys(labels._glyphCache).length).toEqual(5);
+        expect(labels._textureCount).toEqual(5);
 
         label.setFont('30px arial');
         labels.update(context, sceneState);
-        expect(Object.keys(labels._glyphCache).length).toEqual(7);
+        expect(labels._textureCount).toEqual(7);
 
         label.setStyle(LabelStyle.OUTLINE);
         labels.update(context, sceneState);
-        expect(Object.keys(labels._glyphCache).length).toEqual(9);
+        expect(labels._textureCount).toEqual(9);
 
         label.setFillColor({
             red : 1.0,
@@ -725,7 +768,7 @@ defineSuite([
             alpha : 1.0
         });
         labels.update(context, sceneState);
-        expect(Object.keys(labels._glyphCache).length).toEqual(11);
+        expect(labels._textureCount).toEqual(11);
 
         label.setOutlineColor({
             red : 1.0,
@@ -734,16 +777,73 @@ defineSuite([
             alpha : 1.0
         });
         labels.update(context, sceneState);
-        expect(Object.keys(labels._glyphCache).length).toEqual(13);
+        expect(labels._textureCount).toEqual(13);
 
+        // vertical origin only affects glyph positions, not glyphs themselves.
         label.setVerticalOrigin(VerticalOrigin.CENTER);
         labels.update(context, sceneState);
-        expect(Object.keys(labels._glyphCache).length).toEqual(15);
+        expect(labels._textureCount).toEqual(13);
+        label.setVerticalOrigin(VerticalOrigin.TOP);
+        labels.update(context, sceneState);
+        expect(labels._textureCount).toEqual(13);
 
         //even though we originally started with 30px sans-serif, other properties used to create the id have changed
         label.setFont('30px sans-serif');
         labels.update(context, sceneState);
-        expect(Object.keys(labels._glyphCache).length).toEqual(17);
+        expect(labels._textureCount).toEqual(15);
+    });
+
+    it('should reuse billboards that are not needed any more', function() {
+        var label = labels.add({
+            text : 'abc'
+        });
+        labels.update(context, sceneState);
+        expect(labels._billboardCollection.getLength()).toEqual(3);
+
+        label.setText('a');
+        labels.update(context, sceneState);
+        expect(labels._billboardCollection.getLength()).toEqual(3);
+
+        label.setText('def');
+        labels.update(context, sceneState);
+        expect(labels._billboardCollection.getLength()).toEqual(3);
+    });
+
+    it('should compact unused billboards after several frames', function() {
+        var label = labels.add({
+            text : 'abc'
+        });
+        labels.update(context, sceneState);
+        expect(labels._billboardCollection.getLength()).toEqual(3);
+
+        label.setText('a');
+        labels.update(context, sceneState);
+        expect(labels._billboardCollection.getLength()).toEqual(3);
+
+        for ( var i = 0; i < 150; ++i) {
+            labels.update(context, sceneState);
+        }
+
+        expect(labels._billboardCollection.getLength()).toEqual(1);
+    });
+
+    it('should remove all glyphs several frames after calling remove', function() {
+        var label = labels.add({
+            text : 'blah blah'
+        });
+        labels.update(context, sceneState);
+
+        expect(labels._textureCount).toEqual(5);
+        expect(labels._billboardCollection.getLength()).toEqual(8);
+
+        labels.remove(label);
+
+        for ( var i = 0; i < 150; ++i) {
+            labels.update(context, sceneState);
+        }
+
+        expect(labels._textureCount).toEqual(0);
+        expect(labels._billboardCollection.getLength()).toEqual(0);
     });
 
     describe('Label', function() {
@@ -938,29 +1038,33 @@ defineSuite([
             expect(label._glyphs.length).toEqual(0);
         });
 
+        function getGlyphBillboardPixelOffset(label, index) {
+            return Cartesian2.clone(label._glyphs[index].billboard.getPixelOffset());
+        }
+
         it('should set pixelOffsets of billboards correctly when vertical origin is changed', function() {
             var label = labels.add({
                 text : 'apl'
             });
             labels.update(context, sceneState);
 
-            var y0 = label._glyphs[0].getPixelOffset().y;
-            var y1 = label._glyphs[1].getPixelOffset().y;
-            var y2 = label._glyphs[2].getPixelOffset().y;
+            var offset0 = getGlyphBillboardPixelOffset(label, 0);
+            var offset1 = getGlyphBillboardPixelOffset(label, 1);
+            var offset2 = getGlyphBillboardPixelOffset(label, 2);
 
             label.setVerticalOrigin(VerticalOrigin.TOP);
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().y).toBeLessThan(y0);
-            expect(label._glyphs[1].getPixelOffset().y).toEqual(y1);
-            expect(label._glyphs[2].getPixelOffset().y).toEqual(y2);
+            expect(getGlyphBillboardPixelOffset(label, 0).y).toBeLessThan(offset0.y);
+            expect(getGlyphBillboardPixelOffset(label, 1).y).toEqual(offset1.y);
+            expect(getGlyphBillboardPixelOffset(label, 2).y).toEqual(offset2.y);
 
             label.setVerticalOrigin(VerticalOrigin.CENTER);
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().y).toBeLessThan(y0);
-            expect(label._glyphs[1].getPixelOffset().y).toEqual(y1);
-            expect(label._glyphs[2].getPixelOffset().y).toEqual(y2);
+            expect(getGlyphBillboardPixelOffset(label, 0).y).toBeLessThan(offset0.y);
+            expect(getGlyphBillboardPixelOffset(label, 1).y).toEqual(offset1.y);
+            expect(getGlyphBillboardPixelOffset(label, 2).y).toEqual(offset2.y);
         });
 
         it('should set pixelOffsets of billboards correctly when vertical origin and scale are changed', function() {
@@ -969,42 +1073,39 @@ defineSuite([
             });
             labels.update(context, sceneState);
 
-            var x0 = label._glyphs[0].getPixelOffset().x;
-            var y0 = label._glyphs[0].getPixelOffset().y;
-            var x1 = label._glyphs[1].getPixelOffset().x;
-            var y1 = label._glyphs[1].getPixelOffset().y;
-            var x2 = label._glyphs[2].getPixelOffset().x;
-            var y2 = label._glyphs[2].getPixelOffset().y;
+            var offset0 = getGlyphBillboardPixelOffset(label, 0);
+            var offset1 = getGlyphBillboardPixelOffset(label, 1);
+            var offset2 = getGlyphBillboardPixelOffset(label, 2);
 
             label.setScale(2);
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().x).toEqual(x0);
-            expect(label._glyphs[0].getPixelOffset().y).toBeGreaterThan(y0);
-            expect(label._glyphs[1].getPixelOffset().x).toBeGreaterThan(x1);
-            expect(label._glyphs[1].getPixelOffset().y).toBeLessThan(y1);
-            expect(label._glyphs[2].getPixelOffset().x).toBeGreaterThan(x2);
-            expect(label._glyphs[2].getPixelOffset().y).toBeGreaterThan(y2);
+            expect(getGlyphBillboardPixelOffset(label, 0).x).toEqual(offset0.x);
+            expect(getGlyphBillboardPixelOffset(label, 0).y).toBeGreaterThan(offset0.y);
+            expect(getGlyphBillboardPixelOffset(label, 1).x).toBeGreaterThan(offset1.x);
+            expect(getGlyphBillboardPixelOffset(label, 1).y).toBeLessThan(offset1.y);
+            expect(getGlyphBillboardPixelOffset(label, 2).x).toBeGreaterThan(offset2.x);
+            expect(getGlyphBillboardPixelOffset(label, 2).y).toBeGreaterThan(offset2.y);
 
             label.setVerticalOrigin(VerticalOrigin.TOP);
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().x).toEqual(x0);
-            expect(label._glyphs[0].getPixelOffset().y).toBeLessThan(y0);
-            expect(label._glyphs[1].getPixelOffset().x).toBeGreaterThan(x1);
-            expect(label._glyphs[1].getPixelOffset().y).toBeLessThan(y1);
-            expect(label._glyphs[2].getPixelOffset().x).toBeGreaterThan(x2);
-            expect(label._glyphs[2].getPixelOffset().y).toBeGreaterThan(y2);
+            expect(getGlyphBillboardPixelOffset(label, 0).x).toEqual(offset0.x);
+            expect(getGlyphBillboardPixelOffset(label, 0).y).toBeLessThan(offset0.y);
+            expect(getGlyphBillboardPixelOffset(label, 1).x).toBeGreaterThan(offset1.x);
+            expect(getGlyphBillboardPixelOffset(label, 1).y).toBeLessThan(offset1.y);
+            expect(getGlyphBillboardPixelOffset(label, 2).x).toBeGreaterThan(offset2.x);
+            expect(getGlyphBillboardPixelOffset(label, 2).y).toBeGreaterThan(offset2.y);
 
             label.setVerticalOrigin(VerticalOrigin.CENTER);
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().x).toEqual(x0);
-            expect(label._glyphs[0].getPixelOffset().y).toBeLessThan(y0);
-            expect(label._glyphs[1].getPixelOffset().x).toBeGreaterThan(x1);
-            expect(label._glyphs[1].getPixelOffset().y).toBeLessThan(y1);
-            expect(label._glyphs[2].getPixelOffset().x).toBeGreaterThan(x2);
-            expect(label._glyphs[2].getPixelOffset().y).toBeGreaterThan(y2);
+            expect(getGlyphBillboardPixelOffset(label, 0).x).toEqual(offset0.x);
+            expect(getGlyphBillboardPixelOffset(label, 0).y).toBeLessThan(offset0.y);
+            expect(getGlyphBillboardPixelOffset(label, 1).x).toBeGreaterThan(offset1.x);
+            expect(getGlyphBillboardPixelOffset(label, 1).y).toBeLessThan(offset1.y);
+            expect(getGlyphBillboardPixelOffset(label, 2).x).toBeGreaterThan(offset2.x);
+            expect(getGlyphBillboardPixelOffset(label, 2).y).toBeGreaterThan(offset2.y);
         });
 
         it('should set pixelOffsets of billboards correctly when horizontal origin is changed', function() {
@@ -1013,24 +1114,24 @@ defineSuite([
             });
             labels.update(context, sceneState);
 
-            var x0 = label._glyphs[0].getPixelOffset().x;
+            var offset0 = getGlyphBillboardPixelOffset(label, 0);
 
             label.setHorizontalOrigin(HorizontalOrigin.CENTER);
             labels.update(context, sceneState);
 
-            var centerX0 = label._glyphs[0].getPixelOffset().x;
-            var centerX1 = label._glyphs[1].getPixelOffset().x;
-            var centerX2 = label._glyphs[2].getPixelOffset().x;
-            expect(centerX0).toBeLessThan(x0);
-            expect(centerX1).toBeGreaterThan(centerX0);
-            expect(centerX2).toBeGreaterThan(centerX1);
+            var center0 = getGlyphBillboardPixelOffset(label, 0);
+            var center1 = getGlyphBillboardPixelOffset(label, 1);
+            var center2 = getGlyphBillboardPixelOffset(label, 2);
+            expect(center0.x).toBeLessThan(offset0.x);
+            expect(center1.x).toBeGreaterThan(center0.x);
+            expect(center2.x).toBeGreaterThan(center1.x);
 
             label.setHorizontalOrigin(HorizontalOrigin.RIGHT);
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().x).toBeLessThan(centerX0);
-            expect(label._glyphs[1].getPixelOffset().x).toBeLessThan(centerX1);
-            expect(label._glyphs[2].getPixelOffset().x).toBeLessThan(centerX2);
+            expect(getGlyphBillboardPixelOffset(label, 0).x).toBeLessThan(center0.x);
+            expect(getGlyphBillboardPixelOffset(label, 1).x).toBeLessThan(center1.x);
+            expect(getGlyphBillboardPixelOffset(label, 2).x).toBeLessThan(center2.x);
         });
 
         it('should set pixelOffsets of billboards correctly when horizontal origin and scale are changed', function() {
@@ -1039,33 +1140,33 @@ defineSuite([
             });
             labels.update(context, sceneState);
 
-            var x0 = label._glyphs[0].getPixelOffset().x;
-            var x1 = label._glyphs[1].getPixelOffset().x;
-            var x2 = label._glyphs[2].getPixelOffset().x;
+            var offset0 = getGlyphBillboardPixelOffset(label, 0);
+            var offset1 = getGlyphBillboardPixelOffset(label, 1);
+            var offset2 = getGlyphBillboardPixelOffset(label, 2);
 
             label.setScale(2);
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().x).toEqual(x0);
-            expect(label._glyphs[1].getPixelOffset().x).toBeGreaterThan(x1);
-            expect(label._glyphs[2].getPixelOffset().x).toBeGreaterThan(x2);
+            expect(getGlyphBillboardPixelOffset(label, 0).x).toEqual(offset0.x);
+            expect(getGlyphBillboardPixelOffset(label, 1).x).toBeGreaterThan(offset1.x);
+            expect(getGlyphBillboardPixelOffset(label, 2).x).toBeGreaterThan(offset2.x);
 
             label.setHorizontalOrigin(HorizontalOrigin.CENTER);
             labels.update(context, sceneState);
 
-            var centerX0 = label._glyphs[0].getPixelOffset().x;
-            var centerX1 = label._glyphs[1].getPixelOffset().x;
-            var centerX2 = label._glyphs[2].getPixelOffset().x;
-            expect(centerX0).toBeLessThan(x0);
+            var centerX0 = getGlyphBillboardPixelOffset(label, 0).x;
+            var centerX1 = getGlyphBillboardPixelOffset(label, 1).x;
+            var centerX2 = getGlyphBillboardPixelOffset(label, 2).x;
+            expect(centerX0).toBeLessThan(offset0.x);
             expect(centerX1).toBeGreaterThan(centerX0);
             expect(centerX2).toBeGreaterThan(centerX1);
 
             label.setHorizontalOrigin(HorizontalOrigin.RIGHT);
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().x).toBeLessThan(centerX0);
-            expect(label._glyphs[1].getPixelOffset().x).toBeLessThan(centerX1);
-            expect(label._glyphs[2].getPixelOffset().x).toBeLessThan(centerX2);
+            expect(getGlyphBillboardPixelOffset(label, 0).x).toBeLessThan(centerX0);
+            expect(getGlyphBillboardPixelOffset(label, 1).x).toBeLessThan(centerX1);
+            expect(getGlyphBillboardPixelOffset(label, 2).x).toBeLessThan(centerX2);
         });
 
         it('should set pixelOffsets of billboards correctly when vertical origin, scale and pixel offset are changed', function() {
@@ -1074,12 +1175,9 @@ defineSuite([
             });
             labels.update(context, sceneState);
 
-            var x0 = label._glyphs[0].getPixelOffset().x;
-            var y0 = label._glyphs[0].getPixelOffset().y;
-            var x1 = label._glyphs[1].getPixelOffset().x;
-            var y1 = label._glyphs[1].getPixelOffset().y;
-            var x2 = label._glyphs[2].getPixelOffset().x;
-            var y2 = label._glyphs[2].getPixelOffset().y;
+            var offset0 = getGlyphBillboardPixelOffset(label, 0);
+            var offset1 = getGlyphBillboardPixelOffset(label, 1);
+            var offset2 = getGlyphBillboardPixelOffset(label, 2);
 
             label.setPixelOffset({
                 x : 10,
@@ -1088,32 +1186,32 @@ defineSuite([
             label.setScale(2);
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().x).toBeGreaterThan(x0);
-            expect(label._glyphs[0].getPixelOffset().y).toBeGreaterThan(y0);
-            expect(label._glyphs[1].getPixelOffset().x).toBeGreaterThan(x1);
-            expect(label._glyphs[1].getPixelOffset().y).toBeGreaterThan(y1);
-            expect(label._glyphs[2].getPixelOffset().x).toBeGreaterThan(x2);
-            expect(label._glyphs[2].getPixelOffset().y).toBeGreaterThan(y2);
+            expect(getGlyphBillboardPixelOffset(label, 0).x).toBeGreaterThan(offset0.x);
+            expect(getGlyphBillboardPixelOffset(label, 0).y).toBeGreaterThan(offset0.y);
+            expect(getGlyphBillboardPixelOffset(label, 1).x).toBeGreaterThan(offset1.x);
+            expect(getGlyphBillboardPixelOffset(label, 1).y).toBeGreaterThan(offset1.y);
+            expect(getGlyphBillboardPixelOffset(label, 2).x).toBeGreaterThan(offset2.x);
+            expect(getGlyphBillboardPixelOffset(label, 2).y).toBeGreaterThan(offset2.y);
 
             label.setVerticalOrigin(VerticalOrigin.TOP);
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().x).toBeGreaterThan(x0);
-            expect(label._glyphs[0].getPixelOffset().y).toBeLessThan(y0);
-            expect(label._glyphs[1].getPixelOffset().x).toBeGreaterThan(x1);
-            expect(label._glyphs[1].getPixelOffset().y).toBeGreaterThan(y1);
-            expect(label._glyphs[2].getPixelOffset().x).toBeGreaterThan(x2);
-            expect(label._glyphs[2].getPixelOffset().y).toBeGreaterThan(y2);
+            expect(getGlyphBillboardPixelOffset(label, 0).x).toBeGreaterThan(offset0.x);
+            expect(getGlyphBillboardPixelOffset(label, 0).y).toBeLessThan(offset0.y);
+            expect(getGlyphBillboardPixelOffset(label, 1).x).toBeGreaterThan(offset1.x);
+            expect(getGlyphBillboardPixelOffset(label, 1).y).toBeGreaterThan(offset1.y);
+            expect(getGlyphBillboardPixelOffset(label, 2).x).toBeGreaterThan(offset2.x);
+            expect(getGlyphBillboardPixelOffset(label, 2).y).toBeGreaterThan(offset2.y);
 
             label.setVerticalOrigin(VerticalOrigin.CENTER);
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().x).toBeGreaterThan(x0);
-            expect(label._glyphs[0].getPixelOffset().y).toBeGreaterThan(y0);
-            expect(label._glyphs[1].getPixelOffset().x).toBeGreaterThan(x1);
-            expect(label._glyphs[1].getPixelOffset().y).toBeGreaterThan(y1);
-            expect(label._glyphs[2].getPixelOffset().x).toBeGreaterThan(x2);
-            expect(label._glyphs[2].getPixelOffset().y).toBeGreaterThan(y2);
+            expect(getGlyphBillboardPixelOffset(label, 0).x).toBeGreaterThan(offset0.x);
+            expect(getGlyphBillboardPixelOffset(label, 0).y).toBeGreaterThan(offset0.y);
+            expect(getGlyphBillboardPixelOffset(label, 1).x).toBeGreaterThan(offset1.x);
+            expect(getGlyphBillboardPixelOffset(label, 1).y).toBeGreaterThan(offset1.y);
+            expect(getGlyphBillboardPixelOffset(label, 2).x).toBeGreaterThan(offset2.x);
+            expect(getGlyphBillboardPixelOffset(label, 2).y).toBeGreaterThan(offset2.y);
         });
 
         it('should set pixelOffsets of billboards correctly when font size changes', function() {
@@ -1122,22 +1220,19 @@ defineSuite([
             });
             labels.update(context, sceneState);
 
-            var x0 = label._glyphs[0].getPixelOffset().x;
-            var y0 = label._glyphs[0].getPixelOffset().y;
-            var x1 = label._glyphs[1].getPixelOffset().x;
-            var y1 = label._glyphs[1].getPixelOffset().y;
-            var x2 = label._glyphs[2].getPixelOffset().x;
-            var y2 = label._glyphs[2].getPixelOffset().y;
+            var offset0 = getGlyphBillboardPixelOffset(label, 0);
+            var offset1 = getGlyphBillboardPixelOffset(label, 1);
+            var offset2 = getGlyphBillboardPixelOffset(label, 2);
 
             label.setFont('20px sans-serif');
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().x).toEqual(x0);
-            expect(label._glyphs[0].getPixelOffset().y).toEqual(y0);
-            expect(label._glyphs[1].getPixelOffset().x).toBeLessThan(x1);
-            expect(label._glyphs[1].getPixelOffset().y).toBeGreaterThan(y1);
-            expect(label._glyphs[2].getPixelOffset().x).toBeLessThan(x2);
-            expect(label._glyphs[2].getPixelOffset().y).toEqual(y2);
+            expect(getGlyphBillboardPixelOffset(label, 0).x).toEqual(offset0.x);
+            expect(getGlyphBillboardPixelOffset(label, 0).y).toEqual(offset0.y);
+            expect(getGlyphBillboardPixelOffset(label, 1).x).toBeLessThan(offset1.x);
+            expect(getGlyphBillboardPixelOffset(label, 1).y).toBeGreaterThan(offset1.y);
+            expect(getGlyphBillboardPixelOffset(label, 2).x).toBeLessThan(offset2.x);
+            expect(getGlyphBillboardPixelOffset(label, 2).y).toEqual(offset2.y);
         });
 
         it('should have the same pixelOffsets of billboards whether values are set at construction or afterwards', function() {
@@ -1168,9 +1263,9 @@ defineSuite([
 
             labels.update(context, sceneState);
 
-            expect(one._glyphs[0].getPixelOffset()).toEqual(two._glyphs[0].getPixelOffset());
-            expect(one._glyphs[1].getPixelOffset()).toEqual(two._glyphs[1].getPixelOffset());
-            expect(one._glyphs[2].getPixelOffset()).toEqual(two._glyphs[2].getPixelOffset());
+            expect(getGlyphBillboardPixelOffset(one, 0)).toEqual(getGlyphBillboardPixelOffset(two, 0));
+            expect(getGlyphBillboardPixelOffset(one, 1)).toEqual(getGlyphBillboardPixelOffset(two, 1));
+            expect(getGlyphBillboardPixelOffset(one, 2)).toEqual(getGlyphBillboardPixelOffset(two, 2));
         });
 
         it('should not change pixelOffsets of billboards when position changes', function() {
@@ -1179,12 +1274,9 @@ defineSuite([
             });
             labels.update(context, sceneState);
 
-            var x0 = label._glyphs[0].getPixelOffset().x;
-            var y0 = label._glyphs[0].getPixelOffset().y;
-            var x1 = label._glyphs[1].getPixelOffset().x;
-            var y1 = label._glyphs[1].getPixelOffset().y;
-            var x2 = label._glyphs[2].getPixelOffset().x;
-            var y2 = label._glyphs[2].getPixelOffset().y;
+            var offset0 = getGlyphBillboardPixelOffset(label, 0);
+            var offset1 = getGlyphBillboardPixelOffset(label, 1);
+            var offset2 = getGlyphBillboardPixelOffset(label, 2);
 
             label.setPosition({
                 x : 1,
@@ -1193,12 +1285,31 @@ defineSuite([
             });
             labels.update(context, sceneState);
 
-            expect(label._glyphs[0].getPixelOffset().x).toEqual(x0);
-            expect(label._glyphs[0].getPixelOffset().y).toEqual(y0);
-            expect(label._glyphs[1].getPixelOffset().x).toEqual(x1);
-            expect(label._glyphs[1].getPixelOffset().y).toEqual(y1);
-            expect(label._glyphs[2].getPixelOffset().x).toEqual(x2);
-            expect(label._glyphs[2].getPixelOffset().y).toEqual(y2);
+            expect(getGlyphBillboardPixelOffset(label, 0)).toEqual(offset0);
+            expect(getGlyphBillboardPixelOffset(label, 1)).toEqual(offset1);
+            expect(getGlyphBillboardPixelOffset(label, 2)).toEqual(offset2);
+        });
+
+        it('should not change pixelOffsets of billboards when eye offset changes', function() {
+            var label = labels.add({
+                text : 'apl'
+            });
+            labels.update(context, sceneState);
+
+            var offset0 = getGlyphBillboardPixelOffset(label, 0);
+            var offset1 = getGlyphBillboardPixelOffset(label, 1);
+            var offset2 = getGlyphBillboardPixelOffset(label, 2);
+
+            label.setEyeOffset({
+                x : 10.0,
+                y : 10.0,
+                z : -10.0
+            });
+            labels.update(context, sceneState);
+
+            expect(getGlyphBillboardPixelOffset(label, 0)).toEqual(offset0);
+            expect(getGlyphBillboardPixelOffset(label, 1)).toEqual(offset1);
+            expect(getGlyphBillboardPixelOffset(label, 2)).toEqual(offset2);
         });
 
         it('should not change label dimensions when scale changes', function() {
@@ -1207,12 +1318,12 @@ defineSuite([
             });
             labels.update(context, sceneState);
 
-            var originalDimensions = label._glyphs[0]._dimensions;
+            var originalDimensions = label._glyphs[0].dimensions;
 
             label.setScale(3);
             labels.update(context, sceneState);
 
-            var dimensions = label._glyphs[0]._dimensions;
+            var dimensions = label._glyphs[0].dimensions;
             expect(dimensions.width).toEqual(originalDimensions.width);
             expect(dimensions.height).toEqual(originalDimensions.height);
             expect(dimensions.descent).toEqual(originalDimensions.descent);
@@ -1225,7 +1336,7 @@ defineSuite([
             });
             labels.update(context, sceneState);
 
-            var originalDimensions = label._glyphs[0]._dimensions;
+            var originalDimensions = label._glyphs[0].dimensions;
 
             expect(originalDimensions.width).toEqual(16);
             expect(originalDimensions.height).toEqual(16);
@@ -1234,7 +1345,7 @@ defineSuite([
             label.setFont('20px sans-serif');
             labels.update(context, sceneState);
 
-            var dimensions = label._glyphs[0]._dimensions;
+            var dimensions = label._glyphs[0].dimensions;
             expect(dimensions.width).toBeLessThan(originalDimensions.width);
             expect(dimensions.height).toBeLessThan(originalDimensions.height);
             expect(dimensions.descent).toEqual(originalDimensions.descent);
