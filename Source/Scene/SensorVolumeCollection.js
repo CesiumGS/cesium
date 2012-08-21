@@ -160,6 +160,11 @@ define([
      * @private
      */
     SensorVolumeCollection.prototype.update = function(context, sceneState) {
+        var mode = sceneState.mode;
+        if (mode !== SceneMode.SCENE3D) {
+            return undefined;
+        }
+
         var sensors = this._sensors;
         var length = sensors.length;
         var camera = sceneState.camera;
@@ -185,8 +190,7 @@ define([
                 }
 
                 var occluder = sceneState.occluder;
-                if (mode === SceneMode.SCENE3D &&
-                        typeof occluder !== 'undefined' &&
+                if (typeof occluder !== 'undefined' &&
                         !occluder.isVisible(boundingVolume)) {
                     continue;
                 }

@@ -439,11 +439,11 @@ define([
      */
     BoundingSphere.intersect = function(sphere, plane) {
         if (typeof sphere === 'undefined') {
-            throw DeveloperError('sphere is required.');
+            throw new DeveloperError('sphere is required.');
         }
 
         if (typeof plane === 'undefined') {
-            throw DeveloperError('plane is required.');
+            throw new DeveloperError('plane is required.');
         }
 
         var center = sphere.center;
@@ -521,7 +521,7 @@ define([
      */
     BoundingSphere.prototype.intersect = function(plane) {
         if (typeof plane === 'undefined') {
-            throw DeveloperError('plane is required.');
+            throw new DeveloperError('plane is required.');
         }
 
         return BoundingSphere.intersect(this, plane);

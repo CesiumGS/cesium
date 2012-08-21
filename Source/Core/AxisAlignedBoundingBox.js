@@ -186,11 +186,11 @@ define([
      */
     AxisAlignedBoundingBox.intersect = function(box, plane) {
         if (typeof box === 'undefined') {
-            throw DeveloperError('box is required.');
+            throw new DeveloperError('box is required.');
         }
 
         if (typeof plane === 'undefined') {
-            throw DeveloperError('plane is required.');
+            throw new DeveloperError('plane is required.');
         }
 
         var max = box.maximum;
@@ -235,7 +235,7 @@ define([
      */
     AxisAlignedBoundingBox.prototype.intersect = function(plane) {
         if (typeof plane === 'undefined') {
-            throw DeveloperError('plane is required.');
+            throw new DeveloperError('plane is required.');
         }
 
         return AxisAlignedBoundingBox.intersect(this, plane);

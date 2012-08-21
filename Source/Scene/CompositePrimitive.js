@@ -417,7 +417,7 @@ define([
         var camera = sceneState.camera;
         var mode = sceneState.mode;
 
-        var frustumRect = undefined;
+        var frustumRect;
         if (mode === SceneMode.SCENE2D) {
             var frustum = camera.frustum;
 

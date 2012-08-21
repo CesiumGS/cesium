@@ -517,9 +517,10 @@ define([
             return undefined;
         }
 
+        var mesh;
         var processedMeshes = [];
         for (i = 0; i < meshes.length; i++) {
-            var mesh = meshes[i];
+            mesh = meshes[i];
             mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
             mesh = MeshFilters.reorderForPostVertexCache(mesh);
             mesh = MeshFilters.reorderForPreVertexCache(mesh);
@@ -541,7 +542,7 @@ define([
             var projectedPositions = mesh.attributes.position2D.values;
             var positions = [];
 
-            for (var i = 0; i < projectedPositions.length; i += 2) {
+            for (i = 0; i < projectedPositions.length; i += 2) {
                 positions.push(new Cartesian3(projectedPositions[i], projectedPositions[i + 1], 0.0));
             }
 

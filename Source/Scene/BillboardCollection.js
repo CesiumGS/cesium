@@ -890,6 +890,7 @@ define([
         var length;
         var i;
         var b;
+        var positions;
 
         if ((this._mode !== mode) ||
             (this._projection !== projection) ||
@@ -905,7 +906,7 @@ define([
 
             switch (mode) {
             case SceneMode.SCENE3D:
-                var positions = [];
+                positions = [];
                 for (i = 0; i < length; ++i) {
                     b = billboards[i];
                     var position = b.getPosition();
@@ -927,7 +928,7 @@ define([
             billboards = this._billboards;
             length = billboards.length;
 
-            var positions = [];
+            positions = [];
             for (i = 0; i < length; ++i) {
                 b = billboards[i];
                 var p = b.getPosition();
@@ -953,6 +954,11 @@ define([
         var size;
         var boundingVolume;
 
+        var tanPhi;
+        var d1;
+        var toCenter;
+        var distance;
+
         var camera = sceneState.camera;
         var frustum = camera.frustum;
         var mode = sceneState.mode;
@@ -961,17 +967,17 @@ define([
             boundingVolume = new BoundingSphere();
             boundingVolume.center = this._baseVolume.center.clone();
 
-            var tanPhi = Math.tan(frustum.fovy * 0.5);
-            var d1 = 1.0 / tanPhi;
+            tanPhi = Math.tan(frustum.fovy * 0.5);
+            d1 = 1.0 / tanPhi;
 
-            var toCenter = camera.getPositionWC().subtract(this._baseVolume.center);
-            var distance = Math.max(0.0, toCenter.magnitude() - this._baseVolume.radius);
+            toCenter = camera.getPositionWC().subtract(this._baseVolume.center);
+            distance = Math.max(0.0, toCenter.magnitude() - this._baseVolume.radius);
             pixelScale = distance / d1;
 
             size = 2.0 * pixelScale * this._maxScale * this._maxSize;
             boundingVolume.radius = this._baseVolume.radius + size + this._maxEyeOffset;
         } else if (mode === SceneMode.SCENE2D) {
-            var boundingVolume = new BoundingRectangle();
+            boundingVolume = new BoundingRectangle();
 
             pixelScale = (frustum.right - frustum.left);
 
@@ -986,11 +992,11 @@ define([
             boundingVolume = new BoundingSphere();
             boundingVolume.center = this._baseVolume2D.center.clone();
 
-            var tanPhi = Math.tan(frustum.fovy * 0.5);
-            var d1 = 1.0 / tanPhi;
+            tanPhi = Math.tan(frustum.fovy * 0.5);
+            d1 = 1.0 / tanPhi;
 
-            var toCenter = camera.getPositionWC().subtract(this._baseVolume2D.center);
-            var distance = Math.max(0.0, toCenter.magnitude() - this._baseVolume2D.radius);
+            toCenter = camera.getPositionWC().subtract(this._baseVolume2D.center);
+            distance = Math.max(0.0, toCenter.magnitude() - this._baseVolume2D.radius);
             pixelScale = distance / d1;
 
             size = 2.0 * pixelScale * this._maxScale * this._maxSize;
