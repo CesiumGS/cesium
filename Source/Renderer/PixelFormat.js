@@ -65,11 +65,11 @@ define(['../Core/Enumeration'], function(Enumeration) {
         LUMINANCE_ALPHA : new Enumeration(0x190A, 'LUMINANCE_ALPHA'),
 
         /**
-         * DOC_TBA
+         * Returns true if the pixel format is a validate enumeration value.
          *
-         * @param pixelFormat
+         * @param {PixelFormat} pixelFormat The pixel format to test.
          *
-         * @returns {Boolean}
+         * @returns {Boolean} Returns true if the pixel format is a validate enumeration value; otherwise, false.
          */
         validate : function(pixelFormat) {
             return ((pixelFormat === PixelFormat.DEPTH_COMPONENT) ||
@@ -79,6 +79,18 @@ define(['../Core/Enumeration'], function(Enumeration) {
                     (pixelFormat === PixelFormat.RGBA) ||
                     (pixelFormat === PixelFormat.LUMINANCE) ||
                     (pixelFormat === PixelFormat.LUMINANCE_ALPHA));
+        },
+
+        /**
+         * Returns true if the pixel format is a depth format.
+         *
+         * @param {PixelFormat} pixelFormat The pixel format to test.
+         *
+         * @returns {Boolean} Returns true if the pixel format is a depth format; otherwise false.
+         */
+        isDepthFormat : function(pixelFormat) {
+            return ((pixelFormat === PixelFormat.DEPTH_COMPONENT) ||
+                    (pixelFormat === PixelFormat.DEPTH_STENCIL));
         }
     };
 

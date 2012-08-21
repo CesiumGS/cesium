@@ -1481,7 +1481,7 @@ define([
             throw new DeveloperError('When description.pixelFormat is DEPTH_STENCIL, description.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
         }
 
-        if ((pixelFormat === PixelFormat.DEPTH_COMPONENT) || (pixelFormat === PixelFormat.DEPTH_STENCIL)) {
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
             if (source) {
                 throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
             }
@@ -1552,7 +1552,7 @@ define([
             throw new DeveloperError('Invalid pixelFormat.');
         }
 
-        if ((pixelFormat === PixelFormat.DEPTH_COMPONENT) || (pixelFormat === PixelFormat.DEPTH_STENCIL)) {
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
             throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
@@ -1687,7 +1687,7 @@ define([
             throw new DeveloperError('Invalid description.pixelFormat.');
         }
 
-        if ((pixelFormat === PixelFormat.DEPTH_COMPONENT) || (pixelFormat === PixelFormat.DEPTH_STENCIL)) {
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
             throw new DeveloperError('description.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 

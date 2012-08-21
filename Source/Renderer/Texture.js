@@ -72,7 +72,7 @@ define([
         var width = source.width;
         var height = source.height;
 
-        if ((this._pixelFormat === PixelFormat.DEPTH_COMPONENT) || (this._pixelFormat === PixelFormat.DEPTH_STENCIL)) {
+        if (PixelFormat.isDepthFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
@@ -140,7 +140,7 @@ define([
         width = width || this._width;
         height = height || this._height;
 
-        if ((this._pixelFormat === PixelFormat.DEPTH_COMPONENT) || (this._pixelFormat === PixelFormat.DEPTH_STENCIL)) {
+        if (PixelFormat.isDepthFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
@@ -191,7 +191,7 @@ define([
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      */
     Texture.prototype.generateMipmap = function(hint) {
-        if ((this._pixelFormat === PixelFormat.DEPTH_COMPONENT) || (this._pixelFormat === PixelFormat.DEPTH_STENCIL)) {
+        if (PixelFormat.isDepthFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
