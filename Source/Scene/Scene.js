@@ -5,6 +5,9 @@ define([
         '../Core/EquidistantCylindricalProjection',
         '../Core/Ellipsoid',
         '../Core/DeveloperError',
+        '../Core/Occluder',
+        '../Core/BoundingSphere',
+        '../Core/Cartesian3',
         '../Renderer/Context',
         './Camera',
         './CompositePrimitive',
@@ -17,6 +20,9 @@ define([
         EquidistantCylindricalProjection,
         Ellipsoid,
         DeveloperError,
+        Occluder,
+        BoundingSphere,
+        Cartesian3,
         Context,
         Camera,
         CompositePrimitive,
@@ -169,7 +175,7 @@ define([
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one?
         var cb = this._primitives.getCentralBody();
-        if (this.mode === SceneState.SCENE3D && cb !== undefined) {
+        if (this.mode === SceneMode.SCENE3D && typeof cb !== 'undefined') {
             var ellipsoid = cb.getEllipsoid();
             var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
             sceneState.occluder = occluder;
