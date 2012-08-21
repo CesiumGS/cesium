@@ -9,7 +9,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
      */
     var PixelFormat = {
         /**
-         * DOC_TBA
+         * A pixel format containing a depth value.
          *
          * @constant
          * @type {Enumeration}
@@ -17,7 +17,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
         DEPTH_COMPONENT : new Enumeration(0x1902, 'DEPTH_COMPONENT'),
 
         /**
-         * DOC_TBA
+         * A pixel format containing a depth and stencil value, most often used with {@see PixelDatatype.UNSIGNED_INT_24_8_WEBGL}.
          *
          * @constant
          * @type {Enumeration}

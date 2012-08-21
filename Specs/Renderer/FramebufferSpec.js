@@ -295,136 +295,90 @@ defineSuite([
         sp2 = sp2.destroy();
     });
 
+    function renderDepthAttachment(framebuffer, texture) {
+        context.clear();
+
+        // 1 of 3.  Render green point into color attachment.
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
+        sp = context.createShaderProgram(vs, fs);
+
+        va = context.createVertexArray();
+        va.addAttribute({
+            index : sp.getVertexAttributes().position.index,
+            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 4
+        });
+
+        context.draw({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va,
+            framebuffer : framebuffer,
+            renderState : context.createRenderState({
+                depthTest : {
+                    enabled : true
+                }
+            })
+        });
+
+        // 2 of 3.  Verify default color buffer is still black.
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        // 3 of 3.  Render green to default color buffer by reading from previous color attachment
+        var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs2 = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)).rrrr; }';
+        var sp2 = context.createShaderProgram(vs2, fs2, {
+            position : 0
+        });
+        sp2.getAllUniforms().u_texture.value = texture;
+
+        context.draw({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp2,
+            vertexArray : va
+        });
+
+        sp2 = sp2.destroy();
+
+        return context.readPixels();
+    }
+
     it('draws to a depth texture attachment', function() {
         if (context.getDepthTexture()) {
-            var colorTexture = context.createTexture2D({
-                width : 1,
-                height : 1
-            });
-            var depthTexture = context.createTexture2D({
-                width : 1,
-                height : 1,
-                pixelFormat : PixelFormat.DEPTH_COMPONENT,
-                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
-            });
-
             framebuffer = context.createFramebuffer({
-                colorTexture : colorTexture,
-                depthTexture : depthTexture
-            });
-
-            context.clear();
-
-            // 1 of 3.  Render green point into color attachment.
-            var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-            var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
-            sp = context.createShaderProgram(vs, fs);
-
-            va = context.createVertexArray();
-            va.addAttribute({
-                index : sp.getVertexAttributes().position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-                componentsPerAttribute : 4
-            });
-
-            context.draw({
-                primitiveType : PrimitiveType.POINTS,
-                shaderProgram : sp,
-                vertexArray : va,
-                framebuffer : framebuffer,
-                renderState : context.createRenderState({
-                    depthTest : {
-                        enabled : true
-                    }
+                colorTexture : context.createTexture2D({
+                    width : 1,
+                    height : 1
+                }),
+                depthTexture : context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 })
             });
 
-            // 2 of 3.  Verify default color buffer is still black.
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            // 3 of 3.  Render green to default color buffer by reading from previous color attachment
-            var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-            var fs2 = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)).rrrr; }';
-            var sp2 = context.createShaderProgram(vs2, fs2, {
-                position : 0
-            });
-            sp2.getAllUniforms().u_texture.value = depthTexture;
-
-            context.draw({
-                primitiveType : PrimitiveType.POINTS,
-                shaderProgram : sp2,
-                vertexArray : va
-            });
-            expect(context.readPixels()).toEqual([128, 128, 128, 128]);
-
-            sp2 = sp2.destroy();
+            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthTexture())).toEqual([128, 128, 128, 128]);
         }
     });
 
-// TODO: remove duplication with above function.
     it('draws to a depth-stencil texture attachment', function() {
         if (context.getDepthTexture()) {
-            var colorTexture = context.createTexture2D({
-                width : 1,
-                height : 1
-            });
-            var depthStencilTexture = context.createTexture2D({
-                width : 1,
-                height : 1,
-                pixelFormat : PixelFormat.DEPTH_STENCIL,
-                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
-            });
-
             framebuffer = context.createFramebuffer({
-                colorTexture : colorTexture,
-                depthStencilTexture : depthStencilTexture
-            });
-
-            context.clear();
-
-            // 1 of 3.  Render green point into color attachment.
-            var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-            var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';
-            sp = context.createShaderProgram(vs, fs);
-
-            va = context.createVertexArray();
-            va.addAttribute({
-                index : sp.getVertexAttributes().position.index,
-                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-                componentsPerAttribute : 4
-            });
-
-            context.draw({
-                primitiveType : PrimitiveType.POINTS,
-                shaderProgram : sp,
-                vertexArray : va,
-                framebuffer : framebuffer,
-                renderState : context.createRenderState({
-                    depthTest : {
-                        enabled : true
-                    }
+                colorTexture : context.createTexture2D({
+                    width : 1,
+                    height : 1
+                }),
+                depthStencilTexture : context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.DEPTH_STENCIL,
+                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
                 })
             });
 
-            // 2 of 3.  Verify default color buffer is still black.
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            // 3 of 3.  Render green to default color buffer by reading from previous color attachment
-            var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-            var fs2 = 'uniform sampler2D u_texture; void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)).rrrr; }';
-            var sp2 = context.createShaderProgram(vs2, fs2, {
-                position : 0
-            });
-            sp2.getAllUniforms().u_texture.value = depthStencilTexture;
-
-            context.draw({
-                primitiveType : PrimitiveType.POINTS,
-                shaderProgram : sp2,
-                vertexArray : va
-            });
-            expect(context.readPixels()).toEqual([128, 128, 128, 128]);
-
-            sp2 = sp2.destroy();
+            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthStencilTexture())).toEqual([128, 128, 128, 128]);
         }
     });
 
