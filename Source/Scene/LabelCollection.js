@@ -357,7 +357,7 @@ define([
          *   text     : 'Up'
          * });
          */
-        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this.modelMatrix = Matrix4.IDENTITY.clone();
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
