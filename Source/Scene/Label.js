@@ -23,6 +23,22 @@ define([
 
     var EMPTY_OBJECT = {};
 
+    function rebindAllGlyphs(label) {
+        if (!label._rebindAllGlyphs && !label._repositionAllGlyphs) {
+            // only push label if it's not already been marked dirty
+            label._labelCollection._labelsToUpdate.push(label);
+        }
+        label._rebindAllGlyphs = true;
+    }
+
+    function repositionAllGlyphs(label) {
+        if (!label._rebindAllGlyphs && !label._repositionAllGlyphs) {
+            // only push label if it's not already been marked dirty
+            label._labelCollection._labelsToUpdate.push(label);
+        }
+        label._repositionAllGlyphs = true;
+    }
+
     /**
      * A Label draws viewport-aligned text positioned in the 3D scene.  This constructor
      * should not be used directly, instead create labels by calling {@link LabelCollection#add}.
@@ -191,7 +207,7 @@ define([
 
         if (value !== this._text) {
             this._text = value;
-            this._rebindAllGlyphs = true;
+            rebindAllGlyphs(this);
         }
     };
 
@@ -228,7 +244,7 @@ define([
 
         if (this._font !== value) {
             this._font = value;
-            this._rebindAllGlyphs = true;
+            rebindAllGlyphs(this);
         }
     };
 
@@ -266,7 +282,7 @@ define([
         var fillColor = this._fillColor;
         if (!Color.equals(fillColor, value)) {
             Color.clone(value, fillColor);
-            this._rebindAllGlyphs = true;
+            rebindAllGlyphs(this);
         }
     };
 
@@ -304,7 +320,7 @@ define([
         var outlineColor = this._outlineColor;
         if (!Color.equals(outlineColor, value)) {
             Color.clone(value, outlineColor);
-            this._rebindAllGlyphs = true;
+            rebindAllGlyphs(this);
         }
     };
 
@@ -339,7 +355,7 @@ define([
 
         if (this._style !== value) {
             this._style = value;
-            this._rebindAllGlyphs = true;
+            rebindAllGlyphs(this);
         }
     };
 
@@ -392,7 +408,7 @@ define([
         var pixelOffset = this._pixelOffset;
         if (!Cartesian2.equals(pixelOffset, value)) {
             Cartesian2.clone(value, pixelOffset);
-            this._repositionAllGlyphs = true;
+            repositionAllGlyphs(this);
         }
     };
 
@@ -503,7 +519,7 @@ define([
 
         if (this._horizontalOrigin !== value) {
             this._horizontalOrigin = value;
-            this._repositionAllGlyphs = true;
+            repositionAllGlyphs(this);
         }
     };
 
@@ -549,7 +565,7 @@ define([
 
         if (this._verticalOrigin !== value) {
             this._verticalOrigin = value;
-            this._repositionAllGlyphs = true;
+            repositionAllGlyphs(this);
         }
     };
 
@@ -606,7 +622,7 @@ define([
                 }
             }
 
-            this._repositionAllGlyphs = true;
+            repositionAllGlyphs(this);
         }
     };
 

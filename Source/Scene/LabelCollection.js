@@ -214,7 +214,8 @@ define([
     // reusable Cartesian2 instance
     var glyphPixelOffset = new Cartesian2();
 
-    function repositionAllGlyphs(label, glyphs) {
+    function repositionAllGlyphs(label) {
+        var glyphs = label._glyphs;
         var glyph;
         var dimensions;
         var totalWidth = 0;
@@ -320,6 +321,7 @@ define([
         this._textureCount = 0;
         this._unusedTextureCount = 0;
         this._labels = [];
+        this._labelsToUpdate = [];
         this._frameCount = 0;
         this._totalGlyphCount = 0;
 
@@ -414,10 +416,11 @@ define([
      * });
      */
     LabelCollection.prototype.add = function(description) {
-        var labels = this._labels;
+        var label = new Label(description, this, this._labels.length);
 
-        var label = new Label(description, this, labels.length);
-        labels.push(label);
+        this._labels.push(label);
+        this._labelsToUpdate.push(label);
+
         return label;
     };
 
@@ -502,10 +505,10 @@ define([
      * @see LabelCollection#get
      */
     LabelCollection.prototype.contains = function(label) {
-        if (label) {
+        if (typeof label !== 'undefined') {
             var labels = this._labels;
-            var length = labels.length;
-            for ( var i = 0; i < length; i++) {
+
+            for ( var i = 0, len = labels.length; i < len; ++i) {
                 if (labels[i] === label) {
                     return true;
                 }
@@ -591,6 +594,7 @@ define([
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.morphTime = this.morphTime;
 
+        var rebindAllGlyphsInAllLabels = false;
         if (++this._frameCount % 100 === 0) {
             this._frameCount = 0;
             // clear and rebuild texture atlas to compact it when we have more than 25% unused textures
@@ -599,6 +603,10 @@ define([
                 this._glyphTextureCache = {};
                 this._textureCount = 0;
                 this._unusedTextureCount = 0;
+
+                // rebind and update all labels to repopulate the textures
+                rebindAllGlyphsInAllLabels = true;
+                this._labelsToUpdate = this._labels.slice(0);
             }
 
             // prune spare billboards to 10% of total glyph count
@@ -612,24 +620,29 @@ define([
             billboardCollection.setTextureAtlas(this._textureAtlas);
         }
 
-        this._totalGlyphCount = 0;
-        var labels = this._labels;
-        for (var i = 0, len = labels.length; i < len; ++i) {
-            var label = labels[i];
-            var glyphs = label._glyphs;
+        var labelsToUpdate = this._labelsToUpdate;
+        for ( var i = 0, len = labelsToUpdate.length; i < len; ++i) {
+            var label = labelsToUpdate[i];
+            if (label.isDestroyed()) {
+                continue;
+            }
 
-            if (label._rebindAllGlyphs) {
+            var preUpdateGlyphCount = label._glyphs.length;
+
+            if (rebindAllGlyphsInAllLabels || label._rebindAllGlyphs) {
                 rebindAllGlyphs(this, label);
                 label._rebindAllGlyphs = false;
             }
 
             if (label._repositionAllGlyphs) {
-                repositionAllGlyphs(label, glyphs);
+                repositionAllGlyphs(label);
                 label._repositionAllGlyphs = false;
             }
 
-            this._totalGlyphCount += glyphs.length;
+            var glyphCountDifference = label._glyphs.length - preUpdateGlyphCount;
+            this._totalGlyphCount += glyphCountDifference;
         }
+        labelsToUpdate.length = 0;
 
         this._billboardCollection.update(context, sceneState);
     };
