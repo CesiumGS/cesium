@@ -11,6 +11,8 @@ define([
         measureText) {
     "use strict";
 
+    var EMPTY_OBJECT = {};
+
     /**
      * Writes the given text into a new canvas.  The canvas will be sized to fit the text.
      * If text is blank, returns undefined.
@@ -36,7 +38,7 @@ define([
             return undefined;
         }
 
-        description = defaultValue(description, {});
+        description = defaultValue(description, EMPTY_OBJECT);
         var font = defaultValue(description.font, '10px sans-serif');
 
         var canvas = document.createElement('canvas');
