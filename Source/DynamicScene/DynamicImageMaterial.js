@@ -17,8 +17,21 @@ define([
      * @constructor
      */
     var DynamicImageMaterial = function() {
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the material's image.
+         * @type DynamicProperty
+         */
         this.image = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the material's vertical repeat.
+         * @type DynamicProperty
+         */
         this.verticalRepeat = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the material's horizontal repeat.
+         *
+         * @type DynamicProperty
+         */
         this.horizontalRepeat = undefined;
     };
 
