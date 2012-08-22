@@ -18,7 +18,8 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A cube map with faces +x, -x, +y, -y, +z, and -z.  Cube maps are used for environment techniques like
+     * approximate reflection and refraction as used in the Reflection and Refraction {@link Material}s.
      *
      * @alias CubeMap
      * @internalConstructor
@@ -47,64 +48,102 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the +x face of this cube map for modification, rendering to, etc.
+     *
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The +x face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getPositiveX = function() {
         return this._positiveX;
     };
 
     /**
-     * DOC_TBA
+     * Returns the -x face of this cube map for modification, rendering to, etc.
+     *
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The -x face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getNegativeX = function() {
         return this._negativeX;
     };
 
     /**
-     * DOC_TBA
+     * Returns the +y face of this cube map for modification, rendering to, etc.
+     *
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The +y face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getPositiveY = function() {
         return this._positiveY;
     };
 
     /**
-     * DOC_TBA
+     * Returns the -y face of this cube map for modification, rendering to, etc.
+     *
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The -y face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getNegativeY = function() {
         return this._negativeY;
     };
 
     /**
-     * DOC_TBA
+     * Returns the +z face of this cube map for modification, rendering to, etc.
+     *
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The +z face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getPositiveZ = function() {
         return this._positiveZ;
     };
 
     /**
-     * DOC_TBA
+     * Returns the -z face of this cube map for modification, rendering to, etc.
+     *
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The -z face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getNegativeZ = function() {
         return this._negativeZ;
     };
 
     /**
-     * DOC_TBA
+     * Generates a complete mipmap chain for each cubemap face.
      *
      * @memberof CubeMap
      *
-     * @param {MipmapHint} hint optional.
+     * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] A performance vs. quality hint.
      *
      * @exception {DeveloperError} hint is invalid.
      * @exception {DeveloperError} This CubeMap's width must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This CubeMap's height must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+     *
+     * @example
+     * // Generate mipmaps, and then set the sampler so mipmaps are used for
+     * // minification when the cube map is sampled.
+     * cubeMap.generateMipmap();
+     * cubeMap.setSampler(context.createSampler({
+     *   minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
+     * }));
      */
     CubeMap.prototype.generateMipmap = function(hint) {
         if ((this._size > 1) && (this._size % 2 !== 0)) {
@@ -131,7 +170,7 @@ define([
      *
      * @memberof CubeMap
      *
-     * @param sampler optional.
+     * @param [sampler] DOC_TBA
      *
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
@@ -179,9 +218,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the pixel format of this cube map.  All faces in the same cube map have the same pixel format.
      *
      * @memberof CubeMap
+     *
+     * @returns {PixelFormat} The pixel format of this cubemap.
      *
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
@@ -190,9 +231,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the pixel datatype of this cube map.  All faces in the same cube map have the same pixel datatype.
      *
      * @memberof CubeMap
+     *
+     * @returns {PixelDatatype} The pixel datatype of this cubemap.
      *
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
@@ -201,9 +244,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the width, in texels, of faces in this cube map.  All faces in the same cube map have the same width and height, and the width equals the height.
      *
      * @memberof CubeMap
+     *
+     * @returns {Number} The width, in texels, of faces in this cube map.
      *
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
@@ -212,9 +257,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the height, in texels, of faces in this cube map.  All faces in the same cube map have the same width and height, and the width equals the height.
      *
      * @memberof CubeMap
+     *
+     * @returns {Number} The height, in texels, of faces in this cube map.
      *
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
@@ -223,9 +270,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns true if the cubemap was created with premultiplied alpha (UNPACK_PREMULTIPLY_ALPHA_WEBGL).
      *
      * @memberof CubeMap
+     *
+     * @returns {Boolean} true if the cubemap was created with premultiplied alpha; otherwise, false.
      *
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      */
@@ -251,7 +300,7 @@ define([
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see CubeMap.destroy
+     * @see CubeMap#destroy
      */
     CubeMap.prototype.isDestroyed = function() {
         return false;
@@ -271,7 +320,7 @@ define([
      *
      * @exception {DeveloperError} This cube map was destroyed, i.e., destroy() was called.
      *
-     * @see CubeMap.isDestroyed
+     * @see CubeMap#isDestroyed
      * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
      *
      * @example

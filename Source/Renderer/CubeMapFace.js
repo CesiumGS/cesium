@@ -39,6 +39,8 @@ define([
     /**
      * Copies texels from the source to the cubemap's face.
      *
+     * @memberof CubeMapFace
+     *
      * @param {Object} source The source ImageData, HTMLImageElement, HTMLCanvasElement, HTMLVideoElement, or an object with a width, height, and typed array as shown in the example.
      * @param {Number} [xOffset=0] An offset in the x direction in the cubemap where copying begins.
      * @param {Number} [yOffset=0] An offset in the y direction in the cubemap where copying begins.
@@ -111,6 +113,8 @@ define([
     /**
      * Copies texels from the framebuffer to the cubemap's face.
      *
+     * @memberof CubeMapFace
+     *
      * @param {Number} [xOffset=0] An offset in the x direction in the cubemap where copying begins.
      * @param {Number} [yOffset=0] An offset in the y direction in the cubemap where copying begins.
      * @param {Number} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
@@ -174,6 +178,8 @@ define([
 
     /**
      * Returns the pixel format of this cube map face.  All faces in the same cube map have the same pixel format.
+     *
+     * @memberof CubeMapFace
      *
      * @returns {PixelFormat} The pixel format of this cubemap face.
      *

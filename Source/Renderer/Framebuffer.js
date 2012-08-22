@@ -302,7 +302,7 @@ define([
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see Framebuffer.destroy
+     * @see Framebuffer#destroy
      */
     Framebuffer.prototype.isDestroyed = function() {
         return false;
@@ -325,7 +325,7 @@ define([
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      *
-     * @see Framebuffer.isDestroyed
+     * @see Framebuffer#isDestroyed
      * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteFramebuffers.xml'>glDeleteFramebuffers</a>
      * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
      * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteRenderbuffers.xml'>glDeleteRenderbuffers</a>

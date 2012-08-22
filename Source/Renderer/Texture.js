@@ -338,7 +338,7 @@ define([
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see Texture.destroy
+     * @see Texture#destroy
      */
     Texture.prototype.isDestroyed = function() {
         return false;
@@ -358,7 +358,7 @@ define([
      *
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      *
-     * @see Texture.isDestroyed
+     * @see Texture#isDestroyed
      * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
      *
      * @example
