@@ -39,7 +39,7 @@ define([
     /**
      * Copies texels from the source to the cubemap's face.
      *
-     * @param {Object} source The source {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, {HTMLVideoElement}, or an object with a width, height, and typed array as shown in the example.
+     * @param {Object} source The source ImageData, HTMLImageElement, HTMLCanvasElement, HTMLVideoElement, or an object with a width, height, and typed array as shown in the example.
      * @param {Number} [xOffset=0] An offset in the x direction in the cubemap where copying begins.
      * @param {Number} [yOffset=0] An offset in the y direction in the cubemap where copying begins.
      *
