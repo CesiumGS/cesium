@@ -1053,7 +1053,8 @@ defineSuite([
 
         it('should set pixelOffsets of billboards correctly when vertical origin is changed', function() {
             var label = labels.add({
-                text : 'apl'
+                text : 'apl',
+                font : '30px arial'
             });
             labels.update(context, sceneState);
 
@@ -1078,7 +1079,8 @@ defineSuite([
 
         it('should set pixelOffsets of billboards correctly when vertical origin and scale are changed', function() {
             var label = labels.add({
-                text : 'apl'
+                text : 'apl',
+                font : '30px arial'
             });
             labels.update(context, sceneState);
 
@@ -1119,7 +1121,8 @@ defineSuite([
 
         it('should set pixelOffsets of billboards correctly when horizontal origin is changed', function() {
             var label = labels.add({
-                text : 'apl'
+                text : 'apl',
+                font : '30px arial'
             });
             labels.update(context, sceneState);
 
@@ -1145,7 +1148,8 @@ defineSuite([
 
         it('should set pixelOffsets of billboards correctly when horizontal origin and scale are changed', function() {
             var label = labels.add({
-                text : 'apl'
+                text : 'apl',
+                font : '30px arial'
             });
             labels.update(context, sceneState);
 
@@ -1180,7 +1184,8 @@ defineSuite([
 
         it('should set pixelOffsets of billboards correctly when vertical origin, scale and pixel offset are changed', function() {
             var label = labels.add({
-                text : 'apl'
+                text : 'apl',
+                font : '30px arial'
             });
             labels.update(context, sceneState);
 
@@ -1225,7 +1230,8 @@ defineSuite([
 
         it('should set pixelOffsets of billboards correctly when font size changes', function() {
             var label = labels.add({
-                text : 'apl'
+                text : 'apl',
+                font : '30px arial'
             });
             labels.update(context, sceneState);
 
@@ -1233,7 +1239,7 @@ defineSuite([
             var offset1 = getGlyphBillboardPixelOffset(label, 1);
             var offset2 = getGlyphBillboardPixelOffset(label, 2);
 
-            label.setFont('20px sans-serif');
+            label.setFont('20px arial');
             labels.update(context, sceneState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).x).toEqual(offset0.x);
@@ -1346,10 +1352,6 @@ defineSuite([
             labels.update(context, sceneState);
 
             var originalDimensions = label._glyphs[0].dimensions;
-
-            expect(originalDimensions.width).toEqual(16);
-            expect(originalDimensions.height).toEqual(16);
-            expect(originalDimensions.descent).toEqual(-1);
 
             label.setFont('20px sans-serif');
             labels.update(context, sceneState);
