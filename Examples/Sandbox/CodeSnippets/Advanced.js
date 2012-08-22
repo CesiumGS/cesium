@@ -226,7 +226,10 @@
                 if (mode !== this._mode || projection !== this._projection) {
                     this._mode = mode;
                     this._projection = projection;
-                    this.morphTime = this._mode.morphTime;
+
+                    if (typeof mode.morphTime !== 'undefined') {
+                        this.morphTime = mode.morphTime;
+                    }
 
                     var zLength = this._ellipsoid.getRadii().getMaximumComponent() * 0.1;
                     var x = zLength * 0.1;
