@@ -97,14 +97,14 @@ define([
          *
          * @type {Number}
          */
-        this.tileWidth = undefined;
+        this.tileWidth = 256;
 
         /**
          * The height of every image loaded.
          *
          * @type {Number}
          */
-        this.tileHeight = undefined;
+        this.tileHeight = 256;
 
         /**
          * The maximum level-of-detail that can be requested.
