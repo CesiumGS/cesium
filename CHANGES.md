@@ -26,13 +26,14 @@ Beta Releases
                         repeat : 10.0
                     }
                 }
-            });
+            }); 
     * `Label.computeScreenSpacePosition` now requires the current scene state as a parameter.
     * Passing `undefined` to any of the set functions on `Label` now throws an exception.
-
+            
 * All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * Added support for nested polygons with holes. See `Polygon.configureFromPolygonHierarchy`.
 * Added `writeTextToCanvas` function which handles sizing the resulting canvas to fit the desired text.
+* Added support for CZML path visualization via the `DynamicPath` and `DynamicPathVisualizer` objects.  See the [CZML wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide) for more details.
 
 ### b7 - 08/01/2012
 
