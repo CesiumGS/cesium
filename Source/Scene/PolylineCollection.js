@@ -9,7 +9,6 @@ define([
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
-        '../Core/PolylinePipeline',
         '../Core/Color',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
@@ -32,7 +31,6 @@ define([
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
-        PolylinePipeline,
         Color,
         BoundingRectangle,
         BoundingSphere,
@@ -541,13 +539,14 @@ define([
                     polyline = polylinesToUpdate[i];
                     var changedProperties = polyline._getChangedProperties();
                     if (changedProperties[POSITION_INDEX]) {
-                        bucket = polyline._bucket;
-                        var segments = bucket.getSegments(polyline);
-                        if(PolylineBucket.segmentsLengthChanged(segments, polyline)){
-                            createVertexArrays = true;
-                            break;
+                        if(intersectsIDL(polyline)){
+                            var newSegments = polyline._createSegments(this._projection._ellipsoid);
+                            if(polyline._segmentsLengthChanged(newSegments)){
+                                createVertexArrays = true;
+                                break;
+                            }
+                            polyline._setSegments(newSegments);
                         }
-                        polyline._segments = segments;
                     }
                 }
             }
@@ -1139,67 +1138,19 @@ define([
     };
 
     function intersectsIDL(polyline) {
-        return Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) > 0 ||
-            polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) !== Intersect.INTERSECTING;
+        return Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) < 0 ||
+            polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) === Intersect.INTERSECTING;
     }
 
     /**
      * @private
      */
-    PolylineBucket.prototype.getSegments = function(polyline) {
-        if (intersectsIDL(polyline)) {
-            return undefined;
-        }
-
-        return PolylinePipeline.wrapLongitude(this.ellipsoid, polyline.getPositions());
-    };
-
-    /**
-     * @private
-     */
-    PolylineBucket.segmentsLengthChanged = function(segments, polyline) {
-        if (typeof segments === 'undefined') {
-            return polyline.getPositions().length !== polyline._actualLength;
-        }
-
-        var pSegments = polyline._segments;
-        if (typeof pSegments !== 'undefined') {
-            var numberOfSegments = segments.length;
-            if (numberOfSegments !== pSegments.length) {
-                return true;
-            }
-            for ( var i = 0; i < numberOfSegments; ++i) {
-                if (segments[i].length !== pSegments[i].length) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return true;
-    };
-
-    /**
-     * @private
-     */
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {
-        if (this.mode === SceneMode.SCENE3D) {
+        if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
             return polyline.getPositions().length;
         }
-
-        var segments = this.getSegments(polyline);
-        if (typeof segments === 'undefined') {
-            return polyline.getPositions().length;
-        }
-
-        polyline._segments = segments;
-        var numberOfSegments = segments.length;
-        var length = 0;
-        for ( var i = 0; i < numberOfSegments; ++i) {
-            var segment = segments[i];
-            var segmentLength = segment.length;
-            length += segmentLength;
-        }
-        return length;
+        var segments = polyline._createSegments(this.ellipsoid);
+        return polyline._setSegments(segments);
     };
 
     /**
@@ -1253,7 +1204,7 @@ define([
             var numberOfSegments;
             var j;
             if (intersectsIDL(polyline)) {
-                var segments = PolylinePipeline.wrapLongitude(this.ellipsoid, positions);
+                var segments = polyline._getSegments();
                 numberOfSegments = segments.length;
                 for ( j = 0; j < numberOfSegments; ++j) {
                     var segment = segments[j];
@@ -1353,9 +1304,8 @@ define([
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
-            var segments = polyline._segments;
-
-            if (typeof segments !== 'undefined') {
+            if(intersectsIDL(polyline)){
+                var segments = polyline._segments;
                 var numberOfSegments = segments.length;
                 if(numberOfSegments > 0){
                     for ( var k = 0; k < numberOfSegments; ++k) {
@@ -1483,38 +1433,26 @@ define([
             }
         }
 
+
         if (this.mode === SceneMode.SCENE3D) {
             return positions;
+        }
+        if(intersectsIDL(polyline)){
+            positions = polyline._getPositions2D();
         }
 
         var ellipsoid = this.ellipsoid;
         var projection = this.projection;
         var newPositions = [];
         var modelMatrix = this.modelMatrix;
-        var segments = polyline._segments;
-
-        var n;
+        var length = positions.length;
         var position;
         var p;
-        if (typeof segments !== 'undefined') {
-            var numberOfSegments = segments.length;
 
-            for ( var i = 0; i < numberOfSegments; ++i) {
-                var segment = segments[i];
-                var segmentLength = segment.length;
-                for ( n = 0; n < segmentLength; ++n) {
-                    position = segment[n].cartesian;
-                    p = modelMatrix.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
-                    newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
-                }
-            }
-        } else {
-            var length = positions.length;
-            for ( n = 0; n < length; ++n) {
-                position = positions[n];
-                p = modelMatrix.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
-                newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
-            }
+        for (var n = 0; n < length; ++n) {
+            position = positions[n];
+            p = modelMatrix.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+            newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
         }
 
         if (newPositions.length > 0) {
