@@ -1655,6 +1655,7 @@ defineSuite([
             }]
         });
         var three = polylines.add({
+            positions : [{
                 x : 7.0,
                 y : 8.0,
                 z : 9.0

@@ -127,9 +127,9 @@ define([
         this._maxEyeOffset = 0.0;
         this._maxScale = 1.0;
 
-        this._baseVolume = undefined;
-        this._baseVolume2D = undefined;
-        this._baseRectangle = undefined;
+        this._baseVolume = new BoundingSphere();
+        this._baseVolume2D = new BoundingSphere();
+        this._baseRectangle = new BoundingRectangle();
 
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -837,12 +837,41 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    function recomputeActualPositions(billboards, sceneState, morphTime, modelMatrix) {
+    function recomputeActualPositions(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume) {
+        var boundingVolume;
+        switch (sceneState.mode) {
+        case SceneMode.SCENE3D:
+            boundingVolume = billboardCollection._baseVolume;
+            break;
+        case SceneMode.SCENE2D:
+            boundingVolume = billboardCollection._baseRectangle;
+            break;
+        case SceneMode.COLUMBUS_VIEW:
+        case SceneMode.MORPHING:
+            boundingVolume = billboardCollection._baseVolume2D;
+            break;
+        }
+
+        var positions = [];
         for ( var i = 0, length = billboards.length; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.getPosition();
             var actualPosition = Billboard._computeActualPosition(position, sceneState, morphTime, modelMatrix);
             billboard._setActualPosition(actualPosition);
+
+            if (recomputeBoundingVolume) {
+                positions.push(actualPosition);
+            } else {
+                boundingVolume.expand(actualPosition, boundingVolume);
+            }
+        }
+
+        if (recomputeBoundingVolume) {
+            if (sceneState.mode === SceneMode.SCENE2D) {
+                BoundingRectangle.fromPoints(positions, boundingVolume);
+            } else {
+                BoundingSphere.fromPoints(positions, boundingVolume);
+            }
         }
     }
 
@@ -860,12 +889,12 @@ define([
             this.modelMatrix.clone(this._modelMatrix);
 
             if (mode === SceneMode.SCENE3D || mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-                recomputeActualPositions(this._billboards, sceneState, this.morphTime, this._modelMatrix);
+                recomputeActualPositions(this, this._billboards, sceneState, this.morphTime, this._modelMatrix, true);
             }
         } else if (mode === SceneMode.MORPHING) {
-            recomputeActualPositions(this._billboards, sceneState, this.morphTime, this._modelMatrix);
+            recomputeActualPositions(this, this._billboards, sceneState, this.morphTime, this._modelMatrix, true);
         } else if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-            recomputeActualPositions(this._billboardsToUpdate, sceneState, this.morphTime, this._modelMatrix);
+            recomputeActualPositions(this, this._billboardsToUpdate, sceneState, this.morphTime, this._modelMatrix, false);
         }
     };
 

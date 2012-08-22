@@ -165,6 +165,7 @@ define([
      * smaller of the two spheres is used to ensure a tight fit.
      *
      * @param {Array} positions List of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
      *
      * @exception {DeveloperError} <code>positions</code> is required.
      *
@@ -172,9 +173,13 @@ define([
      *
      * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      */
-    BoundingSphere.fromPoints = function(positions) {
+    BoundingSphere.fromPoints = function(positions, result) {
         if (typeof positions === 'undefined') {
             throw new DeveloperError('positions is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new BoundingSphere();
         }
 
         var x = positions[0].x;
@@ -189,10 +194,10 @@ define([
         var yMax = new Cartesian3(x, y, z);
         var zMax = new Cartesian3(x, y, z);
 
-        var currentPos;
+        var currentPos = new Cartesian3();
         var numPositions = positions.length;
         for ( var i = 0; i < numPositions; i++) {
-            currentPos = positions[i];
+            Cartesian3.clone(positions[i], currentPos);
             x = currentPos.x;
             y = currentPos.y;
             z = currentPos.z;
@@ -261,7 +266,7 @@ define([
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0;
         for (i = 0; i < numPositions; i++) {
-            currentPos = positions[i];
+            Cartesian3.clone(positions[i], currentPos);
 
             // Find the furthest point from the naive center to calculate the naive radius.
             var r = (currentPos.subtract(naiveCenter)).magnitude();
@@ -286,12 +291,14 @@ define([
         }
 
         if (ritterRadius < naiveRadius) {
-            this.center = ritterCenter;
-            this.radius = ritterRadius;
-            return new BoundingSphere(ritterCenter, ritterRadius);
+            result.center = ritterCenter;
+            result.radius = ritterRadius;
+        } else {
+            result.center = naiveCenter;
+            result.radius = naiveRadius;
         }
 
-        return new BoundingSphere(naiveCenter, naiveRadius);
+        return result;
     };
 
     /**
