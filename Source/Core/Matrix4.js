@@ -974,8 +974,8 @@ define([
      *
      * @param {Matrix4} matrix The matrix.
      * @param {Cartesian4} cartesian The column.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -1671,8 +1671,8 @@ define([
      * @memberof Matrix4
      *
      * @param {Cartesian4} cartesian The column.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */

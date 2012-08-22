@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
+        '../Core/defaultValue',
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
         './DynamicProperty'
     ], function(
          TimeInterval,
+         defaultValue,
          CzmlBoolean,
          CzmlNumber,
          CzmlColor,
@@ -32,22 +34,27 @@ define([
     var DynamicPoint = function() {
         /**
          * A DynamicProperty of type CzmlColor which determines the point's color.
+         * @type DynamicProperty
          */
         this.color = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the point's pixel size.
+         * @type DynamicProperty
          */
         this.pixelSize = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the point's outline color.
+         * @type DynamicProperty
          */
         this.outlineColor = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the point's outline width.
+         * @type DynamicProperty
          */
         this.outlineWidth = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the point's visibility.
+         * @type DynamicProperty
          */
         this.show = undefined;
     };
@@ -152,11 +159,11 @@ define([
                 targetObject.point = targetPoint = new DynamicPoint();
             }
 
-            targetPoint.color = targetPoint.color || pointToMerge.color;
-            targetPoint.pixelSize = targetPoint.pixelSize || pointToMerge.pixelSize;
-            targetPoint.outlineColor = targetPoint.outlineColor || pointToMerge.outlineColor;
-            targetPoint.outlineWidth = targetPoint.outlineWidth || pointToMerge.outlineWidth;
-            targetPoint.show = targetPoint.show || pointToMerge.show;
+            targetPoint.color = defaultValue(targetPoint.color, pointToMerge.color);
+            targetPoint.pixelSize = defaultValue(targetPoint.pixelSize, pointToMerge.pixelSize);
+            targetPoint.outlineColor = defaultValue(targetPoint.outlineColor, pointToMerge.outlineColor);
+            targetPoint.outlineWidth = defaultValue(targetPoint.outlineWidth, pointToMerge.outlineWidth);
+            targetPoint.show = defaultValue(targetPoint.show, pointToMerge.show);
         }
     };
 
