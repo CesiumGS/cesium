@@ -1525,17 +1525,18 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
+     * the texture is the same width and height as the framebuffer and contains its contents.
      *
      * @memberof Context
      *
-     * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] DOC_TBA
-     * @param {PixelFormat} [framebufferXOffset=0] DOC_TBA
-     * @param {PixelFormat} [framebufferYOffset=0] DOC_TBA
-     * @param {PixelFormat} [width=canvas.clientWidth] DOC_TBA
-     * @param {PixelFormat} [height=canvas.clientHeight] DOC_TBA
+     * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
+     * @param {PixelFormat} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
+     * @param {PixelFormat} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
+     * @param {PixelFormat} [width=canvas.clientWidth] The width of the texture in texels.
+     * @param {PixelFormat} [height=canvas.clientHeight] The height of the texture in texels.
      *
-     * @return {Texture} DOC_TBA.
+     * @return {Texture} A texture with contents from the framebuffer.
      *
      * @exception {DeveloperError} Invalid pixelFormat.
      * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
@@ -1547,9 +1548,18 @@ define([
      * @see Context#createTexture2D
      * @see Context#createCubeMap
      * @see Context#createSampler
+     *
+     * @example
+     * // Create a texture with the contents of the framebuffer.
+     * var t = context.createTexture2DFromFramebuffer();
      */
     Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height) {
         pixelFormat = pixelFormat || PixelFormat.RGB;
+        framebufferXOffset = defaultValue(framebufferXOffset, 0);
+        framebufferYOffset = defaultValue(framebufferYOffset, 0);
+        width = defaultValue(width, this._canvas.clientWidth);
+        height = defaultValue(height, this._canvas.clientHeight);
+
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
         }
@@ -1558,27 +1568,21 @@ define([
             throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
-        if ((typeof framebufferXOffset !== 'undefined') && (framebufferXOffset < 0)) {
+        if (framebufferXOffset < 0) {
             throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
         }
 
-        if ((typeof framebufferYOffset !== 'undefined') && (framebufferYOffset < 0)) {
+        if (framebufferYOffset < 0) {
             throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
         }
 
-        framebufferXOffset = defaultValue(framebufferXOffset, 0);
-        framebufferYOffset = defaultValue(framebufferYOffset, 0);
-
-        if ((typeof width !== 'undefined') && (framebufferXOffset + width > this._canvas.clientWidth)) {
+        if (framebufferXOffset + width > this._canvas.clientWidth) {
             throw new DeveloperError('framebufferXOffset + width must be less than or equal to getCanvas().clientWidth');
         }
 
-        if ((typeof height !== 'undefined') && (framebufferYOffset + height > this._canvas.clientHeight)) {
+        if (framebufferYOffset + height > this._canvas.clientHeight) {
             throw new DeveloperError('framebufferYOffset + height must be less than or equal to getCanvas().clientHeight.');
         }
-
-        width = defaultValue(width, this._canvas.clientWidth);
-        height = defaultValue(height, this._canvas.clientHeight);
 
         var gl = this._gl;
         var textureTarget = gl.TEXTURE_2D;
@@ -1743,13 +1747,15 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Creates a framebuffer with optional initial color, depth, and stencil attachments.
+     * Framebuffers are used for render-to-texture effects; they allow us to render to
+     * a texture in one pass, and read from it in a later pass.
      *
      * @memberof Context
      *
-     * @param {Object} [description] DOC_TBA
+     * @param {Object} [description] The initial framebuffer attachments as shown in Example 2.  The possible properties are <code>colorTexture</code>, <code>colorRenderbuffer</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
      *
-     * @return {Framebuffer} DOC_TBA.
+     * @return {Framebuffer} The created framebuffer.
      *
      * @exception {DeveloperError} Cannot have both a color texture and color renderbuffer attachment.
      * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.

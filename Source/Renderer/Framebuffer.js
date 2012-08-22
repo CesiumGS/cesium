@@ -10,7 +10,9 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A framebuffer is a target for draw and clear calls.  It can contain color, depth, and stencil attachments
+     * that are written to in response to these calls.  If the attachments are textures, they can be read in
+     * later rendering passes.
      *
      * @alias Framebuffer
      *
@@ -147,7 +149,12 @@ define([
     }
 
     /**
-     * DOC_TBA.
+     * Attaches a texture to the color attachment point.  When this framebuffer is passed to a draw
+     * or clear call, the texture is the target of color output, e.g., <code>gl_FragColor</code>.
+     *
+     * @memberof Framebuffer
+     *
+     * @param {Texture} The texture to attach.  <code>undefined</code> dettaches the current texture.
      *
      * @exception {DeveloperError} The color-texture pixel-format must be a color format.
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
@@ -163,7 +170,11 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Returns the color texture attached to this framebuffer.
+     *
+     * @memberof Framebuffer
+     *
+     * @returns {Texture} The color texture attached to this framebuffer.
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -172,7 +183,9 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Prefer {@link Framebuffer#setColorTexture}.
+     *
+     * @memberof Framebuffer
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -183,7 +196,11 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Returns the color renderbuffer attached to this framebuffer.
+     *
+     * @memberof Framebuffer
+     *
+     * @returns {Texture} The color renderbuffer attached to this framebuffer.
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -192,7 +209,12 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Attaches a texture to the depth attachment point.  When this framebuffer is passed to a draw
+     * or clear call, the texture is the target of depth output.
+     *
+     * @memberof Framebuffer
+     *
+     * @param {Texture} The texture to attach.  <code>undefined</code> dettaches the current texture.
      *
      * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
@@ -208,7 +230,11 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Returns the depth texture attached to this framebuffer.
+     *
+     * @memberof Framebuffer
+     *
+     * @returns {Texture} The depth texture attached to this framebuffer.
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -217,7 +243,9 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Prefer {@link Framebuffer#setDepthTexture}.
+     *
+     * @memberof Framebuffer
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -228,7 +256,11 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Returns the depth renderbuffer attached to this framebuffer.
+     *
+     * @memberof Framebuffer
+     *
+     * @returns {Texture} The depth renderbuffer attached to this framebuffer.
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -237,7 +269,9 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Prefer {@link Framebuffer#setDepthStencilTexture}.
+     *
+     * @memberof Framebuffer
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -248,7 +282,11 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Returns the stencil renderbuffer attached to this framebuffer.
+     *
+     * @memberof Framebuffer
+     *
+     * @returns {Texture} The stencil renderbuffer attached to this framebuffer.
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -257,7 +295,12 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Attaches a texture to the depth-stencil attachment point.  When this framebuffer is passed to a draw
+     * or clear call, the texture is the target of depth and stencil output.
+     *
+     * @memberof Framebuffer
+     *
+     * @param {Texture} The texture to attach.  <code>undefined</code> dettaches the current texture.
      *
      * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
@@ -273,7 +316,11 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Returns the depth-stencil texture attached to this framebuffer.
+     *
+     * @memberof Framebuffer
+     *
+     * @returns {Texture} The depth-stencil texture attached to this framebuffer.
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -282,7 +329,9 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Prefer {@link Framebuffer#setDepthStencilTexture}.
+     *
+     * @memberof Framebuffer
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -293,7 +342,11 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Returns the depth-stencil renderbuffer attached to this framebuffer.
+     *
+     * @memberof Framebuffer
+     *
+     * @returns {Texture} The depth-stencil renderbuffer attached to this framebuffer.
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -305,6 +358,8 @@ define([
      * Returns true if the framebuffer has a depth attachment.  Depth attachments include
      * depth and depth-stencil textures, and depth and depth-stencil renderbuffers.  When
      * rendering to a framebuffer, a depth attachment is required for the depth test to have effect.
+     *
+     * @memberof Framebuffer
      *
      * @return {Boolean} Returns true if the framebuffer has a depth attachment; otherwise, false.
      *
@@ -319,6 +374,8 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof Framebuffer
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
@@ -338,6 +395,8 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof Framebuffer
      *
      * @return {undefined}
      *
