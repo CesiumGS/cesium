@@ -1,6 +1,6 @@
 {
     "title": "Material",
-    "description": "A material composed of uniforms, an agi_getMaterial GLSL function, and potentially other materials.",
+    "description": "A material composed of uniforms, an czm_getMaterial GLSL function, and potentially other materials.",
     "type": "object",
 	"properties": {
 		"type": {
@@ -20,7 +20,7 @@
 		
 		"uniforms": {
 			"type": "object",
-			"description": "Uniform variables, and their default values, that are input to this material.  Texture and cube-map face uniform values are specified as an image URL or a <a href=\"https://developer.mozilla.org/en/data_URIs\">data URI</a>.  Alternatively, a placeholder RGBA white texture can be used by specifying agi_defaultImage or agi_defaultCubeMap for textures or cube-maps, respectively.",
+			"description": "Uniform variables, and their default values, that are input to this material.  Texture and cube-map face uniform values are specified as an image URL or a <a href=\"https://developer.mozilla.org/en/data_URIs\">data URI</a>.  Alternatively, a placeholder RGBA white texture can be used by specifying czm_defaultImage or czm_defaultCubeMap for textures or cube-maps, respectively.",
 			"properties": {
 			},
 			"additionalProperties": {
@@ -177,8 +177,8 @@
         },
 		"source": {
 			"type": "string",
-			"description": "GLSL source for the agi_getMaterial function with a full function definition.  The components or source property is required, but not both.",
-			"pattern" : "agi_getMaterial"
+			"description": "GLSL source for the czm_getMaterial function with a full function definition.  The components or source property is required, but not both.",
+			"pattern" : "czm_getMaterial"
 		}
 	}
 }

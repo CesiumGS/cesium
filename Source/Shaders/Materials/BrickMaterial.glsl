@@ -7,9 +7,9 @@ uniform float mortarRoughness;
 
 #define Integral(x, p) ((floor(x) * p) + max(fract(x) - (1.0 - p), 0.0))
 
-agi_material agi_getMaterial(agi_materialInput materialInput)
+czm_material czm_getMaterial(czm_materialInput materialInput)
 {
-    agi_material material = agi_getDefaultMaterial(materialInput);
+    czm_material material = czm_getDefaultMaterial(materialInput);
 
     // From OpenGL Shading Language (3rd edition) pg. 194, 501
     vec2 st = materialInput.st;
@@ -27,12 +27,12 @@ agi_material agi_getMaterial(agi_materialInput materialInput)
     
     //Apply noise to brick
     vec2 brickScaled = vec2(st.x / 0.1, st.y / 0.006);
-    float brickNoise = abs(agi_snoise(brickScaled) * brickRoughness / 5.0);
+    float brickNoise = abs(czm_snoise(brickScaled) * brickRoughness / 5.0);
     color.rg += brickNoise * useBrickFinal;
     
     //Apply noise to mortar
     vec2 mortarScaled = st / 0.005;
-    float mortarNoise = max(agi_snoise(mortarScaled) * mortarRoughness, 0.0);
+    float mortarNoise = max(czm_snoise(mortarScaled) * mortarRoughness, 0.0);
     color.rgb += mortarNoise * (1.0 - useBrickFinal); 
 
     material.diffuse = color.rgb;

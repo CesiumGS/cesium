@@ -183,8 +183,8 @@
                         }
                     },
                     source :
-                        'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n' +
-                        'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
+                        'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n' +
+                        'czm_material material = czm_getDefaultMaterial(materialInput);\n' +
                         'float distanceFromCenter = abs(materialInput.st - vec2(0.5)).x;\n' +
                         'if(distanceFromCenter > 0.3){material.diffuse = grass.diffuse;}\n' +
                         'else if(distanceFromCenter > 0.2){material.diffuse = cement.diffuse;}\n' +
@@ -230,8 +230,8 @@
                         }
                     },
                     source :
-                        'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n' +
-                        'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
+                        'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n' +
+                        'czm_material material = czm_getDefaultMaterial(materialInput);\n' +
                         'float heightValue = texture2D(heightField, materialInput.st).r;\n' +
                         'material.diffuse = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue);\n' +
                         'material.alpha = (1.0 - texture2D(image, materialInput.st).r) * 0.7;\n' +

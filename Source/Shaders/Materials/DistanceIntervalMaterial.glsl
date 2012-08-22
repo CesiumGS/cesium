@@ -1,9 +1,9 @@
 uniform vec4 u_colors[NUMBER_OF_DISTANCES];
 uniform float u_distances[NUMBER_OF_DISTANCES];
 
-agi_material agi_getMaterial(agi_materialInput materialInput)
+czm_material czm_getMaterial(czm_materialInput materialInput)
 {
-    agi_material material = agi_getDefaultMaterial(materialInput);
+    czm_material material = czm_getDefaultMaterial(materialInput);
 
     vec4 color = vec4(0.0);
     
