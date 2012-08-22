@@ -198,6 +198,8 @@ define([
 
             this._renderList.push(sensor);
         }
+
+        return {};
     };
 
     /**
