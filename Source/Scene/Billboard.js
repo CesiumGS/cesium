@@ -571,13 +571,13 @@ define([
         var mv = uniformState.getView().multiply(modelMatrix);
         var positionEC = mv.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
 
-        // Apply eye offset, e.g., agi_eyeOffset
+        // Apply eye offset, e.g., czm_eyeOffset
         var zEyeOffset = eyeOffset.multiplyComponents(positionEC.normalize());
         positionEC.x += eyeOffset.x + zEyeOffset.x;
         positionEC.y += eyeOffset.y + zEyeOffset.y;
         positionEC.z += zEyeOffset.z;
 
-        // Eye to window coordinates, e.g., agi_eyeToWindowCoordinates
+        // Eye to window coordinates, e.g., czm_eyeToWindowCoordinates
         var q = uniformState.getProjection().multiplyByVector(positionEC); // clip coordinates
         q.x /= q.w; // normalized device coordinates
         q.y /= q.w;

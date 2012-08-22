@@ -98,7 +98,7 @@ define([
          * called azimuth, is the angle in the sensor's X-Y plane measured from the positive X-axis toward the positive
          * Y-axis.  The cone angle, sometimes called elevation, is the angle out of the X-Y plane along the positive Z-axis.
          * This matrix is available to GLSL vertex and fragment shaders via
-         * {@link agi_model} and derived uniforms.
+         * {@link czm_model} and derived uniforms.
          * <br /><br />
          * <div align='center'>
          * <img src='images/CustomSensorVolume.setModelMatrix.png' /><br />
@@ -107,7 +107,7 @@ define([
          *
          * @type Matrix4
          *
-         * @see agi_model
+         * @see czm_model
          *
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.

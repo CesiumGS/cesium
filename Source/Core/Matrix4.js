@@ -621,7 +621,7 @@ define([
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if none was provided.
      *
-     * @see agi_viewportTransformation
+     * @see czm_viewportTransformation
      * @see Context#getViewport
      *
      * @example

@@ -31,7 +31,7 @@
                 vs += 'attribute vec4 position;';
                 vs += 'void main()';
                 vs += '{';
-                vs += '    gl_Position = agi_modelViewProjection * position;';
+                vs += '    gl_Position = czm_modelViewProjection * position;';
                 vs += '}';
                 var fs = '';
                 fs += 'uniform vec4 u_color;';

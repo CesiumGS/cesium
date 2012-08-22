@@ -2,11 +2,11 @@ uniform vec4 cementColor;
 uniform float grainScale;
 uniform float roughness;
 
-agi_material agi_getMaterial(agi_materialInput materialInput)
+czm_material czm_getMaterial(czm_materialInput materialInput)
 {
-    agi_material material = agi_getDefaultMaterial(materialInput);
+    czm_material material = czm_getDefaultMaterial(materialInput);
 
-    float noise = agi_snoise(materialInput.st / grainScale);
+    float noise = czm_snoise(materialInput.st / grainScale);
     noise = pow(noise, 5.0) * roughness;
    
     vec4 color = cementColor;

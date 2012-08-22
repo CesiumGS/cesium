@@ -85,7 +85,7 @@ define([
      * @memberof UniformState
      *
      *
-     * @see agi_viewportOrthographic
+     * @see czm_viewportOrthographic
      */
     UniformState.prototype.getViewportOrthographic = function() {
         this._cleanViewport();
@@ -97,7 +97,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @see agi_viewportTransformation
+     * @see czm_viewportTransformation
      */
     UniformState.prototype.getViewportTransformation = function() {
         this._cleanViewport();
@@ -112,7 +112,7 @@ define([
      * @param {Matrix4} [matrix] DOC_TBA.
      *
      * @see UniformState#getModel
-     * @see agi_model
+     * @see czm_model
      */
     UniformState.prototype.setModel = function(matrix) {
         matrix = matrix || Matrix4.IDENTITY;
@@ -135,7 +135,7 @@ define([
      * @return {Matrix4} DOC_TBA.
      *
      * @see UniformState#setModel
-     * @see agi_model
+     * @see czm_model
      */
     UniformState.prototype.getModel = function() {
         return this._model;
@@ -149,7 +149,7 @@ define([
      * @param {Matrix4} [matrix] DOC_TBA.
      *
      * @see UniformState#getView
-     * @see agi_view
+     * @see czm_view
      */
     UniformState.prototype.setView = function(matrix) {
         matrix = matrix || Matrix4.IDENTITY;
@@ -174,7 +174,7 @@ define([
      * @return {Matrix4} DOC_TBA.
      *
      * @see UniformState#setView
-     * @see agi_view
+     * @see czm_view
      */
     UniformState.prototype.getView = function() {
         return this._view;
@@ -196,7 +196,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_inverseView
+     * @see czm_inverseView
      */
     UniformState.prototype.getInverseView = function() {
         this._cleanInverseView();
@@ -211,7 +211,7 @@ define([
      * @param {Matrix4} [matrix] DOC_TBA.
      *
      * @see UniformState#getProjection
-     * @see agi_projection
+     * @see czm_projection
      */
     UniformState.prototype.setProjection = function(matrix) {
         matrix = matrix || Matrix4.IDENTITY;
@@ -230,7 +230,7 @@ define([
      * @return {Matrix4} DOC_TBA.
      *
      * @see UniformState#setProjection
-     * @see agi_projection
+     * @see czm_projection
      */
     UniformState.prototype.getProjection = function() {
         return this._projection;
@@ -252,7 +252,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_inverseProjection
+     * @see czm_inverseProjection
      */
     UniformState.prototype.getInverseProjection = function() {
         this._cleanInverseProjection();
@@ -267,7 +267,7 @@ define([
      * @param {Matrix4} [matrix] DOC_TBA.
      *
      * @see UniformState#getInfiniteProjection
-     * @see agi_infiniteProjection
+     * @see czm_infiniteProjection
      */
     UniformState.prototype.setInfiniteProjection = function(matrix) {
         matrix = matrix || Matrix4.IDENTITY;
@@ -284,7 +284,7 @@ define([
      * @return {Matrix4} DOC_TBA.
      *
      * @see UniformState#setInfiniteProjection
-     * @see agi_infiniteProjection
+     * @see czm_infiniteProjection
      */
     UniformState.prototype.getInfiniteProjection = function() {
         return this._infiniteProjection;
@@ -307,7 +307,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_modelView
+     * @see czm_modelView
      */
     UniformState.prototype.getModelView = function() {
         this._cleanModelView();
@@ -330,7 +330,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_inverseModelView
+     * @see czm_inverseModelView
      */
     UniformState.prototype.getInverseModelView = function() {
         this._cleanInverseModelView();
@@ -353,7 +353,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_viewProjection
+     * @see czm_viewProjection
      */
     UniformState.prototype.getViewProjection = function() {
         this._cleanViewProjection();
@@ -376,7 +376,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_modelViewProjection
+     * @see czm_modelViewProjection
      */
     UniformState.prototype.getModelViewProjection = function() {
         this._cleanModelViewProjection();
@@ -399,7 +399,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_modelViewProjection
+     * @see czm_modelViewProjection
      */
     UniformState.prototype.getModelViewInfiniteProjection = function() {
         this._cleanModelViewInfiniteProjection();
@@ -423,7 +423,7 @@ define([
      *
      * @return {Matrix3} DOC_TBA.
      *
-     * @see agi_normal
+     * @see czm_normal
      */
     UniformState.prototype.getNormal = function() {
         this._cleanNormal();
@@ -447,7 +447,7 @@ define([
      *
      * @return {Matrix3} DOC_TBA.
      *
-     * @see agi_inverseNormal
+     * @see czm_inverseNormal
      */
     UniformState.prototype.getInverseNormal = function() {
         this._cleanInverseNormal();
@@ -505,7 +505,7 @@ define([
      *
      * @return {Cartesian3} The sun's direction in eye coordinates.
      *
-     * @see agi_sunDirectionEC
+     * @see czm_sunDirectionEC
      * @see UniformState#getSunDirectionEC
      */
     UniformState.prototype.getSunDirectionEC = function() {
@@ -527,7 +527,7 @@ define([
     *
     * @return {Cartesian3} A normalized vector from the model's origin to the sun in model coordinates.
     *
-    * @see agi_sunDirectionWC
+    * @see czm_sunDirectionWC
     */
     UniformState.prototype.getSunDirectionWC = function() {
         this._cleanSunDirectionWC();

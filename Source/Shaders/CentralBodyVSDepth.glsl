@@ -4,6 +4,6 @@ varying vec4 positionEC;
 
 void main()
 {
-    positionEC = agi_modelView * position;
-    gl_Position = agi_projection * positionEC;
+    positionEC = czm_modelView * position;
+    gl_Position = czm_projection * positionEC;
 }
