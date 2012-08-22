@@ -67,8 +67,6 @@ defineSuite([
 
         framebuffer.setColorRenderbuffer(undefined);
         expect(framebuffer.getColorRenderbuffer()).not.toBeDefined();
-
-        renderbuffer.destroy();
     });
 
     it('has a depth texture attachment', function() {

@@ -30,6 +30,18 @@ define([
         this._depthStencilTexture = undefined;
         this._depthStencilRenderbuffer = undefined;
 
+        /**
+         * When true, the framebuffer owns its attachments so they will be destroyed when
+         * {@link Framebuffer#destroy} is called or when a new attachment is assigned
+         * to an attachment point.
+         *
+         * @type Boolean
+         * @default true
+         *
+         * @see Framebuffer#destroy
+         */
+        this.destroyAttachments = true;
+
         if (description) {
             // Throw if a texture and renderbuffer are attached to the same point.  This won't
             // cause a WebGL error (because only one will be attached), but is likely a developer error.
@@ -128,6 +140,12 @@ define([
         framebuffer._unBind();
     }
 
+    function destroyAttachment(framebuffer, attachment) {
+        if (framebuffer.destroyAttachments && attachment && attachment.destroy) {
+            attachment.destroy();
+        }
+    }
+
     /**
      * DOC_TBA.
      *
@@ -140,6 +158,7 @@ define([
         }
 
         attachTexture(this, this._gl.COLOR_ATTACHMENT0, texture);
+        destroyAttachment(this, this._colorTexture);
         this._colorTexture = texture;
     };
 
@@ -159,6 +178,7 @@ define([
      */
     Framebuffer.prototype.setColorRenderbuffer = function(renderbuffer) {
         attachRenderbuffer(this, this._gl.COLOR_ATTACHMENT0, renderbuffer);
+        destroyAttachment(this, this._colorRenderbuffer);
         this._colorRenderbuffer = renderbuffer;
     };
 
@@ -178,14 +198,12 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setDepthTexture = function(texture) {
-// TODO: clear previous _depthTexture?
-// TODO: clear _depthRenderbuffer?
-
         if (texture && (texture.getPixelFormat() !== PixelFormat.DEPTH_COMPONENT)) {
             throw new DeveloperError('The depth-texture pixel-format must be DEPTH_COMPONENT.');
         }
 
         attachTexture(this, this._gl.DEPTH_ATTACHMENT, texture);
+        destroyAttachment(this, this._depthTexture);
         this._depthTexture = texture;
     };
 
@@ -205,6 +223,7 @@ define([
      */
     Framebuffer.prototype.setDepthRenderbuffer = function(renderbuffer) {
         attachRenderbuffer(this, this._gl.DEPTH_ATTACHMENT, renderbuffer);
+        destroyAttachment(this, this._depthRenderbuffer);
         this._depthRenderbuffer = renderbuffer;
     };
 
@@ -224,6 +243,7 @@ define([
      */
     Framebuffer.prototype.setStencilRenderbuffer = function(renderbuffer) {
         attachRenderbuffer(this, this._gl.STENCIL_ATTACHMENT, renderbuffer);
+        destroyAttachment(this, this._stencilRenderbuffer);
         this._stencilRenderbuffer = renderbuffer;
     };
 
@@ -243,13 +263,12 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setDepthStencilTexture = function(texture) {
-// TODO: see TODOs in setDepthTexture
-
         if (texture && (texture.getPixelFormat() !== PixelFormat.DEPTH_STENCIL)) {
             throw new DeveloperError('The depth-stencil pixel-format must be DEPTH_STENCIL.');
         }
 
         attachTexture(this, this._gl.DEPTH_STENCIL_ATTACHMENT, texture);
+        destroyAttachment(this, this._depthStencilTexture);
         this._depthStencilTexture = texture;
     };
 
@@ -269,6 +288,7 @@ define([
      */
     Framebuffer.prototype.setDepthStencilRenderbuffer = function(renderbuffer) {
         attachRenderbuffer(this, this._gl.DEPTH_STENCIL_ATTACHMENT, renderbuffer);
+        destroyAttachment(this, this._depthStencilRenderbuffer);
         this._depthStencilRenderbuffer = renderbuffer;
     };
 
@@ -312,41 +332,41 @@ define([
      * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
      * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
      * <br /><br />
-     * Only call this if the framebuffer has no attachments or the framebuffer owns its attachments;
-     * otherwise, the owner of the textures/renderbuffers is responsible for deleting them.
+     * Framebuffer attachments are only destoryed if the framebuffer owns them, i.e., {@link destroyAttachments}
+     * is true.
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     * <br /><br />
-     * This will fail if the color attachment is a face in a cube map texture.
      *
      * @return {undefined}
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      *
      * @see Framebuffer#isDestroyed
+     * @see Framebuffer#destroyAttachments
      * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteFramebuffers.xml'>glDeleteFramebuffers</a>
      * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
      * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteRenderbuffers.xml'>glDeleteRenderbuffers</a>
      *
      * @example
-     * // Destroying the framebuffer implicitly calls destroy for each of its attachments.
      * var texture = context.createTexture2D({ width : 1, height : 1 });
      * framebuffer = context.createFramebuffer({ colorTexture : texture });
      * // ...
      * framebuffer = framebuffer.destroy();
-     * // Calling texture.destroy() would throw <code>DeveloperError</code> at this point.
+     * // texture is also destroyed.
      */
     Framebuffer.prototype.destroy = function() {
-        // TODO:  What should the behavior be if the color attachment is a face in a cube map texture?
-        this._colorTexture = this._colorTexture && this._colorTexture.destroy();
-        this._colorRenderbuffer = this._colorRenderbuffer && this._colorRenderbuffer.destroy();
-        this._depthTexture = this._depthTexture && this._depthTexture.destroy();
-        this._depthRenderbuffer = this._depthRenderbuffer && this._depthRenderbuffer.destroy();
-        this._stencilRenderbuffer = this._stencilRenderbuffer && this._stencilRenderbuffer.destroy();
-        this._depthStencilTexture = this._depthStencilTexture && this._depthStencilTexture.destroy();
-        this._depthStencilRenderbuffer = this._depthStencilRenderbuffer && this._depthStencilRenderbuffer.destroy();
+        if (this.destroyAttachments) {
+            // If the color texture is a cube map face, it is owned by the cube map, and will not be destroyed.
+            this._colorTexture = this._colorTexture && this._colorTexture.destroy && this._colorTexture.destroy();
+            this._colorRenderbuffer = this._colorRenderbuffer && this._colorRenderbuffer.destroy();
+            this._depthTexture = this._depthTexture && this._depthTexture.destroy();
+            this._depthRenderbuffer = this._depthRenderbuffer && this._depthRenderbuffer.destroy();
+            this._stencilRenderbuffer = this._stencilRenderbuffer && this._stencilRenderbuffer.destroy();
+            this._depthStencilTexture = this._depthStencilTexture && this._depthStencilTexture.destroy();
+            this._depthStencilRenderbuffer = this._depthStencilRenderbuffer && this._depthStencilRenderbuffer.destroy();
+        }
 
         this._gl.deleteFramebuffer(this._framebuffer);
         return destroyObject(this);
