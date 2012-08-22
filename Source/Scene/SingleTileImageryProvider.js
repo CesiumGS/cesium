@@ -1,52 +1,50 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/loadImage',
         '../Core/DeveloperError',
         '../Core/Extent',
         './Projections',
         './GeographicTilingScheme',
         './TileState',
-        './ImageryProvider',
-        '../ThirdParty/when'
+        './ImageryProvider'
     ], function(
+        defaultValue,
         loadImage,
         DeveloperError,
         Extent,
         Projections,
         GeographicTilingScheme,
         TileState,
-        ImageryProvider,
-        when) {
+        ImageryProvider) {
     "use strict";
 
     /**
-     * Provides a single, top-level tile.
+     * Provides a single, top-level imagery tile.
      *
      * @alias SingleTileImageryProvider
      * @constructor
      *
      * @param {String} url The url for the tile.
-     * @param {Extent} extent The extent covered by the image.
-     * @param {Object} [proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent covered by the image.
+     * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} url is required.
-     * @exception {DeveloperError} extent is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    var SingleTileImageryProvider = function(url, extent, proxy) {
+    var SingleTileImageryProvider = function(url, description) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
+
+        description = defaultValue(description, {});
 
         this._url = url;
-        this._proxy = proxy;
+        this._proxy = description.proxy;
 
         /**
          * The cartographic extent of this provider's imagery,
@@ -55,7 +53,7 @@ define([
          * @constant
          * @type {Extent}
          */
-        this.extent = extent;
+        this.extent = defaultValue(description.extent, Extent.MAX_VALUE);
 
         /**
          * The maximum level-of-detail that can be requested.
@@ -81,10 +79,10 @@ define([
          * @see GeographicTilingScheme
          */
         this.tilingScheme = new GeographicTilingScheme({
+            extent : this.extent,
             numberOfLevelZeroTilesX : 1,
             numberOfLevelZeroTilesY : 1
         });
-        this.tilingScheme.extent = extent;
 
         this._image = undefined;
         this._texture = undefined;

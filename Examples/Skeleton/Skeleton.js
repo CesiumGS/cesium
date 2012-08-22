@@ -14,25 +14,30 @@ require({
 
     //Cesium.TerrainProvider.wireframe = true;
 
-//    var terrainProvider = new Cesium.EllipsoidTerrainProvider(new Cesium.WebMercatorTilingScheme({
+    var terrainProvider;
+//    terrainProvider = new Cesium.EllipsoidTerrainProvider(new Cesium.WebMercatorTilingScheme({
 //        ellipsoid : ellipsoid,
 //        numberOfLevelZeroTilesX : 2,
 //        numberOfLevelZeroTilesY : 2
 //    }));
 
-    var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
+    terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
         token : 'g6W_4dlgbMh1ts4WBKPIMSz3ReXmU6NZflAsBPCoDfhmdtArZmMLvpyaMVgnnbRKRY5ZQxcbPh1N5_PpN25Xcw..',
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
-//    var terrainProvider = new Cesium.WebMapServiceTerrainProvider({
+//    terrainProvider = new Cesium.WebMapServiceTerrainProvider({
 //        url : 'http://localhost:8081/geoserver/terrain/wms',
 //        layerName : 'terrain:SRTM',
 //        proxy : new Cesium.DefaultProxy('/terrain/')
 //    });
 
-    var imageryLayerCollection = new Cesium.ImageryLayerCollection();
+    var cb = new Cesium.CentralBody(ellipsoid, terrainProvider);
+    var imageryLayerCollection = cb.getImageLayers();
+
+//    var single = new Cesium.SingleTileImageryProvider('../../Images/NE2_50M_SR_W_4096.jpg');
+//    var singleLayer = imageryLayerCollection.addImageryProvider(single);
 
 //    var wmsImagery = new Cesium.WebMapServiceImageryProvider({
 //        url : 'http://localhost:8081/geoserver/wms',
@@ -52,7 +57,6 @@ require({
 //        proxy : new Cesium.DefaultProxy('/proxy/')
 //    });
 //    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
-
 
     var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({
         server : 'dev.virtualearth.net',
@@ -82,8 +86,6 @@ require({
 //                                                                   Cesium.Math.toRadians(37),
 //                                                                   Cesium.Math.toRadians(-119),
 //                                                                   Cesium.Math.toRadians(38))));
-
-    var cb = new Cesium.CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
 
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';

@@ -47,8 +47,7 @@ define([
          *
          * @type Extent
          */
-        this.extent = new Extent(-CesiumMath.PI, -CesiumMath.PI_OVER_TWO,
-                                 CesiumMath.PI, CesiumMath.PI_OVER_TWO);
+        this.extent = defaultValue(description.extent, Extent.MAX_VALUE);
 
         /**
          * The number of tiles in the X direction at level zero of the tile tree.

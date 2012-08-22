@@ -175,17 +175,6 @@ define([
         this._proxy = description.proxy;
 
         /**
-         * The cartographic extent of this provider's imagery,
-         * with north, south, east and west properties in radians.
-         *
-         * @type {Extent}
-         */
-        this.extent = new Extent(-CesiumMath.PI,
-                                 CesiumMath.toRadians(-85.05112878),
-                                 CesiumMath.PI,
-                                 CesiumMath.toRadians(85.05112878));
-
-        /**
          * The width of every image loaded.
          *
          * @type {Number}
@@ -225,6 +214,14 @@ define([
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 2
         });
+
+        /**
+         * The cartographic extent of this provider's imagery,
+         * with north, south, east and west properties in radians.
+         *
+         * @type {Extent}
+         */
+        this.extent = this.tilingScheme.extent;
 
         /**
          * True if the provider is ready for use; otherwise, false.

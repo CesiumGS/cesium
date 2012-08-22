@@ -40,6 +40,7 @@ define([
         './SceneMode',
         './ViewportQuad',
         './EllipsoidSurface',
+        './EllipsoidTerrainProvider',
         '../Shaders/CentralBodyVS',
         '../Shaders/CentralBodyFS',
         '../Shaders/CentralBodyFSCommon',
@@ -93,6 +94,7 @@ define([
         SceneMode,
         ViewportQuad,
         EllipsoidSurface,
+        EllipsoidTerrainProvider,
         CentralBodyVS,
         CentralBodyFS,
         CentralBodyFSCommon,
@@ -113,22 +115,26 @@ define([
      * @alias CentralBody
      * @constructor
      *
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the central body.
-     * @param {TerrainProvider} terrainProvider DOC_TBA
-     * @param {ImageryLayerCollection} [imageryLayerCollection=new ImageryLayerCollection()] DOC_TBA
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
+     * central body.
+     * @param {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain
+     * provider that will provide geometry for the surface of the central body.
+     * @param {ImageryLayerCollection} [imageryLayerCollection=new ImageryLayerCollection()] The
+     * collection of imagery layers that will be rendered on the surface of the central body.
      */
     var CentralBody = function(ellipsoid, terrainProvider, imageryLayerCollection) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        terrainProvider = typeof terrainProvider !== 'undefined' ? terrainProvider : new EllipsoidTerrainProvider();
+        imageryLayerCollection = typeof imageryLayerCollection !== 'undefined' ? imageryLayerCollection : new ImageryLayerCollection();
+
         this._ellipsoid = ellipsoid;
-
-        this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
-
-        this._imageryLayerCollection = defaultValue(imageryLayerCollection, new ImageryLayerCollection());
-        this._terrain = terrainProvider;
+        this._imageryLayerCollection = imageryLayerCollection;
         this._surface = new EllipsoidSurface({
             terrainProvider : terrainProvider,
-            imageryLayerCollection : this._imageryLayerCollection
+            imageryLayerCollection : imageryLayerCollection
         });
+
+        this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
         this._spWithoutAtmosphere = undefined;
         this._spGroundFromSpace = undefined;
