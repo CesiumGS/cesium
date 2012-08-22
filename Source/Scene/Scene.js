@@ -124,6 +124,15 @@ define([
     };
 
     /**
+     * Gets state information about the current scene.
+     *
+     * @memberof Scene
+     */
+    Scene.prototype.getSceneState = function() {
+        return this._sceneState;
+    };
+
+    /**
      * DOC_TBA
      * @memberof Scene
      */

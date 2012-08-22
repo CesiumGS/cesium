@@ -1551,7 +1551,6 @@ define([
      *
      * @memberof Context
      *
-     * @param {Context} description.context The context in which the texture gets created.
      * @param {PixelFormat} [description.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
      * @param {Number} [description.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
      * @param {Cartesian2} [description.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.

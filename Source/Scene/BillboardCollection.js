@@ -152,8 +152,8 @@ define([
          * billboards.add({ position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
          */
-        this.modelMatrix = Matrix4.IDENTITY;
-        this._modelMatrix = Matrix4.IDENTITY;
+        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this._modelMatrix = Matrix4.IDENTITY.clone();
 
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
@@ -837,115 +837,35 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    BillboardCollection.prototype._updateScene2D = function(projection, billboards, recomputeBoundingVolume) {
-        var length = billboards.length;
-
-        var positions = [];
-        for ( var i = 0; i < length; ++i) {
-            var b = billboards[i];
-            var p = this.modelMatrix.multiplyByVector(new Cartesian4(b.getPosition().x, b.getPosition().y, b.getPosition().z, 1.0));
-            var projectedPoint = projection.project(projection.getEllipsoid().cartesianToCartographic(new Cartesian3(p.x, p.y, p.z)));
-            b._setActualPosition(new Cartesian3(0.0, projectedPoint.x, projectedPoint.y));
-
-            if (recomputeBoundingVolume) {
-                positions.push(projectedPoint);
-            } else {
-                this._baseRectangle.expand(projectedPoint, this._baseRectangle);
-            }
+    function recomputeActualPositions(billboards, sceneState, morphTime, modelMatrix) {
+        for ( var i = 0, length = billboards.length; i < length; ++i) {
+            var billboard = billboards[i];
+            var position = billboard.getPosition();
+            var actualPosition = Billboard._computeActualPosition(position, sceneState, morphTime, modelMatrix);
+            billboard._setActualPosition(actualPosition);
         }
-
-        if (recomputeBoundingVolume) {
-            this._baseRectangle = BoundingRectangle.fromPoints(positions);
-        }
-    };
-
-    BillboardCollection.prototype._updateColumbusView = function(projection, billboards, recomputeBoundingVolume) {
-        var length = billboards.length;
-
-        var positions = [];
-        for ( var i = 0; i < length; ++i) {
-            var b = billboards[i];
-            var p = this.modelMatrix.multiplyByVector(new Cartesian4(b.getPosition().x, b.getPosition().y, b.getPosition().z, 1.0));
-            var projectedPoint = projection.project(projection.getEllipsoid().cartesianToCartographic(new Cartesian3(p.x, p.y, p.z)));
-            var point = new Cartesian3(projectedPoint.z, projectedPoint.x, projectedPoint.y);
-            b._setActualPosition(point);
-
-            if (recomputeBoundingVolume) {
-                positions.push(point);
-            } else {
-                this._baseVolume2D.expand(point, this._baseVolume2D);
-            }
-        }
-
-        if (recomputeBoundingVolume) {
-            this._baseVolume2D = BoundingSphere.fromPoints(positions);
-        }
-    };
+    }
 
     BillboardCollection.prototype._updateMode = function(sceneState) {
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
 
-        var billboards;
-        var length;
-        var i;
-        var b;
-        var positions;
-
-        if ((this._mode !== mode) ||
-            (this._projection !== projection) ||
-            (mode !== SceneMode.SCENE3D) &&
-            (!this._modelMatrix.equals(this.modelMatrix))) {
+        if (this._mode !== mode ||
+            this._projection !== projection ||
+            mode !== SceneMode.SCENE3D &&
+            !this._modelMatrix.equals(this.modelMatrix)) {
 
             this._mode = mode;
             this._projection = projection;
-            this._modelMatrix = this.modelMatrix.clone();
+            this.modelMatrix.clone(this._modelMatrix);
 
-            billboards = this._billboards;
-            length = billboards.length;
-
-            switch (mode) {
-            case SceneMode.SCENE3D:
-                positions = [];
-                for (i = 0; i < length; ++i) {
-                    b = billboards[i];
-                    var position = b.getPosition();
-                    b._setActualPosition(position);
-                    positions.push(position);
-                }
-                this._baseVolume = BoundingSphere.fromPoints(positions);
-                break;
-
-            case SceneMode.SCENE2D:
-                this._updateScene2D(projection, this._billboards, true);
-                break;
-
-            case SceneMode.COLUMBUS_VIEW:
-                this._updateColumbusView(projection, this._billboards, true);
-                break;
+            if (mode === SceneMode.SCENE3D || mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
+                recomputeActualPositions(this._billboards, sceneState, this.morphTime, this._modelMatrix);
             }
         } else if (mode === SceneMode.MORPHING) {
-            billboards = this._billboards;
-            length = billboards.length;
-
-            positions = [];
-            for (i = 0; i < length; ++i) {
-                b = billboards[i];
-                var p = b.getPosition();
-                var projectedPoint = projection.project(projection.getEllipsoid().cartesianToCartographic(p));
-                var point = new Cartesian3(
-                        CesiumMath.lerp(projectedPoint.z, p.x, this.morphTime),
-                        CesiumMath.lerp(projectedPoint.x, p.y, this.morphTime),
-                        CesiumMath.lerp(projectedPoint.y, p.z, this.morphTime));
-                b._setActualPosition(point);
-                positions.push(point);
-            }
-
-            this._baseVolume2D = BoundingSphere.fromPoints(positions);
-        } else if (mode === SceneMode.SCENE2D) {
-            this._updateScene2D(projection, this._billboardsToUpdate);
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            this._updateColumbusView(projection, this._billboardsToUpdate);
+            recomputeActualPositions(this._billboards, sceneState, this.morphTime, this._modelMatrix);
+        } else if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
+            recomputeActualPositions(this._billboardsToUpdate, sceneState, this.morphTime, this._modelMatrix);
         }
     };
 
