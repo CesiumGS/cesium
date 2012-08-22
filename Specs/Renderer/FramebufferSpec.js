@@ -64,6 +64,11 @@ defineSuite([
         framebuffer = context.createFramebuffer();
         framebuffer.setColorRenderbuffer(renderbuffer);
         expect(framebuffer.getColorRenderbuffer()).toEqual(renderbuffer);
+
+        framebuffer.setColorRenderbuffer(undefined);
+        expect(framebuffer.getColorRenderbuffer()).not.toBeDefined();
+
+        renderbuffer.destroy();
     });
 
     it('has a depth texture attachment', function() {
@@ -212,7 +217,7 @@ defineSuite([
             }
         }));
 
-        framebuffer.setColorTexture(null);
+        framebuffer.setColorTexture(undefined);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
