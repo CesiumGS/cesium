@@ -5,14 +5,16 @@ define([
         './MipmapHint',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
-        './TextureWrap'
+        './TextureWrap',
+        './CubeMapFace'
     ], function(
         DeveloperError,
         destroyObject,
         MipmapHint,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap) {
+        TextureWrap,
+        CubeMapFace) {
     "use strict";
 
     /**
@@ -34,126 +36,14 @@ define([
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._sampler = undefined;
 
+        this._positiveX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        this._negativeX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        this._positiveY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        this._negativeY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        this._positiveZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        this._negativeZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+
         this.setSampler();
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @param {Object} source The source {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, or {HTMLVideoElement}.
-     * @param {Number} xOffset optional
-     * @param {Number} yOffset optional
-     *
-     * @exception {DeveloperError} source is required.
-     * @exception {DeveloperError} xOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} yOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} xOffset + source.width must be less than or equal to getWidth().
-     * @exception {DeveloperError} yOffset + source.height must be less than or equal to getHeight().
-     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
-     */
-    CubeMap.prototype._copyFrom = function(targetFace, source, xOffset, yOffset) {
-        if (!source) {
-            throw new DeveloperError('source is required.');
-        }
-
-        xOffset = xOffset || 0;
-        yOffset = yOffset || 0;
-
-        var width = source.width;
-        var height = source.height;
-
-        if (xOffset < 0) {
-            throw new DeveloperError('xOffset must be greater than or equal to zero.');
-        }
-
-        if (yOffset < 0) {
-            throw new DeveloperError('yOffset must be greater than or equal to zero.');
-        }
-
-        if (xOffset + width > this._size) {
-            throw new DeveloperError('xOffset + source.width must be less than or equal to getWidth().');
-        }
-
-        if (yOffset + height > this._size) {
-            throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
-        }
-
-        var gl = this._gl;
-        var target = this._textureTarget;
-
-        // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(target, this._texture);
-
-        //Firefox bug: texSubImage2D has overloads and can't resolve our enums, so we use + to explicitly convert to a number.
-        if (source.arrayBufferView) {
-            gl.texSubImage2D(targetFace, 0, xOffset, yOffset, width, height, +this._pixelFormat, +this._pixelDatatype, source.arrayBufferView);
-        } else {
-            gl.texSubImage2D(targetFace, 0, xOffset, yOffset, +this._pixelFormat, +this._pixelDatatype, source);
-        }
-
-        gl.bindTexture(target, null);
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @param {Number} xOffset optional
-     * @param {Number} yOffset optional
-     * @param {Number} framebufferXOffset optional
-     * @param {Number} framebufferYOffset optional
-     * @param {Number} width optional
-     * @param {Number} height optional
-     *
-     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
-     * @exception {DeveloperError} xOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} yOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} xOffset + source.width must be less than or equal to getWidth().
-     * @exception {DeveloperError} yOffset + source.height must be less than or equal to getHeight().
-     */
-    CubeMap.prototype._copyFromFramebuffer = function(targetFace, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-        xOffset = xOffset || 0;
-        yOffset = yOffset || 0;
-        framebufferXOffset = framebufferXOffset || 0;
-        framebufferYOffset = framebufferYOffset || 0;
-        width = width || this._size;
-        height = height || this._size;
-
-        if (xOffset < 0) {
-            throw new DeveloperError('xOffset must be greater than or equal to zero.');
-        }
-
-        if (yOffset < 0) {
-            throw new DeveloperError('yOffset must be greater than or equal to zero.');
-        }
-
-        if (framebufferXOffset < 0) {
-            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
-        }
-
-        if (framebufferYOffset < 0) {
-            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
-        }
-
-        if (xOffset + width > this._size) {
-            throw new DeveloperError('xOffset + source.width must be less than or equal to getWidth().');
-        }
-
-        if (yOffset + height > this._size) {
-            throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
-        }
-
-        var gl = this._gl;
-        var target = this._textureTarget;
-
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(target, this._texture);
-        gl.copyTexSubImage2D(targetFace, 0, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-        gl.bindTexture(target, null);
     };
 
     /**
@@ -161,28 +51,7 @@ define([
      * @memberof CubeMap
      */
     CubeMap.prototype.getPositiveX = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_POSITIVE_X, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_POSITIVE_X, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            getPixelFormat : function() {
-                return that._pixelFormat;
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_POSITIVE_X;
-            }
-        };
+        return this._positiveX;
     };
 
     /**
@@ -190,28 +59,7 @@ define([
      * @memberof CubeMap
      */
     CubeMap.prototype.getNegativeX = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_X, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            getPixelFormat : function() {
-                return that._pixelFormat;
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_NEGATIVE_X;
-            }
-        };
+        return this._negativeX;
     };
 
     /**
@@ -219,28 +67,7 @@ define([
      * @memberof CubeMap
      */
     CubeMap.prototype.getPositiveY = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_POSITIVE_Y, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            getPixelFormat : function() {
-                return that._pixelFormat;
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_POSITIVE_Y;
-            }
-        };
+        return this._positiveY;
     };
 
     /**
@@ -248,28 +75,7 @@ define([
      * @memberof CubeMap
      */
     CubeMap.prototype.getNegativeY = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            getPixelFormat : function() {
-                return that._pixelFormat;
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Y;
-            }
-        };
+        return this._negativeY;
     };
 
     /**
@@ -277,28 +83,7 @@ define([
      * @memberof CubeMap
      */
     CubeMap.prototype.getPositiveZ = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_POSITIVE_Z, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_POSITIVE_Z, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            getPixelFormat : function() {
-                return that._pixelFormat;
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_POSITIVE_Z;
-            }
-        };
+        return this._positiveZ;
     };
 
     /**
@@ -306,28 +91,7 @@ define([
      * @memberof CubeMap
      */
     CubeMap.prototype.getNegativeZ = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            getPixelFormat : function() {
-                return that._pixelFormat;
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Z;
-            }
-        };
+        return this._negativeZ;
     };
 
     /**
@@ -515,6 +279,12 @@ define([
      */
     CubeMap.prototype.destroy = function() {
         this._gl.deleteTexture(this._texture);
+        this._positiveX = destroyObject(this._positiveX);
+        this._negativeX = destroyObject(this._negativeX);
+        this._positiveY = destroyObject(this._positiveY);
+        this._negativeY = destroyObject(this._negativeY);
+        this._positiveZ = destroyObject(this._positiveZ);
+        this._negativeZ = destroyObject(this._negativeZ);
         return destroyObject(this);
     };
 
