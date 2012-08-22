@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
@@ -35,6 +36,7 @@ define([
         './VertexArray',
         './VertexLayout'
     ], function(
+        defaultValue,
         DeveloperError,
         destroyObject,
         Color,
@@ -1527,11 +1529,11 @@ define([
      *
      * @memberof Context
      *
-     * @param {PixelFormat} pixelFormat optional.
-     * @param {PixelFormat} framebufferXOffset optional.
-     * @param {PixelFormat} framebufferYOffset optional.
-     * @param {PixelFormat} width optional.
-     * @param {PixelFormat} height optional.
+     * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] DOC_TBA
+     * @param {PixelFormat} [framebufferXOffset=0] DOC_TBA
+     * @param {PixelFormat} [framebufferYOffset=0] DOC_TBA
+     * @param {PixelFormat} [width=canvas.clientWidth] DOC_TBA
+     * @param {PixelFormat} [height=canvas.clientHeight] DOC_TBA
      *
      * @return {Texture} DOC_TBA.
      *
@@ -1556,26 +1558,27 @@ define([
             throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
-        if (framebufferXOffset < 0) {
+        if ((typeof framebufferXOffset !== 'undefined') && (framebufferXOffset < 0)) {
             throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
         }
 
-        if (framebufferYOffset < 0) {
+        if ((typeof framebufferYOffset !== 'undefined') && (framebufferYOffset < 0)) {
             throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
         }
 
-        if (framebufferXOffset + width > this._canvas.clientWidth) {
+        framebufferXOffset = defaultValue(framebufferXOffset, 0);
+        framebufferYOffset = defaultValue(framebufferYOffset, 0);
+
+        if ((typeof width !== 'undefined') && (framebufferXOffset + width > this._canvas.clientWidth)) {
             throw new DeveloperError('framebufferXOffset + width must be less than or equal to getCanvas().clientWidth');
         }
 
-        if (framebufferYOffset + height > this._canvas.clientHeight) {
+        if ((typeof height !== 'undefined') && (framebufferYOffset + height > this._canvas.clientHeight)) {
             throw new DeveloperError('framebufferYOffset + height must be less than or equal to getCanvas().clientHeight.');
         }
 
-        framebufferXOffset = framebufferXOffset || 0;
-        framebufferYOffset = framebufferYOffset || 0;
-        width = width || this._canvas.clientWidth;
-        height = height || this._canvas.clientHeight;
+        width = defaultValue(width, this._canvas.clientWidth);
+        height = defaultValue(height, this._canvas.clientHeight);
 
         var gl = this._gl;
         var textureTarget = gl.TEXTURE_2D;
@@ -1598,8 +1601,8 @@ define([
      * @param {PixelFormat} [description.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
      * @param {Number} [description.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
      * @param {Cartesian2} [description.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Array} description.images Optional array of {@link Image} to be added to the atlas. Same as calling addImages(images).
-     * @param {Image} description.image Optional single image to be added to the atlas. Same as calling addImage(image).
+     * @param {Array} [description.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * @param {Image} [description.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
      *
      * @returns {TextureAtlas} The new texture atlas.
      *
@@ -1744,7 +1747,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Object} description optional.
+     * @param {Object} [description] DOC_TBA
      *
      * @return {Framebuffer} DOC_TBA.
      *
@@ -1758,10 +1761,37 @@ define([
      * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
      * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
      *
-     *
      * @see Context#createTexture2D
      * @see Context#createCubeMap
      * @see Context#createRenderbuffer
+     *
+     * @example
+     * // Example 1. Create a framebuffer with no initial attachments,
+     * // and then add a color-texture attachment.
+     * var framebuffer = context.createFramebuffer();
+     * framebuffer.setColorTexture(context.createTexture2D({
+     *     width : 256,
+     *     height : 256,
+     * }));
+     *
+     * //////////////////////////////////////////////////////////////////
+     *
+     * // Example 2. Create a framebuffer with color and depth texture attachments.
+     * var width = context.getCanvas().clientWidth;
+     * var height = context.getCanvas().clientHeight;
+     * var framebuffer = context.createFramebuffer({
+     *   colorTexture : context.createTexture2D({
+     *     width : width,
+     *     height : height,
+     *     pixelFormat : PixelFormat.RGBA
+     *   }),
+     *   depthTexture : context.createTexture2D({
+     *     width : width,
+     *     height : height,
+     *     pixelFormat : PixelFormat.DEPTH_COMPONENT,
+     *     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+     *   })
+     * });
      */
     Context.prototype.createFramebuffer = function(description) {
         return new Framebuffer(this._gl, description);
@@ -1772,7 +1802,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Object} description optional.
+     * @param {Object} [description] DOC_TBA.
      *
      * @return {createRenderbuffer} DOC_TBA.
      *
