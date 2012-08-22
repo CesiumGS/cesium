@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/DeveloperError',
@@ -15,6 +16,7 @@ define([
         defaultValue,
         destroyObject,
         BoundingRectangle,
+        BoundingSphere,
         Cartesian3,
         Cartesian4,
         DeveloperError,
@@ -404,69 +406,84 @@ define([
      * @private
      */
     CompositePrimitive.prototype.update = function(context, sceneState) {
-        if (this.show) {
-            if (this._centralBody) {
-                this._centralBody.update(context, sceneState);
-            }
+        if (!this.show) {
+            return undefined;
+        }
 
-            var camera = sceneState.camera;
-            var mode = sceneState.mode;
+        if (this._centralBody) {
+            this._centralBody.update(context, sceneState);
+        }
 
-            var frustumRect = undefined;
-            if (mode === SceneMode.SCENE2D) {
-                var frustum = camera.frustum;
+        var camera = sceneState.camera;
+        var mode = sceneState.mode;
 
-                if (typeof frustum !== 'undefined' && typeof frustum.top !== 'undefined') {
-                    var position = camera.position;
-                    var up = camera.up;
-                    var right = camera.right;
+        var frustumRect = undefined;
+        if (mode === SceneMode.SCENE2D) {
+            var frustum = camera.frustum;
 
-                    var width = frustum.right - frustum.left;
-                    var height = frustum.top - frustum.bottom;
+            if (typeof frustum.top !== 'undefined') {
+                var position = camera.position;
+                var up = camera.up;
+                var right = camera.right;
 
-                    var lowerLeft = position.add(right.multiplyByScalar(frustum.left));
-                    lowerLeft = lowerLeft.add(up.multiplyByScalar(frustum.bottom));
-                    var upperLeft = lowerLeft.add(up.multiplyByScalar(height));
-                    var upperRight = upperLeft.add(right.multiplyByScalar(width));
-                    var lowerRight = upperRight.add(up.multiplyByScalar(-height));
+                var width = frustum.right - frustum.left;
+                var height = frustum.top - frustum.bottom;
 
-                    var x = Math.min(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x);
-                    var y = Math.min(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y);
-                    var w = Math.max(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x) - x;
-                    var h = Math.max(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y) - y;
+                var lowerLeft = position.add(right.multiplyByScalar(frustum.left));
+                lowerLeft = lowerLeft.add(up.multiplyByScalar(frustum.bottom));
+                var upperLeft = lowerLeft.add(up.multiplyByScalar(height));
+                var upperRight = upperLeft.add(right.multiplyByScalar(width));
+                var lowerRight = upperRight.add(up.multiplyByScalar(-height));
 
-                    frustumRect = new BoundingRectangle(x, y, w, h);
-                }
-            }
+                var x = Math.min(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x);
+                var y = Math.min(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y);
+                var w = Math.max(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x) - x;
+                var h = Math.max(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y) - y;
 
-            var primitives = this._primitives;
-            var length = primitives.length;
-            for ( var i = 0; i < length; ++i) {
-                var primitive = primitives[i];
-                var renderState = primitive.update(context, sceneState);
-
-                if (typeof renderState !== 'undefined') {
-                    var boundingVolume = renderState.boundingVolume;
-                    var modelMatrix = defaultValue(renderState.modelMatrix, Matrix4.IDENTITY);
-
-                    if (typeof boundingVolume !== 'undefined') {
-                        if (mode !== SceneMode.SCENE2D) {
-                            var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
-                            boundingVolume.center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
-                            if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
-                                continue;
-                            }
-                        } else {
-                            if (typeof frustumRect !== 'undefined' && boundingVolume.intersect(frustumRect) === Intersect.OUTSIDE) {
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-                this._renderList.push(primitive);
+                frustumRect = new BoundingRectangle(x, y, w, h);
             }
         }
+
+        var primitives = this._primitives;
+        var length = primitives.length;
+        for ( var i = 0; i < length; ++i) {
+            var primitive = primitives[i];
+            var spatialState = primitive.update(context, sceneState);
+
+            if (typeof spatialState === 'undefined') {
+                continue;
+            }
+
+            var boundingVolume = spatialState.boundingVolume;
+            var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
+
+            if (typeof boundingVolume !== 'undefined') {
+                if (mode !== SceneMode.SCENE2D) {
+                    var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
+                    center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
+                    boundingVolume = new BoundingSphere(center, boundingVolume.radius);
+
+                    if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+                        continue;
+                    }
+
+                    var occluder = sceneState.occluder;
+                    if (mode === SceneMode.SCENE3D &&
+                            typeof occluder !== 'undefined' &&
+                            !occluder.isVisible(boundingVolume)) {
+                        continue;
+                    }
+                } else {
+                    if (typeof frustumRect !== 'undefined' && boundingVolume.intersect(frustumRect) === Intersect.OUTSIDE) {
+                        continue;
+                    }
+                }
+            }
+
+            this._renderList.push(primitive);
+        }
+
+        return {};
     };
 
     /**
@@ -474,38 +491,35 @@ define([
      * @memberof CompositePrimitive
      */
     CompositePrimitive.prototype.render = function(context) {
-        if (this.show) {
-            var cb = this._centralBody;
-            var primitives = this._renderList;
-            var primitivesLen = primitives.length;
+        var cb = this._centralBody;
+        var primitives = this._renderList;
+        var primitivesLen = primitives.length;
 
-            if (cb) {
-                cb.render(context);
-            }
-            for ( var i = 0; i < primitivesLen; ++i) {
-                var primitive = primitives[i];
-                primitive.render(context);
-            }
-            this._renderList.length = 0;
+        if (cb) {
+            cb.render(context);
         }
+        for ( var i = 0; i < primitivesLen; ++i) {
+            var primitive = primitives[i];
+            primitive.render(context);
+        }
+        this._renderList.length = 0;
     };
 
     /**
      * @private
      */
     CompositePrimitive.prototype.updateForPick = function(context) {
-        if (this.show) {
-            if (this._centralBody && this._centralBody.updateForPick) {
-                this._centralBody.updateForPick(context);
-            }
+        if (this._centralBody && this._centralBody.updateForPick) {
+            this._centralBody.updateForPick(context);
+        }
 
-            var primitives = this._primitives;
-            var length = primitives.length;
-            for ( var i = 0; i < length; ++i) {
-                var primitive = primitives[i];
-                if (primitive.updateForPick) {
-                    primitives[i].updateForPick(context);
-                }
+        // This assumes that updateForPick is called after update and before renderForPick
+        var primitives = this._renderList;
+        var length = primitives.length;
+        for ( var i = 0; i < length; ++i) {
+            var primitive = primitives[i];
+            if (primitive.updateForPick) {
+                primitives[i].updateForPick(context);
             }
         }
     };
@@ -515,21 +529,21 @@ define([
      * @memberof CompositePrimitive
      */
     CompositePrimitive.prototype.renderForPick = function(context, framebuffer) {
-        if (this.show) {
-            var cb = this._centralBody;
-            var primitives = this._primitives;
-            var primitivesLen = primitives.length;
+        var cb = this._centralBody;
+        var primitives = this._renderList;
+        var primitivesLen = primitives.length;
 
-            if (cb) {
-                cb.renderForPick(context, framebuffer);
-            }
-            for ( var i = 0; i < primitivesLen; ++i) {
-                var primitive = primitives[i];
-                if (primitive.renderForPick) {
-                    primitive.renderForPick(context, framebuffer);
-                }
+        if (cb) {
+            cb.renderForPick(context, framebuffer);
+        }
+
+        for ( var i = 0; i < primitivesLen; ++i) {
+            var primitive = primitives[i];
+            if (primitive.renderForPick) {
+                primitive.renderForPick(context, framebuffer);
             }
         }
+        this._renderList.length = 0;
     };
 
     /**

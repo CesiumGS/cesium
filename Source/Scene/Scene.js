@@ -157,6 +157,25 @@ define([
         return this._animate;
     };
 
+    Scene.prototype._updateSceneState = function() {
+        var camera = this._camera;
+
+        var sceneState = this._sceneState;
+        sceneState.mode = this.mode;
+        sceneState.scene2D = this.scene2D;
+        sceneState.camera = camera;
+        sceneState.occluder = undefined;
+
+        // TODO: The occluder is the top-level central body. When we add
+        //       support for multiple central bodies, this should be the closest one?
+        var cb = this._primitives.getCentralBody();
+        if (this.mode === SceneState.SCENE3D && cb !== undefined) {
+            var ellipsoid = cb.getEllipsoid();
+            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
+            sceneState.occluder = occluder;
+        }
+    };
+
     Scene.prototype._update = function() {
         var us = this.getUniformState();
         var camera = this._camera;
@@ -179,12 +198,8 @@ define([
             this._animate();
         }
 
-        var sceneState = this._sceneState;
-        sceneState.mode = this.mode;
-        sceneState.scene2D = this.scene2D;
-        sceneState.camera = camera;
-
-        this._primitives.update(this._context, sceneState);
+        this._updateSceneState();
+        this._primitives.update(this._context, this._sceneState);
     };
 
     /**
@@ -205,11 +220,13 @@ define([
     Scene.prototype.pick = function(windowPosition) {
         var context = this._context;
         var primitives = this._primitives;
+        var sceneState = this._sceneState;
 
         this._pickFramebuffer = this._pickFramebuffer || context.createPickFramebuffer();
         var fb = this._pickFramebuffer.begin();
 
-        // TODO: Should we also do a regular update?
+        this._updateSceneState();
+        primitives.update(context, sceneState);
         primitives.updateForPick(context);
         primitives.renderForPick(context, fb);
 

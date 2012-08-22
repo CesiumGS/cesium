@@ -141,8 +141,6 @@
                 this._pickId = undefined;
 
                 this._boundingVolume = undefined;
-                this._boundingVolumeCV = undefined;
-                this._boundingVolume2D = undefined;
 
                 this._mode = undefined;
                 this._projection = undefined;
@@ -152,17 +150,17 @@
                     position3D : 1
                 };
 
-                this.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+                this._modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
                 this.morphTime = 1.0;
 
                 var that = this;
                 this._drawUniforms = {
-                    u_model : function() { return (that._mode === Cesium.SceneMode.SCENE3D) ? that.modelMatrix : Cesium.Matrix4.IDENTITY; },
+                    u_model : function() { return (that._mode === Cesium.SceneMode.SCENE3D) ? that._modelMatrix : Cesium.Matrix4.IDENTITY; },
                     u_color : function() { return { red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 }; },
                     u_morphTime : function() { return that.morphTime; }
                 };
                 this._pickUniforms = {
-                    u_model : function() { return (that._mode === Cesium.SceneMode.SCENE3D) ? that.modelMatrix : Cesium.Matrix4.IDENTITY; },
+                    u_model : function() { return (that._mode === Cesium.SceneMode.SCENE3D) ? that._modelMatrix : Cesium.Matrix4.IDENTITY; },
                     u_color : function() { return that._pickId.normalizedRgba; },
                     u_morphTime : function() { return that.morphTime; }
                 };
@@ -218,32 +216,45 @@
                     mesh.attributes.position3D = mesh.attributes.position;
                     delete mesh.attributes.position;
 
-                    this._boundingVolume = Cesium.BoundingSphere.fromPoints([
-                        new Cesium.Cartesian3(x, 0.0, 0.0),
-                        new Cesium.Cartesian3(0.0, y, 0.0),
-                        new Cesium.Cartesian3(0.0, 0.0, z)
-                    ]);
-
                     if (mode === Cesium.SceneMode.SCENE3D) {
                         mesh.attributes.position2D = { // Not actually used in shader
-                                value : [0.0, 0.0]
-                            };
+                            value : [0.0, 0.0]
+                        };
+
+                        this._boundingVolume = Cesium.BoundingSphere.fromPoints([
+                            new Cesium.Cartesian3(x, 0.0, 0.0),
+                            new Cesium.Cartesian3(0.0, y, 0.0),
+                            new Cesium.Cartesian3(0.0, 0.0, z)
+                        ]);
                     } else {
                         var positions = mesh.attributes.position3D.values;
                         var projectedPositions = [];
                         var projectedPositionsFlat = [];
                         for (var i = 0; i < positions.length; i += 3) {
                             var p = new Cesium.Cartesian3(positions[i], positions[i + 1], positions[i + 2]);
-                            p = this.modelMatrix.multiplyByVector(new Cesium.Cartesian4(p.x, p.y, p.z, 1.0));
+                            p = this._modelMatrix.multiplyByVector(new Cesium.Cartesian4(p.x, p.y, p.z, 1.0));
                             p = projection.project(this._ellipsoid.cartesianToCartographic(Cesium.Cartesian3.fromCartesian4(p)));
 
                             projectedPositions.push(p);
                             projectedPositionsFlat.push(p.z, p.x, p.y);
                         }
 
-                        this._boundingVolumeCV = Cesium.BoundingSphere.fromPoints(projectedPositions);
-                        this._boundingVolumeCV.center = new Cesium.Cartesian3(this._boundingVolumeCV.center.z, this._boundingVolumeCV.center.x, this._boundingVolumeCV.center.y);
-                        this._boundingVolume2D = Cesium.BoundingRectangle.fromPoints(projectedPositions);
+                        if (mode === SceneMode.SCENE2D){
+                            this._boundingVolume = Cesium.BoundingRectangle.fromPoints(projectedPositions);
+                        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+                            this._boundingVolume = Cesium.BoundingSphere.fromPoints(projectedPositions);
+                            this._boundingVolume.center = new Cesium.Cartesian3(this._boundingVolume.center.z, this._boundingVolume.center.x, this._boundingVolume.center.y);
+                        } else {
+                            var bv3D = Cesium.BoundingSphere.fromPoints([
+                                new Cesium.Cartesian3(x, 0.0, 0.0),
+                                new Cesium.Cartesian3(0.0, y, 0.0),
+                                new Cesium.Cartesian3(0.0, 0.0, z)
+                            ]);
+                            var bv2D = Cesium.BoundingSphere.fromPoints(projectedPositions);
+                            bv2D.center = new Cesium.Cartesian3(bv2D.center.z, bv2D.center.x, bv2D.center.y);
+
+                            this._boundingVolume = bv3D.union(bv2D);
+                        }
 
                         mesh.attributes.position2D = {
                                 componentDatatype : Cesium.ComponentDatatype.FLOAT,
@@ -260,22 +271,13 @@
                     });
                 }
 
-                var boundingVolume;
                 var modelMatrix = Cesium.Matrix4.IDENTITY;
-
                 if (mode === Cesium.SceneMode.SCENE3D) {
-                    boundingVolume = this._boundingVolume.clone();
-                    modelMatrix = this.modelMatrix.clone();
-                } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-                    boundingVolume = this._boundingVolumeCV.clone();
-                } else if (mode === Cesium.SceneMode.SCENE2D) {
-                    boundingVolume = this._boundingVolume2D.clone();
-                } else {
-                    boundingVolume = this._boundingVolume.union(this._boundingVolumeCV);
+                    modelMatrix = this._modelMatrix;
                 }
 
                 return {
-                    boundingVolume : boundingVolume,
+                    boundingVolume : this._boundingVolume,
                     modelMatrix : modelMatrix
                 };
             };

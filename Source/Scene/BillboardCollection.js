@@ -608,19 +608,21 @@ define([
      * @see BillboardCollection#setTextureAtlas
      */
     BillboardCollection.prototype.render = function(context) {
-        if (this._vaf && this._vaf.va && this._textureAtlas) {
-            var va = this._vaf.va;
-            var length = va.length;
-            for ( var i = 0; i < length; ++i) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    count : va[i].indicesCount,
-                    shaderProgram : this._sp,
-                    uniformMap : this._uniforms,
-                    vertexArray : va[i].va,
-                    renderState : this._rs
-                });
-            }
+        if (typeof this._vaf === 'undefined' || typeof this._vaf.va === 'undefined') {
+            return;
+        }
+
+        var va = this._vaf.va;
+        var length = va.length;
+        for ( var i = 0; i < length; ++i) {
+            context.draw({
+                primitiveType : PrimitiveType.TRIANGLES,
+                count : va[i].indicesCount,
+                shaderProgram : this._sp,
+                uniformMap : this._uniforms,
+                vertexArray : va[i].va,
+                renderState : this._rs
+            });
         }
     };
 
@@ -629,20 +631,22 @@ define([
      * @memberof BillboardCollection
      */
     BillboardCollection.prototype.renderForPick = function(context, framebuffer) {
-        if (this._vaf && this._vaf.va && this._textureAtlas) {
-            var va = this._vaf.va;
-            var length = va.length;
-            for ( var i = 0; i < length; ++i) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    count : va[i].indicesCount,
-                    shaderProgram : this._spPick,
-                    uniformMap : this._uniforms,
-                    vertexArray : va[i].va,
-                    renderState : this._rsPick,
-                    framebuffer : framebuffer
-                });
-            }
+        if (typeof this._vaf === 'undefined' || typeof this._vaf.va === 'undefined') {
+            return;
+        }
+
+        var va = this._vaf.va;
+        var length = va.length;
+        for ( var i = 0; i < length; ++i) {
+            context.draw({
+                primitiveType : PrimitiveType.TRIANGLES,
+                count : va[i].indicesCount,
+                shaderProgram : this._spPick,
+                uniformMap : this._uniforms,
+                vertexArray : va[i].va,
+                renderState : this._rsPick,
+                framebuffer : framebuffer
+            });
         }
     };
 
@@ -1001,14 +1005,14 @@ define([
         if (typeof textureAtlas === 'undefined') {
             // Can't write billboard vertices until we have texture coordinates
             // provided by a texture atlas
-            return;
+            return undefined;
         }
 
         var textureAtlasCoordinates = textureAtlas.getTextureCoordinates();
         if (textureAtlasCoordinates.length === 0) {
             // Can't write billboard vertices until we have texture coordinates
             // provided by a texture atlas
-            return;
+            return undefined;
         }
 
         this._removeBillboards();
@@ -1124,7 +1128,7 @@ define([
         var modelMatrix = Matrix4.IDENTITY;
 
         if (sceneState.mode === SceneMode.SCENE3D) {
-            modelMatrix = this.modelMatrix.clone();
+            modelMatrix = this.modelMatrix;
         }
 
         return {

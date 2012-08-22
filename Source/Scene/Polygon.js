@@ -70,7 +70,7 @@ define([
     };
 
     function PositionVertices() {
-        this._va = null;
+        this._va = undefined;
     }
 
     PositionVertices.prototype.getVertexArrays = function() {
@@ -102,8 +102,8 @@ define([
 
     PositionVertices.prototype._destroyVA = function() {
         var va = this._va;
-        if (va) {
-            this._va = null;
+        if (typeof va !== 'undefined') {
+            this._va = undefined;
 
             var length = va.length;
             for ( var i = 0; i < length; ++i) {
@@ -508,6 +508,10 @@ define([
             for (i = 0; i < this._polygonHierarchy.length; i++) {
                  meshes.push(this._createMeshFromPositions(this._polygonHierarchy[i], outerPositions2D));
             }
+
+            // The bounding volume is just around the boundary points, so there could be cases for
+            // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
+            // volume doesn't cover the polygon.
             this._boundingVolume = BoundingSphere.fromPoints(outerPositions);
         } else {
             return undefined;
@@ -583,7 +587,7 @@ define([
         }
 
         if (!this.show) {
-            return;
+            return undefined;
         }
 
         if (this._ellipsoid !== this.ellipsoid) {
@@ -665,11 +669,11 @@ define([
 
         var boundingVolume;
         if (mode === SceneMode.SCENE3D) {
-            boundingVolume = this._boundingVolume.clone();
+            boundingVolume = this._boundingVolume;
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            boundingVolume = this._boundingVolume2D.clone();
+            boundingVolume = this._boundingVolume2D;
         } else if (mode === SceneMode.SCENE2D) {
-            boundingVolume = this._boundingRectangle.clone();
+            boundingVolume = this._boundingRectangle;
         } else {
             boundingVolume = this._boundingVolume.union(this._boundingVolume2D);
         }
@@ -691,18 +695,20 @@ define([
      * @see Polygon#setTextureAtlas
      */
     Polygon.prototype.render = function(context) {
-        if (this.show) {
-            var vas = this._vertices.getVertexArrays();
-            var length = vas.length;
-            for ( var j = 0; j < length; ++j) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._sp,
-                    uniformMap : this._drawUniforms,
-                    vertexArray : vas[j],
-                    renderState : this._rs
-                });
-            }
+        var vas = this._vertices.getVertexArrays();
+        if (typeof vas === 'undefined') {
+            return;
+        }
+
+        var length = vas.length;
+        for ( var j = 0; j < length; ++j) {
+            context.draw({
+                primitiveType : PrimitiveType.TRIANGLES,
+                shaderProgram : this._sp,
+                uniformMap : this._drawUniforms,
+                vertexArray : vas[j],
+                renderState : this._rs
+            });
         }
     };
 
@@ -714,35 +720,33 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     Polygon.prototype.updateForPick = function(context) {
-        if (this.show) {
-            this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
+        this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
 
-            this._rsPick = context.createRenderState({
-                // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
-                cull : {
-                    enabled : true,
-                    face : CullFace.BACK
-                }
-            });
+        this._rsPick = context.createRenderState({
+            // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
+            cull : {
+                enabled : true,
+                face : CullFace.BACK
+            }
+        });
 
-            this._pickId = context.createPickId(this);
+        this._pickId = context.createPickId(this);
 
-            var that = this;
-            this._pickUniforms = {
-                u_pickColor : function() {
-                    return that._pickId.normalizedRgba;
-                },
-                u_morphTime : function() {
-                    return that.morphTime;
-                },
-                u_height : function() {
-                    return that.height;
-                }
-            };
+        var that = this;
+        this._pickUniforms = {
+            u_pickColor : function() {
+                return that._pickId.normalizedRgba;
+            },
+            u_morphTime : function() {
+                return that.morphTime;
+            },
+            u_height : function() {
+                return that.height;
+            }
+        };
 
-            this.updateForPick = function(context) {
-            };
-        }
+        this.updateForPick = function(context) {
+        };
     };
 
     /**
@@ -753,19 +757,21 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     Polygon.prototype.renderForPick = function(context, framebuffer) {
-        if (this.show) {
-            var vas = this._vertices.getVertexArrays();
-            var length = vas.length;
-            for ( var j = 0; j < length; ++j) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._spPick,
-                    uniformMap : this._pickUniforms,
-                    vertexArray : vas[j],
-                    renderState : this._rsPick,
-                    framebuffer : framebuffer
-                });
-            }
+        var vas = this._vertices.getVertexArrays();
+        if (typeof vas === 'undefined') {
+            return;
+        }
+
+        var length = vas.length;
+        for ( var j = 0; j < length; ++j) {
+            context.draw({
+                primitiveType : PrimitiveType.TRIANGLES,
+                shaderProgram : this._spPick,
+                uniformMap : this._pickUniforms,
+                vertexArray : vas[j],
+                renderState : this._rsPick,
+                framebuffer : framebuffer
+            });
         }
     };
 

@@ -22,8 +22,6 @@ define([
         var p = polylineTemplate || {};
 
         this._boundingVolume = undefined;
-        this._boundingVolume2D = undefined;
-        this._boundingRectangle = undefined;
 
         this._positions = [];
         if (typeof p.positions !== 'undefined') {

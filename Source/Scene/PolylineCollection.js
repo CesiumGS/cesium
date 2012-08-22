@@ -596,12 +596,12 @@ define([
         var modelMatrix = Matrix4.IDENTITY;
 
         if (sceneState.mode === SceneMode.SCENE3D) {
-            boundingVolume = this._boundingVolume && this._boundingVolume.clone();
-            modelMatrix = this.modelMatrix.clone();
+            boundingVolume = this._boundingVolume;
+            modelMatrix = this.modelMatrix;
         } else if (sceneState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingVolume = this._boundingVolume2D && this._boundingVolume2D.clone();
+            boundingVolume = this._boundingVolume2D;
         } else if (sceneState.mode === SceneMode.SCENE2D) {
-            boundingVolume = this._boundingRectangle && this._boundingRectangle.clone();
+            boundingVolume = this._boundingRectangle;
         } else {
             boundingVolume = this._boundingVolume && this._boundingVolume2D && this._boundingVolume.union(this._boundingVolume2D);
         }

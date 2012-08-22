@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/DeveloperError',
@@ -14,6 +15,7 @@ define([
     ], function(
         defaultValue,
         destroyObject,
+        BoundingSphere,
         Cartesian3,
         Cartesian4,
         DeveloperError,
@@ -164,18 +166,29 @@ define([
 
         for ( var i = 0; i < length; ++i) {
             var sensor = sensors[i];
-            var renderState = sensor.update(context, sceneState);
+            var spatialState = sensor.update(context, sceneState);
 
-            if (typeof renderState !== 'undefined') {
-                var boundingVolume = renderState.boundingVolume;
-                var modelMatrix = defaultValue(renderState.modelMatrix, Matrix4.IDENTITY);
+            if (typeof spatialState === 'undefined') {
+                continue;
+            }
 
-                if (typeof boundingVolume !== 'undefined') {
-                    var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.x, boundingVolume.center.x, 1.0);
-                    boundingVolume.center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
-                    if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
-                        continue;
-                    }
+            var boundingVolume = spatialState.boundingVolume;
+            var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
+
+            if (typeof boundingVolume !== 'undefined') {
+                var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
+                center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
+                boundingVolume = new BoundingSphere(center, boundingVolume.radius);
+
+                if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+                    continue;
+                }
+
+                var occluder = sceneState.occluder;
+                if (mode === SceneMode.SCENE3D &&
+                        typeof occluder !== 'undefined' &&
+                        !occluder.isVisible(boundingVolume)) {
+                    continue;
                 }
             }
 
@@ -199,7 +212,8 @@ define([
      * @private
      */
     SensorVolumeCollection.prototype.updateForPick = function(context) {
-        var sensors = this._sensors;
+        // This assumes that updateForPick is called after update and before renderForPick
+        var sensors = this._renderList;
         var length = sensors.length;
         for ( var i = 0; i < length; ++i) {
             sensors[i].updateForPick(context);
@@ -210,11 +224,12 @@ define([
      * @private
      */
     SensorVolumeCollection.prototype.renderForPick = function(context, framebuffer) {
-        var sensors = this._sensors;
+        var sensors = this._renderList;
         var length = sensors.length;
         for ( var i = 0; i < length; ++i) {
             sensors[i].renderForPick(context, framebuffer);
         }
+        this._renderList.length = 0;
     };
 
     /**

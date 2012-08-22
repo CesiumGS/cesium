@@ -366,7 +366,11 @@ define([
     ComplexConicSensorVolume.prototype.update = function(context, sceneState) {
         this._mode = sceneState.mode;
         if (this._mode !== SceneMode.SCENE3D) {
-            return;
+            return undefined;
+        }
+
+        if (!this.show) {
+            return undefined;
         }
 
         if (this.innerHalfAngle > this.outerHalfAngle) {
@@ -377,73 +381,71 @@ define([
             throw new DeveloperError('this.radius must be greater than or equal to zero.');
         }
 
-        if (this.show) {
-            // Recreate vertex array when proxy geometry needs to change
-            if ((this._outerHalfAngle !== this.outerHalfAngle) || (this._radius !== this.radius)) {
-                this._outerHalfAngle = this.outerHalfAngle;
-                this._radius = this.radius;
+        // Recreate vertex array when proxy geometry needs to change
+        if ((this._outerHalfAngle !== this.outerHalfAngle) || (this._radius !== this.radius)) {
+            this._outerHalfAngle = this.outerHalfAngle;
+            this._radius = this.radius;
 
-                this._va = context.createVertexArrayFromMesh({
-                    mesh : this._getBoundingVolume(),
-                    attributeIndices : attributeIndices,
-                    bufferUsage : BufferUsage.STATIC_DRAW
-                });
-            }
-
-            // Recompile shader when material changes
-            if ((!this._outerMaterial || (this._outerMaterial !== this.outerMaterial)) ||
-                (!this._innerMaterial || (this._innerMaterial !== this.innerMaterial)) ||
-                (!this._capMaterial || (this._capMaterial !== this.capMaterial)) ||
-                (!this._silhouetteMaterial || (this._silhouetteMaterial !== this.silhouetteMaterial))) {
-
-                this._outerMaterial = (typeof this.outerMaterial !== 'undefined') ? this.outerMaterial : Material.fromType(context, Material.ColorType);
-                this._innerMaterial = (typeof this.innerMaterial !== 'undefined') ? this.innerMaterial : Material.fromType(context, Material.ColorType);
-                this._capMaterial = (typeof this.capMaterial !== 'undefined') ? this.capMaterial : Material.fromType(context, Material.ColorType);
-                this._silhouetteMaterial = (typeof this.silhouetteMaterial !== 'undefined') ? this.silhouetteMaterial : Material.fromType(context, Material.ColorType);
-
-                var material = this._combineMaterials();
-                this._drawUniforms = combine([this._uniforms, material._uniforms], false, false);
-
-                var fsSource =
-                    '#line 0\n' +
-                    ShadersNoise +
-                    '#line 0\n' +
-                    ShadersRay +
-                    '#line 0\n' +
-                    ShadersConstructiveSolidGeometry +
-                    '#line 0\n' +
-                    ShadersSensorVolume +
-                    '#line 0\n' +
-                    material.shaderSource +
-                    '#line 0\n' +
-                    ComplexConicSensorVolumeFS;
-
-                this._sp = this._sp && this._sp.release();
-                this._sp = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
-            }
-
-            // Initial render state creation
-            this._rs = this._rs || context.createRenderState({
-                cull : {
-                    enabled : true,
-                    face : CullFace.FRONT
-                },
-                blending : {
-                    enabled : true,
-                    equationRgb : BlendEquation.ADD,
-                    equationAlpha : BlendEquation.ADD,
-                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-                    functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
-                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
-                    functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
-                }
-            // Does not read or write depth
+            this._va = context.createVertexArrayFromMesh({
+                mesh : this._getBoundingVolume(),
+                attributeIndices : attributeIndices,
+                bufferUsage : BufferUsage.STATIC_DRAW
             });
         }
 
+        // Recompile shader when material changes
+        if ((!this._outerMaterial || (this._outerMaterial !== this.outerMaterial)) ||
+            (!this._innerMaterial || (this._innerMaterial !== this.innerMaterial)) ||
+            (!this._capMaterial || (this._capMaterial !== this.capMaterial)) ||
+            (!this._silhouetteMaterial || (this._silhouetteMaterial !== this.silhouetteMaterial))) {
+
+            this._outerMaterial = (typeof this.outerMaterial !== 'undefined') ? this.outerMaterial : Material.fromType(context, Material.ColorType);
+            this._innerMaterial = (typeof this.innerMaterial !== 'undefined') ? this.innerMaterial : Material.fromType(context, Material.ColorType);
+            this._capMaterial = (typeof this.capMaterial !== 'undefined') ? this.capMaterial : Material.fromType(context, Material.ColorType);
+            this._silhouetteMaterial = (typeof this.silhouetteMaterial !== 'undefined') ? this.silhouetteMaterial : Material.fromType(context, Material.ColorType);
+
+            var material = this._combineMaterials();
+            this._drawUniforms = combine([this._uniforms, material._uniforms], false, false);
+
+            var fsSource =
+                '#line 0\n' +
+                ShadersNoise +
+                '#line 0\n' +
+                ShadersRay +
+                '#line 0\n' +
+                ShadersConstructiveSolidGeometry +
+                '#line 0\n' +
+                ShadersSensorVolume +
+                '#line 0\n' +
+                material.shaderSource +
+                '#line 0\n' +
+                ComplexConicSensorVolumeFS;
+
+            this._sp = this._sp && this._sp.release();
+            this._sp = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
+        }
+
+        // Initial render state creation
+        this._rs = this._rs || context.createRenderState({
+            cull : {
+                enabled : true,
+                face : CullFace.FRONT
+            },
+            blending : {
+                enabled : true,
+                equationRgb : BlendEquation.ADD,
+                equationAlpha : BlendEquation.ADD,
+                functionSourceRgb : BlendFunction.SOURCE_ALPHA,
+                functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+                functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
+                functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
+            }
+        // Does not read or write depth
+        });
+
         return {
-            boundingVolume : this._boundingVolume.clone(),
-            modelMatrix : this.modelMatrix.clone()
+            boundingVolume : this._boundingVolume,
+            modelMatrix : this.modelMatrix
         };
     };
 
@@ -452,15 +454,13 @@ define([
      * @memberof ComplexConicSensorVolume
      */
     ComplexConicSensorVolume.prototype.render = function(context) {
-        if (this._mode === SceneMode.SCENE3D && this.show) {
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLES,
-                shaderProgram : this._sp,
-                uniformMap : this._drawUniforms,
-                vertexArray : this._va,
-                renderState : this._rs
-            });
-        }
+        context.draw({
+            primitiveType : PrimitiveType.TRIANGLES,
+            shaderProgram : this._sp,
+            uniformMap : this._drawUniforms,
+            vertexArray : this._va,
+            renderState : this._rs
+        });
     };
 
     /**
@@ -468,31 +468,29 @@ define([
      * @memberof ComplexConicSensorVolume
      */
     ComplexConicSensorVolume.prototype.updateForPick = function(context) {
-        if (this._mode === SceneMode.SCENE3D && this.show) {
-            // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
-            var fsSource =
-                '#define RENDER_FOR_PICK 1\n' +
-                '#line 0\n' +
-                ShadersRay +
-                '#line 0\n' +
-                ShadersConstructiveSolidGeometry +
-                '#line 0\n' +
-                ShadersSensorVolume +
-                '#line 0\n' +
-                ComplexConicSensorVolumeFS;
+        // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
+        var fsSource =
+            '#define RENDER_FOR_PICK 1\n' +
+            '#line 0\n' +
+            ShadersRay +
+            '#line 0\n' +
+            ShadersConstructiveSolidGeometry +
+            '#line 0\n' +
+            ShadersSensorVolume +
+            '#line 0\n' +
+            ComplexConicSensorVolumeFS;
 
-            this._spPick = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
-            this._pickId = context.createPickId(this);
+        this._spPick = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
+        this._pickId = context.createPickId(this);
 
-            var that = this;
+        var that = this;
 
-            this._pickUniforms = combine([this._uniforms, {
-                u_pickColor : function() {
-                    return that._pickId.normalizedRgba;
-                }
-            }], false, false);
-            this.updateForPick = function(context) {};
-        }
+        this._pickUniforms = combine([this._uniforms, {
+            u_pickColor : function() {
+                return that._pickId.normalizedRgba;
+            }
+        }], false, false);
+        this.updateForPick = function(context) {};
     };
 
     /**
@@ -500,16 +498,14 @@ define([
      * @memberof ComplexConicSensorVolume
      */
     ComplexConicSensorVolume.prototype.renderForPick = function(context, framebuffer) {
-        if (this._mode === SceneMode.SCENE3D && this.show) {
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLES,
-                shaderProgram : this._spPick,
-                uniformMap : this._pickUniforms,
-                vertexArray : this._va,
-                renderState : this._rs,
-                framebuffer : framebuffer
-            });
-        }
+        context.draw({
+            primitiveType : PrimitiveType.TRIANGLES,
+            shaderProgram : this._spPick,
+            uniformMap : this._pickUniforms,
+            vertexArray : this._va,
+            renderState : this._rs,
+            framebuffer : framebuffer
+        });
     };
 
     /**
