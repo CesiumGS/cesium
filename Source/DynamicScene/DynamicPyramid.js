@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
+        '../Core/defaultValue',
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
@@ -9,6 +10,7 @@ define([
         './DynamicMaterialProperty'
     ], function(
         TimeInterval,
+        defaultValue,
         CzmlBoolean,
         CzmlNumber,
         CzmlColor,
@@ -33,11 +35,36 @@ define([
      * @see CzmlDefaults
      */
     var DynamicPyramid = function() {
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the cone's visibility.
+         * @type DynamicProperty
+         */
         this.show = undefined;
+        /**
+         * A DynamicDirectionsProperty which determines the projection of the pyramid.
+         * @type DynamicDirectionsProperty
+         */
         this.directions = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the cone's radius.
+         * @type DynamicProperty
+         */
         this.radius = undefined;
+        /**
+         * A DynamicProperty of type CzmlBoolean which determines the cone's intersection visibility.
+         * @type DynamicProperty
+         */
         this.showIntersection = undefined;
+        this.showIntersection = undefined;
+        /**
+         * A DynamicProperty of type CzmlColor which determines the color of the line formed by the intersection of the cone and other central bodies.
+         * @type DynamicProperty
+         */
         this.intersectionColor = undefined;
+        /**
+         * A DynamicMaterialProperty which determines the material.
+         * @type DynamicMaterialProperty
+         */
         this.material = undefined;
     };
 
@@ -152,12 +179,12 @@ define([
                 targetObject.pyramid = targetPyramid = new DynamicPyramid();
             }
 
-            targetPyramid.show = targetPyramid.show || pyramidToMerge.show;
-            targetPyramid.directions = targetPyramid.directions || pyramidToMerge.directions;
-            targetPyramid.radius = targetPyramid.radius || pyramidToMerge.radius;
-            targetPyramid.showIntersection = targetPyramid.showIntersection || pyramidToMerge.showIntersection;
-            targetPyramid.intersectionColor = targetPyramid.intersectionColor || pyramidToMerge.intersectionColor;
-            targetPyramid.material = targetPyramid.material || pyramidToMerge.material;
+            targetPyramid.show = defaultValue(targetPyramid.show, pyramidToMerge.show);
+            targetPyramid.directions = defaultValue(targetPyramid.directions, pyramidToMerge.directions);
+            targetPyramid.radius = defaultValue(targetPyramid.radius, pyramidToMerge.radius);
+            targetPyramid.showIntersection = defaultValue(targetPyramid.showIntersection, pyramidToMerge.showIntersection);
+            targetPyramid.intersectionColor = defaultValue(targetPyramid.intersectionColor, pyramidToMerge.intersectionColor);
+            targetPyramid.material = defaultValue(targetPyramid.material, pyramidToMerge.material);
         }
     };
 
