@@ -3,6 +3,7 @@ define([
         '../Core/createGuid',
         '../Core/DeveloperError',
         '../Core/TimeInterval',
+        '../Core/defaultValue',
         './DynamicProperty',
         './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
@@ -11,6 +12,7 @@ define([
         createGuid,
         DeveloperError,
         TimeInterval,
+        defaultValue,
         DynamicProperty,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
@@ -59,56 +61,73 @@ define([
          * other properties will return valid data for any provided time.
          * If availability exists, the objects other properties will only
          * provide valid data if queried within the given interval.
+         * @type TimeInterval
          */
         this.availability = undefined;
 
         /**
-         * The DynamicPositionProperty, if any, associated with this object.
+         * Gets or sets the position.
+         * @type DynamicPositionProperty
          */
         this.position = undefined;
 
         /**
-         * The DynamicProperty with value type CzmlUnitQuaternion, if any, associated with this object.
+         * Gets or sets the orientation.
+         * @type DynamicProperty
          */
         this.orientation = undefined;
 
         /**
-         * The DynamicBillboard, if any, associated with this object.
+         * Gets or sets the billboard.
+         * @type DynamicBillboard
          */
         this.billboard = undefined;
 
         /**
-         * The DynamicCone, if any, associated with this object.
+         * Gets or sets the cone.
+         * @type DynamicCone
          */
         this.cone = undefined;
 
         /**
-         * The DynamicLabel, if any, associated with this object.
+         * Gets or sets the label.
+         * @type DynamicLabel
          */
         this.label = undefined;
 
         /**
-         * The DynamicPoint, if any, associated with this object.
+         * Gets or sets the path.
+         * @type DynamicPath
+         */
+        this.path = undefined;
+
+        /**
+         * Gets or sets the point graphic.
+         * @type DynamicPoint
          */
         this.point = undefined;
 
         /**
-         * The DynamicPolygon, if any, associated with this object.
+         * Gets or sets the polygon.
+         * @type DynamicPolygon
          */
         this.polygon = undefined;
 
         /**
-         * The DynamicPolyline, if any, associated with this object.
+         * Gets or sets the polyline.
+         * @type DynamicPolyline
          */
         this.polyline = undefined;
 
         /**
-         * The DynamicPyramid, if any, associated with this object.
+         * Gets or sets the pyramid.
+         * @type DynamicPyramid
          */
         this.pyramid = undefined;
 
         /**
-         * The DynamicVertexPositionsProperty, if any, associated with this object.
+         * Gets or sets the vertex positions.
+         * @type DynamicVertexPositionsProperty
          */
         this.vertexPositions = undefined;
     };
@@ -259,10 +278,10 @@ define([
      * @see CzmlDefaults
      */
     DynamicObject.mergeProperties = function(targetObject, objectToMerge) {
-        targetObject.position = targetObject.position || objectToMerge.position;
-        targetObject.orientation = targetObject.orientation || objectToMerge.orientation;
-        targetObject.vertexPositions = targetObject.vertexPositions || objectToMerge.vertexPositions;
-        targetObject._setAvailability(targetObject.availability || objectToMerge.availability);
+        targetObject.position = defaultValue(targetObject.position, objectToMerge.position);
+        targetObject.orientation = defaultValue(targetObject.orientation, objectToMerge.orientation);
+        targetObject.vertexPositions = defaultValue(targetObject.vertexPositions, objectToMerge.vertexPositions);
+        targetObject._setAvailability(defaultValue(targetObject.availability, objectToMerge.availability));
     };
 
     /**

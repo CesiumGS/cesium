@@ -1,8 +1,17 @@
 /*global define*/
 define(function() {
     "use strict";
+    /*global Uint8ClampedArray,CanvasPixelArray*/
 
     var typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array];
+
+    if (typeof Uint8ClampedArray !== 'undefined') {
+        typedArrayTypes.push(Uint8ClampedArray);
+    }
+
+    if (typeof CanvasPixelArray !== 'undefined') {
+        typedArrayTypes.push(CanvasPixelArray);
+    }
 
     function isTypedArray(o) {
         return typedArrayTypes.some(function(type) {
