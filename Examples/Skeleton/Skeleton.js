@@ -33,13 +33,22 @@ require({
     cb.showGroundAtmosphere = true;
     primitives.setCentralBody(cb);
 
-    scene.getCamera().frustum.near = 1.0;
+    scene.getCamera().frustum.near = 1000;
     scene.getCamera().getControllers().addCentralBody();
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
     ///////////////////////////////////////////////////////////////////////////
     // Add examples from the Sandbox here:
+    var radii = new Cesium.Cartesian3(180000.0, 100000.0, 100000.0);
+
+    var position = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000));
+
+    var e = new Cesium.EllipsoidPrimitive();
+    e.setPosition(position);
+    e.setRadii(radii);
+
+    primitives.add(e);
 
     ///////////////////////////////////////////////////////////////////////////
 
