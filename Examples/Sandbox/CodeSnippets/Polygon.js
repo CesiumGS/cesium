@@ -31,6 +31,53 @@
         };
     };
 
+    Sandbox.NestedPolygon = function(scene, ellipsoid, primitives) {
+        this.code = function () {
+            var hierarchy = {
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        new Cesium.Cartographic.fromDegrees(-109.0, 35.0, 0.0),
+                        new Cesium.Cartographic.fromDegrees(-95.0, 35.0, 0.0),
+                        new Cesium.Cartographic.fromDegrees(-95.0, 40.0, 0.0),
+                        new Cesium.Cartographic.fromDegrees(-109.0, 40.0, 0.0)
+                    ]),
+                    holes : [{
+                                positions : ellipsoid.cartographicArrayToCartesianArray([
+                                    new Cesium.Cartographic.fromDegrees(-107.0, 36.0, 0.0),
+                                    new Cesium.Cartographic.fromDegrees(-107.0, 39.0, 0.0),
+                                    new Cesium.Cartographic.fromDegrees(-97.0, 39.0, 0.0),
+                                    new Cesium.Cartographic.fromDegrees(-97.0, 36.0, 0.0)
+                                ]),
+                                holes : [{
+                                            positions : ellipsoid.cartographicArrayToCartesianArray([
+                                                new Cesium.Cartographic.fromDegrees(-105.0, 36.5, 0.0),
+                                                new Cesium.Cartographic.fromDegrees(-99.0, 36.5, 0.0),
+                                                new Cesium.Cartographic.fromDegrees(-99.0, 38.5, 0.0),
+                                                new Cesium.Cartographic.fromDegrees(-105.0, 38.5, 0.0)
+                                            ]),
+                                            holes : [{
+                                                        positions : ellipsoid.cartographicArrayToCartesianArray([
+                                                            new Cesium.Cartographic.fromDegrees(-103.0, 37.25, 0.0),
+                                                            new Cesium.Cartographic.fromDegrees(-101.0, 37.25, 0.0),
+                                                            new Cesium.Cartographic.fromDegrees(-101.0, 37.75, 0.0),
+                                                            new Cesium.Cartographic.fromDegrees(-103.0, 37.75, 0.0)
+                                                        ])
+                                            }]
+                                }]
+                    }]
+            };
+            var polygon = new Cesium.Polygon();
+            polygon.configureFromPolygonHierarchy(hierarchy);
+            primitives.add(polygon);
+
+        };
+
+        this.camera = {
+            eye : new Cesium.Cartesian3(-1280476.6605044599, -6108296.327862781, 4770090.478198281),
+            target : new Cesium.Cartesian3(0.16300940344701773, 0.7776086602705017, -0.6072501180404701),
+            up : new Cesium.Cartesian3(0.12458922984093211, 0.5943317505129697, 0.7945107262585154)
+        };
+    };
+
     Sandbox.PolygonColor = function (scene, ellipsoid, primitives) {
         this.code = function () {
             var polygon = new Cesium.Polygon(undefined);
@@ -459,7 +506,7 @@
                             type : 'NormalMap',
                             uniforms : {
                                 image : '../../Images/normalmap.png',
-                                strength : 0.6,
+                                strength : 0.6
                             }
                         }
                     },
