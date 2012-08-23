@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../DynamicScene/processCzml'
+        '../DynamicScene/processCzml',
+        '../Core/getJson'
     ], function(
-        processCzml
+        processCzml,
+        get
         ) {
     "use strict";
 
@@ -42,21 +44,12 @@ define([
     };
 
     DynamicExternalDocumentProperty.refreshInterval = function(source, dynamicObjectCollection, updaterFunctions, poll){
-        var xmlHttp = new XMLHttpRequest();
-        xmlHttp.open("GET", source, true);
-        xmlHttp.setRequestHeader('Accept', 'application/json');
-        xmlHttp.setRequestHeader("Cache-Control", "no-cache");
-        xmlHttp.responseType='text';
-        xmlHttp.onload = function(){
-            if(xmlHttp.status === 200){
-                var text = JSON.parse(xmlHttp.responseText);
-                processCzml(text, dynamicObjectCollection, source, updaterFunctions);
-                if(typeof poll !== 'undefined'){
-                    poll();
-                }
+        get(source).then(function(data) {
+            processCzml(data, dynamicObjectCollection, source, updaterFunctions);
+            if(typeof poll !== 'undefined'){
+                poll();
             }
-        };
-        xmlHttp.send(null);
+        });
     };
 
 
