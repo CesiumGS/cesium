@@ -647,6 +647,8 @@ czm_raySegment czm_rayEllipsoidIntersectionInterval(czm_ray ray, czm_ellipsoid e
     vec3 q = ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.origin, 1.0)).xyz;
     vec3 w = ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.direction, 0.0)).xyz;
    
+    q = q - ellipsoid.inverseRadii * (agi_inverseView * vec4(ellipsoid.center, 1.0)).xyz;
+    
     float q2 = dot(q, q);
     float qw = dot(q, w);
     
