@@ -23,7 +23,7 @@ define([
         this._positionsLength = this._positions.length;
         this._show = typeof p.show === 'undefined' ? true : p.show;
         this._width = typeof p.width === 'undefined' ? 1.0 : p.width;
-        this._outlineWidth = typeof p.outlineWidth === 'undefined' ? 0.0 : p.outlineWidth;
+        this._outlineWidth = typeof p.outlineWidth === 'undefined' ? 1.0 : p.outlineWidth;
         this._color = typeof p.color === 'undefined' ? new Color(1.0, 1.0, 1.0, 1.0) : Color.clone(p.color);
         this._outlineColor = (typeof p.outlineColor === 'undefined') ? new Color(1.0, 1.0, 1.0, 1.0) : Color.clone(p.outlineColor);
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);

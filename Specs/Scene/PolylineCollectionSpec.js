@@ -66,7 +66,7 @@ defineSuite([
         expect(p.getOutlineColor().blue).toEqual(1.0);
         expect(p.getOutlineColor().alpha).toEqual(1.0);
         expect(p.getWidth()).toEqual(1.0);
-        expect(p.getOutlineWidth()).toEqual(0.0);
+        expect(p.getOutlineWidth()).toEqual(1.0);
     });
 
     it("explicitly constructs a polyline", function() {
