@@ -15,8 +15,7 @@ define([
         '../Renderer/CullFace',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
-        './ColorMaterial',
-        './combineMaterials',
+        './Material',
         '../Shaders/Noise',
         '../Shaders/Ray',
         '../Shaders/ConstructiveSolidGeometry',
@@ -40,8 +39,7 @@ define([
         CullFace,
         BlendEquation,
         BlendFunction,
-        ColorMaterial,
-        combineMaterials,
+        Material,
         ShadersNoise,
         ShadersRay,
         ShadersConstructiveSolidGeometry,
@@ -91,7 +89,7 @@ define([
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
          * coordinates, the sensor's principal direction is along the positive z-axis.  Minimum and maximum clock
          * angles are measured from the x-axis.  This matrix is available to GLSL vertex and fragment shaders via
-         * {@link agi_model} and derived uniforms.
+         * {@link czm_model} and derived uniforms.
          * <br /><br />
          * <div align='center'>
          * <img src='images/ComplexConicSensorVolume.setModelMatrix.png' width='400' height='258' /><br />
@@ -100,7 +98,7 @@ define([
          *
          * @type Matrix4
          *
-         * @see agi_model
+         * @see czm_model
          *
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
@@ -108,7 +106,7 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
-        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY;
+        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY.clone();
 
         /**
          * DOC_TBA
@@ -174,25 +172,25 @@ define([
         /**
          * DOC_TBA
          */
-        this.outerMaterial = t.outerMaterial || new ColorMaterial();
+        this.outerMaterial = (typeof t.outerMaterial !== 'undefined') ? t.outerMaterial : Material.fromType(undefined, Material.ColorType);
         this._outerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.innerMaterial = t.innerMaterial || new ColorMaterial();
+        this.innerMaterial = (typeof t.innerMaterial !== 'undefined') ? t.innerMaterial : Material.fromType(undefined, Material.ColorType);
         this._innerMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.capMaterial = t.capMaterial || new ColorMaterial();
+        this.capMaterial = (typeof t.capMaterial !== 'undefined') ? t.capMaterial : Material.fromType(undefined, Material.ColorType);
         this._capMaterial = undefined;
 
         /**
          * DOC_TBA
          */
-        this.silhouetteMaterial = t.silhouetteMaterial || new ColorMaterial();
+        this.silhouetteMaterial = (typeof t.silhouetteMaterial !== 'undefined') ? t.silhouetteMaterial : Material.fromType(undefined, Material.ColorType);
         this._silhouetteMaterial = undefined;
 
         /**
@@ -293,27 +291,40 @@ define([
     ComplexConicSensorVolume.prototype._combineMaterials = function() {
         // On older/mobile hardware, we could do one pass per material to avoid
         // going over the maximum uniform limit
-        return combineMaterials({
-            material : this.outerMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterialColor', 'g'), 'agi_getOuterMaterialColor');
+
+        var materials = {
+            'czm_getOuterMaterial' : this.outerMaterial,
+            'czm_getInnerMaterial' : this.innerMaterial,
+            'czm_getCapMaterial' : this.capMaterial,
+            'czm_getSilhouetteMaterial' : this.silhouetteMaterial
+        };
+
+        var combinedUniforms = {};
+        var concatenatedSource = '';
+        for (var materialId in materials) {
+            if (materials.hasOwnProperty(materialId)) {
+                var material = materials[materialId];
+                var materialSource = material.shaderSource.replace(/czm_getMaterial/g, materialId);
+                var materialUniforms = material._uniforms;
+                for (var uniformName in materialUniforms) {
+                    if (materialUniforms.hasOwnProperty(uniformName)) {
+                        var count = 1;
+                        var newUniformName = uniformName;
+                        while (combinedUniforms.hasOwnProperty(newUniformName)) {
+                            newUniformName = uniformName + count;
+                            count += 1;
+                        }
+                        materialSource = materialSource.replace(uniformName, newUniformName);
+                        combinedUniforms[newUniformName] = materialUniforms[uniformName];
+                    }
+                }
+                concatenatedSource += materialSource;
             }
-        }, {
-            material : this.innerMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterialColor', 'g'), 'agi_getInnerMaterialColor');
-            }
-        }, {
-            material : this.capMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterialColor', 'g'), 'agi_getCapMaterialColor');
-            }
-        }, {
-            material : this.silhouetteMaterial,
-            sourceTransform : function(source) {
-                return source.replace(new RegExp('agi_getMaterialColor', 'g'), 'agi_getSilhouetteMaterialColor');
-            }
-        });
+        }
+        return {
+            _uniforms : combinedUniforms,
+            shaderSource : concatenatedSource
+        };
     };
 
     /**
@@ -357,13 +368,13 @@ define([
                 (!this._capMaterial || (this._capMaterial !== this.capMaterial)) ||
                 (!this._silhouetteMaterial || (this._silhouetteMaterial !== this.silhouetteMaterial))) {
 
-                this._outerMaterial = this.outerMaterial || new ColorMaterial();
-                this._innerMaterial = this.innerMaterial || new ColorMaterial();
-                this._capMaterial = this.capMaterial || new ColorMaterial();
-                this._silhouetteMaterial = this.silhouetteMaterial || new ColorMaterial();
+                this._outerMaterial = (typeof this.outerMaterial !== 'undefined') ? this.outerMaterial : Material.fromType(context, Material.ColorType);
+                this._innerMaterial = (typeof this.innerMaterial !== 'undefined') ? this.innerMaterial : Material.fromType(context, Material.ColorType);
+                this._capMaterial = (typeof this.capMaterial !== 'undefined') ? this.capMaterial : Material.fromType(context, Material.ColorType);
+                this._silhouetteMaterial = (typeof this.silhouetteMaterial !== 'undefined') ? this.silhouetteMaterial : Material.fromType(context, Material.ColorType);
 
                 var material = this._combineMaterials();
-                this._drawUniforms = combine(this._uniforms, material._uniforms);
+                this._drawUniforms = combine([this._uniforms, material._uniforms], false, false);
 
                 var fsSource =
                     '#line 0\n' +
@@ -375,7 +386,7 @@ define([
                     '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +
-                    material._getShaderSource() +
+                    material.shaderSource +
                     '#line 0\n' +
                     ComplexConicSensorVolumeFS;
 
@@ -441,14 +452,13 @@ define([
             this._pickId = context.createPickId(this);
 
             var that = this;
-            this._pickUniforms = combine(this._uniforms, {
+
+            this._pickUniforms = combine([this._uniforms, {
                 u_pickColor : function() {
                     return that._pickId.normalizedRgba;
                 }
-            });
-
-            this.updateForPick = function(context) {
-            };
+            }], false, false);
+            this.updateForPick = function(context) {};
         }
     };
 

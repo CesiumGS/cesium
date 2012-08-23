@@ -6,7 +6,7 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
-        './ColorMaterial',
+        './Material',
         './CustomSensorVolume'
     ], function(
         DeveloperError,
@@ -15,7 +15,7 @@ define([
         CesiumMath,
         Matrix4,
         BufferUsage,
-        ColorMaterial,
+        Material,
         CustomSensorVolume) {
     "use strict";
 
@@ -62,7 +62,7 @@ define([
          * coordinates, the sensor's principal direction is along the positive z-axis.  Half angles measured from the
          * principal direction and in the direction of the x-axis and y-axis define the extent of the rectangular
          * cross section.  This matrix is available to GLSL vertex and fragment shaders via
-         * {@link agi_model} and derived uniforms.
+         * {@link czm_model} and derived uniforms.
          * <br /><br />
          * <div align='center'>
          * <img src='images/RectangularPyramidSensorVolume.setModelMatrix.png' /><br />
@@ -71,7 +71,7 @@ define([
          *
          * @type Matrix4
          *
-         * @see agi_model
+         * @see czm_model
          *
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
@@ -79,7 +79,7 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
-        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY;
+        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY.clone();
 
         /**
          * DOC_TBA
@@ -118,7 +118,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.material = t.material || new ColorMaterial();
+        this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromType(undefined, Material.ColorType);
 
         /**
          * DOC_TBA

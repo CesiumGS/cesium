@@ -446,7 +446,9 @@ define(['./DeveloperError'
         }
         Cartesian3.normalize(left, angleBetweenScratch);
         Cartesian3.normalize(right, angleBetweenScratch2);
-        return Math.acos(Cartesian3.dot(angleBetweenScratch, angleBetweenScratch2));
+        var cosine = Cartesian3.dot(angleBetweenScratch, angleBetweenScratch2);
+        var sine = Cartesian3.cross(angleBetweenScratch, angleBetweenScratch2, angleBetweenScratch).magnitude();
+        return Math.atan2(sine, cosine);
     };
 
     /**

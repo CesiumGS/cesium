@@ -70,6 +70,7 @@ define([
         VertexArray,
         VertexLayout) {
     "use strict";
+    /*global Uint8Array*/
 
     function _errorToString(gl, error) {
         var message = 'OpenGL Error:  ';
@@ -243,6 +244,9 @@ define([
         this._us = new UniformState(this);
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
+
+        this._defaultTexture = undefined;
+        this._defaultCubeMap = undefined;
     };
 
     Context.prototype._enableOrDisable = function(glEnum, enable) {
@@ -453,7 +457,7 @@ define([
      *
      * @see Context#setViewport
      * @see Context#getCanvas
-     * @see agi_viewport
+     * @see czm_viewport
      *
      * @example
      * var viewport = context.getViewport();
@@ -492,7 +496,7 @@ define([
      * @see Context#getMaximumViewportWidth
      * @see Context#getMaximumViewportHeight
      * @see Context#getCanvas
-     * @see agi_viewport
+     * @see czm_viewport
      *
      * @example
      * context.setViewport({
@@ -1047,6 +1051,60 @@ define([
     };
 
     /**
+     * Returns a 1x1 RGBA texture initialized to [255, 255, 255, 255].  This can
+     * be used as a placeholder texture while other textures are downloaded.
+     *
+     * @return {Texture}
+     *
+     * @memberof Context
+     */
+    Context.prototype.getDefaultTexture = function() {
+        if (this._defaultTexture === undefined) {
+            this._defaultTexture = this.createTexture2D({
+                source : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint8Array([255, 255, 255, 255])
+                }
+            });
+        }
+
+        return this._defaultTexture;
+    };
+
+    /**
+     * Returns a cube map, where each face is a 1x1 RGBA texture initialized to
+     * [255, 255, 255, 255].  This can be used as a placeholder cube map while
+     * other cube maps are downloaded.
+     *
+     * @return {CubeMap}
+     *
+     * @memberof Context
+     */
+    Context.prototype.getDefaultCubeMap = function() {
+        if (this._defaultCubeMap === undefined) {
+            var face = {
+                width : 1,
+                height : 1,
+                arrayBufferView : new Uint8Array([255, 255, 255, 255])
+            };
+
+            this._defaultCubeMap = this.createCubeMap({
+                source : {
+                    positiveX : face,
+                    negativeX : face,
+                    positiveY : face,
+                    negativeY : face,
+                    positiveZ : face,
+                    negativeZ : face
+                }
+            });
+        }
+
+        return this._defaultCubeMap;
+    };
+
+    /**
      * Creates a shader program given the GLSL source for a vertex and fragment shader.
      * <br /><br />
      * The vertex and fragment shader are individually compiled, and then linked together
@@ -1493,7 +1551,6 @@ define([
      *
      * @memberof Context
      *
-     * @param {Context} description.context The context in which the texture gets created.
      * @param {PixelFormat} [description.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
      * @param {Number} [description.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
      * @param {Cartesian2} [description.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
@@ -2703,6 +2760,9 @@ define([
 
     Context.prototype.destroy = function() {
         this._shaderCache = this._shaderCache.destroy();
+        this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
+        this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
+
         return destroyObject(this);
     };
 

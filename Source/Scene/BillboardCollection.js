@@ -124,12 +124,12 @@ define([
          * When this is the identity matrix, the billboards are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
          * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link agi_model} and derived uniforms.
+         * shaders via {@link czm_model} and derived uniforms.
          *
          * @type Matrix4
          *
          * @see Transforms.eastNorthUpToFixedFrame
-         * @see agi_model
+         * @see czm_model
          *
          * @example
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
@@ -140,8 +140,8 @@ define([
          * billboards.add({ position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
          */
-        this.modelMatrix = Matrix4.IDENTITY;
-        this._modelMatrix = Matrix4.IDENTITY;
+        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this._modelMatrix = Matrix4.IDENTITY.clone();
 
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
@@ -177,16 +177,16 @@ define([
             }
         };
 
-        this._uniforms3D = combine(uniforms, {
+        this._uniforms3D = combine([uniforms, {
             u_model : function() {
                 return that.modelMatrix;
             }
-        });
-        this._uniforms2D = combine(uniforms, {
+        }], false, false);
+        this._uniforms2D = combine([uniforms, {
             u_model : function() {
                 return Matrix4.IDENTITY;
             }
-        });
+        }], false, false);
         this._uniforms = undefined;
     };
 
@@ -811,92 +811,35 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    BillboardCollection.prototype._updateScene2D = function(projection, billboards) {
-        var length = billboards.length;
-
-        for ( var i = 0; i < length; ++i) {
-            var b = billboards[i];
-            var p = this.modelMatrix.multiplyByVector(new Cartesian4(b.getPosition().x, b.getPosition().y, b.getPosition().z, 1.0));
-            var projectedPoint = projection.project(projection.getEllipsoid().cartesianToCartographic(new Cartesian3(p.x, p.y, p.z)));
-            b._setActualPosition({
-                x : 0.0,
-                y : projectedPoint.x,
-                z : projectedPoint.y
-            });
+    function recomputeActualPositions(billboards, sceneState, morphTime, modelMatrix) {
+        for ( var i = 0, length = billboards.length; i < length; ++i) {
+            var billboard = billboards[i];
+            var position = billboard.getPosition();
+            var actualPosition = Billboard._computeActualPosition(position, sceneState, morphTime, modelMatrix);
+            billboard._setActualPosition(actualPosition);
         }
-    };
-
-    BillboardCollection.prototype._updateColumbusView = function(projection, billboards) {
-        var length = billboards.length;
-
-        for ( var i = 0; i < length; ++i) {
-            var b = billboards[i];
-            var p = this.modelMatrix.multiplyByVector(new Cartesian4(b.getPosition().x, b.getPosition().y, b.getPosition().z, 1.0));
-            var projectedPoint = projection.project(projection.getEllipsoid().cartesianToCartographic(new Cartesian3(p.x, p.y, p.z)));
-            b._setActualPosition({
-                x : projectedPoint.z,
-                y : projectedPoint.x,
-                z : projectedPoint.y
-            });
-        }
-    };
+    }
 
     BillboardCollection.prototype._updateMode = function(sceneState) {
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
 
-        var billboards;
-        var length;
-        var i;
-        var b;
-
-        if ((this._mode !== mode) ||
-            (this._projection !== projection) ||
-            (mode !== SceneMode.SCENE3D) &&
-            (!this._modelMatrix.equals(this.modelMatrix))) {
+        if (this._mode !== mode ||
+            this._projection !== projection ||
+            mode !== SceneMode.SCENE3D &&
+            !this._modelMatrix.equals(this.modelMatrix)) {
 
             this._mode = mode;
             this._projection = projection;
-            this._modelMatrix = this.modelMatrix.clone();
+            this.modelMatrix.clone(this._modelMatrix);
 
-            billboards = this._billboards;
-            length = billboards.length;
-
-            switch (mode) {
-            case SceneMode.SCENE3D:
-                for (i = 0; i < length; ++i) {
-                    b = billboards[i];
-                    b._setActualPosition(b.getPosition());
-                }
-                break;
-
-            case SceneMode.SCENE2D:
-                this._updateScene2D(projection, this._billboards);
-                break;
-
-            case SceneMode.COLUMBUS_VIEW:
-                this._updateColumbusView(projection, this._billboards);
-                break;
+            if (mode === SceneMode.SCENE3D || mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
+                recomputeActualPositions(this._billboards, sceneState, this.morphTime, this._modelMatrix);
             }
         } else if (mode === SceneMode.MORPHING) {
-            billboards = this._billboards;
-            length = billboards.length;
-
-            for (i = 0; i < length; ++i) {
-                b = billboards[i];
-                var p = b.getPosition();
-                var projectedPoint = projection.project(projection.getEllipsoid().cartesianToCartographic(p));
-
-                b._setActualPosition({
-                    x : CesiumMath.lerp(projectedPoint.z, p.x, this.morphTime),
-                    y : CesiumMath.lerp(projectedPoint.x, p.y, this.morphTime),
-                    z : CesiumMath.lerp(projectedPoint.y, p.z, this.morphTime)
-                });
-            }
-        } else if (mode === SceneMode.SCENE2D) {
-            this._updateScene2D(projection, this._billboardsToUpdate);
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            this._updateColumbusView(projection, this._billboardsToUpdate);
+            recomputeActualPositions(this._billboards, sceneState, this.morphTime, this._modelMatrix);
+        } else if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
+            recomputeActualPositions(this._billboardsToUpdate, sceneState, this.morphTime, this._modelMatrix);
         }
     };
 

@@ -10,7 +10,7 @@ void erode(vec3 str)
 {
     if (u_erosion != 1.0)
     {
-        float t = 0.5 + (0.5 * agi_snoise(str / (1.0 / 10.0)));   // Scale [-1, 1] to [0, 1]
+        float t = 0.5 + (0.5 * czm_snoise(str / (1.0 / 10.0)));   // Scale [-1, 1] to [0, 1]
     
         if (t > u_erosion)
         {
@@ -21,32 +21,32 @@ void erode(vec3 str)
 
 #endif
 
-vec4 getColor()
-{
-    // TODO: Real 1D distance, and better 3D coordinate
-    float zDistance = 0.0;          // 1D distance
-    vec2 st = v_textureCoordinates; // 2D texture coordinates
-    vec3 str = vec3(st, 0.0);       // 3D texture coordinates
-
-    erode(str);
-
-    return agi_getMaterialColor(zDistance, st, str);
-}
-
 void main()
 {
-    // TODO: use specular map
+    czm_materialInput materialInput;
     
-    // Light using ellipsoid surface normal
-    vec3 normalEC = normalize(agi_normal * agi_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));  // normalized surface normal in eye coordiantes
-    vec3 positionToEyeEC = normalize(-v_positionEC);                                                        // normalized position-to-eye vector in eye coordinates
+    // TODO: Real 1D distance, and better 3D coordinate
+    materialInput.st = v_textureCoordinates;
+    materialInput.str = vec3(v_textureCoordinates, 0.0);
+    materialInput.positionMC = v_positionMC;
+    
+    //Convert tangent space material normal to eye space
+    materialInput.normalEC = normalize(czm_normal * czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));  
+    materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, materialInput.normalEC);
+    
+    //Convert view vector to world space
+    vec3 positionToEyeEC = normalize(-v_positionEC); 
+    materialInput.positionToEyeWC = normalize(vec3(czm_inverseView * vec4(positionToEyeEC, 0.0)));
 
-#ifdef AFFECTED_BY_LIGHTING
-    float intensity = agi_lightIntensity(normalEC, agi_sunDirectionEC, positionToEyeEC);
-#else
-    float intensity = 1.0;
-#endif
-
-    vec4 color = getColor();
-    gl_FragColor = vec4(intensity * color.rgb, color.a);
+    erode(materialInput.str);
+    czm_material material = czm_getMaterial(materialInput);
+    
+    vec4 color; 
+    #ifdef AFFECTED_BY_LIGHTING
+    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+    #else
+    color = vec4(material.diffuse, material.alpha);
+    #endif
+    
+    gl_FragColor = color;
 }
