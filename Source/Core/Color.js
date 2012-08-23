@@ -114,7 +114,6 @@ define([
                 left.green === right.green &&
                 left.blue === right.blue &&
                 left.alpha === right.alpha);
-
     };
 
     /**
@@ -149,11 +148,21 @@ define([
      */
     Color.prototype.equalsEpsilon = function(other, epsilon) {
         return (this === other) ||
-                ((typeof other !== 'undefined') &&
-                 (Math.abs(this.red - other.red) <= epsilon) &&
-                 (Math.abs(this.green - other.green) <= epsilon) &&
-                 (Math.abs(this.blue - other.blue) <= epsilon) &&
-                 (Math.abs(this.alpha - other.alpha) <= epsilon));
+               ((typeof other !== 'undefined') &&
+                (Math.abs(this.red - other.red) <= epsilon) &&
+                (Math.abs(this.green - other.green) <= epsilon) &&
+                (Math.abs(this.blue - other.blue) <= epsilon) &&
+                (Math.abs(this.alpha - other.alpha) <= epsilon));
+    };
+
+    /**
+     * Creates a string representing this Color in the format '(red, green, blue, alpha)'.
+     * @memberof Color
+     *
+     * @return {String} A string representing this Color in the format '(red, green, blue, alpha)'.
+     */
+    Color.prototype.toString = function() {
+        return '(' + this.red + ', ' + this.green + ', ' + this.blue + ', ' + this.alpha + ')';
     };
 
     /**

@@ -422,8 +422,8 @@ defineSuite([
                     components : {
                         diffuse : 'vec3(0.0, 0.0, 0.0)'
                     },
-                    source : 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n' +
-                             'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
+                    source : 'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n' +
+                             'czm_material material = czm_getDefaultMaterial(materialInput);\n' +
                              'return material;\n}\n'
                 }
             });

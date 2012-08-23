@@ -63,7 +63,7 @@ define([
      *
      * @return {Ellipsoid} DOC_TBA
      *
-     * @see agi_getWgs84EllipsoidEC
+     * @see czm_getWgs84EllipsoidEC
      */
     Ellipsoid.WGS84 = Object.freeze(new Ellipsoid(new Cartesian3(6378137.0, 6378137.0, 6356752.314245)));
 

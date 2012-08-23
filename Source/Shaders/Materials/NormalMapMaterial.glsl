@@ -2,9 +2,9 @@ uniform sampler2D image;
 uniform float strength;
 uniform vec2 repeat;
 
-agi_material agi_getMaterial(agi_materialInput materialInput)
+czm_material czm_getMaterial(czm_materialInput materialInput)
 {
-    agi_material material = agi_getDefaultMaterial(materialInput);
+    czm_material material = czm_getDefaultMaterial(materialInput);
     
     vec4 textureValue = texture2D(image, fract(repeat * materialInput.st));
     vec3 normalTangentSpace = textureValue.channels;

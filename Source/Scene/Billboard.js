@@ -6,8 +6,10 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Math',
         './HorizontalOrigin',
-        './VerticalOrigin'
+        './VerticalOrigin',
+        './SceneMode'
     ], function(
         DeveloperError,
         shallowEquals,
@@ -15,8 +17,10 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        CesiumMath,
         HorizontalOrigin,
-        VerticalOrigin) {
+        VerticalOrigin,
+        SceneMode) {
     "use strict";
 
     /**
@@ -517,6 +521,49 @@ define([
         }
     };
 
+    var tempCartesian4 = new Cartesian4();
+    var tempCartesian3 = new Cartesian3();
+    Billboard._computeActualPosition = function(position, sceneState, morphTime, modelMatrix) {
+        var mode = sceneState.mode;
+
+        if (mode === SceneMode.SCENE3D) {
+            return position;
+        }
+
+        var projection = sceneState.scene2D.projection;
+        var cartographic, projectedPosition;
+
+        if (mode === SceneMode.MORPHING) {
+            cartographic = projection.getEllipsoid().cartesianToCartographic(position);
+            projectedPosition = projection.project(cartographic);
+
+            var x = CesiumMath.lerp(projectedPosition.z, position.x, morphTime);
+            var y = CesiumMath.lerp(projectedPosition.x, position.y, morphTime);
+            var z = CesiumMath.lerp(projectedPosition.y, position.z, morphTime);
+            return new Cartesian3(x, y, z);
+        }
+
+        tempCartesian4.x = position.x;
+        tempCartesian4.y = position.y;
+        tempCartesian4.z = position.z;
+        tempCartesian4.w = 1.0;
+
+        modelMatrix.multiplyByVector(tempCartesian4, tempCartesian4);
+
+        // TODO: eventually cartesianToCartographic should work with a Cartesian4 directly,
+        // ignoring the w value.  Until then, it needs an actual Cartesian3 instance.
+        tempCartesian4.clone(tempCartesian3);
+
+        cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian3);
+        projectedPosition = projection.project(cartographic);
+
+        if (mode === SceneMode.SCENE2D) {
+            return new Cartesian3(0.0, projectedPosition.x, projectedPosition.y);
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            return new Cartesian3(projectedPosition.z, projectedPosition.x, projectedPosition.y);
+        }
+    };
+
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, uniformState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
@@ -524,13 +571,13 @@ define([
         var mv = uniformState.getView().multiply(modelMatrix);
         var positionEC = mv.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
 
-        // Apply eye offset, e.g., agi_eyeOffset
+        // Apply eye offset, e.g., czm_eyeOffset
         var zEyeOffset = eyeOffset.multiplyComponents(positionEC.normalize());
         positionEC.x += eyeOffset.x + zEyeOffset.x;
         positionEC.y += eyeOffset.y + zEyeOffset.y;
         positionEC.z += zEyeOffset.z;
 
-        // Eye to window coordinates, e.g., agi_eyeToWindowCoordinates
+        // Eye to window coordinates, e.g., czm_eyeToWindowCoordinates
         var q = uniformState.getProjection().multiplyByVector(positionEC); // clip coordinates
         q.x /= q.w; // normalized device coordinates
         q.y /= q.w;
