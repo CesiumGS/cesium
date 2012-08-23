@@ -466,7 +466,7 @@ define([
         checkForValidProperties(uniforms, materialNames, duplicateNameError, false);
     };
 
-    // Create the agi_getMaterial method body using source or components.
+    // Create the czm_getMaterial method body using source or components.
     var createMethodDefinition = function(material) {
         var components = material._template.components;
         var source = material._template.source;
@@ -474,8 +474,8 @@ define([
             material.shaderSource += source + '\n';
         }
         else {
-            material.shaderSource += 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n';
-            material.shaderSource += 'agi_material material = agi_getDefaultMaterial(materialInput);\n';
+            material.shaderSource += 'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n';
+            material.shaderSource += 'czm_material material = czm_getDefaultMaterial(materialInput);\n';
             if (typeof components !== 'undefined') {
                 for (var component in components) {
                     if (components.hasOwnProperty(component)) {
@@ -641,13 +641,13 @@ define([
                 material._uniforms = combine([material._uniforms, subMaterial._uniforms]);
                 material.materials[subMaterialId] = subMaterial;
 
-                // Make the material's agi_getMaterial unique by appending a guid.
-                var originalMethodName = 'agi_getMaterial';
+                // Make the material's czm_getMaterial unique by appending a guid.
+                var originalMethodName = 'czm_getMaterial';
                 var newMethodName = originalMethodName + '_' + getRandomId();
                 replaceToken(subMaterial, originalMethodName, newMethodName);
                 material.shaderSource = subMaterial.shaderSource + material.shaderSource;
 
-                // Replace each material id with an agi_getMaterial method call.
+                // Replace each material id with an czm_getMaterial method call.
                 var materialMethodCall = newMethodName + '(materialInput)';
                 if (replaceToken(material, subMaterialId, materialMethodCall) === 0 && strict) {
                     throw new DeveloperError('strict: shader source does not use material \'' + subMaterialId + '\'.');
@@ -785,8 +785,8 @@ define([
         }
     };
 
-    Material.DefaultImageId = 'agi_defaultImage';
-    Material.DefaultCubeMapId = 'agi_defaultCubeMap';
+    Material.DefaultImageId = 'czm_defaultImage';
+    Material.DefaultCubeMapId = 'czm_defaultCubeMap';
 
     Material.ColorType = 'Color';
     Material._materialCache.addMaterial(Material.ColorType, {

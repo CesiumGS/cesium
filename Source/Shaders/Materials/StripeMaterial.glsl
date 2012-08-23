@@ -4,9 +4,9 @@ uniform float offset;
 uniform float repeat;
 uniform bool horizontal;
 
-agi_material agi_getMaterial(agi_materialInput materialInput)
+czm_material czm_getMaterial(czm_materialInput materialInput)
 {
-    agi_material material = agi_getDefaultMaterial(materialInput);
+    czm_material material = czm_getDefaultMaterial(materialInput);
 
     // Based on the Stripes Fragment Shader in the Orange Book (11.1.2)
     // Fuzz Factor - Controls blurriness between light and dark colors
