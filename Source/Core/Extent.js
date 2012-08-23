@@ -145,6 +145,43 @@ define([
         return new Cartographic(this.east, this.south);
     };
 
+    Extent.prototype.subsample = function(ellipsoid) {
+        var positions = [];
+
+        var lla = new Cartographic(this.west, this.north);
+        positions.push(ellipsoid.cartographicToCartesian(lla));
+        lla.longitude = this.east;
+        positions.push(ellipsoid.cartographicToCartesian(lla));
+        lla.latitude = this.south;
+        positions.push(ellipsoid.cartographicToCartesian(lla));
+        lla.longitude = this.west;
+        positions.push(ellipsoid.cartographicToCartesian(lla));
+
+        if (this.north < 0.0) {
+            lla.latitude = this.north;
+        } else if (this.south > 0.0) {
+            lla.latitude = this.south;
+        } else {
+            lla.latitude = 0.0;
+        }
+
+        for ( var i = 1; i < 8; ++i) {
+            var temp = -Math.PI + i * CesiumMath.PI_OVER_TWO;
+            if (this.west < temp && temp < this.east) {
+                lla.longitude = temp;
+                positions.push(ellipsoid.cartographicToCartesian(lla));
+            }
+        }
+
+        if (lla.latitude === 0.0) {
+            lla.longitude = this.west;
+            positions.push(ellipsoid.cartographicToCartesian(lla));
+            lla.longitude = this.east;
+            positions.push(ellipsoid.cartographicToCartesian(lla));
+        }
+
+        return positions;
+    };
     /**
      * The largest possible extent.
      */

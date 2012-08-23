@@ -167,64 +167,60 @@ define([
      * @param {Array} positions List of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      *
-     * @exception {DeveloperError} <code>positions</code> is required.
-     *
      * @return {BoundingSphere} The bounding sphere computed from positions.
      *
      * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      */
     BoundingSphere.fromPoints = function(positions, result) {
         if (typeof positions === 'undefined') {
-            throw new DeveloperError('positions is required.');
+            return undefined;
         }
 
         if (typeof result === 'undefined') {
             result = new BoundingSphere();
         }
 
-        var x = positions[0].x;
-        var y = positions[0].y;
-        var z = positions[0].z;
+        var currentPos = Cartesian3.clone(positions[0]);
 
-        var xMin = new Cartesian3(x, y, z);
-        var yMin = new Cartesian3(x, y, z);
-        var zMin = new Cartesian3(x, y, z);
+        var xMin = Cartesian3.clone(currentPos);
+        var yMin = Cartesian3.clone(currentPos);
+        var zMin = Cartesian3.clone(currentPos);
 
-        var xMax = new Cartesian3(x, y, z);
-        var yMax = new Cartesian3(x, y, z);
-        var zMax = new Cartesian3(x, y, z);
+        var xMax = Cartesian3.clone(currentPos);
+        var yMax = Cartesian3.clone(currentPos);
+        var zMax = Cartesian3.clone(currentPos);
 
-        var currentPos = new Cartesian3();
         var numPositions = positions.length;
-        for ( var i = 0; i < numPositions; i++) {
+        for ( var i = 1; i < numPositions; i++) {
             Cartesian3.clone(positions[i], currentPos);
-            x = currentPos.x;
-            y = currentPos.y;
-            z = currentPos.z;
+
+            var x = currentPos.x;
+            var y = currentPos.y;
+            var z = currentPos.z;
 
             // Store points containing the the smallest and largest components
             if (x < xMin.x) {
-                xMin = currentPos;
+                Cartesian3.clone(currentPos, xMin);
             }
 
             if (x > xMax.x) {
-                xMax = currentPos;
+                Cartesian3.clone(currentPos, xMax);
             }
 
             if (y < yMin.y) {
-                yMin = currentPos;
+                Cartesian3.clone(currentPos, yMin);
             }
 
             if (y > yMax.y) {
-                yMax = currentPos;
+                Cartesian3.clone(currentPos, yMax);
             }
 
             if (z < zMin.z) {
-                zMin = currentPos;
+                Cartesian3.clone(currentPos, zMin);
             }
 
             if (z > zMax.z) {
-                zMax = currentPos;
+                Cartesian3.clone(currentPos, zMax);
             }
         }
 
@@ -331,85 +327,6 @@ define([
         return new BoundingSphere(center, radius);
     };
 
-    function getExtentPosition(lla, ellipsoid, time, projection) {
-        if (typeof time === 'undefined' || typeof projection === 'undefined') {
-            return ellipsoid.cartographicToCartesian(lla);
-        }
-
-        var twod = projection.project(lla);
-        twod = new Cartesian3(0.0, twod.x, twod.y);
-        return twod.lerp(ellipsoid.cartographicToCartesian(lla), time);
-    }
-
-    BoundingSphere._computeExtentPositions = function(extent, ellipsoid, time, projection) {
-        var positions = [];
-
-        var lla = new Cartographic(extent.west, extent.north);
-        positions.push(getExtentPosition(lla, ellipsoid, time, projection));
-        lla.longitude = extent.east;
-        positions.push(getExtentPosition(lla, ellipsoid, time, projection));
-        lla.latitude = extent.south;
-        positions.push(getExtentPosition(lla, ellipsoid, time, projection));
-        lla.longitude = extent.west;
-        positions.push(getExtentPosition(lla, ellipsoid, time, projection));
-
-        if (extent.north < 0.0) {
-            lla.latitude = extent.north;
-        } else if (extent.south > 0.0) {
-            lla.latitude = extent.south;
-        } else {
-            lla.latitude = 0.0;
-        }
-
-        for ( var i = 1; i < 8; ++i) {
-            var temp = -Math.PI + i * CesiumMath.PI_OVER_TWO;
-            if (extent.west < temp && temp < extent.east) {
-                lla.longitude = temp;
-                positions.push(getExtentPosition(lla, ellipsoid, time, projection));
-            }
-        }
-
-        if (lla.latitude === 0.0) {
-            lla.longitude = extent.west;
-            positions.push(getExtentPosition(lla, ellipsoid, time, projection));
-            lla.longitude = extent.east;
-            positions.push(getExtentPosition(lla, ellipsoid, time, projection));
-        }
-
-        return positions;
-    };
-
-    /**
-     * Creates a bounding sphere from an extent that is in the process of being morphed.
-     *
-     * @memberof BoundingSphere
-     *
-     * @param {Extent} extent The valid extent used to create a bounding sphere.
-     * @param {Object} projection The projection used to project the extent into 2D.
-     * @param {Number} time The morph time.
-     *
-     * @exception {DeveloperError} extent is required.
-     * @exception {DeveloperError} projection is required.
-     * @exception {DeveloperError} time is required.
-     *
-     * @returns {BoundingSphere} The bounding sphere containing the extent.
-     */
-    BoundingSphere.fromExtentMorph = function(extent, projection, time) {
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
-
-        if (typeof projection === 'undefined' || typeof projection.project === 'undefined') {
-            throw new DeveloperError('projection is required.');
-        }
-
-        if (typeof time === 'undefined') {
-            throw new DeveloperError('time is required.');
-        }
-
-        return BoundingSphere.fromPoints(BoundingSphere._computeExtentPositions(extent, projection.getEllipsoid(), time, projection));
-    };
-
     /**
      * Creates a bounding sphere from an extent in 3D.
      *
@@ -428,7 +345,7 @@ define([
         }
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        return BoundingSphere.fromPoints(BoundingSphere._computeExtentPositions(extent, ellipsoid));
+        return BoundingSphere.fromPoints(extent.subsample(ellipsoid));
     };
 
     /**

@@ -68,10 +68,14 @@ defineSuite([
         expect(sphere.equals(undefined)).toEqual(false);
     });
 
-    it('throws an exception when constructed with fromPoints without positions', function() {
-        expect(function() {
-            BoundingSphere.fromPoints();
-        }).toThrow();
+    it('fromPoints without positions returns undefined', function() {
+        expect(typeof BoundingSphere.fromPoints() === 'undefined').toEqual(true);
+    });
+
+    it('computes with one point', function() {
+        var sphere = BoundingSphere.fromPoints([Cartesian3.ZERO]);
+        expect(sphere.center).toEqual(Cartesian3.ZERO);
+        expect(sphere.radius).toEqual(0.0);
     });
 
     it('computes a center from points', function() {
@@ -136,37 +140,6 @@ defineSuite([
         var projection = new EquidistantCylindricalProjection(Ellipsoid.UNIT_SPHERE);
         var expected = new BoundingSphere(Cartesian3.ZERO, Math.sqrt(extent.east * extent.east + extent.north * extent.north));
         expect(BoundingSphere.fromExtent2D(extent, projection)).toEqual(expected);
-    });
-
-    it('from extent morph throws without an extent', function() {
-        expect(function() {
-            return BoundingSphere.fromExtentMorph();
-        }).toThrow();
-    });
-
-    it('from extent morph throws without a projection', function() {
-        expect(function() {
-            return BoundingSphere.fromExtentMorph(Extent.MAX_VALUE);
-        }).toThrow();
-    });
-
-    it('from extent morph throws without a time', function() {
-        expect(function() {
-            return BoundingSphere.fromExtentMorph(Extent.MAX_VALUE, new EquidistantCylindricalProjection());
-        }).toThrow();
-    });
-
-    it('from extent morph', function() {
-        var extent = Extent.MAX_VALUE;
-        var projection = new EquidistantCylindricalProjection();
-
-        var actual = BoundingSphere.fromExtentMorph(extent, projection, 0.0);
-        var expected = BoundingSphere.fromExtent2D(extent, projection);
-        expect(actual).toEqual(expected);
-
-        actual = BoundingSphere.fromExtentMorph(extent, projection, 1.0);
-        expected = BoundingSphere.fromExtent3D(extent);
-        expect(actual).toEqual(expected);
     });
 
     it('from extent 3d throws without an extent', function() {

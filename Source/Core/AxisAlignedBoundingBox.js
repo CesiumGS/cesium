@@ -47,12 +47,14 @@ define([
          */
         this.maximum = Cartesian3.clone(maximumPoint);
 
+        var center = this.minimum.add(this.maximum);
+
         /**
          * The center point of the bounding box.
          *
          * @type {Cartesian3}
          */
-        this.center = (this.minimum.add(this.maximum)).multiplyByScalar(0.5);
+        this.center = center.multiplyByScalar(0.5, center);
     };
 
     /**
@@ -74,9 +76,9 @@ define([
             return new AxisAlignedBoundingBox(box.minimum, box.maximum);
         }
 
-        result.minimum = box.minimum.clone();
-        result.maximum = box.maximum.clone();
-        result.center = box.center.clone();
+        result.minimum = Cartesian3.clone(box.minimum, result.minimum);
+        result.maximum = Cartesian3.clone(box.maximum, result.maximum);
+        result.center = Cartesian3.clone(box.center, result.center);
         return result;
     };
 
@@ -93,9 +95,9 @@ define([
         return (left === right) ||
                ((typeof left !== 'undefined') &&
                 (typeof right !== 'undefined') &&
-                (left.center.equals(right.center)) &&
-                (left.minimum.equals(right.minimum)) &&
-                (left.maximum.equals(right.maximum)));
+                Cartesian3.equals(left.center, right.center) &&
+                Cartesian3.equals(left.minimum, right.minimum) &&
+                Cartesian3.equals(left.maximum, right.maximum));
     };
 
     /**
@@ -108,6 +110,7 @@ define([
      *
      * @exception {DeveloperError} <code>positions</code> is required.
      * @exception {DeveloperError} At least one position is required.
+     * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
      *
      * @return {AxisAlignedBoundingBox} The axis-aligned bounding box constructed from {@link positions}.
      *
@@ -115,15 +118,18 @@ define([
      * // Compute an axis aligned bounding box enclosing two points.
      * var box = AxisAlignedBoundingBox.fromPoints([new Cartesian3(2, 0, 0), new Cartesian3(-2, 0, 0)]);
      */
-    AxisAlignedBoundingBox.fromPoints = function(positions)
-    {
+    AxisAlignedBoundingBox.fromPoints = function(positions, result) {
         if (typeof positions === 'undefined') {
             throw new DeveloperError('positions is required.');
         }
 
         var length = positions.length;
-        if (typeof length === 'undefined' || length < 1) {
+        if (length < 1) {
             throw new DeveloperError('At least one position is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.ZERO);
         }
 
         var minimumX = positions[0].x;
@@ -140,36 +146,24 @@ define([
             var y = p.y;
             var z = p.z;
 
-            if (x < minimumX) {
-                minimumX = x;
-            }
-
-            if (x > maximumX) {
-                maximumX = x;
-            }
-
-            if (y < minimumY) {
-                minimumY = y;
-            }
-
-            if (y > maximumY) {
-                maximumY = y;
-            }
-
-            if (z < minimumZ) {
-                minimumZ = z;
-            }
-
-            if (z > maximumZ) {
-                maximumZ = z;
-            }
+            minimumX = Math.min(x, minimumX);
+            maximumX = Math.max(x, maximumX);
+            minimumY = Math.min(y, minimumY);
+            maximumY = Math.max(y, maximumY);
+            minimumZ = Math.min(z, minimumZ);
+            maximumZ = Math.max(z, maximumZ);
         }
 
-        var min = new Cartesian3(minimumX, minimumY, minimumZ);
-        var max = new Cartesian3(maximumX, maximumY, maximumZ);
+        result.minimum = new Cartesian3(minimumX, minimumY, minimumZ);
+        result.maximum = new Cartesian3(maximumX, maximumY, maximumZ);
 
-        return new AxisAlignedBoundingBox(min, max);
+        var center = result.minimum.add(result.maximum);
+        result.center = center.multiplyByScalar(0.5, center);
+
+        return result;
     };
+
+    var intersectScratch = new Cartesian3();
 
     /**
      * Determines which side of a plane a box is located.
@@ -196,9 +190,10 @@ define([
         var max = box.maximum;
         var min = box.minimum;
         var center = box.center;
-        var h = max.subtract(min).multiplyByScalar(0.5); //The positive half diagonal
+        intersectScratch = Cartesian3.subtract(max, min, intersectScratch);
+        var h = Cartesian3.multiplyByScalar(intersectScratch, 0.5, intersectScratch); //The positive half diagonal
         var e = h.x * Math.abs(plane.x) + h.y * Math.abs(plane.y) + h.z * Math.abs(plane.z);
-        var s = center.dot(plane) + plane.w; //signed distance from center
+        var s = Cartesian3.dot(center, plane) + plane.w; //signed distance from center
         if (s - e > 0) {
             return Intersect.INSIDE;
         }

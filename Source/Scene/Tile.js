@@ -232,17 +232,6 @@ define([
     };
 
     /**
-     * The bounding sphere for the tile geometry during a morph.
-     *
-     * @memberof Tile
-     *
-     * @return {BoundingSphere} The bounding sphere.
-     */
-    Tile.prototype.computeMorphBounds = function(morphTime, projection) {
-        return BoundingSphere.fromExtentMorph(this.extent, projection, morphTime);
-    };
-
-    /**
      * The bounding sphere for the geometry.
      *
      * @memberof Tile

@@ -852,15 +852,16 @@ define([
             break;
         }
 
-        var positions = [];
-        for ( var i = 0, length = billboards.length; i < length; ++i) {
+        var length = billboards.length;
+        var positions = new Array(length);
+        for ( var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.getPosition();
             var actualPosition = Billboard._computeActualPosition(position, sceneState, morphTime, modelMatrix);
             billboard._setActualPosition(actualPosition);
 
             if (recomputeBoundingVolume) {
-                positions.push(actualPosition);
+                positions[i] = actualPosition;
             } else {
                 boundingVolume.expand(actualPosition, boundingVolume);
             }
@@ -898,7 +899,7 @@ define([
         }
     };
 
-    BillboardCollection.prototype._updateBoundingVolumes = function(sceneState) {
+    function updateBoundingVolumes(collection, sceneState) {
         var pixelScale;
         var size;
         var boundingVolume;
@@ -914,46 +915,46 @@ define([
 
         if (mode === SceneMode.SCENE3D) {
             boundingVolume = new BoundingSphere();
-            boundingVolume.center = this._baseVolume.center.clone();
+            boundingVolume.center = collection._baseVolume.center.clone();
 
             tanPhi = Math.tan(frustum.fovy * 0.5);
             d1 = 1.0 / tanPhi;
 
-            toCenter = camera.getPositionWC().subtract(this._baseVolume.center);
-            distance = Math.max(0.0, toCenter.magnitude() - this._baseVolume.radius);
+            toCenter = camera.getPositionWC().subtract(collection._baseVolume.center);
+            distance = Math.max(0.0, toCenter.magnitude() - collection._baseVolume.radius);
             pixelScale = distance / d1;
 
-            size = 2.0 * pixelScale * this._maxScale * this._maxSize;
-            boundingVolume.radius = this._baseVolume.radius + size + this._maxEyeOffset;
+            size = 2.0 * pixelScale * collection._maxScale * collection._maxSize;
+            boundingVolume.radius = collection._baseVolume.radius + size + collection._maxEyeOffset;
         } else if (mode === SceneMode.SCENE2D) {
             boundingVolume = new BoundingRectangle();
 
             pixelScale = (frustum.right - frustum.left);
 
-            size = pixelScale * this._maxScale * this._maxSize;
-            var offset = size + this._maxEyeOffset;
+            size = pixelScale * collection._maxScale * collection._maxSize;
+            var offset = size + collection._maxEyeOffset;
 
-            boundingVolume.x = this._baseRectangle.x - offset;
-            boundingVolume.y = this._baseRectangle.y - offset;
-            boundingVolume.width = this._baseRectangle.width + 2.0 * offset;
-            boundingVolume.height = this._baseRectangle.height + 2.0 * offset;
-        } else if (typeof this._baseVolume2D !== 'undefined') {
+            boundingVolume.x = collection._baseRectangle.x - offset;
+            boundingVolume.y = collection._baseRectangle.y - offset;
+            boundingVolume.width = collection._baseRectangle.width + 2.0 * offset;
+            boundingVolume.height = collection._baseRectangle.height + 2.0 * offset;
+        } else if (typeof collection._baseVolume2D !== 'undefined') {
             boundingVolume = new BoundingSphere();
-            boundingVolume.center = this._baseVolume2D.center.clone();
+            boundingVolume.center = collection._baseVolume2D.center.clone();
 
             tanPhi = Math.tan(frustum.fovy * 0.5);
             d1 = 1.0 / tanPhi;
 
-            toCenter = camera.getPositionWC().subtract(this._baseVolume2D.center);
-            distance = Math.max(0.0, toCenter.magnitude() - this._baseVolume2D.radius);
+            toCenter = camera.getPositionWC().subtract(collection._baseVolume2D.center);
+            distance = Math.max(0.0, toCenter.magnitude() - collection._baseVolume2D.radius);
             pixelScale = distance / d1;
 
-            size = 2.0 * pixelScale * this._maxScale * this._maxSize;
-            boundingVolume.radius = this._baseVolume2D.radius + size + this._maxEyeOffset;
+            size = 2.0 * pixelScale * collection._maxScale * collection._maxSize;
+            boundingVolume.radius = collection._baseVolume2D.radius + size + collection._maxEyeOffset;
         }
 
         return boundingVolume;
-    };
+    }
 
     BillboardCollection.prototype._update = function(context, sceneState) {
         var textureAtlas = this._textureAtlas;
@@ -1079,7 +1080,7 @@ define([
 
         this._uniforms = (sceneState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;
 
-        var boundingVolume = this._updateBoundingVolumes(sceneState);
+        var boundingVolume = updateBoundingVolumes(this, sceneState);
         var modelMatrix = Matrix4.IDENTITY;
 
         if (sceneState.mode === SceneMode.SCENE3D) {

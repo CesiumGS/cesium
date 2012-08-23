@@ -288,8 +288,6 @@ define([
             throw new DeveloperError('occludeePosition must be different than occluderBoundingSphere.center');
         }
 
-        var valid = true;
-
         // Compute a plane with a normal from the occluder to the occludee position.
         var occluderPlaneNormal = occludeePos.subtract(occluderPosition).normalize();
         var occluderPlaneD = -(occluderPlaneNormal.dot(occluderPosition));
@@ -300,15 +298,14 @@ define([
         var dot = Occluder._horizonToPlaneNormalDotProduct(occluderBoundingSphere, occluderPlaneNormal, occluderPlaneD, aRotationVector, positions[0]);
         if (!dot) {
             //The position is inside the mimimum radius, which is invalid
-            valid = false;
+            return undefined;
         }
         var tempDot;
         for ( var i = 1; i < numPositions; ++i) {
             tempDot = Occluder._horizonToPlaneNormalDotProduct(occluderBoundingSphere, occluderPlaneNormal, occluderPlaneD, aRotationVector, positions[i]);
             if (!tempDot) {
                 //The position is inside the minimum radius, which is invalid
-                valid = false;
-                break;
+                return undefined;
             }
             if (tempDot < dot) {
                 dot = tempDot;
@@ -316,17 +313,11 @@ define([
         }
         //Verify that the dot is not near 90 degress
         if (dot < 0.00174532836589830883577820272085) {
-            valid = false;
-        }
-
-        var distance = occluderRadius / dot;
-        var occludeePoint = occluderPosition.add(occluderPlaneNormal.multiplyByScalar(distance));
-
-        if (!valid) {
             return undefined;
         }
 
-        return occludeePoint;
+        var distance = occluderRadius / dot;
+        return occluderPosition.add(occluderPlaneNormal.multiplyByScalar(distance));
     };
 
     /**
@@ -348,7 +339,7 @@ define([
         }
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var positions = BoundingSphere._computeExtentPositions(extent, ellipsoid);
+        var positions = extent.subsample(ellipsoid);
         var bs = BoundingSphere.fromPoints(positions);
 
         // TODO: get correct ellipsoid center

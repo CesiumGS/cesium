@@ -118,7 +118,6 @@ define([
             throw new DeveloperError('point is required.');
         }
 
-        point = Cartesian2.clone(point);
         result = BoundingRectangle.clone(rect, result);
 
         var width = point.x - result.x;
@@ -192,19 +191,19 @@ define([
      * @memberof BoundingRectangle
      *
      * @param {Array} positions List of points that the bounding rectangle will enclose.  Each point must have <code>x</code> and <code>y</code> properties.
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
      *
      * @exception {DeveloperError} positions is required.
-     * @exception {DeveloperError} positions must have a length greater than one.
      *
      * @return {BoundingRectangle} A bounding rectangle computed from the positions. The rectangle is oriented with the corner at the bottom left.
      */
-    BoundingRectangle.fromPoints = function(positions) {
+    BoundingRectangle.fromPoints = function(positions, result) {
         if (typeof positions === 'undefined') {
             throw new DeveloperError('positions is required.');
         }
 
-        if (typeof positions.length === 'undefined' || positions.length <= 1) {
-            throw new DeveloperError('positions must have a length greater than one.');
+        if (typeof result === 'undefined') {
+            result = new BoundingRectangle();
         }
 
         var length = positions.length;
@@ -220,26 +219,17 @@ define([
             var x = p.x;
             var y = p.y;
 
-            if (x < minimumX) {
-                minimumX = x;
-            }
-
-            if (x > maximumX) {
-                maximumX = x;
-            }
-
-            if (y < minimumY) {
-                minimumY = y;
-            }
-
-            if (y > maximumY) {
-                maximumY = y;
-            }
+            minimumX = Math.min(x, minimumX);
+            maximumX = Math.max(x, maximumX);
+            minimumY = Math.min(y, minimumY);
+            maximumY = Math.max(y, maximumY);
         }
 
-        var width = maximumX - minimumX;
-        var height = maximumY - minimumY;
-        return new BoundingRectangle(minimumX, minimumY, width, height);
+        result.x = minimumX;
+        result.y = minimumY;
+        result.width = maximumX - minimumX;
+        result.height = maximumY - minimumY;
+        return result;
     };
 
     /**
@@ -249,23 +239,33 @@ define([
      *
      * @param {Extent} extent The valid extent used to create a bounding rectangle.
      * @param {Object} [projection=EquidistantCylindricalProjection] The projection used to project the extent into 2D.
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
      *
      * @exception {DeveloperError} extent is required.
      *
      * @returns {BoundingRectangle} The bounding rectangle containing the extent.
      */
-    BoundingRectangle.fromExtent = function(extent, projection) {
+    BoundingRectangle.fromExtent = function(extent, projection, result) {
         if (typeof extent === 'undefined') {
             throw new DeveloperError('extent is required.');
         }
 
-        projection = projection || new EquidistantCylindricalProjection();
+        if (typeof result === 'undefined') {
+            result = new BoundingRectangle();
+        }
+
+        projection = (typeof projection !== 'undefined') ? projection : new EquidistantCylindricalProjection();
 
         var lowerLeft = projection.project(extent.getSouthwest());
         var upperRight = projection.project(extent.getNortheast());
 
-        var diagonal = upperRight.subtract(lowerLeft);
-        return new BoundingRectangle(lowerLeft.x, lowerLeft.y, diagonal.x, diagonal.y);
+        upperRight.subtract(lowerLeft, upperRight);
+
+        result.x = lowerLeft.x;
+        result.y = lowerLeft.y;
+        result.width = upperRight.x;
+        result.height = upperRight.y;
+        return result;
     };
 
     /**

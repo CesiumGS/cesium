@@ -60,12 +60,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('throws an exception creating an axis aligned bounding rectangle with positions of length one', function() {
-        expect(function() {
-            return BoundingRectangle.fromPoints([ Cartesian2.ZERO ]);
-        }).toThrow();
-    });
-
     it('create axis aligned bounding rectangle', function() {
         var positions = [
              new Cartesian2(3, -1),

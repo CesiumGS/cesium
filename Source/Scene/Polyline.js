@@ -37,11 +37,7 @@ define([
         this._pickIdThis = p._pickIdThis;
         this._segments = undefined;
         this._actualLength = this._positions.length;
-        
-        this._boundingVolume = undefined;
-        if (this._positionsLength > 0) {
-            this._boundingVolume = BoundingSphere.fromPoints(this._positions);
-        }
+        this._boundingVolume = BoundingSphere.fromPoints(this._positions);
     };
 
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
@@ -123,12 +119,7 @@ define([
             this._makeDirty(POSITION_SIZE_INDEX);
         }
         this._positions = positions;
-
-        if (this._positionsLength > 0) {
-            this._boundingVolume = BoundingSphere.fromPoints(this._positions);
-        } else {
-            this._boundingVolume = undefined;
-        }
+        this._boundingVolume = BoundingSphere.fromPoints(this._positions);
         this._makeDirty(POSITION_INDEX);
     };
 

@@ -886,7 +886,9 @@ define([
             boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
             return boundingVolume;
         } else {
-            return tile.computeMorphBounds(this.morphTime, sceneState.scene2D.projection);
+            var boundingVolume = tile.get2DBoundingSphere(sceneState.scene2D.projection).clone();
+            boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
+            return tile.get3DBoundingSphere().union(boundingVolume);
         }
     };
 
