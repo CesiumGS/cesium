@@ -879,17 +879,18 @@ define([
     };
 
     CentralBody.prototype._getTileBoundingSphere = function(tile, sceneState) {
+        var boundingVolume;
         if (sceneState.mode === SceneMode.SCENE3D) {
             return tile.get3DBoundingSphere();
         } else if (sceneState.mode === SceneMode.COLUMBUS_VIEW) {
-            var boundingVolume = tile.get2DBoundingSphere(sceneState.scene2D.projection).clone();
+            boundingVolume = tile.get2DBoundingSphere(sceneState.scene2D.projection).clone();
             boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
             return boundingVolume;
-        } else {
-            var boundingVolume = tile.get2DBoundingSphere(sceneState.scene2D.projection).clone();
-            boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
-            return tile.get3DBoundingSphere().union(boundingVolume);
         }
+
+        boundingVolume = tile.get2DBoundingSphere(sceneState.scene2D.projection).clone();
+        boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
+        return tile.get3DBoundingSphere().union(boundingVolume);
     };
 
     CentralBody.prototype._cull = function(tile, sceneState) {

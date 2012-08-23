@@ -1698,7 +1698,8 @@ defineSuite([
 
         var positions = one.getPositions();
         var projectedPositions = [];
-        for (var i = 0; i < positions.length; ++i) {
+        var i;
+        for (i = 0; i < positions.length; ++i) {
             projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
         }
         var bs = BoundingSphere.fromPoints(projectedPositions);
@@ -1706,9 +1707,9 @@ defineSuite([
         expect(one._boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
         expect(one._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
-        var positions = two.getPositions();
-        var projectedPositions = [];
-        for (var i = 0; i < positions.length; ++i) {
+        positions = two.getPositions();
+        projectedPositions = [];
+        for (i = 0; i < positions.length; ++i) {
             projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
         }
         bs = BoundingSphere.fromPoints(projectedPositions);
@@ -1743,7 +1744,8 @@ defineSuite([
 
         var positions = one.getPositions();
         var projectedPositions = [];
-        for (var i = 0; i < positions.length; ++i) {
+        var i;
+        for (i = 0; i < positions.length; ++i) {
             projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
         }
         var br = BoundingRectangle.fromPoints(projectedPositions);
@@ -1752,12 +1754,12 @@ defineSuite([
         expect(one._boundingRectangle.width).toEqual(br.width);
         expect(one._boundingRectangle.height).toEqual(br.height);
 
-        var positions = two.getPositions();
-        var projectedPositions = [];
-        for (var i = 0; i < positions.length; ++i) {
+        positions = two.getPositions();
+        projectedPositions = [];
+        for (i = 0; i < positions.length; ++i) {
             projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
         }
-        var br = BoundingRectangle.fromPoints(projectedPositions);
+        br = BoundingRectangle.fromPoints(projectedPositions);
         expect(two._boundingRectangle.x).toEqual(br.x);
         expect(two._boundingRectangle.y).toEqual(br.y);
         expect(two._boundingRectangle.width).toEqual(br.width);

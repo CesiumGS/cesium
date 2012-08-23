@@ -118,7 +118,7 @@ defineSuite([
 
     it('union throws without a rectangle', function() {
         expect(function() {
-            var rect = new Rectangle(1.0, 2.0, 3.0, 4.0);
+            var rect = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
             return rect.union();
         }).toThrow();
     });
