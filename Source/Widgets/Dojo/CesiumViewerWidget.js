@@ -50,6 +50,7 @@ define([
         '../../Scene/TerrainProvider',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectCollection',
+        '../../DynamicScene/CompositeDynamicObjectCollection',
         '../../DynamicScene/VisualizerCollection',
         'dojo/text!./CesiumViewerWidget.html'
     ], function (
@@ -103,6 +104,7 @@ define([
         TerrainProvider,
         processCzml,
         DynamicObjectCollection,
+        CompositeDynamicObjectCollection,
         VisualizerCollection,
         template) {
     "use strict";
@@ -248,19 +250,19 @@ define([
 
         setTimeFromBuffer : function() {
             var clock = this.clock;
+//
+//            var availability = this.dynamicObjectCollection.computeAvailability();
+//            if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
+//                clock.startTime = new JulianDate();
+//                clock.stopTime = clock.startTime.addDays(1);
+//                clock.clockRange = ClockRange.UNBOUNDED;
+//            } else {
+//                clock.startTime = availability.start;
+//                clock.stopTime = availability.stop;
+//                clock.clockRange = ClockRange.LOOP;
+//            }
 
-            var availability = this.dynamicObjectCollection.computeAvailability();
-            if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
-                clock.startTime = new JulianDate();
-                clock.stopTime = clock.startTime.addDays(1);
-                clock.clockRange = ClockRange.UNBOUNDED;
-            } else {
-                clock.startTime = availability.start;
-                clock.stopTime = availability.stop;
-                clock.clockRange = ClockRange.LOOP;
-            }
-
-            clock.multiplier = 1;
+            clock.multiplier = 0.75;
             clock.currentTime = clock.startTime;
             this.timelineControl.zoomTo(clock.startTime, clock.stopTime);
             this.updateSpeedIndicator();
@@ -279,10 +281,10 @@ define([
                 //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
                 //cache data indefinitely and removeAll is the only way to get rid of it.
                 //while there are no visual differences, removeAll cleans the cache and improves performance
-                widget.visualizers.removeAllPrimitives();
-                widget.dynamicObjectCollection.clear();
-                processCzml(JSON.parse(evt.target.result), widget.dynamicObjectCollection, f.name);
-                widget.setTimeFromBuffer();
+//                widget.visualizers.removeAllPrimitives();
+//                widget.dynamicObjectCollection.clear();
+                processCzml(JSON.parse(evt.target.result), widget.extraObjectCollection, f.name);
+//                widget.setTimeFromBuffer();
             };
             reader.readAsText(f);
         },
@@ -328,13 +330,16 @@ define([
 
             var imageryLayerCollection = new ImageryLayerCollection();
 
-            imageryLayerCollection.addImageryProvider(new BingMapsImageryProvider({
-                server : 'dev.virtualearth.net',
-                mapStyle : this.mapStyle,
-                // Some versions of Safari support WebGL, but don't correctly implement
-                // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-            }));
+//            imageryLayerCollection.addImageryProvider(new BingMapsImageryProvider({
+//                server : 'dev.virtualearth.net',
+//                mapStyle : this.mapStyle,
+//                // Some versions of Safari support WebGL, but don't correctly implement
+//                // cross-origin image loading, so we need to load Bing imagery using a proxy.
+//                proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
+//            }));
+
+            var single = new SingleTileImageryProvider(require.toUrl('Images/NE2_50M_SR_W_4096.jpg'));
+            var singleLayer = imageryLayerCollection.addImageryProvider(single);
 
             var extent = new Extent(
                     CesiumMath.toRadians(-78.964624075),
@@ -357,7 +362,22 @@ define([
                         imageryLayerCollection.remove(wamiLayer, false);
                     }
                     break;
+                case 'T'.charCodeAt(0):
+                    widget.includeDynamicObjectCollection = !widget.includeDynamicObjectCollection;
+                    if (widget.includeDynamicObjectCollection) {
+                        widget.compositeCollection.setCollections(widget.collections);
+                    } else {
+                        widget.compositeCollection.setCollections([widget.extraObjectCollection]);
+                    }
+
+                    break;
+                case 46:
+                    widget.visualizers.removeAllPrimitives();
+                    widget.extraObjectCollection.clear();
+                    widget.compositeCollection.setCollections(widget.compositeCollection.getCollections());
+                    break;
                 }
+
             }, false);
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
@@ -426,10 +446,11 @@ define([
                 if (typeof this.clock === 'undefined') {
                     this.clock = new Clock({
                         startTime : currentTime,
-                        stopTime : currentTime.addDays(0.5),
+                        stopTime : JulianDate.fromIso8601('2011-05-11T19:14:45Z'),
                         currentTime : currentTime,
+                        clockRange : ClockRange.LOOP,
                         clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
-                        multiplier : 1
+                        multiplier : 0.75
                     });
                 }
                 this.animationController = new AnimationController(this.clock);
@@ -441,9 +462,15 @@ define([
             animationController.pause();
 
             var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
+            var extraObjectCollection = this.extraObjectCollection = new DynamicObjectCollection();
+            this.includeDynamicObjectCollection = true;
+            var collections = this.collections = [dynamicObjectCollection, extraObjectCollection];
+
+            var compositeCollection = this.compositeCollection = new CompositeDynamicObjectCollection(collections);
+
             var clock = this.clock;
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
-            this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
+            this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, compositeCollection);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 getJson(widget.endUserOptions.source).then(function(czmlData) {
@@ -744,7 +771,7 @@ define([
 
             // Update the camera to stay centered on the selected object, if any.
             if (cameraCenteredObjectID) {
-                var dynamicObject = this.dynamicObjectCollection.getObject(cameraCenteredObjectID);
+                var dynamicObject = this.compositeCollection.getObject(cameraCenteredObjectID);
                 if (dynamicObject && dynamicObject.position) {
                     cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
                     if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
