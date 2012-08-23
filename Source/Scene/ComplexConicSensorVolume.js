@@ -93,7 +93,7 @@ define([
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
          * coordinates, the sensor's principal direction is along the positive z-axis.  Minimum and maximum clock
          * angles are measured from the x-axis.  This matrix is available to GLSL vertex and fragment shaders via
-         * {@link agi_model} and derived uniforms.
+         * {@link czm_model} and derived uniforms.
          * <br /><br />
          * <div align='center'>
          * <img src='images/ComplexConicSensorVolume.setModelMatrix.png' width='400' height='258' /><br />
@@ -102,7 +102,7 @@ define([
          *
          * @type Matrix4
          *
-         * @see agi_model
+         * @see czm_model
          *
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
@@ -321,10 +321,10 @@ define([
         // going over the maximum uniform limit
 
         var materials = {
-            'agi_getOuterMaterial' : this.outerMaterial,
-            'agi_getInnerMaterial' : this.innerMaterial,
-            'agi_getCapMaterial' : this.capMaterial,
-            'agi_getSilhouetteMaterial' : this.silhouetteMaterial
+            'czm_getOuterMaterial' : this.outerMaterial,
+            'czm_getInnerMaterial' : this.innerMaterial,
+            'czm_getCapMaterial' : this.capMaterial,
+            'czm_getSilhouetteMaterial' : this.silhouetteMaterial
         };
 
         var combinedUniforms = {};
@@ -332,7 +332,7 @@ define([
         for (var materialId in materials) {
             if (materials.hasOwnProperty(materialId)) {
                 var material = materials[materialId];
-                var materialSource = material.shaderSource.replace(/agi_getMaterial/g, materialId);
+                var materialSource = material.shaderSource.replace(/czm_getMaterial/g, materialId);
                 var materialUniforms = material._uniforms;
                 for (var uniformName in materialUniforms) {
                     if (materialUniforms.hasOwnProperty(uniformName)) {

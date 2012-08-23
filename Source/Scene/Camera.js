@@ -452,7 +452,7 @@ define([
      *
      * @see UniformState#getView
      * @see UniformState#setView
-     * @see agi_view
+     * @see czm_view
      */
     Camera.prototype.getViewMatrix = function() {
         this._update();

@@ -617,18 +617,7 @@ define([
      * @memberof PolylineCollection
      */
     PolylineCollection.prototype.updateForPick = function(context) {
-        var useDepthTest = (this.morphTime !== 0.0);
-        var polylineBuckets = this._polylineBuckets;
-        for ( var x in polylineBuckets) {
-            if (polylineBuckets.hasOwnProperty(x)) {
-                var obj = polylineBuckets[x];
-                var rs = obj.rsPick || context.createRenderState();
-                rs.depthTest.enabled = useDepthTest;
-                rs.lineWidth = obj.width + obj.outlineWidth;
-                rs.depthMask = !useDepthTest;
-                obj.rsPick = rs;
-            }
-        }
+        //render state for picking is set up during update.
     };
 
     /**
@@ -1054,6 +1043,8 @@ define([
      * @private
      */
     PolylineBucket.prototype.updateRenderState = function(context, useDepthTest) {
+        var width = this._clampWidth(context, this.width);
+        var outlineWidth = this._clampWidth(context, this.outlineWidth);
         var rsOne = this.rsOne || context.createRenderState({
             colorMask : {
                 red : false,
@@ -1083,7 +1074,7 @@ define([
         });
         rsOne.depthMask = !useDepthTest;
         rsOne.depthTest.enabled = useDepthTest;
-        rsOne.lineWidth = this.width + this.outlineWidth;
+        rsOne.lineWidth = outlineWidth;
         this.rsOne = rsOne;
         var rsTwo = this.rsTwo || context.createRenderState({
             lineWidth : 1,
@@ -1108,7 +1099,7 @@ define([
             }
         });
         rsTwo.depthTest.enabled = useDepthTest;
-        rsTwo.lineWidth = this.width;
+        rsTwo.lineWidth = width;
         this.rsTwo = rsTwo;
         var rsThree = this.rsThree || context.createRenderState({
             lineWidth : 1,
@@ -1132,9 +1123,15 @@ define([
                 }
             }
         });
-        rsThree.lineWidth = this.width + this.outlineWidth;
+        rsThree.lineWidth = this.outlineWidth;
         rsThree.depthTest.enabled = useDepthTest;
         this.rsThree = rsThree;
+
+        var rsPick = this.rsPick || context.createRenderState();
+        rsPick.depthTest.enabled = useDepthTest;
+        rsPick.lineWidth = outlineWidth;
+        rsPick.depthMask = !useDepthTest;
+        this.rsPick = rsPick;
     };
 
     function intersectsIDL(polyline) {
@@ -1226,6 +1223,16 @@ define([
                 }
             }
         }
+    };
+
+    /**
+     * @private
+     */
+    PolylineBucket.prototype._clampWidth = function(context, value) {
+        var min = context.getMinimumAliasedLineWidth();
+        var max = context.getMaximumAliasedLineWidth();
+
+        return Math.min(Math.max(value, min), max);
     };
 
     /**

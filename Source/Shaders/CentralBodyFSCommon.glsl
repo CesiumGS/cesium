@@ -117,7 +117,7 @@ vec3 dayColor(vec3 positionMC, vec3 positionEC, vec3 normalEC, vec3 startColor, 
 #endif
     
     float intensity = diffuseSpecularAmbientShininess.z;    // Start with ambient, then accumulate diffuse and specular
-    float diffuse = max(dot(agi_sunDirectionEC, normalEC), 0.0);
+    float diffuse = max(dot(czm_sunDirectionEC, normalEC), 0.0);
     
 #ifdef SHOW_BUMPS   
     // Diffuse shading with bump mapping
@@ -126,9 +126,9 @@ vec3 dayColor(vec3 positionMC, vec3 positionEC, vec3 normalEC, vec3 startColor, 
     float top = texture2D(u_bumpMap, txCoord + vec2(0.0, u_bumpMapResoltuion.y)).r;
 
     vec3 perturbedNormalTC = normalize(vec3(center - right, center - top, u_bumpMapNormalZ));               // perturbed surface normal in tangent coordinates
-    vec3 perturbedNormalEC = agi_eastNorthUpToEyeCoordinates(positionMC, normalEC) * perturbedNormalTC;   // perturbed surface normal in eye coordinates
+    vec3 perturbedNormalEC = czm_eastNorthUpToEyeCoordinates(positionMC, normalEC) * perturbedNormalTC;   // perturbed surface normal in eye coordinates
     perturbedNormalEC = normalize(perturbedNormalEC);
-    float perturbedDiffuse = max(dot(agi_sunDirectionEC, perturbedNormalEC), 0.0);
+    float perturbedDiffuse = max(dot(czm_sunDirectionEC, perturbedNormalEC), 0.0);
 #else
     float perturbedDiffuse = diffuse;
 #endif
@@ -139,7 +139,7 @@ vec3 dayColor(vec3 positionMC, vec3 positionEC, vec3 normalEC, vec3 startColor, 
     {
         // Water has specular highlight
         vec3 positionToEyeEC = normalize(-positionEC);   // normalized position-to-eye vector in eye coordinates
-        vec3 toReflectedLight = reflect(-agi_sunDirectionEC, normalEC);
+        vec3 toReflectedLight = reflect(-czm_sunDirectionEC, normalEC);
     
         // Extra normalize added for Android
         float specular = max(dot(toReflectedLight, normalize(positionToEyeEC)), 0.0);
@@ -149,7 +149,7 @@ vec3 dayColor(vec3 positionMC, vec3 positionEC, vec3 normalEC, vec3 startColor, 
         intensity += (diffuseSpecularAmbientShininess.y * specular);
     }
 
-    //vec3 earthColor = agi_multiplyWithColorBalance(vec3(intensity), startColor);
+    //vec3 earthColor = czm_multiplyWithColorBalance(vec3(intensity), startColor);
     vec3 earthColor = vec3(intensity) * startColor;
     vec3 cloudColor = vec3(cloudCover * diffuse);
     vec3 earthUnderCloudColor = mix(earthColor, cloudColor, cloudCover);
@@ -161,8 +161,8 @@ vec3 dayColor(vec3 positionMC, vec3 positionEC, vec3 normalEC, vec3 startColor, 
     {
         if (!isCloud(texture2D(u_cloudMap, txCoord).r))      // Fragment is not directly under a cloud
         {
-            mat3 eyeToEastNorthUp = agi_transpose(agi_eastNorthUpToEyeCoordinates(positionMC, normalEC));
-            vec3 positionToSunTC = eyeToEastNorthUp * agi_sunDirectionEC;                                         // normalized position-to-sun vector in tangent coordinates
+            mat3 eyeToEastNorthUp = czm_transpose(czm_eastNorthUpToEyeCoordinates(positionMC, normalEC));
+            vec3 positionToSunTC = eyeToEastNorthUp * czm_sunDirectionEC;                                         // normalized position-to-sun vector in tangent coordinates
 
             // The 0.005 term below is a fudge factor that gives the shadows some size.  It will 
             // probably be user-defined in the future, along with isCloud(), and the hard-coded 
@@ -211,7 +211,7 @@ vec3 nightColor(vec2 txCoord, float cloudCover)
 }
 
 vec3 getCentralBodyColor(vec3 positionMC, vec3 positionEC, vec3 normalMC, vec3 normalEC, vec3 startDayColor, vec3 rayleighColor, vec3 mieColor) {
-    float diffuse = dot(agi_sunDirectionEC, normalEC);
+    float diffuse = dot(czm_sunDirectionEC, normalEC);
     
 #ifdef SHOW_TERMINATOR
     // TODO:  Custom color and line width
@@ -232,7 +232,7 @@ vec3 getCentralBodyColor(vec3 positionMC, vec3 positionEC, vec3 normalMC, vec3 n
     #endif
 #endif
     
-    vec2 txCoord = agi_ellipsoidWgs84TextureCoordinates(normalMC);
+    vec2 txCoord = czm_ellipsoidWgs84TextureCoordinates(normalMC);
 
 #ifdef SHOW_CLOUDS
     float cloudCover = texture2D(u_cloudMap, txCoord).r;

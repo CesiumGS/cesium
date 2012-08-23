@@ -161,6 +161,7 @@
     var pick = tree.addNode('Picking', '', null, 'Picking');
     tree.addNode('Show cartographic position on mouse-over', [new Sandbox.PickingCartographicMouseOver(scene, ellipsoid, primitives)], pick, 'Picking');
     tree.addNode('Highlight a billboard on mouse-over', [new Sandbox.PickingBillboardMouseOver(scene, ellipsoid, primitives)], pick, 'Picking');
+    tree.addNode('Highlight a polyline on mouse-over', [new Sandbox.PickingPolylineMouseOver(scene, ellipsoid, primitives)], pick, 'Picking');
     var ani = tree.addNode('Animations', '', pick, 'Animation');
     tree.addNode('Animate highlighting a billboard on mouse-over', [new Sandbox.PickingBillboardAnimationMouseOver(scene, ellipsoid, primitives)], ani, 'Animation');
     tree.addNode('Animate highlighting a polygon on mouse-over', [new Sandbox.PickingPolygonAnimationMouseOver(scene, ellipsoid, primitives)], ani, 'Animation');
