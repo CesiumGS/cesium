@@ -75,6 +75,82 @@
         };
     };
 
+    Sandbox.PickingPolylineMouseOver = function (scene, ellipsoid, primitives) {
+        var handler;
+
+        this.code = function () {
+            var polyline1;
+            var polyline2;
+
+            // If the mouse is over the polyline, change its width, outlineWidth and color
+            handler = new Cesium.EventHandler(scene.getCanvas());
+            handler.setMouseAction(
+
+            function(movement) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (pickedObject === polyline1) {
+                    polyline1.setColor({
+                        red: 1.0,
+                        green: 1.0,
+                        blue: 0.0,
+                        alpha: 1.0
+                    });
+                    polyline1.setWidth(3);
+                    polyline1.setOutlineWidth(2);
+                } else if (pickedObject === polyline2) {
+                    polyline2.setColor({
+                        red: 1.0,
+                        green: 0.0,
+                        blue: 1.0,
+                        alpha: 1.0
+                    });
+                    polyline2.setOutlineWidth(2);
+                } else {
+                    polyline1.setColor({
+                        red: 1.0,
+                        green: 1.0,
+                        blue: 1.0,
+                        alpha: 1.0
+                    });
+                    polyline1.setWidth(1);
+                    polyline1.setOutlineWidth(0);
+                    polyline2.setColor({
+                        red: 1.0,
+                        green: 1.0,
+                        blue: 1.0,
+                        alpha: 1.0
+                    });
+                    polyline2.setOutlineWidth(0);
+                }
+            }, Cesium.MouseEventType.MOVE);
+
+            // Setup code
+            var polylines = new Cesium.PolylineCollection(undefined);
+
+            polyline1 = polylines.add({
+                positions: ellipsoid.cartographicArrayToCartesianArray([
+                                                                        new Cesium.Cartographic.fromDegrees(-75.10, 39.57),
+                                                                        new Cesium.Cartographic.fromDegrees(-77.02, 38.53),
+                                                                        new Cesium.Cartographic.fromDegrees(-80.50, 35.14),
+                                                                        new Cesium.Cartographic.fromDegrees(-80.12, 25.46)
+                                                                        ])
+            });
+            polyline2 = polylines.add({
+                positions: ellipsoid.cartographicArrayToCartesianArray([
+                                                                        new Cesium.Cartographic.fromDegrees(-73.10, 37.57),
+                                                                        new Cesium.Cartographic.fromDegrees(-75.02, 36.53),
+                                                                        new Cesium.Cartographic.fromDegrees(-78.50, 33.14),
+                                                                        new Cesium.Cartographic.fromDegrees(-78.12, 23.46)
+                                                                        ])
+            });
+            primitives.add(polylines);
+        };
+
+        this.clear = function () {
+            handler = handler && handler.destroy();
+        };
+    };
+
     Sandbox.PickingBillboardAnimationMouseOver = function (scene, ellipsoid, primitives) {
         var handler;
 
@@ -219,7 +295,7 @@
                 polygon.highlighted = !polygon.highlighted;
             }
 
-            // If the mouse is over the billboard, change its scale and color
+            // If the mouse is over the polygon, start the animation to highlight it.
             handler = new Cesium.EventHandler(scene.getCanvas());
             handler.setMouseAction(
                 function (movement) {
@@ -287,7 +363,7 @@
             var sensor;
             var eroding = false;
 
-            // If the mouse is over the billboard, change its scale and color
+            // If the mouse is over the sensor, change start the erosion animation.
             handler = new Cesium.EventHandler(scene.getCanvas());
             handler.setMouseAction(
                 function (movement) {

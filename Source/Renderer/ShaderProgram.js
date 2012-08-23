@@ -187,7 +187,7 @@ define([
      * When the GLSL uniform is declared as an array, <code>value</code> is also an array as shown in Example 2.
      * Individual members of a <code>struct uniform</code> can be accessed as done in Example 3.
      * <br /><br />
-     * Uniforms whose names starting with <code>agi_</code>, such as {@link agi_viewProjection}, are called
+     * Uniforms whose names starting with <code>czm_</code>, such as {@link czm_viewProjection}, are called
      * automatic uniforms; they are implicitly declared and automatically assigned to in
      * <code>Context.draw</code> based on the {@link UniformState}.
      *
@@ -571,24 +571,24 @@ define([
                  * and <code>height</code> properties in an <code>ivec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,
                  * and <code>w</code> components, respectively.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_viewport</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_viewport</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_viewport
+                 * @alias czm_viewport
                  * @glslUniform
                  *
                  * @see Context#getViewport
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform ivec4 agi_viewport;
+                 * uniform ivec4 czm_viewport;
                  *
                  * // Scale the window coordinate components to [0, 1] by dividing
                  * // by the viewport's width and height.
-                 * vec2 v = gl_FragCoord.xy / agi_viewport.zw;
+                 * vec2 v = gl_FragCoord.xy / czm_viewport.zw;
                  */
-                agi_viewport : {
+                czm_viewport : {
                     /**
                      * @private
                      */
@@ -629,30 +629,30 @@ define([
                  * This transform is useful when a vertex shader inputs or manipulates window coordinates
                  * as done by {@link BillboardCollection}.
                  * <br /><br />
-                 * Do not confuse {@link agi_viewportTransformation} with <code>agi_viewportOrthographic</code>.
+                 * Do not confuse {@link czm_viewportTransformation} with <code>czm_viewportOrthographic</code>.
                  * The former transforms from normalized device coordinates to window coordinates; the later transforms
                  * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_viewportOrthographic</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_viewportOrthographic</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_viewportOrthographic
+                 * @alias czm_viewportOrthographic
                  * @glslUniform
                  *
                  * @see UniformState#getViewportOrthographic
-                 * @see agi_viewport
-                 * @see agi_viewportTransformation
+                 * @see czm_viewport
+                 * @see czm_viewportTransformation
                  * @see BillboardCollection
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_viewportOrthographic;
+                 * uniform mat4 czm_viewportOrthographic;
                  *
                  * // Example
-                 * gl_Position = agi_viewportOrthographic * vec4(windowPosition, 0.0, 1.0);
+                 * gl_Position = czm_viewportOrthographic * vec4(windowPosition, 0.0, 1.0);
                  */
-                agi_viewportOrthographic : {
+                czm_viewportOrthographic : {
                     /**
                      * @private
                      */
@@ -687,37 +687,37 @@ define([
                  * <br /><br />
                  * This transform is useful when there is a need to manipulate window coordinates
                  * in a vertex shader as done by {@link BillboardCollection}.  In many cases,
-                 * this matrix will not be used directly; instead, {@link agi_modelToWindowCoordinates}
+                 * this matrix will not be used directly; instead, {@link czm_modelToWindowCoordinates}
                  * will be used to transform directly from model to window coordinates.
                  * <br /><br />
-                 * Do not confuse <code>agi_viewportTransformation</code> with {@link agi_viewportOrthographic}.
+                 * Do not confuse <code>czm_viewportTransformation</code> with {@link czm_viewportOrthographic}.
                  * The former transforms from normalized device coordinates to window coordinates; the later transforms
                  * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_viewportTransformation</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_viewportTransformation</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_viewportTransformation
+                 * @alias czm_viewportTransformation
                  * @glslUniform
                  *
                  * @see UniformState#getViewportTransformation
-                 * @see agi_viewport
-                 * @see agi_viewportOrthographic
-                 * @see agi_modelToWindowCoordinates
+                 * @see czm_viewport
+                 * @see czm_viewportOrthographic
+                 * @see czm_modelToWindowCoordinates
                  * @see BillboardCollection
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_viewportTransformation;
+                 * uniform mat4 czm_viewportTransformation;
                  *
-                 * // Use agi_viewportTransformation as part of the
+                 * // Use czm_viewportTransformation as part of the
                  * // transform from model to window coordinates.
-                 * vec4 q = agi_modelViewProjection * positionMC;              // model to clip coordinates
+                 * vec4 q = czm_modelViewProjection * positionMC;              // model to clip coordinates
                  * q.xyz /= q.w;                                                // clip to normalized device coordinates (ndc)
-                 * q.xyz = (agi_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // ndc to window coordinates
+                 * q.xyz = (czm_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // ndc to window coordinates
                  */
-                agi_viewportTransformation : {
+                czm_viewportTransformation : {
                     /**
                      * @private
                      */
@@ -748,25 +748,25 @@ define([
                  * An automatic GLSL uniform representing a 4x4 model transformation matrix that
                  * transforms model coordinates to world coordinates.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_model</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_model</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_model
+                 * @alias czm_model
                  * @glslUniform
                  *
                  * @see UniformState#getModel
-                 * @see agi_modelView
-                 * @see agi_modelViewProjection
+                 * @see czm_modelView
+                 * @see czm_modelViewProjection
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_model;
+                 * uniform mat4 czm_model;
                  *
                  * // Example
-                 * vec4 worldPosition = agi_model * modelPosition;
+                 * vec4 worldPosition = czm_model * modelPosition;
                  */
-                agi_model : {
+                czm_model : {
                     /**
                      * @private
                      */
@@ -797,25 +797,25 @@ define([
                  * An automatic GLSL uniform representing a 4x4 transformation matrix that
                  * transforms from eye coordinates to world coordinates.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_inverseView</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_inverseView</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_inverseView
+                 * @alias czm_inverseView
                  * @glslUniform
                  *
                  * @see UniformState#getInverseView
-                 * @see agi_view
-                 * @see agi_inverseNormal
+                 * @see czm_view
+                 * @see czm_inverseNormal
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_inverseView;
+                 * uniform mat4 czm_inverseView;
                  *
                  * // Example
-                 * vec4 worldPosition = agi_inverseView * eyePosition;
+                 * vec4 worldPosition = czm_inverseView * eyePosition;
                  */
-                agi_inverseView : {
+                czm_inverseView : {
                     getSize : function() {
                         return 1;
                     },
@@ -837,27 +837,27 @@ define([
                  * An automatic GLSL uniform representing a 4x4 view transformation matrix that
                  * transforms world coordinates to eye coordinates.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_view</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_view</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_view
+                 * @alias czm_view
                  * @glslUniform
                  *
                  * @see UniformState#getView
-                 * @see agi_modelView
-                 * @see agi_viewProjection
-                 * @see agi_modelViewProjection
-                 * @see agi_inverseView
+                 * @see czm_modelView
+                 * @see czm_viewProjection
+                 * @see czm_modelViewProjection
+                 * @see czm_inverseView
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_view;
+                 * uniform mat4 czm_view;
                  *
                  * // Example
-                 * vec4 eyePosition = agi_view * worldPosition;
+                 * vec4 eyePosition = czm_view * worldPosition;
                  */
-                agi_view : {
+                czm_view : {
                     getSize : function() {
                         return 1;
                     },
@@ -880,26 +880,26 @@ define([
                  * transforms eye coordinates to clip coordinates.  Clip coordinates is the
                  * coordinate system for a vertex shader's <code>gl_Position</code> output.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_projection</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_projection</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_projection
+                 * @alias czm_projection
                  * @glslUniform
                  *
                  * @see UniformState#getProjection
-                 * @see agi_viewProjection
-                 * @see agi_modelViewProjection
-                 * @see agi_infiniteProjection
+                 * @see czm_viewProjection
+                 * @see czm_modelViewProjection
+                 * @see czm_infiniteProjection
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_projection;
+                 * uniform mat4 czm_projection;
                  *
                  * // Example
-                 * gl_Position = agi_projection * eyePosition;
+                 * gl_Position = czm_projection * eyePosition;
                  */
-                agi_projection : {
+                czm_projection : {
                     getSize : function() {
                         return 1;
                     },
@@ -922,24 +922,24 @@ define([
                  * transforms from clip coordinates to eye coordinates. Clip coordinates is the
                  * coordinate system for a vertex shader's <code>gl_Position</code> output.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_inverseProjection</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_inverseProjection</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_inverseProjection
+                 * @alias czm_inverseProjection
                  * @glslUniform
                  *
                  * @see UniformState#getInverseProjection
-                 * @see agi_projection
+                 * @see czm_projection
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_inverseProjection;
+                 * uniform mat4 czm_inverseProjection;
                  *
                  * // Example
-                 * vec4 eyePosition = agi_inverseProjection * clipPosition;
+                 * vec4 eyePosition = czm_inverseProjection * clipPosition;
                  */
-                agi_inverseProjection : {
+                czm_inverseProjection : {
                     getSize : function() {
                         return 1;
                     },
@@ -964,25 +964,25 @@ define([
                  * in algorithms like shadow volumes and GPU ray casting with proxy geometry to ensure that triangles
                  * are not clipped by the far plane.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_infiniteProjection</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_infiniteProjection</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_infiniteProjection
+                 * @alias czm_infiniteProjection
                  * @glslUniform
                  *
                  * @see UniformState#getInfiniteProjection
-                 * @see agi_projection
-                 * @see agi_modelViewInfiniteProjection
+                 * @see czm_projection
+                 * @see czm_modelViewInfiniteProjection
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_infiniteProjection;
+                 * uniform mat4 czm_infiniteProjection;
                  *
                  * // Example
-                 * gl_Position = agi_infiniteProjection * eyePosition;
+                 * gl_Position = czm_infiniteProjection * eyePosition;
                  */
-                agi_infiniteProjection : {
+                czm_infiniteProjection : {
                     getSize : function() {
                         return 1;
                     },
@@ -1004,33 +1004,33 @@ define([
                  * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
                  * transforms model coordinates to eye coordinates.
                  * <br /><br />
-                 * Positions should be transformed to eye coordinates using <code>agi_modelView</code> and
-                 * normals should be transformed using {@link agi_normal}.
+                 * Positions should be transformed to eye coordinates using <code>czm_modelView</code> and
+                 * normals should be transformed using {@link czm_normal}.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_modelView</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_modelView</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_modelView
+                 * @alias czm_modelView
                  * @glslUniform
                  *
                  * @see UniformState#getModelView
-                 * @see agi_model
-                 * @see agi_view
-                 * @see agi_modelViewProjection
-                 * @see agi_normal
+                 * @see czm_model
+                 * @see czm_view
+                 * @see czm_modelViewProjection
+                 * @see czm_normal
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_modelView;
+                 * uniform mat4 czm_modelView;
                  *
                  * // Example
-                 * vec4 eyePosition = agi_modelView * modelPosition;
+                 * vec4 eyePosition = czm_modelView * modelPosition;
                  *
                  * // The above is equivalent to, but more efficient than:
-                 * vec4 eyePosition = agi_view * agi_model * modelPosition;
+                 * vec4 eyePosition = czm_view * czm_model * modelPosition;
                  */
-                agi_modelView : {
+                czm_modelView : {
                     getSize : function() {
                         return 1;
                     },
@@ -1052,24 +1052,24 @@ define([
                  * An automatic GLSL uniform representing a 4x4 transformation matrix that
                  * transforms from eye coordinates to model coordinates.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_inverseModelView</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_inverseModelView</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_inverseModelView
+                 * @alias czm_inverseModelView
                  * @glslUniform
                  *
                  * @see UniformState#getInverseModelView
-                 * @see agi_modelView
+                 * @see czm_modelView
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_inverseModelView;
+                 * uniform mat4 czm_inverseModelView;
                  *
                  * // Example
-                 * vec4 modelPosition = agi_inverseModelView * eyePosition;
+                 * vec4 modelPosition = czm_inverseModelView * eyePosition;
                  */
-                agi_inverseModelView : {
+                czm_inverseModelView : {
                     getSize : function() {
                         return 1;
                     },
@@ -1092,29 +1092,29 @@ define([
                  * transforms world coordinates to clip coordinates.  Clip coordinates is the
                  * coordinate system for a vertex shader's <code>gl_Position</code> output.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_viewProjection</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_viewProjection</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_viewProjection
+                 * @alias czm_viewProjection
                  * @glslUniform
                  *
                  * @see UniformState#getViewProjection
-                 * @see agi_view
-                 * @see agi_projection
-                 * @see agi_modelViewProjection
+                 * @see czm_view
+                 * @see czm_projection
+                 * @see czm_modelViewProjection
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_viewProjection;
+                 * uniform mat4 czm_viewProjection;
                  *
                  * // Example
-                 * vec4 gl_Position = agi_viewProjection * agi_model * modelPosition;
+                 * vec4 gl_Position = czm_viewProjection * czm_model * modelPosition;
                  *
                  * // The above is equivalent to, but more efficient than:
-                 * gl_Position = agi_projection * agi_view * agi_model * modelPosition;
+                 * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
                  */
-                agi_viewProjection : {
+                czm_viewProjection : {
                     getSize : function() {
                         return 1;
                     },
@@ -1137,32 +1137,32 @@ define([
                  * transforms model coordinates to clip coordinates.  Clip coordinates is the
                  * coordinate system for a vertex shader's <code>gl_Position</code> output.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_modelViewProjection</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_modelViewProjection</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_modelViewProjection
+                 * @alias czm_modelViewProjection
                  * @glslUniform
                  *
                  * @see UniformState#getModelViewProjection
-                 * @see agi_model
-                 * @see agi_view
-                 * @see agi_projection
-                 * @see agi_modelView
-                 * @see agi_viewProjection
-                 * @see agi_modelViewInfiniteProjection
+                 * @see czm_model
+                 * @see czm_view
+                 * @see czm_projection
+                 * @see czm_modelView
+                 * @see czm_viewProjection
+                 * @see czm_modelViewInfiniteProjection
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_modelViewProjection;
+                 * uniform mat4 czm_modelViewProjection;
                  *
                  * // Example
-                 * vec4 gl_Position = agi_modelViewProjection * modelPosition;
+                 * vec4 gl_Position = czm_modelViewProjection * modelPosition;
                  *
                  * // The above is equivalent to, but more efficient than:
-                 * gl_Position = agi_projection * agi_view * agi_model * modelPosition;
+                 * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
                  */
-                agi_modelViewProjection : {
+                czm_modelViewProjection : {
                     getSize : function() {
                         return 1;
                     },
@@ -1187,30 +1187,30 @@ define([
                  * the far plane at infinity.  This is useful in algorithms like shadow volumes and GPU ray casting with
                  * proxy geometry to ensure that triangles are not clipped by the far plane.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_modelViewInfiniteProjection</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_modelViewInfiniteProjection</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_modelViewInfiniteProjection
+                 * @alias czm_modelViewInfiniteProjection
                  * @glslUniform
                  *
                  * @see UniformState#getModelViewInfiniteProjection
-                 * @see agi_model
-                 * @see agi_view
-                 * @see agi_infiniteProjection
-                 * @see agi_modelViewProjection
+                 * @see czm_model
+                 * @see czm_view
+                 * @see czm_infiniteProjection
+                 * @see czm_modelViewProjection
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 agi_modelViewInfiniteProjection;
+                 * uniform mat4 czm_modelViewInfiniteProjection;
                  *
                  * // Example
-                 * vec4 gl_Position = agi_modelViewInfiniteProjection * modelPosition;
+                 * vec4 gl_Position = czm_modelViewInfiniteProjection * modelPosition;
                  *
                  * // The above is equivalent to, but more efficient than:
-                 * gl_Position = agi_infiniteProjection * agi_view * agi_model * modelPosition;
+                 * gl_Position = czm_infiniteProjection * czm_view * czm_model * modelPosition;
                  */
-                agi_modelViewInfiniteProjection : {
+                czm_modelViewInfiniteProjection : {
                     getSize : function() {
                         return 1;
                     },
@@ -1232,28 +1232,28 @@ define([
                  * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
                  * transforms normal vectors in model coordinates to eye coordinates.
                  * <br /><br />
-                 * Positions should be transformed to eye coordinates using {@link agi_modelView} and
-                 * normals should be transformed using <code>agi_normal</code>.
+                 * Positions should be transformed to eye coordinates using {@link czm_modelView} and
+                 * normals should be transformed using <code>czm_normal</code>.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_normal</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_normal</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_normal
+                 * @alias czm_normal
                  * @glslUniform
                  *
                  * @see UniformState#getNormal
-                 * @see agi_inverseNormal
-                 * @see agi_modelView
+                 * @see czm_inverseNormal
+                 * @see czm_modelView
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat3 agi_normal;
+                 * uniform mat3 czm_normal;
                  *
                  * // Example
-                 * vec3 eyeNormal = agi_normal * normal;
+                 * vec3 eyeNormal = czm_normal * normal;
                  */
-                agi_normal : {
+                czm_normal : {
                     getSize : function() {
                         return 1;
                     },
@@ -1274,28 +1274,28 @@ define([
                 /**
                  * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
                  * transforms normal vectors in eye coordinates to model coordinates.  This is
-                 * in the opposite transform provided by {@link agi_normal}.
+                 * in the opposite transform provided by {@link czm_normal}.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_inverseNormal</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_inverseNormal</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_inverseNormal
+                 * @alias czm_inverseNormal
                  * @glslUniform
                  *
                  * @see UniformState#getInverseNormal
-                 * @see agi_normal
-                 * @see agi_modelView
-                 * @see agi_inverseView
+                 * @see czm_normal
+                 * @see czm_modelView
+                 * @see czm_inverseView
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat3 agi_inverseNormal;
+                 * uniform mat3 czm_inverseNormal;
                  *
                  * // Example
-                 * vec3 normalMC = agi_inverseNormal * normalEC;
+                 * vec3 normalMC = czm_inverseNormal * normalEC;
                  */
-                agi_inverseNormal : {
+                czm_inverseNormal : {
                     getSize : function() {
                         return 1;
                     },
@@ -1317,24 +1317,24 @@ define([
                  * An automatic GLSL uniform representing the direction of the sun in eye coordinates.
                  * This is commonly used for directional lighting computations.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_sunDirectionEC</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_sunDirectionEC</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_sunDirectionEC
+                 * @alias czm_sunDirectionEC
                  * @glslUniform
                  *
                  * @see UniformState#getSunDirectionEC
-                 * @see agi_sunDirectionWC
+                 * @see czm_sunDirectionWC
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform vec3 agi_sunDirectionEC;
+                 * uniform vec3 czm_sunDirectionEC;
                  *
                  * // Example
-                 * float diffuse = max(dot(agi_sunDirectionEC, normalEC), 0.0);
+                 * float diffuse = max(dot(czm_sunDirectionEC, normalEC), 0.0);
                  */
-                agi_sunDirectionEC : {
+                czm_sunDirectionEC : {
                     getSize : function() {
                         return 1;
                     },
@@ -1356,21 +1356,21 @@ define([
                  * An automatic GLSL uniform representing a normalized vector from the origin
                  * in world coordinates to the sun.  This is commonly used for lighting computations.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_sunDirectionWC</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_sunDirectionWC</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_sunDirectionWC
+                 * @alias czm_sunDirectionWC
                  * @glslUniform
                  *
                  * @see UniformState#getSunDirectionWC
-                 * @see agi_sunDirectionEC
+                 * @see czm_sunDirectionEC
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform vec3 agi_sunDirectionWC;
+                 * uniform vec3 czm_sunDirectionWC;
                  */
-                agi_sunDirectionWC : {
+                czm_sunDirectionWC : {
                     getSize : function() {
                         return 1;
                     },
@@ -1391,18 +1391,18 @@ define([
                 /**
                  * An automatic GLSL uniform representing the position of the viewer (camera) in world coordinates.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>agi_sunDirectionWC</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_sunDirectionWC</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias agi_viewerPositionWC
+                 * @alias czm_viewerPositionWC
                  * @glslUniform
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform vec3 agi_viewerPositionWC;
+                 * uniform vec3 czm_viewerPositionWC;
                  */
-                agi_viewerPositionWC : {
+                czm_viewerPositionWC : {
                     getSize : function() {
                         return 1;
                     },
@@ -1516,189 +1516,189 @@ define([
                 /**
                  * A built-in GLSL floating-point constant for <code>Math.PI</code>.
                  *
-                 * @alias agi_pi
+                 * @alias czm_pi
                  * @glslConstant
                  *
                  * @see CesiumMath.PI
                  *
                  * @example
                  * // GLSL declaration
-                 * const float agi_pi = ...;
+                 * const float czm_pi = ...;
                  *
                  * // Example
-                 * float twoPi = 2.0 * agi_pi;
+                 * float twoPi = 2.0 * czm_pi;
                  */
-                agi_pi : Math.PI.toString(),
+                czm_pi : Math.PI.toString(),
 
                 /**
                  * A built-in GLSL floating-point constant for <code>1/pi</code>.
                  *
-                 * @alias agi_oneOverPi
+                 * @alias czm_oneOverPi
                  * @glslConstant
                  *
                  * @see CesiumMath.ONE_OVER_PI
                  *
                  * @example
                  * // GLSL declaration
-                 * const float agi_oneOverPi = ...;
+                 * const float czm_oneOverPi = ...;
                  *
                  * // Example
-                 * float pi = 1.0 / agi_oneOverPi;
+                 * float pi = 1.0 / czm_oneOverPi;
                  */
-                agi_oneOverPi : CesiumMath.ONE_OVER_PI.toString(),
+                czm_oneOverPi : CesiumMath.ONE_OVER_PI.toString(),
 
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/2</code>.
                  *
-                 * @alias agi_piOverTwo
+                 * @alias czm_piOverTwo
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_TWO
                  *
                  * @example
                  * // GLSL declaration
-                 * const float agi_piOverTwo = ...;
+                 * const float czm_piOverTwo = ...;
                  *
                  * // Example
-                 * float pi = 2.0 * agi_piOverTwo;
+                 * float pi = 2.0 * czm_piOverTwo;
                  */
-                agi_piOverTwo : CesiumMath.PI_OVER_TWO.toString(),
+                czm_piOverTwo : CesiumMath.PI_OVER_TWO.toString(),
 
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/3</code>.
                  *
-                 * @alias agi_piOverThree
+                 * @alias czm_piOverThree
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_THREE
                  *
                  * @example
                  * // GLSL declaration
-                 * const float agi_piOverThree = ...;
+                 * const float czm_piOverThree = ...;
                  *
                  * // Example
-                 * float pi = 3.0 * agi_piOverThree;
+                 * float pi = 3.0 * czm_piOverThree;
                  */
-                agi_piOverThree : CesiumMath.PI_OVER_THREE.toString(),
+                czm_piOverThree : CesiumMath.PI_OVER_THREE.toString(),
 
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/4</code>.
                  *
-                 * @alias agi_piOverFour
+                 * @alias czm_piOverFour
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_FOUR
                  *
                  * @example
                  * // GLSL declaration
-                 * const float agi_piOverFour = ...;
+                 * const float czm_piOverFour = ...;
                  *
                  * // Example
-                 * float pi = 4.0 * agi_piOverFour;
+                 * float pi = 4.0 * czm_piOverFour;
                  */
-                agi_piOverFour : CesiumMath.PI_OVER_FOUR.toString(),
+                czm_piOverFour : CesiumMath.PI_OVER_FOUR.toString(),
 
                 /**
                  * A built-in GLSL floating-point constant for <code>pi/6</code>.
                  *
-                 * @alias agi_piOverSix
+                 * @alias czm_piOverSix
                  * @glslConstant
                  *
                  * @see CesiumMath.PI_OVER_SIX
                  *
                  * @example
                  * // GLSL declaration
-                 * const float agi_piOverSix = ...;
+                 * const float czm_piOverSix = ...;
                  *
                  * // Example
-                 * float pi = 6.0 * agi_piOverSix;
+                 * float pi = 6.0 * czm_piOverSix;
                  */
-                agi_piOverSix : CesiumMath.PI_OVER_SIX.toString(),
+                czm_piOverSix : CesiumMath.PI_OVER_SIX.toString(),
 
                 /**
                  * A built-in GLSL floating-point constant for <code>3pi/2</code>.
                  *
-                 * @alias agi_threePiOver2
+                 * @alias czm_threePiOver2
                  * @glslConstant
                  *
                  * @see CesiumMath.THREE_PI_OVER_TWO
                  *
                  * @example
                  * // GLSL declaration
-                 * const float agi_threePiOver2 = ...;
+                 * const float czm_threePiOver2 = ...;
                  *
                  * // Example
-                 * float pi = (2.0 / 3.0) * agi_threePiOver2;
+                 * float pi = (2.0 / 3.0) * czm_threePiOver2;
                  */
-                agi_threePiOver2 : CesiumMath.THREE_PI_OVER_TWO.toString(),
+                czm_threePiOver2 : CesiumMath.THREE_PI_OVER_TWO.toString(),
 
                 /**
                  * A built-in GLSL floating-point constant for <code>2pi</code>.
                  *
-                 * @alias agi_twoPi
+                 * @alias czm_twoPi
                  * @glslConstant
                  *
                  * @see CesiumMath.TWO_PI
                  *
                  * @example
                  * // GLSL declaration
-                 * const float agi_twoPi = ...;
+                 * const float czm_twoPi = ...;
                  *
                  * // Example
-                 * float pi = agi_twoPi / 2.0;
+                 * float pi = czm_twoPi / 2.0;
                  */
-                agi_twoPi : CesiumMath.TWO_PI.toString(),
+                czm_twoPi : CesiumMath.TWO_PI.toString(),
 
                 /**
                  * A built-in GLSL floating-point constant for <code>1/2pi</code>.
                  *
-                 * @alias agi_oneOverTwoPi
+                 * @alias czm_oneOverTwoPi
                  * @glslConstant
                  *
                  * @see CesiumMath.ONE_OVER_TWO_PI
                  *
                  * @example
                  * // GLSL declaration
-                 * const float agi_oneOverTwoPi = ...;
+                 * const float czm_oneOverTwoPi = ...;
                  *
                  * // Example
-                 * float pi = 2.0 * agi_oneOverTwoPi;
+                 * float pi = 2.0 * czm_oneOverTwoPi;
                  */
-                agi_oneOverTwoPi : CesiumMath.ONE_OVER_TWO_PI.toString(),
+                czm_oneOverTwoPi : CesiumMath.ONE_OVER_TWO_PI.toString(),
 
                 /**
                  * A built-in GLSL floating-point constant for converting degrees to radians.
                  *
-                 * @alias agi_radiansPerDegree
+                 * @alias czm_radiansPerDegree
                  * @glslConstant
                  *
                  * @see CesiumMath.RADIANS_PER_DEGREE
                  *
                  * @example
                  * // GLSL declaration
-                 * const float agi_radiansPerDegree = ...;
+                 * const float czm_radiansPerDegree = ...;
                  *
                  * // Example
-                 * float rad = agi_radiansPerDegree * deg;
+                 * float rad = czm_radiansPerDegree * deg;
                  */
-                agi_radiansPerDegree : CesiumMath.RADIANS_PER_DEGREE.toString(),
+                czm_radiansPerDegree : CesiumMath.RADIANS_PER_DEGREE.toString(),
 
                 /**
                  * A built-in GLSL floating-point constant for converting radians to degrees.
                  *
-                 * @alias agi_degreesPerRadian
+                 * @alias czm_degreesPerRadian
                  * @glslConstant
                  *
                  * @see CesiumMath.DEGREES_PER_RADIAN
                  *
                  * @example
                  * // GLSL declaration
-                 * const float agi_degreesPerRadian = ...;
+                 * const float czm_degreesPerRadian = ...;
                  *
                  * // Example
-                 * float deg = agi_degreesPerRadian * rad;
+                 * float deg = czm_degreesPerRadian * rad;
                  */
-                agi_degreesPerRadian : CesiumMath.DEGREES_PER_RADIAN.toString()
+                czm_degreesPerRadian : CesiumMath.DEGREES_PER_RADIAN.toString()
             };
 
             var glslConstants = '';

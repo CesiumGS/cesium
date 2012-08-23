@@ -124,12 +124,12 @@ define([
          * When this is the identity matrix, the billboards are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
          * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link agi_model} and derived uniforms.
+         * shaders via {@link czm_model} and derived uniforms.
          *
          * @type Matrix4
          *
          * @see Transforms.eastNorthUpToFixedFrame
-         * @see agi_model
+         * @see czm_model
          *
          * @example
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));

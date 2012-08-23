@@ -34,8 +34,8 @@ varying vec2 v_textureCoordinates;
 
 void main()
 {
-    vec3 normalMC = normalize(agi_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
-    vec3 normalEC = normalize(agi_normal * normalMC);                                           // normalized surface normal in eye coordiantes
+    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
+    vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
     
 #ifdef SHOW_DAY
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
