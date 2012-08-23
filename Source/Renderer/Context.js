@@ -457,7 +457,7 @@ define([
      *
      * @see Context#setViewport
      * @see Context#getCanvas
-     * @see agi_viewport
+     * @see czm_viewport
      *
      * @example
      * var viewport = context.getViewport();
@@ -496,7 +496,7 @@ define([
      * @see Context#getMaximumViewportWidth
      * @see Context#getMaximumViewportHeight
      * @see Context#getCanvas
-     * @see agi_viewport
+     * @see czm_viewport
      *
      * @example
      * context.setViewport({
