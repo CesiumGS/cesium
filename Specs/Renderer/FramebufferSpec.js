@@ -96,7 +96,7 @@ defineSuite([
 
     it('has a stencil renderbuffer attachment', function() {
         var renderbuffer = context.createRenderbuffer({
-            format : RenderbufferFormat.Stencil8
+            format : RenderbufferFormat.STENCIL_INDEX8
         });
 
         framebuffer = context.createFramebuffer();
