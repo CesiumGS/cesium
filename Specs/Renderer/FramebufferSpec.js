@@ -362,7 +362,7 @@ defineSuite([
                 })
             });
 
-            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthTexture())).toEqual([128, 128, 128, 128]);
+            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthTexture())).toEqualEpsilon([128, 128, 128, 128], 1);
         }
     });
 
@@ -381,7 +381,7 @@ defineSuite([
                 })
             });
 
-            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthStencilTexture())).toEqual([128, 128, 128, 128]);
+            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthStencilTexture())).toEqualEpsilon([128, 128, 128, 128], 1);
         }
     });
 
