@@ -17,6 +17,7 @@ define([
         '../Renderer/VertexArrayFacade',
         './SceneMode',
         './Billboard',
+        './HorizontalOrigin',
         '../Shaders/BillboardCollectionVS',
         '../Shaders/BillboardCollectionFS'
     ], function(
@@ -37,6 +38,7 @@ define([
         VertexArrayFacade,
         SceneMode,
         Billboard,
+        HorizontalOrigin,
         BillboardCollectionVS,
         BillboardCollectionFS) {
     "use strict";
@@ -126,6 +128,8 @@ define([
         this._maxSize = 0.0;
         this._maxEyeOffset = 0.0;
         this._maxScale = 1.0;
+        this._maxPixelOffset = 0.0;
+        this._allHorizontalCenter = true;
 
         this._baseVolume = new BoundingSphere();
         this._baseVolume2D = new BoundingSphere();
@@ -760,6 +764,7 @@ define([
     BillboardCollection.prototype._writePixelOffset = function(context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = (billboard._index * 4);
         var pixelOffset = billboard.getPixelOffset();
+        this._maxPixelOffset = Math.max(this._maxPixelOffset, pixelOffset.x, pixelOffset.y);
 
         vafWriters[attributeIndices.pixelOffset](i + 0, pixelOffset.x, pixelOffset.y);
         vafWriters[attributeIndices.pixelOffset](i + 1, pixelOffset.x, pixelOffset.y);
@@ -805,6 +810,8 @@ define([
         var horizontalOrigin = billboard.getHorizontalOrigin().value;
         var verticalOrigin = billboard.getVerticalOrigin().value;
         var show = billboard.getShow();
+
+        this._allHorizontalCenter = this._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER.value;
 
         vafWriters[attributeIndices.originAndShow](i + 0, horizontalOrigin, verticalOrigin, show);
         vafWriters[attributeIndices.originAndShow](i + 1, horizontalOrigin, verticalOrigin, show);
@@ -899,59 +906,55 @@ define([
         }
     };
 
-    function updateBoundingVolumes(collection, sceneState) {
-        var pixelScale;
-        var size;
-        var boundingVolume;
-
-        var tanPhi;
-        var d1;
-        var toCenter;
-        var distance;
-
+    function updateBoundingVolumes(collection, context, sceneState) {
         var camera = sceneState.camera;
         var frustum = camera.frustum;
         var mode = sceneState.mode;
 
-        if (mode === SceneMode.SCENE3D) {
-            boundingVolume = new BoundingSphere();
-            boundingVolume.center = collection._baseVolume.center.clone();
+        var textureDimensions = collection._textureAtlas.getTexture().getDimensions();
+        var textureSize = Math.max(textureDimensions.x, textureDimensions.y);
 
-            tanPhi = Math.tan(frustum.fovy * 0.5);
-            d1 = 1.0 / tanPhi;
+        var boundingVolume;
+        var pixelScale;
+        var size;
+        var offset;
 
-            toCenter = camera.getPositionWC().subtract(collection._baseVolume.center);
-            distance = Math.max(0.0, toCenter.magnitude() - collection._baseVolume.radius);
-            pixelScale = distance / d1;
-
-            size = 2.0 * pixelScale * collection._maxScale * collection._maxSize;
-            boundingVolume.radius = collection._baseVolume.radius + size + collection._maxEyeOffset;
-        } else if (mode === SceneMode.SCENE2D) {
+        if (mode === SceneMode.SCENE2D) {
             boundingVolume = new BoundingRectangle();
 
-            pixelScale = (frustum.right - frustum.left);
+            pixelScale = (frustum.right - frustum.left) / context.getViewport().width;
+            size = pixelScale * collection._maxScale * collection._maxSize * textureSize;
+            if (collection._allHorizontalCenter) {
+                size *= 0.5;
+            }
 
-            size = pixelScale * collection._maxScale * collection._maxSize;
-            var offset = size + collection._maxEyeOffset;
+            offset = size + collection._maxEyeOffset;
 
             boundingVolume.x = collection._baseRectangle.x - offset;
             boundingVolume.y = collection._baseRectangle.y - offset;
             boundingVolume.width = collection._baseRectangle.width + 2.0 * offset;
             boundingVolume.height = collection._baseRectangle.height + 2.0 * offset;
+            return boundingVolume;
+        } else if (mode === SceneMode.SCENE3D) {
+            boundingVolume = BoundingSphere.clone(collection._baseVolume);
         } else if (typeof collection._baseVolume2D !== 'undefined') {
-            boundingVolume = new BoundingSphere();
-            boundingVolume.center = collection._baseVolume2D.center.clone();
-
-            tanPhi = Math.tan(frustum.fovy * 0.5);
-            d1 = 1.0 / tanPhi;
-
-            toCenter = camera.getPositionWC().subtract(collection._baseVolume2D.center);
-            distance = Math.max(0.0, toCenter.magnitude() - collection._baseVolume2D.radius);
-            pixelScale = distance / d1;
-
-            size = 2.0 * pixelScale * collection._maxScale * collection._maxSize;
-            boundingVolume.radius = collection._baseVolume2D.radius + size + collection._maxEyeOffset;
+            boundingVolume = BoundingSphere.clone(collection._baseVolume2D);
         }
+
+        var toCenter = camera.getPositionWC().subtract(boundingVolume.center);
+        var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()));
+        var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
+        var tanPhi = Math.tan(frustum.fovy * 0.5);
+        var d1 = distance / tanPhi;
+        pixelScale = d1 / context.getViewport().width;
+
+        size = pixelScale * collection._maxScale * collection._maxSize * textureSize;
+        if (collection._allHorizontalCenter) {
+            size *= 0.5;
+        }
+
+        offset = pixelScale * collection._maxPixelOffset + collection._maxEyeOffset;
+        boundingVolume.radius += size + offset;
 
         return boundingVolume;
     }
@@ -1080,7 +1083,7 @@ define([
 
         this._uniforms = (sceneState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;
 
-        var boundingVolume = updateBoundingVolumes(this, sceneState);
+        var boundingVolume = updateBoundingVolumes(this, context, sceneState);
         var modelMatrix = Matrix4.IDENTITY;
 
         if (sceneState.mode === SceneMode.SCENE3D) {
