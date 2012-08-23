@@ -402,10 +402,11 @@ define([
         return this._primitives.length;
     };
 
-    function update2D(primitives, sceneState, renderList) {
+    function update2D(context, sceneState, primitives, renderList) {
         var camera = sceneState.camera;
         var frustum = camera.frustum;
 
+        var frustumRect;
         if (typeof frustum.top !== 'undefined') {
             var position = camera.position;
             var up = camera.up;
@@ -448,7 +449,7 @@ define([
         }
     }
 
-    function update3D(primitives, sceneState, renderList) {
+    function update3D(context, sceneState, primitives, renderList) {
         var mode = sceneState.mode;
         var camera = sceneState.camera;
         var occluder = sceneState.occluder;
@@ -498,9 +499,9 @@ define([
 
         var mode = sceneState.mode;
         if (mode === SceneMode.SCENE2D) {
-            update2D(this._primitives, sceneState, this._renderList);
+            update2D(context, sceneState, this._primitives, this._renderList);
         } else {
-            update3D(this._primitives, sceneState, this._renderList);
+            update3D(context, sceneState, this._primitives, this._renderList);
         }
 
         return {};
