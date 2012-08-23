@@ -608,6 +608,9 @@ define([
                             }
                         }
                     }
+                    else {
+                        newIndices.push(indices[i], indices[i + 1], indices[i + 2]);
+                    }
 
                     // PERFORMANCE_IDEA:  Given the plane y = 0, there will be lots of zeros,
                     // so we could hardcode the triangle-plane test.  We'd avoid some allocations
