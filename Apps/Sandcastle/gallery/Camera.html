@@ -117,14 +117,16 @@ require([
         scene.viewExtent(extent, Cesium.Ellipsoid.WGS84);
         
         // Show the extent.  Not required; just for show.
-        var polyline = new Cesium.Polyline();
-        polyline.setPositions(Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-            new Cesium.Cartographic(west, south), 
-            new Cesium.Cartographic(west, north), 
-            new Cesium.Cartographic(east, north), 
-            new Cesium.Cartographic(east, south), 
-            new Cesium.Cartographic(west, south)]));
-        scene.getPrimitives().add(polyline);        
+        var polylines = new Cesium.PolylineCollection();
+        polylines.add({
+            positions: Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+	            new Cesium.Cartographic(west, south), 
+	            new Cesium.Cartographic(west, north), 
+	            new Cesium.Cartographic(east, north), 
+	            new Cesium.Cartographic(east, south), 
+	            new Cesium.Cartographic(west, south)])
+        });
+        scene.getPrimitives().add(polylines);        
     }
     
     function createButtons(scene) {
