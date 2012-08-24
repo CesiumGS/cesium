@@ -15,17 +15,13 @@ require({
     //Cesium.TerrainProvider.wireframe = true;
 
     var terrainProvider;
-//    terrainProvider = new Cesium.EllipsoidTerrainProvider(new Cesium.WebMercatorTilingScheme({
-//        ellipsoid : ellipsoid,
-//        numberOfLevelZeroTilesX : 2,
-//        numberOfLevelZeroTilesY : 2
-//    }));
+    terrainProvider = new Cesium.EllipsoidTerrainProvider(new Cesium.GeographicTilingScheme());
 
-    terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
-        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'YlgFe9jys5iLJFKc_hc_2TiENT2_FhcjUQVT6UV26lJxnOpERyn9h1-mqFhWYX2H0bCIEuFlIxL__9bdvl2GnQ..',
-        proxy : new Cesium.DefaultProxy('/terrain/')
-    });
+//    terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
+//        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+//        token : 'YlgFe9jys5iLJFKc_hc_2TiENT2_FhcjUQVT6UV26lJxnOpERyn9h1-mqFhWYX2H0bCIEuFlIxL__9bdvl2GnQ..',
+//        proxy : new Cesium.DefaultProxy('/terrain/')
+//    });
 
 //    terrainProvider = new Cesium.WebMapServiceTerrainProvider({
 //        url : 'http://localhost:8081/geoserver/terrain/wms',

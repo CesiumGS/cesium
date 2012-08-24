@@ -9,7 +9,7 @@ define([
         './ImageryProvider',
         './Projections',
         './GeographicTilingScheme',
-        './TileState'
+        './ImageryState'
     ], function(
         defaultValue,
         loadImage,
@@ -20,7 +20,7 @@ define([
         ImageryProvider,
         Projections,
         GeographicTilingScheme,
-        TileState) {
+        ImageryState) {
     "use strict";
 
     /**
@@ -172,7 +172,7 @@ define([
     SolidColorImageryProvider.prototype.transformImagery = function(context, imagery) {
         imagery.transformedImage = imagery.image;
         imagery.image = undefined;
-        imagery.state = TileState.TRANSFORMED;
+        imagery.state = ImageryState.TRANSFORMED;
     };
 
     /**

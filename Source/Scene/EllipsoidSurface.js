@@ -19,6 +19,7 @@ define([
         '../Core/MeshFilters',
         './GeographicTilingScheme',
         './ImageryLayerCollection',
+        './ImageryState',
         './TerrainProvider',
         './TileState',
         './TileImagery',
@@ -46,6 +47,7 @@ define([
         MeshFilters,
         GeographicTilingScheme,
         ImageryLayerCollection,
+        ImageryState,
         TerrainProvider,
         TileState,
         TileImagery,
@@ -443,7 +445,7 @@ define([
                     var imageryLayer = imagery.imageryLayer;
                     ++imageryIndex;
 
-                    if (typeof tileImagery === 'undefined' || imagery.state !== TileState.READY) {
+                    if (typeof tileImagery === 'undefined' || imagery.state !== ImageryState.READY) {
                         continue;
                     }
 
@@ -917,25 +919,25 @@ define([
                 var imagery = tileImagery.imagery;
                 var imageryLayer = imagery.imageryLayer;
 
-                if (imagery.state === TileState.UNLOADED) {
-                    imagery.state = TileState.TRANSITIONING;
+                if (imagery.state === ImageryState.UNLOADED) {
+                    imagery.state = ImageryState.TRANSITIONING;
                     imageryLayer.requestImagery(imagery);
                 }
 
-                if (imagery.state === TileState.RECEIVED) {
-                    imagery.state = TileState.TRANSITIONING;
-                    imageryLayer.transformImagery(context, imagery);
+                if (imagery.state === ImageryState.RECEIVED) {
+                    imagery.state = ImageryState.TRANSITIONING;
+                    imageryLayer.createTexture(context, imagery);
                 }
 
-                if (imagery.state === TileState.TRANSFORMED) {
-                    imagery.state = TileState.TRANSITIONING;
-                    imageryLayer.createResources(context, imagery);
+                if (imagery.state === ImageryState.TEXTURE_LOADED) {
+                    imagery.state = ImageryState.TRANSITIONING;
+                    imageryLayer.reprojectTexture(context, imagery);
                 }
 
                 var tileImageryDoneLoading =
-                    imagery.state === TileState.READY ||
-                    imagery.state === TileState.FAILED ||
-                    imagery.state === TileState.INVALID;
+                    imagery.state === ImageryState.READY ||
+                    imagery.state === ImageryState.FAILED ||
+                    imagery.state === ImageryState.INVALID;
 
                 doneLoading = doneLoading && tileImageryDoneLoading;
             }

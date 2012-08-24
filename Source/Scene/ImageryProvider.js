@@ -6,7 +6,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        './TileState',
+        './ImageryState',
         '../ThirdParty/when'
     ], function(
         loadImage,
@@ -15,7 +15,7 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        TileState,
+        ImageryState,
         when) {
     "use strict";
 
@@ -73,7 +73,7 @@ define([
     ImageryProvider.prototype.transformImagery = function(context, imagery) {
         imagery.transformedImage = this.projection.toWgs84(imagery.extent, imagery.image);
         imagery.image = undefined;
-        imagery.state = TileState.TRANSFORMED;
+        imagery.state = ImageryState.TRANSFORMED;
     };
 
     /**
@@ -92,7 +92,7 @@ define([
     ImageryProvider.prototype.createResources = function(context, imagery, texturePool) {
         imagery.texture = ImageryProvider.createTextureFromTransformedImage(context, imagery.transformedImage, texturePool);
         imagery.transformedImage = undefined;
-        imagery.state = TileState.READY;
+        imagery.state = ImageryState.READY;
     };
 
     ImageryProvider.loadImageAndCheckDiscardPolicy = function(url, discardPolicy) {

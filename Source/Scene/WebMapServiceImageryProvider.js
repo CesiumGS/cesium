@@ -10,8 +10,8 @@ define([
         '../Core/Math',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
+        './ImageryState',
         './Projections',
-        './TileState',
         './WebMercatorTilingScheme',
         './GeographicTilingScheme',
         '../ThirdParty/when'
@@ -26,8 +26,8 @@ define([
         CesiumMath,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
+        ImageryState,
         Projections,
-        TileState,
         WebMercatorTilingScheme,
         GeographicTilingScheme,
         when) {
@@ -233,7 +233,7 @@ define([
     WebMapServiceImageryProvider.prototype.transformImagery = function(context, imagery) {
         imagery.transformedImage = imagery.image;
         imagery.image = undefined;
-        imagery.state = TileState.TRANSFORMED;
+        imagery.state = ImageryState.TRANSFORMED;
     };
 
     /**

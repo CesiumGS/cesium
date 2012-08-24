@@ -8,10 +8,15 @@ define([
         '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/PlaneTessellator',
+        '../Renderer/MipmapHint',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureWrap',
+        './GeographicTilingScheme',
         './Imagery',
+        './ImageryState',
         './Tile',
         './TileImagery',
-        './TileState',
         './TexturePool',
         './Projections',
         '../ThirdParty/when'
@@ -24,10 +29,15 @@ define([
         Cartesian2,
         Extent,
         PlaneTessellator,
+        MipmapHint,
+        TextureMinificationFilter,
+        TextureMagnificationFilter,
+        TextureWrap,
+        GeographicTilingScheme,
         Imagery,
+        ImageryState,
         Tile,
         TileImagery,
-        TileState,
         TexturePool,
         Projections,
         when) {
@@ -95,6 +105,10 @@ define([
         this.failedTileRetryTime = 5.0;
 
         this._levelZeroMaximumTexelSpacing = undefined;
+
+        this._spReproject = undefined;
+        this._vaReproject = undefined;
+        this._fbReproject = undefined;
     }
 
     /**
@@ -261,7 +275,7 @@ define([
                 // to be able to reorder pending image requests.
                 if (activeRequestsForHostname > 6) {
                     // postpone loading tile
-                    imagery.state = TileState.UNLOADED;
+                    imagery.state = ImageryState.UNLOADED;
                     return false;
                 }
 
@@ -280,24 +294,65 @@ define([
             imagery.image = image;
 
             if (typeof image === 'undefined') {
-                imagery.state = TileState.INVALID;
+                imagery.state = ImageryState.INVALID;
                 return;
             }
 
-            imagery.state = TileState.RECEIVED;
+            imagery.state = ImageryState.RECEIVED;
         }, function(e) {
             /*global console*/
             console.error('failed to load imagery: ' + e);
-            imagery.state = TileState.FAILED;
+            imagery.state = ImageryState.FAILED;
         });
     };
 
-    ImageryLayer.prototype.transformImagery = function(context, imagery) {
-        this.imageryProvider.transformImagery(context, imagery);
+    ImageryLayer.prototype.createTexture = function(context, imagery) {
+        var texture = this._texturePool.createTexture2D(context, {
+            source : imagery.image
+        });
+
+        imagery.texture = texture;
+        imagery.image = undefined;
+        imagery.state = ImageryState.TEXTURE_LOADED;
     };
 
-    ImageryLayer.prototype.createResources = function(context, imagery) {
-        this.imageryProvider.createResources(context, imagery, this._texturePool);
+    ImageryLayer.prototype.reprojectTexture = function(context, imagery) {
+        var texture = imagery.texture;
+
+        // Reproject to geographic, if necessary.
+        if (!(this.imageryProvider.tilingScheme instanceof GeographicTilingScheme)) {
+            texture.setSampler({
+                wrapS : TextureWrap.CLAMP,
+                wrapT : TextureWrap.CLAMP,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
+            });
+
+
+
+            context.draw({
+                framebuffer : this._fbReproject,
+                shaderProgram : this._spReproject,
+                renderState : this._rsColor,
+                primitiveType : PrimitiveType.TRIANGLE_FAN,
+                vertexArray : this._vaReproject,
+                uniformMap : uniformMap
+            });
+        }
+
+        texture.generateMipmap(MipmapHint.NICEST);
+        texture.setSampler({
+            wrapS : TextureWrap.CLAMP,
+            wrapT : TextureWrap.CLAMP,
+            minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+            magnificationFilter : TextureMagnificationFilter.LINEAR,
+
+            // TODO: Remove Chrome work around
+            maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8
+        });
+
+
+        imagery.state = ImageryState.READY;
     };
 
     ImageryLayer.prototype.removeImageryFromCache = function(imagery) {

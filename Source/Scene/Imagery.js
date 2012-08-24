@@ -1,10 +1,10 @@
 /*global define*/
 define([
         '../Core/destroyObject',
-        './TileState'
+        './ImageryState'
     ], function(
         destroyObject,
-        TileState) {
+        ImageryState) {
     "use strict";
 
     var Imagery = function(imageryLayer, x, y, level) {
@@ -14,10 +14,9 @@ define([
         this.level = level;
         this.extent = imageryLayer.imageryProvider.tilingScheme.tileXYToExtent(x, y, level);
 
-        this.state = TileState.UNLOADED;
+        this.state = ImageryState.UNLOADED;
         this.imageUrl = undefined;
         this.image = undefined;
-        this.transformedImage = undefined;
         this.texture = undefined;
         this.referenceCount = 0;
     };

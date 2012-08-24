@@ -6,8 +6,8 @@ define([
         '../Core/Extent',
         './Projections',
         './GeographicTilingScheme',
-        './TileState',
-        './ImageryProvider'
+        './ImageryProvider',
+        './ImageryState'
     ], function(
         defaultValue,
         loadImage,
@@ -15,8 +15,8 @@ define([
         Extent,
         Projections,
         GeographicTilingScheme,
-        TileState,
-        ImageryProvider) {
+        ImageryProvider,
+        ImageryState) {
     "use strict";
 
     /**
@@ -153,7 +153,7 @@ define([
     SingleTileImageryProvider.prototype.transformImagery = function(context, imagery) {
         imagery.transformedImage = imagery.image;
         imagery.image = undefined;
-        imagery.state = TileState.TRANSFORMED;
+        imagery.state = ImageryState.TRANSFORMED;
     };
 
     /**
