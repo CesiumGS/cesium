@@ -323,4 +323,22 @@ defineSuite([
         p.destroy();
         expect(p.isDestroyed()).toEqual(true);
     });
+
+    it('throws when updated/rendered without a ellipsoid', function() {
+        polygon = createPolygon();
+        polygon.ellipsoid = undefined;
+
+        expect(function() {
+            polygon.update(context, sceneState);
+        }).toThrow();
+    });
+
+    it('throws when updated/rendered without an invalid granularity', function() {
+        polygon = createPolygon();
+        polygon.granularity = -1.0;
+
+        expect(function() {
+            polygon.update(context, sceneState);
+        }).toThrow();
+    });
 });
