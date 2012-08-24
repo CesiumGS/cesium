@@ -1,14 +1,20 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Math',
         './Cartesian3',
-        './Visibility'
+        './Visibility',
+        './Ellipsoid',
+        './BoundingSphere'
     ], function(
+        defaultValue,
         DeveloperError,
         CesiumMath,
         Cartesian3,
-        Visibility) {
+        Visibility,
+        Ellipsoid,
+        BoundingSphere) {
     "use strict";
 
     /**
@@ -254,7 +260,7 @@ define([
      * var occluderBoundingSphere = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
      * var occluder = new Occluder(occluderBoundingSphere, cameraPosition);
      * var positions = [new Cartesian3(-0.25, 0, -5.3), new Cartesian3(0.25, 0, -5.3)];
-     * var tileOccluderSphere = new BoundingSphere(positions);
+     * var tileOccluderSphere = BoundingSphere.fromPoints(positions);
      * var occludeePosition = tileOccluderSphere.center;
      * var occludeePt = occluder.getOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
      *
@@ -282,8 +288,6 @@ define([
             throw new DeveloperError('occludeePosition must be different than occluderBoundingSphere.center');
         }
 
-        var valid = true;
-
         // Compute a plane with a normal from the occluder to the occludee position.
         var occluderPlaneNormal = occludeePos.subtract(occluderPosition).normalize();
         var occluderPlaneD = -(occluderPlaneNormal.dot(occluderPosition));
@@ -294,15 +298,14 @@ define([
         var dot = Occluder._horizonToPlaneNormalDotProduct(occluderBoundingSphere, occluderPlaneNormal, occluderPlaneD, aRotationVector, positions[0]);
         if (!dot) {
             //The position is inside the mimimum radius, which is invalid
-            valid = false;
+            return undefined;
         }
         var tempDot;
         for ( var i = 1; i < numPositions; ++i) {
             tempDot = Occluder._horizonToPlaneNormalDotProduct(occluderBoundingSphere, occluderPlaneNormal, occluderPlaneD, aRotationVector, positions[i]);
             if (!tempDot) {
                 //The position is inside the minimum radius, which is invalid
-                valid = false;
-                break;
+                return undefined;
             }
             if (tempDot < dot) {
                 dot = tempDot;
@@ -310,15 +313,42 @@ define([
         }
         //Verify that the dot is not near 90 degress
         if (dot < 0.00174532836589830883577820272085) {
-            valid = false;
+            return undefined;
         }
 
         var distance = occluderRadius / dot;
-        var occludeePoint = occluderPosition.add(occluderPlaneNormal.multiplyByScalar(distance));
-        return {
-            occludeePoint : occludeePoint,
-            valid : valid
-        };
+        return occluderPosition.add(occluderPlaneNormal.multiplyByScalar(distance));
+    };
+
+    /**
+     * Computes a point that can be used as the occludee position to the visibility functions from an extent.
+     *
+     * @memberof Occluder
+     *
+     * @param {Extent} extent The extent used to create a bounding sphere.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
+     *
+     * @exception {DeveloperError} extent is required.
+     *
+     * @return {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
+     * which is a boolean value.
+     */
+    Occluder.computeOccludeePointFromExtent = function(extent, ellipsoid) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        var positions = extent.subsample(ellipsoid);
+        var bs = BoundingSphere.fromPoints(positions);
+
+        // TODO: get correct ellipsoid center
+        var ellipsoidCenter = Cartesian3.ZERO;
+        if (!ellipsoidCenter.equals(bs.center)) {
+            return Occluder.getOccludeePoint(new BoundingSphere(ellipsoidCenter, ellipsoid.getMinimumRadius()), bs.center, positions);
+        }
+
+        return undefined;
     };
 
     Occluder._anyRotationVector = function(occluderPosition, occluderPlaneNormal, occluderPlaneD) {

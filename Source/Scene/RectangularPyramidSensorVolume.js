@@ -187,7 +187,7 @@ define([
             }]);
         }
 
-        s.update(context, sceneState);
+        return s.update(context, sceneState);
     };
 
     /**
