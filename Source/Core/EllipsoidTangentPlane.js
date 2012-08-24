@@ -46,7 +46,7 @@ define([
             throw new DeveloperError('ellipsoid and positions are required.');
         }
 
-        var box = new AxisAlignedBoundingBox(positions);
+        var box = AxisAlignedBoundingBox.fromPoints(positions);
         var origin = ellipsoid.scaleToGeodeticSurface(box.center);
         return new EllipsoidTangentPlane(ellipsoid, origin);
     };

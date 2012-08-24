@@ -5,30 +5,40 @@ defineSuite([
          '../Specs/destroyContext',
          '../Specs/sceneState',
          '../Specs/pick',
+         'Core/BoundingRectangle',
+         'Core/BoundingSphere',
          'Core/Cartesian2',
          'Core/Cartesian3',
+         'Core/Cartographic',
          'Core/Color',
          'Core/Matrix4',
          'Core/Math',
          'Renderer/BufferUsage',
          'Scene/HorizontalOrigin',
          'Scene/VerticalOrigin',
-         'Scene/LabelStyle'
+         'Scene/LabelStyle',
+         'Scene/SceneMode',
+         'Scene/OrthographicFrustum'
      ], function(
          LabelCollection,
          createContext,
          destroyContext,
          sceneState,
          pick,
+         BoundingRectangle,
+         BoundingSphere,
          Cartesian2,
          Cartesian3,
+         Cartographic,
          Color,
          Matrix4,
          CesiumMath,
          BufferUsage,
          HorizontalOrigin,
          VerticalOrigin,
-         LabelStyle) {
+         LabelStyle,
+         SceneMode,
+         OrthographicFrustum) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -289,12 +299,7 @@ defineSuite([
     });
 
     it('does not render when constructed', function() {
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        labels.update(context, sceneState);
-        labels.render(context, us);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(typeof labels.update(context, sceneState) === 'undefined').toEqual(true);
     });
 
     it('can render after modifying and removing a label', function() {
@@ -1361,5 +1366,98 @@ defineSuite([
             expect(dimensions.height).toBeLessThan(originalDimensions.height);
             expect(dimensions.descent).toEqual(originalDimensions.descent);
         });
+    });
+
+    it('computes bounding sphere in 3D', function() {
+        var projection = sceneState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+
+        var one = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            text : 'one'
+        });
+        var two = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            text : 'two'
+        });
+
+        var actual = labels.update(context, sceneState).boundingVolume;
+
+        var positions = [one.getPosition(), two.getPosition()];
+        var bs = BoundingSphere.fromPoints(positions);
+        expect(actual.center).toEqual(bs.center);
+        expect(actual.radius > bs.radius).toEqual(true);
+    });
+
+    it('computes bounding sphere in Columbus view', function() {
+        var projection = sceneState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+
+        var one = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            text : 'one'
+        });
+        var two = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            text : 'two'
+        });
+
+        var mode = sceneState.mode;
+        sceneState.mode = SceneMode.COLUMBUS_VIEW;
+        var actual = labels.update(context, sceneState).boundingVolume;
+        sceneState.mode = mode;
+
+        var projectedPositions = [
+            projection.project(ellipsoid.cartesianToCartographic(one.getPosition())),
+            projection.project(ellipsoid.cartesianToCartographic(two.getPosition()))
+        ];
+        var bs = BoundingSphere.fromPoints(projectedPositions);
+        bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
+        expect(actual.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
+        expect(actual.radius > bs.radius).toEqual(true);
+    });
+
+    it('computes bounding rectangle in 2D', function() {
+        var projection = sceneState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+
+        var one = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            text : 'one'
+        });
+        var two = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            text : 'two'
+        });
+
+        var maxRadii = ellipsoid.getMaximumRadius();
+        var orthoFrustum = new OrthographicFrustum();
+        orthoFrustum.right = maxRadii * Math.PI;
+        orthoFrustum.left = -orthoFrustum.right;
+        orthoFrustum.top = orthoFrustum.right;
+        orthoFrustum.bottom = -orthoFrustum.top;
+        orthoFrustum.near = 0.01 * maxRadii;
+        orthoFrustum.far = 60.0 * maxRadii;
+
+        var mode = sceneState.mode;
+        var camera = sceneState.camera;
+        var frustum = camera.frustum;
+        sceneState.mode = SceneMode.SCENE2D;
+        camera.frustum = orthoFrustum;
+
+        var actual = labels.update(context, sceneState).boundingVolume;
+
+        camera.frustum = frustum;
+        sceneState.mode = mode;
+
+        var projectedPositions = [
+            projection.project(ellipsoid.cartesianToCartographic(one.getPosition())),
+            projection.project(ellipsoid.cartesianToCartographic(two.getPosition()))
+        ];
+        var br = BoundingRectangle.fromPoints(projectedPositions);
+        expect(actual.x < br.x).toEqual(true);
+        expect(actual.y < br.y).toEqual(true);
+        expect(actual.width > br.width).toEqual(true);
+        expect(actual.height > br.height).toEqual(true);
     });
 });
