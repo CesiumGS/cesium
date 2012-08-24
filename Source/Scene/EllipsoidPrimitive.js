@@ -104,13 +104,6 @@ define([
         this._material = undefined;
 
         /**
-         * DOC_TBA
-         *
-         * @type Number
-         */
-        this.erosion = 1.0;
-
-        /**
          * The usage hint for the polygon's vertex buffer.
          *
          * @type BufferUsage
@@ -127,9 +120,6 @@ define([
 
         var that = this;
         this._uniforms = {
-            u_erosion : function() {
-                return that.erosion;
-            },
             u_morphTime : function() {
                 return that.morphTime;
             },
