@@ -197,8 +197,8 @@
                 vs += 'uniform float u_morphTime;';
                 vs += 'void main()';
                 vs += '{';
-                vs += '    vec4 p = agi_columbusViewMorph(position2D, position3D, u_morphTime);';
-                vs += '    gl_Position = agi_modelViewProjection * p;';
+                vs += '    vec4 p = czm_columbusViewMorph(position2D, position3D, u_morphTime);';
+                vs += '    gl_Position = czm_modelViewProjection * p;';
                 vs += '}';
                 var fs = '';
                 fs += 'uniform vec4 u_color;';

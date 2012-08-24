@@ -836,14 +836,11 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    function recomputeActualPositions(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume) {
+    function recomputeActualPositions3D(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume) {
         var boundingVolume;
         switch (sceneState.mode) {
         case SceneMode.SCENE3D:
             boundingVolume = billboardCollection._baseVolume;
-            break;
-        case SceneMode.SCENE2D:
-            boundingVolume = billboardCollection._baseRectangle;
             break;
         case SceneMode.COLUMBUS_VIEW:
         case SceneMode.MORPHING:
@@ -867,11 +864,39 @@ define([
         }
 
         if (recomputeBoundingVolume) {
-            if (sceneState.mode === SceneMode.SCENE2D) {
-                BoundingRectangle.fromPoints(positions, boundingVolume);
+            BoundingSphere.fromPoints(positions, boundingVolume);
+        }
+    }
+
+    function recomputeActualPositions2D(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume) {
+        var boundingVolume = billboardCollection._baseRectangle;
+
+        var length = billboards.length;
+        var positions = new Array(length);
+        for ( var i = 0; i < length; ++i) {
+            var billboard = billboards[i];
+            var position = billboard.getPosition();
+            var actualPosition = Billboard._computeActualPosition(position, sceneState, morphTime, modelMatrix);
+            billboard._setActualPosition(actualPosition);
+
+            position = new Cartesian3(actualPosition.y, actualPosition.z, 0.0);
+
+            if (recomputeBoundingVolume) {
+                positions[i] = position;
             } else {
-                BoundingSphere.fromPoints(positions, boundingVolume);
+                boundingVolume.expand(position, boundingVolume);
             }
+        }
+
+        if (recomputeBoundingVolume) {
+            BoundingRectangle.fromPoints(positions, boundingVolume);
+        }
+    }
+    function recomputeActualPositions(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume) {
+        if (sceneState.mode === SceneMode.SCENE2D) {
+            recomputeActualPositions2D(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume);
+        } else {
+            recomputeActualPositions3D(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume);
         }
     }
 
@@ -920,7 +945,7 @@ define([
                 size *= 0.5;
             }
 
-            offset = size + collection._maxEyeOffset;
+            offset = size + pixelScale * collection._maxPixelOffset + collection._maxEyeOffset;
 
             boundingVolume.x = collection._baseRectangle.x - offset;
             boundingVolume.y = collection._baseRectangle.y - offset;
