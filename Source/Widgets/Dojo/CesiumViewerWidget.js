@@ -671,6 +671,7 @@ define([
 
             this.timelineControl.updateFromClock();
             this.scene.setSunPosition(SunPosition.compute(currentTime).position);
+            this.compositeDynamicObjectCollection.updateBuffers(currentTime);
             this.visualizers.update(currentTime);
 
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||

@@ -248,5 +248,16 @@ define([
         }
     };
 
+    CompositeDynamicObjectCollection.prototype.updateBuffers = function(currentTime){
+        var thisCollections = this._collections;
+        var length = thisCollections.length;
+        for(var i = 0; i < length; ++i){
+            var buffer = thisCollections[i];
+            if(buffer.updater){
+                buffer.updater.update(currentTime);
+            }
+        }
+    };
+
     return CompositeDynamicObjectCollection;
 });
