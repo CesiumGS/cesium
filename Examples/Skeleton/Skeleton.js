@@ -40,7 +40,7 @@ require({
 
     ///////////////////////////////////////////////////////////////////////////
     // Add examples from the Sandbox here:
-    var radii = new Cesium.Cartesian3(180000.0, 100000.0, 100000.0);
+    var radii = new Cesium.Cartesian3(180000.0, 1000000.0, 100000.0);
 
     var position = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000));
 
