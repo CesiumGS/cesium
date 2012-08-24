@@ -879,8 +879,7 @@ define([
             var actualPosition = Billboard._computeActualPosition(position, sceneState, morphTime, modelMatrix);
             billboard._setActualPosition(actualPosition);
 
-            position.x = actualPosition.y;
-            position.y = actualPosition.z;
+            position = new Cartesian3(actualPosition.y, actualPosition.z, 0.0);
 
             if (recomputeBoundingVolume) {
                 positions[i] = position;
