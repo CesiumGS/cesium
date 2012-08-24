@@ -146,7 +146,7 @@ define([
      *
      * @param {BoundingRectangle} rect The bounding rectangle to duplicate.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if none was provided.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      *
      * @exception {DeveloperError} rect is required.
      */
@@ -361,7 +361,7 @@ define([
      * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if none was provided.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      */
     BoundingRectangle.prototype.clone = function(result) {
         return BoundingRectangle.clone(this, result);

@@ -320,13 +320,7 @@ define([
         if (!this._rs) {
             this._rs = context.createRenderState({
                 blending : {
-                    enabled : true,
-                    equationRgb : BlendEquation.ADD,
-                    equationAlpha : BlendEquation.ADD,
-                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-                    functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
-                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
-                    functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
+                    blending : BlendingState.ALPHA_BLEND,
                 },
                 depthTest : {
                     enabled : true

@@ -4,6 +4,11 @@ Change Log
 Beta Releases
 -------------
 
+### TODO
+
+* Added EllipsoidPrimitive for visualizing ellipsoids and spheres.
+* Added Matrix4.multiplyByTranslation.
+
 ### b8 - xx/xx/2012
 
 * Breaking changes:

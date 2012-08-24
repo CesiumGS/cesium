@@ -124,7 +124,7 @@ define([
      *
      * @param {BoundingSphere} sphere The bounding sphere to duplicate.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
      * @exception {DeveloperError} sphere is required.
      */
@@ -427,7 +427,7 @@ define([
      * @memberof BoundingSphere
      *
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      */
     BoundingSphere.prototype.clone = function(result) {
         return BoundingSphere.clone(this, result);

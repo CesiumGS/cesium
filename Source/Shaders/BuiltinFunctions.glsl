@@ -644,10 +644,17 @@ vec3 czm_ellipsoidNormal(czm_ellipsoid ellipsoid, vec3 pointOnEllipsoid)
  */
 czm_raySegment czm_rayEllipsoidIntersectionInterval(czm_ray ray, czm_ellipsoid ellipsoid)
 {
+/*
     vec3 q = ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.origin, 1.0)).xyz;
     vec3 w = ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.direction, 0.0)).xyz;
    
     q = q - ellipsoid.inverseRadii * (czm_inverseView * vec4(ellipsoid.center, 1.0)).xyz;
+*/
+
+    vec3 q = ellipsoid.inverseRadii * (czm_inverseModelView * vec4(ray.origin, 1.0)).xyz;
+    vec3 w = ellipsoid.inverseRadii * (czm_inverseModelView * vec4(ray.direction, 0.0)).xyz;
+   
+    q = q - ellipsoid.inverseRadii * (czm_inverseModelView * vec4(ellipsoid.center, 1.0)).xyz;
     
     float q2 = dot(q, q);
     float qw = dot(q, w);
@@ -751,6 +758,6 @@ czm_raySegment czm_rayEllipsoidIntersectionInterval(czm_ray ray, czm_ellipsoid e
 czm_ellipsoid czm_getWgs84EllipsoidEC()
 {
     return czm_ellipsoidNew(
-        vec3(czm_view[3].x, czm_view[3].y, czm_view[3].z),              // center
-        vec3(6378137.0, 6378137.0, 6356752.314245));                    // radii
+        czm_view[3].xyz,                               // center
+        vec3(6378137.0, 6378137.0, 6356752.314245));   // radii
 }

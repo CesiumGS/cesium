@@ -37,7 +37,7 @@ define([
      *
      * @param {Matrix2} matrix The matrix to duplicate.
      * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -63,7 +63,7 @@ define([
      *
      * @param {Array} values The column-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if none was provided.
+     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} values is required.
      */
@@ -76,7 +76,7 @@ define([
      *
      * @param {Array} values The row-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix2 instance if none was provided.
+     * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} values is required.
      */
@@ -102,7 +102,7 @@ define([
      *
      * @param {Matrix2} matrix The matrix to use..
      * @param {Array} [result] The Array onto which to store the result.
-     * @return {Array} The modified Array parameter or a new Array instance if none was provided.
+     * @return {Array} The modified Array parameter or a new Array instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -127,7 +127,7 @@ define([
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to retrieve.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} index is required and must be 0 or 1.
@@ -163,7 +163,7 @@ define([
      * @param {Number} index The zero-based index of the column to set.
      * @param {Cartesian2} cartesian The Cartesian whose values will be assigned to the specified column.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -195,7 +195,7 @@ define([
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to retrieve.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} index is required and must be 0 or 1.
@@ -230,7 +230,7 @@ define([
      * @param {Number} index The zero-based index of the row to set.
      * @param {Cartesian2} cartesian The Cartesian whose values will be assigned to the specified row.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -262,7 +262,7 @@ define([
      * @param {Matrix2} left The first matrix.
      * @param {Matrix2} right The second matrix.
      * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -298,7 +298,7 @@ define([
      * @param {Matrix2} matrix The matrix.
      * @param {Cartesian2} cartesian The column.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -329,7 +329,7 @@ define([
      * @param {Matrix2} matrix The matrix.
      * @param {Number} scalar The number to multiply by.
      * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} scalar is required and must be a number.
@@ -359,7 +359,7 @@ define([
      *
      * @param {Matrix2} matrix The matrix to negate.
      * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -385,7 +385,7 @@ define([
      *
      * @param {Matrix2} matrix The matrix to transpose.
      * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -507,7 +507,7 @@ define([
      * @memberof Matrix2
      *
      * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      */
     Matrix2.prototype.clone = function(result) {
         return Matrix2.clone(this, result);
@@ -518,7 +518,7 @@ define([
      * @memberof Matrix2
      *
      * @param {Array} [result] The Array onto which to store the result.
-     * @return {Array} The modified Array parameter or a new Array instance if none was provided.
+     * @return {Array} The modified Array parameter or a new Array instance if one was not provided.
      */
     Matrix2.prototype.toArray = function(result) {
         return Matrix2.toArray(this, result);
@@ -530,7 +530,7 @@ define([
      *
      * @param {Number} index The zero-based index of the column to retrieve.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} index is required and must be 0 or 1.
      *
@@ -562,7 +562,7 @@ define([
      *
      * @param {Number} index The zero-based index of the row to retrieve.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} index is required and must be 0 or 1.
      *
@@ -594,7 +594,7 @@ define([
      *
      * @param {Matrix2} right The right hand side matrix.
      * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -608,7 +608,7 @@ define([
      *
      * @param {Cartesian2} cartesian The column.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -622,7 +622,7 @@ define([
      *
      * @param {Number} scalar The number to multiply by.
      * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
@@ -635,7 +635,7 @@ define([
      *
      * @param {Matrix2} matrix The matrix to negate.
      * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -648,7 +648,7 @@ define([
      * @memberof Matrix2
      *
      * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if none was provided.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      */
     Matrix2.prototype.transpose = function(result) {
         return Matrix2.transpose(this, result);

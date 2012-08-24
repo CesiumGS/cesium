@@ -63,7 +63,7 @@ define([
      *
      * @param {AxisAlignedBoundingBox} sphere The bounding box to duplicate.
      * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
-     * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if none was provided.
+     * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
      *
      * @exception {DeveloperError} box is required.
      */
@@ -211,7 +211,7 @@ define([
      * @memberof AxisAlignedBoundingBox
      *
      * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
-     * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if none was provided.
+     * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
      */
     AxisAlignedBoundingBox.prototype.clone = function(result) {
         return AxisAlignedBoundingBox.clone(this, result);

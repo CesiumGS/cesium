@@ -465,6 +465,33 @@ defineSuite([
         expect(left).toEqual(expected);
     });
 
+    it('multiplyByTranslation works without a result parameter', function() {
+        var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var translation = new Cartesian3(17, 18, 19);
+        var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation));
+        var result = m.multiplyByTranslation(translation);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByTranslation works with a result parameter', function() {
+        var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var translation = new Cartesian3(17, 18, 19);
+        var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation));
+        var result = new Matrix4();
+        var returnedResult = m.multiplyByTranslation(translation, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByTranslation works with "this" result parameter', function() {
+        var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var translation = new Cartesian3(17, 18, 19);
+        var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation));
+        var returnedResult = m.multiplyByTranslation(translation, m);
+        expect(returnedResult).toBe(m);
+        expect(m).toEqual(expected);
+    });
+
     it('multiplyByVector works without a result parameter', function() {
         var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = new Cartesian4(17, 18, 19, 20);
@@ -1094,6 +1121,21 @@ defineSuite([
         var left = new Matrix4();
         expect(function() {
             Matrix4.multiply(left, undefined);
+        }).toThrow();
+    });
+
+
+    it('static multiplyByTranslation throws with no matrix parameter', function() {
+        var translation = new Cartesian3();
+        expect(function() {
+            Matrix4.multiplyByTranslation(undefined, translation);
+        }).toThrow();
+    });
+
+    it('static multiplyByTranslation throws with no translation parameter', function() {
+        var m = new Matrix4();
+        expect(function() {
+            Matrix4.multiplyByTranslation(m, undefined);
         }).toThrow();
     });
 
