@@ -1,12 +1,12 @@
 /*global define*/
 define([
         '../Core/destroyObject',
-        '../Core/Rectangle',
+        '../Core/BoundingRectangle',
         '../Renderer/PixelFormat',
         './ViewportQuad'
     ], function(
         destroyObject,
-        Rectangle,
+        BoundingRectangle,
         PixelFormat,
         ViewportQuad) {
     "use strict";
@@ -22,7 +22,7 @@ define([
      * @param {Color} [description.frameTimeColor] The color of the frame time graph.
      * @param {Color} [description.backgroundColor] The color of the background of the display.
      * @param {String} [description.font] The CSS font of the text in the display.
-     * @param {Rectangle} [description.rectangle] The position and size of the display, relative to the top left corner.
+     * @param {BoundingRectangle} [description.rectangle] The position and size of the display, relative to the top left corner.
      *
      * @example
      * scene.getPrimitives().add(new PerformanceDisplay());
@@ -36,7 +36,7 @@ define([
         this._frameTimeColor = typeof description.frameTimeColor !== 'undefined' ? description.frameTimeColor.toCSSColor() : '#de3';
         this._backgroundColor = typeof description.backgroundColor !== 'undefined' ? description.backgroundColor.toCSSColor() : 'rgba(0, 0, 30, 0.9)';
         this._font = typeof description.font !== 'undefined' ? description.font : 'bold 10px Helvetica,Arial,sans-serif';
-        this._rectangle = typeof description.rectangle !== 'undefined' ? description.rectangle : new Rectangle(0, 0, 80, 40);
+        this._rectangle = typeof description.rectangle !== 'undefined' ? description.rectangle : new BoundingRectangle(0, 0, 80, 40);
 
         this._canvas = document.createElement('canvas');
         this._canvas.width = this._rectangle.width;
@@ -59,7 +59,7 @@ define([
         this._lastFpsSampleTime = undefined;
         this._frameCount = 0;
 
-        this._quad = new ViewportQuad(new Rectangle(0, 0, 0, 0));
+        this._quad = new ViewportQuad(new BoundingRectangle(0, 0, 0, 0));
         this._quad.enableBlending = true;
 
         this._time = undefined;
@@ -145,7 +145,7 @@ define([
         var viewportHeight = context.getViewport().height;
         if (viewportHeight !== this._viewportHeight) {
             this._viewportHeight = viewportHeight;
-            this._quad.setRectangle(new Rectangle(this._rectangle.x, viewportHeight - canvasHeight - this._rectangle.y, canvasWidth, canvasHeight));
+            this._quad.setRectangle(new BoundingRectangle(this._rectangle.x, viewportHeight - canvasHeight - this._rectangle.y, canvasWidth, canvasHeight));
         }
 
         this._quad.update(context, sceneState);
