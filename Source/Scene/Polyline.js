@@ -2,13 +2,17 @@
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/Color'
+        '../Core/Color',
+        '../Core/PolylinePipeline'
     ], function(
         DeveloperError,
         destroyObject,
+        BoundingSphere,
         Cartesian3,
-        Color) {
+        Color,
+        PolylinePipeline) {
     "use strict";
 
     /**
@@ -31,6 +35,9 @@ define([
         this._dirty = false;
         this._pickId = undefined;
         this._pickIdThis = p._pickIdThis;
+        this._segments = undefined;
+        this._actualLength = this._positions.length;
+        this._boundingVolume = BoundingSphere.fromPoints(this._positions);
     };
 
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
@@ -112,6 +119,7 @@ define([
             this._makeDirty(POSITION_SIZE_INDEX);
         }
         this._positions = positions;
+        this._boundingVolume = BoundingSphere.fromPoints(this._positions);
         this._makeDirty(POSITION_INDEX);
     };
 
@@ -307,6 +315,59 @@ define([
             c._updatePolyline(propertyChanged, this);
             this._dirty = true;
         }
+    };
+
+    Polyline.prototype._getPositions2D = function(){
+        var segments = this._segments;
+        var positions = [];
+        var numberOfSegments = segments.length;
+
+        for ( var i = 0; i < numberOfSegments; ++i) {
+            var segment = segments[i];
+            var segmentLength = segment.length;
+            for (var n = 0; n < segmentLength; ++n) {
+                positions.push( segment[n].cartesian);
+            }
+        }
+        return positions;
+
+    };
+
+    Polyline.prototype._createSegments = function(ellipsoid){
+        return PolylinePipeline.wrapLongitude(ellipsoid, this.getPositions());
+    };
+
+    Polyline.prototype._setSegments = function(segments){
+        this._segments = segments;
+        var numberOfSegments = segments.length;
+        var length = 0;
+        for ( var i = 0; i < numberOfSegments; ++i) {
+            var segment = segments[i];
+            var segmentLength = segment.length;
+            length += segmentLength;
+        }
+        return length;
+    };
+
+    Polyline.prototype._getSegments = function(){
+        return this._segments;
+    };
+
+    Polyline.prototype._segmentsLengthChanged = function(newSegments){
+        var origSegments = this._segments;
+        if (typeof origSegments !== 'undefined') {
+            var numberOfSegments = newSegments.length;
+            if (numberOfSegments !== origSegments.length) {
+                return true;
+            }
+            for ( var i = 0; i < numberOfSegments; ++i) {
+                if (newSegments[i].length !== origSegments[i].length) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return true;
     };
 
     Polyline.prototype._destroy = function() {
