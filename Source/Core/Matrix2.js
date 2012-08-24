@@ -297,8 +297,8 @@ define([
      *
      * @param {Matrix2} matrix The matrix.
      * @param {Cartesian2} cartesian The column.
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -607,8 +607,8 @@ define([
      * @memberof Matrix2
      *
      * @param {Cartesian2} cartesian The column.
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */

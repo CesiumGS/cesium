@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
+        '../Core/defaultValue',
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
@@ -8,6 +9,7 @@ define([
         './DynamicMaterialProperty'
        ], function(
          TimeInterval,
+         defaultValue,
          CzmlBoolean,
          CzmlNumber,
          CzmlColor,
@@ -33,50 +35,62 @@ define([
     var DynamicCone = function() {
         /**
          * A DynamicProperty of type CzmlNumber which determines the cone's minimum clock-angle.
+         * @type DynamicProperty
          */
         this.minimumClockAngle = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the cone's maximum clock-angle.
+         * @type DynamicProperty
          */
         this.maximumClockAngle = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the cone's inner half-angle.
+         * @type DynamicProperty
          */
         this.innerHalfAngle = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the cone's outer half-angle.
+         * @type DynamicProperty
          */
         this.outerHalfAngle = undefined;
         /**
          * A DynamicMaterialProperty which determines the cone's cap material.
+         * @type DynamicMaterialProperty
          */
         this.capMaterial = undefined;
         /**
          * A DynamicMaterialProperty which determines the cone's inner material.
+         * @type DynamicMaterialProperty
          */
         this.innerMaterial = undefined;
         /**
          * A DynamicMaterialProperty which determines the cone's outer material.
+         * @type DynamicMaterialProperty
          */
         this.outerMaterial = undefined;
         /**
          * A DynamicMaterialProperty which determines the cone's silhouette material.
+         * @type DynamicMaterialProperty
          */
         this.silhouetteMaterial = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the color of the line formed by the intersection of the cone and other central bodies.
+         * @type DynamicProperty
          */
         this.intersectionColor = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the cone's intersection visibility
+         * @type DynamicProperty
          */
         this.showIntersection = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the cone's radius.
+         * @type DynamicProperty
          */
         this.radius = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the cone's visibility
+         * @type DynamicProperty
          */
         this.show = undefined;
     };
@@ -245,18 +259,18 @@ define([
                 targetObject.cone = targetCone = new DynamicCone();
             }
 
-            targetCone.show = targetCone.show || coneToMerge.show;
-            targetCone.innerHalfAngle = targetCone.innerHalfAngle || coneToMerge.innerHalfAngle;
-            targetCone.outerHalfAngle = targetCone.outerHalfAngle || coneToMerge.outerHalfAngle;
-            targetCone.minimumClockAngle = targetCone.minimumClockAngle || coneToMerge.minimumClockAngle;
-            targetCone.maximumClockAngle = targetCone.maximumClockAngle || coneToMerge.maximumClockAngle;
-            targetCone.radius = targetCone.radius || coneToMerge.radius;
-            targetCone.showIntersection = targetCone.showIntersection || coneToMerge.showIntersection;
-            targetCone.intersectionColor = targetCone.intersectionColor || coneToMerge.intersectionColor;
-            targetCone.capMaterial = targetCone.capMaterial || coneToMerge.capMaterial;
-            targetCone.innerMaterial = targetCone.innerMaterial || coneToMerge.innerMaterial;
-            targetCone.outerMaterial = targetCone.outerMaterial || coneToMerge.outerMaterial;
-            targetCone.silhouetteMaterial = targetCone.silhouetteMaterial || coneToMerge.silhouetteMaterial;
+            targetCone.show = defaultValue(targetCone.show, coneToMerge.show);
+            targetCone.innerHalfAngle = defaultValue(targetCone.innerHalfAngle, coneToMerge.innerHalfAngle);
+            targetCone.outerHalfAngle = defaultValue(targetCone.outerHalfAngle, coneToMerge.outerHalfAngle);
+            targetCone.minimumClockAngle = defaultValue(targetCone.minimumClockAngle, coneToMerge.minimumClockAngle);
+            targetCone.maximumClockAngle = defaultValue(targetCone.maximumClockAngle, coneToMerge.maximumClockAngle);
+            targetCone.radius = defaultValue(targetCone.radius, coneToMerge.radius);
+            targetCone.showIntersection = defaultValue(targetCone.showIntersection, coneToMerge.showIntersection);
+            targetCone.intersectionColor = defaultValue(targetCone.intersectionColor, coneToMerge.intersectionColor);
+            targetCone.capMaterial = defaultValue(targetCone.capMaterial, coneToMerge.capMaterial);
+            targetCone.innerMaterial = defaultValue(targetCone.innerMaterial, coneToMerge.innerMaterial);
+            targetCone.outerMaterial = defaultValue(targetCone.outerMaterial, coneToMerge.outerMaterial);
+            targetCone.silhouetteMaterial = defaultValue(targetCone.silhouetteMaterial, coneToMerge.silhouetteMaterial);
         }
     };
 

@@ -203,9 +203,9 @@ define([
          * @returns {Cartesian2} The point in window coordinates.
          *
          * @see UniformState#getModelViewProjection
-         * @see agi_modelViewProjection
+         * @see czm_modelViewProjection
          * @see UniformState#getViewportTransformation
-         * @see agi_viewportTransformation
+         * @see czm_viewportTransformation
          *
          * @exception {DeveloperError} modelViewProjectionMatrix is required.
          * @exception {DeveloperError} viewportTransformation is required.

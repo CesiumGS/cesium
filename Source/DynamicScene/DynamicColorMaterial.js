@@ -15,6 +15,10 @@ define([
      * @constructor
      */
     var DynamicColorMaterial = function() {
+        /**
+         * A DynamicProperty of type CzmlColor which determines the material's color.
+         * @type DynamicProperty
+         */
         this.color = undefined;
     };
 
