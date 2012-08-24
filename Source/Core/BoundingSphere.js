@@ -328,7 +328,8 @@ define([
     };
 
     /**
-     * Creates a bounding sphere from an extent in 3D.
+     * Creates a bounding sphere from an extent in 3D. The bounding sphere is created using a subsample of points
+     * on the ellipsoid and contained in the extent. It may not be accurate for all extents on all types of ellipsoids.
      *
      * @memberof BoundingSphere
      *

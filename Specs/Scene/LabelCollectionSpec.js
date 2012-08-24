@@ -299,12 +299,7 @@ defineSuite([
     });
 
     it('does not render when constructed', function() {
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        labels.update(context, sceneState);
-        labels.render(context, us);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(typeof labels.update(context, sceneState) === 'undefined').toEqual(true);
     });
 
     it('can render after modifying and removing a label', function() {

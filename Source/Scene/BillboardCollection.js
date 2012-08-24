@@ -612,10 +612,6 @@ define([
      * @see BillboardCollection#setTextureAtlas
      */
     BillboardCollection.prototype.render = function(context) {
-        if (typeof this._vaf === 'undefined' || typeof this._vaf.va === 'undefined') {
-            return;
-        }
-
         var va = this._vaf.va;
         var length = va.length;
         for ( var i = 0; i < length; ++i) {
@@ -635,10 +631,6 @@ define([
      * @memberof BillboardCollection
      */
     BillboardCollection.prototype.renderForPick = function(context, framebuffer) {
-        if (typeof this._vaf === 'undefined' || typeof this._vaf.va === 'undefined') {
-            return;
-        }
-
         var va = this._vaf.va;
         var length = va.length;
         for ( var i = 0; i < length; ++i) {
@@ -1079,6 +1071,10 @@ define([
 
         for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
             properties[k] = 0;
+        }
+
+        if (typeof this._vaf === 'undefined' || typeof this._vaf.va === 'undefined') {
+            return undefined;
         }
 
         this._uniforms = (sceneState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;

@@ -5,18 +5,23 @@ defineSuite([
          '../Specs/destroyContext',
          '../Specs/sceneState',
          '../Specs/pick',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Math',
          'Core/Matrix3',
          'Core/Matrix4',
+         'Renderer/TextureMinificationFilter',
+         'Renderer/TextureMagnificationFilter',
+         'Scene/BillboardCollection',
          'Scene/Camera',
          'Scene/CentralBody',
          'Scene/LabelCollection',
          'Scene/HorizontalOrigin',
          'Scene/VerticalOrigin',
          'Scene/Polygon',
+         'Scene/PolylineCollection',
          'Scene/SceneMode',
          'Scene/OrthographicFrustum'
      ], function(
@@ -25,18 +30,23 @@ defineSuite([
          destroyContext,
          sceneState,
          pick,
+         Cartesian2,
          Cartesian3,
          Cartographic,
          Ellipsoid,
          CesiumMath,
          Matrix3,
          Matrix4,
+         TextureMinificationFilter,
+         TextureMagnificationFilter,
+         BillboardCollection,
          Camera,
          CentralBody,
          LabelCollection,
          HorizontalOrigin,
          VerticalOrigin,
          Polygon,
+         PolylineCollection,
          SceneMode,
          OrthographicFrustum) {
     "use strict";
@@ -650,55 +660,95 @@ defineSuite([
         }).toThrow();
     });
 
-    it('frustum culls in 3D', function() {
+    var verifyNoDraw = function() {
+        // reposition camera so bounding volume is outside frustum.
+        var camera = sceneState.camera;
+        camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        primitives.update(context, sceneState);
+        var numRendered = primitives._renderList.length;
+        primitives.render(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        return numRendered;
+    };
+
+    var verifyDraw = function(primitive) {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        // get bounding volume for primitive and reposition camera so its in the the frustum.
+        var state = primitive.update(context, sceneState);
+        if (typeof state !== 'undefined' && typeof state.boundingVolume !== 'undefined') {
+            var camera = sceneState.camera;
+            var bv = state.boundingVolume;
+            if (sceneState.mode === SceneMode.SCENE3D) {
+                camera.position = bv.center.clone();
+                camera.position = camera.position.normalize().multiplyByScalar(camera.position.magnitude() + 1.0);
+                camera.direction = camera.position.negate().normalize();
+                camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
+                camera.up = camera.right.cross(camera.direction);
+            } else if (sceneState.mode === SceneMode.COLUMBUS_VIEW) {
+                camera.position = bv.center.clone();
+                camera.position.z += 1.0;
+                camera.direction = Cartesian3.UNIT_Z.negate();
+                camera.up = Cartesian3.UNIT_Y;
+                camera.right = camera.direction.cross(camera.up);
+            } else if (sceneState.mode === SceneMode.SCENE2D) {
+                camera.position = new Cartesian3(bv.x + bv.width * 0.5, bv.y + bv.height * 0.5, 1.0);
+                camera.direction = Cartesian3.UNIT_Z.negate();
+                camera.up = Cartesian3.UNIT_Y;
+                camera.right = camera.direction.cross(camera.up);
+            }
+        }
+
+        primitives.update(context, sceneState);
+        var numRendered = primitives._renderList.length;
+        primitives.render(context);
+        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
+
+        return numRendered;
+    };
+
+    var testCullIn3D = function(primitive) {
+        primitives.add(primitive);
+
         var savedCamera = sceneState.camera;
         sceneState.camera = camera;
 
-        var polygon = createPolygon();
-        primitives.add(polygon);
+        var numRendered = verifyDraw(primitive);
+        expect(numRendered).toEqual(1);
 
-        primitives.update(context, sceneState);
-        expect(primitives._renderList.length).toEqual(1);
-        primitives._renderList.length = 0;
-
-        camera.position = new Cartesian3(50.0, 0.0, 0.0);
-        camera.direction = camera.position.normalize();
-        camera.right = camera.direction.cross(camera.up);
-
-        primitives.update(context, sceneState);
-        expect(primitives._renderList.length).toEqual(0);
-        primitives._renderList.length = 0;
+        numRendered = verifyNoDraw();
+        expect(numRendered).toEqual(0);
 
         sceneState.camera = savedCamera;
-    });
+    };
 
-    it('frustum culls in Columbus view', function() {
+    var testCullInColumbusView = function(primitive) {
+        primitives.add(primitive);
+
         var savedCamera = sceneState.camera;
         sceneState.camera = camera;
 
         var mode = sceneState.mode;
         sceneState.mode = SceneMode.COLUMBUS_VIEW;
 
-        var polygon = createPolygon();
-        primitives.add(polygon);
+        var numRendered = verifyDraw(primitive);
+        expect(numRendered).toEqual(1);
 
-        primitives.update(context, sceneState);
-        expect(primitives._renderList.length).toEqual(1);
-        primitives._renderList.length = 0;
-
-        camera.position = new Cartesian3(8000000.0, 0.0, 0.0);
-        camera.direction = camera.position.normalize();
-        camera.right = camera.direction.cross(camera.up);
-
-        primitives.update(context, sceneState);
-        expect(primitives._renderList.length).toEqual(0);
-        primitives._renderList.length = 0;
+        numRendered = verifyNoDraw();
+        expect(numRendered).toEqual(0);
 
         sceneState.mode = mode;
         sceneState.camera = savedCamera;
-    });
+    };
 
-    it('frustum culls in 2D', function() {
+    var testCullIn2D = function(primitive) {
+        primitives.add(primitive);
+
         var savedCamera = sceneState.camera;
         sceneState.camera = camera;
 
@@ -714,20 +764,116 @@ defineSuite([
         var mode = sceneState.mode;
         sceneState.mode = SceneMode.SCENE2D;
 
-        var polygon = createPolygon();
-        primitives.add(polygon);
+        var numRendered = verifyDraw(primitive);
+        expect(numRendered).toEqual(1);
 
-        primitives.update(context, sceneState);
-        expect(primitives._renderList.length).toEqual(1);
-        primitives._renderList.length = 0;
-
-        camera.position = new Cartesian3(8000000.0, 0.0, 0.0);
-
-        primitives.update(context, sceneState);
-        expect(primitives._renderList.length).toEqual(0);
-        primitives._renderList.length = 0;
+        numRendered = verifyNoDraw();
+        expect(numRendered).toEqual(0);
 
         sceneState.mode = mode;
         sceneState.camera = savedCamera;
+    };
+
+    it('frustum culls polygon in 3D', function() {
+        var polygon = createPolygon();
+        testCullIn3D(polygon);
+    });
+
+    it('frustum culls polygon in Columbus view', function() {
+        var polygon = createPolygon();
+        testCullInColumbusView(polygon);
+    });
+
+    it('frustum culls polygon in 2D', function() {
+        var polygon = createPolygon();
+        testCullIn2D(polygon);
+    });
+
+    it('frustum culls labels in 3D', function() {
+        var labels = createLabels();
+        testCullIn3D(labels);
+    });
+
+    it('frustum culls labels in Columbus view', function() {
+        var labels = createLabels();
+        testCullInColumbusView(labels);
+    });
+
+    it('frustum culls labels in 2D', function() {
+        var labels = createLabels();
+        testCullIn2D(labels);
+    });
+
+    var greenImage;
+
+    it('initialize billboard image for culling tests', function() {
+        greenImage = new Image();
+        greenImage.src = './Data/Images/Green.png';
+
+        waitsFor(function() {
+            return greenImage.complete;
+        }, 'Load .png file(s) for billboard collection culling tests.', 3000);
+    });
+
+    var createBillboards = function() {
+        var atlas = context.createTextureAtlas({images : [greenImage], borderWidthInPixels : 1, initialSize : new Cartesian2(3, 3)});
+
+        // ANGLE Workaround
+        atlas.getTexture().setSampler(context.createSampler({
+            minificationFilter : TextureMinificationFilter.NEAREST,
+            magnificationFilter : TextureMagnificationFilter.NEAREST
+        }));
+
+        var billboards = new BillboardCollection();
+        billboards.setTextureAtlas(atlas);
+        billboards.add({
+            position : {
+                x : -1.0,
+                y :  0.0,
+                z :  0.0
+            },
+            imageIndex : 0
+        });
+
+        return billboards;
+    };
+
+    it('frustum culls billboards in 3D', function() {
+        var billboards = createBillboards();
+        testCullIn3D(billboards);
+    });
+
+    it('frustum culls billboards in Columbus view', function() {
+        var billboards = createBillboards();
+        testCullInColumbusView(billboards);
+    });
+
+    it('frustum culls billboards in 2D', function() {
+        var billboards = createBillboards();
+        testCullIn2D(billboards);
+    });
+
+    var createPolylines = function() {
+        var polylines = new PolylineCollection();
+        polylines.add({positions:Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+            new Cartographic.fromDegrees(-75.10, 39.57),
+            new Cartographic.fromDegrees(-80.12, 25.46)
+        ])});
+        return polylines;
+    };
+
+    it('frustum culls polylines in 3D', function() {
+        var polylines = createPolylines();
+        testCullIn3D(polylines);
+    });
+
+    it('frustum culls polylines in Columbus view', function() {
+        var polylines = createPolylines();
+        testCullInColumbusView(polylines);
+    });
+
+    it('frustum culls polylines in 2D', function() {
+        var polylines = createPolylines();
+        testCullIn2D(polylines);
     });
 });

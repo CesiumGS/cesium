@@ -393,12 +393,7 @@ defineSuite([
     });
 
     it('does not render when constructed', function() {
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        billboards.update(context, sceneState);
-        billboards.render(context, us);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(typeof billboards.update(context, sceneState) === 'undefined').toEqual(true);
     });
 
     it('modifies and removes a billboard, then renders', function() {
@@ -546,9 +541,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         billboards.removeAll();
-        billboards.update(context, sceneState);
-        billboards.render(context, us);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(typeof billboards.update(context, sceneState) === 'undefined').toEqual(true);
     });
 
     it('removes all billboards, adds a billboard, and renders', function() {
