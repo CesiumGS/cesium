@@ -300,10 +300,11 @@ define([
      */
     Tile.prototype.destroy = function() {
         this.vertexArray = this.vertexArray && this.vertexArray.destroy();
-        var imagery = this._imagery;
-        Object.keys(imagery).forEach(function(key) {
-            var tileImagery = imagery[key];
-            tileImagery._texture = tileImagery._texture && tileImagery._texture.destroy();
+        var imageryList = this._imagery;
+        Object.keys(imageryList).forEach(function(key) {
+            var tileImagery = imageryList[key];
+            var imagery = tileImagery.imagery;
+            imagery.releaseReference();
         });
 
         if (typeof this.children !== 'undefined') {
@@ -344,10 +345,11 @@ define([
         }
         this.transformedGeometry = undefined;
 
-        var imagery = this.imagery;
-        Object.keys(imagery).forEach(function(key) {
-            var tileImagery = imagery[key];
-            tileImagery.destroy();
+        var imageryList = this.imagery;
+        Object.keys(imageryList).forEach(function(key) {
+            var tileImagery = imageryList[key];
+            var imagery = tileImagery.imagery;
+            imagery.releaseReference();
         });
         this.imagery = [];
 

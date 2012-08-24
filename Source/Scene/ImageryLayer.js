@@ -8,7 +8,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/PlaneTessellator',
-        './ImageryCache',
+        './Imagery',
         './Tile',
         './TileImagery',
         './TileState',
@@ -24,7 +24,7 @@ define([
         Cartesian2,
         Extent,
         PlaneTessellator,
-        ImageryCache,
+        Imagery,
         Tile,
         TileImagery,
         TileState,
@@ -59,7 +59,7 @@ define([
          */
         this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 1.0);
 
-        this._imageryCache = new ImageryCache();
+        this._imageryCache = {};
         this._texturePool = new TexturePool();
 
         /**
@@ -130,6 +130,7 @@ define([
     };
 
     ImageryLayer.prototype.createTileImagerySkeletons = function(tile, terrainProvider) {
+        var imageryCache = this._imageryCache;
         var imageryProvider = this.imageryProvider;
         var imageryTilingScheme = imageryProvider.tilingScheme;
 
@@ -209,6 +210,17 @@ define([
             maxU = Math.min(1.0, (imageryExtent.east - tile.extent.west) / (tile.extent.east - tile.extent.west));
 
             for (var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
+
+                var cacheKey = getImageryCacheKey(i, j, imageryLevel);
+                var imagery = imageryCache[cacheKey];
+
+                if (typeof imagery === 'undefined') {
+                    imagery = new Imagery(this, i, j, imageryLevel);
+                    imageryCache[cacheKey] = imagery;
+                }
+
+                imagery.addReference();
+
                 maxV = minV;
 
                 imageryExtent = imageryTilingScheme.tileXYToExtent(i, j, imageryLevel);
@@ -226,7 +238,7 @@ define([
                 var minTexCoords = new Cartesian2(minU, minV);
                 var maxTexCoords = new Cartesian2(maxU, maxV);
 
-                tile.imagery.push(new TileImagery(this, i, j, imageryLevel, textureTranslation, textureScale, minTexCoords, maxTexCoords));
+                tile.imagery.push(new TileImagery(imagery, textureTranslation, textureScale, minTexCoords, maxTexCoords));
             }
         }
 
@@ -235,42 +247,28 @@ define([
 
     var activeTileImageRequests = {};
 
-    ImageryLayer.prototype.requestImagery = function(tileImagery) {
+    ImageryLayer.prototype.requestImagery = function(imagery) {
         var imageryProvider = this.imageryProvider;
-        var imageryCache = this._imageryCache;
         var hostname;
 
-        when(imageryProvider.buildImageUrl(tileImagery.x, tileImagery.y, tileImagery.level), function(imageUrl) {
-            var cacheItem = imageryCache.get(imageUrl);
-            if (typeof cacheItem !== 'undefined') {
-                if (typeof cacheItem.texture === 'undefined') {
-                    tileImagery.state = TileState.UNLOADED;
-                } else {
-                    tileImagery.texture = cacheItem.texture;
-                    tileImagery.state = TileState.READY;
-                }
-                return false;
-            }
-
+        when(imageryProvider.buildImageUrl(imagery.x, imagery.y, imagery.level), function(imageUrl) {
             hostname = getHostname(imageUrl);
             if (hostname !== '') {
                 var activeRequestsForHostname = defaultValue(activeTileImageRequests[hostname], 0);
 
-                //cap image requests per hostname, because the browser itself is capped,
-                //and we have no way to cancel an image load once it starts, but we need
-                //to be able to reorder pending image requests
+                // Cap image requests per hostname, because the browser itself is capped,
+                // and we have no way to cancel an image load once it starts, but we need
+                // to be able to reorder pending image requests.
                 if (activeRequestsForHostname > 6) {
                     // postpone loading tile
-                    tileImagery.state = TileState.UNLOADED;
+                    imagery.state = TileState.UNLOADED;
                     return false;
                 }
 
                 activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
             }
 
-            imageryCache.beginAdd(imageUrl);
-
-            tileImagery.imageUrl = imageUrl;
+            imagery.imageUrl = imageUrl;
             return imageryProvider.requestImage(imageUrl);
         }).then(function(image) {
             if (typeof image === 'boolean') {
@@ -279,35 +277,37 @@ define([
 
             activeTileImageRequests[hostname]--;
 
-            tileImagery.image = image;
+            imagery.image = image;
 
             if (typeof image === 'undefined') {
-                tileImagery.state = TileState.INVALID;
-                imageryCache.abortAdd(tileImagery.imageUrl);
+                imagery.state = TileState.INVALID;
                 return;
             }
 
-            tileImagery.state = TileState.RECEIVED;
+            imagery.state = TileState.RECEIVED;
         }, function(e) {
             /*global console*/
             console.error('failed to load imagery: ' + e);
-            tileImagery.state = TileState.FAILED;
-            imageryCache.abortAdd(tileImagery.imageUrl);
+            imagery.state = TileState.FAILED;
         });
     };
 
-    ImageryLayer.prototype.transformImagery = function(context, tileImagery) {
-        this.imageryProvider.transformImagery(context, tileImagery);
+    ImageryLayer.prototype.transformImagery = function(context, imagery) {
+        this.imageryProvider.transformImagery(context, imagery);
     };
 
-    ImageryLayer.prototype.createResources = function(context, tileImagery) {
-        this.imageryProvider.createResources(context, tileImagery, this._texturePool);
-
-        if (tileImagery.state === TileState.READY) {
-            tileImagery.texture = this._imageryCache.finishAdd(tileImagery.imageUrl, tileImagery.texture);
-            tileImagery.imageUrl = undefined;
-        }
+    ImageryLayer.prototype.createResources = function(context, imagery) {
+        this.imageryProvider.createResources(context, imagery, this._texturePool);
     };
+
+    ImageryLayer.prototype.removeImageryFromCache = function(imagery) {
+        var cacheKey = getImageryCacheKey(imagery.x, imagery.y, imagery.level);
+        delete this._imageryCache[cacheKey];
+    };
+
+    function getImageryCacheKey(x, y, level) {
+        return JSON.stringify([x, y, level]);
+    }
 
     var anchor;
     function getHostname(url) {

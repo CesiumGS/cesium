@@ -68,12 +68,12 @@ define([
      * the transformedImage property.
      *
      * @param {Context} context The context to use to create resources.
-     * @param {TileImagery} tileImagery The tile imagery to transform.
+     * @param {Imagery} imagery The imagery to transform.
      */
-    ImageryProvider.prototype.transformImagery = function(context, tileImagery) {
-        tileImagery.transformedImage = this.projection.toWgs84(tileImagery.extent, tileImagery.image);
-        tileImagery.image = undefined;
-        tileImagery.state = TileState.TRANSFORMED;
+    ImageryProvider.prototype.transformImagery = function(context, imagery) {
+        imagery.transformedImage = this.projection.toWgs84(imagery.extent, imagery.image);
+        imagery.image = undefined;
+        imagery.state = TileState.TRANSFORMED;
     };
 
     /**
@@ -86,13 +86,13 @@ define([
      * property on the tile imagery.
      *
      * @param {Context} context The context to use to create resources.
-     * @param {TileImagery} tileImagery The tile imagery to create resources for.
+     * @param {Imagery} imagery The imagery to create resources for.
      * @param {TexturePool} texturePool A texture pool to use to create textures.
      */
-    ImageryProvider.prototype.createResources = function(context, tileImagery, texturePool) {
-        tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.transformedImage, texturePool);
-        tileImagery.transformedImage = undefined;
-        tileImagery.state = TileState.READY;
+    ImageryProvider.prototype.createResources = function(context, imagery, texturePool) {
+        imagery.texture = ImageryProvider.createTextureFromTransformedImage(context, imagery.transformedImage, texturePool);
+        imagery.transformedImage = undefined;
+        imagery.state = TileState.READY;
     };
 
     ImageryProvider.loadImageAndCheckDiscardPolicy = function(url, discardPolicy) {

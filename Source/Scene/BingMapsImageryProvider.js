@@ -382,12 +382,12 @@ define([
      * is still needed.
      *
      * @param {Context} context The context to use to create resources.
-     * @param {TileImagery} tileImagery The tile imagery to transform.
+     * @param {Imagery} imagery The imagery to transform.
      */
-    BingMapsImageryProvider.prototype.transformImagery = function(context, tileImagery) {
-        tileImagery.transformedImage = tileImagery.image;
-        tileImagery.image = undefined;
-        tileImagery.state = TileState.TRANSFORMED;
+    BingMapsImageryProvider.prototype.transformImagery = function(context, imagery) {
+        imagery.transformedImage = imagery.image;
+        imagery.image = undefined;
+        imagery.state = TileState.TRANSFORMED;
     };
 
     /**

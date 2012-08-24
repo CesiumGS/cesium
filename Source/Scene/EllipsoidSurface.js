@@ -142,12 +142,12 @@ define([
             var numDestroyed = 0;
             for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
                 var tileImagery = tileImageryCollection[i];
-                if (tileImagery.imageryLayer === layer) {
+                if (tileImagery.imagery.imageryLayer === layer) {
                     if (startIndex === -1) {
                         startIndex = i;
                     }
 
-                    tileImagery.destroy();
+                    tileImagery.imagery.releaseReference();
                     ++numDestroyed;
                 } else if (startIndex !== -1) {
                     // iterated past the section of TileImagerys belonging to this layer, no need to continue.
@@ -181,7 +181,7 @@ define([
         var numTileImagery = 0;
         for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
-            var tileImageryLayer = tileImagery.imageryLayer;
+            var tileImageryLayer = tileImagery.imagery.imageryLayer;
 
             if (newTileImageryIndex === -1 && tileImageryLayer === newNextLayer) {
                 newTileImageryIndex = i;
@@ -439,19 +439,21 @@ define([
 
                 while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                     var tileImagery = tileImageryCollection[imageryIndex];
+                    var imagery = tileImagery.imagery;
+                    var imageryLayer = imagery.imageryLayer;
                     ++imageryIndex;
 
-                    if (typeof tileImagery === 'undefined' || tileImagery.state !== TileState.READY) {
+                    if (typeof tileImagery === 'undefined' || imagery.state !== TileState.READY) {
                         continue;
                     }
 
-                    uniformMap.dayTextures[numberOfDayTextures] = tileImagery.texture;
+                    uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
                     uniformMap.dayTextureTranslation[numberOfDayTextures] = tileImagery.textureTranslation;
                     uniformMap.dayTextureScale[numberOfDayTextures] = tileImagery.textureScale;
                     uniformMap.dayTextureMinTexCoords[numberOfDayTextures] = tileImagery.minTexCoords;
                     uniformMap.dayTextureMaxTexCoords[numberOfDayTextures] = tileImagery.maxTexCoords;
-                    uniformMap.dayTextureAlpha[numberOfDayTextures] = tileImagery.imageryLayer.alpha;
-                    uniformMap.dayTextureIsGeographic[numberOfDayTextures] = tileImagery.imageryLayer.imageryProvider.tilingScheme instanceof GeographicTilingScheme;
+                    uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
+                    uniformMap.dayTextureIsGeographic[numberOfDayTextures] = imageryLayer.imageryProvider.tilingScheme instanceof GeographicTilingScheme;
 
                     ++numberOfDayTextures;
                 }
@@ -912,27 +914,28 @@ define([
             var tileImageryCollection = tile.imagery;
             for (i = 0, len = tileImageryCollection.length; Date.now() < endTime && i < len; ++i) {
                 var tileImagery = tileImageryCollection[i];
-                var imageryLayer = tileImagery.imageryLayer;
+                var imagery = tileImagery.imagery;
+                var imageryLayer = imagery.imageryLayer;
 
-                if (tileImagery.state === TileState.UNLOADED) {
-                    tileImagery.state = TileState.TRANSITIONING;
-                    imageryLayer.requestImagery(tileImagery);
+                if (imagery.state === TileState.UNLOADED) {
+                    imagery.state = TileState.TRANSITIONING;
+                    imageryLayer.requestImagery(imagery);
                 }
 
-                if (tileImagery.state === TileState.RECEIVED) {
-                    tileImagery.state = TileState.TRANSITIONING;
-                    imageryLayer.transformImagery(context, tileImagery);
+                if (imagery.state === TileState.RECEIVED) {
+                    imagery.state = TileState.TRANSITIONING;
+                    imageryLayer.transformImagery(context, imagery);
                 }
 
-                if (tileImagery.state === TileState.TRANSFORMED) {
-                    tileImagery.state = TileState.TRANSITIONING;
-                    imageryLayer.createResources(context, tileImagery);
+                if (imagery.state === TileState.TRANSFORMED) {
+                    imagery.state = TileState.TRANSITIONING;
+                    imageryLayer.createResources(context, imagery);
                 }
 
                 var tileImageryDoneLoading =
-                    tileImagery.state === TileState.READY ||
-                    tileImagery.state === TileState.FAILED ||
-                    tileImagery.state === TileState.INVALID;
+                    imagery.state === TileState.READY ||
+                    imagery.state === TileState.FAILED ||
+                    imagery.state === TileState.INVALID;
 
                 doneLoading = doneLoading && tileImageryDoneLoading;
             }
