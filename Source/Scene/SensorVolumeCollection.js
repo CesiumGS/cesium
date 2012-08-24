@@ -1,16 +1,30 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/BoundingSphere',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/DeveloperError',
+        '../Core/Intersect',
+        '../Core/Matrix4',
         './ComplexConicSensorVolume',
         './CustomSensorVolume',
-        './RectangularPyramidSensorVolume'
+        './RectangularPyramidSensorVolume',
+        './SceneMode'
     ], function(
-        DeveloperError,
+        defaultValue,
         destroyObject,
+        BoundingSphere,
+        Cartesian3,
+        Cartesian4,
+        DeveloperError,
+        Intersect,
+        Matrix4,
         ComplexConicSensorVolume,
         CustomSensorVolume,
-        RectangularPyramidSensorVolume) {
+        RectangularPyramidSensorVolume,
+        SceneMode) {
     "use strict";
 
     /**
@@ -21,6 +35,7 @@ define([
      */
     var SensorVolumeCollection = function() {
         this._sensors = [];
+        this._renderList = [];
     };
 
     /**
@@ -145,29 +160,66 @@ define([
      * @private
      */
     SensorVolumeCollection.prototype.update = function(context, sceneState) {
+        var mode = sceneState.mode;
+        if (mode !== SceneMode.SCENE3D) {
+            return undefined;
+        }
+
         var sensors = this._sensors;
         var length = sensors.length;
+        var camera = sceneState.camera;
+
         for ( var i = 0; i < length; ++i) {
-            sensors[i].update(context, sceneState);
+            var sensor = sensors[i];
+            var spatialState = sensor.update(context, sceneState);
+
+            if (typeof spatialState === 'undefined') {
+                continue;
+            }
+
+            var boundingVolume = spatialState.boundingVolume;
+            var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
+
+            if (typeof boundingVolume !== 'undefined') {
+                var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
+                center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
+                boundingVolume = new BoundingSphere(center, boundingVolume.radius);
+
+                if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+                    continue;
+                }
+
+                var occluder = sceneState.occluder;
+                if (typeof occluder !== 'undefined' &&
+                        !occluder.isVisible(boundingVolume)) {
+                    continue;
+                }
+            }
+
+            this._renderList.push(sensor);
         }
+
+        return {};
     };
 
     /**
      * @private
      */
     SensorVolumeCollection.prototype.render = function(context) {
-        var sensors = this._sensors;
+        var sensors = this._renderList;
         var length = sensors.length;
         for ( var i = 0; i < length; ++i) {
             sensors[i].render(context);
         }
+        this._renderList.length = 0;
     };
 
     /**
      * @private
      */
     SensorVolumeCollection.prototype.updateForPick = function(context) {
-        var sensors = this._sensors;
+        // This assumes that updateForPick is called after update and before renderForPick
+        var sensors = this._renderList;
         var length = sensors.length;
         for ( var i = 0; i < length; ++i) {
             sensors[i].updateForPick(context);
@@ -178,11 +230,12 @@ define([
      * @private
      */
     SensorVolumeCollection.prototype.renderForPick = function(context, framebuffer) {
-        var sensors = this._sensors;
+        var sensors = this._renderList;
         var length = sensors.length;
         for ( var i = 0; i < length; ++i) {
             sensors[i].renderForPick(context, framebuffer);
         }
+        this._renderList.length = 0;
     };
 
     /**
