@@ -64,18 +64,36 @@ define([
      */
     EllipsoidTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
 
+    /**
+     * Request the tile geometry from the remote server.  Once complete, the
+     * tile state should be set to RECEIVED.  Alternatively, tile state can be set to
+     * UNLOADED to indicate that the request should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Tile} The tile to request geometry for.
+     */
     EllipsoidTerrainProvider.prototype.requestTileGeometry = function(tile) {
         tile.state = TileState.RECEIVED;
     };
 
     var taskProcessor = new TaskProcessor('createVerticesFromExtent');
 
+    /**
+     * Transform the tile geometry from the format requested from the remote server
+     * into a format suitable for resource creation.  Once complete, the tile
+     * state should be set to TRANSFORMED.  Alternatively, tile state can be set to
+     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Context} context The context to use to create resources.
+     * @param {Tile} tile The tile to transform geometry for.
+     */
     EllipsoidTerrainProvider.prototype.transformGeometry = function(context, tile) {
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
         var extent = tile.extent;
 
-        tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
+        tile.center = ellipsoid.cartographicToCartesian(extent.getCenter());
 
         var width = 16;
         var height = 16;
@@ -104,24 +122,37 @@ define([
             tile.state = TileState.TRANSFORMED;
         }, function(e) {
             /*global console*/
-            console.error('failed to load transform geometry: ' + e);
+            console.error('failed to transform geometry: ' + e);
+            tile.state = TileState.FAILED;
         });
     };
 
+    var scratch = new Cartesian3();
+
+    /**
+     * Create WebGL resources for the tile using whatever data the transformGeometry step produced.
+     * Once complete, the tile state should be set to READY.  Alternatively, tile state can be set to
+     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
+     * is still needed.
+     *
+     * @param {Context} context The context to use to create resources.
+     * @param {Tile} tile The tile to create resources for.
+     */
     EllipsoidTerrainProvider.prototype.createResources = function(context, tile) {
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
+
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = 0;
         tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
 
         var ellipsoid = this.tilingScheme.ellipsoid;
-        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSouthwest());
-        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSoutheast());
-        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getNortheast());
-        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getNorthwest());
+        var extent = tile.extent;
+        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
+        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
+        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNortheast());
+        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest());
 
-        var scratch = new Cartesian3();
         tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(scratch), scratch).normalize();
         tile.eastNormal = tile.northeastCornerCartesian.negate(scratch).cross(Cartesian3.UNIT_Z, scratch).normalize();
         tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, scratch)).normalize();

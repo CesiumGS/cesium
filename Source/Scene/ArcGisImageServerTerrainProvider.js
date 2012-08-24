@@ -215,6 +215,7 @@ define([
         if (this.token) {
             url += '&token=' + this.token;
         }
+
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
         }
@@ -226,6 +227,7 @@ define([
         }, function(e) {
             /*global console*/
             console.error('failed to load tile geometry: ' + e);
+            tile.state = TileState.FAILED;
         });
     };
 
@@ -248,8 +250,12 @@ define([
         var height = image.height;
         var pixels = getImagePixels(image);
 
-        var southwest = this.tilingScheme.cartographicToWebMercator(tile.extent.west, tile.extent.south);
-        var northeast = this.tilingScheme.cartographicToWebMercator(tile.extent.east, tile.extent.north);
+        var tilingScheme = this.tilingScheme;
+        var ellipsoid = tilingScheme.ellipsoid;
+        var extent = tile.extent;
+
+        var southwest = tilingScheme.cartographicToWebMercator(extent.west, extent.south);
+        var northeast = tilingScheme.cartographicToWebMercator(extent.east, extent.north);
         var webMercatorExtent = {
             west : southwest.x,
             south : southwest.y,
@@ -257,7 +263,7 @@ define([
             north : northeast.y
         };
 
-        tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
+        tile.center = ellipsoid.cartographicToCartesian(extent.getCenter());
 
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : pixels,
@@ -269,8 +275,8 @@ define([
             height : height,
             extent : webMercatorExtent,
             relativeToCenter : tile.center,
-            radiiSquared : this.tilingScheme.ellipsoid.getRadiiSquared(),
-            oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x,
+            radiiSquared : ellipsoid.getRadiiSquared(),
+            oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
             skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0)
         });
 
@@ -281,7 +287,7 @@ define([
         }
 
         when(verticesPromise, function(result) {
-            console.log('Tile ' + tile.x + ', ' + tile.y + ', ' + tile.level + ' UDiff: ' + result.statistics.maxUDifference + ' VDiff: ' + result.statistics.maxVDifference);
+            console.log('Tile transformGeometry (' + tile.x + ', ' + tile.y + ', ' + tile.level + ') UDiff: ' + result.statistics.maxUDifference + ' VDiff: ' + result.statistics.maxVDifference);
             tile.geometry = undefined;
             tile.transformedGeometry = {
                 vertices : result.vertices,
@@ -291,9 +297,12 @@ define([
             tile.state = TileState.TRANSFORMED;
         }, function(e) {
             /*global console*/
-            console.error('failed to load transform geometry: ' + e);
+            console.error('failed to transform geometry: ' + e);
+            tile.state = TileState.FAILED;
         });
     };
+
+    var scratch = new Cartesian3();
 
     /**
      * Create WebGL resources for the tile using whatever data the transformGeometry step produced.
@@ -307,17 +316,18 @@ define([
     ArcGisImageServerTerrainProvider.prototype.createResources = function(context, tile) {
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
+
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = buffers.statistics.maxHeight;
         tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
 
         var ellipsoid = this.tilingScheme.ellipsoid;
-        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSouthwest());
-        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSoutheast());
-        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getNortheast());
-        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getNorthwest());
+        var extent = tile.extent;
+        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
+        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
+        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNortheast());
+        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest());
 
-        var scratch = new Cartesian3();
         tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(scratch), scratch).normalize();
         tile.eastNormal = tile.northeastCornerCartesian.negate(scratch).cross(Cartesian3.UNIT_Z, scratch).normalize();
         tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, scratch)).normalize();
