@@ -107,32 +107,37 @@ require([
 
         // Show reference frame.  Not required.
         var primitives = scene.getPrimitives();
-        var xAxis = new Cesium.Polyline();
-        xAxis.modelMatrix = transform;
-        xAxis.color = new Cesium.Color(1.0, 0.0, 0.0, 1.0);
-        xAxis.setPositions([
-            Cesium.Cartesian3.ZERO, 
-            new Cesium.Cartesian3(100000.0, 0.0, 0.0)
-        ]);
-        primitives.add(xAxis);
+        var polylines = new Cesium.PolylineCollection();
+        polylines.modelMatrix = transform;
         
-        var yAxis = new Cesium.Polyline(undefined);
-        yAxis.modelMatrix = transform;
-        yAxis.color = new Cesium.Color(0.0, 1.0, 0.0, 1.0);
-        yAxis.setPositions([
-            Cesium.Cartesian3.ZERO, 
-            new Cesium.Cartesian3(0.0, 100000.0, 0.0)
-        ]);
-        primitives.add(yAxis);
+        var xAxis = {
+                color : new Cesium.Color(1.0, 0.0, 0.0, 1.0),
+                positions : [
+                    Cesium.Cartesian3.ZERO, 
+                    new Cesium.Cartesian3(100000.0, 0.0, 0.0)
+                ]
+        };
+        polylines.add(xAxis);
         
-        var zAxis = new Cesium.Polyline(undefined);
-        zAxis.modelMatrix = transform;
-        zAxis.color = new Cesium.Color(0.0, 0.0, 1.0, 1.0);
-        zAxis.setPositions([
-            Cesium.Cartesian3.ZERO, 
-            new Cesium.Cartesian3(0.0, 0.0, 100000.0)
-        ]);
-        primitives.add(zAxis);        
+        var yAxis = {
+                color : new Cesium.Color(0.0, 1.0, 0.0, 1.0),
+                positions : [
+                    Cesium.Cartesian3.ZERO, 
+                    new Cesium.Cartesian3(0.0, 100000.0, 0.0)
+                ]
+        };
+        polylines.add(yAxis);
+        
+        var zAxis = {
+                color : new Cesium.Color(0.0, 0.0, 1.0, 1.0),
+                positions : [
+                    Cesium.Cartesian3.ZERO, 
+                    new Cesium.Cartesian3(0.0, 0.0, 100000.0)
+                ]        
+        };
+        polylines.add(zAxis);
+        
+        primitives.add(polylines);        
     }
     
     function createButtons(scene) {
