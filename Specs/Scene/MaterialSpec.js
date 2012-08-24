@@ -637,7 +637,6 @@ defineSuite([
     });
 
     it('destroys material with texture', function() {
-
         var material = Material.fromType(context, Material.DiffuseMapType);
         material.uniforms.image = './Data/Images/Green.png';
         var pixel = renderMaterial(material);
