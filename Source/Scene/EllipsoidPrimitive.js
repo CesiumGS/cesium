@@ -260,8 +260,9 @@ define([
                     this.morphTime = mode.morphTime;
                 }
 
+                var length = this.radii.getMaximumComponent() * 2.0;
                 var mesh = BoxTessellator.compute({
-                    dimensions : this.radii.multiplyByScalar(2.0)
+                    dimensions : new Cartesian3(length, length, length)
                 });
 
                 this._modelMatrix = Transforms.eastNorthUpToFixedFrame(this._position);
