@@ -30,7 +30,8 @@ Beta Releases
     * `Label.computeScreenSpacePosition` now requires the current scene state as a parameter.
     * Passing `undefined` to any of the set functions on `Label` now throws an exception.
     * Renamed `agi_` prefix on GLSL identifiers to `czm_`.
-            
+    * Replaced `ViewportQuad` properties `vertexShader` and `fragmentShader` with optional constructor arguments.
+                
 * All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * Added support for nested polygons with holes. See `Polygon.configureFromPolygonHierarchy`.
 * Added support to the renderer for view frustum and central body occlusion culling. All built-in primitives, such as `BillboardCollection`, `Polygon`, `PolylineCollection`, etc., can be culled. See the advanced examples in the Sandbox for details.
