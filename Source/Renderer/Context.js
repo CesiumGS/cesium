@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
@@ -37,6 +38,7 @@ define([
         './VertexArray',
         './VertexLayout'
     ], function(
+        defaultValue,
         DeveloperError,
         destroyObject,
         Color,
@@ -234,9 +236,9 @@ define([
         this._viewport = new BoundingRectangle(v[0], v[1], v[2], v[3]);
 
         // Query and initialize extensions
-        var textureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
-
         this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
+        this._depthTexture = gl.getExtension('WEBKIT_WEBGL_depth_texture') || gl.getExtension('MOZ_WEBGL_depth_texture');
+        var textureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._maximumTextureFilterAnisotropy = textureFilterAnisotropic ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
@@ -931,6 +933,20 @@ define([
     };
 
     /**
+     * Returns <code>true</code> if WEBGL_depth_texture is supported.  This extension provides
+     * access to depth textures that, for example, can be attached to framebuffers for shadow mapping.
+     *
+     * @memberof Context
+     *
+     * @returns {Boolean} <code>true</code> if WEBGL_depth_texture is supported; otherwise, <code>false</code>.
+     *
+     * @see <a href='http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/'>WEBGL_depth_texture</a>
+     */
+    Context.prototype.getDepthTexture = function() {
+        return !!this._depthTexture;
+    };
+
+    /**
      * DOC_TBA
      *
      * @memberof Context
@@ -1405,6 +1421,7 @@ define([
      *
      * @return {Texture} DOC_TBA.
      *
+     * @exception {RuntimeError} When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
      * @exception {DeveloperError} description is required.
      * @exception {DeveloperError} description requires a source field to create an initialized texture or width and height fields to create a blank texture.
      * @exception {DeveloperError} Width must be greater than zero.
@@ -1413,6 +1430,9 @@ define([
      * @exception {DeveloperError} Height must be less than or equal to the maximum texture size.
      * @exception {DeveloperError} Invalid description.pixelFormat.
      * @exception {DeveloperError} Invalid description.pixelDatatype.
+     * @exception {DeveloperError} When description.pixelFormat is DEPTH_COMPONENT, description.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.
+     * @exception {DeveloperError} When description.pixelFormat is DEPTH_STENCIL, description.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.
+     * @exception {DeveloperError} When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.
      *
      * @see Context#createTexture2DFromFramebuffer
      * @see Context#createCubeMap
@@ -1457,6 +1477,25 @@ define([
             throw new DeveloperError('Invalid description.pixelDatatype.');
         }
 
+        if ((pixelFormat === PixelFormat.DEPTH_COMPONENT) &&
+            ((pixelDatatype !== PixelDatatype.UNSIGNED_SHORT) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT))) {
+            throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT, description.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.');
+        }
+
+        if ((pixelFormat === PixelFormat.DEPTH_STENCIL) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8_WEBGL)) {
+            throw new DeveloperError('When description.pixelFormat is DEPTH_STENCIL, description.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
+        }
+
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+            if (source) {
+                throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
+            }
+
+            if (!this.getDepthTexture()) {
+                throw new RuntimeError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check getDepthTexture().');
+            }
+        }
+
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
         var preMultiplyAlpha = description.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
@@ -1465,13 +1504,14 @@ define([
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
 
-        // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
         if (source) {
+            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
             if (source.arrayBufferView) {
                 // Source: typed array
                 gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
@@ -1488,19 +1528,21 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
+     * the texture is the same width and height as the framebuffer and contains its contents.
      *
      * @memberof Context
      *
-     * @param {PixelFormat} pixelFormat optional.
-     * @param {PixelFormat} framebufferXOffset optional.
-     * @param {PixelFormat} framebufferYOffset optional.
-     * @param {PixelFormat} width optional.
-     * @param {PixelFormat} height optional.
+     * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
+     * @param {PixelFormat} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
+     * @param {PixelFormat} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
+     * @param {PixelFormat} [width=canvas.clientWidth] The width of the texture in texels.
+     * @param {PixelFormat} [height=canvas.clientHeight] The height of the texture in texels.
      *
-     * @return {Texture} DOC_TBA.
+     * @return {Texture} A texture with contents from the framebuffer.
      *
      * @exception {DeveloperError} Invalid pixelFormat.
+     * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to getCanvas().clientWidth.
@@ -1509,11 +1551,24 @@ define([
      * @see Context#createTexture2D
      * @see Context#createCubeMap
      * @see Context#createSampler
+     *
+     * @example
+     * // Create a texture with the contents of the framebuffer.
+     * var t = context.createTexture2DFromFramebuffer();
      */
     Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height) {
         pixelFormat = pixelFormat || PixelFormat.RGB;
+        framebufferXOffset = defaultValue(framebufferXOffset, 0);
+        framebufferYOffset = defaultValue(framebufferYOffset, 0);
+        width = defaultValue(width, this._canvas.clientWidth);
+        height = defaultValue(height, this._canvas.clientHeight);
+
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
+        }
+
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+            throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
         if (framebufferXOffset < 0) {
@@ -1531,11 +1586,6 @@ define([
         if (framebufferYOffset + height > this._canvas.clientHeight) {
             throw new DeveloperError('framebufferYOffset + height must be less than or equal to getCanvas().clientHeight.');
         }
-
-        framebufferXOffset = framebufferXOffset || 0;
-        framebufferYOffset = framebufferYOffset || 0;
-        width = width || this._canvas.clientWidth;
-        height = height || this._canvas.clientHeight;
 
         var gl = this._gl;
         var textureTarget = gl.TEXTURE_2D;
@@ -1557,8 +1607,8 @@ define([
      * @param {PixelFormat} [description.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
      * @param {Number} [description.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
      * @param {Cartesian2} [description.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Array} description.images Optional array of {@link Image} to be added to the atlas. Same as calling addImages(images).
-     * @param {Image} description.image Optional single image to be added to the atlas. Same as calling addImage(image).
+     * @param {Array} [description.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * @param {Image} [description.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
      *
      * @returns {TextureAtlas} The new texture atlas.
      *
@@ -1587,6 +1637,7 @@ define([
      * @exception {DeveloperError} Width and height must be greater than zero.
      * @exception {DeveloperError} Width and height must be less than or equal to the maximum cube map size.
      * @exception {DeveloperError} Invalid description.pixelFormat.
+     * @exception {DeveloperError} description.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} Invalid description.pixelDatatype.
      *
      * @see Context#createTexture2D
@@ -1645,6 +1696,10 @@ define([
             throw new DeveloperError('Invalid description.pixelFormat.');
         }
 
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+            throw new DeveloperError('description.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
+
         var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid description.pixelDatatype.');
@@ -1658,9 +1713,6 @@ define([
         var textureTarget = gl.TEXTURE_CUBE_MAP;
         var texture = gl.createTexture();
 
-        // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
@@ -1673,6 +1725,10 @@ define([
         }
 
         if (source) {
+            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
             createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX);
             createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX);
             createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source.positiveY);
@@ -1693,36 +1749,59 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Creates a framebuffer with optional initial color, depth, and stencil attachments.
+     * Framebuffers are used for render-to-texture effects; they allow us to render to
+     * a texture in one pass, and read from it in a later pass.
      *
      * @memberof Context
      *
-     * @param {Object} description optional.
+     * @param {Object} [description] The initial framebuffer attachments as shown in Example 2.  The possible properties are <code>colorTexture</code>, <code>colorRenderbuffer</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
      *
-     * @return {Framebuffer} DOC_TBA.
+     * @return {Framebuffer} The created framebuffer.
      *
+     * @exception {DeveloperError} Cannot have both a color texture and color renderbuffer attachment.
+     * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.
+     * @exception {DeveloperError} Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.
      * @exception {DeveloperError} Cannot have both a depth and depth-stencil renderbuffer.
      * @exception {DeveloperError} Cannot have both a stencil and depth-stencil renderbuffer.
      * @exception {DeveloperError} Cannot have both a depth and stencil renderbuffer.
+     * @exception {DeveloperError} The color-texture pixel-format must be a color format.
+     * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
+     * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
      *
      * @see Context#createTexture2D
      * @see Context#createCubeMap
      * @see Context#createRenderbuffer
+     *
+     * @example
+     * // Example 1. Create a framebuffer with no initial attachments,
+     * // and then add a color-texture attachment.
+     * var framebuffer = context.createFramebuffer();
+     * framebuffer.setColorTexture(context.createTexture2D({
+     *     width : 256,
+     *     height : 256,
+     * }));
+     *
+     * //////////////////////////////////////////////////////////////////
+     *
+     * // Example 2. Create a framebuffer with color and depth texture attachments.
+     * var width = context.getCanvas().clientWidth;
+     * var height = context.getCanvas().clientHeight;
+     * var framebuffer = context.createFramebuffer({
+     *   colorTexture : context.createTexture2D({
+     *     width : width,
+     *     height : height,
+     *     pixelFormat : PixelFormat.RGBA
+     *   }),
+     *   depthTexture : context.createTexture2D({
+     *     width : width,
+     *     height : height,
+     *     pixelFormat : PixelFormat.DEPTH_COMPONENT,
+     *     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+     *   })
+     * });
      */
     Context.prototype.createFramebuffer = function(description) {
-        if (description) {
-            if (description.depthRenderbuffer && description.depthStencilRenderbuffer) {
-                throw new DeveloperError('Cannot have both a depth and depth-stencil attachment.');
-            }
-
-            if (description.stencilRenderbuffer && description.depthStencilRenderbuffer) {
-                throw new DeveloperError('Cannot have both a stencil and depth-stencil attachment.');
-            }
-
-            if (description.depthRenderbuffer && description.stencilRenderbuffer) {
-                throw new DeveloperError('Cannot have both a depth and stencil attachment.');
-            }
-        }
         return new Framebuffer(this._gl, description);
     };
 
@@ -1731,7 +1810,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Object} description optional.
+     * @param {Object} [description] DOC_TBA.
      *
      * @return {createRenderbuffer} DOC_TBA.
      *
@@ -2280,9 +2359,7 @@ define([
         var rs = drawArguments.renderState || this.createRenderState();
 
         if (framebuffer && rs.depthTest) {
-            if (rs.depthTest.enabled &&
-                !framebuffer.getDepthRenderbuffer() &&
-                !framebuffer.getDepthStencilRenderbuffer()) {
+            if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
                 throw new DeveloperError('The depth test can not be enabled (drawArguments.renderState.depthTest.enabled) because the framebuffer (drawArguments.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
