@@ -68,7 +68,6 @@ define([
          * @type Cartesian3
          */
         this.position = undefined;
-        this._position = undefined;
 
         /**
          * DOC_TBA
@@ -76,7 +75,6 @@ define([
          * @type Cartesian3
          */
         this.radii = undefined;
-        this._radii = undefined;
 
         /**
          * DOC_TBA
@@ -109,7 +107,6 @@ define([
          * @see Material
          */
         this.material = Material.fromType(undefined, Material.ColorType);
-        this.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
         this._material = undefined;
 
         /**
@@ -117,11 +114,8 @@ define([
          *
          * @type BufferUsage
          *
-         * @performance If <code>bufferUsage</code> changes, the next time
-         * {@link EllipsoidPrimitive#update} is called, the ellipsoid's vertex buffer
-         * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
-         * For best performance, it is important to provide the proper usage hint.  If the ellipsoid
-         * will not change over several frames, use <code>BufferUsage.STATIC_DRAW</code>.
+         * @performance For best performance, it is important to provide the proper usage hint.
+         * If the ellipsoid will not change over several frames, use <code>BufferUsage.STATIC_DRAW</code>.
          * If the ellipsoid will change every frame, use <code>BufferUsage.STREAM_DRAW</code>.
          */
         this.bufferUsage = BufferUsage.STATIC_DRAW;
@@ -190,17 +184,13 @@ define([
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
 
-        // TODO: Really care if _position changes?  Just uniform/matrix?
         // TODO: Need to check modelMatrix?
 
-        if ((!Cartesian3.equals(this._position, this.position)) ||
-            (!Cartesian3.equals(this._radii, this.radii)) ||
+        if ((typeof this._va === 'undefined') ||
             (this._bufferUsage !== this.bufferUsage) ||
             (this._mode !== mode) ||
             (this._projection !== projection)) {
 
-            this._position = Cartesian3.clone(this.position);
-            this._radii = Cartesian3.clone(this.radii);
             this._bufferUsage = this.bufferUsage;
             this._mode = mode;
             this._projection = projection;
@@ -209,8 +199,9 @@ define([
                 this.morphTime = mode.morphTime;
             }
 
+            // TODO: cache for all ellipsoids
             var mesh = BoxTessellator.compute({
-                dimensions : this.radii.multiplyByScalar(2.0)
+                dimensions : new Cartesian3(2.0, 2.0, 2.0)
             });
 
             mesh.attributes.position3D = mesh.attributes.position;
@@ -275,7 +266,8 @@ define([
             this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
         }
 
-        Matrix4.multiplyByTranslation(this.modelMatrix, this._position, this._computedModelMatrix);
+        // Translate model coordinates used for rendering such that the origin is the center of the ellipsoid.
+        Matrix4.multiplyByTranslation(this.modelMatrix, this.position, this._computedModelMatrix);
 
         return {
             modelMatrix : (sceneState.mode === SceneMode.SCENE3D) ? this._computedModelMatrix : Matrix4.IDENTITY
