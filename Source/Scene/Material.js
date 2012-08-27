@@ -285,57 +285,33 @@ define([
      * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric wiki page</a> for a more detailed description of Fabric.
      */
     var Material = function(description) {
-        this._description = defaultValue(description, {});
-        this._context = this._description.context;
-        this._strict = defaultValue(this._description.strict, false);
-        this._template = defaultValue(this._description.fabric, {});
-        this._template.uniforms = defaultValue(this._template.uniforms, {});
-        this._template.materials = defaultValue(this._template.materials, {});
-
-        var type = (typeof this._template.type !== 'undefined') ? this._template.type : getRandomId();
-
         /**
          * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is a GUID.
          * @type String
          */
-        Object.defineProperty(this, 'type', { value : type, writable : false});
+        this.type = undefined;
 
         /**
          * The glsl shader source for this material.
          * @type String
          */
-        this.shaderSource = '';
+        this.shaderSource = undefined;
 
         /**
          * Maps sub-material names to Material objects.
          * @type Object
          */
-        this.materials = {};
+        this.materials = undefined;
 
         /**
          * Maps uniform names to their values.
          * @type Object
          */
-        this.uniforms = {};
-        this._uniforms = {};
+        this.uniforms = undefined;
+        this._uniforms = undefined;
 
-        // If the cache contains this material type, build the material template off of the stored template.
-        var oldMaterialTemplate = Material._materialCache.getMaterial(this.type);
-        if (typeof oldMaterialTemplate !== 'undefined') {
-            this._template = combine([this._template, oldMaterialTemplate]);
-        }
-
-        // Make sure the template has no obvious errors. More error checking happens later.
-        checkForTemplateErrors(this);
-
-        // If the material has a new type, add it to the cache.
-        if ((typeof oldMaterialTemplate === 'undefined') && (typeof this.type !== 'undefined')){
-            Material._materialCache.addMaterial(this.type, this._template);
-        }
-
-        createMethodDefinition(this);
-        createUniforms(this);
-        createSubMaterials(this);
+        initializeMaterial(description, 0, this);
+        Object.defineProperty(this, 'type', { value : this.type, writable : false});
     };
 
     /**
@@ -420,6 +396,41 @@ define([
         return destroyObject(this);
     };
 
+    function initializeMaterial(description, count, result) {
+        description = defaultValue(description, {});
+        result._context = description.context;
+        result._strict = defaultValue(description.strict, false);
+        result._template = defaultValue(description.fabric, {});
+        result._template.uniforms = defaultValue(result._template.uniforms, {});
+        result._template.materials = defaultValue(result._template.materials, {});
+
+        result.type = (typeof result._template.type !== 'undefined') ? result._template.type : getRandomId();
+
+        result.shaderSource = '';
+        result.materials = {};
+        result.uniforms = {};
+        result._uniforms = {};
+
+        // If the cache contains this material type, build the material template off of the stored template.
+        var oldMaterialTemplate = Material._materialCache.getMaterial(result.type);
+        if (typeof oldMaterialTemplate !== 'undefined') {
+            result._template = combine([result._template, oldMaterialTemplate]);
+        }
+
+        // Make sure the template has no obvious errors. More error checking happens later.
+        checkForTemplateErrors(result);
+
+        // If the material has a new type, add it to the cache.
+        if ((typeof oldMaterialTemplate === 'undefined') && (typeof result.type !== 'undefined')){
+            Material._materialCache.addMaterial(result.type, result._template);
+        }
+
+        createMethodDefinition(result);
+        count = createUniforms(result, count);
+        count = createSubMaterials(result, count);
+        return count;
+    }
+
     function checkForValidProperties(object, properties, result, throwNotFound) {
         if (typeof object !== 'undefined') {
             for (var property in object) {
@@ -496,18 +507,19 @@ define([
         }
     }
 
-    function createUniforms(material) {
+    function createUniforms(material, count) {
         var uniforms = material._template.uniforms;
         for (var uniformId in uniforms) {
             if (uniforms.hasOwnProperty(uniformId)) {
-                createUniform(material, uniformId);
+                count = createUniform(material, uniformId, count);
             }
         }
+        return count;
     }
 
     // Writes uniform declarations to the shader file and connects uniform values with
     // corresponding material properties through the returnUniforms function.
-    function createUniform(material, uniformId) {
+    function createUniform(material, uniformId, count) {
         var strict = material._strict;
         var materialUniforms = material._template.uniforms;
         var uniformValue = materialUniforms[uniformId];
@@ -542,7 +554,7 @@ define([
                 material.shaderSource = uniformPhrase + material.shaderSource;
             }
 
-            var newUniformId = uniformId + '_' + material.type;
+            var newUniformId = uniformId + '_' + count++;
             if (replaceToken(material, uniformId, newUniformId) === 1 && strict) {
                 throw new DeveloperError('strict: shader source does not use uniform \'' + uniformId + '\'.');
             }
@@ -550,6 +562,8 @@ define([
             material.uniforms[uniformId] = uniformValue;
             material._uniforms[newUniformId] = returnUniform(material, uniformId, uniformType);
         }
+
+        return count;
     }
 
     // Checks for updates to material values to refresh the uniforms.
@@ -638,20 +652,22 @@ define([
     }
 
     // Create all sub-materials by combining source and uniforms together.
-    function createSubMaterials(material) {
+    function createSubMaterials(material, count) {
         var context = material._context;
         var strict = material._strict;
         var subMaterialTemplates = material._template.materials;
         for (var subMaterialId in subMaterialTemplates) {
             if (subMaterialTemplates.hasOwnProperty(subMaterialId)) {
                 // Construct the sub-material.
-                var subMaterial = new Material({context : context, strict : strict, fabric : subMaterialTemplates[subMaterialId]});
+                var subMaterial = {};
+                count = initializeMaterial({context : context, strict : strict, fabric : subMaterialTemplates[subMaterialId]}, count, subMaterial);
+
                 material._uniforms = combine([material._uniforms, subMaterial._uniforms]);
                 material.materials[subMaterialId] = subMaterial;
 
                 // Make the material's czm_getMaterial unique by appending the sub-material type.
                 var originalMethodName = 'czm_getMaterial';
-                var newMethodName = originalMethodName + '_' + subMaterial.type;
+                var newMethodName = originalMethodName + '_' + count++;
                 replaceToken(subMaterial, originalMethodName, newMethodName);
                 material.shaderSource = subMaterial.shaderSource + material.shaderSource;
 
@@ -662,6 +678,7 @@ define([
                 }
             }
         }
+        return count;
     }
 
     // Used for searching or replacing a token in a material's shader source with something else.
@@ -688,7 +705,7 @@ define([
         return replaceToken(material, token, token, excludePeriod);
     }
 
-    // Returns a random id for differentiating uniforms and materials with the same names.
+    // Returns a random id for differentiating materials with the same names.
     function getRandomId() {
         return createGuid().slice(0,8);
     }
