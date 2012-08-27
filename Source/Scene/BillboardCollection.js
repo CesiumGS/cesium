@@ -563,7 +563,7 @@ define([
         return c.directionsVertexBuffer;
     };
 
-    BillboardCollection._getIndexBuffer = function(context) {
+    function getIndexBuffer(context) {
         var sixteenK = 16 * 1024;
 
         // Per-context cache for billboard collections
@@ -593,7 +593,7 @@ define([
         c.indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
         c.indexBuffer.setVertexArrayDestroyable(false);
         return c.indexBuffer;
-    };
+    }
 
     /**
      * Renders the billboards.  In order for changes to properties to be realized,
@@ -1024,7 +1024,7 @@ define([
                 }
 
                 // Different billboard collections share the same index buffer.
-                this._vaf.commit(BillboardCollection._getIndexBuffer(context));
+                this._vaf.commit(getIndexBuffer(context));
             }
 
             this._billboardsToUpdate = [];
@@ -1076,7 +1076,7 @@ define([
                             writers[n](context, textureAtlasCoordinates, vafWriters, b);
                         }
                     }
-                    this._vaf.commit(BillboardCollection._getIndexBuffer(context));
+                    this._vaf.commit(getIndexBuffer(context));
                 } else {
                     for ( var h = 0; h < updateLength; ++h) {
                         var bb = billboardsToUpdate[h];

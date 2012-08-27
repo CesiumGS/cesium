@@ -42,19 +42,23 @@ require({
     // Add examples from the Sandbox here:
 
     var e = new Cesium.EllipsoidPrimitive();
-/*
-    e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000)));
-    e.position = {
+    e.position = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000));
+    e.radii = new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0);
+    primitives.add(e);
+
+    var e2 = new Cesium.EllipsoidPrimitive();
+    e2.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.59777, 40.03883, 0.0)));
+    e2.position = {
         x : 0.0,
         y : 0.0,
-        z : 1500000.0
+        z : 750000.0
     };
- */
-
-    e.position = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000));
-    e.radii = new Cesium.Cartesian3(1000000.0, 1000000.0, 1000000.0);
-
-    primitives.add(e);
+    e2.radii = {
+        x : 250000.0,
+        y : 250000.0,
+        z : 750000.0
+    };
+    primitives.add(e2);
 
     ///////////////////////////////////////////////////////////////////////////
 

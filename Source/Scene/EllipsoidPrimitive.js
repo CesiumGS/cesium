@@ -109,18 +109,6 @@ define([
         this.material = Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
 
-        /**
-         * The usage hint for the polygon's vertex buffer.
-         *
-         * @type BufferUsage
-         *
-         * @performance For best performance, it is important to provide the proper usage hint.
-         * If the ellipsoid will not change over several frames, use <code>BufferUsage.STATIC_DRAW</code>.
-         * If the ellipsoid will change every frame, use <code>BufferUsage.STREAM_DRAW</code>.
-         */
-        this.bufferUsage = BufferUsage.STATIC_DRAW;
-        this._bufferUsage = BufferUsage.STATIC_DRAW;
-
         var that = this;
         this._uniforms = {
             u_morphTime : function() {
@@ -139,6 +127,85 @@ define([
         this._drawUniforms = undefined;
     };
 
+    var vertexArrayCache = {};
+
+    function getVertexArray(context) {
+        // Per-context cache for ellipsoids
+
+        var c = vertexArrayCache[context.getId()];
+
+        if (typeof c !== 'undefined' &&
+            typeof c.vertexArray !== 'undefined') {
+
+            ++c.referenceCount;
+            return c.vertexArray;
+        }
+
+        var mesh = BoxTessellator.compute({
+            dimensions : new Cartesian3(2.0, 2.0, 2.0)
+        });
+
+        mesh.attributes.position3D = mesh.attributes.position;
+        delete mesh.attributes.position;
+
+//        if (this._mode === SceneMode.SCENE3D) {
+            mesh.attributes.position2D = {
+                value : [0.0, 0.0, 0.0]
+            };
+/*
+        } else {
+            var positions = mesh.attributes.position3D.values;
+            var projectedPositions = [];
+            var projectedPositionsFlat = [];
+            for (var i = 0; i < positions.length; i += 3) {
+                var p = new Cartesian4(positions[i], positions[i + 1], positions[i + 2], 1.0);
+                p = this.modelMatrix.multiplyByVector(p);
+
+                positions[i] = p.x;
+                positions[i + 1] = p.y;
+                positions[i + 2] = p.z;
+
+                p = projection.project(this._ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p)));
+
+                projectedPositions.push(p);
+                projectedPositionsFlat.push(p.z, p.x, p.y);
+            }
+
+            mesh.attributes.position2D = {
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : projectedPositionsFlat
+            };
+        }
+*/
+
+        var va = context.createVertexArrayFromMesh({
+            mesh: mesh,
+            attributeIndices: attributeIndices,
+            bufferUsage: BufferUsage.STATIC_DRAW
+        });
+
+        vertexArrayCache[context.getId()] = {
+            vertexArray : va,
+            referenceCount : 1
+        };
+
+        return va;
+    }
+
+    function releaseVertexArray(context) {
+        // TODO: Schedule this for a few 100 frames later so we don't thrash the cache
+        var c = vertexArrayCache[context.getId()];
+        if (typeof c !== 'undefined' &&
+            typeof c.vertexArray !== 'undefined' &&
+            --c.referenceCount === 0) {
+
+            c.vertexArray = c.vertexArray.destroy();
+        }
+
+        return undefined;
+    }
+
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
      * This must be called before calling {@link EllipsoidPrimitive#render} in order to realize
@@ -155,8 +222,8 @@ define([
      */
     EllipsoidPrimitive.prototype.update = function(context, sceneState) {
         if (!this.show ||
-            (typeof this.position === undefined) ||
-            (typeof this.radii === undefined)) {
+            (typeof this.position === 'undefined') ||
+            (typeof this.radii === 'undefined')) {
             return undefined;
         }
 
@@ -184,8 +251,7 @@ define([
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
 
-        // TODO: Need to check modelMatrix?
-
+        // TODO: When do we really need to rewrite?
         if ((typeof this._va === 'undefined') ||
             (this._bufferUsage !== this.bufferUsage) ||
             (this._mode !== mode) ||
@@ -199,50 +265,8 @@ define([
                 this.morphTime = mode.morphTime;
             }
 
-            // TODO: cache for all ellipsoids
-            var mesh = BoxTessellator.compute({
-                dimensions : new Cartesian3(2.0, 2.0, 2.0)
-            });
-
-            mesh.attributes.position3D = mesh.attributes.position;
-            delete mesh.attributes.position;
-
-            if (this._mode === SceneMode.SCENE3D) {
-                mesh.attributes.position2D = {
-                    value : [0.0, 0.0, 0.0]
-                };
-            } else {
-/*
-                var positions = mesh.attributes.position3D.values;
-                var projectedPositions = [];
-                var projectedPositionsFlat = [];
-                for (var i = 0; i < positions.length; i += 3) {
-                    var p = new Cartesian4(positions[i], positions[i + 1], positions[i + 2], 1.0);
-                    p = this.modelMatrix.multiplyByVector(p);
-
-                    positions[i] = p.x;
-                    positions[i + 1] = p.y;
-                    positions[i + 2] = p.z;
-
-                    p = projection.project(this._ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p)));
-
-                    projectedPositions.push(p);
-                    projectedPositionsFlat.push(p.z, p.x, p.y);
-                }
-
-                mesh.attributes.position2D = {
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : projectedPositionsFlat
-                };
- */
-            }
-
-            this._va = context.createVertexArrayFromMesh({
-                mesh: mesh,
-                attributeIndices: attributeIndices,
-                bufferUsage: this._bufferUsage
-            });
+            debugger;
+            this._va = getVertexArray(context);
         }
 
         // Recompile shader when material changes
@@ -287,15 +311,13 @@ define([
      * @see EllipsoidPrimitive#update
      */
     EllipsoidPrimitive.prototype.render = function(context) {
-        if (this.show) {
-            context.draw({
-                primitiveType: PrimitiveType.TRIANGLES,
-                shaderProgram: this._sp,
-                uniformMap: this._drawUniforms,
-                vertexArray: this._va,
-                renderState: this._rs
-            });
-        }
+        context.draw({
+            primitiveType: PrimitiveType.TRIANGLES,
+            shaderProgram: this._sp,
+            uniformMap: this._drawUniforms,
+            vertexArray: this._va,
+            renderState: this._rs
+        });
     };
 
     // TODO: Picking
@@ -337,7 +359,7 @@ define([
      */
     EllipsoidPrimitive.prototype.destroy = function() {
         this._sp = this._sp && this._sp.release();
-        this._va = this._va && this._va.destroy();
+        this._va = this._va && releaseVertexArray(context);
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };
