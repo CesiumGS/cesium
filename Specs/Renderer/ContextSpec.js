@@ -190,6 +190,10 @@ defineSuite([
         }
     });
 
+    it('gets the depth texture extension', function() {
+        expect(context.getDepthTexture()).toBeDefined();
+    });
+
     it('gets texture filter anisotropic', function() {
         expect(context.getTextureFilterAnisotropic()).toBeDefined();
     });
