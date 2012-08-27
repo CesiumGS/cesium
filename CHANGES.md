@@ -7,7 +7,7 @@ Beta Releases
 ### TODO
 
 * Added EllipsoidPrimitive for visualizing ellipsoids and spheres.
-* Added Matrix4.multiplyByTranslation.
+* Added Matrix4.multiplyByTranslation, Matrix4.fromScale, and Matrix3.fromScale.
 
 ### b8 - xx/xx/2012
 

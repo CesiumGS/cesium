@@ -26,6 +26,8 @@ define([
      *
      * @see Matrix3.fromColumnMajor
      * @see Matrix3.fromRowMajorArray
+     * @see Matrix3.fromQuaternion
+     * @see Matrix3.fromScale
      * @see Matrix2
      * @see Matrix4
      */
@@ -168,6 +170,48 @@ define([
         result[6] = m20;
         result[7] = m21;
         result[8] = m22;
+        return result;
+    };
+
+    /**
+     * Computes a Matrix3 instance representing a non-uniform scale.
+     * @memberof Matrix3
+     *
+     * @param {Cartesian3} scale The x, y, and z scale factors.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} scale is required.
+     *
+     * @example
+     * // Creates
+     * //   [7.0, 0.0, 0.0]
+     * //   [0.0, 8.0, 0.0]
+     * //   [0.0, 0.0, 9.0]
+     * var m = Matrix3.fromScale(new Cartesian3(7.0, 8.0, 9.0));
+     */
+    Matrix3.fromScale = function(scale, result) {
+        if (typeof scale === 'undefined') {
+            throw new DeveloperError('scale is required.');
+        }
+        if (typeof result === 'undefined') {
+            return new Matrix3(scale.x, 0.0,     0.0,
+                               0.0,     scale.y, 0.0,
+                               0.0,     0.0,     scale.z);
+        }
+
+        result[0] = scale.x;
+        result[1] = 0.0;
+        result[2] = 0.0;
+
+        result[3] = 0.0;
+        result[4] = scale.y;
+        result[5] = 0.0;
+
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = scale.z;
+
         return result;
     };
 

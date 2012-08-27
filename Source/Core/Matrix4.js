@@ -43,6 +43,7 @@ define([
      * @see Matrix4.fromRowMajorArray
      * @see Matrix4.fromRotationTranslation
      * @see Matrix4.fromTranslation
+     * @see Matrix4.fromScale
      * @see Matrix4.fromCamera
      * @see Matrix4.computePerspectiveFieldOfView
      * @see Matrix4.computeOrthographicOffCenter
@@ -213,7 +214,7 @@ define([
     };
 
     /**
-     * Computes a Matrix4 instance from a Cartesian3 representing the translation.
+     * Creates a Matrix4 instance from a Cartesian3 representing the translation.
      * @memberof Matrix4
      *
      * @param {Cartesian3} translation The upper right portion of the matrix representing the translation.
@@ -226,6 +227,54 @@ define([
      */
     Matrix4.fromTranslation = function(translation, result) {
         return Matrix4.fromRotationTranslation(Matrix3.IDENTITY, translation, result);
+    };
+
+    /**
+     * Computes a Matrix4 instance representing a non-uniform scale.
+     * @memberof Matrix4
+     *
+     * @param {Cartesian3} scale The x, y, and z scale factors.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} scale is required.
+     *
+     * @example
+     * // Creates
+     * //   [7.0, 0.0, 0.0, 0.0]
+     * //   [0.0, 8.0, 0.0, 0.0]
+     * //   [0.0, 0.0, 9.0, 0.0]
+     * //   [0.0, 0.0, 0.0, 1.0]
+     * var m = Matrix4.fromScale(new Cartesian3(7.0, 8.0, 9.0));
+     */
+    Matrix4.fromScale = function(scale, result) {
+        if (typeof scale === 'undefined') {
+            throw new DeveloperError('scale is required.');
+        }
+        if (typeof result === 'undefined') {
+            return new Matrix4(scale.x, 0.0,     0.0,     0.0,
+                               0.0,     scale.y, 0.0,     0.0,
+                               0.0,     0.0,     scale.z, 0.0,
+                               0.0,     0.0,     0.0,     1.0);
+        }
+
+        result[0] = scale.x;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = 0.0;
+        result[5] = scale.y;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = 0.0;
+        result[9] = 0.0;
+        result[10] = scale.z;
+        result[11] = 0.0;
+        result[12] = 0.0;
+        result[13] = 0.0;
+        result[14] = 0.0;
+        result[15] = 1.0;
+        return result;
     };
 
     var fromCameraF = new Cartesian3();
