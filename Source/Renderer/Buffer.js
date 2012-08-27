@@ -106,7 +106,7 @@ define([
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see Buffer.destroy
+     * @see Buffer#destroy
      */
     Buffer.prototype.isDestroyed = function() {
         return false;
