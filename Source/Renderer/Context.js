@@ -7,6 +7,7 @@ define([
         '../Core/RuntimeError',
         '../Core/PrimitiveType',
         '../Core/WindingOrder',
+        '../Core/BoundingRectangle',
         '../Core/createGuid',
         '../Shaders/BuiltinFunctions',
         './Buffer',
@@ -43,6 +44,7 @@ define([
         RuntimeError,
         PrimitiveType,
         WindingOrder,
+        BoundingRectangle,
         createGuid,
         ShadersBuiltinFunctions,
         Buffer,
@@ -228,7 +230,8 @@ define([
         this._aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
         this._aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
         this._maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
-        this._viewport = gl.getParameter(gl.VIEWPORT);
+        var v = gl.getParameter(gl.VIEWPORT);
+        this._viewport = new BoundingRectangle(v[0], v[1], v[2], v[3]);
 
         // Query and initialize extensions
         var textureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
@@ -468,7 +471,7 @@ define([
      *
      * @memberof Context
      *
-     * @returns The viewport defined by its <code>x</code> and <code>y</code> window coordinates and its <code>width</code> and <code>height</code>.
+     * @returns {BoundingRectangle} The viewport defined by its <code>x</code> and <code>y</code> window coordinates and its <code>width</code> and <code>height</code>.
      *
      * @see Context#setViewport
      * @see Context#getCanvas
@@ -482,13 +485,7 @@ define([
      * console.log(viewport.height);
      */
     Context.prototype.getViewport = function() {
-        var v = this._viewport;
-        return {
-            x : v[0],
-            y : v[1],
-            width : v[2],
-            height : v[3]
-        };
+        return this._viewport;
     };
 
     /**
@@ -498,7 +495,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Object} viewport The new viewport defined by its <code>x</code> and <code>y</code> window coordinates and its <code>width</code> and <code>height</code>.
+     * @param {BoundingRectangle} viewport The new viewport defined by its <code>x</code> and <code>y</code> window coordinates and its <code>width</code> and <code>height</code>.
      *
      * @exception {RuntimeError} viewport.width must be less than or equal to the maximum viewport width.
      * @exception {RuntimeError} viewport.height must be less than or equal to the maximum viewport height.
@@ -514,12 +511,7 @@ define([
      * @see czm_viewport
      *
      * @example
-     * context.setViewport({
-     *     x      : 0,
-     *     y      : 0,
-     *     width  : 640,
-     *     height : 480
-     * });
+     * context.setViewport(new BoundingRectangle(0, 0, 640, 480));
      */
     Context.prototype.setViewport = function(viewport) {
         if ((typeof viewport === 'undefined') ||
@@ -551,13 +543,9 @@ define([
             throw new RuntimeError('viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
         }
 
-        var v = this._viewport;
-        if ((x !== v[0]) || (y !== v[1]) || (w !== v[2]) || (h !== v[3])) {
-            v[0] = x;
-            v[1] = y;
-            v[2] = w;
-            v[3] = h;
-            this._gl.viewport(viewport.x, viewport.y, w, h);
+        if (!BoundingRectangle.equals(viewport, this._viewport)) {
+            BoundingRectangle.clone(viewport, this._viewport);
+            this._gl.viewport(x, y, w, h);
         }
     };
 

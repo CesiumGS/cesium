@@ -5,6 +5,6 @@ varying vec2 v_textureCoordinates;
 
 void main() 
 {
-    gl_Position = czm_viewportOrthographic * position;
+    gl_Position = position;
     v_textureCoordinates = textureCoordinates;
 }
