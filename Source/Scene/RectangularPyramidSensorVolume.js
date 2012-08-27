@@ -62,7 +62,7 @@ define([
          * coordinates, the sensor's principal direction is along the positive z-axis.  Half angles measured from the
          * principal direction and in the direction of the x-axis and y-axis define the extent of the rectangular
          * cross section.  This matrix is available to GLSL vertex and fragment shaders via
-         * {@link agi_model} and derived uniforms.
+         * {@link czm_model} and derived uniforms.
          * <br /><br />
          * <div align='center'>
          * <img src='images/RectangularPyramidSensorVolume.setModelMatrix.png' /><br />
@@ -71,7 +71,7 @@ define([
          *
          * @type Matrix4
          *
-         * @see agi_model
+         * @see czm_model
          *
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
@@ -187,7 +187,7 @@ define([
             }]);
         }
 
-        s.update(context, sceneState);
+        return s.update(context, sceneState);
     };
 
     /**

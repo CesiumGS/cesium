@@ -2,13 +2,17 @@
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/Color'
+        '../Core/Color',
+        '../Core/PolylinePipeline'
     ], function(
         DeveloperError,
         destroyObject,
+        BoundingSphere,
         Cartesian3,
-        Color) {
+        Color,
+        PolylinePipeline) {
     "use strict";
 
     /**
@@ -19,32 +23,21 @@ define([
     var Polyline = function(polylineTemplate, polylineCollection) {
         var p = polylineTemplate || {};
 
-        this._positions = [];
-        if (typeof p.positions !== 'undefined') {
-            var newPositions = p.positions;
-            var length = newPositions.length;
-            var positions = this._positions;
-            for ( var i = 0; i < length; ++i) {
-                var position = newPositions[i];
-                positions.push(new Cartesian3(position.x, position.y, position.z));
-            }
-        }
-        this._show = (typeof p.show === 'undefined') ? true : p.show;
-        this._width = (typeof p.width === 'undefined') ? 1.0 : p.width;
-        this._outlineWidth = (typeof p.outlineWidth === 'undefined') ? 0.0 : p.outlineWidth;
-        this._color = (typeof p.color === 'undefined') ?
-                new Color(1.0, 1.0, 1.0, 1.0) :
-                Color.clone(p.color);
-
-        this._outlineColor = (typeof p.outlineColor === 'undefined') ?
-                new Color(1.0, 1.0, 1.0, 1.0) :
-                Color.clone(p.outlineColor);
-
+        this._positions = typeof p.positions !== 'undefined' ? p.positions : [];
+        this._positionsLength = this._positions.length;
+        this._show = typeof p.show === 'undefined' ? true : p.show;
+        this._width = typeof p.width === 'undefined' ? 1.0 : p.width;
+        this._outlineWidth = typeof p.outlineWidth === 'undefined' ? 1.0 : p.outlineWidth;
+        this._color = typeof p.color === 'undefined' ? new Color(1.0, 1.0, 1.0, 1.0) : Color.clone(p.color);
+        this._outlineColor = (typeof p.outlineColor === 'undefined') ? new Color(1.0, 1.0, 1.0, 1.0) : Color.clone(p.outlineColor);
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
         this._collection = polylineCollection;
         this._dirty = false;
         this._pickId = undefined;
         this._pickIdThis = p._pickIdThis;
+        this._segments = undefined;
+        this._actualLength = this._positions.length;
+        this._boundingVolume = BoundingSphere.fromPoints(this._positions);
     };
 
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
@@ -117,20 +110,16 @@ define([
     *                          new Cartographic3(...))
     * );
      */
-    Polyline.prototype.setPositions = function(value) {
-        var length = 0;
-        if (value && typeof value !== 'undefined') {
-            length = value.length;
+    Polyline.prototype.setPositions = function(positions) {
+        if (typeof positions === 'undefined') {
+            positions = [];
         }
-        if (this._positions.length !== length) {
+        if (this._positionsLength !== positions.length) {
+            this._positionsLength = positions.length;
             this._makeDirty(POSITION_SIZE_INDEX);
         }
-        var positions = [];
-        for ( var i = 0; i < length; ++i) {
-            var position = value[i];
-            positions.push(new Cartesian3(position.x, position.y, position.z));
-        }
         this._positions = positions;
+        this._boundingVolume = BoundingSphere.fromPoints(this._positions);
         this._makeDirty(POSITION_INDEX);
     };
 
@@ -326,6 +315,59 @@ define([
             c._updatePolyline(propertyChanged, this);
             this._dirty = true;
         }
+    };
+
+    Polyline.prototype._getPositions2D = function(){
+        var segments = this._segments;
+        var positions = [];
+        var numberOfSegments = segments.length;
+
+        for ( var i = 0; i < numberOfSegments; ++i) {
+            var segment = segments[i];
+            var segmentLength = segment.length;
+            for (var n = 0; n < segmentLength; ++n) {
+                positions.push( segment[n].cartesian);
+            }
+        }
+        return positions;
+
+    };
+
+    Polyline.prototype._createSegments = function(ellipsoid){
+        return PolylinePipeline.wrapLongitude(ellipsoid, this.getPositions());
+    };
+
+    Polyline.prototype._setSegments = function(segments){
+        this._segments = segments;
+        var numberOfSegments = segments.length;
+        var length = 0;
+        for ( var i = 0; i < numberOfSegments; ++i) {
+            var segment = segments[i];
+            var segmentLength = segment.length;
+            length += segmentLength;
+        }
+        return length;
+    };
+
+    Polyline.prototype._getSegments = function(){
+        return this._segments;
+    };
+
+    Polyline.prototype._segmentsLengthChanged = function(newSegments){
+        var origSegments = this._segments;
+        if (typeof origSegments !== 'undefined') {
+            var numberOfSegments = newSegments.length;
+            if (numberOfSegments !== origSegments.length) {
+                return true;
+            }
+            for ( var i = 0; i < numberOfSegments; ++i) {
+                if (newSegments[i].length !== origSegments[i].length) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return true;
     };
 
     Polyline.prototype._destroy = function() {

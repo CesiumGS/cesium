@@ -3,14 +3,14 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian2',
-        '../Core/Rectangle',
+        '../Core/BoundingRectangle',
         '../Core/createGuid',
         './PixelFormat'
     ], function(
         DeveloperError,
         destroyObject,
         Cartesian2,
-        Rectangle,
+        BoundingRectangle,
         createGuid,
         PixelFormat) {
     "use strict";
@@ -46,7 +46,6 @@ define([
      * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
      * @exception {DeveloperError} initialSize must be greater than zero.
-     *
      */
     var TextureAtlas = function(description) {
         description = (typeof description !== 'undefined') ? description : {};
@@ -101,10 +100,10 @@ define([
     };
 
     // Builds a larger texture and copies the old texture into the new one.
-    TextureAtlas.prototype._resizeAtlas = function (image) {
+    TextureAtlas.prototype._resizeAtlas = function(image) {
         var numImages = this.getNumberOfImages();
         var scalingFactor = 2.0;
-        if(numImages > 0) {
+        if (numImages > 0) {
             var oldAtlasWidth = this._texture.getWidth();
             var oldAtlasHeight = this._texture.getHeight();
             var atlasWidth = scalingFactor * (oldAtlasWidth + image.width + this._borderWidthInPixels);
@@ -120,7 +119,7 @@ define([
             this._root = nodeMain;
 
             // Resize texture coordinates.
-            for (var i = 0; i < this._textureCoordinates.length; i++) {
+            for ( var i = 0; i < this._textureCoordinates.length; i++) {
                 var texCoord = this._textureCoordinates[i];
                 if (typeof texCoord !== 'undefined') {
                     texCoord.x *= widthRatio;
@@ -138,19 +137,25 @@ define([
             });
 
             // Copy old texture into new using an fbo.
-            var framebuffer = this._context.createFramebuffer({colorTexture:this._texture});
+            var framebuffer = this._context.createFramebuffer({
+                colorTexture : this._texture
+            });
             framebuffer._bind();
             newTexture.copyFromFramebuffer(0, 0, 0, 0, oldAtlasWidth, oldAtlasHeight);
             framebuffer._unBind();
             framebuffer.destroy();
             this._texture = newTexture;
-            }
+        }
         // First image exceeds initialSize
         else {
             var initialWidth = scalingFactor * (image.width + this._borderWidthInPixels);
             var initialHeight = scalingFactor * (image.height + this._borderWidthInPixels);
             this._texture = this._texture && this._texture.destroy();
-            this._texture = this._context.createTexture2D({width : initialWidth, height : initialHeight, pixelFormat : this._pixelFormat});
+            this._texture = this._context.createTexture2D({
+                width : initialWidth,
+                height : initialHeight,
+                pixelFormat : this._pixelFormat
+            });
             this._root = new TextureAtlasNode(new Cartesian2(0.0, 0.0), new Cartesian2(initialWidth, initialHeight));
         }
     };
@@ -230,7 +235,7 @@ define([
             var atlasHeight = this._texture.getHeight();
             var nodeWidth = node.topRight.x - node.bottomLeft.x;
             var nodeHeight = node.topRight.y - node.bottomLeft.y;
-            this._textureCoordinates[index] = new Rectangle(
+            this._textureCoordinates[index] = new BoundingRectangle(
                 node.bottomLeft.x / atlasWidth, node.bottomLeft.y / atlasHeight,
                 nodeWidth / atlasWidth, nodeHeight / atlasHeight
             );
@@ -267,7 +272,7 @@ define([
         this._guid = createGuid();
 
         return index;
-            };
+    };
 
     /**
      * Adds an array of images to the texture atlas.
@@ -314,7 +319,7 @@ define([
         for (i = 0; i < numberOfImages; ++i) {
             var annotatedImage = annotatedImages[i];
             this._addImage(annotatedImage.image, annotatedImage.index);
-    }
+        }
 
         this._guid = createGuid();
 
@@ -322,14 +327,13 @@ define([
         return oldNumberOfImages;
     };
 
-
     /**
      * Add a set of sub-regions to one atlas image as additional image indices.
      *
      * @memberof TextureAtlas
      *
      * @param {Image} image An image to be added to the texture atlas.
-     * @param {Array} subRegions An array of {@link Rectangle} sub-regions measured in pixels from the bottom-left.
+     * @param {Array} subRegions An array of {@link BoundingRectangle} sub-regions measured in pixels from the bottom-left.
      *
      * @returns {Number} The index of the first newly-added region.
      *
@@ -346,7 +350,7 @@ define([
         var baseRegion = this._textureCoordinates[index];
         for (var i = 0; i < numSubRegions; ++i) {
             var thisRegion = subRegions[i];
-            this._textureCoordinates.push(new Rectangle(
+            this._textureCoordinates.push(new BoundingRectangle(
                 baseRegion.x + (thisRegion.x / atlasWidth),
                 baseRegion.y + (thisRegion.y / atlasHeight),
                 thisRegion.width / atlasWidth,
@@ -371,7 +375,7 @@ define([
     };
 
     /**
-     * Returns an array of {@link Rectangle} texture coordinate regions for all the images in the texture atlas.
+     * Returns an array of {@link BoundingRectangle} texture coordinate regions for all the images in the texture atlas.
      * The x and y values of the rectangle correspond to the bottom-left corner of the texture coordinate.
      * The coordinates are in the order that the corresponding images were added to the atlas.
      *
@@ -379,7 +383,7 @@ define([
      *
      * @returns {Array} The texture coordinates.
      *
-     * @see Rectangle
+     * @see BoundingRectangle
      */
     TextureAtlas.prototype.getTextureCoordinates = function() {
         return this._textureCoordinates;

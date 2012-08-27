@@ -72,31 +72,31 @@ float scale(float fCos)
 AtmosphereColor computeGroundAtmosphereFromSpace(vec3 v3Pos)
 {
     // Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)
-    vec3 v3Ray = v3Pos - agi_viewerPositionWC;
+    vec3 v3Ray = v3Pos - czm_viewerPositionWC;
     float fFar = length(v3Ray);
     v3Ray /= fFar;
 
 #ifdef SHOW_GROUND_ATMOSPHERE_FROM_SPACE
     // Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)
     
-    // This next line is an ANGLE workaround. It is equivalent to B = 2.0 * dot(agi_viewerPositionWC, v3Ray), 
+    // This next line is an ANGLE workaround. It is equivalent to B = 2.0 * dot(czm_viewerPositionWC, v3Ray), 
     // which is what it should be, but there are problems at the poles.
-    float B = 2.0 * length(agi_viewerPositionWC) * dot(normalize(agi_viewerPositionWC), v3Ray);
+    float B = 2.0 * length(czm_viewerPositionWC) * dot(normalize(czm_viewerPositionWC), v3Ray);
     float C = fCameraHeight2 - fOuterRadius2;
     float fDet = max(0.0, B*B - 4.0 * C);
     float fNear = 0.5 * (-B - sqrt(fDet));
 
     // Calculate the ray's starting position, then calculate its scattering offset
-    vec3 v3Start = agi_viewerPositionWC + v3Ray * fNear;
+    vec3 v3Start = czm_viewerPositionWC + v3Ray * fNear;
     fFar -= fNear;
     float fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);
 #else // SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE
     // Calculate the ray's starting position, then calculate its scattering offset
-    vec3 v3Start = agi_viewerPositionWC;
+    vec3 v3Start = czm_viewerPositionWC;
     float fDepth = exp((fInnerRadius - fCameraHeight) / fScaleDepth);
 #endif
     float fCameraAngle = dot(-v3Ray, v3Pos) / length(v3Pos);
-    float fLightAngle = dot(agi_sunDirectionWC, v3Pos) / length(v3Pos);
+    float fLightAngle = dot(czm_sunDirectionWC, v3Pos) / length(v3Pos);
     float fCameraScale = scale(fCameraAngle);
     float fLightScale = scale(fLightAngle);
     float fCameraOffset = fDepth*fCameraScale;

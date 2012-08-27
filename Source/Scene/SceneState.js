@@ -26,8 +26,17 @@ define([], function() {
 
         /**
          * The current camera.
+         *
+         * @type Camera
          */
         this.camera = undefined;
+
+        /**
+         * The current occluder.
+         *
+         * @type Occluder
+         */
+        this.occluder = undefined;
     };
 
     return SceneState;

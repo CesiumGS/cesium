@@ -43,18 +43,18 @@ varying vec3 v_positionEC;
 void main (void)
 {
     // TODO: make arbitrary ellipsoid
-    agi_ellipsoid ellipsoid = agi_getWgs84EllipsoidEC();
+    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
     
     vec3 direction = normalize(v_positionEC);
-    agi_ray ray = agi_ray(vec3(0.0, 0.0, 0.0), direction);
+    czm_ray ray = czm_ray(vec3(0.0, 0.0, 0.0), direction);
     
-    agi_raySegment intersection = agi_rayEllipsoidIntersectionInterval(ray, ellipsoid);
-    if (!agi_isEmpty(intersection)) {
+    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
+    if (!czm_isEmpty(intersection)) {
         discard;
     }
     
     // Extra normalize added for Android
-    float fCos = dot(agi_sunDirectionWC, normalize(v_toCamera)) / length(v_toCamera);
+    float fCos = dot(czm_sunDirectionWC, normalize(v_toCamera)) / length(v_toCamera);
     float fRayleighPhase = 0.75 * (1.0 + fCos*fCos);
     float fMiePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos*fCos) / pow(1.0 + g2 - 2.0*g*fCos, 1.5);
     

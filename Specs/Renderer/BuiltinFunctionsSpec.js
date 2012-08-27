@@ -51,74 +51,74 @@ defineSuite([
         va = va.destroy();
     };
 
-    it('has agi_tranpose (2x2)', function() {
+    it('has czm_tranpose (2x2)', function() {
         var fs =
             'void main() { ' +
             '  mat2 m = mat2(1.0, 2.0, 3.0, 4.0); ' +
             '  mat2 mt = mat2(1.0, 3.0, 2.0, 4.0); ' +
-            '  gl_FragColor = vec4(agi_transpose(m) == mt); ' +
+            '  gl_FragColor = vec4(czm_transpose(m) == mt); ' +
             '}';
 
         verifyDraw(fs);
     });
 
-    it('has agi_tranpose (3x3)', function() {
+    it('has czm_tranpose (3x3)', function() {
         var fs =
             'void main() { ' +
             '  mat3 m = mat3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0); ' +
             '  mat3 mt = mat3(1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0); ' +
-            '  gl_FragColor = vec4(agi_transpose(m) == mt); ' +
+            '  gl_FragColor = vec4(czm_transpose(m) == mt); ' +
             '}';
 
         verifyDraw(fs);
     });
 
-    it('has agi_tranpose (4x4)', function() {
+    it('has czm_tranpose (4x4)', function() {
         var fs =
             'void main() { ' +
             '  mat4 m = mat4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);' +
             '  mat4 mt = mat4(1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0);' +
-            '  gl_FragColor = vec4(agi_transpose(m) == mt); ' +
+            '  gl_FragColor = vec4(czm_transpose(m) == mt); ' +
             '}';
 
         verifyDraw(fs);
     });
 
-    it('has agi_eyeToWindowCoordinates', function() {
+    it('has czm_eyeToWindowCoordinates', function() {
         var vp = context.getViewport();
         var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
         context.getUniformState().setProjection(perspective);
 
         var fs =
             'void main() { ' +
-            '  float z = agi_projection[3][2] / agi_projection[2][2];' +
-            '  float x = z / agi_projection[0][0];' +
-            '  float y = z / agi_projection[1][1];' +
+            '  float z = czm_projection[3][2] / czm_projection[2][2];' +
+            '  float x = z / czm_projection[0][0];' +
+            '  float y = z / czm_projection[1][1];' +
             '  vec4 pointEC = vec4(x, y, z, 1.0);' +
             '  vec2 fragCoord = vec2(0.0, 0.0);' +
-            '  vec4 actual = agi_eyeToWindowCoordinates(pointEC);' +
+            '  vec4 actual = czm_eyeToWindowCoordinates(pointEC);' +
             '  vec2 diff = actual.xy - fragCoord;' +
-            '  gl_FragColor = vec4(all(lessThan(diff, vec2(agi_epsilon6))));' +
+            '  gl_FragColor = vec4(all(lessThan(diff, vec2(czm_epsilon6))));' +
             '}';
 
         verifyDraw(fs);
     });
 
-    it('has agi_windowToEyeCoordinates', function() {
+    it('has czm_windowToEyeCoordinates', function() {
         var vp = context.getViewport();
         var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
         context.getUniformState().setProjection(perspective);
 
         var fs =
             'void main() { ' +
-            '  float z = agi_projection[3][2] / agi_projection[2][2];' +
-            '  float x = z / agi_projection[0][0];' +
-            '  float y = z / agi_projection[1][1];' +
+            '  float z = czm_projection[3][2] / czm_projection[2][2];' +
+            '  float x = z / czm_projection[0][0];' +
+            '  float y = z / czm_projection[1][1];' +
             '  vec3 pointEC = vec3(x, y, z);' +
             '  vec4 fragCoord = vec4(0.0, 0.0, 0.0, -z);' +
-            '  vec4 actual = agi_windowToEyeCoordinates(fragCoord);' +
+            '  vec4 actual = czm_windowToEyeCoordinates(fragCoord);' +
             '  vec3 diff = actual.xyz - pointEC;' +
-            '  gl_FragColor = vec4(all(lessThan(diff, vec3(agi_epsilon6))));' +
+            '  gl_FragColor = vec4(all(lessThan(diff, vec3(czm_epsilon6))));' +
             '}';
 
         verifyDraw(fs);
