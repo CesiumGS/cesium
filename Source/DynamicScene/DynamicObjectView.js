@@ -97,19 +97,36 @@ define([
             break;
         case SceneMode.SCENE3D:
             controller = this._controller3d;
-            if (objectChanged || typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController) {
+            var cartesian = this._lastCartesian = positionProperty.getValueCartesian(time, this._lastCartesian);
+            var initialView = objectChanged || typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController;
+            if (initialView) {
                 controllers = camera.getControllers();
                 controllers.removeAll();
                 this._lastController = this._controller3d = controller = controllers.addSpindle();
                 controller.constrainedAxis = Cartesian3.UNIT_Z;
-                camera.direction = Cartesian3.UNIT_Y.negate();
-                camera.position = new Cartesian3(0, 20000, 0);
             }
-            var cartesian = this._lastCartesian = positionProperty.getValueCartesian(time, this._lastCartesian);
+
+            var transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid);
             if (typeof cartesian !== 'undefined') {
-                var transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid);
                 controller.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
             }
+
+            if (initialView) {
+                var offset = new Cartesian3(3000, -3000, 3000);//cartesian.multiplyByScalar(0.01);
+
+                var viewFromProperty = this.dynamicObject.viewFrom;
+                if (typeof viewFromProperty !== 'undefined') {
+                    viewFromProperty.getValue(time, offset);
+                }
+
+                if (Cartesian3.equals(offset.normalize(), Cartesian3.UNIT_Z)) {
+                    //If looking straight down, move the camera
+                    //slightly south the avoid gimble lock.
+                    offset.y -= 0.01;
+                }
+                camera.lookAt(offset, Cartesian3.ZERO.clone(), Cartesian3.UNIT_Z.clone());
+            }
+
             break;
         case SceneMode.COLUMBUS_VIEW:
             controller = this._controllerColumbusView;

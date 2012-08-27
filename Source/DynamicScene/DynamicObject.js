@@ -7,7 +7,8 @@ define([
         './DynamicProperty',
         './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
-        './CzmlUnitQuaternion'
+        './CzmlUnitQuaternion',
+        './CzmlCartesian3'
     ], function(
         createGuid,
         DeveloperError,
@@ -16,7 +17,8 @@ define([
         DynamicProperty,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
-        CzmlUnitQuaternion) {
+        CzmlUnitQuaternion,
+        CzmlCartesian3) {
     "use strict";
 
     /**
@@ -130,6 +132,8 @@ define([
          * @type DynamicVertexPositionsProperty
          */
         this.vertexPositions = undefined;
+
+        this.viewFrom = undefined;
     };
 
     /**
@@ -177,6 +181,21 @@ define([
             dynamicObject.position = position = new DynamicPositionProperty();
         }
         position.processCzmlIntervals(positionData);
+        return propertyCreated;
+    };
+
+    DynamicObject.processCzmlPacketViewFrom = function(dynamicObject, packet) {
+        var viewFromData = packet.viewFrom;
+        if (typeof viewFromData === 'undefined') {
+            return false;
+        }
+
+        var viewFrom = dynamicObject.viewFrom;
+        var propertyCreated = typeof viewFrom === 'undefined';
+        if (propertyCreated) {
+            dynamicObject.viewFrom = viewFrom = new DynamicProperty(CzmlCartesian3);
+        }
+        viewFrom.processCzmlIntervals(viewFromData);
         return propertyCreated;
     };
 
@@ -281,6 +300,7 @@ define([
         targetObject.position = defaultValue(targetObject.position, objectToMerge.position);
         targetObject.orientation = defaultValue(targetObject.orientation, objectToMerge.orientation);
         targetObject.vertexPositions = defaultValue(targetObject.vertexPositions, objectToMerge.vertexPositions);
+        targetObject.viewFrom = defaultValue(targetObject.viewFrom, objectToMerge.viewFrom);
         targetObject._setAvailability(defaultValue(targetObject.availability, objectToMerge.availability));
     };
 
@@ -297,6 +317,7 @@ define([
         dynamicObject.position = undefined;
         dynamicObject.orientation = undefined;
         dynamicObject.vertexPositions = undefined;
+        dynamicObject.viewFrom = undefined;
         dynamicObject._setAvailability(undefined);
     };
 

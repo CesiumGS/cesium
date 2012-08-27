@@ -66,6 +66,7 @@ define([
                     DynamicPolyline.processCzmlPacket,
                     DynamicPyramid.processCzmlPacket,
                     DynamicObject.processCzmlPacketPosition,
+                    DynamicObject.processCzmlPacketViewFrom,
                     DynamicObject.processCzmlPacketOrientation,
                     DynamicObject.processCzmlPacketVertexPositions,
                     DynamicObject.processCzmlPacketAvailability],
