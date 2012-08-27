@@ -75,6 +75,7 @@ define([
          * @type Cartesian3
          */
         this.radii = undefined;
+        this._oneOverEllipsoidRadiiSquared = new Cartesian3();
 
         /**
          * DOC_TBA
@@ -135,6 +136,15 @@ define([
             },
             u_radii : function() {
                 return that.radii;
+            },
+            u_oneOverEllipsoidRadiiSquared : function() {
+                var radii = that.radii;
+                var r = that._oneOverEllipsoidRadiiSquared;
+                r.x = 1.0 / (radii.x * radii.x);
+                r.y = 1.0 / (radii.y * radii.y);
+                r.z = 1.0 / (radii.z * radii.z);
+
+                return r;
             }
         };
         this._pickUniforms = undefined;
