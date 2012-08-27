@@ -79,7 +79,6 @@ require([
         var scene = widget.scene;
         var ellipsoid = widget.ellipsoid;
         var primitives = scene.getPrimitives();
-        var polylines = new Cesium.PolylineCollection();
 
         // Create a simple polygon
         var polygon = new Cesium.Polygon();
@@ -139,9 +138,7 @@ require([
             Cesium.Cartographic.fromDegrees(-90.0, 40.0)
         ]));
         checkeredPolygon.material = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
-        primitives.add(checkeredPolygon);
-        
-        
+        primitives.add(checkeredPolygon);        
     }
 
     var cesiumViewerWidget = new CesiumViewerWidget({
