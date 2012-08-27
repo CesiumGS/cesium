@@ -8,6 +8,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/PlaneTessellator',
+        '../Core/PrimitiveType',
         '../Renderer/MipmapHint',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureMagnificationFilter',
@@ -29,6 +30,7 @@ define([
         Cartesian2,
         Extent,
         PlaneTessellator,
+        PrimitiveType,
         MipmapHint,
         TextureMinificationFilter,
         TextureMagnificationFilter,
@@ -321,7 +323,7 @@ define([
 
         // Reproject to geographic, if necessary.
         if (!(this.imageryProvider.tilingScheme instanceof GeographicTilingScheme)) {
-            texture.setSampler({
+            /*texture.setSampler({
                 wrapS : TextureWrap.CLAMP,
                 wrapT : TextureWrap.CLAMP,
                 minificationFilter : TextureMinificationFilter.LINEAR,
@@ -337,7 +339,7 @@ define([
                 primitiveType : PrimitiveType.TRIANGLE_FAN,
                 vertexArray : this._vaReproject,
                 uniformMap : uniformMap
-            });
+            });*/
         }
 
         texture.generateMipmap(MipmapHint.NICEST);
