@@ -274,6 +274,38 @@ require([
             }
         });
     }
+    
+    function applyEmissionMapMaterial(scene) {
+        var polygon = scene.getPrimitives().get(0);
+        resetPolygonExtent(polygon);
+        polygon.material = new Cesium.Material({
+            context : scene.getContext(),
+            fabric : {
+                materials : {
+                    diffuseMaterial : {
+                        type : 'DiffuseMap',
+                        uniforms : {
+                            image : '../../../Images/Cesium_Logo_Color.jpg'
+                        }
+                    },
+                    emissionMaterial : {
+                        type : 'EmissionMap',
+                        uniforms : {
+                            image : '../../../Images/checkerboard.png',
+                            repeat : {
+                                x : 1,
+                                y : 0.5
+                            }
+                        }
+                    }
+                },
+                components : {
+                    diffuse : 'diffuseMaterial.diffuse',
+                    emission : 'emissionMaterial.emission * 0.2'
+                }
+            }
+        });
+    }
         
     function applyFacetMaterial(scene) {
         var polygon = scene.getPrimitives().get(0);
@@ -603,6 +635,14 @@ require([
         }));
         
         menu.addChild(new MenuItem({
+            label: 'Emission Map',
+            onClick: function() { 
+                widget.viewHome();
+                applyEmissionMapMaterial(widget.scene);
+            }
+        }));        
+        
+        menu.addChild(new MenuItem({
             label: 'Fresnel',
             onClick: function() { 
                 widget.viewHome();
@@ -698,7 +738,6 @@ require([
 
     function createPrimitives(widget) {
         var scene = widget.scene;
-        var ellipsoid = widget.ellipsoid;
         var primitives = scene.getPrimitives();
         
         var polygon = new Cesium.Polygon();
