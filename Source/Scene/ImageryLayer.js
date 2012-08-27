@@ -3,12 +3,14 @@ define([
         '../Core/combine',
         '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/ComponentDatatype',
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/PlaneTessellator',
         '../Core/PrimitiveType',
+        '../Renderer/BufferUsage',
         '../Renderer/MipmapHint',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureMagnificationFilter',
@@ -20,17 +22,22 @@ define([
         './TileImagery',
         './TexturePool',
         './Projections',
-        '../ThirdParty/when'
+        './ViewportQuad',
+        '../ThirdParty/when',
+        '../Shaders/ReprojectWebMercatorVS',
+        '../Shaders/ReprojectWebMercatorFS'
     ], function(
         combine,
         defaultValue,
         destroyObject,
+        ComponentDatatype,
         DeveloperError,
         CesiumMath,
         Cartesian2,
         Extent,
         PlaneTessellator,
         PrimitiveType,
+        BufferUsage,
         MipmapHint,
         TextureMinificationFilter,
         TextureMagnificationFilter,
@@ -42,7 +49,10 @@ define([
         TileImagery,
         TexturePool,
         Projections,
-        when) {
+        ViewportQuad,
+        when,
+        ReprojectWebMercatorVS,
+        ReprojectWebMercatorFS) {
     "use strict";
 
     /**
@@ -321,41 +331,172 @@ define([
     ImageryLayer.prototype.reprojectTexture = function(context, imagery) {
         var texture = imagery.texture;
 
-        // Reproject to geographic, if necessary.
         if (!(this.imageryProvider.tilingScheme instanceof GeographicTilingScheme)) {
-            /*texture.setSampler({
-                wrapS : TextureWrap.CLAMP,
-                wrapT : TextureWrap.CLAMP,
-                minificationFilter : TextureMinificationFilter.LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR
-            });
-
-
-
-            context.draw({
-                framebuffer : this._fbReproject,
-                shaderProgram : this._spReproject,
-                renderState : this._rsColor,
-                primitiveType : PrimitiveType.TRIANGLE_FAN,
-                vertexArray : this._vaReproject,
-                uniformMap : uniformMap
-            });*/
+            var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
+            texture.destroy();
+            imagery.texture = texture = reprojectedTexture;
         }
 
-        texture.generateMipmap(MipmapHint.NICEST);
+        //texture.generateMipmap(MipmapHint.NICEST);
         texture.setSampler({
             wrapS : TextureWrap.CLAMP,
             wrapT : TextureWrap.CLAMP,
-            minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+            //minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+            minificationFilter : TextureMinificationFilter.LINEAR,
             magnificationFilter : TextureMagnificationFilter.LINEAR,
-
-            // TODO: Remove Chrome work around
-            maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8
+            maximumAnisotropy : context.getMaximumTextureFilterAnisotropy()
         });
 
 
         imagery.state = ImageryState.READY;
     };
+
+    var uniformMap = {
+        u_textureDimensions : function() {
+            return this.textureDimensions;
+        },
+        u_texture : function() {
+            return this.texture;
+        },
+        u_northLatitude : function() {
+            return this.northLatitude;
+        },
+        u_southLatitude : function() {
+            return this.southLatitude;
+        },
+        u_southMercatorYLow : function() {
+            return this.southMercatorYLow;
+        },
+        u_southMercatorYHigh : function() {
+            return this.southMercatorYHigh;
+        },
+        u_oneOverMercatorHeight : function() {
+            return this.oneOverMercatorHeight;
+        },
+
+        textureDimensions : new Cartesian2(0.0, 0.0),
+        texture : undefined,
+        northLatitude : 0,
+        southLatitude : 0,
+        southMercatorYHigh : 0,
+        southMercatorYLow : 0,
+        oneOverMercatorHeight : 0
+    };
+
+    var float32ArrayScratch = new Float32Array(1);
+
+    function reprojectToGeographic(imageryLayer, context, texture, extent) {
+//        if (typeof imageryLayer._fbReproject === 'undefined') {
+//            imageryLayer._fbReproject = context.createFramebuffer();
+//
+//            var reprojectWidth = 256;
+//            var reprojectHeight = 256;
+//
+//            var reprojectMesh = {
+//                attributes : {
+//                    position : {
+//                        componentDatatype : ComponentDatatype.FLOAT,
+//                        componentsPerAttribute : 2,
+//                        values : [0.0, 0.0, reprojectWidth, 0.0, reprojectWidth, reprojectHeight, 0.0, reprojectHeight]
+//                    },
+//
+//                    textureCoordinates : {
+//                        componentDatatype : ComponentDatatype.FLOAT,
+//                        componentsPerAttribute : 2,
+//                        values : [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+//                    }
+//                }
+//            };
+//
+//            var reprojectAttribInds = {
+//                position : 0,
+//                textureCoordinates : 1
+//            };
+//
+//            imageryLayer._vaReproject = context.createVertexArrayFromMesh({
+//                mesh : reprojectMesh,
+//                attributeIndices : reprojectAttribInds,
+//                bufferUsage : BufferUsage.STATIC_DRAW
+//            });
+//
+//            imageryLayer._spReproject = context.getShaderCache().getShaderProgram(
+//                ReprojectWebMercatorVS,
+//                ReprojectWebMercatorFS,
+//                reprojectAttribInds);
+//
+//            imageryLayer._rsColor = context.createRenderState({
+//                cull : {
+//                    enabled : false
+//                }
+//            });
+//        }
+
+        texture.setSampler({
+            wrapS : TextureWrap.CLAMP,
+            wrapT : TextureWrap.CLAMP,
+            minificationFilter : TextureMinificationFilter.LINEAR,
+            magnificationFilter : TextureMagnificationFilter.LINEAR
+        });
+
+        var width = texture.getWidth();
+        var height = texture.getHeight();
+
+        uniformMap.textureDimensions.x = width;
+        uniformMap.textureDimensions.y = height;
+        uniformMap.texture = texture;
+
+        uniformMap.northLatitude = extent.north;
+        uniformMap.southLatitude = extent.south;
+
+        var sinLatitude = Math.sin(extent.south);
+        var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+        float32ArrayScratch[0] = southMercatorY;
+        uniformMap.southMercatorYHigh = float32ArrayScratch[0];
+        uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
+
+        sinLatitude = Math.sin(extent.north);
+        var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+        uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+
+        imageryLayer._fbReproject = context.createFramebuffer();
+        imageryLayer._viewportQuad = new ViewportQuad({x:0,y:0,width:256,height:256});
+
+        var outputTexture = imageryLayer._texturePool.createTexture2D(context, {
+            width : width,
+            height : height,
+            pixelFormat : texture.getPixelFormat(),
+            pixelDatatype : texture.getPixelDatatype(),
+            preMultiplyAlpha : texture.getPreMultiplyAlpha()
+        });
+        imageryLayer._viewportQuad.setTexture(texture);
+//        imageryLayer._viewportQuad.setFramebuffer(imageryLayer._fbReproject);
+
+        imageryLayer._fbReproject.setColorTexture(outputTexture);
+
+//        var oldViewport = context.getViewport();
+//        context.setViewport({
+//            x      : 0,
+//            y      : 0,
+//            width  : 256,
+//            height : 256
+//        });
+//        context.draw({
+//            framebuffer : imageryLayer._fbReproject,
+//            shaderProgram : imageryLayer._spReproject,
+//            renderState : imageryLayer._rsColor,
+//            primitiveType : PrimitiveType.TRIANGLE_FAN,
+//            vertexArray : imageryLayer._vaReproject,
+//            uniformMap : uniformMap
+//        });
+        imageryLayer._viewportQuad.update(context);
+        imageryLayer._viewportQuad.render(context);
+
+        //context.setViewport(oldViewport);
+
+        //imageryLayer._fbReproject.setColorTexture(undefined);
+
+        return outputTexture;
+    }
 
     ImageryLayer.prototype.removeImageryFromCache = function(imagery) {
         var cacheKey = getImageryCacheKey(imagery.x, imagery.y, imagery.level);

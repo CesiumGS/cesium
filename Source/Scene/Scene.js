@@ -203,7 +203,7 @@ define([
     Scene.prototype.render = function() {
         this._update();
 
-        this._context.clear(this._clearState);
+        //this._context.clear(this._clearState);
         this._primitives.render(this._context);
     };
 

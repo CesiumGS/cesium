@@ -865,7 +865,12 @@ define([
         surface._tileLoadQueue.insertBeforeInsertionPoint(tile);
     }
 
+    var dostuff = true;
+
     function processTileLoadQueue(surface, context, sceneState) {
+        if (!dostuff) {
+            return;
+        }
         var tileLoadQueue = surface._tileLoadQueue;
         var terrainProvider = surface.terrainProvider;
 
@@ -932,6 +937,7 @@ define([
                 if (imagery.state === ImageryState.TEXTURE_LOADED) {
                     imagery.state = ImageryState.TRANSITIONING;
                     imageryLayer.reprojectTexture(context, imagery);
+                    dostuff = false;
                 }
 
                 var tileImageryDoneLoading =
