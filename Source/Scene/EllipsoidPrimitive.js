@@ -103,6 +103,20 @@ define([
         this.show = true;
 
         /**
+         * <p>
+         * Determines if the ellipsoid is affected by lighting, i.e., if the ellipsoid is bright on the
+         * side facing the sun, and dark on the other side.  When <code>true</code>, the ellipsoid
+         * is affected by lighting; when <code>false</code>, the ellipsoid is uniformly shaded regardless
+         * of the sun position.
+         * </p>
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
+         */
+        this.affectedByLighting = true;
+        this._affectedByLighting = true;
+
+        /**
          * DOC_TBA
          * @see Material
          */
@@ -268,16 +282,19 @@ define([
 
         // Recompile shader when material changes
         if (typeof this._material === 'undefined' ||
-            this._material !== this.material) {
+            this._material !== this.material ||
+            this._affectedByLighting !== this.affectedByLighting) {
 
             this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
             this._material = this.material;
+            this._affectedByLighting = this.affectedByLighting;
 
             var fsSource =
                 '#line 0\n' +
                 Noise +
                 '#line 0\n' +
                 this._material.shaderSource +
+                (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                 '#line 0\n' +
                 EllipsoidFS;
 

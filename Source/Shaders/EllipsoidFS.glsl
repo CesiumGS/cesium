@@ -41,11 +41,11 @@ void main()
         czm_material material = czm_getMaterial(materialInput);
 
 		vec4 color; 
-//#ifdef AFFECTED_BY_LIGHTING
+#ifdef AFFECTED_BY_LIGHTING
 		color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
-//#else
-//		color = vec4(material.diffuse, material.alpha);
-//#endif
+#else
+		color = vec4(material.diffuse, material.alpha);
+#endif
 		
 		gl_FragColor = color;
     }
