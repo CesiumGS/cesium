@@ -8,6 +8,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/WindingOrder',
         '../Core/BoundingRectangle',
+        '../Core/createGuid',
         '../Shaders/BuiltinFunctions',
         './Buffer',
         './BufferUsage',
@@ -44,6 +45,7 @@ define([
         PrimitiveType,
         WindingOrder,
         BoundingRectangle,
+        createGuid,
         ShadersBuiltinFunctions,
         Buffer,
         BufferUsage,
@@ -190,6 +192,8 @@ define([
         if (!this._originalGLContext) {
             throw new RuntimeError('The browser supports WebGL, but initialization failed.');
         }
+
+        this._id = createGuid();
 
         // Validation and logging disabled by default for speed.
         this._validateFB = false;
@@ -418,6 +422,17 @@ define([
         this._applySampleCoverage(state.sampleCoverage);
         this._applyDither(state.dither);
     };
+
+    /**
+      * Returns a unique ID for this context.
+      *
+      * @memberof Context
+      *
+      * @returns {String} A unique ID for this context.
+      */
+     Context.prototype.getId = function() {
+         return this._id;
+     };
 
     /**
      * Returns the canvas assoicated with this context.
