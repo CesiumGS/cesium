@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Cartesian2',
+        '../Core/Color',
         '../Core/Extent',
         '../Core/PlaneTessellator',
         '../Core/PrimitiveType',
@@ -34,6 +35,7 @@ define([
         DeveloperError,
         CesiumMath,
         Cartesian2,
+        Color,
         Extent,
         PlaneTessellator,
         PrimitiveType,
@@ -217,7 +219,7 @@ define([
 
         // Create TileImagery instances for each imagery tile overlapping this terrain tile.
         // We need to do all texture coordinate computations in the imagery tile's tiling scheme.
-        var terrainExtent = imageryTilingScheme.extentToNativeExtent(tile.extent);
+        var terrainExtent = tile.extent;
         var terrainWidth = terrainExtent.east - terrainExtent.west;
         var terrainHeight = terrainExtent.north - terrainExtent.south;
 
@@ -252,7 +254,6 @@ define([
                 imageryExtent = imageryTilingScheme.tileXYToExtent(i, j, imageryLevel);
                 minV = Math.max(0.0, (imageryExtent.south - tile.extent.south) / (tile.extent.north - tile.extent.south));
 
-                imageryExtent = imageryTilingScheme.tileXYToNativeExtent(i, j, imageryLevel);
                 var textureTranslation = new Cartesian2(
                         (imageryExtent.west - terrainExtent.west) / terrainWidth,
                         (imageryExtent.south - terrainExtent.south) / terrainHeight);
@@ -330,23 +331,27 @@ define([
 
     ImageryLayer.prototype.reprojectTexture = function(context, imagery) {
         var texture = imagery.texture;
+        var extent = imagery.extent;
 
-        if (!(this.imageryProvider.tilingScheme instanceof GeographicTilingScheme)) {
-            var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
-            texture.destroy();
-            imagery.texture = texture = reprojectedTexture;
+        // Reproject this texture if it is not already in a geographic projection and
+        // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
+        // avoids precision problems in the reprojection transformation while making
+        // no noticeable difference in the georeferencing of the image.
+        if (!(this.imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
+            (extent.east - extent.west) / texture.getWidth() > 1e-5) {
+                var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
+                texture.destroy();
+                imagery.texture = texture = reprojectedTexture;
         }
 
-        //texture.generateMipmap(MipmapHint.NICEST);
+        texture.generateMipmap(MipmapHint.NICEST);
         texture.setSampler({
             wrapS : TextureWrap.CLAMP,
             wrapT : TextureWrap.CLAMP,
-            //minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-            minificationFilter : TextureMinificationFilter.LINEAR,
+            minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
             magnificationFilter : TextureMagnificationFilter.LINEAR,
             maximumAnisotropy : context.getMaximumTextureFilterAnisotropy()
         });
-
 
         imagery.state = ImageryState.READY;
     };
@@ -386,50 +391,40 @@ define([
     var float32ArrayScratch = new Float32Array(1);
 
     function reprojectToGeographic(imageryLayer, context, texture, extent) {
-//        if (typeof imageryLayer._fbReproject === 'undefined') {
-//            imageryLayer._fbReproject = context.createFramebuffer();
-//
-//            var reprojectWidth = 256;
-//            var reprojectHeight = 256;
-//
-//            var reprojectMesh = {
-//                attributes : {
-//                    position : {
-//                        componentDatatype : ComponentDatatype.FLOAT,
-//                        componentsPerAttribute : 2,
-//                        values : [0.0, 0.0, reprojectWidth, 0.0, reprojectWidth, reprojectHeight, 0.0, reprojectHeight]
-//                    },
-//
-//                    textureCoordinates : {
-//                        componentDatatype : ComponentDatatype.FLOAT,
-//                        componentsPerAttribute : 2,
-//                        values : [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
-//                    }
-//                }
-//            };
-//
-//            var reprojectAttribInds = {
-//                position : 0,
-//                textureCoordinates : 1
-//            };
-//
-//            imageryLayer._vaReproject = context.createVertexArrayFromMesh({
-//                mesh : reprojectMesh,
-//                attributeIndices : reprojectAttribInds,
-//                bufferUsage : BufferUsage.STATIC_DRAW
-//            });
-//
-//            imageryLayer._spReproject = context.getShaderCache().getShaderProgram(
-//                ReprojectWebMercatorVS,
-//                ReprojectWebMercatorFS,
-//                reprojectAttribInds);
-//
-//            imageryLayer._rsColor = context.createRenderState({
-//                cull : {
-//                    enabled : false
-//                }
-//            });
-//        }
+        if (typeof imageryLayer._fbReproject === 'undefined') {
+            imageryLayer._fbReproject = context.createFramebuffer();
+
+            var reprojectMesh = {
+                attributes : {
+                    position : {
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 2,
+                        values : [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
+                    }
+                }
+            };
+
+            var reprojectAttribInds = {
+                position : 0
+            };
+
+            imageryLayer._vaReproject = context.createVertexArrayFromMesh({
+                mesh : reprojectMesh,
+                attributeIndices : reprojectAttribInds,
+                bufferUsage : BufferUsage.STATIC_DRAW
+            });
+
+            imageryLayer._spReproject = context.getShaderCache().getShaderProgram(
+                ReprojectWebMercatorVS,
+                ReprojectWebMercatorFS,
+                reprojectAttribInds);
+
+            imageryLayer._rsColor = context.createRenderState({
+                cull : {
+                    enabled : false
+                }
+            });
+        }
 
         texture.setSampler({
             wrapS : TextureWrap.CLAMP,
@@ -458,9 +453,6 @@ define([
         var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
         uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
 
-        imageryLayer._fbReproject = context.createFramebuffer();
-        imageryLayer._viewportQuad = new ViewportQuad({x:0,y:0,width:256,height:256});
-
         var outputTexture = imageryLayer._texturePool.createTexture2D(context, {
             width : width,
             height : height,
@@ -468,32 +460,38 @@ define([
             pixelDatatype : texture.getPixelDatatype(),
             preMultiplyAlpha : texture.getPreMultiplyAlpha()
         });
-        imageryLayer._viewportQuad.setTexture(texture);
-//        imageryLayer._viewportQuad.setFramebuffer(imageryLayer._fbReproject);
+
+        // Allocate memory for the mipmaps.  Failure to do this before rendering
+        // to the texture via the FBO, and calling generateMipmap later,
+        // will result in the texture appearing blank.  I can't pretend to
+        // understand exactly why this is.
+        outputTexture.generateMipmap(MipmapHint.NICEST);
 
         imageryLayer._fbReproject.setColorTexture(outputTexture);
 
-//        var oldViewport = context.getViewport();
-//        context.setViewport({
-//            x      : 0,
-//            y      : 0,
-//            width  : 256,
-//            height : 256
-//        });
-//        context.draw({
-//            framebuffer : imageryLayer._fbReproject,
-//            shaderProgram : imageryLayer._spReproject,
-//            renderState : imageryLayer._rsColor,
-//            primitiveType : PrimitiveType.TRIANGLE_FAN,
-//            vertexArray : imageryLayer._vaReproject,
-//            uniformMap : uniformMap
-//        });
-        imageryLayer._viewportQuad.update(context);
-        imageryLayer._viewportQuad.render(context);
+        context.clear(context.createClearState({
+            framebuffer : imageryLayer._fbReproject,
+            color : new Color(0.0, 0.0, 0.0, 0.0)
+        }));
 
-        //context.setViewport(oldViewport);
+        var oldViewport = context.getViewport();
+        context.setViewport({
+            x      : 0,
+            y      : 0,
+            width  : width,
+            height : height
+        });
 
-        //imageryLayer._fbReproject.setColorTexture(undefined);
+        context.draw({
+            framebuffer : imageryLayer._fbReproject,
+            shaderProgram : imageryLayer._spReproject,
+            renderState : imageryLayer._rsColor,
+            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            vertexArray : imageryLayer._vaReproject,
+            uniformMap : uniformMap
+        });
+
+        context.setViewport(oldViewport);
 
         return outputTexture;
     }

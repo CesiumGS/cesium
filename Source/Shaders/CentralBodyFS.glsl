@@ -11,18 +11,11 @@ uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec2 u_dayTextureTranslation[TEXTURE_UNITS];
 uniform vec2 u_dayTextureScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
-uniform bool u_dayTextureIsGeographic[TEXTURE_UNITS];
 uniform vec2 u_dayTextureMinTexCoords[TEXTURE_UNITS];
 uniform vec2 u_dayTextureMaxTexCoords[TEXTURE_UNITS];
 
 uniform bool u_cameraInsideBoundingSphere;
 uniform int u_level;
-
-uniform float u_northLatitude;
-uniform float u_southLatitude;
-uniform float u_southMercatorYHigh;
-uniform float u_southMercatorYLow;
-uniform float u_oneOverMercatorHeight;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -43,23 +36,6 @@ void main()
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
     vec2 geographicUV = clamp(v_textureCoordinates, 0.0, 1.0);
-    vec2 webMercatorUV = geographicUV;
-    
-    if (u_level < 12)
-    {
-	    float currentLatitude = mix(u_southLatitude, u_northLatitude, geographicUV.y);
-	    float sinLatitude = sin(currentLatitude);
-	    float mercatorY = 0.5 * log((1.0 + sinLatitude) / (1.0 - sinLatitude));
-	    
-	    // mercatorY - u_southMercatorY in simulated double precision.
-	    float t1 = 0.0 - u_southMercatorYLow;
-	    float e = t1 - 0.0;
-	    float t2 = ((-u_southMercatorYLow - e) + (0.0 - (t1 - e))) + mercatorY - u_southMercatorYHigh;
-	    float highDifference = t1 + t2;
-	    float lowDifference = t2 - (highDifference - t1);
-	    
-	    webMercatorUV = vec2(geographicUV.x, highDifference * u_oneOverMercatorHeight + lowDifference * u_oneOverMercatorHeight);
-    }
 
     vec3 startDayColor = vec3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
     for (int i = 0; i < TEXTURE_UNITS; ++i)
@@ -75,8 +51,7 @@ void main()
             geographicUV.y >= minTexCoords.y &&
             geographicUV.y <= maxTexCoords.y)
         {
-	        vec2 baseTextureCoordinates = mix(webMercatorUV, geographicUV, float(u_dayTextureIsGeographic[i]));
-	        vec2 textureCoordinates = (baseTextureCoordinates - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
+	        vec2 textureCoordinates = (geographicUV - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
 	        
             vec4 color = texture2D(u_dayTextures[i], textureCoordinates);
 	        startDayColor = mix(startDayColor, color.rgb, color.a * u_dayTextureAlpha[i]);

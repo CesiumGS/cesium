@@ -31,5 +31,4 @@ void main()
     webMercatorUV = vec2(geographicUV.x, highDifference * u_oneOverMercatorHeight + lowDifference * u_oneOverMercatorHeight);
     
     gl_FragColor = texture2D(u_texture, webMercatorUV);
-    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }

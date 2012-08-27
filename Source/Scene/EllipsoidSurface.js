@@ -419,19 +419,6 @@ define([
             uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);
             uniformMap.modifiedModelViewProjection = Matrix4.multiply(projection, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
 
-            var extent = tile.extent;
-            uniformMap.northLatitude = extent.north;
-            uniformMap.southLatitude = extent.south;
-
-            var sinLatitude = Math.sin(extent.south);
-            var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-            float32ArrayScratch[0] = southMercatorY;
-            uniformMap.southMercatorYHigh = float32ArrayScratch[0];
-            uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
-            sinLatitude = Math.sin(extent.north);
-            var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
-            uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
-
             var tileImageryCollection = tile.imagery;
             var imageryIndex = 0;
             var imageryLen = tileImageryCollection.length;
@@ -455,7 +442,6 @@ define([
                     uniformMap.dayTextureMinTexCoords[numberOfDayTextures] = tileImagery.minTexCoords;
                     uniformMap.dayTextureMaxTexCoords[numberOfDayTextures] = tileImagery.maxTexCoords;
                     uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
-                    uniformMap.dayTextureIsGeographic[numberOfDayTextures] = imageryLayer.imageryProvider.tilingScheme instanceof GeographicTilingScheme;
 
                     ++numberOfDayTextures;
                 }
@@ -865,12 +851,7 @@ define([
         surface._tileLoadQueue.insertBeforeInsertionPoint(tile);
     }
 
-    var dostuff = true;
-
     function processTileLoadQueue(surface, context, sceneState) {
-        if (!dostuff) {
-            return;
-        }
         var tileLoadQueue = surface._tileLoadQueue;
         var terrainProvider = surface.terrainProvider;
 
@@ -937,7 +918,6 @@ define([
                 if (imagery.state === ImageryState.TEXTURE_LOADED) {
                     imagery.state = ImageryState.TRANSITIONING;
                     imageryLayer.reprojectTexture(context, imagery);
-                    dostuff = false;
                 }
 
                 var tileImageryDoneLoading =

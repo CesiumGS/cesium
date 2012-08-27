@@ -1371,7 +1371,6 @@ define([
      * @memberof CentralBody
      */
     CentralBody.prototype.render = function(context) {
-        return;
         if (this.show) {
             // clear FBO
             context.clear(context.createClearState(clearState));
