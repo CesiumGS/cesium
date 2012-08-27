@@ -245,6 +245,22 @@ define([
         }
     };
 
+    Camera2DController.prototype.setCameraPosition = function(cartographic) {
+        var newLeft = -cartographic.height * 0.5;
+        var newRight = -newLeft;
+
+        var frustum = this._camera.frustum;
+        if (newRight > newLeft) {
+            var ratio = frustum.top / frustum.right;
+            frustum.right = newRight;
+            frustum.left = newLeft;
+            frustum.top = frustum.right * ratio;
+            frustum.bottom = -frustum.top;
+        }
+
+        this._camera.position = this._projection.project(cartographic);
+    };
+
     /**
      * DOC_TBA
      *

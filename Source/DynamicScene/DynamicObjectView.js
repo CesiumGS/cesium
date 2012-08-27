@@ -30,8 +30,11 @@ define([
         this._controller2d = undefined;
         this._controller3d = undefined;
         this._controllerColumbusView = undefined;
-        this._lastCartographic = undefined;
+
         this._lastCartesian = undefined;
+        this._lastCartographic = undefined;
+        this._lastDistance = undefined;
+        this._lastOffset = undefined;
     };
 
     /**
@@ -63,9 +66,15 @@ define([
             throw new DeveloperError('dynamicObject.position is required.');
         }
 
+        var offset = new Cartesian3(3000, -3000, 3000);
         var objectChanged = dynamicObject !== this._lastDynamicObject;
         if (objectChanged) {
             this._lastDynamicObject = dynamicObject;
+
+            var viewFromProperty = this.dynamicObject.viewFrom;
+            if (typeof viewFromProperty !== 'undefined') {
+                viewFromProperty.getValue(time, offset);
+            }
         }
 
         var sceneChanged = scene !== this._lastScene;
@@ -81,52 +90,68 @@ define([
 
         var controller;
         var controllers;
+        var controllerChanged;
+
         switch (scene.mode) {
         case SceneMode.SCENE2D:
             controller = this._controller2d;
-            if (typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController) {
+            controllerChanged = typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController;
+
+            if (controllerChanged) {
                 controllers = camera.getControllers();
                 controllers.removeAll();
                 this._lastController = this._controller2d = controller = controllers.add2D(scene.scene2D.projection);
                 controller.zoomOnly = true;
             }
+
+            if (objectChanged) {
+                this._lastDistance = offset.magnitude();
+            } else if (this._lastDistance === 'undefined') {
+                this._lastDistance = camera.position.z;
+            }
+
             var cartographic = this._lastCartographic = positionProperty.getValueCartographic(time, this._lastCartographic);
             if (typeof cartographic !== 'undefined') {
-                camera.position = scene.scene2D.projection.project(cartographic);
+                cartographic.height = this._lastDistance;
+                if (objectChanged || controllerChanged) {
+                    camera.frustum.near = this._lastDistance;
+                    controller.setCameraPosition(cartographic);
+                } else {
+                    camera.position = scene.scene2D.projection.project(cartographic);
+                }
             }
             break;
         case SceneMode.SCENE3D:
             controller = this._controller3d;
-            var cartesian = this._lastCartesian = positionProperty.getValueCartesian(time, this._lastCartesian);
-            var initialView = objectChanged || typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController;
-            if (initialView) {
+            controllerChanged = typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController;
+
+            if (controllerChanged) {
                 controllers = camera.getControllers();
                 controllers.removeAll();
                 this._lastController = this._controller3d = controller = controllers.addSpindle();
                 controller.constrainedAxis = Cartesian3.UNIT_Z;
             }
 
-            var transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid);
+            var cartesian = this._lastCartesian = positionProperty.getValueCartesian(time, this._lastCartesian);
             if (typeof cartesian !== 'undefined') {
+                if (objectChanged || controllerChanged) {
+                    //If looking straight down, move the camera slightly south the avoid gimbal lock.
+                    if (Cartesian3.equals(offset.normalize(), Cartesian3.UNIT_Z)) {
+                        offset.y -= 0.01;
+                    }
+
+                    var viewDistance = offset.magnitude();
+                    if (viewDistance < camera.frustum.near) {
+                        camera.frustum.near = viewDistance - 1;
+                    }
+                    camera.lookAt(offset, Cartesian3.ZERO.clone(), Cartesian3.UNIT_Z.clone());
+                }
+
+                var transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid);
                 controller.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
             }
 
-            if (initialView) {
-                var offset = new Cartesian3(3000, -3000, 3000);//cartesian.multiplyByScalar(0.01);
-
-                var viewFromProperty = this.dynamicObject.viewFrom;
-                if (typeof viewFromProperty !== 'undefined') {
-                    viewFromProperty.getValue(time, offset);
-                }
-
-                if (Cartesian3.equals(offset.normalize(), Cartesian3.UNIT_Z)) {
-                    //If looking straight down, move the camera
-                    //slightly south the avoid gimble lock.
-                    offset.y -= 0.01;
-                }
-                camera.lookAt(offset, Cartesian3.ZERO.clone(), Cartesian3.UNIT_Z.clone());
-            }
-
+            this._lastDistance = camera.position.magnitude();
             break;
         case SceneMode.COLUMBUS_VIEW:
             controller = this._controllerColumbusView;
