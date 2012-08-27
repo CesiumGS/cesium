@@ -253,11 +253,9 @@ define([
 
         // TODO: When do we really need to rewrite?
         if ((typeof this._va === 'undefined') ||
-            (this._bufferUsage !== this.bufferUsage) ||
             (this._mode !== mode) ||
             (this._projection !== projection)) {
 
-            this._bufferUsage = this.bufferUsage;
             this._mode = mode;
             this._projection = projection;
 
@@ -265,7 +263,6 @@ define([
                 this.morphTime = mode.morphTime;
             }
 
-            debugger;
             this._va = getVertexArray(context);
         }
 
