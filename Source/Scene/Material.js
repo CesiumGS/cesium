@@ -414,7 +414,8 @@ define([
         // If the cache contains this material type, build the material template off of the stored template.
         var oldMaterialTemplate = Material._materialCache.getMaterial(result.type);
         if (typeof oldMaterialTemplate !== 'undefined') {
-            result._template = combine([result._template, oldMaterialTemplate]);
+            var template = clone(oldMaterialTemplate);
+            result._template = combine([result._template, template]);
         }
 
         // Make sure the template has no obvious errors. More error checking happens later.
