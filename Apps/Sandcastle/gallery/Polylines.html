@@ -81,14 +81,63 @@ require([
         var primitives = widget.scene.getPrimitives();
         var polylines = new Cesium.PolylineCollection();
 
+        // A simple polyline with two points. 
         var polyline = polylines.add();
         Sandcastle.declare(polyline);
         polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-            new Cesium.Cartographic.fromDegrees(-75.10, 39.57), // Philadelphia
-            new Cesium.Cartographic.fromDegrees(-80.12, 25.46) // Miami
+            new Cesium.Cartographic.fromDegrees(-120.0, 40.0),
+            new Cesium.Cartographic.fromDegrees(-110.0, 30.0)
         ]));
+        
+        // Set a polyline's color
+        var coloredPolyline = polylines.add();
+        Sandcastle.declare(coloredPolyline);
+        coloredPolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+            new Cesium.Cartographic.fromDegrees(-95.0, 30.0),
+            new Cesium.Cartographic.fromDegrees(-85.0, 40.0)
+        ]));
+        coloredPolyline.setColor({
+            red   : 1.0,
+            green : 1.0,
+            blue  : 0.0,
+            alpha : 0.75
+        });
+        
+         // Set a polyline's width and outline width
+        var widePolyline = polylines.add();
+        Sandcastle.declare(widePolyline);
+        widePolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+            new Cesium.Cartographic.fromDegrees(-105.0, 40.0),
+            new Cesium.Cartographic.fromDegrees(-100.0, 38.0),
+            new Cesium.Cartographic.fromDegrees(-105.0, 35.0),
+            new Cesium.Cartographic.fromDegrees(-100.0, 32.0)            
+        ]));
+        widePolyline.setWidth(5); // Request 5 pixels interior
+        widePolyline.setOutlineWidth(10); // Request 10 pixels total
+        widePolyline.setOutlineColor({
+            red : 1.0,
+            green : 0.0,
+            blue : 0.0,
+            alpha : 1.0
+        });
+        
         primitives.add(polylines);
-
+                
+        // Draw a line in a local reference frame
+        // The arrow points to the east, i.e. along the local x-axis.
+        var localPolylines = new Cesium.PolylineCollection();
+        var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 35.0));
+        localPolylines.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+        var localPolyline = localPolylines.add();
+        Sandcastle.declare(localPolyline);
+        localPolyline.setPositions([
+            new Cesium.Cartesian3(0.0, 0.0, 0.0),
+            new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
+            new Cesium.Cartesian3(900000.0, -100000.0, 0.0),
+            new Cesium.Cartesian3(900000.0, 100000.0, 0.0),
+            new Cesium.Cartesian3(1000000.0, 0.0, 0.0)
+        ]);
+        primitives.add(localPolylines);
     }
 
     var cesiumViewerWidget = new CesiumViewerWidget({
