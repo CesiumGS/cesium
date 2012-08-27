@@ -65,11 +65,11 @@ define(['../Core/Enumeration'], function(Enumeration) {
         LUMINANCE_ALPHA : new Enumeration(0x190A, 'LUMINANCE_ALPHA'),
 
         /**
-         * Returns true if the pixel format is a validate enumeration value.
+         * Returns true if the pixel format is a valid enumeration value.
          *
          * @param {PixelFormat} pixelFormat The pixel format to test.
          *
-         * @returns {Boolean} Returns true if the pixel format is a validate enumeration value; otherwise, false.
+         * @returns {Boolean} Returns true if the pixel format is a valid enumeration value; otherwise, false.
          */
         validate : function(pixelFormat) {
             return ((pixelFormat === PixelFormat.DEPTH_COMPONENT) ||
