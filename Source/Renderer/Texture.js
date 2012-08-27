@@ -3,6 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian2',
+        '../Core/Math',
         './PixelFormat',
         './MipmapHint',
         './TextureMagnificationFilter',
@@ -12,6 +13,7 @@ define([
         DeveloperError,
         destroyObject,
         Cartesian2,
+        CesiumMath,
         PixelFormat,
         MipmapHint,
         TextureMagnificationFilter,
@@ -195,9 +197,9 @@ define([
             throw new DeveloperError('Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
-        if ((this._width > 1) && (this._width % 2 !== 0)) {
+        if ((this._width > 1) && !CesiumMath.isPowerOfTwo(this._width)) {
             throw new DeveloperError('width must be a power of two to call generateMipmap().');
-        } else if ((this._height > 1) && (this._height % 2 !== 0)) {
+        } else if ((this._height > 1) && !CesiumMath.isPowerOfTwo(this._height)) {
             throw new DeveloperError('height must be a power of two to call generateMipmap().');
         }
 

@@ -37,6 +37,7 @@ Beta Releases
 * Added `writeTextToCanvas` function which handles sizing the resulting canvas to fit the desired text.
 * Added support for CZML path visualization via the `DynamicPath` and `DynamicPathVisualizer` objects.  See the [CZML wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide) for more details.
 * Added support for [WEBGL_depth_texture](http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/).  See `Framebuffer.setDepthTexture`.
+* Added `CesiumMath.isPowerOfTwo`.
 
 ### b7 - 08/01/2012
 

@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Math',
         './MipmapHint',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
@@ -10,6 +11,7 @@ define([
     ], function(
         DeveloperError,
         destroyObject,
+        CesiumMath,
         MipmapHint,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -146,7 +148,7 @@ define([
      * }));
      */
     CubeMap.prototype.generateMipmap = function(hint) {
-        if ((this._size > 1) && (this._size % 2 !== 0)) {
+        if ((this._size > 1) && !CesiumMath.isPowerOfTwo(this._size)) {
             throw new DeveloperError('width and height must be a power of two to call generateMipmap().');
         }
 
