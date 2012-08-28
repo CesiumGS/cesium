@@ -141,13 +141,26 @@ define([
 
         viewFromTo : undefined,
 
-        centerCameraOnObject : function(selectedObject) {
-            if (selectedObject && selectedObject.dynamicObject) {
+        centerCameraOnPick : function(selectedObject) {
+            if (typeof selectedObject !== 'undefined' && typeof selectedObject.dynamicObject !== 'undefined' && typeof selectedObject.dynamicObject.position !== 'undefined') {
                 var viewFromTo = this.viewFromTo;
                 if (typeof viewFromTo === 'undefined') {
                     this.viewFromTo = viewFromTo = new DynamicObjectView(selectedObject.dynamicObject, this.scene, this.ellipsoid);
                 } else {
                     viewFromTo.dynamicObject = selectedObject.dynamicObject;
+                }
+            } else {
+                this.viewFromTo = undefined;
+            }
+        },
+
+        centerCameraOnObject : function(selectedObject) {
+            if (typeof selectedObject !== 'undefined' && typeof selectedObject.position !== 'undefined') {
+                var viewFromTo = this.viewFromTo;
+                if (typeof viewFromTo === 'undefined') {
+                    this.viewFromTo = viewFromTo = new DynamicObjectView(selectedObject, this.scene, this.ellipsoid);
+                } else {
+                    viewFromTo.dynamicObject = selectedObject;
                 }
             } else {
                 this.viewFromTo = undefined;
@@ -356,7 +369,7 @@ define([
             }
 
             if (typeof this.onObjectRightClickSelected === 'undefined') {
-                this.onObjectRightClickSelected = this.centerCameraOnObject;
+                this.onObjectRightClickSelected = this.centerCameraOnPick;
             }
 
             if (this.enableDragDrop) {
@@ -393,14 +406,13 @@ define([
                 getJson(widget.endUserOptions.source).then(function(czmlData) {
                     processCzml(czmlData, widget.dynamicObjectCollection, widget.endUserOptions.source);
                     widget.setTimeFromBuffer();
+                    if (typeof widget.endUserOptions.lookAt !== 'undefined') {
+                        widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(widget.endUserOptions.lookAt));
+                    }
                 },
                 function(error) {
                     window.alert(error);
                 });
-            }
-
-            if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                widget.cameraCenteredObjectID = widget.endUserOptions.lookAt;
             }
 
             if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {

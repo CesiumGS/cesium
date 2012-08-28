@@ -54,12 +54,6 @@ defineSuite([
         expect(rect.equals(undefined)).toEqual(false);
     });
 
-    it('throws an exception when creating an axis aligned bounding rectangle without any positions', function() {
-        expect(function() {
-            return BoundingRectangle.fromPoints();
-        }).toThrow();
-    });
-
     it('create axis aligned bounding rectangle', function() {
         var positions = [
              new Cartesian2(3, -1),
@@ -75,6 +69,14 @@ defineSuite([
         expect(rectangle.y).toEqual(-3);
         expect(rectangle.width).toEqual(6);
         expect(rectangle.height).toEqual(6);
+    });
+
+    it('fromPoints creates an empty rectangle with no positions', function() {
+        var rectangle = BoundingRectangle.fromPoints();
+        expect(rectangle.x).toEqual(0.0);
+        expect(rectangle.y).toEqual(0.0);
+        expect(rectangle.width).toEqual(0.0);
+        expect(rectangle.height).toEqual(0.0);
     });
 
     it('create a bounding rectangle from an extent throws without an extent', function() {

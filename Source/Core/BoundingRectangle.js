@@ -198,12 +198,16 @@ define([
      * @return {BoundingRectangle} A bounding rectangle computed from the positions. The rectangle is oriented with the corner at the bottom left.
      */
     BoundingRectangle.fromPoints = function(positions, result) {
-        if (typeof positions === 'undefined') {
-            throw new DeveloperError('positions is required.');
-        }
-
         if (typeof result === 'undefined') {
             result = new BoundingRectangle();
+        }
+
+        if (typeof positions === 'undefined' || positions.length === 0) {
+            result.x = 0;
+            result.y = 0;
+            result.width = 0;
+            result.height = 0;
+            return result;
         }
 
         var length = positions.length;

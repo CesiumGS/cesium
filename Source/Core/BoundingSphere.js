@@ -172,12 +172,14 @@ define([
      * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      */
     BoundingSphere.fromPoints = function(positions, result) {
-        if (typeof positions === 'undefined' || positions.length === 0) {
-            return undefined;
-        }
-
         if (typeof result === 'undefined') {
             result = new BoundingSphere();
+        }
+
+        if (typeof positions === 'undefined' || positions.length === 0) {
+            result.center = Cartesian3.ZERO.clone(result.center);
+            result.radius = 0.0;
+            return result;
         }
 
         var currentPos = Cartesian3.clone(positions[0]);

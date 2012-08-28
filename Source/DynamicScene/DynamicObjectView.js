@@ -66,7 +66,7 @@ define([
             throw new DeveloperError('dynamicObject.position is required.');
         }
 
-        var offset = new Cartesian3(3000, -3000, 3000);
+        var offset = new Cartesian3(10000, -10000, 10000);
         var objectChanged = dynamicObject !== this._lastDynamicObject;
         if (objectChanged) {
             this._lastDynamicObject = dynamicObject;
@@ -103,7 +103,7 @@ define([
                 controllers.removeAll();
                 this._lastController = this._controller2d = controller = controllers.add2D(scene.scene2D.projection);
                 controller.zoomOnly = true;
-                viewDistance = this._lastOffset.magnitude();
+                viewDistance = typeof this._lastOffset === 'undefined' ? camera.position.z : this._lastOffset.magnitude();
             } else if (objectChanged) {
                 viewDistance = offset.magnitude();
             } else {
@@ -142,20 +142,20 @@ define([
                     }
                     camera.lookAt(offset, Cartesian3.ZERO.clone(), Cartesian3.UNIT_Z.clone());
 
-                    //TODO We won't need this once the multi-frustum code is in place.
+                    //TODO There are all kinds of near plane issues in our code base right now,
+                    //hack around it until the multi-frustum code is in place.
                     viewDistance = offset.magnitude();
-                    if (viewDistance < camera.frustum.near) {
-                        camera.frustum.near = viewDistance - 1;
-                    }
+                    camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * this.ellipsoid.getRadii().getMaximumComponent());
                 } else if (controllerChanged) {
-                    this._lastOffset.normalize(offset).multiplyByScalar(this._lastDistance, offset);
+                    if (typeof this._lastOffset !== 'undefined') {
+                        this._lastOffset.normalize(offset).multiplyByScalar(this._lastDistance, offset);
+                    }
                     camera.lookAt(offset, Cartesian3.ZERO.clone(), Cartesian3.UNIT_Z.clone());
 
-                    //TODO We won't need this once the multi-frustum code is in place.
+                    //TODO There are all kinds of near plane issues in our code base right now,
+                    //hack around it until the multi-frustum code is in place.
                     viewDistance = offset.magnitude();
-                    if (viewDistance < camera.frustum.near) {
-                        camera.frustum.near = viewDistance - 1;
-                    }
+                    camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * this.ellipsoid.getRadii().getMaximumComponent());
                 }
 
                 var transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid);

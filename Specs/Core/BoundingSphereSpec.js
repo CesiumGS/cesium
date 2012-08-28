@@ -68,8 +68,10 @@ defineSuite([
         expect(sphere.equals(undefined)).toEqual(false);
     });
 
-    it('fromPoints without positions returns undefined', function() {
-        expect(typeof BoundingSphere.fromPoints() === 'undefined').toEqual(true);
+    it('fromPoints without positions returns an empty sphere', function() {
+        var sphere = BoundingSphere.fromPoints();
+        expect(sphere.center).toEqual(Cartesian3.ZERO);
+        expect(sphere.radius).toEqual(0.0);
     });
 
     it('computes with one point', function() {
