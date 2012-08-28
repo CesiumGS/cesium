@@ -418,6 +418,8 @@ defineSuite([
         var material2 = Material.fromType(context, 'Color');
         material2.uniforms.color = new Color(0.0, 0.0, 1.0, 1.0);
 
+        expect(material1.shaderSource).toEqual(material2.shaderSource);
+
         var pixel = renderMaterial(material2);
         expect(pixel).toEqual([0, 0, 255, 255]);
 
