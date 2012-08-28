@@ -90,6 +90,7 @@ define([
 
         var controller;
         var controllers;
+        var viewDistance;
         var controllerChanged;
 
         switch (scene.mode) {
@@ -102,24 +103,24 @@ define([
                 controllers.removeAll();
                 this._lastController = this._controller2d = controller = controllers.add2D(scene.scene2D.projection);
                 controller.zoomOnly = true;
-            }
-
-            if (objectChanged) {
-                this._lastDistance = offset.magnitude();
-            } else if (this._lastDistance === 'undefined') {
-                this._lastDistance = camera.position.z;
+                viewDistance = this._lastOffset.magnitude();
+            } else if (objectChanged) {
+                viewDistance = offset.magnitude();
+            } else {
+                viewDistance = camera.position.z;
             }
 
             var cartographic = this._lastCartographic = positionProperty.getValueCartographic(time, this._lastCartographic);
             if (typeof cartographic !== 'undefined') {
-                cartographic.height = this._lastDistance;
+                cartographic.height = viewDistance;
                 if (objectChanged || controllerChanged) {
-                    camera.frustum.near = this._lastDistance;
+                    camera.frustum.near = viewDistance;
                     controller.setCameraPosition(cartographic);
                 } else {
                     camera.position = scene.scene2D.projection.project(cartographic);
                 }
             }
+            this._lastDistance = camera.frustum.right - camera.frustum.left;
             break;
         case SceneMode.SCENE3D:
             controller = this._controller3d;
@@ -134,24 +135,34 @@ define([
 
             var cartesian = this._lastCartesian = positionProperty.getValueCartesian(time, this._lastCartesian);
             if (typeof cartesian !== 'undefined') {
-                if (objectChanged || controllerChanged) {
+                if (objectChanged) {
                     //If looking straight down, move the camera slightly south the avoid gimbal lock.
                     if (Cartesian3.equals(offset.normalize(), Cartesian3.UNIT_Z)) {
                         offset.y -= 0.01;
                     }
+                    camera.lookAt(offset, Cartesian3.ZERO.clone(), Cartesian3.UNIT_Z.clone());
 
-                    var viewDistance = offset.magnitude();
+                    //TODO We won't need this once the multi-frustum code is in place.
+                    viewDistance = offset.magnitude();
                     if (viewDistance < camera.frustum.near) {
                         camera.frustum.near = viewDistance - 1;
                     }
+                } else if (controllerChanged) {
+                    this._lastOffset.normalize(offset).multiplyByScalar(this._lastDistance, offset);
                     camera.lookAt(offset, Cartesian3.ZERO.clone(), Cartesian3.UNIT_Z.clone());
+
+                    //TODO We won't need this once the multi-frustum code is in place.
+                    viewDistance = offset.magnitude();
+                    if (viewDistance < camera.frustum.near) {
+                        camera.frustum.near = viewDistance - 1;
+                    }
                 }
 
                 var transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid);
                 controller.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+                this._lastOffset = camera.position;
+                this._lastDistance = camera.position.magnitude();
             }
-
-            this._lastDistance = camera.position.magnitude();
             break;
         case SceneMode.COLUMBUS_VIEW:
             controller = this._controllerColumbusView;
