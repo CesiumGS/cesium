@@ -215,7 +215,7 @@ define([
 
             var v = this.getView();
             Matrix4.inverse(v, this._inverseView);
-            Matrix4.getRotation(v, this._inverseViewRotation);
+            Matrix4.getRotation(this._inverseView, this._inverseViewRotation);
         }
     };
 
