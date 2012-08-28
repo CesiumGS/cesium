@@ -43,7 +43,8 @@ require({
 
     var e = new Cesium.EllipsoidPrimitive();
     e.position = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000));
-    e.radii = new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0);
+    e.radii = new Cesium.Cartesian3(1000000.0, 1000000.0, 1000000.0);
+//    e.radii = new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0);
     primitives.add(e);
 
     var e2 = new Cesium.EllipsoidPrimitive();
@@ -59,6 +60,8 @@ require({
         z : 750000.0
     };
     primitives.add(e2);
+
+    e.material = Cesium.Material.fromType(undefined, Cesium.Material.RimLightingType);
 
     ///////////////////////////////////////////////////////////////////////////
 
