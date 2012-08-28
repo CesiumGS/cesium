@@ -317,11 +317,12 @@ require([
     function createButtons(widget) {
         var ellipsoid = widget.ellipsoid;
         var scene = widget.scene;
+        var primitives = scene.getPrimitives();
         
         new Button({
             label: "Add billboard",
             onClick: function() {
-                scene.getPrimitives().removeAll();
+                primitives.removeAll();
                 addBillboard(scene, ellipsoid); 
                 Sandcastle.highlight(addBillboard);
             }
@@ -330,7 +331,7 @@ require([
         new Button({
             label: "Set billboard properties",
             onClick: function() {
-                scene.getPrimitives().removeAll();
+                primitives.removeAll();
                 setBillboardProperties(scene, ellipsoid); 
                 Sandcastle.highlight(setBillboardProperties);
             }
@@ -339,7 +340,7 @@ require([
         new Button({
             label: "Add multiple billboards",
             onClick: function() {
-                scene.getPrimitives().removeAll();
+                primitives.removeAll();
                 addMultipleBillboards(scene, ellipsoid); 
                 Sandcastle.highlight(addMultipleBillboards);
             }
@@ -348,7 +349,7 @@ require([
         new Button({
             label: "Add point billboards",
             onClick: function() {
-                scene.getPrimitives().removeAll();
+                primitives.removeAll();
                 addPointBillboards(scene, ellipsoid); 
                 Sandcastle.highlight(addPointBillboards);
             }
@@ -357,7 +358,7 @@ require([
         new Button({
             label: "Add marker billboards",
             onClick: function() {
-                scene.getPrimitives().removeAll();
+                primitives.removeAll();
                 addMarkerBillboards(scene, ellipsoid); 
                 Sandcastle.highlight(addMarkerBillboards);
             }
@@ -366,7 +367,7 @@ require([
         new Button({
             label: "Add billboards in reference frame",
             onClick: function() {
-                scene.getPrimitives().removeAll();
+                primitives.removeAll();
                 addBillboardsInReferenceframe(scene, ellipsoid); 
                 Sandcastle.highlight(addBillboardsInReferenceframe);
             }

@@ -148,11 +148,12 @@ require([
     function createButtons(widget) {
         var ellipsoid = widget.ellipsoid;
         var scene = widget.scene;
+        var primitives = scene.getPrimitives();
         
         new Button({
             label: "Add label",
             onClick: function() {
-                scene.getPrimitives().removeAll();
+                primitives.removeAll();
                 addLabel(scene, ellipsoid); 
                 Sandcastle.highlight(addLabel);
             }
@@ -161,7 +162,7 @@ require([
         new Button({
             label: "Set font",
             onClick: function() {
-                scene.getPrimitives().removeAll();
+                primitives.removeAll();
                 setLabelFont(scene, ellipsoid); 
                 Sandcastle.highlight(setLabelFont);
             }
@@ -170,7 +171,7 @@ require([
         new Button({
             label: "Set properties",
             onClick: function() {
-                scene.getPrimitives().removeAll();
+                primitives.removeAll();
                 setLabelProperties(scene, ellipsoid); 
                 Sandcastle.highlight(setLabelProperties);
             }
@@ -179,7 +180,7 @@ require([
         new Button({
             label: "Add labels in reference frame",
             onClick: function() {
-                scene.getPrimitives().removeAll();
+                primitives.removeAll();
                 addLabelsInReferenceFrame(scene, ellipsoid); 
                 Sandcastle.highlight(addLabelsInReferenceFrame);
             }

@@ -341,6 +341,7 @@ require([
             label: "Pick Billboard",
             onClick: function() {
                 cleanup();
+                widget.viewHome();
                 pickBillboard(scene, ellipsoid); 
                 Sandcastle.highlight(pickBillboard);
             }
@@ -350,6 +351,7 @@ require([
             label: "Animate Billboard on Pick",
             onClick: function() {
                 cleanup();
+                widget.viewHome();
                 animateBillboardOnPick(scene, ellipsoid); 
                 Sandcastle.highlight(animateBillboardOnPick);
             }
@@ -359,6 +361,7 @@ require([
             label: "Erode Sensor on Click",
             onClick: function() {
                 cleanup();
+                widget.viewHome();
                 erodeSensorOnClick(scene, ellipsoid); 
                 Sandcastle.highlight(erodeSensorOnClick);
             }
@@ -368,6 +371,7 @@ require([
             label: "Layer Primitives",
             onClick: function() {
                 cleanup();
+                widget.viewHome();
                 layerCompositePrimitive(scene, ellipsoid); 
                 Sandcastle.highlight(layerCompositePrimitive);
             }
