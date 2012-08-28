@@ -149,13 +149,6 @@ define([
          */
         this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : new Color(1.0, 1.0, 0.0, 1.0);
 
-        /**
-         * DOC_TBA
-         *
-         * @type Number
-         */
-        this.erosion = (typeof t.erosion === 'undefined') ? 1.0 : t.erosion;
-
         var that = this;
         this._uniforms = {
             u_model : function() {
@@ -172,9 +165,6 @@ define([
             },
             u_intersectionColor : function() {
                 return that.intersectionColor;
-            },
-            u_erosion : function() {
-                return that.erosion;
             }
         };
         this._drawUniforms = null;

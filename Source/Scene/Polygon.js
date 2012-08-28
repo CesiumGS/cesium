@@ -242,13 +242,6 @@ define([
         this.material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
         this._material = undefined;
 
-        /**
-         * DOC_TBA
-         *
-         * @type Number
-         */
-        this.erosion = 1.0;
-
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
@@ -262,9 +255,6 @@ define([
 
         var that = this;
         this._uniforms = {
-            u_erosion : function() {
-                return that.erosion;
-            },
             u_morphTime : function() {
                 return that.morphTime;
             },

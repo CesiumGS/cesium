@@ -7,10 +7,11 @@ Beta Releases
 ### TODO
 
 * Breaking changes:
+   * Removed `erosion` property from `Polygon`, `ComplexConicSensorVolume`, `RectangularPyramidSensorVolume`, and `ComplexConicSensorVolume`.  Use the new `Erosion` material.  See the Sandbox examples.
    * Replaced the `positionToEyeWC` field of the `czm_materialInput` struct with its equivalent in eye coordinates, `positionToEyeEC`.
 * Added EllipsoidPrimitive for visualizing ellipsoids and spheres.
 * Added Matrix4.multiplyByTranslation, Matrix4.fromScale, and Matrix3.fromScale.
-* Added new Materials: `RimLighting`, ErosionMaterial`, TODO.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
+* Added new Materials: `RimLighting`, Erosion`, TODO.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
 
 ### b8 - xx/xx/2012
 

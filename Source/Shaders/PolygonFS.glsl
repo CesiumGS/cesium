@@ -1,25 +1,6 @@
-uniform float u_erosion;
-
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
-
-#ifndef RENDER_FOR_PICK
-
-void erode(vec3 str)
-{
-    if (u_erosion != 1.0)
-    {
-        float t = 0.5 + (0.5 * czm_snoise(str / (1.0 / 10.0)));   // Scale [-1, 1] to [0, 1]
-    
-        if (t > u_erosion)
-        {
-            discard;
-        }
-    }
-}
-
-#endif
 
 void main()
 {
@@ -38,7 +19,6 @@ void main()
     vec3 positionToEyeEC = normalize(-v_positionEC); 
     materialInput.positionToEyeEC = positionToEyeEC;
 
-    erode(materialInput.str);
     czm_material material = czm_getMaterial(materialInput);
     
     vec4 color; 
