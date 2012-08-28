@@ -246,7 +246,7 @@ define([
      *
      * @param {BoundingRectangle} left A rectangle to check for intersection.
      * @param {BoundingRectangle} right The other rectangle to check for intersection.
-     * @return {Boolean} <code>true</code> if the rectangles intersect, <code>false</code> otherwise.
+     * @return {Intersect} <code>Intersect.INTESECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -336,7 +336,7 @@ define([
      * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} right A rectangle to check for intersection.
-     * @return {Boolean} <code>true</code> if the rectangles intersect, <code>false</code> otherwise.
+     * @return {Intersect} <code>Intersect.INTESECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
      *
      * @exception {DeveloperError} right is required.
      */
