@@ -30,7 +30,7 @@ void main()
         materialInput.str = (positionMC + u_radii) / u_radii;
         materialInput.normalEC = normalEC;
         materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(positionMC, normalEC);
-        materialInput.positionToEyeWC = positionToEyeEC;
+        materialInput.positionToEyeEC = positionToEyeEC;
         materialInput.positionMC = positionMC;
         czm_material material = czm_getMaterial(materialInput);
 
