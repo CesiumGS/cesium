@@ -41,6 +41,7 @@ Beta Releases
 * Added `CesiumMath.isPowerOfTwo`.
 * Added `affectedByLighting` to `ComplexConicSensorVolume`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume` to turn lighting on/off for these objects.
 * CZML `Polygon`, `Cone`, and `Pyramid` objects are no longer affected by lighting.
+* Added `czm_viewRotation` and `czm_viewInverseRotation` automatic GLSL uniforms.
 
 ### b7 - 08/01/2012
 
