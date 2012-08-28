@@ -1063,6 +1063,7 @@ define([
         uniforms : {
             color : new Color(1.0, 0.0, 0.0, 0.7),
             rimColor : new Color(1.0, 1.0, 1.0, 0.4),
+            width : 0.3
         },
         source : RimLightingMaterial
     });
