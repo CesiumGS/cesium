@@ -2,15 +2,19 @@
 define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Cartesian3',
-        '../Core/Cartesian4'
+        '../Core/Cartesian4',
+        '../Core/BoundingRectangle'
     ], function(
         DeveloperError,
         Ellipsoid,
+        Matrix3,
         Matrix4,
         Cartesian3,
-        Cartesian4) {
+        Cartesian4,
+        BoundingRectangle) {
     "use strict";
 
     /**
@@ -22,36 +26,50 @@ define([
      */
     var UniformState = function(context) {
         this._context = context;
-        this._viewport = {
-            x : 0,
-            y : 0,
-            width : 0,
-            height : 0
-        };
-        this._viewportOrthographicMatrix = Matrix4.IDENTITY;
-        this._viewportTransformation = Matrix4.IDENTITY;
+        this._viewport = new BoundingRectangle();
+        this._viewportOrthographicMatrix = Matrix4.IDENTITY.clone();
+        this._viewportTransformation = Matrix4.IDENTITY.clone();
 
-        this._model = Matrix4.IDENTITY;
-        this._view = Matrix4.IDENTITY;
-        this._projection = Matrix4.IDENTITY;
-
-        this._infiniteProjection = Matrix4.IDENTITY;
-
+        this._model = Matrix4.IDENTITY.clone();
+        this._view = Matrix4.IDENTITY.clone();
+        this._projection = Matrix4.IDENTITY.clone();
+        this._infiniteProjection = Matrix4.IDENTITY.clone();
         // Arbitrary.  The user will explicitly set this later.
         this._sunPosition = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().x, 0.0, 0.0);
 
         // Derived members
         this._inverseViewDirty = true;
+        this._inverseView = new Matrix4();
+
         this._inverseProjectionDirty = true;
+        this._inverseProjection = new Matrix4();
+
         this._modelViewDirty = true;
+        this._modelView = new Matrix4();
+
         this._inverseModelViewDirty = true;
+        this._inverseModelView = new Matrix4();
+
         this._viewProjectionDirty = true;
+        this._viewProjection = new Matrix4();
+
         this._modelViewProjectionDirty = true;
+        this._modelViewProjection = new Matrix4();
+
         this._modelViewInfiniteProjectionDirty = true;
+        this._modelViewInfiniteProjection = new Matrix4();
+
         this._normalDirty = true;
+        this._normal = new Matrix3();
+
         this._inverseNormalDirty = true;
+        this._inverseNormal = new Matrix3();
+
         this._sunDirectionECDirty = true;
+        this._sunDirectionEC = new Cartesian3();
+
         this._sunDirectionWCDirty = true;
+        this._sunDirectionWC = new Cartesian3();
     };
 
     /**
@@ -63,20 +81,12 @@ define([
     };
 
     UniformState.prototype._cleanViewport = function() {
-        var current = this._viewport;
         var v = this._context.getViewport();
 
-        if ((current.x !== v.x) ||
-            (current.y !== v.y) ||
-            (current.width !== v.width) ||
-            (current.height !== v.height)) {
-            current.x = v.x;
-            current.y = v.y;
-            current.width = v.width;
-            current.height = v.height;
-
-            this._viewportOrthographicMatrix = Matrix4.computeOrthographicOffCenter(v.x, v.x + v.width, v.y, v.y + v.height, 0.0, 1.0);
-            this._viewportTransformation = Matrix4.computeViewportTransformation(v);
+        if (!BoundingRectangle.equals(v, this._viewport)) {
+            BoundingRectangle.clone(v, this._viewport);
+            Matrix4.computeOrthographicOffCenter(v.x, v.x + v.width, v.y, v.y + v.height, 0.0, 1.0, this._viewportOrthographicMatrix);
+            Matrix4.computeViewportTransformation(v, 0.0, 1.0, this._viewportTransformation);
         }
     };
 
@@ -115,9 +125,9 @@ define([
      * @see czm_model
      */
     UniformState.prototype.setModel = function(matrix) {
-        matrix = matrix || Matrix4.IDENTITY;
+        var m = (typeof matrix !== 'undefined') ? matrix : Matrix4.IDENTITY;
+        Matrix4.clone(m, this._model);
 
-        this._model = matrix;
         this._modelViewDirty = true;
         this._inverseModelViewDirty = true;
         this._modelViewProjectionDirty = true;
@@ -152,9 +162,9 @@ define([
      * @see czm_view
      */
     UniformState.prototype.setView = function(matrix) {
-        matrix = matrix || Matrix4.IDENTITY;
+        var m = (typeof matrix !== 'undefined') ? matrix : Matrix4.IDENTITY;
+        Matrix4.clone(m, this._view);
 
-        this._view = matrix;
         this._inverseViewDirty = true;
         this._modelViewDirty = true;
         this._inverseModelViewDirty = true;
@@ -184,8 +194,7 @@ define([
         if (this._inverseViewDirty) {
             this._inverseViewDirty = false;
 
-            var n = this.getView().inverse();
-            this._inverseView = n;
+            Matrix4.inverse(this.getView(), this._inverseView);
         }
     };
 
@@ -214,9 +223,9 @@ define([
      * @see czm_projection
      */
     UniformState.prototype.setProjection = function(matrix) {
-        matrix = matrix || Matrix4.IDENTITY;
+        var m = (typeof matrix !== 'undefined') ? matrix : Matrix4.IDENTITY;
+        Matrix4.clone(m, this._projection);
 
-        this._projection = matrix;
         this._inverseProjectionDirty = true;
         this._viewProjectionDirty = true;
         this._modelViewProjectionDirty = true;
@@ -240,8 +249,7 @@ define([
         if (this._inverseProjectionDirty) {
             this._inverseProjectionDirty = false;
 
-            var n = this.getProjection().inverse();
-            this._inverseProjection = n;
+            Matrix4.inverse(this.getProjection(), this._inverseProjection);
         }
     };
 
@@ -270,9 +278,9 @@ define([
      * @see czm_infiniteProjection
      */
     UniformState.prototype.setInfiniteProjection = function(matrix) {
-        matrix = matrix || Matrix4.IDENTITY;
+        var m = (typeof matrix !== 'undefined') ? matrix : Matrix4.IDENTITY;
+        Matrix4.clone(m, this._infiniteProjection);
 
-        this._infiniteProjection = matrix;
         this._modelViewInfiniteProjectionDirty = true;
     };
 
@@ -295,8 +303,7 @@ define([
         if (this._modelViewDirty) {
             this._modelViewDirty = false;
 
-            var mv = this._view.multiply(this._model);
-            this._modelView = mv;
+            Matrix4.multiply(this._view, this._model, this._modelView);
         }
     };
 
@@ -318,8 +325,7 @@ define([
         if (this._inverseModelViewDirty) {
             this._inverseModelViewDirty = false;
 
-            var m = this.getModelView().inverse();
-            this._inverseModelView = m;
+            Matrix4.inverse(this.getModelView(), this._inverseModelView);
         }
     };
 
@@ -341,8 +347,7 @@ define([
         if (this._viewProjectionDirty) {
             this._viewProjectionDirty = false;
 
-            var vp = this.getProjection().multiply(this.getView());
-            this._viewProjection = vp;
+            Matrix4.multiply(this.getProjection(), this.getView(), this._viewProjection);
         }
     };
 
@@ -364,8 +369,7 @@ define([
         if (this._modelViewProjectionDirty) {
             this._modelViewProjectionDirty = false;
 
-            var mvp = this._projection.multiply(this.getModelView());
-            this._modelViewProjection = mvp;
+            Matrix4.multiply(this._projection, this.getModelView(), this._modelViewProjection);
         }
     };
 
@@ -387,8 +391,7 @@ define([
         if (this._modelViewInfiniteProjectionDirty) {
             this._modelViewInfiniteProjectionDirty = false;
 
-            var mvp = this._infiniteProjection.multiply(this.getModelView());
-            this._modelViewInfiniteProjection = mvp;
+            Matrix4.multiply(this._infiniteProjection, this.getModelView(), this._modelViewInfiniteProjection);
         }
     };
 
@@ -406,13 +409,16 @@ define([
         return this._modelViewInfiniteProjection;
     };
 
+    var normalScratch = new Matrix4();
+
     UniformState.prototype._cleanNormal = function() {
         if (this._normalDirty) {
             this._normalDirty = false;
 
             // TODO:  Inverse, transpose of the whole 4x4?  Or we can just do the 3x3?
-            var n = this.getModelView().inverse().transpose().getRotation();
-            this._normal = n;
+            Matrix4.inverse(this.getModelView(), normalScratch);
+            Matrix4.transpose(normalScratch, normalScratch);
+            Matrix4.getRotation(normalScratch, this._normal);
         }
     };
 
@@ -430,13 +436,15 @@ define([
         return this._normal;
     };
 
+    var inverseNormalScratch = new Matrix4();
+
     UniformState.prototype._cleanInverseNormal = function() {
         if (this._inverseNormalDirty) {
             this._inverseNormalDirty = false;
 
             // TODO:  Inverse of the whole 4x4?  Or we can just do the 3x3?
-            var n = this.getModelView().inverse().getRotation();
-            this._inverseNormal = n;
+            Matrix4.inverse(this.getModelView(), inverseNormalScratch);
+            Matrix4.getRotation(inverseNormalScratch, this._inverseNormal);
         }
     };
 
@@ -454,15 +462,21 @@ define([
         return this._inverseNormal;
     };
 
+    var sunPosition3Scratch = new Cartesian3();
+    var sunPosition4Scratch = new Cartesian4();
+
     UniformState.prototype._cleanSunDirectionEC = function() {
         if (this._sunDirectionECDirty) {
             this._sunDirectionECDirty = false;
 
-            var sunPosition = new Cartesian4(this._sunPosition.x, this._sunPosition.y, this._sunPosition.z, 0.0);
-            var sunEC = this.getView().multiplyByVector(sunPosition);
-            var p = new Cartesian3(sunEC.x, sunEC.y, sunEC.z).normalize();
+            sunPosition4Scratch.x = this._sunPosition.x;
+            sunPosition4Scratch.y = this._sunPosition.y;
+            sunPosition4Scratch.z = this._sunPosition.z;
+            sunPosition4Scratch.w = 0.0;
+            Matrix4.multiplyByVector(this.getView(), sunPosition4Scratch, sunPosition4Scratch);
 
-            this._sunDirectionEC = p;
+            Cartesian3.fromCartesian4(sunPosition4Scratch, sunPosition3Scratch);
+            Cartesian3.normalize(sunPosition3Scratch, this._sunDirectionEC);
         }
     };
 
@@ -482,7 +496,7 @@ define([
             throw new DeveloperError('sunPosition is required.');
         }
 
-        this._sunPosition = sunPosition;
+        this._sunPosition = Cartesian3.clone(sunPosition);
         this._sunDirectionECDirty = true;
         this._sunDirectionWCDirty = true;
     };
@@ -516,7 +530,7 @@ define([
     UniformState.prototype._cleanSunDirectionWC = function() {
         if (this._sunDirectionWCDirty) {
             this._sunDirectionWCDirty = false;
-            this._sunDirectionWC = this._sunPosition.normalize();
+            Cartesian3.normalize(this._sunPosition, this._sunDirectionWC);
         }
     };
 
