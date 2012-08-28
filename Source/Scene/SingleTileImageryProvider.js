@@ -140,33 +140,5 @@ define([
         return this._image;
     };
 
-    /**
-     * Transform the tile imagery from the format requested from the remote server
-     * into a format suitable for resource creation.  Once complete, the tile imagery
-     * state should be set to TRANSFORMED.  Alternatively, tile imagery state can be set to
-     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
-     * is still needed.
-     *
-     * @param {Context} context The context to use to create resources.
-     * @param {Imagery} imagery The imagery to transform.
-     */
-    SingleTileImageryProvider.prototype.transformImagery = function(context, imagery) {
-        imagery.transformedImage = imagery.image;
-        imagery.image = undefined;
-        imagery.state = ImageryState.TRANSFORMED;
-    };
-
-    /**
-     * Create WebGL resources for the tile imagery using whatever data the transformImagery step produced.
-     * Once complete, the tile imagery state should be set to READY.  Alternatively, tile imagery state can be set to
-     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
-     * is still needed.
-     *
-     * @param {Context} context The context to use to create resources.
-     * @param {TileImagery} tileImagery The tile imagery to create resources for.
-     * @param {TexturePool} texturePool A texture pool to use to create textures.
-     */
-    SingleTileImageryProvider.prototype.createResources = ImageryProvider.prototype.createResources;
-
     return SingleTileImageryProvider;
 });
