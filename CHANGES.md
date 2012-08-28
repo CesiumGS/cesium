@@ -30,12 +30,15 @@ Beta Releases
     * `Label.computeScreenSpacePosition` now requires the current scene state as a parameter.
     * Passing `undefined` to any of the set functions on `Label` now throws an exception.
     * Renamed `agi_` prefix on GLSL identifiers to `czm_`.
-            
+    * Changed the GLSL automatic uniform `czm_viewport` from an `ivec4` to a `vec4` to reduce casting.
+                
 * All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * Added support for nested polygons with holes. See `Polygon.configureFromPolygonHierarchy`.
 * Added support to the renderer for view frustum and central body occlusion culling. All built-in primitives, such as `BillboardCollection`, `Polygon`, `PolylineCollection`, etc., can be culled. See the advanced examples in the Sandbox for details.
 * Added `writeTextToCanvas` function which handles sizing the resulting canvas to fit the desired text.
 * Added support for CZML path visualization via the `DynamicPath` and `DynamicPathVisualizer` objects.  See the [CZML wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide) for more details.
+* Added support for [WEBGL_depth_texture](http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/).  See `Framebuffer.setDepthTexture`.
+* Added `CesiumMath.isPowerOfTwo`.
 
 ### b7 - 08/01/2012
 
