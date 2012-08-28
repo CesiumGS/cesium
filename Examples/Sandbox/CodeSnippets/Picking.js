@@ -372,7 +372,7 @@
                         // Prevent multiple erosions
                         eroding = true;
 
-                        scene.getAnimations().addProperty(sensor, 'erosion', 1.0, 0.0, {
+                        scene.getAnimations().addProperty(sensor.material.materials.erosion.uniforms, 'time', 1.0, 0.0, {
                             onComplete : function() {
                                 sensors.remove(sensor);
                             }
@@ -392,6 +392,24 @@
                 radius : 20000000.0,
                 xHalfAngle : Cesium.Math.toRadians(40.0),
                 yHalfAngle : Cesium.Math.toRadians(20.0)
+            });
+
+            sensor.material = new Cesium.Material({
+                context: scene.getContext(),
+                fabric: {
+                    materials: {
+                        color: {
+                            type: 'Color'
+                        },
+                        erosion: {
+                            type: 'Erosion'
+                        }
+                    },
+                    components: {
+                        diffuse: 'color.diffuse',
+                        alpha: 'erosion.alpha * color.alpha'
+                    }
+                }
             });
 
             primitives.add(sensors);

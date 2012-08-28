@@ -146,7 +146,6 @@
     tree.addNode('Apply a blob material', [new Sandbox.BlobSensorMaterial(scene, ellipsoid, primitives)], mt, 'Material');
     tree.addNode('Apply multiple materials to a conic sensor', [new Sandbox.SensorMaterialPerSurface(scene, ellipsoid, primitives)], mt, 'Material');
     var anim = tree.addNode('Animation', '', sens, 'Animation');
-    tree.addNode('Use an erosion animation', [new Sandbox.ErosionSensorAnimation(scene, ellipsoid, primitives)], anim, 'Animation');
     tree.addNode('Use an alpha animation', [new Sandbox.AlphaSensorAnimation(scene, ellipsoid, primitives)], anim, 'Animation');
     tree.addNode('Animate stripes', [new Sandbox.AnimateSensorStripes(scene, ellipsoid, primitives)], anim, 'Animation');
 

@@ -1109,11 +1109,27 @@
                 Cesium.Cartographic.fromDegrees(-80.0, 40.0)
             ]));
 
-            polygon.material = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
+            polygon.material = new Cesium.Material({
+                context: scene.getContext(),
+                fabric: {
+                    materials: {
+                        checkerboard: {
+                            type: 'Checkerboard'
+                        },
+                        erosion: {
+                            type: 'Erosion'
+                        }
+                    },
+                    components: {
+                        diffuse: 'checkerboard.diffuse',
+                        alpha: 'erosion.alpha * checkerboard.alpha'
+                    }
+                }
+            });
 
             primitives.add(polygon);
 
-            scene.getAnimations().addProperty(polygon, 'erosion', 0.0, 1.0);
+            scene.getAnimations().addProperty(polygon.material.materials.erosion.uniforms, 'time', 0.0, 1.0);
         };
     };
 
