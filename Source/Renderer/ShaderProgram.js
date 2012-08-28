@@ -558,7 +558,7 @@ define([
             var uniforms = {
                 /**
                  * An automatic GLSL uniform containing the viewport's <code>x</code>, <code>y</code>, <code>width</code>,
-                 * and <code>height</code> properties in an <code>ivec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,
+                 * and <code>height</code> properties in an <code>vec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,
                  * and <code>w</code> components, respectively.
                  * <br /><br />
                  * Like all automatic uniforms, <code>czm_viewport</code> does not need to be explicitly declared.
@@ -572,7 +572,7 @@ define([
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform ivec4 czm_viewport;
+                 * uniform vec4 czm_viewport;
                  *
                  * // Scale the window coordinate components to [0, 1] by dividing
                  * // by the viewport's width and height.
@@ -590,7 +590,7 @@ define([
                      * @private
                      */
                     getDatatype : function() {
-                        return UniformDatatype.INT_VECTOR4;
+                        return UniformDatatype.FLOAT_VECTOR4;
                     },
 
                     /**
