@@ -624,20 +624,6 @@ bool czm_ellipsoidContainsPoint(czm_ellipsoid ellipsoid, vec3 point)
 /**
  * DOC_TBA
  *
- * @name czm_ellipsoidNormal
- * @glslFunction
- *
- */
-vec3 czm_ellipsoidNormal(czm_ellipsoid ellipsoid, vec3 pointOnEllipsoid)
-{
-    vec3 n = ellipsoid.inverseRadiiSquared * (czm_inverseView * vec4(pointOnEllipsoid, 1.0)).xyz;
-    vec3 rotated = (czm_view * vec4(n, 0.0)).xyz;
-    return normalize(rotated);
-}
-
-/**
- * DOC_TBA
- *
  *
  * @name czm_rayEllipsoidIntersectionInterval
  * @glslFunction
