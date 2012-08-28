@@ -813,17 +813,26 @@ define([
 
     BillboardCollection.prototype._writeTextureCoordinatesAndImageSize = function(context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = (billboard._index * 4);
+        var bottomLeftX = 0;
+        var bottomLeftY = 0;
+        var width = 0;
+        var height = 0;
         var imageRectangle = textureAtlasCoordinates[billboard.getImageIndex()];
-        var bottomLeftX = imageRectangle.x;
-        var bottomLeftY = imageRectangle.y;
-        var topRightX = imageRectangle.x + imageRectangle.width;
-        var topRightY = imageRectangle.y + imageRectangle.height;
-        this._maxSize = Math.max(this._maxSize, imageRectangle.width, imageRectangle.height);
+        if (typeof imageRectangle !== 'undefined') {
+            bottomLeftX = imageRectangle.x;
+            bottomLeftY = imageRectangle.y;
+            width = imageRectangle.width;
+            height = imageRectangle.height;
+        }
+        var topRightX = bottomLeftX + width;
+        var topRightY = bottomLeftY + height;
 
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, bottomLeftX * 65535, bottomLeftY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Lower Left
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, topRightX * 65535, bottomLeftY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Lower Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, topRightX * 65535, topRightY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Upper Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 3, bottomLeftX * 65535, topRightY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Upper Left
+        this._maxSize = Math.max(this._maxSize, width, height);
+
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, bottomLeftX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Left
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, topRightX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Right
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, topRightX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Right
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 3, bottomLeftX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Left
     };
 
     BillboardCollection.prototype._writeBillboard = function(context, textureAtlasCoordinates, vafWriters, billboard) {
