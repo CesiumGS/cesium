@@ -85,12 +85,14 @@ require([
     
     function alphaAnimation(scene) {
         Sandcastle.declare(alphaAnimation);
+        scene.getAnimations().removeAll();
         var polygon = scene.getPrimitives().get(0);
         scene.getAnimations().addAlpha(polygon.material, 0.0, 0.7);
     }
     
     function erosionAnimation(scene) {
         Sandcastle.declare(erosionAnimation);
+        scene.getAnimations().removeAll();
         var polygon = scene.getPrimitives().get(0);
         scene.getAnimations().addProperty(polygon, 'erosion', 0.0, 1.0, { 
             duration: 1000 
@@ -99,14 +101,26 @@ require([
     
     function heightAnimation(scene) {
         Sandcastle.declare(heightAnimation);
+        scene.getAnimations().removeAll();
         var polygon = scene.getPrimitives().get(0);
         scene.getAnimations().addProperty(polygon, 'height', 5000000.0, 0.0, { 
             duration: 1000 
         });
     }
     
-    function createPrimitives(scene) {
+    function stripeAnimation(scene) {
+        Sandcastle.declare(stripeAnimation);
+        scene.getAnimations().removeAll();
+        var sensor = scene.getPrimitives().get(1).get(0);
+        scene.getAnimations().addOffsetIncrement(sensor.material);
+    }
+    
+    function createPrimitives(widget) {
+        var ellipsoid = widget.ellipsoid;
+        var scene = widget.scene;
         var primitives = scene.getPrimitives();
+        
+        // Add a polygon
         var polygon = new Cesium.Polygon();
         polygon.configureExtent(new Cesium.Extent(
                 Cesium.Math.toRadians(-120.0), 
@@ -115,6 +129,20 @@ require([
                 Cesium.Math.toRadians(50.0)));
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Color');
         primitives.add(polygon);        
+        
+        // Add a rectangular sensor
+        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-45.0, 45.0)));
+        modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(200000.0, 0.0, -3000000.0)));
+        var material = Cesium.Material.fromType(scene.getContext(), 'Stripe'); // Use default colors
+        var sensors = new Cesium.SensorVolumeCollection(undefined);
+        sensors.addRectangularPyramid({
+            modelMatrix : modelMatrix,
+            radius : 20000000.0,
+            xHalfAngle : Cesium.Math.toRadians(30.0),
+            yHalfAngle : Cesium.Math.toRadians(20.0),
+            material : material
+        });
+        primitives.add(sensors);
     }
     
     function createButtons(scene) {
@@ -141,11 +169,19 @@ require([
                 Sandcastle.highlight(heightAnimation);
             }
         }).placeAt("toolbar");
+        
+        new Button({
+            label: "Stripe Animation",
+            onClick: function() {
+                stripeAnimation(scene); 
+                Sandcastle.highlight(stripeAnimation);
+            }
+        }).placeAt("toolbar");
     }
 
     var cesiumWidget = new CesiumWidget({
         postSetup : function(widget) {
-            createPrimitives(widget.scene);
+            createPrimitives(widget);
             createButtons(widget.scene);
             widget.startRenderLoop();
         }
