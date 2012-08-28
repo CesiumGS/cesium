@@ -487,24 +487,15 @@ require([
         
         var menu = new DropDownMenu({ style: "display: none;"});
         
-        function showPolygon() {
-            if (!polygon.show) {
-                polygon.show = true;
-                worldPolygon.show = false;   
-            }
-        }
-        
-        function showWorldPolygon() {
-            if (!worldPolygon.show) {
-                worldPolygon.show = true;
-                polygon.show = false;
-            }
+        function togglePolygonVisibility(polygonToShow, polygonToHide) {
+            polygonToShow.show = true;
+            polygonToHide.show = false;   
         }
         
         menu.addChild(new MenuItem({
             label: 'Alpha Map',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyAlphaMapMaterial(polygon, scene);
                 Sandcastle.highlight(applyAlphaMapMaterial);
             }
@@ -513,7 +504,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Asphalt',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyAsphaltMaterial(polygon, scene);
                 Sandcastle.highlight(applyAsphaltMaterial);
             }
@@ -522,7 +513,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Blob',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyBlobMaterial(polygon, scene);
                 Sandcastle.highlight(applyBlobMaterial);
             }
@@ -531,7 +522,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Brick',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyBrickMaterial(polygon, scene);
                 Sandcastle.highlight(applyBrickMaterial);
             }
@@ -540,7 +531,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Bump Map',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyBumpMapMaterial(polygon, scene);
                 Sandcastle.highlight(applyBumpMapMaterial);
             }
@@ -549,7 +540,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Cement',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyCementMaterial(polygon, scene);
                 Sandcastle.highlight(applyCementMaterial);
             }
@@ -558,7 +549,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Checkerboard',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyCheckerboardMaterial(polygon, scene);
                 Sandcastle.highlight(applyCheckerboardMaterial);
             }
@@ -567,7 +558,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Composite Example 1',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyCompositeMaterial1(polygon, scene);
                 Sandcastle.highlight(applyCompositeMaterial1);
             }
@@ -576,7 +567,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Composite Example 2',
             onClick: function() { 
-                showWorldPolygon();
+                togglePolygonVisibility(worldPolygon, polygon);
                 applyCompositeMaterial2(worldPolygon, scene);
                 Sandcastle.highlight(applyCompositeMaterial2);
             }
@@ -585,7 +576,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Color',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyColorMaterial(polygon, scene);
                 Sandcastle.highlight(applyColorMaterial);
             }
@@ -594,7 +585,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Diffuse',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyDiffuseMaterial(polygon, scene);
                 Sandcastle.highlight(applyDiffuseMaterial);
             }
@@ -603,7 +594,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Dot',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyDotMaterial(polygon, scene);
                 Sandcastle.highlight(applyDotMaterial);
             }
@@ -612,7 +603,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Emission Map',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyEmissionMapMaterial(polygon, scene);
                 Sandcastle.highlight(applyEmissionMapMaterial);
             }
@@ -621,7 +612,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Facet',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyFacetMaterial(polygon, scene);
                 Sandcastle.highlight(applyFacetMaterial);
             }
@@ -630,7 +621,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Fresnel',
             onClick: function() { 
-                showWorldPolygon();
+                togglePolygonVisibility(worldPolygon, polygon);
                 applyFresnelMaterial(worldPolygon, scene);
                 Sandcastle.highlight(applyFresnelMaterial);
             }
@@ -639,7 +630,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Grass',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyGrassMaterial(polygon, scene);
                 Sandcastle.highlight(applyGrassMaterial);
             }
@@ -648,7 +639,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Image',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyImageMaterial(polygon, scene);
                 Sandcastle.highlight(applyImageMaterial);
             }
@@ -657,7 +648,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Normal Map',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyNormalMapMaterial(polygon, scene);
                 Sandcastle.highlight(applyNormalMapMaterial);
             }
@@ -666,7 +657,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Reflection',
             onClick: function() { 
-                showWorldPolygon();
+                togglePolygonVisibility(worldPolygon, polygon);
                 applyReflectionMaterial(worldPolygon, scene);
                 Sandcastle.highlight(applyReflectionMaterial);
             }
@@ -675,7 +666,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Refraction',
             onClick: function() { 
-                showWorldPolygon();
+                togglePolygonVisibility(worldPolygon, polygon);
                 applyRefractionMaterial(worldPolygon, scene);
                 Sandcastle.highlight(applyRefractionMaterial);
             }
@@ -684,7 +675,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Specular Map',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applySpecularMapMaterial(polygon, scene);
                 Sandcastle.highlight(applySpecularMapMaterial);
             }
@@ -693,7 +684,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Stripe',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyStripeMaterial(polygon, scene);
                 Sandcastle.highlight(applyStripeMaterial);
             }
@@ -702,7 +693,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'TieDye',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyTieDyeMaterial(polygon, scene);
                 Sandcastle.highlight(applyTieDyeMaterial);
             }
@@ -711,7 +702,7 @@ require([
         menu.addChild(new MenuItem({
             label: 'Wood',
             onClick: function() { 
-                showPolygon();
+                togglePolygonVisibility(polygon, worldPolygon);
                 applyWoodMaterial(polygon, scene);
                 Sandcastle.highlight(applyWoodMaterial);
             }
