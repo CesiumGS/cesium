@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Cesium Demo</title>
+    <script>
+    var Sandcastle = {};
+    Sandcastle.declare = function () {};
+    Sandcastle.highlight = function () {};
+    Sandcastle.registered = [];
+    if (window.location.protocol === 'file:') {
+        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
+            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
+        }
+    }
+    </script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript">
+    require({
+        baseUrl : '../../..',
+        packages: [
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Source', location: 'Source' },
+            { name: 'Core', location: 'Source/Core' },
+            { name: 'DynamicScene', location: 'Source/DynamicScene' },
+            { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Scene', location: 'Source/Scene' },
+            { name: 'Shaders', location: 'Source/Shaders' },
+            { name: 'ThirdParty', location: 'Source/ThirdParty' },
+            { name: 'Widgets', location: 'Source/Widgets' }
+        ]
+    });
+    </script>
+    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
+</head>
+<body class="claro">
+<style>
+body {
+    background: #000;
+    color: #eee;
+    font-family: sans-serif;
+    font-size: 9pt;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.fullSize {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: none;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+#toolbar {
+    background: rgba(0, 0, 0, 0.5);
+    border: solid 1px rgba(0, 0, 0, 0.9);
+    margin: 5px;
+    padding: 2px 5px;
+    border-radius: 5px;
+}
+</style>
+
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="toolbar">Loading...</div>
+
+<script id="cesium_sandcastle_script">
+require([
+    'Source/Cesium', 'Widgets/Dojo/CesiumWidget',
+    'dojo/on', 'dojo/dom', 'dijit/form/Button'
+], function(
+    Cesium, CesiumWidget,
+    on, dom, Button)
+{
+    "use strict";
+    
+    function alphaAnimation(scene) {
+        Sandcastle.declare(alphaAnimation);
+        var polygon = scene.getPrimitives().get(0);
+        scene.getAnimations().addAlpha(polygon.material, 0.0, 0.7);
+    }
+    
+    function erosionAnimation(scene) {
+        Sandcastle.declare(erosionAnimation);
+        var polygon = scene.getPrimitives().get(0);
+        scene.getAnimations().addProperty(polygon, 'erosion', 0.0, 1.0, { 
+            duration: 1000 
+        });
+    } 
+    
+    function heightAnimation(scene) {
+        Sandcastle.declare(heightAnimation);
+        var polygon = scene.getPrimitives().get(0);
+        scene.getAnimations().addProperty(polygon, 'height', 5000000.0, 0.0, { 
+            duration: 1000 
+        });
+    }
+    
+    function createPrimitives(scene) {
+        var primitives = scene.getPrimitives();
+        var polygon = new Cesium.Polygon();
+        polygon.configureExtent(new Cesium.Extent(
+                Cesium.Math.toRadians(-120.0), 
+                Cesium.Math.toRadians(20.0), 
+                Cesium.Math.toRadians(-80.0), 
+                Cesium.Math.toRadians(50.0)));
+        polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Color');
+        primitives.add(polygon);        
+    }
+    
+    function createButtons(scene) {
+        new Button({
+            label: "Alpha Animation",
+            onClick: function() {
+                alphaAnimation(scene); 
+                Sandcastle.highlight(alphaAnimation);
+            }
+        }).placeAt("toolbar");
+        
+        new Button({
+            label: "Erosion Animation",
+            onClick: function() {
+                erosionAnimation(scene); 
+                Sandcastle.highlight(erosionAnimation);
+            }
+        }).placeAt("toolbar");
+        
+        new Button({
+            label: "Height Animation",
+            onClick: function() {
+                heightAnimation(scene); 
+                Sandcastle.highlight(heightAnimation);
+            }
+        }).placeAt("toolbar");
+    }
+
+    var cesiumWidget = new CesiumWidget({
+        postSetup : function(widget) {
+            createPrimitives(widget.scene);
+            createButtons(widget.scene);
+            widget.startRenderLoop();
+        }
+    }).placeAt(dom.byId("cesiumContainer"));
+    
+    on(window, 'resize', function() {
+        cesiumWidget.resize();
+    });
+    
+    dom.byId("toolbar").innerHTML = '';
+});
+
+</script>
+</body>
+</html>
