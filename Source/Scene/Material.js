@@ -286,7 +286,7 @@ define([
      */
     var Material = function(description) {
         /**
-         * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is undefined.
+         * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is a GUID.
          * @type String
          */
         this.type = undefined;
@@ -408,7 +408,7 @@ define([
         result._template.uniforms = defaultValue(result._template.uniforms, {});
         result._template.materials = defaultValue(result._template.materials, {});
 
-        result.type = result._template.type;
+        result.type = (typeof result._template.type !== 'undefined') ? result._template.type : createGuid();
 
         result.shaderSource = '';
         result.materials = {};
@@ -426,7 +426,7 @@ define([
         checkForTemplateErrors(result);
 
         // If the material has a new type, add it to the cache.
-        if ((typeof cachedTemplate === 'undefined') && (typeof result.type !== 'undefined')){
+        if (typeof cachedTemplate === 'undefined'){
             Material._materialCache.addMaterial(result.type, result._template);
         }
 
