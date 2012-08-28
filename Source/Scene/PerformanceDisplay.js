@@ -148,7 +148,7 @@ define([
             this._quad.setRectangle(new BoundingRectangle(this._rectangle.x, viewportHeight - canvasHeight - this._rectangle.y, canvasWidth, canvasHeight));
         }
 
-        this._quad.update(context, sceneState);
+        return this._quad.update(context, sceneState);
     };
 
     PerformanceDisplay.prototype._drawLine = function(style, x, valuePercent) {
