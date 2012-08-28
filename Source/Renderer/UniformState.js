@@ -345,7 +345,7 @@ define([
         if (this._viewProjectionDirty) {
             this._viewProjectionDirty = false;
 
-            Matrix4.multiply(this._project, this._view, this._viewProjection);
+            Matrix4.multiply(this._projection, this._view, this._viewProjection);
         }
     };
 
