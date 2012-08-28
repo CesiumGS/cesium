@@ -41,7 +41,7 @@ Beta Releases
 * Added `CesiumMath.isPowerOfTwo`.
 * Added `affectedByLighting` to `ComplexConicSensorVolume`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume` to turn lighting on/off for these objects.
 * CZML `Polygon`, `Cone`, and `Pyramid` objects are no longer affected by lighting.
-* Added a `clampToPixel` property to `BillboardCollection` and `LabelCollection`.  When true, it aligns all vertices to a full pixel in screen space, providing a crisper images and text at the cost of jumpier motion.
+* Added a `clampToPixel` property to `BillboardCollection` and `LabelCollection`.  When true, it aligns all billboards and text to a pixel in screen space, providing a crisper images at the cost of jumpier motion.
 
 ### b7 - 08/01/2012
 

@@ -163,7 +163,7 @@ define([
         this._projection = undefined;
 
         /**
-         * If true, aligns all vertices to a pixel in screen space,
+         * If true, aligns all billboards to a pixel in screen space,
          * providing a crisper image at the cost of jumpier motion.
          * Defaults to false.
          *

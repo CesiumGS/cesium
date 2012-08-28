@@ -360,7 +360,7 @@ define([
         this.modelMatrix = Matrix4.IDENTITY.clone();
 
         /**
-         * If true, aligns all vertices to a pixel in screen space,
+         * If true, aligns all text to a pixel in screen space,
          * providing crisper text at the cost of jumpier motion.
          * Defaults to true.
          *
