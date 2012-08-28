@@ -36,7 +36,7 @@ void main()
     
     //Convert view vector to world space
     vec3 positionToEyeEC = normalize(-v_positionEC); 
-    materialInput.positionToEyeWC = normalize(czm_inverseViewRotation * positionToEyeEC);
+    materialInput.positionToEyeEC = positionToEyeEC;
 
     erode(materialInput.str);
     czm_material material = czm_getMaterial(materialInput);
