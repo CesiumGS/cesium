@@ -223,6 +223,8 @@ define([
             } else {
                 pyramidVisualizerIndex = this._pyramidCollection.length;
                 pyramid = new CustomSensorVolume();
+                pyramid.affectedByLighting = false;
+
                 this._pyramidCollection.push(pyramid);
                 this._primitives.add(pyramid);
             }
