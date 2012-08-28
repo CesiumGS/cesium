@@ -342,7 +342,7 @@ define([
                             newUniformName = uniformName + count;
                             count += 1;
                         }
-                        materialSource = materialSource.replace(uniformName, newUniformName);
+                        materialSource = materialSource.replace(new RegExp(uniformName, 'g'), newUniformName);
                         combinedUniforms[newUniformName] = materialUniforms[uniformName];
                     }
                 }
