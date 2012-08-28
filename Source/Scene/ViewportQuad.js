@@ -38,7 +38,6 @@ define([
          */
         this.enableBlending = false;
 
-        this._context = undefined;
         this._sp = undefined;
         this._va = undefined;
         this._commandTree = {};
@@ -166,7 +165,7 @@ define([
             typeof c.vertexArray !== 'undefined') {
 
             ++c.referenceCount;
-            return c.vertexArray;
+            return c;
         }
 
         var mesh = {
@@ -201,25 +200,26 @@ define([
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
-        vertexArrayCache[context.getId()] = {
+        var cachedVA = {
             vertexArray : va,
-            referenceCount : 1
+            referenceCount : 1,
+
+            release : function() {
+                if (typeof this.vertexArray !== 'undefined' &&
+                    --this.referenceCount === 0) {
+
+                    debugger;
+
+                    // TODO: Schedule this for a few 100 frames later so we don't thrash the cache
+                    this.vertexArray = this.vertexArray.destroy();
+                }
+
+                return undefined;
+            }
         };
 
-        return va;
-    }
-
-    function releaseVertexArray(context) {
-        // TODO: Schedule this for a few 100 frames later so we don't thrash the cache
-        var c = vertexArrayCache[context.getId()];
-        if (typeof c !== 'undefined' &&
-            typeof c.vertexArray !== 'undefined' &&
-            --c.referenceCount === 0) {
-
-            c.vertexArray = c.vertexArray.destroy();
-        }
-
-        return undefined;
+        vertexArrayCache[context.getId()] = cachedVA;
+        return cachedVA;
     }
 
     /**
@@ -227,7 +227,6 @@ define([
      */
     ViewportQuad.prototype.update = function(context, sceneState) {
         if (typeof this._sp == 'undefined') {
-            this._context = context;
             this._sp = context.getShaderCache().getShaderProgram(this._vertexShaderSource, this._fragmentShaderSource, attributeIndices);
             this._va = getVertexArray(context);
             this.renderState = context.createRenderState({
@@ -255,7 +254,7 @@ define([
                 primitiveType : PrimitiveType.TRIANGLE_FAN,
                 shaderProgram : this._sp,
                 uniformMap : this.uniforms,
-                vertexArray : this._va,
+                vertexArray : this._va.vertexArray,
                 renderState : this.renderState,
                 framebuffer : this._framebuffer
             });
@@ -300,7 +299,7 @@ define([
      * quad = quad && quad.destroy();
      */
     ViewportQuad.prototype.destroy = function() {
-        this._va = releaseVertexArray(this._context);
+        this._va = this._va && this._va.release();
         this._sp = this._sp && this._sp.release();
         this._texture = this._destroyTexture && this._texture && this._texture.destroy();
         this._framebuffer = this._destroyFramebuffer && this._framebuffer && this._framebuffer.destroy();
