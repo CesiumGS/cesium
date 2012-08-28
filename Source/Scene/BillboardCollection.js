@@ -163,6 +163,15 @@ define([
         this._projection = undefined;
 
         /**
+         * If true, aligns all vertices to a pixel in screen space,
+         * providing a crisper image at the cost of jumpier motion.
+         * Defaults to false.
+         *
+         * @type Boolean
+         */
+        this.clampToPixel = false;
+
+        /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
@@ -658,7 +667,11 @@ define([
             blending : BlendingState.ALPHA_BLEND
         });
 
-        this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
+        this._sp = context.getShaderCache().getShaderProgram(
+                (this.clampToPixel ? '#define CLAMP_TO_PIXEL 1\n' : '') +
+                BillboardCollectionVS,
+                BillboardCollectionFS,
+                attributeIndices);
 
         var state = this._update(context, sceneState);
         this.update = this._update;
@@ -1129,8 +1142,10 @@ define([
         });
 
         this._spPick = context.getShaderCache().getShaderProgram(
+                (this.clampToPixel ? '#define CLAMP_TO_PIXEL 1\n' : '') +
                 BillboardCollectionVS,
-                '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
+                '#define RENDER_FOR_PICK 1\n' +
+                BillboardCollectionFS,
                 attributeIndices);
 
         this.updateForPick = function(context) {

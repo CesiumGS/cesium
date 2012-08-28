@@ -314,6 +314,7 @@ define([
         this._textureAtlas = undefined;
 
         this._billboardCollection = new BillboardCollection();
+        this._billboardCollection.clampToPixel = true;
         this._billboardCollection.setDestroyTextureAtlas(false);
 
         this._spareBillboards = [];

@@ -43,7 +43,11 @@ void main()
     positionWC.xy += (origin * abs(halfSize)) + halfSize;
     positionWC.xy += (pixelOffset * czm_highResolutionSnapScale);
     
-    gl_Position = czm_viewportOrthographic * vec4(positionWC.x, floor(positionWC.y), -positionWC.z, 1.0);
+    #ifdef CLAMP_TO_PIXEL
+    gl_Position = czm_viewportOrthographic * vec4(floor(positionWC.x), floor(positionWC.y), -positionWC.z, 1.0);
+    #else
+    gl_Position = czm_viewportOrthographic * vec4(positionWC.x, positionWC.y, -positionWC.z, 1.0);
+    #endif
     v_textureCoordinates = textureCoordinates;
     v_color = color;
     v_pickColor = pickColor;

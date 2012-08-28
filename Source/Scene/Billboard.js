@@ -589,7 +589,11 @@ define([
         positionWC.x += po.x;
         positionWC.y += po.y;
 
-        return new Cartesian2(positionWC.x, Math.floor(positionWC.y));
+        if (this._collection.clampToPixel) {
+            return new Cartesian2(Math.floor(positionWC.x), Math.floor(positionWC.y));
+        }
+
+        return new Cartesian2(positionWC.x, positionWC.y);
     };
 
     /**
