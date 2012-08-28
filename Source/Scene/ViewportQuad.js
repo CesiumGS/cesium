@@ -2,6 +2,7 @@
 define([
         '../Core/destroyObject',
         '../Core/defaultValue',
+        '../Core/clone',
         '../Core/BoundingRectangle',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
@@ -12,6 +13,7 @@ define([
     ], function(
         destroyObject,
         defaultValue,
+        clone,
         BoundingRectangle,
         ComponentDatatype,
         PrimitiveType,
@@ -232,7 +234,7 @@ define([
             this._sp = context.getShaderCache().getShaderProgram(this._vertexShaderSource, this._fragmentShaderSource, attributeIndices);
             this._va = getVertexArray(context);
             this.renderState = context.createRenderState({
-                blending : BlendingState.ALPHA_BLEND
+                blending : clone(BlendingState.ALPHA_BLEND)
             });
         }
 
