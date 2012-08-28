@@ -1,29 +1,24 @@
 /*global define*/
 define([
         './defaultValue',
-        './Cartesian3',
-        './Cartographic',
         './DeveloperError',
+        './Cartesian3',
         './Ellipsoid',
         './EquidistantCylindricalProjection',
         './Extent',
-        './Intersect',
-        './Math'
+        './Intersect'
     ], function(
         defaultValue,
-        Cartesian3,
-        Cartographic,
         DeveloperError,
+        Cartesian3,
         Ellipsoid,
         EquidistantCylindricalProjection,
         Extent,
-        Intersect,
-        CesiumMath) {
+        Intersect) {
     "use strict";
 
     /**
      * A bounding sphere with a center and a radius.
-     *
      * @alias BoundingSphere
      * @constructor
      *
@@ -31,143 +26,30 @@ define([
      * @param {Number} [radius=0.0] The radius of the bounding sphere.
      *
      * @see AxisAlignedBoundingBox
+     * @see BoundingRectangle
      */
     var BoundingSphere = function(center, radius) {
         /**
          * The center point of the sphere.
-         *
          * @type {Cartesian3}
          */
         this.center = (typeof center !== 'undefined') ? Cartesian3.clone(center) : Cartesian3.ZERO.clone();
         /**
          * The radius of the sphere.
-         *
          * @type {Number}
          */
         this.radius = defaultValue(radius, 0.0);
     };
 
     /**
-     * Creates a bounding sphere that contains both the left and right bounding spheres.
+     * Computes a tight-fitting bounding sphere enclosing a list of 3D Cartesian points.
+     * The bounding sphere is computed by running two algorithms, a naive algorithm and
+     * Ritter's algorithm. The smaller of the two spheres is used to ensure a tight fit.
      * @memberof BoundingSphere
      *
-     * @param {BoundingSphere} left A sphere to enclose in a bounding sphere.
-     * @param {BoundingSphere} right A sphere to enclose in a bounding sphere.
-     * @param {BoundingSphere} [result] The object onto which to store the result.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
-     *
-     * @return {BoundingSphere} A sphere that encloses both left and right bounding spheres.
-     */
-    BoundingSphere.union = function(left, right, result) {
-        if (typeof left === 'undefined') {
-            throw new DeveloperError('left is required.');
-        }
-
-        if (typeof right === 'undefined') {
-            throw new DeveloperError('right is required.');
-        }
-
-        if (typeof result === 'undefined') {
-            result = new BoundingSphere();
-        }
-
-        var center = left.center.add(right.center).multiplyByScalar(0.5);
-        var radius1 = left.center.subtract(center).magnitude() + left.radius;
-        var radius2 = right.center.subtract(center).magnitude() + right.radius;
-        var radius = Math.max(radius1, radius2);
-
-        result.center.x = center.x;
-        result.center.y = center.y;
-        result.center.z = center.z;
-        result.radius = radius;
-        return result;
-    };
-
-    /**
-     * Creates a bounding sphere that is sphere expanded to contain point.
-     * @memberof BoundingSphere
-     *
-     * @param {BoundingSphere} sphere A sphere to expand.
-     * @param {Cartesian3} point A point to enclose in a bounding sphere.
-     * @param {BoundingSphere} [result] The object onto which to store the result.
-     *
-     * @exception {DeveloperError} sphere is required.
-     * @exception {DeveloperError} point is required.
-     *
-     * @return {BoundingSphere} A sphere that encloses the point.
-     */
-    BoundingSphere.expand = function(sphere, point, result) {
-        if (typeof sphere === 'undefined') {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        if (typeof point === 'undefined') {
-            throw new DeveloperError('point is required.');
-        }
-
-        point = Cartesian3.clone(point);
-        result = BoundingSphere.clone(sphere, result);
-
-        var radius = point.subtract(result.center).magnitude();
-        if (radius > result.radius) {
-            result.radius = radius;
-        }
-
-        return result;
-    };
-
-    /**
-     * Duplicates a BoundingSphere instance.
-     * @memberof BoundingSphere
-     *
-     * @param {BoundingSphere} sphere The bounding sphere to duplicate.
+     * @param {Array} positions An array of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     *
-     * @exception {DeveloperError} sphere is required.
-     */
-    BoundingSphere.clone = function(sphere, result) {
-        if (typeof sphere === 'undefined') {
-            throw new DeveloperError('sphere is required');
-        }
-
-        if (typeof result === 'undefined') {
-            return new BoundingSphere(sphere.center, sphere.radius);
-        }
-
-        result.center = sphere.center.clone();
-        result.radius = sphere.radius;
-        return result;
-    };
-
-    /**
-     * Compares the provided BoundingSphere componentwise and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof BoundingSphere
-     *
-     * @param {BoundingSphere} [left] The first BoundingSphere.
-     * @param {BoundingSphere} [right] The second BoundingSphere.
-     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    BoundingSphere.equals = function(left, right) {
-        return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
-                (left.center.equals(right.center)) &&
-                (left.radius === right.radius));
-    };
-
-    /**
-     * Computes a tight-fitting bounding sphere enclosing a list of 3D Cartesian points.
-     * The bounding sphere is computed by running two algorithms, a naive algorithm and Ritter's algorithm. The
-     * smaller of the two spheres is used to ensure a tight fit.
-     *
-     * @param {Array} positions List of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
-     * @param {BoundingSphere} [result] The object onto which to store the result.
-     *
-     * @return {BoundingSphere} The bounding sphere computed from positions.
      *
      * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      */
@@ -247,10 +129,7 @@ define([
         }
 
         // Calculate the center of the initial sphere found by Ritter's algorithm
-        var ritterCenter = new Cartesian3(
-                (diameter1.x + diameter2.x) * 0.5,
-                (diameter1.y + diameter2.y) * 0.5,
-                (diameter1.z + diameter2.z) * 0.5);
+        var ritterCenter = new Cartesian3((diameter1.x + diameter2.x) * 0.5, (diameter1.y + diameter2.y) * 0.5, (diameter1.z + diameter2.z) * 0.5);
 
         // Calculate the radius of the initial sphere found by Ritter's algorithm
         var radiusSquared = (diameter2.subtract(ritterCenter)).magnitudeSquared();
@@ -281,10 +160,7 @@ define([
                 radiusSquared = ritterRadius * ritterRadius;
                 // Calculate center of new Ritter sphere
                 var oldToNew = oldCenterToPoint - ritterRadius;
-                ritterCenter = new Cartesian3(
-                        (ritterRadius * ritterCenter.x + oldToNew * currentPos.x) / oldCenterToPoint,
-                        (ritterRadius * ritterCenter.y + oldToNew * currentPos.y) / oldCenterToPoint,
-                        (ritterRadius * ritterCenter.z + oldToNew * currentPos.z) / oldCenterToPoint);
+                ritterCenter = new Cartesian3((ritterRadius * ritterCenter.x + oldToNew * currentPos.x) / oldCenterToPoint, (ritterRadius * ritterCenter.y + oldToNew * currentPos.y) / oldCenterToPoint, (ritterRadius * ritterCenter.z + oldToNew * currentPos.z) / oldCenterToPoint);
             }
         }
 
@@ -299,24 +175,28 @@ define([
         return result;
     };
 
+    var defaultProjection = new EquidistantCylindricalProjection();
     /**
-     * Creates a bounding sphere from an extent projected in 2D.
-     *
+     * Computes a bounding sphere from an extent projected in 2D.
      * @memberof BoundingSphere
      *
-     * @param {Extent} extent The valid extent used to create a bounding sphere.
+     * @param {Extent} extent The extent around which to create a bounding sphere.
      * @param {Object} [projection=EquidistantCylindricalProjection] The projection used to project the extent into 2D.
-     *
-     * @exception {DeveloperError} extent is required.
-     *
-     * @returns {BoundingSphere} The bounding sphere containing the extent.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
-    BoundingSphere.fromExtent2D = function(extent, projection) {
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
+    BoundingSphere.fromExtent2D = function(extent, projection, result) {
+        if (typeof result === 'undefined') {
+            result = new BoundingSphere();
         }
 
-        projection = projection || new EquidistantCylindricalProjection();
+        if (typeof extent === 'undefined') {
+            result.center = Cartesian3.ZERO.clone(result.center);
+            result.radius = 0.0;
+            return result;
+        }
+
+        projection = (typeof projection !== 'undefined') ? projection : defaultProjection;
 
         var lowerLeft = projection.project(extent.getSouthwest());
         var upperRight = projection.project(extent.getNortheast());
@@ -324,42 +204,135 @@ define([
         var width = upperRight.x - lowerLeft.x;
         var height = upperRight.y - lowerLeft.y;
 
-        var center = new Cartesian3(lowerLeft.x + width * 0.5, lowerLeft.y + height * 0.5, 0.0);
-        var radius = Math.sqrt(width * width + height * height) * 0.5;
-        return new BoundingSphere(center, radius);
+        result.radius = Math.sqrt(width * width + height * height) * 0.5;
+        var center = result.center;
+        center.x = lowerLeft.x + width * 0.5;
+        center.y = lowerLeft.y + height * 0.5;
+        center.z = 0;
+        return result;
     };
 
     /**
-     * Creates a bounding sphere from an extent in 3D. The bounding sphere is created using a subsample of points
+     * Computes a bounding sphere from an extent in 3D. The bounding sphere is created using a subsample of points
      * on the ellipsoid and contained in the extent. It may not be accurate for all extents on all types of ellipsoids.
-     *
      * @memberof BoundingSphere
      *
      * @param {Extent} extent The valid extent used to create a bounding sphere.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
-     *
-     * @exception {DeveloperError} extent is required.
-     *
-     * @returns {BoundingSphere} The bounding sphere containing the extent.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
-    BoundingSphere.fromExtent3D = function(extent, ellipsoid) {
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
+    BoundingSphere.fromExtent3D = function(extent, ellipsoid, result) {
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        var positions = typeof extent !== 'undefined' ? extent.subsample(ellipsoid) : undefined;
+        return BoundingSphere.fromPoints(positions, result);
+    };
+
+    /**
+     * Duplicates a BoundingSphere instance.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The bounding sphere to duplicate.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} sphere is required.
+     */
+    BoundingSphere.clone = function(sphere, result) {
+        if (typeof sphere === 'undefined') {
+            throw new DeveloperError('sphere is required');
         }
 
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        return BoundingSphere.fromPoints(extent.subsample(ellipsoid));
+        if (typeof result === 'undefined') {
+            return new BoundingSphere(sphere.center, sphere.radius);
+        }
+
+        result.center = Cartesian3.clone(sphere.center, result.center);
+        result.radius = sphere.radius;
+        return result;
+    };
+
+    var unionScratch = new Cartesian3();
+    /**
+     * Computes a bounding sphere that contains both the left and right bounding spheres.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} left A sphere to enclose in a bounding sphere.
+     * @param {BoundingSphere} right A sphere to enclose in a bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     */
+    BoundingSphere.union = function(left, right, result) {
+        if (typeof left === 'undefined') {
+            throw new DeveloperError('left is required.');
+        }
+
+        if (typeof right === 'undefined') {
+            throw new DeveloperError('right is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new BoundingSphere();
+        }
+
+        var leftCenter = left.center;
+        var rightCenter = right.center;
+
+        var center = Cartesian3.add(leftCenter, rightCenter, result.center);
+        result.center = Cartesian3.multiplyByScalar(center, 0.5, center);
+
+        var radius1 = Cartesian3.subtract(leftCenter, center, unionScratch).magnitude() + left.radius;
+        var radius2 = Cartesian3.subtract(rightCenter, center, unionScratch).magnitude() + right.radius;
+        result.radius = Math.max(radius1, radius2);
+        return result;
+    };
+
+    var expandScratch = new Cartesian3();
+    /**
+     * Computes a bounding sphere by enlarging the provided sphere to contain the provided point.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere A sphere to expand.
+     * @param {Cartesian3} point A point to enclose in a bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} sphere is required.
+     * @exception {DeveloperError} point is required.
+     */
+    BoundingSphere.expand = function(sphere, point, result) {
+        if (typeof sphere === 'undefined') {
+            throw new DeveloperError('sphere is required.');
+        }
+
+        if (typeof point === 'undefined') {
+            throw new DeveloperError('point is required.');
+        }
+
+        result = BoundingSphere.clone(sphere, result);
+
+        var radius = Cartesian3.subtract(point, result.center, expandScratch).magnitude();
+        if (radius > result.radius) {
+            result.radius = radius;
+        }
+
+        return result;
     };
 
     /**
      * Determines which side of a plane a sphere is located.
-     *
      * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to test.
-     * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0 where the coefficients a, b, c, and d are the components x, y, z, and w of the {Cartesian4}, respectively.
-     *
-     * @return {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side, and {Intersect.INTERSETING} if the sphere intersects the plane.
+     * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
+     *                           where the coefficients a, b, c, and d are the components x, y, z,
+     *                           and w of the {Cartesian4}, respectively.
+     * @return {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
+     *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
+     *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
      *
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} plane is required.
@@ -388,40 +361,20 @@ define([
     };
 
     /**
-     * Creates a bounding sphere that contains both this bounding sphere and the argument sphere.
+     * Compares the provided BoundingSphere componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof BoundingSphere
      *
-     * @param {BoundingSphere} sphere The sphere to enclose in this bounding sphere.
-     * @param {BoundingSphere} [result] The object onto which to store the result.
-     *
-     * @exception {DeveloperError} sphere is required.
-     *
-     * @return {BoundingSphere} A sphere that encloses both this sphere and the argument sphere.
+     * @param {BoundingSphere} [left] The first BoundingSphere.
+     * @param {BoundingSphere} [right] The second BoundingSphere.
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    BoundingSphere.prototype.union = function(sphere, result) {
-        if (typeof sphere === 'undefined') {
-            throw new DeveloperError('sphere is required.');
-        }
-
-        return BoundingSphere.union(this, sphere, result);
-    };
-
-    /**
-     * Creates a bounding sphere that is sphere expanded to contain point.
-     * @memberof BoundingSphere
-     *
-     * @param {Cartesian3} point A point to enclose in a bounding sphere.
-     *
-     * @exception {DeveloperError} point is required.
-     *
-     * @return {BoundingSphere} A sphere that encloses the point.
-     */
-    BoundingSphere.prototype.expand = function(point, result) {
-        if (typeof point === 'undefined') {
-            throw new DeveloperError('point is required.');
-        }
-
-        return BoundingSphere.expand(this, point, result);
+    BoundingSphere.equals = function(left, right) {
+        return (left === right) ||
+               ((typeof left !== 'undefined') &&
+                (typeof right !== 'undefined') &&
+                Cartesian3.equals(left.center, right.center) &&
+                left.radius === right.radius);
     };
 
     /**
@@ -436,21 +389,46 @@ define([
     };
 
     /**
-     * Determines which side of a plane the sphere is located.
-     *
+     * Computes a bounding sphere that contains both this bounding sphere and the argument sphere.
      * @memberof BoundingSphere
      *
-     * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0 where the coefficients a, b, c, and d are the components x, y, z, and w of the {Cartesian4}, respectively.
+     * @param {BoundingSphere} right The sphere to enclose in this bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
-     * @return {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side, and {Intersect.INTERSETING} if the sphere intersects the plane.
+     * @exception {DeveloperError} sphere is required.
+     */
+    BoundingSphere.prototype.union = function(right, result) {
+        return BoundingSphere.union(this, right, result);
+    };
+
+    /**
+     * Computes a bounding sphere that is sphere expanded to contain point.
+     * @memberof BoundingSphere
+     *
+     * @param {Cartesian3} point A point to enclose in a bounding sphere.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} point is required.
+     */
+    BoundingSphere.prototype.expand = function(point, result) {
+        return BoundingSphere.expand(this, point, result);
+    };
+
+    /**
+     * Determines which side of a plane the sphere is located.
+     * @memberof BoundingSphere
+     *
+     * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
+     *                           where the coefficients a, b, c, and d are the components x, y, z,
+     *                           and w of the {Cartesian4}, respectively.
+     * @return {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
+     *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
+     *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
      *
      * @exception {DeveloperError} plane is required.
      */
     BoundingSphere.prototype.intersect = function(plane) {
-        if (typeof plane === 'undefined') {
-            throw new DeveloperError('plane is required.');
-        }
-
         return BoundingSphere.intersect(this, plane);
     };
 
