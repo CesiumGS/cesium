@@ -125,6 +125,23 @@ defineSuite([
         verifyDraw(fs);
     });
 
+    it('has czm_viewRotation', function() {
+        var us = context.getUniformState();
+        us.setView(new Matrix4( 1.0,  2.0,  3.0,  4.0,
+                                5.0,  6.0,  7.0,  8.0,
+                                9.0, 10.0, 11.0, 12.0,
+                               13.0, 14.0, 15.0, 16.0));
+
+        var fs =
+            'void main() { ' +
+            '  bool b0 = (czm_viewRotation[0][0] ==  1.0) && (czm_viewRotation[1][0] ==  2.0) && (czm_viewRotation[2][0] ==  3.0); ' +
+            '  bool b1 = (czm_viewRotation[0][1] ==  5.0) && (czm_viewRotation[1][1] ==  6.0) && (czm_viewRotation[2][1] ==  7.0); ' +
+            '  bool b2 = (czm_viewRotation[0][2] ==  9.0) && (czm_viewRotation[1][2] == 10.0) && (czm_viewRotation[2][2] == 11.0); ' +
+            '  gl_FragColor = vec4(b0 && b1 && b2); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
     it('has czm_inverseView', function() {
         var us = context.getUniformState();
         us.setView(new Matrix4(1.0, 0.0, 0.0, 7.0,
@@ -135,9 +152,27 @@ defineSuite([
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    (czm_inverseView[0][0] == 1.0) && (czm_inverseView[1][0] == 0.0) && (czm_inverseView[2][0] == 0.0) && ' +
-            '    (czm_inverseView[0][1] == 0.0) && (czm_inverseView[1][1] == 1.0) && (czm_inverseView[2][1] == 0.0) && ' +
-            '    (czm_inverseView[0][2] == 0.0) && (czm_inverseView[1][2] == 0.0) && (czm_inverseView[2][2] == 1.0) ' +
+            '    (czm_inverseView[0][0] == 1.0) && (czm_inverseView[1][0] == 0.0) && (czm_inverseView[2][0] == 0.0) && (czm_inverseView[3][0] == -7.0) &&' +
+            '    (czm_inverseView[0][1] == 0.0) && (czm_inverseView[1][1] == 1.0) && (czm_inverseView[2][1] == 0.0) && (czm_inverseView[3][1] == -8.0) &&' +
+            '    (czm_inverseView[0][2] == 0.0) && (czm_inverseView[1][2] == 0.0) && (czm_inverseView[2][2] == 1.0) && (czm_inverseView[3][2] == -9.0)' +
+            '  ); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_inverseViewRotation', function() {
+        var us = context.getUniformState();
+        us.setView(new Matrix4(1.0, 0.0, 0.0, 7.0,
+                               0.0, 1.0, 0.0, 8.0,
+                               0.0, 0.0, 1.0, 9.0,
+                               0.0, 0.0, 0.0, 1.0));
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(' +
+            '    (czm_inverseViewRotation[0][0] == 1.0) && (czm_inverseViewRotation[1][0] == 0.0) && (czm_inverseViewRotation[2][0] == 0.0) && ' +
+            '    (czm_inverseViewRotation[0][1] == 0.0) && (czm_inverseViewRotation[1][1] == 1.0) && (czm_inverseViewRotation[2][1] == 0.0) && ' +
+            '    (czm_inverseViewRotation[0][2] == 0.0) && (czm_inverseViewRotation[1][2] == 0.0) && (czm_inverseViewRotation[2][2] == 1.0) ' +
             '  ); ' +
             '}';
         verifyDraw(fs);

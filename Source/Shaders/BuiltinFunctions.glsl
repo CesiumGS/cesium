@@ -631,7 +631,7 @@ bool czm_ellipsoidContainsPoint(czm_ellipsoid ellipsoid, vec3 point)
 vec3 czm_ellipsoidNormal(czm_ellipsoid ellipsoid, vec3 pointOnEllipsoid)
 {
     vec3 n = ellipsoid.inverseRadiiSquared * (czm_inverseView * vec4(pointOnEllipsoid, 1.0)).xyz;
-    vec3 rotated = (czm_view * vec4(n, 0.0)).xyz;
+    vec3 rotated = czm_viewRotation * n;
     return normalize(rotated);
 }
 
