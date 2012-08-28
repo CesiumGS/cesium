@@ -83,7 +83,7 @@ defineSuite([
 
     it('has an automatic uniform', function() {
         var vs = 'uniform vec4 u_vec4; void main() { gl_Position = u_vec4; }';
-        var fs = 'void main() { gl_FragColor = vec4((czm_viewport.x == 0) && (czm_viewport.y == 0) && (czm_viewport.z == 1) && (czm_viewport.w == 1)); }';
+        var fs = 'void main() { gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); }';
         sp = context.createShaderProgram(vs, fs);
 
         expect(sp.getAllUniforms().u_vec4.getName()).toEqual('u_vec4');
