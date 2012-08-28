@@ -286,7 +286,7 @@ define([
      */
     var Material = function(description) {
         /**
-         * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is a GUID.
+         * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is undefined.
          * @type String
          */
         this.type = undefined;
@@ -309,6 +309,10 @@ define([
          */
         this.uniforms = undefined;
         this._uniforms = undefined;
+
+        this._context = undefined;
+        this._strict = undefined;
+        this._template = undefined;
 
         initializeMaterial(description, 0, this);
         Object.defineProperty(this, 'type', { value : this.type, writable : false});
@@ -404,7 +408,7 @@ define([
         result._template.uniforms = defaultValue(result._template.uniforms, {});
         result._template.materials = defaultValue(result._template.materials, {});
 
-        result.type = (typeof result._template.type !== 'undefined') ? result._template.type : getRandomId();
+        result.type = result._template.type;
 
         result.shaderSource = '';
         result.materials = {};
@@ -412,9 +416,9 @@ define([
         result._uniforms = {};
 
         // If the cache contains this material type, build the material template off of the stored template.
-        var oldMaterialTemplate = Material._materialCache.getMaterial(result.type);
-        if (typeof oldMaterialTemplate !== 'undefined') {
-            var template = clone(oldMaterialTemplate);
+        var cachedTemplate = Material._materialCache.getMaterial(result.type);
+        if (typeof cachedTemplate !== 'undefined') {
+            var template = clone(cachedTemplate);
             result._template = combine([result._template, template]);
         }
 
@@ -422,7 +426,7 @@ define([
         checkForTemplateErrors(result);
 
         // If the material has a new type, add it to the cache.
-        if ((typeof oldMaterialTemplate === 'undefined') && (typeof result.type !== 'undefined')){
+        if ((typeof cachedTemplate === 'undefined') && (typeof result.type !== 'undefined')){
             Material._materialCache.addMaterial(result.type, result._template);
         }
 
@@ -464,12 +468,12 @@ define([
 
     function checkForTemplateErrors(material) {
         var template = material._template;
-        var uniforms = material._template.uniforms;
-        var materials = material._template.materials;
-        var components = material._template.components;
+        var uniforms = template.uniforms;
+        var materials = template.materials;
+        var components = template.components;
 
         // Make sure source and components do not exist in the same template.
-        if ((typeof components !== 'undefined') && (typeof material._template.source !== 'undefined')) {
+        if ((typeof components !== 'undefined') && (typeof template.source !== 'undefined')) {
             throw new DeveloperError('fabric: cannot have source and components in the same template.');
         }
 
@@ -661,7 +665,11 @@ define([
             if (subMaterialTemplates.hasOwnProperty(subMaterialId)) {
                 // Construct the sub-material.
                 var subMaterial = {};
-                count = initializeMaterial({context : context, strict : strict, fabric : subMaterialTemplates[subMaterialId]}, count, subMaterial);
+                count = initializeMaterial({
+                    context : context,
+                    strict : strict,
+                    fabric : subMaterialTemplates[subMaterialId]
+                }, count, subMaterial);
 
                 material._uniforms = combine([material._uniforms, subMaterial._uniforms]);
                 material.materials[subMaterialId] = subMaterial;
@@ -704,11 +712,6 @@ define([
 
     function getNumberOfTokens(material, token, excludePeriod) {
         return replaceToken(material, token, token, excludePeriod);
-    }
-
-    // Returns a random id for differentiating materials with the same names.
-    function getRandomId() {
-        return createGuid().slice(0,8);
     }
 
     Material._textureCache = {
