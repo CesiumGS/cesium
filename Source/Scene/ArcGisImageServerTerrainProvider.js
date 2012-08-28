@@ -83,7 +83,6 @@ define([
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 2
         });
-        this.projection = Projections.MERCATOR;
         this.maxLevel = 25;
         this.heightmapWidth = 64;
         this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, this.heightmapWidth, this.tilingScheme.numberOfLevelZeroTilesX);
@@ -106,7 +105,6 @@ define([
             /*var extentData = data.extent;
 
             if (extentData.spatialReference.wkid === 102100) {
-                that.projection = Projections.MERCATOR;
                 that._extentSouthwestInMeters = new Cartesian2(extentData.xmin, extentData.ymin);
                 that._extentNortheastInMeters = new Cartesian2(extentData.xmax, extentData.ymax);
                 that.tilingScheme = new WebMercatorTilingScheme({
@@ -114,7 +112,6 @@ define([
                     extentNortheastInMeters: that._extentNortheastInMeters
                 });
             } if (extentData.spatialReference.wkid === 4326) {
-                that.projection = Projections.WGS84;
                 var extent = new Extent(CesiumMath.toRadians(extentData.xmin),
                                         CesiumMath.toRadians(extentData.ymin),
                                         CesiumMath.toRadians(extentData.xmax),

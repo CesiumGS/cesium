@@ -72,14 +72,6 @@ define([
         this.maxLevel = maxLevel;
 
         /**
-         * The map projection of the image.
-         *
-         * @type {Enumeration}
-         * @see Projections
-         */
-        this.projection = Projections.WGS84;
-
-        /**
          * The tiling scheme used by this provider.
          *
          * @type {TilingScheme}

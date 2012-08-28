@@ -276,33 +276,44 @@ define([
 
     ImageryLayer.prototype.requestImagery = function(imagery) {
         var imageryProvider = this.imageryProvider;
+
+        // Cap image requests per hostname, because the browser itself is capped,
+        // and we have no way to cancel an image load once it starts, but we need
+        // to be able to reorder pending image requests.
+        var maximumRequestsPerHostname = 6;
+
+        var hostnames = imageryProvider.getAvailableHostnames(imagery.x, imagery.y, imagery.level);
+        var hostnameIndex;
         var hostname;
 
-        when(imageryProvider.buildImageUrl(imagery.x, imagery.y, imagery.level), function(imageUrl) {
-            hostname = getHostname(imageUrl);
-            if (hostname !== '') {
+        if (typeof hostnames !== 'undefined' && hostnames.length > 0) {
+            var bestActiveRequestsForHostname = maximumRequestsPerHostname + 1;
+
+            // Find the hostname with the fewest active requests.
+            for (var i = 0, len = hostnames.length; bestActiveRequestsForHostname > 0 && i < len; ++i) {
+                hostname = hostnames[i];
+
                 var activeRequestsForHostname = defaultValue(activeTileImageRequests[hostname], 0);
-
-                // Cap image requests per hostname, because the browser itself is capped,
-                // and we have no way to cancel an image load once it starts, but we need
-                // to be able to reorder pending image requests.
-                if (activeRequestsForHostname > 6) {
-                    // postpone loading tile
-                    imagery.state = ImageryState.UNLOADED;
-                    return false;
+                if (activeRequestsForHostname < bestActiveRequestsForHostname) {
+                    hostnameIndex = i;
+                    bestActiveRequestsForHostname = activeRequestsForHostname;
                 }
-
-                activeTileImageRequests[hostname] = activeRequestsForHostname + 1;
             }
 
-            imagery.imageUrl = imageUrl;
-            return imageryProvider.requestImage(imageUrl);
-        }).then(function(image) {
-            if (typeof image === 'boolean') {
+            if (bestActiveRequestsForHostname >= maximumRequestsPerHostname) {
+                // All hostnames have too many requests, so postpone loading tile.
+                imagery.state = ImageryState.UNLOADED;
                 return;
             }
 
-            activeTileImageRequests[hostname]--;
+            hostname = hostnames[hostnameIndex];
+            activeTileImageRequests[hostname] = bestActiveRequestsForHostname + 1;
+        }
+
+        when (imageryProvider.requestImage(hostnames, hostnameIndex, imagery.x, imagery.y, imagery.level), function(image) {
+            if (typeof hostname !== 'undefined') {
+                activeTileImageRequests[hostname]--;
+            }
 
             imagery.image = image;
 
@@ -503,15 +514,6 @@ define([
 
     function getImageryCacheKey(x, y, level) {
         return JSON.stringify([x, y, level]);
-    }
-
-    var anchor;
-    function getHostname(url) {
-        if (typeof anchor === 'undefined') {
-            anchor = document.createElement('a');
-        }
-        anchor.href = url;
-        return anchor.hostname;
     }
 
     /**

@@ -64,14 +64,6 @@ define([
         this.maxLevel = 0;
 
         /**
-         * The map projection of the image.
-         *
-         * @type {Enumeration}
-         * @see Projections
-         */
-        this.projection = Projections.WGS84;
-
-        /**
          * The tiling scheme used by this provider.
          *
          * @type {TilingScheme}
@@ -95,7 +87,7 @@ define([
         this.ready = false;
 
         var that = this;
-        this._image = loadImage(this.buildImageUrl()).then(function(image) {
+        this._image = loadImage(this._buildImageUrl()).then(function(image) {
             that._image = image;
 
             var tilingScheme = that.tilingScheme;
@@ -109,6 +101,19 @@ define([
     };
 
     /**
+     * Gets an array containing the host names from which a particular tile image can
+     * be requested.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @returns {Array} The host name(s) from which the tile can be requested.
+     */
+    SingleTileImageryProvider.prototype.getAvailableHostnames = function(x, y, level) {
+        return undefined;
+    };
+
+    /**
      * Build a URL to retrieve the image for a tile.
      *
      * @param {Number} x The x coordinate of the tile.
@@ -118,7 +123,7 @@ define([
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    SingleTileImageryProvider.prototype.buildImageUrl = function(x, y, level) {
+    SingleTileImageryProvider.prototype._buildImageUrl = function(x, y, level) {
         var url = this._url;
 
         if (typeof this._proxy !== 'undefined') {
@@ -136,7 +141,7 @@ define([
      * @return A promise for the image that will resolve when the image is available.
      *         If the image is not suitable for display, the promise can resolve to undefined.
      */
-    SingleTileImageryProvider.prototype.requestImage = function(url) {
+    SingleTileImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
         return this._image;
     };
 

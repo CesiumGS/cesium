@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/getHostname',
         '../Core/jsonp',
         '../Core/loadImage',
         '../Core/writeTextToCanvas',
@@ -17,6 +18,7 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        getHostname,
         jsonp,
         loadImage,
         writeTextToCanvas,
@@ -113,14 +115,6 @@ define([
         this.maxLevel = undefined;
 
         /**
-         * The map projection of the image.
-         *
-         * @type {Enumeration}
-         * @see Projections
-         */
-        this.projection = undefined;
-
-        /**
          * The tiling scheme used by this provider.
          *
          * @type {TilingScheme}
@@ -137,6 +131,8 @@ define([
         this.ready = false;
 
         this._logo = undefined;
+
+        this._imageUrlHostnames = [getHostname(this.url)];
 
         // Grab the details of this MapServer.
         var metadata = jsonp(this.url, {
@@ -162,14 +158,12 @@ define([
                 var east = west + levelZeroResolution * cols;
                 var south = north - levelZeroResolution * rows;
 
-                that.projection = Projections.MERCATOR;
                 that.tilingScheme = new WebMercatorTilingScheme(/*{
                     extentSouthwestInMeters : new Cartesian2(west, south),
                     extentNortheastInMeters : new Cartesian2(east, north)
                 }*/);
                 that.extent = that.tilingScheme.extent;
             } else if (data.tileInfo.spatialReference.wkid === 4326) {
-                that.projection = Projections.WGS84;
                 that.extent = new Extent(CesiumMath.toRadians(data.fullExtent.xmin),
                                          CesiumMath.toRadians(data.fullExtent.ymin),
                                          CesiumMath.toRadians(data.fullExtent.xmax),
@@ -196,6 +190,19 @@ define([
     };
 
     /**
+     * Gets an array containing the host names from which a particular tile image can
+     * be requested.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @returns {Array} The host name(s) from which the tile can be requested.
+     */
+    ArcGisMapServerImageryProvider.prototype.getAvailableHostnames = function(x, y, level) {
+        return this._imageUrlHostnames;
+    };
+
+    /**
      * Creates a {@link DiscardMissingTileImagePolicy} that compares tiles
      * against the tile at coordinate (0, 0), at the maximum level of detail, which is
      * assumed to be missing.  Only a subset of the pixels are compared to improve performance.
@@ -209,7 +216,7 @@ define([
     ArcGisMapServerImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
         var that = this;
         var missingTileUrl = when(this._isReady, function() {
-            return that.buildImageUrl(0, 0, that.maxLevel);
+            return that._buildImageUrl(0, 0, that.maxLevel);
         });
         var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
 
@@ -226,7 +233,7 @@ define([
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    ArcGisMapServerImageryProvider.prototype.buildImageUrl = function(x, y, level) {
+    ArcGisMapServerImageryProvider.prototype._buildImageUrl = function(x, y, level) {
         var url = this.url + '/tile/' + level + '/' + y + '/' + x;
 
         if (typeof this._proxy !== 'undefined') {
@@ -244,7 +251,8 @@ define([
      * @return A promise for the image that will resolve when the image is available.
      *         If the image is not suitable for display, the promise can resolve to undefined.
      */
-    ArcGisMapServerImageryProvider.prototype.requestImage = function(url) {
+    ArcGisMapServerImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
+        var url = this._buildImageUrl(x, y, level);
         return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this.discardPolicy);
     };
 

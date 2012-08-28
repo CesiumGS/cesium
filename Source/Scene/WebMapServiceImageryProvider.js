@@ -114,14 +114,6 @@ define([
         this.maxLevel = undefined;
 
         /**
-         * The map projection of the image.
-         *
-         * @type {Enumeration}
-         * @see Projections
-         */
-        this.projection = undefined;
-
-        /**
          * The tiling scheme used by this provider.
          *
          * @type {TilingScheme}
@@ -145,14 +137,12 @@ define([
             });
         }
 
-//        this.projection = Projections.MERCATOR;
 //        this.tilingScheme = new WebMercatorTilingScheme();
 //        this.extent = new Extent(-CesiumMath.PI,
 //                CesiumMath.toRadians(-85.05112878),
 //                CesiumMath.PI,
 //                CesiumMath.toRadians(85.05112878));
 
-        this.projection = Projections.WGS84;
         this.tilingScheme = new GeographicTilingScheme();
         this.extent = new Extent(-CesiumMath.PI,
                 -CesiumMath.PI_OVER_TWO,
@@ -178,7 +168,7 @@ define([
     WebMapServiceImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
         var that = this;
         var missingTileUrl = when(this._isReady, function() {
-            return that.buildImageUrl(0, 0, that.maxLevel);
+            return that._buildImageUrl(0, 0, that.maxLevel);
         });
         var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
 
@@ -195,7 +185,7 @@ define([
      * @return {String|Promise} Either a string containing the URL, or a Promise for a string
      *                          if the URL needs to be built asynchronously.
      */
-    WebMapServiceImageryProvider.prototype.buildImageUrl = function(x, y, level) {
+    WebMapServiceImageryProvider.prototype._buildImageUrl = function(x, y, level) {
         var nativeExtent = this.tilingScheme.tileXYToNativeExtent(x, y, level);
         var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
         var srs = 'EPSG:4326';
@@ -216,8 +206,9 @@ define([
      * @return A promise for the image that will resolve when the image is available.
      *         If the image is not suitable for display, the promise can resolve to undefined.
      */
-    WebMapServiceImageryProvider.prototype.requestImage = function(url) {
-        return loadImage(url);
+    WebMapServiceImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
+        var imageUrl = this._buildImageUrl(hostnameIndex, x, y, level);
+        return loadImage(imageUrl);
     };
 
     /**

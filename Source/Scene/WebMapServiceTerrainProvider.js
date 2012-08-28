@@ -81,7 +81,6 @@ define([
          * @type TilingScheme
          */
         this.tilingScheme = new GeographicTilingScheme();
-        this.projection = Projections.WGS84;
         this.maxLevel = 18;
 
         this._proxy = description.proxy;

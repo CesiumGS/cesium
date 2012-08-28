@@ -31,16 +31,15 @@ define([
     }
 
     /**
-     * Build a URL to retrieve the image for a tile.
+     * Gets an array containing the host names from which a particular tile image can
+     * be requested.
      *
-     * @param {Number} x The x coordinate of the tile.
-     * @param {Number} y The y coordinate of the tile.
-     * @param {Number} level The level-of-detail of the tile.
-     *
-     * @return {String|Promise} Either a string containing the URL, or a Promise for a string
-     *                          if the URL needs to be built asynchronously.
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @returns {Array} The host name(s) from which the tile can be requested.
      */
-    ImageryProvider.prototype.buildImageUrl = function(x, y, level) {
+    ImageryProvider.prototype.getAvailableHostnames = function(x, y, level) {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 
