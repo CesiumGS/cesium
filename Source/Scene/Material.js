@@ -31,7 +31,8 @@ define([
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/TieDyeMaterial',
         '../Shaders/Materials/WoodMaterial',
-        '../Shaders/Materials/RimLightingMaterial'
+        '../Shaders/Materials/RimLightingMaterial',
+        '../Shaders/Materials/ErosionMaterial'
     ], function(
         when,
         loadImage,
@@ -64,7 +65,8 @@ define([
         StripeMaterial,
         TieDyeMaterial,
         WoodMaterial,
-        RimLightingMaterial) {
+        RimLightingMaterial,
+        ErosionMaterial) {
     "use strict";
 
     /**
@@ -1066,6 +1068,15 @@ define([
             width : 0.3
         },
         source : RimLightingMaterial
+    });
+
+    Material.ErosionType = 'Erosion';
+    Material._materialCache.addMaterial(Material.ErosionType, {
+        type : Material.ErosionType,
+        uniforms : {
+            erosion : 1.0
+        },
+        source : ErosionMaterial
     });
 
     return Material;
