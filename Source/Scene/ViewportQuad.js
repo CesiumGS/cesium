@@ -226,7 +226,11 @@ define([
      * @private
      */
     ViewportQuad.prototype.update = function(context, sceneState) {
-        if (typeof this._sp == 'undefined') {
+        if (typeof this._texture === 'undefined') {
+            return undefined;
+        }
+
+        if (typeof this._sp === 'undefined') {
             this._sp = context.getShaderCache().getShaderProgram(this._vertexShaderSource, this._fragmentShaderSource, attributeIndices);
             this._va = getVertexArray(context);
             this.renderState = context.createRenderState({
@@ -246,21 +250,19 @@ define([
      * @memberof ViewportQuad
      */
     ViewportQuad.prototype.render = function(context) {
-        if (this._texture) {
-            BoundingRectangle.clone(context.getViewport(), originalViewport);
-            context.setViewport(this._rectangle);
+        BoundingRectangle.clone(context.getViewport(), originalViewport);
+        context.setViewport(this._rectangle);
 
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLE_FAN,
-                shaderProgram : this._sp,
-                uniformMap : this.uniforms,
-                vertexArray : this._va.vertexArray,
-                renderState : this.renderState,
-                framebuffer : this._framebuffer
-            });
+        context.draw({
+            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            shaderProgram : this._sp,
+            uniformMap : this.uniforms,
+            vertexArray : this._va.vertexArray,
+            renderState : this.renderState,
+            framebuffer : this._framebuffer
+        });
 
-            context.setViewport(originalViewport);
-        }
+        context.setViewport(originalViewport);
     };
 
     /**
