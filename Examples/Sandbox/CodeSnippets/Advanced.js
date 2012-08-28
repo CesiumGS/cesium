@@ -29,7 +29,7 @@
                 };
             };
 
-            Sandbox.ExamplePrimitive.prototype.update = function(context, sceneState) {
+            Sandbox.ExamplePrimitive.prototype.update = function(context, frameState) {
                 var vs = '';
                 vs += 'attribute vec4 position;';
                 vs += 'void main()';
@@ -79,10 +79,10 @@
                 });
 
                 this.update = this._update;
-                return this._update(context, sceneState);
+                return this._update(context, frameState);
             };
 
-            Sandbox.ExamplePrimitive.prototype._update = function(context, sceneState) {
+            Sandbox.ExamplePrimitive.prototype._update = function(context, frameState) {
                 return {
                     boundingVolume : this._boundingVolume,
                     modelMatrix : this.modelMatrix
@@ -190,7 +190,7 @@
                 };
             };
 
-            Sandbox.ExamplePrimitive.prototype.update = function(context, sceneState) {
+            Sandbox.ExamplePrimitive.prototype.update = function(context, frameState) {
                 var vs = '';
                 vs += 'attribute vec3 position2D;';
                 vs += 'attribute vec3 position3D;';
@@ -216,12 +216,12 @@
                 });
 
                 this.update = this._update;
-                return this._update(context, sceneState);
+                return this._update(context, frameState);
             };
 
-            Sandbox.ExamplePrimitive.prototype._update = function(context, sceneState) {
-                var mode = sceneState.mode;
-                var projection = sceneState.scene2D.projection;
+            Sandbox.ExamplePrimitive.prototype._update = function(context, frameState) {
+                var mode = frameState.mode;
+                var projection = frameState.scene2D.projection;
 
                 if (mode !== this._mode || projection !== this._projection) {
                     this._mode = mode;

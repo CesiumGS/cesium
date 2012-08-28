@@ -168,7 +168,7 @@ define([
         };
     };
 
-    ViewportQuad.prototype._update = function(context, sceneState) {
+    ViewportQuad.prototype._update = function(context, frameState) {
         if (this._dirtyRectangle) {
             this._dirtyRectangle = false;
 
@@ -202,11 +202,11 @@ define([
     /**
      * @private
      */
-    ViewportQuad.prototype.update = function(context, sceneState) {
+    ViewportQuad.prototype.update = function(context, frameState) {
         this._sp = context.getShaderCache().getShaderProgram(this.vertexShader, this.fragmentShader, ViewportQuad._getAttributeIndices());
         this.renderState = context.createRenderState({ blending : BlendingState.ALPHA_BLEND });
 
-        this._update(context, sceneState);
+        this._update(context, frameState);
         this.update = this._update;
     };
 

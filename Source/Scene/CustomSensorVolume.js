@@ -315,8 +315,8 @@ define([
      *
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
-    CustomSensorVolume.prototype.update = function(context, sceneState) {
-        this._mode = sceneState.mode;
+    CustomSensorVolume.prototype.update = function(context, frameState) {
+        this._mode = frameState.mode;
         if (this._mode !== SceneMode.SCENE3D) {
             return undefined;
         }

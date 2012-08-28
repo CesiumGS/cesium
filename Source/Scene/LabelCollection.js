@@ -588,7 +588,7 @@ define([
     /**
      * @private
      */
-    LabelCollection.prototype.update = function(context, sceneState) {
+    LabelCollection.prototype.update = function(context, frameState) {
         var billboardCollection = this._billboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
@@ -644,7 +644,7 @@ define([
         }
         labelsToUpdate.length = 0;
 
-        return this._billboardCollection.update(context, sceneState);
+        return this._billboardCollection.update(context, frameState);
     };
 
     /**

@@ -575,12 +575,12 @@ define([
      *
      * @see Polygon#render
      */
-    Polygon.prototype.update = function(context, sceneState) {
+    Polygon.prototype.update = function(context, frameState) {
         if (!this.ellipsoid) {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
 
-        var mode = sceneState.mode;
+        var mode = frameState.mode;
         var granularity = this._getGranularity(mode);
 
         if (granularity < 0.0) {
@@ -611,7 +611,7 @@ define([
             this._bufferUsage = this.bufferUsage;
         }
 
-        var projection = sceneState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
         if (this._projection !== projection) {
             this._createVertexArray = true;
             this._projection = projection;

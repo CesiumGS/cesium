@@ -3,13 +3,13 @@ define([], function() {
     "use strict";
 
     /**
-     * State information about the current scene.  An instance of this class
+     * State information about the current frame.  An instance of this class
      * is provided to update functions.
      *
-     * @alias SceneState
+     * @alias FrameState
      * @constructor
      */
-    var SceneState = function() {
+    var FrameState = function() {
         /**
          * The current mode of the scene.
          *
@@ -39,5 +39,5 @@ define([], function() {
         this.occluder = undefined;
     };
 
-    return SceneState;
+    return FrameState;
 });

@@ -376,8 +376,8 @@ define([
      * @exception {DeveloperError} this.innerHalfAngle cannot be greater than this.outerHalfAngle.
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
-    ComplexConicSensorVolume.prototype.update = function(context, sceneState) {
-        this._mode = sceneState.mode;
+    ComplexConicSensorVolume.prototype.update = function(context, frameState) {
+        this._mode = frameState.mode;
         if (this._mode !== SceneMode.SCENE3D) {
             return undefined;
         }

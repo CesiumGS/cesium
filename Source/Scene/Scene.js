@@ -13,7 +13,7 @@ define([
         './CompositePrimitive',
         './AnimationCollection',
         './SceneMode',
-        './SceneState'
+        './FrameState'
     ], function(
         Color,
         destroyObject,
@@ -28,7 +28,7 @@ define([
         CompositePrimitive,
         AnimationCollection,
         SceneMode,
-        SceneState) {
+        FrameState) {
     "use strict";
 
     /**
@@ -40,7 +40,7 @@ define([
     var Scene = function(canvas) {
         var context = new Context(canvas);
 
-        this._sceneState = new SceneState();
+        this._frameState = new FrameState();
         this._canvas = canvas;
         this._context = context;
         this._primitives = new CompositePrimitive();
@@ -128,8 +128,8 @@ define([
      *
      * @memberof Scene
      */
-    Scene.prototype.getSceneState = function() {
-        return this._sceneState;
+    Scene.prototype.getFrameState = function() {
+        return this._frameState;
     };
 
     /**
@@ -172,14 +172,14 @@ define([
         return this._animate;
     };
 
-    Scene.prototype._updateSceneState = function() {
+    Scene.prototype._updateFrameState = function() {
         var camera = this._camera;
 
-        var sceneState = this._sceneState;
-        sceneState.mode = this.mode;
-        sceneState.scene2D = this.scene2D;
-        sceneState.camera = camera;
-        sceneState.occluder = undefined;
+        var frameState = this._frameState;
+        frameState.mode = this.mode;
+        frameState.scene2D = this.scene2D;
+        frameState.camera = camera;
+        frameState.occluder = undefined;
 
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one?
@@ -187,7 +187,7 @@ define([
         if (this.mode === SceneMode.SCENE3D && typeof cb !== 'undefined') {
             var ellipsoid = cb.getEllipsoid();
             var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
-            sceneState.occluder = occluder;
+            frameState.occluder = occluder;
         }
     };
 
@@ -213,8 +213,8 @@ define([
             this._animate();
         }
 
-        this._updateSceneState();
-        this._primitives.update(this._context, this._sceneState);
+        this._updateFrameState();
+        this._primitives.update(this._context, this._frameState);
     };
 
     /**
@@ -235,13 +235,13 @@ define([
     Scene.prototype.pick = function(windowPosition) {
         var context = this._context;
         var primitives = this._primitives;
-        var sceneState = this._sceneState;
+        var frameState = this._frameState;
 
         this._pickFramebuffer = this._pickFramebuffer || context.createPickFramebuffer();
         var fb = this._pickFramebuffer.begin();
 
-        this._updateSceneState();
-        primitives.update(context, sceneState);
+        this._updateFrameState();
+        primitives.update(context, frameState);
         primitives.updateForPick(context);
         primitives.renderForPick(context, fb);
 
