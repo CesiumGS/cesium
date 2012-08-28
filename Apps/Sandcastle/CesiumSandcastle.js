@@ -295,6 +295,12 @@ require({
                 line = jsEditor.setMarker(lineNum - 1, makeLineLabel('hover'), "highlightMarker");
                 jsEditor.setLineClass(line, "highlightLine");
                 highlightLines.push(line);
+
+                // Scroll to bring the highlighted line into view.
+                jsEditor.setCursor(lineNum);
+                jsEditor.setSelection({line: lineNum - 2, ch:0}, {line: lineNum - 2, ch: 0});
+                jsEditor.focus();
+                jsEditor.setSelection({line: lineNum, ch: 0}, {line: lineNum, ch: 0});
             }
         }
 

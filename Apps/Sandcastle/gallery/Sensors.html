@@ -130,7 +130,8 @@ require([
         
         // Apply a distance interval material to the conic sensor
 //         var distanceMaterial = new Cesium.DistanceIntervalMaterial({
-//             intervals : [{
+//             intervals : [
+//                 {
 //                     distance : 500000.0,
 //                     color : {
 //                         red : 1.0,
@@ -154,26 +155,40 @@ require([
 //                         blue : 1.0,
 //                         alpha : 0.5
 //                     }
-//                 }]
-//             });
-//             complexConicSensor.outerMaterial = distanceMaterial;
-//             complexConicSensor.innerMaterial = distanceMaterial;
-//             complexConicSensor.capMaterial = distanceMaterial;
+//                 }
+//             ]
+//         });
+        
+//         complexConicSensor.outerMaterial = distanceMaterial;
+//         complexConicSensor.innerMaterial = distanceMaterial;
+//         complexConicSensor.capMaterial = distanceMaterial;
 
-            primitives.add(sensors);
+        // Draw a complex conic sensor with clock angles
+//         var complexConicModelMatrix2 = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-50.0, 25.0)));
+//         complexConicModelMatrix2 = complexConicModelMatrix2.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(2000000.0, 0.0, -2000000.0)));
+//         var complexConicSensor2 =  sensors.addComplexConic();
+//         Sandcastle.declare(complexConicSensor2);
+//         complexConicSensor2.modelMatrix = complexConicModelMatrix2;
+//         complexConicSensor2.outerHalfAngle = Cesium.Math.toRadians(30.0);
+//         complexConicSensor2.innerHalfAngle = Cesium.Math.toRadians(20.0);
+//         complexConicSensor2.maximumClockAngle = Cesium.Math.toRadians(45.0);
+//         complexConicSensor2.minimumClockAngle = Cesium.Math.toRadians(-45.0);
+//         complexConicSensor2.radius = 20000000.0
+
+        primitives.add(sensors);
+    }
+
+    var cesiumViewerWidget = new CesiumViewerWidget({
+        onObjectMousedOver : function(mousedOverObject) {
+            cesiumViewerWidget.highlightObject(mousedOverObject);
+            Sandcastle.highlight(mousedOverObject);
+        },
+        postSetup : function(widget) {
+            createPrimitives(widget);
+            widget.startRenderLoop();
         }
-
-        var cesiumViewerWidget = new CesiumViewerWidget({
-            onObjectMousedOver : function(mousedOverObject) {
-                cesiumViewerWidget.highlightObject(mousedOverObject);
-                Sandcastle.highlight(mousedOverObject);
-            },
-            postSetup : function(widget) {
-                createPrimitives(widget);
-                widget.startRenderLoop();
-            }
-        }).placeAt(dom.byId("cesiumContainer"));
-    });
+    }).placeAt(dom.byId("cesiumContainer"));
+});
 </script>
 </body>
 </html>

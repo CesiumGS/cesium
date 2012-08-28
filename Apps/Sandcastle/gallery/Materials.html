@@ -96,6 +96,7 @@ require([
     }
     
     function applyAlphaMapMaterial(scene) {
+        Sandcastle.declare(applyAlphaMapMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material({
@@ -119,24 +120,28 @@ require([
     }
     
     function applyAsphaltMaterial(scene) {
+        Sandcastle.declare(applyAsphaltMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Asphalt');
     }
     
     function applyBlobMaterial(scene) {
+        Sandcastle.declare(applyBlobMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Blob');
     }
     
     function applyBrickMaterial(scene) {
+        Sandcastle.declare(applyBrickMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Brick');
     }
     
     function applyBumpMapMaterial(scene) {
+        Sandcastle.declare(applyBumpMapMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material({
@@ -167,24 +172,28 @@ require([
     }
     
     function applyCementMaterial(scene) {
+        Sandcastle.declare(applyCementMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Cement');
     }
 
     function applyCheckerboardMaterial(scene) {
+        Sandcastle.declare(applyCheckerboardMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
     }
     
     function applyColorMaterial(scene) {
+        Sandcastle.declare(applyColorMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Color');
     }
     
     function applyCompositeMaterial1(scene) {
+        Sandcastle.declare(applyCompositeMaterial1);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material({
@@ -219,6 +228,7 @@ require([
     }
     
     function applyCompositeMaterial2(scene) {
+        Sandcastle.declare(applyCompositeMaterial2);
         var polygon = scene.getPrimitives().get(0);
         polygon.configureExtent(new Cesium.Extent(
                 Cesium.Math.toRadians(-180.0),
@@ -256,12 +266,14 @@ require([
     }
     
     function applyDotMaterial(scene) {
+        Sandcastle.declare(applyDotMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Dot');
     }
     
     function applyDiffuseMaterial(scene) {
+        Sandcastle.declare(applyDiffuseMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material({
@@ -276,6 +288,7 @@ require([
     }
     
     function applyEmissionMapMaterial(scene) {
+        Sandcastle.declare(applyEmissionMapMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material({
@@ -308,12 +321,14 @@ require([
     }
         
     function applyFacetMaterial(scene) {
+        Sandcastle.declare(applyFacetMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Facet');
     }
     
     function applyFresnelMaterial(scene) {
+        Sandcastle.declare(applyFresnelMaterial);
         var polygon = scene.getPrimitives().get(0);
         
         polygon.configureExtent(new Cesium.Extent(
@@ -370,12 +385,14 @@ require([
     }
     
     function applyGrassMaterial(scene) {
+        Sandcastle.declare(applyGrassMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Grass');
     }
     
     function applyImageMaterial(scene) {
+        Sandcastle.declare(applyImageMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material({
@@ -390,6 +407,7 @@ require([
     }
     
     function applyNormalMapMaterial(scene) {
+        Sandcastle.declare(applyNormalMapMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material({
@@ -420,6 +438,7 @@ require([
     }
     
     function applyReflectionMaterial(scene) {
+        Sandcastle.declare(applyReflectionMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.configureExtent(new Cesium.Extent(
@@ -460,6 +479,7 @@ require([
     }
     
     function applyRefractionMaterial(scene) {
+        Sandcastle.declare(applyRefractionMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.configureExtent(new Cesium.Extent(
@@ -501,6 +521,7 @@ require([
     }
     
     function applySpecularMapMaterial(scene) {
+        Sandcastle.declare(applySpecularMapMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material({
@@ -516,18 +537,21 @@ require([
     }
     
     function applyStripeMaterial(scene) {
+        Sandcastle.declare(applyStripeMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Stripe');
     }
     
     function applyTieDyeMaterial(scene) {
+        Sandcastle.declare(applyTieDyeMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'TieDye');
     }
         
     function applyWoodMaterial(scene) {
+        Sandcastle.declare(applyWoodMaterial);
         var polygon = scene.getPrimitives().get(0);
         resetPolygonExtent(polygon);
         polygon.material = new Cesium.Material.fromType(scene.getContext(), 'Wood');
@@ -543,6 +567,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyAlphaMapMaterial(widget.scene);
+                Sandcastle.highlight(applyAlphaMapMaterial);
             }
         }));
         
@@ -551,6 +576,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyAsphaltMaterial(widget.scene);
+                Sandcastle.highlight(applyAsphaltMaterial);
             }
         }));
         
@@ -559,6 +585,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyBlobMaterial(widget.scene);
+                Sandcastle.highlight(applyBlobMaterial);
             }
         }));
         
@@ -567,6 +594,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyBrickMaterial(widget.scene);
+                Sandcastle.highlight(applyBrickMaterial);
             }
         }));
         
@@ -574,7 +602,8 @@ require([
             label: 'Bump Map',
             onClick: function() { 
                 widget.viewHome();
-                applyBumpMapMaterial(widget.scene); 
+                applyBumpMapMaterial(widget.scene);
+                Sandcastle.highlight(applyBumpMapMaterial);
             }
         }));
         
@@ -582,7 +611,8 @@ require([
             label: 'Cement',
             onClick: function() { 
                 widget.viewHome();
-                applyCementMaterial(widget.scene); 
+                applyCementMaterial(widget.scene);
+                Sandcastle.highlight(applyCementMaterial);
             }
         }));
         
@@ -590,8 +620,9 @@ require([
             label: 'Checkerboard',
             onClick: function() { 
                 widget.viewHome();
-	            applyCheckerboardMaterial(widget.scene);
-	        }
+                applyCheckerboardMaterial(widget.scene);
+                Sandcastle.highlight(applyCheckerboardMaterial);
+            }
         }));
         
         menu.addChild(new MenuItem({
@@ -599,6 +630,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyCompositeMaterial1(widget.scene);
+                Sandcastle.highlight(applyCompositeMaterial1);
             }
         }));
         
@@ -607,6 +639,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyCompositeMaterial2(widget.scene);
+                Sandcastle.highlight(applyCompositeMaterial2);
             }
         }));
         
@@ -615,6 +648,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyColorMaterial(widget.scene);
+                Sandcastle.highlight(applyColorMaterial);
             }
         }));
         
@@ -623,6 +657,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyDiffuseMaterial(widget.scene);
+                Sandcastle.highlight(applyDiffuseMaterial);
             }
         }));
         
@@ -631,6 +666,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyDotMaterial(widget.scene);
+                Sandcastle.highlight(applyDotMaterial);
             }
         }));
         
@@ -639,6 +675,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyEmissionMapMaterial(widget.scene);
+                Sandcastle.highlight(applyEmissionMapMaterial);
             }
         }));        
         
@@ -647,6 +684,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyFresnelMaterial(widget.scene);
+                Sandcastle.highlight(applyFresnelMaterial);
             }
         }));
 
@@ -655,6 +693,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyFacetMaterial(widget.scene);
+                Sandcastle.highlight(applyFacetMaterial);
             }
         }));
         
@@ -663,6 +702,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyGrassMaterial(widget.scene);
+                Sandcastle.highlight(applyGrassMaterial);
             }
         }));
         
@@ -671,6 +711,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyImageMaterial(widget.scene);
+                Sandcastle.highlight(applyImageMaterial);
             }
         }));
         
@@ -679,6 +720,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyNormalMapMaterial(widget.scene);
+                Sandcastle.highlight(applyNormalMapMaterial);
             }
         }));
         
@@ -687,6 +729,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyReflectionMaterial(widget.scene);
+                Sandcastle.highlight(applyReflectionMaterial);
             }
         }));
         
@@ -695,6 +738,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyRefractionMaterial(widget.scene);
+                Sandcastle.highlight(applyRefractionMaterial);
             }
         }));
         
@@ -703,6 +747,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applySpecularMapMaterial(widget.scene);
+                Sandcastle.highlight(applySpecularMapMaterial);
             }
         }));
         
@@ -711,6 +756,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyStripeMaterial(widget.scene);
+                Sandcastle.highlight(applyStripeMaterial);
             }
         }));
         
@@ -719,6 +765,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyTieDyeMaterial(widget.scene);
+                Sandcastle.highlight(applyTieDyeMaterial);
             }
         }));
         
@@ -727,6 +774,7 @@ require([
             onClick: function() { 
                 widget.viewHome();
                 applyWoodMaterial(widget.scene);
+                Sandcastle.highlight(applyWoodMaterial);
             }
         }));
         
