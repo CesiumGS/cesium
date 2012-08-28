@@ -2,23 +2,23 @@
 define([
         '../Core/destroyObject',
         '../Core/defaultValue',
-        '../Core/clone',
         '../Core/BoundingRectangle',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
-        '../Renderer/BlendingState',
+        '../Renderer/BlendEquation',
+        '../Renderer/BlendFunction',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
         destroyObject,
         defaultValue,
-        clone,
         BoundingRectangle,
         ComponentDatatype,
         PrimitiveType,
         BufferUsage,
-        BlendingState,
+        BlendEquation,
+        BlendFunction,
         ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
@@ -234,7 +234,13 @@ define([
             this._sp = context.getShaderCache().getShaderProgram(this._vertexShaderSource, this._fragmentShaderSource, attributeIndices);
             this._va = getVertexArray(context);
             this.renderState = context.createRenderState({
-                blending : clone(BlendingState.ALPHA_BLEND)
+                enabled : true,
+                equationRgb : BlendEquation.ADD,
+                equationAlpha : BlendEquation.ADD,
+                functionSourceRgb : BlendFunction.SOURCE_ALPHA,
+                functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+                functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
+                functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
             });
         }
 
