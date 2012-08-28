@@ -51,9 +51,9 @@ defineSuite([
 
     it('can declare automatic uniforms', function() {
         var fs =
-            'uniform ivec4 czm_viewport; ' +
+            'uniform vec4 czm_viewport; ' +
             'void main() { ' +
-            '  gl_FragColor = vec4((czm_viewport.x == 0) && (czm_viewport.y == 0) && (czm_viewport.z == 1) && (czm_viewport.w == 1)); ' +
+            '  gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); ' +
             '}';
         verifyDraw(fs);
     });
@@ -61,7 +61,7 @@ defineSuite([
     it('has czm_viewport', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4((czm_viewport.x == 0) && (czm_viewport.y == 0) && (czm_viewport.z == 1) && (czm_viewport.w == 1)); ' +
+            '  gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); ' +
             '}';
         verifyDraw(fs);
     });
