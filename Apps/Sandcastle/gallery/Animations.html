@@ -134,10 +134,11 @@ require([
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-45.0, 45.0)));
         modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(200000.0, 0.0, -3000000.0)));
         var material = Cesium.Material.fromType(scene.getContext(), 'Stripe'); // Use default colors
+        material.uniforms.repeat = 10;
         var sensors = new Cesium.SensorVolumeCollection(undefined);
         sensors.addRectangularPyramid({
             modelMatrix : modelMatrix,
-            radius : 20000000.0,
+            radius : 10000000.0,
             xHalfAngle : Cesium.Math.toRadians(30.0),
             yHalfAngle : Cesium.Math.toRadians(20.0),
             material : material
