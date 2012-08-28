@@ -317,13 +317,11 @@ define([
         // Initial render state creation
         if (!this._rs) {
             this._rs = context.createRenderState({
-                blending : {
-                    blending : BlendingState.ALPHA_BLEND,
-                },
                 depthTest : {
                     enabled : true
                 },
-                depthMask : false
+                depthMask : false,
+                blending : BlendingState.ALPHA_BLEND
             });
         }
         // This would be better served by depth testing with a depth buffer that does not
