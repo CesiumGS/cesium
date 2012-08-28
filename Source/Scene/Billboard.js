@@ -564,7 +564,7 @@ define([
         }
     };
 
-    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, uniformState) {
+    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, clampToPixel, uniformState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
         // Model to eye coordinates
@@ -589,7 +589,7 @@ define([
         positionWC.x += po.x;
         positionWC.y += po.y;
 
-        if (this._collection.clampToPixel) {
+        if (clampToPixel) {
             return new Cartesian2(Math.floor(positionWC.x), Math.floor(positionWC.y));
         }
 
@@ -626,7 +626,7 @@ define([
             throw new DeveloperError('uniformState is required.');
         }
 
-        return Billboard._computeScreenSpacePosition(this._collection.modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, uniformState);
+        return Billboard._computeScreenSpacePosition(this._collection.modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, this.clampToPixel, uniformState);
     };
 
     /**

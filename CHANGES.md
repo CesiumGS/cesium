@@ -39,8 +39,7 @@ Beta Releases
 * Added support for CZML path visualization via the `DynamicPath` and `DynamicPathVisualizer` objects.  See the [CZML wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide) for more details.
 * Added support for [WEBGL_depth_texture](http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/).  See `Framebuffer.setDepthTexture`.
 * Added `CesiumMath.isPowerOfTwo`.
-* Added `BillboardCollection.clampToPixel` which aligns all vertices to a full pixel in screen space, providing a crisper image at the cost of jumpier motion.
-* `LabelCollection` now clamps all text to pixels provided improved legibility.
+* Added a `clampToPixel` property to `BillboardCollection` and `LabelCollection`.  When true, it aligns all vertices to a full pixel in screen space, providing a crisper images and text at the cost of jumpier motion.
 
 ### b7 - 08/01/2012
 
