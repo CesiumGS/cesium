@@ -644,7 +644,7 @@ define([
         }
         labelsToUpdate.length = 0;
 
-        this._billboardCollection.update(context, sceneState);
+        return this._billboardCollection.update(context, sceneState);
     };
 
     /**
