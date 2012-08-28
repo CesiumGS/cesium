@@ -208,9 +208,7 @@ define([
                 if (typeof this.vertexArray !== 'undefined' &&
                     --this.referenceCount === 0) {
 
-                    debugger;
-
-                    // TODO: Schedule this for a few 100 frames later so we don't thrash the cache
+                    // TODO: Schedule this for a few hundred frames later so we don't thrash the cache
                     this.vertexArray = this.vertexArray.destroy();
                 }
 
