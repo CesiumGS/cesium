@@ -194,7 +194,7 @@ define([
         if (this._inverseViewDirty) {
             this._inverseViewDirty = false;
 
-            Matrix4.inverse(this.getView(), this._inverseView);
+            Matrix4.inverse(this._view, this._inverseView);
         }
     };
 
@@ -248,7 +248,7 @@ define([
         if (this._inverseProjectionDirty) {
             this._inverseProjectionDirty = false;
 
-            Matrix4.inverse(this.getProjection(), this._inverseProjection);
+            Matrix4.inverse(this._projection, this._inverseProjection);
         }
     };
 
@@ -345,7 +345,7 @@ define([
         if (this._viewProjectionDirty) {
             this._viewProjectionDirty = false;
 
-            Matrix4.multiply(this.getProjection(), this.getView(), this._viewProjection);
+            Matrix4.multiply(this._project, this._view, this._viewProjection);
         }
     };
 
@@ -471,7 +471,7 @@ define([
             sunPosition4Scratch.y = this._sunPosition.y;
             sunPosition4Scratch.z = this._sunPosition.z;
             sunPosition4Scratch.w = 0.0;
-            Matrix4.multiplyByVector(this.getView(), sunPosition4Scratch, sunPosition4Scratch);
+            Matrix4.multiplyByVector(this._view, sunPosition4Scratch, sunPosition4Scratch);
 
             Cartesian3.fromCartesian4(sunPosition4Scratch, sunPosition3Scratch);
             Cartesian3.normalize(sunPosition3Scratch, this._sunDirectionEC);
@@ -494,7 +494,7 @@ define([
             throw new DeveloperError('sunPosition is required.');
         }
 
-        this._sunPosition = Cartesian3.clone(sunPosition);
+        Cartesian3.clone(sunPosition, this._sunPosition);
         this._sunDirectionECDirty = true;
         this._sunDirectionWCDirty = true;
     };
