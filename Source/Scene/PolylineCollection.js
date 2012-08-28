@@ -1135,11 +1135,6 @@ define([
     };
 
     function intersectsIDL(polyline) {
-        if (typeof polyline._boundingVolume === 'undefined') {
-            // This can only happen when the polyline has no positions, so its not intersecting.
-            return false;
-        }
-
         return Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) < 0 ||
             polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) === Intersect.INTERSECTING;
     }
