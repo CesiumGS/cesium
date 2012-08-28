@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/Ellipsoid',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -9,6 +10,7 @@ define([
         '../Core/BoundingRectangle'
     ], function(
         DeveloperError,
+        defaultValue,
         Ellipsoid,
         Matrix3,
         Matrix4,
@@ -125,8 +127,7 @@ define([
      * @see czm_model
      */
     UniformState.prototype.setModel = function(matrix) {
-        var m = (typeof matrix !== 'undefined') ? matrix : Matrix4.IDENTITY;
-        Matrix4.clone(m, this._model);
+        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._model);
 
         this._modelViewDirty = true;
         this._inverseModelViewDirty = true;
@@ -162,8 +163,7 @@ define([
      * @see czm_view
      */
     UniformState.prototype.setView = function(matrix) {
-        var m = (typeof matrix !== 'undefined') ? matrix : Matrix4.IDENTITY;
-        Matrix4.clone(m, this._view);
+        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._view);
 
         this._inverseViewDirty = true;
         this._modelViewDirty = true;
@@ -223,8 +223,7 @@ define([
      * @see czm_projection
      */
     UniformState.prototype.setProjection = function(matrix) {
-        var m = (typeof matrix !== 'undefined') ? matrix : Matrix4.IDENTITY;
-        Matrix4.clone(m, this._projection);
+        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._projection);
 
         this._inverseProjectionDirty = true;
         this._viewProjectionDirty = true;
@@ -278,8 +277,7 @@ define([
      * @see czm_infiniteProjection
      */
     UniformState.prototype.setInfiniteProjection = function(matrix) {
-        var m = (typeof matrix !== 'undefined') ? matrix : Matrix4.IDENTITY;
-        Matrix4.clone(m, this._infiniteProjection);
+        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._infiniteProjection);
 
         this._modelViewInfiniteProjectionDirty = true;
     };
