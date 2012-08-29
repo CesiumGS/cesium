@@ -101,8 +101,7 @@ defineSuite([
             position : position,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
-            verticalOrigin : VerticalOrigin.CENTER,
-            font : '1px sans-serif'
+            verticalOrigin : VerticalOrigin.CENTER
         });
         return labels;
     }
