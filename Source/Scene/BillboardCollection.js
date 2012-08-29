@@ -199,6 +199,9 @@ define([
             },
             u_atlasSize : function() {
                 return that._textureAtlas.getTexture().getDimensions();
+            },
+            u_clampToPixel : function() {
+                return that.clampToPixel ? 1.0 : 0.0;
             }
         };
 
@@ -667,11 +670,7 @@ define([
             blending : BlendingState.ALPHA_BLEND
         });
 
-        this._sp = context.getShaderCache().getShaderProgram(
-                (this.clampToPixel ? '#define CLAMP_TO_PIXEL 1\n' : '') +
-                BillboardCollectionVS,
-                BillboardCollectionFS,
-                attributeIndices);
+        this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
 
         var state = this._update(context, sceneState);
         this.update = this._update;
@@ -1142,10 +1141,8 @@ define([
         });
 
         this._spPick = context.getShaderCache().getShaderProgram(
-                (this.clampToPixel ? '#define CLAMP_TO_PIXEL 1\n' : '') +
                 BillboardCollectionVS,
-                '#define RENDER_FOR_PICK 1\n' +
-                BillboardCollectionFS,
+                '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
                 attributeIndices);
 
         this.updateForPick = function(context) {
