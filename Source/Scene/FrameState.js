@@ -3,13 +3,13 @@ define([], function() {
     "use strict";
 
     /**
-     * State information about the current scene.  An instance of this class
+     * State information about the current frame.  An instance of this class
      * is provided to update functions.
      *
-     * @alias SceneState
+     * @alias FrameState
      * @constructor
      */
-    var SceneState = function() {
+    var FrameState = function() {
         /**
          * The current mode of the scene.
          *
@@ -37,7 +37,16 @@ define([], function() {
          * @type Occluder
          */
         this.occluder = undefined;
+
+        this.passes = {
+                /**
+                 * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
+                 *
+                 * @type Boolean
+                 */
+                pick : false
+        };
     };
 
-    return SceneState;
+    return FrameState;
 });
