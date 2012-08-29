@@ -623,6 +623,10 @@ define([
             this._vertices.update(context, this._createMeshes(), this.bufferUsage);
         }
 
+        if (typeof this._vertices.getVertexArrays() === 'undefined') {
+            return undefined;
+        }
+
         if (!this._rs) {
             // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
             this._rs = context.createRenderState({
@@ -687,10 +691,6 @@ define([
      */
     Polygon.prototype.render = function(context) {
         var vas = this._vertices.getVertexArrays();
-        if (typeof vas === 'undefined') {
-            return;
-        }
-
         var length = vas.length;
         for ( var j = 0; j < length; ++j) {
             context.draw({
@@ -749,10 +749,6 @@ define([
      */
     Polygon.prototype.renderForPick = function(context, framebuffer) {
         var vas = this._vertices.getVertexArrays();
-        if (typeof vas === 'undefined') {
-            return;
-        }
-
         var length = vas.length;
         for ( var j = 0; j < length; ++j) {
             context.draw({

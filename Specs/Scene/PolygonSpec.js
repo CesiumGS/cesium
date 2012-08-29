@@ -286,7 +286,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('does not renders', function() {
+    it('does not render', function() {
         polygon = createPolygon();
         polygon.material.uniforms.color = {
             red : 1.0,
@@ -296,12 +296,14 @@ defineSuite([
         };
         polygon.show = false;
 
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(typeof polygon.update(context, sceneState) === 'undefined').toEqual(true);
+    });
 
-        polygon.update(context, sceneState);
-        polygon.render(context, us);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+    it('does not render without positions', function() {
+        polygon = new Polygon();
+        polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
+        polygon.granularity = CesiumMath.toRadians(20.0);
+        expect(typeof polygon.update(context, sceneState) === 'undefined').toEqual(true);
     });
 
     it('is picked', function() {
@@ -317,10 +319,7 @@ defineSuite([
         polygon = createPolygon();
         polygon.show = false;
 
-        polygon.update(context, sceneState);
-
-        var pickedObject = pick(context, polygon, 0, 0);
-        expect(pickedObject).not.toBeDefined();
+        expect(typeof polygon.update(context, sceneState) === 'undefined').toEqual(true);
     });
 
     it('test 3D bounding sphere from positions', function() {
