@@ -247,7 +247,7 @@ define([
         var i, len;
         var imageryLayerCollection = this._imageryLayerCollection;
         for (i = 0, len = imageryLayerCollection.getLength(); i < len; i++) {
-            if (!imageryLayerCollection.get(i).imageryProvider.ready) {
+            if (!imageryLayerCollection.get(i).imageryProvider.isReady()) {
                 return;
             }
         }

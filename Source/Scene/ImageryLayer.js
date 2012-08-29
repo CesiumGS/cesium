@@ -73,8 +73,7 @@ define([
 
         description = defaultValue(description, {});
 
-        this.extent = defaultValue(description.extent, imageryProvider.extent);
-        this.extent = defaultValue(this.extent, Extent.MAX_VALUE);
+        this.extent = defaultValue(description.extent, Extent.MAX_VALUE);
 
         /**
          * DOC_TBA
@@ -136,11 +135,11 @@ define([
         var levelZeroMaximumTexelSpacing = this._levelZeroMaximumTexelSpacing;
         //if (typeof levelZeroMaximumTexelSpacing === 'undefined') {
             var imageryProvider = this.imageryProvider;
-            var tilingScheme = imageryProvider.tilingScheme;
+            var tilingScheme = imageryProvider.getTilingScheme();
             var ellipsoid = tilingScheme.ellipsoid;
             var latitudeFactor = Math.cos(latitudeClosestToEquator);
             //var latitudeFactor = 1.0;
-            levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * 2 * Math.PI * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.numberOfLevelZeroTilesX);
+            levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * 2 * Math.PI * latitudeFactor / (imageryProvider.getTileWidth() * tilingScheme.numberOfLevelZeroTilesX);
             this._levelZeroMaximumTexelSpacing = levelZeroMaximumTexelSpacing;
         //}
 
@@ -160,13 +159,13 @@ define([
     ImageryLayer.prototype.createTileImagerySkeletons = function(tile, terrainProvider) {
         var imageryCache = this._imageryCache;
         var imageryProvider = this.imageryProvider;
-        var imageryTilingScheme = imageryProvider.tilingScheme;
+        var imageryTilingScheme = imageryProvider.getTilingScheme();
 
         // Compute the extent of the imagery from this imageryProvider that overlaps
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
         // opportunity to constrain the extent.  The imagery TilingScheme's extent
         // always fully contains the ImageryProvider's extent.
-        var extent = tile.extent.intersectWith(imageryProvider.extent);
+        var extent = tile.extent.intersectWith(imageryProvider.getExtent());
         extent = extent.intersectWith(this.extent);
 
         if (extent.east <= extent.west ||
@@ -188,7 +187,7 @@ define([
         var errorRatio = 1.0;
         var targetGeometricError = errorRatio * terrainProvider.getLevelMaximumGeometricError(tile.level);
         var imageryLevel = this._getLevelWithMaximumTexelSpacing(targetGeometricError, latitudeClosestToEquator);
-        imageryLevel = Math.max(0, Math.min(imageryProvider.maxLevel, imageryLevel));
+        imageryLevel = Math.max(0, Math.min(imageryProvider.getMaximumLevel(), imageryLevel));
 
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
         var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getSoutheast(), imageryLevel);
@@ -348,7 +347,7 @@ define([
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
-        if (!(this.imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
+        if (!(this.imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) &&
             (extent.east - extent.west) / texture.getWidth() > 1e-5) {
                 var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
                 texture.destroy();

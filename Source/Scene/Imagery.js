@@ -12,7 +12,7 @@ define([
         this.x = x;
         this.y = y;
         this.level = level;
-        this.extent = imageryLayer.imageryProvider.tilingScheme.tileXYToExtent(x, y, level);
+        this.extent = imageryLayer.imageryProvider.getTilingScheme().tileXYToExtent(x, y, level);
 
         this.state = ImageryState.UNLOADED;
         this.imageUrl = undefined;

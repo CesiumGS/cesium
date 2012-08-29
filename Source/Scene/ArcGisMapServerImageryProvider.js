@@ -3,16 +3,11 @@ define([
         '../Core/defaultValue',
         '../Core/getHostname',
         '../Core/jsonp',
-        '../Core/loadImage',
         '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Cartesian2',
-        '../Core/Extent',
-        '../Core/Math',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
-        './Projections',
-        './TileState',
         './WebMercatorTilingScheme',
         './GeographicTilingScheme',
         '../ThirdParty/when'
@@ -20,32 +15,27 @@ define([
         defaultValue,
         getHostname,
         jsonp,
-        loadImage,
         writeTextToCanvas,
         DeveloperError,
         Cartesian2,
-        Extent,
-        CesiumMath,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
-        Projections,
-        TileState,
         WebMercatorTilingScheme,
         GeographicTilingScheme,
         when) {
     "use strict";
 
     /**
-     * Provides tiled imagery hosted by an ArcGIS server.
+     * Provides tiled imagery hosted by an ArcGIS MapServer.
      *
      * @alias ArcGisMapServerImageryProvider
      * @constructor
      *
      * @param {String} description.url The URL of the ArcGIS MapServer service.
-     * @param {String|Object} [description.discardPolicy] If the service returns "missing" tiles,
+     * @param {TileDiscardPolicy} [description.discardPolicy] If the service returns "missing" tiles,
      *        these can be filtered out by providing an object which is expected to have a
      *        shouldDiscardImage function.  By default, no tiles will be filtered.
-     * @param {Object} [description.proxy] A proxy to use for requests. This object is
+     * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
@@ -70,72 +60,21 @@ define([
             throw new DeveloperError('description.url is required.');
         }
 
-        /**
-         * The URL of the ArcGIS MapServer.
-         * @type {String}
-         */
-        this.url = description.url;
-
-        /**
-         * If the service returns "missing" tiles, these can be filtered out by providing
-         * an object which is expected to have a shouldDiscardImage function.  By default,
-         * no tiles will be filtered.
-         */
-        this.discardPolicy = description.discardPolicy;
-
+        this._url = description.url;
+        this._tileDiscardPolicy = description.discardPolicy;
         this._proxy = description.proxy;
-
-        /**
-         * The cartographic extent of this provider's imagery,
-         * with north, south, east and west properties in radians.
-         *
-         * @type {Extent}
-         */
-        this.extent = undefined;
-
-        /**
-         * The width of every image loaded.
-         *
-         * @type {Number}
-         */
-        this.tileWidth = undefined;
-
-        /**
-         * The height of every image loaded.
-         *
-         * @type {Number}
-         */
-        this.tileHeight = undefined;
-
-        /**
-         * The maximum level-of-detail that can be requested.
-         *
-         * @type {Number}
-         */
-        this.maxLevel = undefined;
-
-        /**
-         * The tiling scheme used by this provider.
-         *
-         * @type {TilingScheme}
-         * @see WebMercatorTilingScheme
-         * @see GeographicTilingScheme
-         */
-        this.tilingScheme = undefined;
-
-        /**
-         * True if the provider is ready for use; otherwise, false.
-         *
-         * @type {Boolean}
-         */
-        this.ready = false;
-
-        this._logo = undefined;
-
         this._imageUrlHostnames = [getHostname(this.url)];
 
+        this._tileWidth = undefined;
+        this._tileHeight = undefined;
+        this._maximumLevel = undefined;
+        this._tilingScheme = undefined;
+        this._logo = undefined;
+
+        this._ready = false;
+
         // Grab the details of this MapServer.
-        var metadata = jsonp(this.url, {
+        var metadata = jsonp(this._url, {
             parameters : {
                 f : 'json'
             },
@@ -144,49 +83,105 @@ define([
 
         var that = this;
         this._isReady = when(metadata, function(data) {
+            // TODO: support non-tiled MapServers.
             var tileInfo = data.tileInfo;
 
-            that.tileWidth = tileInfo.rows;
-            that.tileHeight = tileInfo.cols;
+            that._tileWidth = tileInfo.rows;
+            that._tileHeight = tileInfo.cols;
 
             if (tileInfo.spatialReference.wkid === 102100) {
-                var levelZeroResolution = tileInfo.lods[0].resolution;
-                var rows = tileInfo.rows;
-                var cols = tileInfo.cols;
-                var west = tileInfo.origin.x;
-                var north = tileInfo.origin.y;
-                var east = west + levelZeroResolution * cols;
-                var south = north - levelZeroResolution * rows;
-
-                that.tilingScheme = new WebMercatorTilingScheme(/*{
-                    extentSouthwestInMeters : new Cartesian2(west, south),
-                    extentNortheastInMeters : new Cartesian2(east, north)
-                }*/);
-                that.extent = that.tilingScheme.extent;
+                that._tilingScheme = new WebMercatorTilingScheme();
             } else if (data.tileInfo.spatialReference.wkid === 4326) {
-                that.extent = new Extent(CesiumMath.toRadians(data.fullExtent.xmin),
-                                         CesiumMath.toRadians(data.fullExtent.ymin),
-                                         CesiumMath.toRadians(data.fullExtent.xmax),
-                                         CesiumMath.toRadians(data.fullExtent.ymax));
-                that.tilingScheme = new GeographicTilingScheme({
-                    extent : that.extent
-                });
+                that._tilingScheme = new GeographicTilingScheme();
             }
-
-            that.maxLevel = data.tileInfo.lods.length - 1;
+            that._maximumLevel = data.tileInfo.lods.length - 1;
 
             // Create the copyright message.
             that._logo = writeTextToCanvas(data.copyrightText, {
                 font : '12px sans-serif'
             });
 
-            that.ready = true;
+            that._ready = true;
 
             return true;
         }, function(e) {
             /*global console*/
             console.error('failed to load metadata: ' + e);
         });
+    };
+
+    /**
+     * Gets the URL of the ArcGIS MapServer.
+     * @returns {String} The URL.
+     */
+    ArcGisMapServerImageryProvider.prototype.getUrl = function() {
+        return this._url;
+    };
+
+    /**
+     * Gets the width of each tile, in pixels.
+     *
+     * @returns {Number} The width.
+     */
+    ArcGisMapServerImageryProvider.prototype.getTileWidth = function() {
+        return this._tileWidth;
+    };
+
+    /**
+     * Gets the height of each tile, in pixels.
+     *
+     * @returns {Number} The height.
+     */
+    ArcGisMapServerImageryProvider.prototype.getTileHeight = function() {
+        return this._tileHeight;
+    };
+
+    /**
+     * Gets the maximum level-of-detail that can be requested.
+     *
+     * @returns {Number} The maximum level.
+     */
+    ArcGisMapServerImageryProvider.prototype.getMaximumLevel = function() {
+        return this._maximumLevel;
+    };
+
+    /**
+     * Gets the tiling scheme used by this provider.
+     *
+     * @returns {TilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     */
+    ArcGisMapServerImageryProvider.prototype.getTilingScheme = function() {
+        return this._tilingScheme;
+    };
+
+    /**
+     * Gets the extent, in radians, of the imagery provided by this instance.
+     *
+     * @returns {Extent} The extent.
+     */
+    ArcGisMapServerImageryProvider.prototype.getExtent = function() {
+        return this._tilingScheme.extent;
+    };
+
+    /**
+     * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+     * for filtering out "missing" tiles via its shouldDiscardImage function.
+     * By default, no tiles will be filtered.
+     * @returns {TileDiscardPolicy} The discard policy.
+     */
+    ArcGisMapServerImageryProvider.prototype.getTileDiscardPolicy = function() {
+        return this._tileDiscardPolicy;
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     *
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
+     */
+    ArcGisMapServerImageryProvider.prototype.isReady = function() {
+        return this._ready;
     };
 
     /**
@@ -216,7 +211,7 @@ define([
     ArcGisMapServerImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
         var that = this;
         var missingTileUrl = when(this._isReady, function() {
-            return that._buildImageUrl(0, 0, that.maxLevel);
+            return that._buildImageUrl(0, 0, that._maximumLevel);
         });
         var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
 
@@ -234,7 +229,7 @@ define([
      *                          if the URL needs to be built asynchronously.
      */
     ArcGisMapServerImageryProvider.prototype._buildImageUrl = function(x, y, level) {
-        var url = this.url + '/tile/' + level + '/' + y + '/' + x;
+        var url = this._url + '/tile/' + level + '/' + y + '/' + x;
 
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
@@ -253,7 +248,7 @@ define([
      */
     ArcGisMapServerImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
         var url = this._buildImageUrl(x, y, level);
-        return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this.discardPolicy);
+        return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this._tileDiscardPolicy);
     };
 
     /**
