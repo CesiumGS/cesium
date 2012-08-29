@@ -234,13 +234,15 @@ define([
             this._sp = context.getShaderCache().getShaderProgram(this._vertexShaderSource, this._fragmentShaderSource, attributeIndices);
             this._va = getVertexArray(context);
             this.renderState = context.createRenderState({
-                enabled : true,
-                equationRgb : BlendEquation.ADD,
-                equationAlpha : BlendEquation.ADD,
-                functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-                functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
-                functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
-                functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
+                blending : {
+                    enabled : true,
+                    equationRgb : BlendEquation.ADD,
+                    equationAlpha : BlendEquation.ADD,
+                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
+                    functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
+                    functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
+                }
             });
         }
 
