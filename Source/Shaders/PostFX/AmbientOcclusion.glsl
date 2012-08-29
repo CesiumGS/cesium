@@ -34,7 +34,7 @@ void main(void)
         float xDirection = rand(startPos.yz * float(i));
         float yDirection = rand(startPos.zy * float(i));
         float zDirection = rand(startPos.zx * float(i));
-        vec3 direction = normalize(vec3(xDirection, yDirection, zDirection));
+        vec3 direction = normalize( vec3(xDirection, yDirection, zDirection) - vec3(0.5) );
         vec3 newPos = startPos + direction * stepSize * 5.0 * depthScale;
         float newDepth = newPos.z;
         float textureDepth = LinearizeDepth(newPos.xy);
