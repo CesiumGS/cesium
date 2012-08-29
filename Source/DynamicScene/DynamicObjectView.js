@@ -22,7 +22,6 @@ define([
         this.scene = scene;
         this.ellipsoid = ellipsoid;
 
-        this._camera = undefined;
         this._lastScene = undefined;
         this._lastDynamicObject = undefined;
 
@@ -70,7 +69,7 @@ define([
         var objectChanged = dynamicObject !== this._lastDynamicObject;
         if (objectChanged) {
             this._lastDynamicObject = dynamicObject;
-
+            this._lastOffset = undefined;
             var viewFromProperty = this.dynamicObject.viewFrom;
             if (typeof viewFromProperty !== 'undefined') {
                 viewFromProperty.getValue(time, offset);
@@ -83,10 +82,9 @@ define([
             this._controller3d = undefined;
             this._controllerColumbusView = undefined;
             this._lastScene = scene;
-            this._camera = this.scene.getCamera();
         }
 
-        var camera = this._camera;
+        var camera = this.scene.getCamera();
 
         var controller;
         var controllers;
@@ -103,7 +101,7 @@ define([
                 controllers.removeAll();
                 this._lastController = this._controller2d = controller = controllers.add2D(scene.scene2D.projection);
                 controller.zoomOnly = true;
-                viewDistance = typeof this._lastOffset === 'undefined' ? camera.position.z : this._lastOffset.magnitude();
+                viewDistance = typeof this._lastOffset === 'undefined' ? offset.magnitude() : this._lastOffset.magnitude();
             } else if (objectChanged) {
                 viewDistance = offset.magnitude();
             } else {
@@ -140,7 +138,7 @@ define([
                     if (Cartesian3.equals(offset.normalize(), Cartesian3.UNIT_Z)) {
                         offset.y -= 0.01;
                     }
-                    camera.lookAt(offset, Cartesian3.ZERO.clone(), Cartesian3.UNIT_Z.clone());
+                    camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
 
                     //TODO There are all kinds of near plane issues in our code base right now,
                     //hack around it until the multi-frustum code is in place.
@@ -150,7 +148,7 @@ define([
                     if (typeof this._lastOffset !== 'undefined') {
                         this._lastOffset.normalize(offset).multiplyByScalar(this._lastDistance, offset);
                     }
-                    camera.lookAt(offset, Cartesian3.ZERO.clone(), Cartesian3.UNIT_Z.clone());
+                    camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
 
                     //TODO There are all kinds of near plane issues in our code base right now,
                     //hack around it until the multi-frustum code is in place.

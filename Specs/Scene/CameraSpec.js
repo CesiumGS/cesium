@@ -64,23 +64,7 @@ defineSuite([
         expect(controllers).toEqual(new CameraControllerCollection(camera, document));
     });
 
-    it('lookAt object', function() {
-        var target = Cartesian3.ZERO;
-        var newPosition = new Cartesian3(1.0, 1.0, 1.0);
-        var newDirection = target.subtract(newPosition).normalize();
-        var newUp = camera.right.cross(newDirection).normalize();
-        var tempCamera = camera.clone();
-        tempCamera.lookAt({
-            eye : newPosition,
-            up : newUp,
-            target : target
-        });
-        expect(tempCamera.position.equals(newPosition)).toEqual(true);
-        expect(tempCamera.direction.equals(newDirection)).toEqual(true);
-        expect(tempCamera.up.equals(newUp)).toEqual(true);
-    });
-
-    it('lookAt array', function() {
+    it('lookAt works', function() {
         var target = Cartesian3.ZERO;
         var newPosition = new Cartesian3(1.0, 1.0, 1.0);
         var newDirection = target.subtract(newPosition).normalize();
@@ -90,18 +74,6 @@ defineSuite([
         expect(tempCamera.position.equals(newPosition)).toEqual(true);
         expect(tempCamera.direction.equals(newDirection)).toEqual(true);
         expect(tempCamera.up.equals(newUp)).toEqual(true);
-    });
-
-    it('lookAt returns without proper arguments', function() {
-        var eye = new Cartesian3(1, 1, 1);
-
-        camera.lookAt(eye);
-        expect(camera.position.equals(eye)).toEqual(false);
-
-        camera.lookAt({
-            eye : eye
-        });
-        expect(camera.position.equals(eye)).toEqual(false);
     });
 
     it('get view matrix', function() {
