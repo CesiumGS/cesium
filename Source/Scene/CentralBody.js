@@ -1667,9 +1667,10 @@ define([
             });
 
             // create viewport quad for vertical gaussian blur pass
-            this._quadV = new ViewportQuad(new BoundingRectangle(0.0, 0.0, width, height));
-            this._quadV.vertexShader = '#define VERTICAL 1\n' + CentralBodyVSFilter;
-            this._quadV.fragmentShader = CentralBodyFSFilter;
+            this._quadV = new ViewportQuad(
+                new BoundingRectangle(0.0, 0.0, width, height),
+                '#define VERTICAL 1\n' + CentralBodyVSFilter,
+                CentralBodyFSFilter);
             this._quadV.uniforms.u_height = function() {
                 return height;
             };
@@ -1685,9 +1686,10 @@ define([
             this._quadV.setDestroyFramebuffer(true);
 
             // create viewport quad for horizontal gaussian blur pass
-            this._quadH = new ViewportQuad(new BoundingRectangle(0.0, 0.0, width, height));
-            this._quadH.vertexShader = CentralBodyVSFilter;
-            this._quadH.fragmentShader = CentralBodyFSFilter;
+            this._quadH = new ViewportQuad(
+                new BoundingRectangle(0.0, 0.0, width, height),
+                CentralBodyVSFilter,
+                CentralBodyFSFilter);
             this._quadH.uniforms.u_width = function() {
                 return width;
             };

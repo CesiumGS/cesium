@@ -102,10 +102,12 @@ define([
      * var atlas = context.createTextureAtlas({images : images});
      * billboards.setTextureAtlas(atlas);
      * billboards.add({
-     *   position : { x : 1.0, y : 2.0, z : 3.0 }
+     *   position : { x : 1.0, y : 2.0, z : 3.0 },
+     *   imageIndex : 0
      * });
      * billboards.add({
-     *   position : { x : 4.0, y : 5.0, z : 6.0 }
+     *   position : { x : 4.0, y : 5.0, z : 6.0 },
+     *   imageIndex : 1
      * });
      */
     var BillboardCollection = function() {
@@ -150,10 +152,10 @@ define([
          * @example
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * billboards.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
-         * billboards.add({ position : new Cartesian3(0.0, 0.0, 0.0) }); // center
-         * billboards.add({ position : new Cartesian3(1000000.0, 0.0, 0.0) }); // east
-         * billboards.add({ position : new Cartesian3(0.0, 1000000.0, 0.0) }); // north
-         * billboards.add({ position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 0.0, 0.0) }); // center
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(1000000.0, 0.0, 0.0) }); // east
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 1000000.0, 0.0) }); // north
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
@@ -161,6 +163,15 @@ define([
 
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
+
+        /**
+         * If true, aligns all billboards to a pixel in screen space,
+         * providing a crisper image at the cost of jumpier motion.
+         * Defaults to false.
+         *
+         * @type Boolean
+         */
+        this.clampToPixel = false;
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -190,6 +201,9 @@ define([
             },
             u_atlasSize : function() {
                 return that._textureAtlas.getTexture().getDimensions();
+            },
+            u_clampToPixel : function() {
+                return that.clampToPixel ? 1.0 : 0.0;
             }
         };
 
@@ -824,17 +838,30 @@ define([
 
     BillboardCollection.prototype._writeTextureCoordinatesAndImageSize = function(context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = (billboard._index * 4);
-        var imageRectangle = textureAtlasCoordinates[billboard.getImageIndex()];
-        var bottomLeftX = imageRectangle.x;
-        var bottomLeftY = imageRectangle.y;
-        var topRightX = imageRectangle.x + imageRectangle.width;
-        var topRightY = imageRectangle.y + imageRectangle.height;
-        this._maxSize = Math.max(this._maxSize, imageRectangle.width, imageRectangle.height);
+        var bottomLeftX = 0;
+        var bottomLeftY = 0;
+        var width = 0;
+        var height = 0;
+        var index = billboard.getImageIndex();
+        if (index !== -1) {
+            var imageRectangle = textureAtlasCoordinates[index];
+            if (typeof imageRectangle === 'undefined') {
+                throw new DeveloperError('Invalid billboard image index: ' + index);
+            }
+            bottomLeftX = imageRectangle.x;
+            bottomLeftY = imageRectangle.y;
+            width = imageRectangle.width;
+            height = imageRectangle.height;
+        }
+        var topRightX = bottomLeftX + width;
+        var topRightY = bottomLeftY + height;
 
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, bottomLeftX * 65535, bottomLeftY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Lower Left
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, topRightX * 65535, bottomLeftY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Lower Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, topRightX * 65535, topRightY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Upper Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 3, bottomLeftX * 65535, topRightY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Upper Left
+        this._maxSize = Math.max(this._maxSize, width, height);
+
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, bottomLeftX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Left
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, topRightX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Right
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, topRightX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Right
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 3, bottomLeftX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Left
     };
 
     BillboardCollection.prototype._writeBillboard = function(context, textureAtlasCoordinates, vafWriters, billboard) {
