@@ -8,6 +8,7 @@ attribute vec4 eyeOffsetAndScale;                       // eye offset in meters
 attribute vec4 pickColor;
 
 uniform vec2 u_atlasSize;
+uniform float u_clampToPixel; // clamp is 1.0 (true) or 0.0 (false)
 
 const vec2 czm_highResolutionSnapScale = vec2(1.0, 1.0);    // TODO
 
@@ -42,8 +43,9 @@ void main()
 
     positionWC.xy += (origin * abs(halfSize)) + halfSize;
     positionWC.xy += (pixelOffset * czm_highResolutionSnapScale);
-    
-    gl_Position = czm_viewportOrthographic * vec4(positionWC.x, floor(positionWC.y), -positionWC.z, 1.0);
+    positionWC.xy = mix(positionWC.xy, floor(positionWC.xy), u_clampToPixel);
+
+    gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
     v_color = color;
     v_pickColor = pickColor;
