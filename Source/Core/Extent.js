@@ -1,24 +1,12 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/Math',
-        '../Core/Occluder',
-        '../Core/Rectangle'
+        '../Core/Math'
     ], function(
-        defaultValue,
-        BoundingSphere,
-        Cartesian3,
         Cartographic,
         DeveloperError,
-        Ellipsoid,
-        CesiumMath,
-        Occluder,
-        Rectangle) {
+        CesiumMath) {
     "use strict";
 
     /**
@@ -129,151 +117,6 @@ define([
         }
     };
 
-    function getPosition(lla, ellipsoid, time, projection) {
-        if (typeof time === 'undefined' || time === 0.0 || typeof projection === 'undefined') {
-            return ellipsoid.cartographicToCartesian(lla);
-        }
-
-        var twod = projection.project(lla);
-        twod = new Cartesian3(0.0, twod.x, twod.y);
-        return twod.lerp(ellipsoid.cartographicToCartesian(lla), time);
-    }
-
-    function computePositions(extent, ellipsoid, time, projection) {
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
-
-        Extent.validate(extent);
-
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var positions = [];
-
-        var lla = new Cartographic(extent.west, extent.north, 0.0);
-        positions.push(getPosition(lla, ellipsoid, time, projection));
-        lla.longitude = extent.east;
-        positions.push(getPosition(lla, ellipsoid, time, projection));
-        lla.latitude = extent.south;
-        positions.push(getPosition(lla, ellipsoid, time, projection));
-        lla.longitude = extent.west;
-        positions.push(getPosition(lla, ellipsoid, time, projection));
-
-        if (extent.north < 0.0) {
-            lla.latitude = extent.north;
-        } else if (extent.south > 0.0) {
-            lla.latitude = extent.south;
-        } else {
-            lla.latitude = 0.0;
-        }
-
-        for ( var i = 1; i < 8; ++i) {
-            var temp = -Math.PI + i * CesiumMath.PI_OVER_TWO;
-            if (extent.west < temp && temp < extent.east) {
-                lla.longitude = temp;
-                positions.push(getPosition(lla, ellipsoid, time, projection));
-            }
-        }
-
-        if (lla.latitude === 0.0) {
-            lla.longitude = extent.west;
-            positions.push(getPosition(lla, ellipsoid, time, projection));
-            lla.longitude = extent.east;
-            positions.push(getPosition(lla, ellipsoid, time, projection));
-        }
-
-        return positions;
-    }
-
-    /**
-     * DOC_TBA
-     *
-     * @param {Extent} extent DOC_TBA
-     * @param {Ellipsoid} ellipsoid DOC_TBA
-     * @param {Number} time DOC_TBA
-     * @param {Object} projection DOC_TBA
-     *
-     * @returns {BoundingSphere} DOC_TBA
-     */
-    Extent.computeMorphBoundingSphere = function(extent, ellipsoid, time, projection) {
-        return new BoundingSphere(computePositions(extent, ellipsoid, time, projection));
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @param {Extent} extent DOC_TBA
-     * @param {Ellipsoid} ellipsoid DOC_TBA
-     * @returns {BoundingSphere} DOC_TBA
-     */
-    Extent.compute3DBoundingSphere = function(extent, ellipsoid) {
-        return new BoundingSphere(computePositions(extent, ellipsoid));
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @param {Extent} extent DOC_TBA
-     * @param {Ellipsoid} ellipsoid DOC_TBA
-     *
-     * @returns {Object} DOC_TBA
-     */
-    Extent.computeOccludeePoint = function(extent, ellipsoid) {
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var positions = computePositions(extent, ellipsoid);
-        var bs = new BoundingSphere(positions);
-
-        // TODO: get correct ellipsoid center
-        var ellipsoidCenter = Cartesian3.ZERO;
-        if (!ellipsoidCenter.equals(bs.center)) {
-            return Occluder.getOccludeePoint(new BoundingSphere(ellipsoidCenter, ellipsoid.getMinimumRadius()), bs.center, positions);
-        }
-        return {
-            valid : false
-        };
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @param {Extent} extent DOC_TBA
-     * @param {Object} projection DOC_TBA
-     * @returns {Rectangle} DOC_TBA
-     */
-    Extent.computeBoundingRectangle = function(extent, projection) {
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
-
-        Extent.validate(extent);
-
-        if (typeof projection === 'undefined') {
-            throw new DeveloperError('projection is required.');
-        }
-
-        var lla = new Cartographic(extent.west, extent.south);
-        var lowerLeft = projection.project(lla);
-        lla.longitude = extent.east;
-        lla.latitude = extent.north;
-        var upperRight = projection.project(lla);
-
-        var diagonal = upperRight.subtract(lowerLeft);
-        return new Rectangle(lowerLeft.x, lowerLeft.y, diagonal.x, diagonal.y);
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @param {Extent} extent DOC_TBA
-     * @param {Object} projection DOC_TBA
-     * @returns {BoundingSphere} DOC_TBA
-     */
-    Extent.compute2DBoundingSphere = function(extent, projection) {
-        var rect = Extent.computeBoundingRectangle(extent, projection);
-        var center = new Cartesian3((2.0 * rect.x + rect.width) * 0.5, (2.0 * rect.y + rect.height) * 0.5, 0.0);
-        var radius = Math.sqrt(rect.width * rect.width + rect.height * rect.height) * 0.5;
-        return new BoundingSphere(center, radius);
-    };
-
     /**
      * Gets a {@link Cartographic} containing the southwest corner of this extent.
      */
@@ -302,6 +145,43 @@ define([
         return new Cartographic(this.east, this.south);
     };
 
+    Extent.prototype.subsample = function(ellipsoid) {
+        var positions = [];
+
+        var lla = new Cartographic(this.west, this.north);
+        positions.push(ellipsoid.cartographicToCartesian(lla));
+        lla.longitude = this.east;
+        positions.push(ellipsoid.cartographicToCartesian(lla));
+        lla.latitude = this.south;
+        positions.push(ellipsoid.cartographicToCartesian(lla));
+        lla.longitude = this.west;
+        positions.push(ellipsoid.cartographicToCartesian(lla));
+
+        if (this.north < 0.0) {
+            lla.latitude = this.north;
+        } else if (this.south > 0.0) {
+            lla.latitude = this.south;
+        } else {
+            lla.latitude = 0.0;
+        }
+
+        for ( var i = 1; i < 8; ++i) {
+            var temp = -Math.PI + i * CesiumMath.PI_OVER_TWO;
+            if (this.west < temp && temp < this.east) {
+                lla.longitude = temp;
+                positions.push(ellipsoid.cartographicToCartesian(lla));
+            }
+        }
+
+        if (lla.latitude === 0.0) {
+            lla.longitude = this.west;
+            positions.push(ellipsoid.cartographicToCartesian(lla));
+            lla.longitude = this.east;
+            positions.push(ellipsoid.cartographicToCartesian(lla));
+        }
+
+        return positions;
+    };
     /**
      * The largest possible extent.
      */

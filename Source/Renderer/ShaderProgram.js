@@ -558,7 +558,7 @@ define([
             var uniforms = {
                 /**
                  * An automatic GLSL uniform containing the viewport's <code>x</code>, <code>y</code>, <code>width</code>,
-                 * and <code>height</code> properties in an <code>ivec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,
+                 * and <code>height</code> properties in an <code>vec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,
                  * and <code>w</code> components, respectively.
                  * <br /><br />
                  * Like all automatic uniforms, <code>czm_viewport</code> does not need to be explicitly declared.
@@ -572,7 +572,7 @@ define([
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform ivec4 czm_viewport;
+                 * uniform vec4 czm_viewport;
                  *
                  * // Scale the window coordinate components to [0, 1] by dividing
                  * // by the viewport's width and height.
@@ -590,7 +590,7 @@ define([
                      * @private
                      */
                     getDatatype : function() {
-                        return UniformDatatype.INT_VECTOR4;
+                        return UniformDatatype.FLOAT_VECTOR4;
                     },
 
                     /**
@@ -784,6 +784,90 @@ define([
                 },
 
                 /**
+                 * An automatic GLSL uniform representing a 4x4 view transformation matrix that
+                 * transforms world coordinates to eye coordinates.
+                 * <br /><br />
+                 * Like all automatic uniforms, <code>czm_view</code> does not need to be explicitly declared.
+                 * However, it can be explicitly declared when a shader is also used by other applications such
+                 * as a third-party authoring tool.
+                 *
+                 * @alias czm_view
+                 * @glslUniform
+                 *
+                 * @see UniformState#getView
+                 * @see czm_viewRotation
+                 * @see czm_modelView
+                 * @see czm_viewProjection
+                 * @see czm_modelViewProjection
+                 * @see czm_inverseView
+                 *
+                 * @example
+                 * // GLSL declaration
+                 * uniform mat4 czm_view;
+                 *
+                 * // Example
+                 * vec4 eyePosition = czm_view * worldPosition;
+                 */
+                czm_view : {
+                    getSize : function() {
+                        return 1;
+                    },
+
+                    getDatatype : function() {
+                        return UniformDatatype.FLOAT_MATRIX4;
+                    },
+
+                    create : function(uniform) {
+                        return {
+                            _set : function(uniformState) {
+                                uniform.value = uniformState.getView();
+                            }
+                        };
+                    }
+                },
+
+                /**
+                 * An automatic GLSL uniform representing a 3x3 view rotation matrix that
+                 * transforms vectors in world coordinates to eye coordinates.
+                 * <br /><br />
+                 * Like all automatic uniforms, <code>czm_viewRotation</code> does not need to be explicitly declared.
+                 * However, it can be explicitly declared when a shader is also used by other applications such
+                 * as a third-party authoring tool.
+                 *
+                 * @alias czm_viewRotation
+                 * @glslUniform
+                 *
+                 * @see UniformState#getViewRotation
+                 * @see czm_view
+                 * @see czm_inverseView
+                 * @see czm_inverseViewRotation
+                 *
+                 * @example
+                 * // GLSL declaration
+                 * uniform mat3 czm_viewRotation;
+                 *
+                 * // Example
+                 * vec3 eyeVector = czm_viewRotation * worldVector;
+                 */
+                czm_viewRotation : {
+                    getSize : function() {
+                        return 1;
+                    },
+
+                    getDatatype : function() {
+                        return UniformDatatype.FLOAT_MATRIX3;
+                    },
+
+                    create : function(uniform) {
+                        return {
+                            _set : function(uniformState) {
+                                uniform.value = uniformState.getViewRotation();
+                            }
+                        };
+                    }
+                },
+
+                /**
                  * An automatic GLSL uniform representing a 4x4 transformation matrix that
                  * transforms from eye coordinates to world coordinates.
                  * <br /><br />
@@ -824,42 +908,41 @@ define([
                 },
 
                 /**
-                 * An automatic GLSL uniform representing a 4x4 view transformation matrix that
-                 * transforms world coordinates to eye coordinates.
+                 * An automatic GLSL uniform representing a 3x3 rotation matrix that
+                 * transforms vectors from eye coordinates to world coordinates.
                  * <br /><br />
-                 * Like all automatic uniforms, <code>czm_view</code> does not need to be explicitly declared.
+                 * Like all automatic uniforms, <code>czm_inverseViewRotation</code> does not need to be explicitly declared.
                  * However, it can be explicitly declared when a shader is also used by other applications such
                  * as a third-party authoring tool.
                  *
-                 * @alias czm_view
+                 * @alias czm_inverseViewRotation
                  * @glslUniform
                  *
-                 * @see UniformState#getView
-                 * @see czm_modelView
-                 * @see czm_viewProjection
-                 * @see czm_modelViewProjection
-                 * @see czm_inverseView
+                 * @see UniformState#getInverseView
+                 * @see czm_view
+                 * @see czm_viewRotation
+                 * @see czm_inverseViewRotation
                  *
                  * @example
                  * // GLSL declaration
-                 * uniform mat4 czm_view;
+                 * uniform mat3 czm_inverseViewRotation;
                  *
                  * // Example
-                 * vec4 eyePosition = czm_view * worldPosition;
+                 * vec4 worldVector = czm_inverseViewRotation * eyeVector;
                  */
-                czm_view : {
+                czm_inverseViewRotation : {
                     getSize : function() {
                         return 1;
                     },
 
                     getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
+                        return UniformDatatype.FLOAT_MATRIX3;
                     },
 
                     create : function(uniform) {
                         return {
                             _set : function(uniformState) {
-                                uniform.value = uniformState.getView();
+                                uniform.value = uniformState.getInverseViewRotation();
                             }
                         };
                     }

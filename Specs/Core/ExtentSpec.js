@@ -50,6 +50,42 @@ defineSuite([
         }).toThrow();
     });
 
+    it('constructor throws exception with invalid extent 5', function() {
+        expect(function() {
+            return new Extent(undefined,
+                              -CesiumMath.PI_OVER_TWO,
+                              CesiumMath.PI,
+                              CesiumMath.PI_OVER_TWO);
+        }).toThrow();
+    });
+
+    it('constructor throws exception with invalid extent 6', function() {
+        expect(function() {
+            return new Extent(-CesiumMath.PI,
+                              undefined,
+                              CesiumMath.PI,
+                              CesiumMath.PI_OVER_TWO);
+        }).toThrow();
+    });
+
+    it('constructor throws exception with invalid extent 7', function() {
+        expect(function() {
+            return new Extent(-CesiumMath.PI,
+                              -CesiumMath.PI_OVER_TWO,
+                              undefined,
+                              CesiumMath.PI_OVER_TWO);
+        }).toThrow();
+    });
+
+    it('constructor throws exception with invalid extent 8', function() {
+        expect(function() {
+            return new Extent(-CesiumMath.PI,
+                              -CesiumMath.PI_OVER_TWO,
+                              CesiumMath.PI,
+                              undefined);
+        }).toThrow();
+    });
+
     it('validate throws exception with undefined extent', function() {
         expect(function() {
             Extent.validate();

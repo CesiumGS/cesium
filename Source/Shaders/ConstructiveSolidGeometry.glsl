@@ -650,7 +650,7 @@ vec3 czm_ellipsoidSilhouetteConeNormal(czm_ellipsoidSilhouetteCone cone, vec3 po
 
     vec3 scaledNormal = czm_coneNormal(cone.coneInScaledSpace, pointOnScaledCone);
 
-    vec3 temp = -normalize((czm_view * vec4(cone.ellipsoid.radii * scaledNormal, 0.0)).xyz);
+    vec3 temp = -normalize(czm_viewRotation * (cone.ellipsoid.radii * scaledNormal));
     
     return temp;
 }
@@ -707,7 +707,7 @@ czm_raySegment czm_rayEllipsoidSilhouetteConeIntersectionInterval(czm_ray ray, c
 {
 	// Determine the ray in the scaled space.
 	vec3 origin = cone.ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.origin, 1.0)).xyz;
-	vec3 direction = normalize(cone.ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.direction, 0.0)).xyz);
+	vec3 direction = normalize(cone.ellipsoid.inverseRadii * (czm_inverseViewRotation * ray.direction));
 	czm_ray rayInScaledSpace = czm_ray(origin, direction);
 	
 	// Perform the intersection in the scaled space.
@@ -851,7 +851,7 @@ czm_raySegment czm_rayEllipsoidSilhouetteHalfspaceIntersectionInterval(czm_ray r
 {
 	// Determine the ray in the scaled space.
 	vec3 origin = halfspace.ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.origin, 1.0)).xyz;
-	vec3 direction = halfspace.ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.direction, 0.0)).xyz;
+	vec3 direction = halfspace.ellipsoid.inverseRadii * (czm_inverseViewRotation * ray.direction);
 	czm_ray rayInScaledSpace = czm_ray(origin, direction);
 	
 	// Perform the intersection in the scaled space.

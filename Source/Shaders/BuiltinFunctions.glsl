@@ -225,8 +225,8 @@ vec4 czm_eyeToWindowCoordinates(vec4 positionEC)
  */
 vec4 czm_windowToEyeCoordinates(vec4 fragmentCoordinate)
 {
-    float x = 2.0 * (fragmentCoordinate.x - float(czm_viewport.x)) / float(czm_viewport.z) - 1.0;
-    float y = 2.0 * (fragmentCoordinate.y - float(czm_viewport.y)) / float(czm_viewport.w) - 1.0;
+    float x = 2.0 * (fragmentCoordinate.x - czm_viewport.x) / czm_viewport.z - 1.0;
+    float y = 2.0 * (fragmentCoordinate.y - czm_viewport.y) / czm_viewport.w - 1.0;
     float z = (fragmentCoordinate.z - czm_viewportTransformation[3][2]) / czm_viewportTransformation[2][2];
     vec4 q = vec4(x, y, z, 1.0);
     q /= fragmentCoordinate.w;
@@ -334,7 +334,7 @@ mat3 czm_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
  * @property {vec3} str 3D texture coordinates.
  * @property {vec3} normalEC Unperturbed surface normal in eye coordinates.
  * @property {mat3} tangentToEyeMatrix Matrix for converting a tangent space normal to eye space.
- * @property {vec3} positionToEyeWC Direction from the fragment to the eye.
+ * @property {vec3} positionToEyeEC Direction from the fragment to the eye in eye coordinates.
  * @property {vec3} positionMC Position in model coordinates.
  */
 struct czm_materialInput
@@ -344,7 +344,7 @@ struct czm_materialInput
     vec3 str;
     vec3 normalEC;
     mat3 tangentToEyeMatrix;
-    vec3 positionToEyeWC;
+    vec3 positionToEyeEC;
     vec3 positionMC;
 };
 
@@ -631,7 +631,7 @@ bool czm_ellipsoidContainsPoint(czm_ellipsoid ellipsoid, vec3 point)
 vec3 czm_ellipsoidNormal(czm_ellipsoid ellipsoid, vec3 pointOnEllipsoid)
 {
     vec3 n = ellipsoid.inverseRadiiSquared * (czm_inverseView * vec4(pointOnEllipsoid, 1.0)).xyz;
-    vec3 rotated = (czm_view * vec4(n, 0.0)).xyz;
+    vec3 rotated = czm_viewRotation * n;
     return normalize(rotated);
 }
 
