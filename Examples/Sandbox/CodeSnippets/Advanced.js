@@ -78,6 +78,8 @@
                     }
                 });
 
+                this._pickId = context.createPickId(this);
+
                 this.update = this._update;
                 return this._update(context, frameState);
             };
@@ -97,11 +99,6 @@
                     vertexArray   : this._va,
                     renderState   : this._rs
                 });
-            };
-
-            Sandbox.ExamplePrimitive.prototype.updateForPick = function(context) {
-                this._pickId = this._pickId || context.createPickId(this);
-                this.updateForPick = function() {};
             };
 
             Sandbox.ExamplePrimitive.prototype.renderForPick = function(context, framebuffer) {
@@ -215,6 +212,8 @@
                     }
                 });
 
+                this._pickId = context.createPickId(this);
+
                 this.update = this._update;
                 return this._update(context, frameState);
             };
@@ -325,11 +324,6 @@
                     vertexArray   : this._va,
                     renderState   : this._rs
                 });
-            };
-
-            Sandbox.ExamplePrimitive.prototype.updateForPick = function(context) {
-                this._pickId = this._pickId || context.createPickId(this);
-                this.updateForPick = function() {};
             };
 
             Sandbox.ExamplePrimitive.prototype.renderForPick = function(context, framebuffer) {
