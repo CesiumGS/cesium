@@ -29,5 +29,5 @@ void main()
         v_textureCoordinates[i] = textureCoordinates + offset;
     }
     
-    gl_Position = czm_viewportOrthographic * position;
+    gl_Position = position;
 }
