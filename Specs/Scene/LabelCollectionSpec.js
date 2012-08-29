@@ -691,9 +691,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        labels.update(context, frameState);
-
-        var pickedObject = pick(context, labels, 0, 0);
+        var pickedObject = pick(context, frameState, labels, 0, 0);
         expect(pickedObject).toEqual(label);
     });
 
@@ -710,9 +708,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        labels.update(context, frameState);
-
-        var pickedObject = pick(context, labels, 0, 0);
+        var pickedObject = pick(context, frameState, labels, 0, 0);
         expect(pickedObject).toBeUndefined();
     });
 

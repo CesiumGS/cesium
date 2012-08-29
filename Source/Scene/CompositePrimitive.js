@@ -527,25 +527,6 @@ define([
     };
 
     /**
-     * @private
-     */
-    CompositePrimitive.prototype.updateForPick = function(context) {
-        if (this._centralBody && this._centralBody.updateForPick) {
-            this._centralBody.updateForPick(context);
-        }
-
-        // This assumes that updateForPick is called after update and before renderForPick
-        var primitives = this._renderList;
-        var length = primitives.length;
-        for ( var i = 0; i < length; ++i) {
-            var primitive = primitives[i];
-            if (primitive.updateForPick) {
-                primitives[i].updateForPick(context);
-            }
-        }
-    };
-
-    /**
      * DOC_TBA
      * @memberof CompositePrimitive
      */

@@ -612,15 +612,6 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
-     * @memberof PolylineCollection
-     */
-    PolylineCollection.prototype.updateForPick = function(context) {
-        //render state for picking is set up during update.
-    };
-
-    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than

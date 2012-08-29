@@ -172,7 +172,7 @@ define([
         return this._animate;
     };
 
-    Scene.prototype._updateFrameState = function() {
+    Scene.prototype._updateFrameState = function(passName) {
         var camera = this._camera;
 
         var frameState = this._frameState;
@@ -188,6 +188,17 @@ define([
             var ellipsoid = cb.getEllipsoid();
             var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
             frameState.occluder = occluder;
+        }
+
+        var passes = frameState.passes;
+        for (var pass in passes) {
+            if (passes.hasOwnProperty(pass)) {
+                passes[pass] = false;
+            }
+        }
+
+        if (typeof passName !== 'undefined') {
+            frameState.passes[passName] = true;
         }
     };
 
@@ -240,9 +251,8 @@ define([
         this._pickFramebuffer = this._pickFramebuffer || context.createPickFramebuffer();
         var fb = this._pickFramebuffer.begin();
 
-        this._updateFrameState();
+        this._updateFrameState('pick');
         primitives.update(context, frameState);
-        primitives.updateForPick(context);
         primitives.renderForPick(context, fb);
 
         return this._pickFramebuffer.end({

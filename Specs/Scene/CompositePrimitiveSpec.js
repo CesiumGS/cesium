@@ -333,9 +333,8 @@ defineSuite([
         var l = labels.get(0);
 
         primitives.add(labels);
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(l);
     });
 
@@ -344,9 +343,8 @@ defineSuite([
 
         primitives.show = false;
         primitives.add(labels);
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 
@@ -358,9 +356,7 @@ defineSuite([
         children.add(labels);
         primitives.add(children);
 
-        primitives.update(context, frameState);
-
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(l);
     });
 
@@ -370,9 +366,8 @@ defineSuite([
 
         primitives.add(p0);
         primitives.add(p1);
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -382,9 +377,8 @@ defineSuite([
 
         primitives.add(p1);
         primitives.add(p0);
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -395,9 +389,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringForward(p1); // Already on top
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -408,9 +401,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringForward(p0); // Moved to top
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -421,9 +413,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringToFront(p1); // Already on top
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -434,9 +425,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringToFront(p0); // Moved to top
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -447,9 +437,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendBackward(p1); // Moved back
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -460,9 +449,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendBackward(p0); // Already on bottom
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -473,9 +461,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendToBack(p1); // Moved back
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -486,9 +473,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendToBack(p0); // Already on bottom
-        primitives.update(context, frameState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 

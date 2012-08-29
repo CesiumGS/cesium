@@ -37,6 +37,15 @@ define([], function() {
          * @type Occluder
          */
         this.occluder = undefined;
+
+        this.passes = {
+                /**
+                 * <code>true</code> is the current pass is for picking, <code>false</code> otherwise.
+                 *
+                 * @type Boolean
+                 */
+                pick : false
+        };
     };
 
     return FrameState;

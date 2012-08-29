@@ -665,13 +665,6 @@ define([
     };
 
     /**
-     * @private
-     */
-    LabelCollection.prototype.updateForPick = function(context) {
-        this._billboardCollection.updateForPick(context);
-    };
-
-    /**
      * DOC_TBA
      * @memberof LabelCollection
      */

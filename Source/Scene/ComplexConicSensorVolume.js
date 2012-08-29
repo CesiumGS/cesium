@@ -406,6 +406,8 @@ define([
             });
         }
 
+        var fsSource;
+
         // Recompile shader when material changes
         if ((!this._outerMaterial || (this._outerMaterial !== this.outerMaterial)) ||
             (!this._innerMaterial || (this._innerMaterial !== this.innerMaterial)) ||
@@ -422,7 +424,7 @@ define([
             var material = this._combineMaterials();
             this._drawUniforms = combine([this._uniforms, material._uniforms], false, false);
 
-            var fsSource =
+            fsSource =
                 '#line 0\n' +
                 ShadersNoise +
                 '#line 0\n' +
@@ -459,6 +461,31 @@ define([
         // Does not read or write depth
         });
 
+        if (frameState.passes.pick && typeof this._pickId === 'undefined') {
+            // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
+            fsSource =
+                '#define RENDER_FOR_PICK 1\n' +
+                '#line 0\n' +
+                ShadersRay +
+                '#line 0\n' +
+                ShadersConstructiveSolidGeometry +
+                '#line 0\n' +
+                ShadersSensorVolume +
+                '#line 0\n' +
+                ComplexConicSensorVolumeFS;
+
+            this._spPick = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
+            this._pickId = context.createPickId(this);
+
+            var that = this;
+
+            this._pickUniforms = combine([this._uniforms, {
+                u_pickColor : function() {
+                    return that._pickId.normalizedRgba;
+                }
+            }], false, false);
+        }
+
         return {
             boundingVolume : this._boundingVolume,
             modelMatrix : this.modelMatrix
@@ -477,36 +504,6 @@ define([
             vertexArray : this._va,
             renderState : this._rs
         });
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ComplexConicSensorVolume
-     */
-    ComplexConicSensorVolume.prototype.updateForPick = function(context) {
-        // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
-        var fsSource =
-            '#define RENDER_FOR_PICK 1\n' +
-            '#line 0\n' +
-            ShadersRay +
-            '#line 0\n' +
-            ShadersConstructiveSolidGeometry +
-            '#line 0\n' +
-            ShadersSensorVolume +
-            '#line 0\n' +
-            ComplexConicSensorVolumeFS;
-
-        this._spPick = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
-        this._pickId = context.createPickId(this);
-
-        var that = this;
-
-        this._pickUniforms = combine([this._uniforms, {
-            u_pickColor : function() {
-                return that._pickId.normalizedRgba;
-            }
-        }], false, false);
-        this.updateForPick = function(context) {};
     };
 
     /**

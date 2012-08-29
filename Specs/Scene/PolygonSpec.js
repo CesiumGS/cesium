@@ -309,9 +309,7 @@ defineSuite([
     it('is picked', function() {
         polygon = createPolygon();
 
-        polygon.update(context, frameState);
-
-        var pickedObject = pick(context, polygon, 0, 0);
+        var pickedObject = pick(context, frameState, polygon, 0, 0);
         expect(pickedObject).toEqual(polygon);
     });
 

@@ -216,14 +216,6 @@ define([
      * DOC_TBA
      * @memberof RectangularPyramidSensorVolume
      */
-    RectangularPyramidSensorVolume.prototype.updateForPick = function(context) {
-        this._customSensor.updateForPick(context);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
-     */
     RectangularPyramidSensorVolume.prototype.renderForPick = function(context, framebuffer) {
         this._customSensor.renderForPick(context, framebuffer);
     };

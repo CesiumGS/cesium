@@ -1594,9 +1594,7 @@ defineSuite([
             }]
         });
 
-        polylines.update(context, frameState);
-
-        var pickedObject = pick(context, polylines, 0, 0);
+        var pickedObject = pick(context, frameState, polylines, 0, 0);
         expect(pickedObject).toEqual(p);
     });
 
@@ -1614,9 +1612,7 @@ defineSuite([
             }]
         });
 
-        polylines.update(context, frameState);
-
-        var pickedObject = pick(context, polylines, 0, 0);
+        var pickedObject = pick(context, frameState, polylines, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 

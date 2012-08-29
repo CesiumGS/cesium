@@ -217,18 +217,6 @@ define([
     /**
      * @private
      */
-    SensorVolumeCollection.prototype.updateForPick = function(context) {
-        // This assumes that updateForPick is called after update and before renderForPick
-        var sensors = this._renderList;
-        var length = sensors.length;
-        for ( var i = 0; i < length; ++i) {
-            sensors[i].updateForPick(context);
-        }
-    };
-
-    /**
-     * @private
-     */
     SensorVolumeCollection.prototype.renderForPick = function(context, framebuffer) {
         var sensors = this._renderList;
         var length = sensors.length;

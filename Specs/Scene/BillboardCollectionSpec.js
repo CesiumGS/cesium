@@ -909,9 +909,7 @@ defineSuite([
             imageIndex : 0
         });
 
-        billboards.update(context, frameState);
-
-        var pickedObject = pick(context, billboards, 0, 0);
+        var pickedObject = pick(context, frameState, billboards, 0, 0);
         expect(pickedObject).toEqual(b);
     });
 
@@ -927,9 +925,7 @@ defineSuite([
             imageIndex : 0
         });
 
-        billboards.update(context, frameState);
-
-        var pickedObject = pick(context, billboards, 0, 0);
+        var pickedObject = pick(context, frameState, billboards, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 

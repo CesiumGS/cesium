@@ -660,6 +660,17 @@ define([
 
         this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
 
+        this._rsPick = context.createRenderState({
+            depthTest : {
+                enabled : true
+            }
+        });
+
+        this._spPick = context.getShaderCache().getShaderProgram(
+                BillboardCollectionVS,
+                '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
+                attributeIndices);
+
         var state = this._update(context, frameState);
         this.update = this._update;
 
@@ -1114,26 +1125,6 @@ define([
         return {
             boundingVolume : boundingVolume,
             modelMatrix : modelMatrix
-        };
-    };
-
-    /**
-     * @private
-     */
-    BillboardCollection.prototype.updateForPick = function(context) {
-        // First update:  create render state and shader program
-        this._rsPick = context.createRenderState({
-            depthTest : {
-                enabled : true
-            }
-        });
-
-        this._spPick = context.getShaderCache().getShaderProgram(
-                BillboardCollectionVS,
-                '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
-                attributeIndices);
-
-        this.updateForPick = function(context) {
         };
     };
 
