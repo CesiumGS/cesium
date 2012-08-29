@@ -24,6 +24,10 @@ require({
         proxy : new Cesium.DefaultProxy('/terrain/')
     });
 
+//    terrainProvider = new Cesium.TileMapServiceTerrainProvider({
+//        url : 'http://localhost:8080/terraindata/TifTiles/srtm'
+//    });
+
 //    terrainProvider = new Cesium.WebMapServiceTerrainProvider({
 //        url : 'http://localhost:8081/geoserver/terrain/wms',
 //        layerName : 'terrain:SRTM',

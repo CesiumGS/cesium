@@ -93,10 +93,22 @@ define([
         var piOverTwo = Math.PI / 2.0;
         var toRadians = CesiumMath.toRadians;
 
-        var geographicWest = extent.west * oneOverCentralBodySemimajorAxis;
-        var geographicSouth = piOverTwo - (2.0 * atan(exp(-extent.south * oneOverCentralBodySemimajorAxis)));
-        var geographicEast = extent.east * oneOverCentralBodySemimajorAxis;
-        var geographicNorth = piOverTwo - (2.0 * atan(exp(-extent.north * oneOverCentralBodySemimajorAxis)));
+        var geographicWest;
+        var geographicSouth;
+        var geographicEast;
+        var geographicNorth;
+
+        if (isGeographic) {
+            geographicWest = toRadians(extent.west);
+            geographicSouth = toRadians(extent.south);
+            geographicEast = toRadians(extent.east);
+            geographicNorth = toRadians(extent.north);
+        } else {
+            geographicWest = extent.west * oneOverCentralBodySemimajorAxis;
+            geographicSouth = piOverTwo - (2.0 * atan(exp(-extent.south * oneOverCentralBodySemimajorAxis)));
+            geographicEast = extent.east * oneOverCentralBodySemimajorAxis;
+            geographicNorth = piOverTwo - (2.0 * atan(exp(-extent.north * oneOverCentralBodySemimajorAxis)));
+        }
 
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
