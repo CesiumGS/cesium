@@ -330,11 +330,12 @@ define([
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
-            centralBody.showSkyAtmosphere = true;
-            centralBody.showGroundAtmosphere = true;
+
             // This logo is replicated by the imagery selector button, so it's hidden here.
             centralBody.logoOffset = new Cartesian2(-100, -100);
 
+            this.showSkyAtmosphere(true);
+            this.showGroundAtmosphere(true);
             this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
@@ -543,6 +544,8 @@ define([
             var cbLighting = widget.cbLighting;
             on(cbLighting, 'Change', function(value) {
                 widget.centralBody.affectedByLighting = !value;
+                widget.centralBody.showSkyAtmosphere = widget._showSkyAtmosphere && !value;
+                widget.centralBody.showGroundAtmosphere = widget._showGroundAtmosphere && !value;
             });
 
             var imagery = widget.imagery;
@@ -626,11 +629,13 @@ define([
         },
 
         showSkyAtmosphere : function(show) {
-            this.centralBody.showSkyAtmosphere = show;
+            this._showSkyAtmosphere = show;
+            this.centralBody.showSkyAtmosphere = show && this.centralBody.affectedByLighting;
         },
 
         showGroundAtmosphere : function(show) {
-            this.centralBody.showGroundAtmosphere = show;
+            this._showGroundAtmosphere = show;
+            this.centralBody.showGroundAtmosphere = show && this.centralBody.affectedByLighting;
         },
 
         enableStreamingImagery : function(value) {
