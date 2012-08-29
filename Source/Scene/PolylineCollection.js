@@ -518,12 +518,12 @@ define([
      * @memberof PolylineCollection
      *
      */
-    PolylineCollection.prototype.update = function(context, sceneState) {
+    PolylineCollection.prototype.update = function(context, frameState) {
         if (!this._sp) {
             this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
         }
         this._removePolylines();
-        this._updateMode(sceneState);
+        this._updateMode(frameState);
         var bucket;
         var polyline;
         var properties = this._propertiesChanged;
@@ -594,12 +594,12 @@ define([
         var boundingVolume;
         var modelMatrix = Matrix4.IDENTITY;
 
-        if (sceneState.mode === SceneMode.SCENE3D) {
+        if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolume = this._boundingVolume;
             modelMatrix = this.modelMatrix;
-        } else if (sceneState.mode === SceneMode.COLUMBUS_VIEW) {
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
             boundingVolume = this._boundingVolume2D;
-        } else if (sceneState.mode === SceneMode.SCENE2D) {
+        } else if (frameState.mode === SceneMode.SCENE2D) {
             boundingVolume = this._boundingRectangle;
         } else {
             boundingVolume = this._boundingVolume && this._boundingVolume2D && this._boundingVolume.union(this._boundingVolume2D);
@@ -609,15 +609,6 @@ define([
             boundingVolume : boundingVolume,
             modelMatrix : modelMatrix
         };
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof PolylineCollection
-     */
-    PolylineCollection.prototype.updateForPick = function(context) {
-        //render state for picking is set up during update.
     };
 
     /**
@@ -908,9 +899,9 @@ define([
         }
     };
 
-    PolylineCollection.prototype._updateMode = function(sceneState) {
-        var mode = sceneState.mode;
-        var projection = sceneState.scene2D.projection;
+    PolylineCollection.prototype._updateMode = function(frameState) {
+        var mode = frameState.mode;
+        var projection = frameState.scene2D.projection;
         if (this._mode !== mode && typeof mode.morphTime !== 'undefined') {
             this.morphTime = mode.morphTime;
         }

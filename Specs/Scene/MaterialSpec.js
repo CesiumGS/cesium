@@ -4,7 +4,7 @@ defineSuite([
         'Scene/Polygon',
         '../Specs/createContext',
         '../Specs/destroyContext',
-        '../Specs/sceneState',
+        '../Specs/frameState',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -16,7 +16,7 @@ defineSuite([
         Polygon,
         createContext,
         destroyContext,
-        sceneState,
+        frameState,
         Cartesian3,
         Cartographic,
         Color,
@@ -71,7 +71,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        polygon.update(context, sceneState);
+        polygon.update(context, frameState);
         polygon.render(context, us);
         return context.readPixels();
     };

@@ -149,7 +149,7 @@ define([
         this._rsPick = undefined;
 
         this._vertices = new PositionVertices();
-        this._pickId = null;
+        this._pickId = undefined;
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
@@ -575,12 +575,12 @@ define([
      *
      * @see Polygon#render
      */
-    Polygon.prototype.update = function(context, sceneState) {
+    Polygon.prototype.update = function(context, frameState) {
         if (!this.ellipsoid) {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
 
-        var mode = sceneState.mode;
+        var mode = frameState.mode;
         var granularity = this._getGranularity(mode);
 
         if (granularity < 0.0) {
@@ -611,7 +611,7 @@ define([
             this._bufferUsage = this.bufferUsage;
         }
 
-        var projection = sceneState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
         if (this._projection !== projection) {
             this._createVertexArray = true;
             this._projection = projection;
@@ -672,6 +672,33 @@ define([
             this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
         }
 
+        if (frameState.passes.pick && typeof this._pickId === 'undefined') {
+            this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
+
+            this._rsPick = context.createRenderState({
+                // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
+                cull : {
+                    enabled : true,
+                    face : CullFace.BACK
+                }
+            });
+
+            this._pickId = context.createPickId(this);
+
+            var that = this;
+            this._pickUniforms = {
+                u_pickColor : function() {
+                    return that._pickId.normalizedRgba;
+                },
+                u_morphTime : function() {
+                    return that.morphTime;
+                },
+                u_height : function() {
+                    return that.height;
+                }
+            };
+        }
+
         var boundingVolume;
         if (mode === SceneMode.SCENE3D) {
             boundingVolume = this._boundingVolume;
@@ -711,43 +738,6 @@ define([
                 renderState : this._rs
             });
         }
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    Polygon.prototype.updateForPick = function(context) {
-        this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
-
-        this._rsPick = context.createRenderState({
-            // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
-            cull : {
-                enabled : true,
-                face : CullFace.BACK
-            }
-        });
-
-        this._pickId = context.createPickId(this);
-
-        var that = this;
-        this._pickUniforms = {
-            u_pickColor : function() {
-                return that._pickId.normalizedRgba;
-            },
-            u_morphTime : function() {
-                return that.morphTime;
-            },
-            u_height : function() {
-                return that.height;
-            }
-        };
-
-        this.updateForPick = function(context) {
-        };
     };
 
     /**

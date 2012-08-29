@@ -44,6 +44,7 @@ Beta Releases
                 position : { x : 1.0, y : 2.0, z : 3.0 },
                 imageIndex : 0
             });
+    * Renamed `SceneState` to `FrameState`.
 
 * All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * Added support for nested polygons with holes. See `Polygon.configureFromPolygonHierarchy`.
