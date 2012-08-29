@@ -221,6 +221,7 @@ define([
             } else {
                 coneVisualizerIndex = this._coneCollection.length;
                 cone = new ComplexConicSensorVolume();
+                cone.affectedByLighting = false;
                 this._coneCollection.push(cone);
                 this._primitives.add(cone);
             }
