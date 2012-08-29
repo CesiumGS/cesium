@@ -40,7 +40,7 @@ define([], function() {
 
         this.passes = {
                 /**
-                 * <code>true</code> is the current pass is for picking, <code>false</code> otherwise.
+                 * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
                  *
                  * @type Boolean
                  */

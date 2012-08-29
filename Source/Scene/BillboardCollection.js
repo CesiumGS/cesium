@@ -660,37 +660,6 @@ define([
         }
     };
 
-    /**
-     * @private
-     */
-    BillboardCollection.prototype.update = function(context, frameState) {
-        // First update:  create render state and shader program
-        this._rs = context.createRenderState({
-            depthTest : {
-                enabled : true
-            },
-            blending : BlendingState.ALPHA_BLEND
-        });
-
-        this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
-
-        this._rsPick = context.createRenderState({
-            depthTest : {
-                enabled : true
-            }
-        });
-
-        this._spPick = context.getShaderCache().getShaderProgram(
-                BillboardCollectionVS,
-                '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
-                attributeIndices);
-
-        var state = this._update(context, frameState);
-        this.update = this._update;
-
-        return state;
-    };
-
     BillboardCollection.prototype.computeNewBuffersUsage = function() {
         var buffersUsage = this._buffersUsage;
         var usageChanged = false;
@@ -1014,7 +983,10 @@ define([
         return boundingVolume;
     }
 
-    BillboardCollection.prototype._update = function(context, frameState) {
+    /**
+     * @private
+     */
+    BillboardCollection.prototype.update = function(context, frameState) {
         var textureAtlas = this._textureAtlas;
         if (typeof textureAtlas === 'undefined') {
             // Can't write billboard vertices until we have texture coordinates
@@ -1138,6 +1110,30 @@ define([
 
         if (typeof this._vaf === 'undefined' || typeof this._vaf.va === 'undefined') {
             return undefined;
+        }
+
+        if (typeof this._sp === 'undefined') {
+            this._rs = context.createRenderState({
+                depthTest : {
+                    enabled : true
+                },
+                blending : BlendingState.ALPHA_BLEND
+            });
+
+            this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
+        }
+
+        if (frameState.passes.pick && typeof this._spPick === 'undefined') {
+            this._rsPick = context.createRenderState({
+                depthTest : {
+                    enabled : true
+                }
+            });
+
+            this._spPick = context.getShaderCache().getShaderProgram(
+                    BillboardCollectionVS,
+                    '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
+                    attributeIndices);
         }
 
         this._uniforms = (frameState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;

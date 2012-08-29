@@ -352,8 +352,6 @@ define([
         // so we can selectively depth test.
         this._rs.depthTest.enabled = !this.showThroughEllipsoid;
 
-        var fsSource;
-
         // Recompile shader when material changes
         if (typeof this._material === 'undefined' ||
             this._material !== this.material ||
@@ -363,7 +361,7 @@ define([
             this._material = this.material;
             this._affectedByLighting = this.affectedByLighting;
 
-            fsSource =
+            var fsSource =
                 '#line 0\n' +
                 ShadersNoise +
                 '#line 0\n' +
@@ -382,14 +380,14 @@ define([
 
         if (frameState.passes.pick && typeof this._pickId === 'undefined') {
             // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
-            fsSource =
+            var fsPickSource =
                 '#define RENDER_FOR_PICK 1\n' +
                 '#line 0\n' +
                 ShadersSensorVolume +
                 '#line 0\n' +
                 CustomSensorVolumeFS;
 
-            this._spPick = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
+            this._spPick = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsPickSource, attributeIndices);
             this._pickId = context.createPickId(this._pickIdThis);
 
             var that = this;

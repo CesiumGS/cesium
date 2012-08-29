@@ -406,8 +406,6 @@ define([
             });
         }
 
-        var fsSource;
-
         // Recompile shader when material changes
         if ((!this._outerMaterial || (this._outerMaterial !== this.outerMaterial)) ||
             (!this._innerMaterial || (this._innerMaterial !== this.innerMaterial)) ||
@@ -424,7 +422,7 @@ define([
             var material = this._combineMaterials();
             this._drawUniforms = combine([this._uniforms, material._uniforms], false, false);
 
-            fsSource =
+            var fsSource =
                 '#line 0\n' +
                 ShadersNoise +
                 '#line 0\n' +
@@ -463,7 +461,7 @@ define([
 
         if (frameState.passes.pick && typeof this._pickId === 'undefined') {
             // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
-            fsSource =
+            var fsPickSource =
                 '#define RENDER_FOR_PICK 1\n' +
                 '#line 0\n' +
                 ShadersRay +
@@ -474,7 +472,7 @@ define([
                 '#line 0\n' +
                 ComplexConicSensorVolumeFS;
 
-            this._spPick = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
+            this._spPick = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsPickSource, attributeIndices);
             this._pickId = context.createPickId(this);
 
             var that = this;
