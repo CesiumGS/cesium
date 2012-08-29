@@ -203,7 +203,7 @@ defineSuite([
         });
 
         expect(function() {
-            billboards.update(context, sceneState);
+            billboards.update(context, frameState);
         }).toThrow();
     });
 
