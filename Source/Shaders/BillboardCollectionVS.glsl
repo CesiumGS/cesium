@@ -8,7 +8,7 @@ attribute vec4 eyeOffsetAndScale;                       // eye offset in meters
 attribute vec4 pickColor;
 
 uniform vec2 u_atlasSize;
-uniform float u_clampToPixel;
+uniform float u_clampToPixel; // clamp is 1.0 (true) or 0.0 (false)
 
 const vec2 czm_highResolutionSnapScale = vec2(1.0, 1.0);    // TODO
 
