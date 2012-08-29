@@ -40,6 +40,9 @@ define([
         this._sunPosition = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().x, 0.0, 0.0);
 
         // Derived members
+        this._viewRotation = new Matrix3();
+        this._inverseViewRotation = new Matrix3();
+
         this._inverseViewDirty = true;
         this._inverseView = new Matrix4();
 
@@ -163,7 +166,9 @@ define([
      * @see czm_view
      */
     UniformState.prototype.setView = function(matrix) {
-        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._view);
+        matrix = defaultValue(matrix, Matrix4.IDENTITY);
+        Matrix4.clone(matrix, this._view);
+        Matrix4.getRotation(matrix, this._viewRotation);
 
         this._inverseViewDirty = true;
         this._modelViewDirty = true;
@@ -190,11 +195,27 @@ define([
         return this._view;
     };
 
+    /**
+     * Returns the 3x3 rotation matrix of the current view matrix ({@link UniformState#getView}).
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix3} The 3x3 rotation matrix of the current view matrix.
+     *
+     * @see UniformState#getView
+     * @see czm_viewRotation
+     */
+    UniformState.prototype.getViewRotation = function() {
+        return this._viewRotation;
+    };
+
     UniformState.prototype._cleanInverseView = function() {
         if (this._inverseViewDirty) {
             this._inverseViewDirty = false;
 
-            Matrix4.inverse(this._view, this._inverseView);
+            var v = this.getView();
+            Matrix4.inverse(v, this._inverseView);
+            Matrix4.getRotation(this._inverseView, this._inverseViewRotation);
         }
     };
 
@@ -210,6 +231,20 @@ define([
     UniformState.prototype.getInverseView = function() {
         this._cleanInverseView();
         return this._inverseView;
+    };
+
+    /**
+     * Returns the 3x3 rotation matrix of the current inverse-view matrix ({@link UniformState#getInverseView}).
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix3} The 3x3 rotation matrix of the current inverse-view matrix.
+     *
+     * @see UniformState#getInverseView
+     * @see czm_inverseViewRotation
+     */
+    UniformState.prototype.getInverseViewRotation = function() {
+        return this._inverseViewRotation;
     };
 
     /**
@@ -460,21 +495,14 @@ define([
         return this._inverseNormal;
     };
 
-    var sunPosition3Scratch = new Cartesian3();
-    var sunPosition4Scratch = new Cartesian4();
+    var sunPositionScratch = new Cartesian3();
 
     UniformState.prototype._cleanSunDirectionEC = function() {
         if (this._sunDirectionECDirty) {
             this._sunDirectionECDirty = false;
 
-            sunPosition4Scratch.x = this._sunPosition.x;
-            sunPosition4Scratch.y = this._sunPosition.y;
-            sunPosition4Scratch.z = this._sunPosition.z;
-            sunPosition4Scratch.w = 0.0;
-            Matrix4.multiplyByVector(this._view, sunPosition4Scratch, sunPosition4Scratch);
-
-            Cartesian3.fromCartesian4(sunPosition4Scratch, sunPosition3Scratch);
-            Cartesian3.normalize(sunPosition3Scratch, this._sunDirectionEC);
+            Matrix3.multiplyByVector(this.getViewRotation(), this._sunPosition, sunPositionScratch);
+            Cartesian3.normalize(sunPositionScratch, this._sunDirectionEC);
         }
     };
 

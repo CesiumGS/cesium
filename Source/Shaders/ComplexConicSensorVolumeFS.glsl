@@ -22,8 +22,7 @@ czm_materialInput getMaterialInput(float sensorRadius, vec3 pointEC, vec3 normal
     czm_materialInput materialInput;
 
     vec3 pointMC = (czm_inverseModelView * vec4(pointEC, 1.0)).xyz;
-    vec3 positionToEyeEC = normalize(-v_positionEC);
-    materialInput.positionToEyeWC = normalize(vec3(czm_inverseView * vec4(positionToEyeEC, 0.0))); 
+    materialInput.positionToEyeEC = normalize(-v_positionEC); 
     materialInput.normalEC = normalEC;
     
     materialInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);
@@ -41,7 +40,15 @@ vec4 getOuterColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
-    return czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+    
+    vec4 color; 
+    #ifdef AFFECTED_BY_LIGHTING    
+    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+    #else
+    color = vec4(material.diffuse, material.alpha);
+    #endif
+    
+    return color;        
 }
 
 vec4 getInnerColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
@@ -53,7 +60,15 @@ vec4 getInnerColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
-    return czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+
+    vec4 color; 
+    #ifdef AFFECTED_BY_LIGHTING    
+    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+    #else
+    color = vec4(material.diffuse, material.alpha);
+    #endif
+    
+    return color;        
 }
 
 vec4 getCapColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
@@ -65,7 +80,15 @@ vec4 getCapColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
-    return czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+
+    vec4 color; 
+    #ifdef AFFECTED_BY_LIGHTING    
+    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+    #else
+    color = vec4(material.diffuse, material.alpha);
+    #endif
+    
+    return color;        
 }
 
 vec4 getSilhouetteColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
@@ -77,7 +100,15 @@ vec4 getSilhouetteColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
-    return czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+
+    vec4 color; 
+    #ifdef AFFECTED_BY_LIGHTING    
+    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+    #else
+    color = vec4(material.diffuse, material.alpha);
+    #endif
+    
+    return color;        
 }
 
 #endif
