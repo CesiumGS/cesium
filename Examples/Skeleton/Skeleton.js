@@ -25,7 +25,7 @@ require({
     });
 
 //    terrainProvider = new Cesium.TileMapServiceTerrainProvider({
-//        url : 'http://localhost:8080/terraindata/TifTiles/srtm'
+//        url : 'http://localhost/srtm'
 //    });
 
 //    terrainProvider = new Cesium.WebMapServiceTerrainProvider({
@@ -81,13 +81,13 @@ require({
 
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
-    var testLayer = imageryLayerCollection.addImageryProvider(
-            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png', {
-                extent : new Cesium.Extent(Cesium.Math.toRadians(-120),
-                        Cesium.Math.toRadians(37),
-                        Cesium.Math.toRadians(-119),
-                        Cesium.Math.toRadians(38))
-            }));
+//    var testLayer = imageryLayerCollection.addImageryProvider(
+//            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png', {
+//                extent : new Cesium.Extent(Cesium.Math.toRadians(-120),
+//                        Cesium.Math.toRadians(37),
+//                        Cesium.Math.toRadians(-119),
+//                        Cesium.Math.toRadians(38))
+//            }));
 
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';

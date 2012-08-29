@@ -182,7 +182,9 @@ define([
             relativeToCenter : tile.center,
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
-            skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
+            // TODO: add skirts.  The problem is, the tiles are 256x256 already, so adding skirts puts us over the
+            // vertex limit for 16-bit indices (65536).
+            //skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
             isGeographic : true
         });
 
@@ -198,7 +200,9 @@ define([
             tile.transformedGeometry = {
                 vertices : result.vertices,
                 statistics : result.statistics,
-                indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
+                indices : TerrainProvider.getRegularGridIndices(width, height)
+                // TODO: +2 for skirts
+                //indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
             };
             tile.state = TileState.TRANSFORMED;
         }, function(e) {

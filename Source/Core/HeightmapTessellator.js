@@ -242,10 +242,6 @@ define([
                         u = 1.0;
                     }
 
-                    if (u > 1.0 || u < 0.0 || v > 1.0 || v < 0.0) {
-                        console.log('wtf');
-                    }
-
                     if (interleaveTextureCoordinates) {
                         vertices[vertexArrayIndex++] = u;
                         vertices[vertexArrayIndex++] = v;
