@@ -864,6 +864,7 @@ defineSuite([
         // collection to a Cesium app and looking for when it is/is not occluded.
 
         var labels = new LabelCollection();
+        labels.clampToPixel = false;
         labels.add({
             position : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic.fromDegrees(-75.10, 39.57)),
             text : 'x',

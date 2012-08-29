@@ -43,9 +43,9 @@ void main()
 
     positionWC.xy += (origin * abs(halfSize)) + halfSize;
     positionWC.xy += (pixelOffset * czm_highResolutionSnapScale);
-    
-    vec2 clampedXY = mix(positionWC.xy, floor(positionWC.xy), u_clampToPixel);
-    gl_Position = czm_viewportOrthographic * vec4(clampedXY, -positionWC.z, 1.0);
+    positionWC.xy = mix(positionWC.xy, floor(positionWC.xy), u_clampToPixel);
+
+    gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
     v_color = color;
     v_pickColor = pickColor;
