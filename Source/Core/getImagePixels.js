@@ -12,20 +12,24 @@ define(function() {
      *
      * @returns {CanvasPixelArray} The pixels of the image.
      */
-    var imageToPixels = function(image) {
+    var imageToPixels = function(image, width, height) {
         if (typeof canvas === 'undefined') {
             canvas = document.createElement('canvas');
         }
 
-        var width = image.width;
-        var height = image.height;
+        if (typeof width === 'undefined') {
+            width = image.width;
+        }
+        if (typeof height === 'undefined') {
+            height = image.height;
+        }
 
         canvas.width = width;
         canvas.height = height;
 
         var context2d = canvas.getContext('2d');
         context2d.globalCompositeOperation = 'copy';
-        context2d.drawImage(image, 0, 0);
+        context2d.drawImage(image, 0, 0, width, height);
 
         return context2d.getImageData(0, 0, width, height).data;
     };

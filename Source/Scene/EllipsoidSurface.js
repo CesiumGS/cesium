@@ -825,6 +825,10 @@ define([
     }
 
     function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile) {
+        if (tile.level === surface.terrainProvider.maxLevel) {
+            return false;
+        }
+
         var allRenderable = true;
 
         var children = tile.getChildren();

@@ -43,13 +43,12 @@ define([
 
     /**
      * A {@link TerrainProvider} that produces geometry by tessellating height maps
-     * retrieved from an ArcGIS ImageServer.
+     * retrieved from a Tile Map Service (TMS) server.
      *
-     * @alias ArcGisImageServerTerrainProvider
+     * @alias TileMapServiceTerrainProvider
      * @constructor
      *
-     * @param {String} description.url The URL of the ArcGIS ImageServer service.
-     * @param {String} [description.token] The authorization token to use to connect to the service.
+     * @param {String} description.url The URL of the TMS service.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see TerrainProvider
@@ -160,9 +159,12 @@ define([
     TileMapServiceTerrainProvider.prototype.transformGeometry = function(context, tile) {
         // Get the height data from the image by copying it to a canvas.
         var image = tile.geometry;
-        var width = image.width;
-        var height = image.height;
-        var pixels = getImagePixels(image);
+//        var width = image.width;
+//        var height = image.height;
+//        var pixels = getImagePixels(image);
+        var width = 129;
+        var height = 129;
+        var pixels = getImagePixels(image, width, height);
 
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
@@ -182,9 +184,7 @@ define([
             relativeToCenter : tile.center,
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
-            // TODO: add skirts.  The problem is, the tiles are 256x256 already, so adding skirts puts us over the
-            // vertex limit for 16-bit indices (65536).
-            //skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
+            skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
             isGeographic : true
         });
 
@@ -200,9 +200,7 @@ define([
             tile.transformedGeometry = {
                 vertices : result.vertices,
                 statistics : result.statistics,
-                indices : TerrainProvider.getRegularGridIndices(width, height)
-                // TODO: +2 for skirts
-                //indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
+                indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
             };
             tile.state = TileState.TRANSFORMED;
         }, function(e) {
