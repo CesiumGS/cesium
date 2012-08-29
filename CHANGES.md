@@ -31,6 +31,7 @@ Beta Releases
     * Passing `undefined` to any of the set functions on `Label` now throws an exception.
     * Renamed `agi_` prefix on GLSL identifiers to `czm_`.
     * Changed the GLSL automatic uniform `czm_viewport` from an `ivec4` to a `vec4` to reduce casting.
+    * Renamed `SceneState` to `FrameState`.
                 
 * All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * Added support for nested polygons with holes. See `Polygon.configureFromPolygonHierarchy`.
