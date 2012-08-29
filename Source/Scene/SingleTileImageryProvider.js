@@ -45,33 +45,9 @@ define([
 
         this._url = url;
         this._proxy = description.proxy;
-
-        /**
-         * The cartographic extent of this provider's imagery,
-         * with north, south, east and west properties in radians.
-         *
-         * @constant
-         * @type {Extent}
-         */
-        this.extent = defaultValue(description.extent, Extent.MAX_VALUE);
-
-        /**
-         * The maximum level-of-detail that can be requested.
-         *
-         * @constant
-         * @type {Number}
-         */
-        this.maxLevel = 0;
-
-        /**
-         * The tiling scheme used by this provider.
-         *
-         * @type {TilingScheme}
-         * @see WebMercatorTilingScheme
-         * @see GeographicTilingScheme
-         */
-        this.tilingScheme = new GeographicTilingScheme({
-            extent : this.extent,
+        this._maximumLevel = 0;
+        this._tilingScheme = new GeographicTilingScheme({
+            extent : defaultValue(description.extent, Extent.MAX_VALUE),
             numberOfLevelZeroTilesX : 1,
             numberOfLevelZeroTilesY : 1
         });
@@ -79,25 +55,94 @@ define([
         this._image = undefined;
         this._texture = undefined;
 
-        /**
-         * True if the provider is ready for use; otherwise, false.
-         *
-         * @type {Boolean}
-         */
-        this.ready = false;
+        this._ready = false;
 
         var that = this;
         this._image = loadImage(this._buildImageUrl()).then(function(image) {
             that._image = image;
 
-            var tilingScheme = that.tilingScheme;
+            var tilingScheme = that._tilingScheme;
             var ellipsoid = tilingScheme.ellipsoid;
-            var extent = that.extent;
+            var extent = tilingScheme.extent;
 
             tilingScheme.levelZeroMaximumGeometricError = ellipsoid.getRadii().x * (extent.east - extent.west) / image.width;
 
-            that.ready = true;
+            that._ready = true;
         });
+    };
+
+    /**
+     * Gets the URL of the ArcGIS MapServer.
+     * @returns {String} The URL.
+     */
+    SingleTileImageryProvider.prototype.getUrl = function() {
+        return this._url;
+    };
+
+    /**
+     * Gets the width of each tile, in pixels.
+     *
+     * @returns {Number} The width.
+     */
+    SingleTileImageryProvider.prototype.getTileWidth = function() {
+        return this._tileWidth;
+    };
+
+    /**
+     * Gets the height of each tile, in pixels.
+     *
+     * @returns {Number} The height.
+     */
+    SingleTileImageryProvider.prototype.getTileHeight = function() {
+        return this._tileHeight;
+    };
+
+    /**
+     * Gets the maximum level-of-detail that can be requested.
+     *
+     * @returns {Number} The maximum level.
+     */
+    SingleTileImageryProvider.prototype.getMaximumLevel = function() {
+        return this._maximumLevel;
+    };
+
+    /**
+     * Gets the tiling scheme used by this provider.
+     *
+     * @returns {TilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     */
+    SingleTileImageryProvider.prototype.getTilingScheme = function() {
+        return this._tilingScheme;
+    };
+
+    /**
+     * Gets the extent, in radians, of the imagery provided by this instance.
+     *
+     * @returns {Extent} The extent.
+     */
+    SingleTileImageryProvider.prototype.getExtent = function() {
+        return this._tilingScheme.extent;
+    };
+
+    /**
+     * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+     * for filtering out "missing" tiles via its shouldDiscardImage function.
+     * By default, no tiles will be filtered.
+     * @returns {TileDiscardPolicy} The discard policy.
+     */
+    SingleTileImageryProvider.prototype.getTileDiscardPolicy = function() {
+        return this._tileDiscardPolicy;
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     *
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
+     */
+    SingleTileImageryProvider.prototype.isReady = function() {
+        return this._ready;
     };
 
     /**

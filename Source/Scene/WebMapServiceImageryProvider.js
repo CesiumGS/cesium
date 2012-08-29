@@ -34,7 +34,7 @@ define([
     "use strict";
 
     /**
-     * Provides tiled imagery hosted by a WMS server.
+     * Provides tiled imagery hosted by a Web Map Service (WMS) server.
      *
      * @alias WebMapServiceImageryProvider
      * @constructor
@@ -70,64 +70,14 @@ define([
             throw new DeveloperError('description.layerName is required.');
         }
 
-        /**
-         * The URL of the WMS server.
-         * @type {String}
-         */
-        this.url = description.url;
-
-        /**
-         * The name of the layer to access on the WMS server.
-         * @type {String}
-         */
-        this.layerName = description.layerName;
-
+        this._url = description.url;
+        this._layerName = description.layerName;
         this._proxy = description.proxy;
 
-        /**
-         * The cartographic extent of this provider's imagery,
-         * with north, south, east and west properties in radians.
-         *
-         * @type {Extent}
-         */
-        this.extent = undefined;
-
-        /**
-         * The width of every image loaded.
-         *
-         * @type {Number}
-         */
-        this.tileWidth = 256;
-
-        /**
-         * The height of every image loaded.
-         *
-         * @type {Number}
-         */
-        this.tileHeight = 256;
-
-        /**
-         * The maximum level-of-detail that can be requested.
-         *
-         * @type {Number}
-         */
-        this.maxLevel = undefined;
-
-        /**
-         * The tiling scheme used by this provider.
-         *
-         * @type {TilingScheme}
-         * @see WebMercatorTilingScheme
-         * @see GeographicTilingScheme
-         */
-        this.tilingScheme = undefined;
-
-        /**
-         * True if the provider is ready for use; otherwise, false.
-         *
-         * @type {Boolean}
-         */
-        this.ready = false;
+        this._tileWidth = 256;
+        this._tileHeight = 256;
+        this._maximumLevel = 18;
+        this._tilingScheme = new GeographicTilingScheme();
 
         // Create the copyright message.
         if (typeof description.copyrightText !== 'undefined') {
@@ -137,21 +87,89 @@ define([
             });
         }
 
-//        this.tilingScheme = new WebMercatorTilingScheme();
-//        this.extent = new Extent(-CesiumMath.PI,
-//                CesiumMath.toRadians(-85.05112878),
-//                CesiumMath.PI,
-//                CesiumMath.toRadians(85.05112878));
+        this._ready = true;
+    };
 
-        this.tilingScheme = new GeographicTilingScheme();
-        this.extent = new Extent(-CesiumMath.PI,
-                -CesiumMath.PI_OVER_TWO,
-                CesiumMath.PI,
-                CesiumMath.PI_OVER_TWO);
+    /**
+     * Gets the URL of the WMS server.
+     * @returns {String} The URL.
+     */
+    WebMapServiceImageryProvider.prototype.getUrl = function() {
+        return this._url;
+    };
 
-        this.maxLevel = 18;
+    /**
+     * Gets the name of the WMS layer.
+     * @returns {String} The layer name.
+     */
+    WebMapServiceImageryProvider.prototype.getLayerName = function() {
+        return this._layerName;
+    };
 
-        this.ready = true;
+    /**
+     * Gets the width of each tile, in pixels.
+     *
+     * @returns {Number} The width.
+     */
+    WebMapServiceImageryProvider.prototype.getTileWidth = function() {
+        return this._tileWidth;
+    };
+
+    /**
+     * Gets the height of each tile, in pixels.
+     *
+     * @returns {Number} The height.
+     */
+    WebMapServiceImageryProvider.prototype.getTileHeight = function() {
+        return this._tileHeight;
+    };
+
+    /**
+     * Gets the maximum level-of-detail that can be requested.
+     *
+     * @returns {Number} The maximum level.
+     */
+    WebMapServiceImageryProvider.prototype.getMaximumLevel = function() {
+        return this._maximumLevel;
+    };
+
+    /**
+     * Gets the tiling scheme used by this provider.
+     *
+     * @returns {TilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     */
+    WebMapServiceImageryProvider.prototype.getTilingScheme = function() {
+        return this._tilingScheme;
+    };
+
+    /**
+     * Gets the extent, in radians, of the imagery provided by this instance.
+     *
+     * @returns {Extent} The extent.
+     */
+    WebMapServiceImageryProvider.prototype.getExtent = function() {
+        return this._tilingScheme.extent;
+    };
+
+    /**
+     * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+     * for filtering out "missing" tiles via its shouldDiscardImage function.
+     * By default, no tiles will be filtered.
+     * @returns {TileDiscardPolicy} The discard policy.
+     */
+    WebMapServiceImageryProvider.prototype.getTileDiscardPolicy = function() {
+        return this._tileDiscardPolicy;
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     *
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
+     */
+    WebMapServiceImageryProvider.prototype.isReady = function() {
+        return this._ready;
     };
 
     /**
@@ -168,7 +186,7 @@ define([
     WebMapServiceImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
         var that = this;
         var missingTileUrl = when(this._isReady, function() {
-            return that._buildImageUrl(0, 0, that.maxLevel);
+            return that._buildImageUrl(0, 0, that._maximumLevel);
         });
         var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
 
@@ -186,10 +204,10 @@ define([
      *                          if the URL needs to be built asynchronously.
      */
     WebMapServiceImageryProvider.prototype._buildImageUrl = function(x, y, level) {
-        var nativeExtent = this.tilingScheme.tileXYToNativeExtent(x, y, level);
+        var nativeExtent = this._tilingScheme.tileXYToNativeExtent(x, y, level);
         var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
         var srs = 'EPSG:4326';
-        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=' + srs + '&format=image%2Fjpeg&styles=';
+        var url = this._url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=256&height=256&srs=' + srs + '&format=image%2Fjpeg&styles=';
 
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);

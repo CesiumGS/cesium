@@ -46,12 +46,12 @@ require({
 //    });
 //    var wmsLayer = imageryLayerCollection.addImageryProvider(wmsImagery);
 
-    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-        proxy : new Cesium.DefaultProxy('/proxy/')
-    });
-    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
-    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
+//    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+//        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+//        proxy : new Cesium.DefaultProxy('/proxy/')
+//    });
+//    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
+//    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
 
 //    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
 //        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
@@ -59,15 +59,15 @@ require({
 //    });
 //    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);
 
-//    var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({
-//        server : 'dev.virtualearth.net',
-//        mapStyle : Cesium.BingMapsStyle.AERIAL,
-//        // Some versions of Safari support WebGL, but don't correctly implement
-//        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-//        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-//    });
-//    bingAerialImageryProvider.discardPolicy = bingAerialImageryProvider.createDiscardMissingTilePolicy();
-//    var bingAerialLayer = imageryLayerCollection.addImageryProvider(bingAerialImageryProvider);
+    var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({
+        server : 'dev.virtualearth.net',
+        mapStyle : Cesium.BingMapsStyle.AERIAL,
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+    });
+    bingAerialImageryProvider.discardPolicy = bingAerialImageryProvider.createDiscardMissingTilePolicy();
+    var bingAerialLayer = imageryLayerCollection.addImageryProvider(bingAerialImageryProvider);
 
 //    var bingRoadImageryProvider = new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',
@@ -81,13 +81,13 @@ require({
 
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
-//    var testLayer = imageryLayerCollection.addImageryProvider(
-//            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png', {
-//                extent : new Cesium.Extent(Cesium.Math.toRadians(-120),
-//                        Cesium.Math.toRadians(37),
-//                        Cesium.Math.toRadians(-119),
-//                        Cesium.Math.toRadians(38))
-//            }));
+    var testLayer = imageryLayerCollection.addImageryProvider(
+            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png', {
+                extent : new Cesium.Extent(Cesium.Math.toRadians(-120),
+                        Cesium.Math.toRadians(37),
+                        Cesium.Math.toRadians(-119),
+                        Cesium.Math.toRadians(38))
+            }));
 
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';

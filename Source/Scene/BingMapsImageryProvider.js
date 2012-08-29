@@ -114,10 +114,10 @@ define([
      *        <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
      *        imagery to load.
-     * @param {String|Object} [description.discardPolicy] If the service returns "missing" tiles,
+     * @param {TileDiscardPolicy} [description.discardPolicy] If the service returns "missing" tiles,
      *        these can be filtered out by providing an object which is expected to have a
      *        shouldDiscardImage function.  By default, no tiles will be filtered.
-     * @param {Object} [description.proxy] A proxy to use for requests. This object is
+     * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.server</code> is required.
@@ -143,91 +143,27 @@ define([
             throw new DeveloperError('description.server is required.');
         }
 
-        var server = description.server;
-
-        /**
-         * The name of the Bing Maps server hosting the imagery.
-         * @type {String}
-         */
-        this.server = server;
-
-        var key = defaultValue(description.key, 'AquXz3981-1ND5jGs8qQn7R7YUP8qkWi77yZSVM7o3nIvzb-Mg0W2Ta57xuUyywX');
-
-        /**
-         * The Bing Maps key.
-         * @type {String}
-         */
-        this.key = key;
-
-        var mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
-
-        /**
-         * The type of Bing Maps imagery to load.
-         * @type {Enumeration}
-         */
-        this.mapStyle = mapStyle;
-
-        /**
-         * If the service returns "missing" tiles, these can be filtered out by providing
-         * an object which is expected to have a shouldDiscardImage function.  By default,
-         * no tiles will be filtered.
-         */
-        this.discardPolicy = description.discardPolicy;
-
+        this._server = description.server;
+        this._key = defaultValue(description.key, 'AquXz3981-1ND5jGs8qQn7R7YUP8qkWi77yZSVM7o3nIvzb-Mg0W2Ta57xuUyywX');
+        this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
+        this._tileDiscardPolicy = description.discardPolicy;
         this._proxy = description.proxy;
 
-        /**
-         * The width of every image loaded.
-         *
-         * @type {Number}
-         */
-        this.tileWidth = undefined;
-
-        /**
-         * The height of every image loaded.
-         *
-         * @type {Number}
-         */
-        this.tileHeight = undefined;
-
-        /**
-         * The maximum level-of-detail that can be requested.
-         *
-         * @type {Number}
-         */
-        this.maxLevel = undefined;
-
-        /**
-         * The tiling scheme used by this provider.
-         *
-         * @type {TilingScheme}
-         * @see WebMercatorTilingScheme
-         * @see GeographicTilingScheme
-         */
-        this.tilingScheme = new WebMercatorTilingScheme({
+        this._tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 2
         });
 
-        /**
-         * The cartographic extent of this provider's imagery,
-         * with north, south, east and west properties in radians.
-         *
-         * @type {Extent}
-         */
-        this.extent = this.tilingScheme.extent;
-
-        /**
-         * True if the provider is ready for use; otherwise, false.
-         *
-         * @type {Boolean}
-         */
-        this.ready = false;
-
+        this._tileWidth = undefined;
+        this._tileHeight = undefined;
+        this._maximumLevel = undefined;
+        this._imageUrlTemplate = undefined;
         this._imageUrlSubdomains = undefined;
         this._imageUrlHostnames = undefined;
 
-        var metadataUrl = 'http://' + server + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=' + key;
+        this._ready = false;
+
+        var metadataUrl = 'http://' + this._server + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
         var that = this;
         this._imageUrlTemplate = when(jsonp(metadataUrl, {
             callbackParameterName : 'jsonp',
@@ -235,18 +171,108 @@ define([
         }), function(data) {
             var resource = data.resourceSets[0].resources[0];
 
-            that.tileWidth = resource.imageWidth;
-            that.tileHeight = resource.imageHeight;
-            that.maxLevel = resource.zoomMax - 1;
+            that._tileWidth = resource.imageWidth;
+            that._tileHeight = resource.imageHeight;
+            that._maximumLevel = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
             that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
             that._imageUrlHostnames = that._imageUrlSubdomains.map(function(subdomain) {
                 return getHostname(that._imageUrlTemplate.replace('{subdomain}', subdomain));
             });
-            that.ready = true;
+            that._ready = true;
 
             return that._imageUrlTemplate;
         });
+    };
+
+    /**
+     * Gets the name of the Bing Maps server hosting the imagery.
+     * @returns {String} The server name.
+     */
+    BingMapsImageryProvider.prototype.getServer = function() {
+        return this._server;
+    };
+
+    /**
+     * Gets the Bing Maps key.
+     * @returns {String} The key.
+     */
+    BingMapsImageryProvider.prototype.getKey = function() {
+        return this._key;
+    };
+
+    /**
+     * Gets the type of Bing Maps imagery to load.
+     * @returns {BingMapsStyle} The style.
+     */
+    BingMapsImageryProvider.prototype.getMapStyle = function() {
+        return this._mapStyle;
+    };
+
+    /**
+     * Gets the width of each tile, in pixels.
+     *
+     * @returns {Number} The width.
+     */
+    BingMapsImageryProvider.prototype.getTileWidth = function() {
+        return this._tileWidth;
+    };
+
+    /**
+     * Gets the height of each tile, in pixels.
+     *
+     * @returns {Number} The height.
+     */
+    BingMapsImageryProvider.prototype.getTileHeight = function() {
+        return this._tileHeight;
+    };
+
+    /**
+     * Gets the maximum level-of-detail that can be requested.
+     *
+     * @returns {Number} The maximum level.
+     */
+    BingMapsImageryProvider.prototype.getMaximumLevel = function() {
+        return this._maximumLevel;
+    };
+
+    /**
+     * Gets the tiling scheme used by this provider.
+     *
+     * @returns {TilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     */
+    BingMapsImageryProvider.prototype.getTilingScheme = function() {
+        return this._tilingScheme;
+    };
+
+    /**
+     * Gets the extent, in radians, of the imagery provided by this instance.
+     *
+     * @returns {Extent} The extent.
+     */
+    BingMapsImageryProvider.prototype.getExtent = function() {
+        return this._tilingScheme.extent;
+    };
+
+    /**
+     * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+     * for filtering out "missing" tiles via its shouldDiscardImage function.
+     * By default, no tiles will be filtered.
+     * @returns {TileDiscardPolicy} The discard policy.
+     */
+    BingMapsImageryProvider.prototype.getTileDiscardPolicy = function() {
+        return this._tileDiscardPolicy;
+    };
+
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     *
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
+     */
+    BingMapsImageryProvider.prototype.isReady = function() {
+        return this._ready;
     };
 
     /**
@@ -259,7 +285,7 @@ define([
     BingMapsImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
         var that = this;
         var missingTileUrl = when(this._imageUrlTemplate, function() {
-            return that._buildImageUrl(0, 0, 0, that.maxLevel);
+            return that._buildImageUrl(0, 0, 0, that._maximumLevel);
         });
         var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)];
 
@@ -360,18 +386,19 @@ define([
     };
 
     /**
-     * Request the image for a given tile.
+     * Requests the image for a given tile.
      *
-     * @param {Array} hostnames The list of hostnames for this tile, as returned by
-     * {@see getAvailableHostnames}.
-     * @param {Number} hostnameIndex The index of the recommended hostname to use to
-     * obtain the tile image.
-     * @param {Number} x The x coordinate of the tile.
-     * @param {Number} y The y coordinate of the tile.
-     * @param {Number} level The level-of-detail of the tile.
+     * @param {Array} hostnames The list of available hostnames, as returned by
+     *                {@see getAvailableHostnames}.
+     * @param {Number} hostnameIndex The index in the hostnames array of the suggested
+     *                 host from which to request the image.
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
      *
-     * @return A promise for the image that will resolve when the image is available.
+     * @return {Promise} A promise for the image that will resolve when the image is available.
      *         If the image is not suitable for display, the promise can resolve to undefined.
+     *         The resolved image may be either an Image or a Canvas DOM object.
      */
     BingMapsImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
         var imageUrl = this._buildImageUrl(hostnameIndex, x, y, level);
@@ -383,7 +410,7 @@ define([
      * @memberof BingMapsImageryProvider
      */
     BingMapsImageryProvider.prototype.getIntensity = function(tile) {
-        if ((this.mapStyle === BingMapsStyle.AERIAL || this.mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) && tile.level <= 8.0) {
+        if ((this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) && tile.level <= 8.0) {
             return 1.0;
         }
         return 0.1;

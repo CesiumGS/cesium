@@ -191,7 +191,8 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {Array} The host name(s) from which the tile can be requested.
+     * @returns {Array} The host name(s) from which the tile can be requested.  The return
+     * value may be undefined if this imagery provider does not download data from any hosts.
      */
     ArcGisMapServerImageryProvider.prototype.getAvailableHostnames = function(x, y, level) {
         return this._imageUrlHostnames;
@@ -239,12 +240,19 @@ define([
     };
 
     /**
-     * Request the image for a given tile.
+     * Requests the image for a given tile.
      *
-     * @param {String} url The tile image URL.
+     * @param {Array} hostnames The list of available hostnames, as returned by
+     *                {@see getAvailableHostnames}.
+     * @param {Number} hostnameIndex The index in the hostnames array of the suggested
+     *                 host from which to request the image.
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
      *
-     * @return A promise for the image that will resolve when the image is available.
+     * @return {Promise} A promise for the image that will resolve when the image is available.
      *         If the image is not suitable for display, the promise can resolve to undefined.
+     *         The resolved image may be either an Image or a Canvas DOM object.
      */
     ArcGisMapServerImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
         var url = this._buildImageUrl(x, y, level);
