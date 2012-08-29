@@ -42,6 +42,7 @@ Beta Releases
 * Added `affectedByLighting` to `ComplexConicSensorVolume`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume` to turn lighting on/off for these objects.
 * CZML `Polygon`, `Cone`, and `Pyramid` objects are no longer affected by lighting.
 * Added `czm_viewRotation` and `czm_viewInverseRotation` automatic GLSL uniforms.
+* Added a `clampToPixel` property to `BillboardCollection` and `LabelCollection`.  When true, it aligns all billboards and text to a pixel in screen space, providing a crisper images at the cost of jumpier motion.
 
 ### b7 - 08/01/2012
 
