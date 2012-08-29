@@ -102,10 +102,12 @@ define([
      * var atlas = context.createTextureAtlas({images : images});
      * billboards.setTextureAtlas(atlas);
      * billboards.add({
-     *   position : { x : 1.0, y : 2.0, z : 3.0 }
+     *   position : { x : 1.0, y : 2.0, z : 3.0 },
+     *   imageIndex : 0
      * });
      * billboards.add({
-     *   position : { x : 4.0, y : 5.0, z : 6.0 }
+     *   position : { x : 4.0, y : 5.0, z : 6.0 },
+     *   imageIndex : 1
      * });
      */
     var BillboardCollection = function() {
@@ -150,10 +152,10 @@ define([
          * @example
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * billboards.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
-         * billboards.add({ position : new Cartesian3(0.0, 0.0, 0.0) }); // center
-         * billboards.add({ position : new Cartesian3(1000000.0, 0.0, 0.0) }); // east
-         * billboards.add({ position : new Cartesian3(0.0, 1000000.0, 0.0) }); // north
-         * billboards.add({ position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 0.0, 0.0) }); // center
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(1000000.0, 0.0, 0.0) }); // east
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 1000000.0, 0.0) }); // north
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
@@ -829,8 +831,12 @@ define([
         var bottomLeftY = 0;
         var width = 0;
         var height = 0;
-        var imageRectangle = textureAtlasCoordinates[billboard.getImageIndex()];
-        if (typeof imageRectangle !== 'undefined') {
+        var index = billboard.getImageIndex();
+        if (index !== -1) {
+            var imageRectangle = textureAtlasCoordinates[index];
+            if (typeof imageRectangle === 'undefined') {
+                throw new DeveloperError('Invalid billboard image index: ' + index);
+            }
             bottomLeftX = imageRectangle.x;
             bottomLeftY = imageRectangle.y;
             width = imageRectangle.width;

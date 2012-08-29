@@ -114,7 +114,7 @@ defineSuite([
         expect(b.getHorizontalOrigin()).toEqual(HorizontalOrigin.CENTER);
         expect(b.getVerticalOrigin()).toEqual(VerticalOrigin.CENTER);
         expect(b.getScale()).toEqual(1.0);
-        expect(b.getImageIndex()).toEqual(0);
+        expect(b.getImageIndex()).toEqual(-1);
         expect(b.getColor().red).toEqual(1.0);
         expect(b.getColor().green).toEqual(1.0);
         expect(b.getColor().blue).toEqual(1.0);
@@ -183,6 +183,30 @@ defineSuite([
         expect(b.getColor().blue).toEqual(3.0);
         expect(b.getColor().alpha).toEqual(4.0);
     });
+
+    it('throws with non number Index', function() {
+        var b = billboards.add();
+        expect(function() {
+            b.setImageIndex(undefined);
+        }).toThrow();
+    });
+
+    it('throws with invalid index', function() {
+        billboards.setTextureAtlas(createTextureAtlas([whiteImage]));
+        billboards.add({
+            position : {
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            },
+            imageIndex : 1
+        });
+
+        expect(function() {
+            billboards.update(context, sceneState);
+        }).toThrow();
+    });
+
 
     it('set a removed billboard property', function() {
         var b = billboards.add();
@@ -1072,9 +1096,11 @@ defineSuite([
         var ellipsoid = projection.getEllipsoid();
 
         var one = billboards.add({
+            imageIndex : 0,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0))
         });
         var two = billboards.add({
+            imageIndex : 0,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         });
 
@@ -1094,9 +1120,11 @@ defineSuite([
         var ellipsoid = projection.getEllipsoid();
 
         var one = billboards.add({
+            imageIndex : 0,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0))
         });
         var two = billboards.add({
+            imageIndex : 0,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         });
 
@@ -1123,9 +1151,11 @@ defineSuite([
         var ellipsoid = projection.getEllipsoid();
 
         var one = billboards.add({
+            imageIndex : 0,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0))
         });
         var two = billboards.add({
+            imageIndex : 0,
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         });
 
