@@ -430,11 +430,11 @@ define([
      * //Compute 7!, which is equal to 5040
      * var computedFactorial = CesiumMath.factorial(7);
      *
-     * @exception {DeveloperError} number greater than or equal to 0 is required.
+     * @exception {DeveloperError} A number greater than or equal to 0 is required.
      */
     CesiumMath.factorial = function(n) {
         if (typeof n !== 'number' || n < 0) {
-            throw new DeveloperError('number greater than or equal to 0 is required.');
+            throw new DeveloperError('A number greater than or equal to 0 is required.');
         }
 
         var length = factorials.length;
@@ -445,6 +445,30 @@ define([
             }
         }
         return factorials[n];
+    };
+
+    /**
+     * Determines if a positive integer is a power of two.
+     *
+     * @memberof CesiumMath
+     *
+     * @param {Number} n The positive integer to test.
+     *
+     * @return {Boolean} <code>true</code> if the number if a power of two; otherwise, <code>false</code>.
+     *
+     * @example
+     * var t = CesiumMath.isPowerOfTwo(16); // true
+     * var f = CesiumMath.isPowerOfTwo(20); // false
+     *
+     * @exception {DeveloperError} A number greater than or equal to 0 is required.
+     */
+    CesiumMath.isPowerOfTwo = function(n) {
+        if (typeof n !== 'number' || n < 0) {
+            throw new DeveloperError('A number greater than or equal to 0 is required.');
+        }
+
+        var m = n | 0;
+        return (m !== 0) && ((m & (m - 1)) === 0);
     };
 
     return CesiumMath;

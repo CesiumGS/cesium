@@ -404,6 +404,7 @@ define([
     function reprojectToGeographic(imageryLayer, context, texture, extent) {
         if (typeof imageryLayer._fbReproject === 'undefined') {
             imageryLayer._fbReproject = context.createFramebuffer();
+            imageryLayer._fbReproject.destroyAttachments = false;
 
             var reprojectMesh = {
                 attributes : {

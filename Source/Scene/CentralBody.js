@@ -13,7 +13,7 @@ define([
         '../Core/Extent',
         '../Core/ExtentTessellator',
         '../Core/BoundingSphere',
-        '../Core/Rectangle',
+        '../Core/BoundingRectangle',
         '../Core/Cache',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -67,7 +67,7 @@ define([
         Extent,
         ExtentTessellator,
         BoundingSphere,
-        Rectangle,
+        BoundingRectangle,
         Cache,
         Cartesian2,
         Cartesian3,
@@ -650,7 +650,7 @@ define([
         this._drawUniforms = combine([uniforms, atmosphereUniforms], false, false);
     };
 
-    CentralBody.prototype._attributeIndices = {
+    var attributeIndices = {
         position3D : 0,
         textureCoordinates : 1,
         position2D : 2
@@ -676,10 +676,12 @@ define([
         return this._imageryLayerCollection;
     };
 
-    CentralBody.prototype._isModeTransition = function(oldMode, newMode) {
+    CentralBody._isModeTransition = function(oldMode, newMode) {
         // SCENE2D, COLUMBUS_VIEW, and MORPHING use the same rendering path, so a
         // transition only occurs when switching from/to SCENE3D
-        return oldMode !== newMode && (oldMode === SceneMode.SCENE3D || newMode === SceneMode.SCENE3D);
+        return ((oldMode !== newMode) &&
+                ((oldMode === SceneMode.SCENE3D) ||
+                 (newMode === SceneMode.SCENE3D)));
     };
 
     CentralBody.prototype._createScissorRectangle = function(description) {
@@ -729,7 +731,11 @@ define([
         var width = Math.ceil(upperRight.x) - x;
         var height = Math.ceil(upperRight.y) - y;
 
-        return new Rectangle(x, y, width, height);
+        if (width > 0.0 && height > 0.0) {
+            return new BoundingRectangle(x, y, width, height);
+        }
+
+        return undefined;
     };
 
     CentralBody.prototype._computeDepthQuad = function(sceneState) {
@@ -788,7 +794,8 @@ define([
         var halfWidth = Math.floor(Math.max(screenUp.subtract(center).magnitude(), screenRight.subtract(center).magnitude()));
         var halfHeight = halfWidth;
 
-        return new Rectangle(Math.floor(center.x) - halfWidth,
+        return new BoundingRectangle(
+                Math.floor(center.x) - halfWidth,
                 Math.floor(center.y) - halfHeight,
                 halfWidth * 2.0,
                 halfHeight * 2.0);
@@ -827,11 +834,15 @@ define([
 
         // handle north pole
         if (baseImageryProviderMaxExtent.north < CesiumMath.PI_OVER_TWO) {
-            extent = new Extent(-Math.PI, baseImageryProviderMaxExtent.north,
-                                Math.PI, CesiumMath.PI_OVER_TWO);
-            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
-            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
-            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+            extent = new Extent(
+                -Math.PI,
+                baseImageryProviderMaxExtent.north,
+                Math.PI,
+                CesiumMath.PI_OVER_TWO
+            );
+            boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
+            frustumCull = sceneState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
             this._drawNorthPole = !frustumCull && !occluded;
@@ -870,11 +881,15 @@ define([
 
         // handle south pole
         if (baseImageryProviderMaxExtent.south > -CesiumMath.PI_OVER_TWO) {
-            extent = new Extent(-Math.PI, -CesiumMath.PI_OVER_TWO,
-                                Math.PI, baseImageryProviderMaxExtent.south);
-            boundingVolume = Extent.compute3DBoundingSphere(extent, this._ellipsoid);
-            frustumCull = sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE;
-            occludeePoint = Extent.computeOccludeePoint(extent, this._ellipsoid).occludeePoint;
+            extent = new Extent(
+                -Math.PI,
+                -CesiumMath.PI_OVER_TWO,
+                Math.PI,
+                baseImageryProviderMaxExtent.south
+            );
+            boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
+            frustumCull = sceneState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
             this._drawSouthPole = !frustumCull && !occluded;
@@ -997,7 +1012,7 @@ define([
         var mode = sceneState.mode;
         var projection = sceneState.scene2D.projection;
 
-        if (this._isModeTransition(this._mode, mode) || this._projection !== projection) {
+        if (CentralBody._isModeTransition(this._mode, mode) || this._projection !== projection) {
             if (mode === SceneMode.SCENE3D) {
                 this._rsColor = context.createRenderState({ // Write color and depth
                     cull : {
@@ -1061,7 +1076,7 @@ define([
                 viewportTransformation : uniformState.getViewportTransformation()
             });
 
-            if (rect.width !== 0 && rect.height !== 0) {
+            if (typeof rect !== 'undefined') {
                 scissorTest = {
                     enabled : true,
                     rectangle : rect
@@ -1186,140 +1201,80 @@ define([
             bumpImage.src = this.bumpMapSource;
         }
 
-        var recompileShader = typeof this._sp === 'undefined' || typeof this._spPoles === 'undefined';
+        // Initial compile or re-compile if uber-shader parameters changed
+        var dayChanged = ((this._showDay !== this.showDay) && (!this.showDay || this._imageryLayerCollection.getLength() > 0));
+        var nightChanged = ((this._showNight !== this.showNight) && (!this.showNight || this._nightTexture));
+        var cloudsChanged = ((this._showClouds !== this.showClouds) && (!this.showClouds || this._cloudsTexture));
+        var cloudShadowsChanged = ((this._showCloudShadows !== this.showCloudShadows) && (!this.showCloudShadows || this._cloudsTexture));
+        var specularChanged = ((this._showSpecular !== this.showSpecular) && (!this.showSpecular || this._specularTexture));
+        var bumpsChanged = ((this._showBumps !== this.showBumps) && (!this.showBumps || this._bumpTexture));
 
-        var defineShowDay = this.showDay && this._imageryLayerCollection.getLength() > 0;
-        if (this._defineShowDay !== defineShowDay) {
-            recompileShader = true;
-            this._defineShowDay = defineShowDay;
-        }
+        if (typeof this._sp === 'undefined' || typeof this._spPoles === 'undefined' ||
+            (dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged) ||
+            (this._showTerminator !== this.showTerminator) ||
+            (this._affectedByLighting !== this.affectedByLighting)) {
 
-        var defineShowNight = this.showNight && typeof this._nightTexture !== 'undefined';
-        if (this._defineShowNight !== defineShowNight) {
-            recompileShader = true;
-            this._defineShowNight = defineShowNight;
-        }
-
-        var defineShowClouds = this.showClouds && typeof this._cloudsTexture !== 'undefined';
-        if (this._defineShowClouds !== defineShowClouds) {
-            recompileShader = true;
-            this._defineShowClouds = defineShowClouds;
-        }
-
-        var defineShowCloudShadows = this.showCloudShadows && typeof this._cloudsTexture !== 'undefined';
-        if (this._defineShowCloudShadows !== defineShowCloudShadows) {
-            recompileShader = true;
-            this._defineShowCloudShadows = defineShowCloudShadows;
-        }
-
-        var defineShowSpecular = this._showSpecular && typeof this._specularTexture !== 'undefined';
-        if (this._defineShowSpecular !== defineShowSpecular) {
-            recompileShader = true;
-            this._defineShowSpecular = defineShowSpecular;
-        }
-
-        var defineShowBumps = this._showBumps && typeof this._bumpTexture !== 'undefined';
-        if (this._defineShowBumps !== defineShowBumps) {
-            recompileShader = true;
-            this._defineShowBumps = defineShowBumps;
-        }
-
-        var defineShowTerminator = this.showTerminator;
-        if (this._defineShowTerminator !== defineShowTerminator) {
-            recompileShader = true;
-            this._defineShowTerminator = defineShowTerminator;
-        }
-
-        var defineAffectedByLighting = this.affectedByLighting;
-        if (this._defineAffectedByLighting !== defineAffectedByLighting) {
-            recompileShader = true;
-            this._defineAffectedByLighting = defineAffectedByLighting;
-        }
-
-        if (recompileShader) {
-            var fsPrepend = '';
-
-            if (defineShowDay) {
-                fsPrepend += '#define SHOW_DAY 1\n';
-            }
-            if (defineShowNight) {
-                fsPrepend += '#define SHOW_NIGHT 1\n';
-            }
-            if (defineShowClouds) {
-                fsPrepend += '#define SHOW_CLOUDS 1\n';
-            }
-            if (defineShowCloudShadows) {
-                fsPrepend += '#define SHOW_CLOUD_SHADOWS 1\n';
-            }
-            if (defineShowSpecular) {
-                fsPrepend += '#define SHOW_SPECULAR 1\n';
-            }
-            if (defineShowBumps) {
-                fsPrepend += '#define SHOW_BUMPS 1\n';
-            }
-            if (defineShowTerminator) {
-                fsPrepend += '#define SHOW_TERMINATOR 1\n';
-            }
-            if (defineAffectedByLighting) {
-                fsPrepend += '#define AFFECTED_BY_LIGHTING 1\n';
-            }
-
-            fsPrepend +=
+            var fsPrepend = ((this.showDay && this._imageryLayerCollection.getLength() > 0) ? '#define SHOW_DAY 1\n' : '') +
+                ((this.showNight && this._nightTexture) ? '#define SHOW_NIGHT 1\n' : '') +
+                ((this.showClouds && this._cloudsTexture) ? '#define SHOW_CLOUDS 1\n' : '') +
+                ((this.showCloudShadows && this._cloudsTexture) ? '#define SHOW_CLOUD_SHADOWS 1\n' : '') +
+                ((this.showSpecular && this._specularTexture) ? '#define SHOW_SPECULAR 1\n' : '') +
+                ((this.showBumps && this._bumpTexture) ? '#define SHOW_BUMPS 1\n' : '') +
+                (this.showTerminator ? '#define SHOW_TERMINATOR 1\n' : '') +
+                (this.affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                 '#line 0\n' +
                 CentralBodyFSCommon;
+            var groundFromSpacePrepend = '#define SHOW_GROUND_ATMOSPHERE 1\n' +
+                '#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1\n';
+            var groundFromAtmospherePrepend = '#define SHOW_GROUND_ATMOSPHERE 1\n' +
+                '#define SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE 1\n';
 
-            vs =
-                '#line 0\n' +
+            vs = '#line 0\n' +
                  GroundAtmosphere +
-                '#line 0\n' +
                  CentralBodyVS;
 
-            fs =
-                fsPrepend +
-                '#define TEXTURE_UNITS ' + context.getMaximumTextureImageUnits() + '\n' +
-                '#line 0\n' +
-                CentralBodyFS;
-
-            var attributeIndices = this._attributeIndices;
+            fs = fsPrepend + CentralBodyFS;
 
             this._spWithoutAtmosphere = this._spWithoutAtmosphere && this._spWithoutAtmosphere.release();
-            this._spWithoutAtmosphere = shaderCache.getShaderProgram(vs, fs, attributeIndices);
-
-            var groundFromSpacePrepend =
-                '#define SHOW_GROUND_ATMOSPHERE 1\n' +
-                '#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1\n';
-            var groundFromSpaceVS = groundFromSpacePrepend + vs;
-            var groundFromSpaceFS = groundFromSpacePrepend + fs;
-
             this._spGroundFromSpace = this._spGroundFromSpace && this._spGroundFromSpace.release();
-            this._spGroundFromSpace = shaderCache.getShaderProgram(groundFromSpaceVS, groundFromSpaceFS, attributeIndices);
-
-            var groundFromAtmospherePrepend =
-                '#define SHOW_GROUND_ATMOSPHERE 1\n' +
-                '#define SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE 1\n';
-            var groundFromAtmosphereVS = groundFromAtmospherePrepend + vs;
-            var groundFromAtmosphereFS = groundFromAtmospherePrepend + fs;
-
             this._spGroundFromAtmosphere = this._spGroundFromAtmosphere && this._spGroundFromAtmosphere.release();
-            this._spGroundFromAtmosphere = shaderCache.getShaderProgram(groundFromAtmosphereVS, groundFromAtmosphereFS, attributeIndices);
+
+            this._spWithoutAtmosphere = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
+            this._spGroundFromSpace = context.getShaderCache().getShaderProgram(
+                    groundFromSpacePrepend + vs,
+                    groundFromSpacePrepend + fs,
+                    attributeIndices);
+            this._spGroundFromAtmosphere = context.getShaderCache().getShaderProgram(
+                    groundFromAtmospherePrepend + vs,
+                    groundFromAtmospherePrepend + fs,
+                    attributeIndices);
 
             vs = CentralBodyVSPole;
             fs = fsPrepend + GroundAtmosphere + CentralBodyFSPole;
 
             this._spPolesWithoutAtmosphere = this._spPolesWithoutAtmosphere && this._spPolesWithoutAtmosphere.release();
-            this._spPolesWithoutAtmosphere = shaderCache.getShaderProgram(vs, fs, attributeIndices);
-
-            groundFromSpaceVS = groundFromSpacePrepend + vs;
-            groundFromSpaceFS = groundFromSpacePrepend + fs;
-
             this._spPolesGroundFromSpace = this._spPolesGroundFromSpace && this._spPolesGroundFromSpace.release();
-            this._spPolesGroundFromSpace = shaderCache.getShaderProgram(groundFromSpaceVS, groundFromSpaceFS, attributeIndices);
-
-            groundFromAtmosphereVS = groundFromAtmospherePrepend + vs;
-            groundFromAtmosphereFS = groundFromAtmospherePrepend + fs;
-
             this._spPolesGroundFromAtmosphere = this._spPolesGroundFromAtmosphere && this._spPolesGroundFromAtmosphere.release();
-            this._spPolesGroundFromAtmosphere = shaderCache.getShaderProgram(groundFromAtmosphereVS, groundFromAtmosphereFS, attributeIndices);
+
+            this._spPolesWithoutAtmosphere = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
+            this._spPolesGroundFromSpace = context.getShaderCache().getShaderProgram(
+                    vs,
+                    groundFromSpacePrepend + fs,
+                    attributeIndices);
+            this._spPolesGroundFromAtmosphere = context.getShaderCache().getShaderProgram(
+                    vs,
+                    groundFromAtmospherePrepend + fs,
+                    attributeIndices);
+
+            // Sync to public state
+            this._showDay = dayChanged ? this.showDay : this._showDay;
+            this._showNight = nightChanged ? this.showNight : this._showNight;
+            this._showClouds = cloudsChanged ? this.showClouds : this._showClouds;
+            this._showCloudShadows = cloudShadowsChanged ? this.showCloudShadows : this._showCloudShadows;
+            this._showSpecular = specularChanged ? this.showSpecular : this._showSpecular;
+            this._showBumps = bumpsChanged ? this.showBumps : this._showBumps;
+            this._showTerminator = this.showTerminator;
+            this._affectedByLighting = this.affectedByLighting;
         }
 
         var cameraPosition = sceneState.camera.getPositionWC();

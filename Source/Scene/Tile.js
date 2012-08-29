@@ -7,6 +7,9 @@ define([
         '../Core/Cartesian2',
         '../Core/Ellipsoid',
         '../Core/Extent',
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
+        '../Core/Occluder',
         './TileState'
     ], function(
         defaultValue,
@@ -16,6 +19,9 @@ define([
         Cartesian2,
         Ellipsoid,
         Extent,
+        BoundingRectangle,
+        BoundingSphere,
+        Occluder,
         TileState) {
     "use strict";
 
@@ -132,6 +138,7 @@ define([
         this.center = undefined;
         this._boundingSphere3D = undefined;
         this._occludeePoint = undefined;
+        this._occludeePointComputed = false;
 
         this._projection = undefined;
         this._boundingSphere2D = undefined;
@@ -192,10 +199,6 @@ define([
         return this.children;
     };
 
-    Tile.prototype.computeMorphBounds = function(morphTime, projection) {
-        return Extent.computeMorphBoundingSphere(this.extent, this.tilingScheme.ellipsoid, morphTime, projection);
-    };
-
     /**
      * The bounding sphere for the geometry.
      *
@@ -204,10 +207,6 @@ define([
      * @return {BoundingSphere} The bounding sphere.
      */
     Tile.prototype.get3DBoundingSphere = function() {
-        if (typeof this._boundingSphere3D === 'undefined') {
-            this._boundingSphere3D = Extent.compute3DBoundingSphere(this.extent, this.tilingScheme.ellipsoid);
-        }
-
         return this._boundingSphere3D;
     };
 
@@ -219,11 +218,11 @@ define([
      * @return {Cartesian3} The occludee point or undefined.
      */
     Tile.prototype.getOccludeePoint = function() {
-        if (typeof this._occludeePoint === 'undefined') {
-            this._occludeePoint = Extent.computeOccludeePoint(this.extent, this.tilingScheme.ellipsoid);
+        if (!this._occludeePointComputed) {
+            this._occludeePoint = Occluder.computeOccludeePointFromExtent(this.extent, this.tilingScheme.ellipsoid);
+            this._occludeePointComputed = true;
         }
-
-        return this._occludeePoint.valid ? this._occludeePoint.occludeePoint : undefined;
+        return this._occludeePoint;
     };
 
     function compute2DBounds(tile, projection) {
@@ -255,7 +254,7 @@ define([
      *
      * @memberof Tile
      *
-     * @return {Rectangle} The bounding rectangle.
+     * @return {BoundingRectangle} The bounding rectangle.
      */
     Tile.prototype.get2DBoundingRectangle = function(projection) {
         compute2DBounds(this, projection);

@@ -55,7 +55,6 @@ define([
          * @type DynamicProperty
          */
         this.showIntersection = undefined;
-        this.showIntersection = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the color of the line formed by the intersection of the cone and other central bodies.
          * @type DynamicProperty

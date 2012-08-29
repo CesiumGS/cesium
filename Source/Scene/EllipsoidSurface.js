@@ -14,7 +14,7 @@ define([
         '../Core/Matrix4',
         '../Core/Occluder',
         '../Core/PrimitiveType',
-        '../Core/Rectangle',
+        '../Core/BoundingRectangle',
         '../Core/CubeMapEllipsoidTessellator',
         '../Core/MeshFilters',
         './GeographicTilingScheme',
@@ -42,7 +42,7 @@ define([
         Matrix4,
         Occluder,
         PrimitiveType,
-        Rectangle,
+        BoundingRectangle,
         CubeMapEllipsoidTessellator,
         MeshFilters,
         GeographicTilingScheme,
@@ -587,7 +587,7 @@ define([
         if (logoData.rebuildLogo) {
             var width = logoData.totalLogoWidth;
             var height = logoData.totalLogoHeight;
-            var logoRectangle = new Rectangle(surface.logoOffset.x, surface.logoOffset.y, width, height);
+            var logoRectangle = new BoundingRectangle(surface.logoOffset.x, surface.logoOffset.y, width, height);
             if (typeof surface._logoQuad === 'undefined') {
                 surface._logoQuad = new ViewportQuad(logoRectangle);
                 surface._logoQuad.enableBlending = true;
