@@ -31,7 +31,19 @@ Beta Releases
     * Passing `undefined` to any of the set functions on `Label` now throws an exception.
     * Renamed `agi_` prefix on GLSL identifiers to `czm_`.
     * Changed the GLSL automatic uniform `czm_viewport` from an `ivec4` to a `vec4` to reduce casting.
-                
+    * `Billboard` now defaults to an image index of `-1` indicating no texture, previously billboards defaulted to `0` indicating the first texture in the atlas. For example, change:
+
+            billboards.add({
+                position : { x : 1.0, y : 2.0, z : 3.0 },
+            });
+
+         to:
+
+            billboards.add({
+                position : { x : 1.0, y : 2.0, z : 3.0 },
+                imageIndex : 0
+            });
+
 * All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * Added support for nested polygons with holes. See `Polygon.configureFromPolygonHierarchy`.
 * Added support to the renderer for view frustum and central body occlusion culling. All built-in primitives, such as `BillboardCollection`, `Polygon`, `PolylineCollection`, etc., can be culled. See the advanced examples in the Sandbox for details.
