@@ -99,11 +99,11 @@ require([
         image.src = '../../../Images/Cesium_Logo_overlay.png';
     }
     
-    function setBillboardProperties(scene, ellipsoid) {
-        Sandcastle.declare(setBillboardProperties);
+    function setBillboardPropertiesAtCreation(scene, ellipsoid) {
+        Sandcastle.declare(setBillboardPropertiesAtCreation);
         var image = new Image();
         image.onload = function() {
-            var billboards = new Cesium.BillboardCollection(undefined);
+            var billboards = new Cesium.BillboardCollection();
             var textureAtlas = scene.getContext().createTextureAtlas({image : image});
             billboards.setTextureAtlas(textureAtlas);
             billboards.add({
@@ -117,6 +117,29 @@ require([
                 imageIndex : 0, // default
                 color : { red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 } // default: all 255
             });
+            scene.getPrimitives().add(billboards);
+        };
+        image.src = '../../../Images/Cesium_Logo_overlay.png';
+    }
+    
+    function setBillboardProperties(scene, ellipsoid) {
+        Sandcastle.declare(setBillboardProperties);
+        var image = new Image();
+        image.onload = function() {
+            var billboards = new Cesium.BillboardCollection(undefined);
+            var textureAtlas = scene.getContext().createTextureAtlas({image : image});
+            billboards.setTextureAtlas(textureAtlas);
+            // add() returns a Billboard object containing functions to change
+            // the billboard's position and appearance.
+            var b = billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                imageIndex : 0
+            });
+
+            b.setPosition(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 300000.0)));
+            b.setScale(3.0);
+            b.setColor({ red : 1.0, green : 1.0, blue : 1.0, alpha : 0.25 });
+
             scene.getPrimitives().add(billboards);
         };
         image.src = '../../../Images/Cesium_Logo_overlay.png';
@@ -329,7 +352,16 @@ require([
         }).placeAt("toolbar");
         
         new Button({
-            label: "Set billboard properties",
+            label: "Set billboard properties at creation",
+            onClick: function() {
+                primitives.removeAll();
+                setBillboardPropertiesAtCreation(scene, ellipsoid); 
+                Sandcastle.highlight(setBillboardPropertiesAtCreation);
+            }
+        }).placeAt("toolbar");
+        
+        new Button({
+            label: "Change billboard properties",
             onClick: function() {
                 primitives.removeAll();
                 setBillboardProperties(scene, ellipsoid); 
