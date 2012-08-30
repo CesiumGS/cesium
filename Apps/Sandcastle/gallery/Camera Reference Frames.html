@@ -140,9 +140,9 @@ require([
     
     function createButtons(scene) {
         new ToggleButton({
-            label: "View in an East-North-Up Frame",
+            label: 'View in an East-North-Up Frame',
             onClick: function() { eastNorthUp(scene); }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
     }
     
     var cesiumWidget = new CesiumWidget({
@@ -150,13 +150,13 @@ require([
             createButtons(widget.scene);
             widget.startRenderLoop();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId('cesiumContainer'));
 
     on(window, 'resize', function() {
         cesiumWidget.resize();
     });
     
-    dom.byId("toolbar").innerHTML = '';
+    dom.byId('toolbar').innerHTML = '';
 });
 
 </script>

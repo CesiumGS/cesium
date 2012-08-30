@@ -97,7 +97,7 @@ require([
     //includes everything.
 
     var canvas = document.createElement('canvas');
-    canvas.className = "fullSize";
+    canvas.className = 'fullSize';
     document.getElementById('cesiumContainer').appendChild(canvas);
     var ellipsoid = Cesium.Ellipsoid.WGS84; // Used in many Sandbox examples
     var scene = new Cesium.Scene(canvas);
@@ -135,27 +135,27 @@ require([
     ///////////////////////////////////////////////////////////////////////////
     // Demo buttons:
 
-    dom.byId("toolbar").innerHTML = "Demo buttons: ";
+    dom.byId('toolbar').innerHTML = 'Demo buttons: ';
 
     var button1 = new ToggleButton({
-        label: "Ground Atmosphere",
+        label: 'Ground Atmosphere',
         iconClass: 'dijitCheckBoxIcon',
         checked: cb.showGroundAtmosphere,
         onChange: function (newValue) {
             cb.showGroundAtmosphere = newValue;
             console.log('Show ground atmosphere: ' + newValue);
         }
-    }).placeAt("toolbar");
+    }).placeAt('toolbar');
 
     var button2 = new ToggleButton({
-        label: "Sky Atmosphere",
+        label: 'Sky Atmosphere',
         iconClass: 'dijitCheckBoxIcon',
         checked: cb.showSkyAtmosphere,
         onChange: function (newValue) {
             cb.showSkyAtmosphere = newValue;
             console.log('Show sky atmosphere: ' + newValue);
         }
-    }).placeAt("toolbar");
+    }).placeAt('toolbar');
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -190,17 +190,17 @@ require([
     // or click on a toolbar inside the iframe.
     function keydownHandler(e) {
         switch (e.keyCode) {
-        case "3".charCodeAt(0):  // "3" -> 3D globe
+        case '3'.charCodeAt(0):  // '3' -> 3D globe
             cb.showSkyAtmosphere = true;
             cb.showGroundAtmosphere = true;
             transitioner.morphTo3D();
             break;
-        case "2".charCodeAt(0):  // "2" -> Columbus View
+        case '2'.charCodeAt(0):  // '2' -> Columbus View
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphToColumbusView();
             break;
-        case "1".charCodeAt(0):  // "1" -> 2D map
+        case '1'.charCodeAt(0):  // '1' -> 2D map
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphTo2D();

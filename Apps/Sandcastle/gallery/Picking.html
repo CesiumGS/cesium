@@ -329,53 +329,53 @@ require([
         var scene = widget.scene;
         
         new Button({
-            label: "Show Cartographic Position on Mouse Over",
+            label: 'Show Cartographic Position on Mouse Over',
             onClick: function() {
                 cleanup();
                 pickCartographicPosition(scene, ellipsoid); 
                 Sandcastle.highlight(pickCartographicPosition);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new Button({
-            label: "Pick Billboard",
+            label: 'Pick Billboard',
             onClick: function() {
                 cleanup();
                 widget.viewHome();
                 pickBillboard(scene, ellipsoid); 
                 Sandcastle.highlight(pickBillboard);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new Button({
-            label: "Animate Billboard on Pick",
+            label: 'Animate Billboard on Pick',
             onClick: function() {
                 cleanup();
                 widget.viewHome();
                 animateBillboardOnPick(scene, ellipsoid); 
                 Sandcastle.highlight(animateBillboardOnPick);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new Button({
-            label: "Erode Sensor on Click",
+            label: 'Erode Sensor on Click',
             onClick: function() {
                 cleanup();
                 widget.viewHome();
                 erodeSensorOnClick(scene, ellipsoid); 
                 Sandcastle.highlight(erodeSensorOnClick);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new Button({
-            label: "Layer Primitives",
+            label: 'Layer Primitives',
             onClick: function() {
                 cleanup();
                 widget.viewHome();
                 layerCompositePrimitive(scene, ellipsoid); 
                 Sandcastle.highlight(layerCompositePrimitive);
             }
-        }).placeAt("toolbar");        
+        }).placeAt('toolbar');        
     }
 
     var cesiumWidget = new CesiumWidget({
@@ -383,13 +383,13 @@ require([
             createButtons(widget);
             widget.startRenderLoop();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId('cesiumContainer'));
     
     on(window, 'resize', function() {
         cesiumWidget.resize();
     });
     
-    dom.byId("toolbar").innerHTML = '';
+    dom.byId('toolbar').innerHTML = '';
 });
 
 </script>

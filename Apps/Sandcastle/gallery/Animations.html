@@ -145,36 +145,36 @@ require([
     
     function createButtons(scene) {
         new Button({
-            label: "Alpha Animation",
+            label: 'Alpha Animation',
             onClick: function() {
                 alphaAnimation(polygon, scene); 
                 Sandcastle.highlight(alphaAnimation);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new Button({
-            label: "Erosion Animation",
+            label: 'Erosion Animation',
             onClick: function() {
                 erosionAnimation(polygon, scene); 
                 Sandcastle.highlight(erosionAnimation);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new Button({
-            label: "Height Animation",
+            label: 'Height Animation',
             onClick: function() {
                 heightAnimation(polygon, scene); 
                 Sandcastle.highlight(heightAnimation);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new Button({
-            label: "Stripe Animation",
+            label: 'Stripe Animation',
             onClick: function() {
                 stripeAnimation(rectangularSensor, scene); 
                 Sandcastle.highlight(stripeAnimation);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
     }
 
     var cesiumWidget = new CesiumWidget({
@@ -183,13 +183,13 @@ require([
             createButtons(widget.scene);
             widget.startRenderLoop();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId('cesiumContainer'));
     
     on(window, 'resize', function() {
         cesiumWidget.resize();
     });
     
-    dom.byId("toolbar").innerHTML = '';
+    dom.byId('toolbar').innerHTML = '';
 });
 
 </script>

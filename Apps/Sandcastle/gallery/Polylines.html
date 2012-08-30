@@ -61,9 +61,14 @@ body {
     height: 100%;
     z-index: -1;
 }
+#toolbar {
+    margin: 5px;
+    padding: 2px 5px;
+}
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
+<div id="toolbar">Loading...</div>
 
 <script id="cesium_sandcastle_script">
 require([
@@ -150,7 +155,9 @@ require([
             createPrimitives(widget);
             widget.startRenderLoop();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId('cesiumContainer'));
+    
+    dom.byId('toolbar').innerHTML = '';
 });
 
 </script>

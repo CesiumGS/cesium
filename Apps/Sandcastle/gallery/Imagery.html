@@ -149,34 +149,34 @@ require([
 
     function createButtons(primitives) {
         new ToggleButton({
-            label: "Bing Maps Road",
+            label: 'Bing Maps Road',
             onClick: function() { bingMapsRoad(primitives); }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new ToggleButton({
-            label: "ArcGIS World Street Maps",
+            label: 'ArcGIS World Street Maps',
             onClick: function() { arcGisWorldStreetMaps(primitives); }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
 
         new ToggleButton({
-            label: "OpenStreetMaps",
+            label: 'OpenStreetMaps',
             onClick: function() { openStreetMaps(primitives); }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
 
         new ToggleButton({
-            label: "MapQuest OpenStreetMaps",
+            label: 'MapQuest OpenStreetMaps',
             onClick: function() { mapQuestOpenStreetMaps(primitives); }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
 
         new ToggleButton({
-            label: "Stamen Maps",
+            label: 'Stamen Maps',
             onClick: function() { stamenMaps(primitives); }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new ToggleButton({
-            label: "Single Image",
+            label: 'Single Image',
             onClick: function() { singleImage(primitives); }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
     }
     
     var cesiumWidget = new CesiumWidget({
@@ -184,13 +184,13 @@ require([
             createButtons(widget.scene.getPrimitives());
             widget.startRenderLoop();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId('cesiumContainer'));
 
     on(window, 'resize', function() {
         cesiumWidget.resize();
     });
     
-    dom.byId("toolbar").innerHTML = '';
+    dom.byId('toolbar').innerHTML = '';
 });
 
 </script>

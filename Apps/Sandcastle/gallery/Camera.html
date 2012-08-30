@@ -131,19 +131,19 @@ require([
     
     function createButtons(scene) {
         new ToggleButton({
-            label: "Fly to Los Angeles",
+            label: 'Fly to Los Angeles',
             onClick: function() { flyToLosAngeles(scene); }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new ToggleButton({
-            label: "Fly to My Location",
+            label: 'Fly to My Location',
             onClick: function() { flyToMyLocation(scene); }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
 
         new ToggleButton({
-            label: "View an Extent",
+            label: 'View an Extent',
             onClick: function() { viewAnExtent(scene); }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
     }
     
     var cesiumWidget = new CesiumWidget({
@@ -151,13 +151,13 @@ require([
             createButtons(widget.scene);
             widget.startRenderLoop();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId('cesiumContainer'));
 
     on(window, 'resize', function() {
         cesiumWidget.resize();
     });
     
-    dom.byId("toolbar").innerHTML = '';
+    dom.byId('toolbar').innerHTML = '';
 });
 
 </script>
