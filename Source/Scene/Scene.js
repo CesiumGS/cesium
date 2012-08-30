@@ -13,7 +13,8 @@ define([
         './CompositePrimitive',
         './AnimationCollection',
         './SceneMode',
-        './FrameState'
+        './FrameState',
+        './PerspectiveOffCenterFrustum'
     ], function(
         Color,
         destroyObject,
@@ -28,7 +29,8 @@ define([
         CompositePrimitive,
         AnimationCollection,
         SceneMode,
-        FrameState) {
+        FrameState,
+        PerspectiveOffCenterFrustum) {
     "use strict";
 
     /**
@@ -197,17 +199,17 @@ define([
         clearPasses(frameState.passes);
     }
 
-    Scene.prototype._update = function() {
-        var us = this.getUniformState();
-        var camera = this._camera;
+    function update(scene) {
+        var us = scene.getUniformState();
+        var camera = scene._camera;
 
         // Destroy released shaders once every 120 frames to avoid thrashing the cache
-        if (this._shaderFrameCount++ === 120) {
-            this._shaderFrameCount = 0;
-            this._context.getShaderCache().destroyReleasedShaderPrograms();
+        if (scene._shaderFrameCount++ === 120) {
+            scene._shaderFrameCount = 0;
+            scene._context.getShaderCache().destroyReleasedShaderPrograms();
         }
 
-        this._animations.update();
+        scene._animations.update();
         camera.update();
         us.setProjection(camera.frustum.getProjectionMatrix());
         if (camera.frustum.getInfiniteProjectionMatrix) {
@@ -215,24 +217,62 @@ define([
         }
         us.setView(camera.getViewMatrix());
 
-        if (this._animate) {
-            this._animate();
+        if (scene._animate) {
+            scene._animate();
         }
 
-        updateFrameState(this);
-        this._primitives.update(this._context, this._frameState);
-    };
+        updateFrameState(scene);
+        scene._primitives.update(scene._context, scene._frameState);
+    }
 
     /**
      * DOC_TBA
      * @memberof Scene
      */
     Scene.prototype.render = function() {
-        this._update();
+        update(this);
 
         this._context.clear(this._clearState);
         this._primitives.render(this._context);
     };
+
+    function getPickFrustum(scene, windowPosition, width, height) {
+        var canvas = scene._canvas;
+        var camera = scene._camera;
+
+        var frustum = camera.frustum;
+        var fovy = frustum.fovy;
+        var ratio = frustum.aspectRatio;
+        var near = frustum.near;
+
+        var tanTheta = Math.tan(fovy * 0.5);
+        var pixelHeight = near * tanTheta / canvas.clientHeight;
+        var pixelWidth = near * ratio * tanTheta / canvas.clientWidth;
+
+        var pickRay = camera._getPickRayPerspective(windowPosition);
+        var pixelCenter = pickRay.getPoint(near);
+
+        var pickWidth = pixelWidth * width;
+        var pickHeight = pixelHeight * height;
+
+        var up = camera.getUpWC();
+        var right = camera.getRightWC();
+
+        var t = pixelCenter.add(up.multiplyByScalar(pickHeight));
+        var b = pixelCenter.add(up.multiplyByScalar(-pickHeight));
+        var r = pixelCenter.add(right.multiplyByScalar(pickWidth));
+        var l = pixelCenter.add(right.multiplyByScalar(-pickWidth));
+
+        var offCenter = new PerspectiveOffCenterFrustum();
+        offCenter.right = right.dot(r);
+        offCenter.left = right.dot(l);
+        offCenter.top = up.dot(t);
+        offCenter.bottom = up.dot(b);
+        offCenter.near = frustum.near;
+        offCenter.far = frustum.far;
+
+        return offCenter;
+    }
 
     /**
      * DOC_TBA
@@ -248,9 +288,13 @@ define([
 
         updateFrameState(this);
         frameState.passes.pick = true;
+        var oldFrustum = frameState.camera.frustum;
+        frameState.camera.frustum = getPickFrustum(this, windowPosition, 1.0, 1.0); // TODO: sizes other than 1x1
 
         primitives.update(context, frameState);
         primitives.renderForPick(context, fb);
+
+        frameState.camera.frustum = oldFrustum;
 
         return this._pickFramebuffer.end({
             x : windowPosition.x,

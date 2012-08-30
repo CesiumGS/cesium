@@ -125,6 +125,7 @@ define([
         this.frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
         this.frustum.near = 0.01 * maxRadii;
         this.frustum.far = 20.0 * maxRadii;
+        this._frustum = this.frustum;
 
         this._viewMatrix = undefined;
         this._invViewMatrix = undefined;
@@ -404,7 +405,8 @@ define([
             this._rightWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         }
 
-        if (positionChanged || directionChanged || upChanged || transformChanged) {
+        if (positionChanged || directionChanged || upChanged || transformChanged || this._frustum !== this.frustum) {
+            this._frustum = this.frustum;
             this._planes = this.frustum.getPlanes(this._positionWC, this._directionWC, this._upWC);
         }
 
