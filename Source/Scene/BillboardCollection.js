@@ -969,16 +969,12 @@ define([
         var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()));
         var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
 
-        var tanPhi;
-        if (typeof frustum.fovy !== 'undefined') {
-            tanPhi = Math.tan(frustum.fovy * 0.5);
-        } else {
-            // off-center perspective
-            tanPhi = frustum.top / frustum.near;
-        }
-
-        var d1 = distance / tanPhi;
-        pixelScale = d1 / context.getViewport().width;
+        var canvas = context.getCanvas();
+        var pixelSize = camera.frustum.getPixelSize({
+            width : canvas.clientWidth,
+            height : canvas.clientHeight
+        }, distance);
+        pixelScale = Math.max(pixelSize.width, pixelSize.height);
 
         size = pixelScale * collection._maxScale * collection._maxSize * textureSize;
         if (collection._allHorizontalCenter) {

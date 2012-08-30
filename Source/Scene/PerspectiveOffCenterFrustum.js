@@ -27,9 +27,9 @@ define([
      * @example
      * var frustum = new PerspectiveOffCenterFrustum();
      * frustum.right = 1.0;
-     * frustum.left = -frustum.right;
+     * frustum.left = -1.0;
      * frustum.top = 1.0;
-     * frustum.bottom = -frustum.top;
+     * frustum.bottom = -1.0;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
      */
@@ -125,7 +125,7 @@ define([
                 frustum.left !== frustum._left || frustum.right !== frustum._right ||
                 frustum.near !== frustum._near || frustum.far !== frustum._far) {
 
-            if (frustum.near < 0 || frustum.near > frustum.far) {
+            if (frustum.near <= 0 || frustum.near > frustum.far) {
                 throw new DeveloperError('near must be greater than zero and less than far.');
             }
 
@@ -152,6 +152,10 @@ define([
         this._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(l, r, b, t, n);
     };
 
+    var getPlanesRight = new Cartesian3();
+    var getPlanesNearCenter = new Cartesian3();
+    var getPlanesFarCenter = new Cartesian3();
+    var getPlanesNormal = new Cartesian3();
     /**
      * Creates an array of clipping planes for this frustum.
      *
@@ -160,29 +164,42 @@ define([
      * @param {Cartesian3} position The eye position.
      * @param {Cartesian3} direction The view direction.
      * @param {Cartesian3} up The up direction.
+     * @param {Array} [result] The Array in which to store the results. If left undefined, one will be created.
      *
      * @exception {DeveloperError} position is required.
      * @exception {DeveloperError} direction is required.
      * @exception {DeveloperError} up is required.
+     *
+     * @return {Array} An array of 6 clipping planes.
+     *
+     * @example
+     * // Check if a bounding volume intersects the frustum.
+     * var planes = frustum.getPlanes(cameraPosition, cameraDirection, cameraUp);
+     * var intersecting = boundingVolume.intersect(planes[0]) !== Intersect.OUTSIDE;             // check for left intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[1]) !== Intersect.OUTSIDE; // check for right intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[2]) !== Intersect.OUTSIDE; // check for bottom intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[3]) !== Intersect.OUTSIDE; // check for top intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[4]) !== Intersect.OUTSIDE; // check for near intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[5]) !== Intersect.OUTSIDE; // check for far intersection
      */
-    PerspectiveOffCenterFrustum.prototype.getPlanes = function(position, direction, up) {
-        if (!position) {
+    PerspectiveOffCenterFrustum.prototype.getPlanes = function(position, direction, up, result) {
+        update(this);
+
+        if (typeof position === 'undefined') {
             throw new DeveloperError('position is required.');
         }
 
-        if (!direction) {
+        if (typeof direction === 'undefined') {
             throw new DeveloperError('direction is required.');
         }
 
-        if (!up) {
+        if (typeof up === 'undefined') {
             throw new DeveloperError('up is required.');
         }
 
-        var pos = Cartesian3.clone(position);
-        var dir = Cartesian3.clone(direction);
-        var u = Cartesian3.clone(up);
-
-        var right = dir.cross(u);
+        if (typeof result === 'undefined') {
+            result = new Array(6);
+        }
 
         var t = this.top;
         var b = this.bottom;
@@ -191,46 +208,161 @@ define([
         var n = this.near;
         var f = this.far;
 
-        var planes = [];
-        planes.length = 6;
+        var right = Cartesian3.cross(direction, up, getPlanesRight);
 
-        var normal, planeVec;
-        var nearCenter = pos.add(dir.multiplyByScalar(n));
-        var farCenter = pos.add(dir.multiplyByScalar(f));
+        var nearCenter = getPlanesNearCenter;
+        Cartesian3.multiplyByScalar(direction, n, nearCenter);
+        Cartesian3.add(position, nearCenter, nearCenter);
+
+        var farCenter = getPlanesFarCenter;
+        Cartesian3.multiplyByScalar(direction, f, farCenter);
+        Cartesian3.add(position, farCenter, farCenter);
+
+        var normal = getPlanesNormal;
 
         //Left plane computation
-        planeVec = nearCenter.add(right.multiplyByScalar(l)).subtract(pos);
-        planeVec = planeVec.normalize();
-        normal = planeVec.cross(u);
-        planes[0] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));
+        Cartesian3.multiplyByScalar(right, l, normal);
+        Cartesian3.add(nearCenter, normal, normal);
+        Cartesian3.subtract(normal, position, normal);
+        Cartesian3.normalize(normal, normal);
+        Cartesian3.cross(normal, up, normal);
+
+        var plane = result[0];
+        if (typeof plane === 'undefined') {
+            plane = result[0] = new Cartesian4();
+        }
+        plane.x = normal.x;
+        plane.y = normal.y;
+        plane.z = normal.z;
+        plane.w = -Cartesian3.dot(normal, position);
 
         //Right plane computation
-        planeVec = nearCenter.add(right.multiplyByScalar(r)).subtract(pos);
-        planeVec = planeVec.normalize();
-        normal = u.cross(planeVec);
-        planes[1] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));
+        Cartesian3.multiplyByScalar(right, r, normal);
+        Cartesian3.add(nearCenter, normal, normal);
+        Cartesian3.subtract(normal, position, normal);
+        Cartesian3.normalize(normal, normal);
+        Cartesian3.cross(up, normal, normal);
+
+        plane = result[1];
+        if (typeof plane === 'undefined') {
+            plane = result[1] = new Cartesian4();
+        }
+        plane.x = normal.x;
+        plane.y = normal.y;
+        plane.z = normal.z;
+        plane.w = -Cartesian3.dot(normal, position);
 
         //Bottom plane computation
-        planeVec = nearCenter.add(u.multiplyByScalar(b)).subtract(position);
-        planeVec = planeVec.normalize();
-        normal = right.cross(planeVec);
-        planes[2] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));
+        Cartesian3.multiplyByScalar(up, b, normal);
+        Cartesian3.add(nearCenter, normal, normal);
+        Cartesian3.subtract(normal, position, normal);
+        Cartesian3.normalize(normal, normal);
+        Cartesian3.cross(right, normal, normal);
+
+        plane = result[2];
+        if (typeof plane === 'undefined') {
+            plane = result[2] = new Cartesian4();
+        }
+        plane.x = normal.x;
+        plane.y = normal.y;
+        plane.z = normal.z;
+        plane.w = -Cartesian3.dot(normal, position);
 
         //Top plane computation
-        planeVec = nearCenter.add(u.multiplyByScalar(t)).subtract(pos);
-        planeVec = planeVec.normalize();
-        normal = planeVec.cross(right);
-        planes[3] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));
+        Cartesian3.multiplyByScalar(up, t, normal);
+        Cartesian3.add(nearCenter, normal, normal);
+        Cartesian3.subtract(normal, position, normal);
+        Cartesian3.normalize(normal, normal);
+        Cartesian3.cross(normal, right, normal);
+
+        plane = result[3];
+        if (typeof plane === 'undefined') {
+            plane = result[3] = new Cartesian4();
+        }
+        plane.x = normal.x;
+        plane.y = normal.y;
+        plane.z = normal.z;
+        plane.w = -Cartesian3.dot(normal, position);
 
         //Near plane computation
-        normal = direction;
-        planes[4] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(nearCenter));
+        plane = result[4];
+        if (typeof plane === 'undefined') {
+            plane = result[4] = new Cartesian4();
+        }
+        plane.x = direction.x;
+        plane.y = direction.y;
+        plane.z = direction.z;
+        plane.w = -Cartesian3.dot(direction, nearCenter);
 
         //Far plane computation
-        normal = direction.negate();
-        planes[5] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(farCenter));
+        Cartesian3.negate(direction, normal);
 
-        return planes;
+        plane = result[5];
+        if (typeof plane === 'undefined') {
+            plane = result[5] = new Cartesian4();
+        }
+        plane.x = normal.x;
+        plane.y = normal.y;
+        plane.z = normal.z;
+        plane.w = -Cartesian3.dot(normal, farCenter);
+
+        return result;
+    };
+
+    /**
+     * Returns the pixels width and height in meters.
+     *
+     * @memberof PerspectiveOffCenterFrustum
+     *
+     * @param {Object} canvasDimensions An object with width and height properties of the canvas.
+     * @param {Number} [distance=near plane distance] The distance of the near plane from the camera.
+     *
+     * @exception {DeveloperError} canvasDimensions is required.
+     *
+     * @returns {Object} An object with width and height properties of a pixel.
+     *
+     * @example
+     * // Example 1
+     * // Get the width and height of a pixel.
+     * var pixelSize = camera.frustum.getPixelSize({
+     *     width : canvas.clientWidth,
+     *     height : canvas.clientHeight
+     * });
+     *
+     * // Example 2
+     * // Get the width and height of a pixel if the near plane was set to 'distance'.
+     * // For example, get the size of a pixel of an image on a billboard.
+     * var position = camera.position;
+     * var direction = camera.direction;
+     * var toCenter = primitive.boundingVolume.center.subtract(position);      // vector from camera to a primitive
+     * var toCenterProj = direction.multiplyByScalar(direction.dot(toCenter)); // project vector onto camera direction vector
+     * var distance = toCenterProj.magnitude();
+     * var pixelSize = camera.frustum.getPixelSize({
+     *     width : canvas.clientWidth,
+     *     height : canvas.clientHeight
+     * }, distance);
+     */
+    PerspectiveOffCenterFrustum.prototype.getPixelSize = function(canvasDimensions, distance) {
+        update(this);
+
+        if (typeof canvasDimensions === 'undefined') {
+            throw new DeveloperError('canvasDimensions is required.');
+        }
+
+        if (typeof distance === 'undefined') {
+            distance = this.near;
+        }
+
+        var inverseNear = 1.0 / this.near;
+        var tanTheta = this.top * inverseNear;
+        var pixelHeight = 2.0 * distance * tanTheta / canvasDimensions.height;
+        tanTheta = this.right * inverseNear;
+        var pixelWidth = 2.0 * distance * tanTheta / canvasDimensions.width;
+
+        return {
+            width : pixelWidth,
+            height : pixelHeight
+        };
     };
 
     /**

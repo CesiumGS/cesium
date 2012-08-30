@@ -140,16 +140,66 @@ define([
      * @param {Cartesian3} position The eye position.
      * @param {Cartesian3} direction The view direction.
      * @param {Cartesian3} up The up direction.
+     * @param {Array} [result] The Array in which to store the results. If left undefined, one will be created.
      *
      * @exception {DeveloperError} position is required.
      * @exception {DeveloperError} direction is required.
      * @exception {DeveloperError} up is required.
      *
      * @return {Array} An array of 6 clipping planes.
+     *
+     * @example
+     * // Check if a bounding volume intersects the frustum.
+     * var planes = frustum.getPlanes(cameraPosition, cameraDirection, cameraUp);
+     * var intersecting = boundingVolume.intersect(planes[0]) !== Intersect.OUTSIDE;             // check for left intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[1]) !== Intersect.OUTSIDE; // check for right intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[2]) !== Intersect.OUTSIDE; // check for bottom intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[3]) !== Intersect.OUTSIDE; // check for top intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[4]) !== Intersect.OUTSIDE; // check for near intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[5]) !== Intersect.OUTSIDE; // check for far intersection
      */
-    PerspectiveFrustum.prototype.getPlanes = function(position, direction, up) {
+    PerspectiveFrustum.prototype.getPlanes = function(position, direction, up, result) {
         update(this);
-        return this._offCenterFrustum.getPlanes(position, direction, up);
+        return this._offCenterFrustum.getPlanes(position, direction, up, result);
+    };
+
+    /**
+     * Returns the pixels width and height in meters.
+     *
+     * @memberof PerspectiveFrustum
+     *
+     * @param {Object} canvasDimensions An object with width and height properties of the canvas.
+     * @param {Number} [distance=near plane distance] The distance of the near plane from the camera.
+     *
+     * @exception {DeveloperError} canvasDimensions is required.
+     * @exceltion {DeveloperError} distance must be greater than zero.
+     *
+     * @returns {Object} An object with width and height properties of a pixel.
+     *
+     * @example
+     * // Example 1
+     * // Get the width and height of a pixel.
+     * var pixelSize = camera.frustum.getPixelSize({
+     *     width : canvas.clientWidth,
+     *     height : canvas.clientHeight
+     * });
+     *
+     * // Example 2
+     * // Get the width and height of a pixel if the near plane was set to 'distance'.
+     * // For example, get the size of a pixel of an image on a billboard.
+     * var position = camera.position;
+     * var direction = camera.direction;
+     * var toCenter = primitive.boundingVolume.center.subtract(position);      // vector from camera to a primitive
+     * var toCenterProj = direction.multiplyByScalar(direction.dot(toCenter)); // project vector onto camera direction vector
+     * var distance = toCenterProj.magnitude();
+     * var pixelSize = camera.frustum.getPixelSize({
+     *     width : canvas.clientWidth,
+     *     height : canvas.clientHeight
+     * }, distance);
+     */
+    PerspectiveFrustum.prototype.getPixelSize = function(canvasDimensions, distance) {
+        update(this);
+        return this._offCenterFrustum.getPixelSize(canvasDimensions, distance);
     };
 
     /**
