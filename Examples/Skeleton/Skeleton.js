@@ -37,7 +37,9 @@ require({
     var cb = new Cesium.CentralBody(ellipsoid, terrainProvider);
     var imageryLayerCollection = cb.getImageLayers();
 
-//    var single = new Cesium.SingleTileImageryProvider('../../Images/NE2_50M_SR_W_4096.jpg');
+//    var single = new Cesium.SingleTileImageryProvider({
+//        url : '../../Images/NE2_50M_SR_W_4096.jpg'
+//    });
 //    var singleLayer = imageryLayerCollection.addImageryProvider(single);
 
 //    var wmsImagery = new Cesium.WebMapServiceImageryProvider({
@@ -82,7 +84,8 @@ require({
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
 //    var testLayer = imageryLayerCollection.addImageryProvider(
-//            new Cesium.SingleTileImageryProvider('../../Images/TestLayer.png', {
+//            new Cesium.SingleTileImageryProvider({
+//                url : '../../Images/TestLayer.png',
 //                extent : new Cesium.Extent(Cesium.Math.toRadians(-120),
 //                        Cesium.Math.toRadians(37),
 //                        Cesium.Math.toRadians(-119),

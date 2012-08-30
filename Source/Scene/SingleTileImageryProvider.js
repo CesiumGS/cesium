@@ -25,7 +25,7 @@ define([
      * @alias SingleTileImageryProvider
      * @constructor
      *
-     * @param {String} url The url for the tile.
+     * @param {String} description.url The url for the tile.
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent covered by the image.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
@@ -36,14 +36,14 @@ define([
      * @see OpenStreetMapTileProvider
      * @see CompositeTileProvider
      */
-    var SingleTileImageryProvider = function(url, description) {
-        if (typeof url === 'undefined') {
+    var SingleTileImageryProvider = function(description) {
+        description = defaultValue(description, {});
+
+        if (typeof description.url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
 
-        description = defaultValue(description, {});
-
-        this._url = url;
+        this._url = description.url;
         this._proxy = description.proxy;
         this._maximumLevel = 0;
         this._tilingScheme = new GeographicTilingScheme({
