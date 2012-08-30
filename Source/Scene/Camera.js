@@ -131,7 +131,7 @@ define([
         this._invViewMatrix = undefined;
         this._updateViewMatrix();
 
-        this._planes = this.frustum.getPlanes(this._positionWC, this._directionWC, this._upWC);
+        this._planes = this.frustum.getPlanes(this._positionWC, this._directionWC, this._upWC, this._planes);
 
         this._canvas = canvas;
         this._controllers = new CameraControllerCollection(this, canvas);
@@ -407,7 +407,7 @@ define([
 
         if (positionChanged || directionChanged || upChanged || transformChanged || this._frustum !== this.frustum) {
             this._frustum = this.frustum;
-            this._planes = this.frustum.getPlanes(this._positionWC, this._directionWC, this._upWC);
+            this._planes = this.frustum.getPlanes(this._positionWC, this._directionWC, this._upWC, this._planes);
         }
 
         if (directionChanged || upChanged || rightChanged) {

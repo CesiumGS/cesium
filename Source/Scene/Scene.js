@@ -241,33 +241,40 @@ define([
         var camera = scene._camera;
 
         var frustum = camera.frustum;
-        var fovy = frustum.fovy;
-        var ratio = frustum.aspectRatio;
         var near = frustum.near;
 
-        var tanTheta = Math.tan(fovy * 0.5);
-        var pixelHeight = near * tanTheta / canvas.clientHeight;
-        var pixelWidth = near * ratio * tanTheta / canvas.clientWidth;
+        var pixelSize = frustum.getPixelSize({
+            width : canvas.clientWidth,
+            height : canvas.clientHeight
+        });
 
         var pickRay = camera._getPickRayPerspective(windowPosition);
         var pixelCenter = pickRay.getPoint(near);
 
-        var pickWidth = pixelWidth * width;
-        var pickHeight = pixelHeight * height;
+        var pickWidth = pixelSize.width * width;
+        var pickHeight = pixelSize.height * height;
 
         var up = camera.getUpWC();
         var right = camera.getRightWC();
 
-        var t = pixelCenter.add(up.multiplyByScalar(pickHeight));
-        var b = pixelCenter.add(up.multiplyByScalar(-pickHeight));
-        var r = pixelCenter.add(right.multiplyByScalar(pickWidth));
-        var l = pixelCenter.add(right.multiplyByScalar(-pickWidth));
-
         var offCenter = new PerspectiveOffCenterFrustum();
-        offCenter.right = right.dot(r);
-        offCenter.left = right.dot(l);
-        offCenter.top = up.dot(t);
-        offCenter.bottom = up.dot(b);
+
+        var scratch = up.multiplyByScalar(pickHeight);
+        Cartesian3.add(pixelCenter, scratch, scratch);
+        offCenter.top = Cartesian3.dot(scratch, up);
+
+        Cartesian3.multiplyByScalar(up, -pickHeight, scratch);
+        Cartesian3.add(pixelCenter, scratch, scratch);
+        offCenter.bottom = Cartesian3.dot(scratch, up);
+
+        Cartesian3.multiplyByScalar(right, pickWidth, scratch);
+        Cartesian3.add(pixelCenter, scratch, scratch);
+        offCenter.right = Cartesian3.dot(scratch, right);
+
+        Cartesian3.multiplyByScalar(right, -pickWidth, scratch);
+        Cartesian3.add(pixelCenter, scratch, scratch);
+        offCenter.left = Cartesian3.dot(scratch, right);
+
         offCenter.near = frustum.near;
         offCenter.far = frustum.far;
 
