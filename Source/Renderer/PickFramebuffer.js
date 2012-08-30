@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/Color',
         './RenderbufferFormat'
     ], function(
+        defaultValue,
         destroyObject,
         Color,
         RenderbufferFormat) {
@@ -67,8 +69,8 @@ define([
      */
     PickFramebuffer.prototype.end = function(screenSpaceRegion) {
         if (screenSpaceRegion) {
-            var width = screenSpaceRegion.width;
-            var height = screenSpaceRegion.height;
+            var width = defaultValue(screenSpaceRegion.width, 1.0);
+            var height = defaultValue(screenSpaceRegion.height, 1.0);
 
             var pixels = this._context.readPixels({
                 x : screenSpaceRegion.x,
