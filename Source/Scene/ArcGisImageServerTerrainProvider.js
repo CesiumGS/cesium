@@ -144,23 +144,8 @@ define([
      */
     ArcGisImageServerTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
 
-    function computeDesiredGranularity(tilingScheme, tile) {
-        var ellipsoid = tilingScheme.ellipsoid;
-        var level = tile.level;
-
-        // The more vertices we use to tessellate the extent, the less geometric error
-        // in the tile.  We only need to use enough vertices to be at or below the
-        // geometric error expected for this level.
-        var maxErrorMeters = tilingScheme.getLevelMaximumGeometricError(level);
-
-        // Convert the max error in meters to radians at the equator.
-        // TODO: we should take the latitude into account to avoid over-tessellation near the poles.
-        var maxErrorRadians = maxErrorMeters / ellipsoid.getRadii().x;
-
-        return maxErrorRadians;
-    }
-
     var requestsInFlight = 0;
+
     // Creating the geometry will require a request to the ImageServer, which will complete
     // asynchronously.  The question is, what do we do in the meantime?  The best thing to do is
     // to use terrain associated with the parent tile.  Ideally, we would be able to render
