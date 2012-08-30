@@ -292,7 +292,7 @@ require({
                 jsEditor.clearMarker(line);
             }
             if (lineNum > 0) {
-                line = jsEditor.setMarker(lineNum - 1, makeLineLabel('hover'), "highlightMarker");
+                line = jsEditor.setMarker(lineNum - 1, makeLineLabel('highlighted by demo'), "highlightMarker");
                 jsEditor.setLineClass(line, "highlightLine");
                 highlightLines.push(line);
 

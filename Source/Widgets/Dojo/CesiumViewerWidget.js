@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,console*/
 define([
         'require',
         'dojo/_base/declare',
@@ -95,7 +95,6 @@ define([
 
     return declare('Cesium.CesiumViewerWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
         templateString : template,
-        preRender : undefined,
         useStreamingImagery : true,
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
@@ -119,7 +118,7 @@ define([
         postSetup : undefined,
 
         onSetupError : function(widget, error) {
-            console.log(error);
+            console.error(error);
         },
 
         resize : function() {

@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,console*/
 define([
         'require',
         'dojo/_base/declare',
@@ -53,7 +53,6 @@ define([
 
     return declare('Cesium.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
         templateString : template,
-        preRender : undefined,
         useStreamingImagery : true,
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
@@ -74,7 +73,7 @@ define([
         postSetup : undefined,
 
         onSetupError : function(widget, error) {
-            console.log(error);
+            console.error(error);
         },
 
         resize : function() {
@@ -303,19 +302,12 @@ define([
             }
         },
 
-        startRenderLoop : function() {
-            var widget = this;
-
-            (function render() {
-                widget.render(new JulianDate());
-                requestAnimationFrame(render);
-            }());
+        update : function(currentTime) {
+            this.scene.setSunPosition(SunPosition.compute(currentTime).position);
         },
 
-        render : function(time) {
-            var scene = this.scene;
-            scene.setSunPosition(SunPosition.compute(time).position);
-            scene.render();
+        render : function() {
+            this.scene.render();
         },
 
         _configureCentralBodyImagery : function() {
@@ -337,6 +329,21 @@ define([
             centralBody.specularMapSource = this.specularMapUrl;
             centralBody.cloudsMapSource = this.cloudsMapUrl;
             centralBody.bumpMapSource = this.bumpMapUrl;
+        },
+
+        startRenderLoop : function() {
+            var widget = this;
+
+            // Note that clients are permitted to use their own custom render loop.
+            // At a minimum it should include lines similar to the following:
+
+            function updateAndRender() {
+                var currentTime = new JulianDate();
+                widget.update(currentTime);
+                widget.render();
+                requestAnimationFrame(updateAndRender);
+            }
+            updateAndRender();
         }
     });
 });
