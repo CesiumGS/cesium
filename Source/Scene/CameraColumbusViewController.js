@@ -69,8 +69,8 @@ define([
         this._animationCollection = new AnimationCollection();
         this._translateAnimation = undefined;
 
-        this._mapWidth = this._ellipsoid.getRadii().x * Math.PI;
-        this._mapHeight = this._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
+        this._mapWidth = this._ellipsoid.radii.x * Math.PI;
+        this._mapHeight = this._ellipsoid.radii.y * CesiumMath.PI_OVER_TWO;
     };
 
     /**

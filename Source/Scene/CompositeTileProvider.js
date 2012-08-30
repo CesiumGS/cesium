@@ -55,7 +55,7 @@ define([
         this._camera = camera;
 
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
-        this._radius = ellipsoid.getMaximumRadius();
+        this._radius = ellipsoid.maximumRadius;
 
         this._list = list;
         this._list.sort(CompositeTileProvider._compare);

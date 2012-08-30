@@ -130,15 +130,15 @@ defineSuite([
 
     it('viewExtent', function() {
         var extent = new Extent(
+                -Math.PI,
                 -CesiumMath.PI_OVER_TWO,
-                -CesiumMath.PI_OVER_TWO,
-                CesiumMath.PI_OVER_TWO,
+                Math.PI,
                 CesiumMath.PI_OVER_TWO);
         camera.viewExtent(extent, Ellipsoid.WGS84);
-        expect(camera.position.equalsEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
-        expect(camera.direction.equalsEpsilon(new Cartesian3(-1.0, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
-        expect(camera.up.equalsEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON10)).toEqual(true);
-        expect(camera.right.equalsEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON10);
+        expect(camera.right).toEqualEpsilon(new Cartesian3(0.0, -1.0, 0.0), CesiumMath.EPSILON10);
     });
 
     it('viewExtent2D throws without extent', function() {
@@ -163,7 +163,7 @@ defineSuite([
         frustum.far = 21.0;
         camera.frustum = frustum;
 
-        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+        var maxRadii = Ellipsoid.WGS84.maximumRadius;
         camera.position = new Cartesian3(0.0, 0.0, maxRadii * 2.0);
 
         var extent = new Extent(
@@ -265,7 +265,7 @@ defineSuite([
 
     it('pick ellipsoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = Cartesian3.UNIT_X.multiplyByScalar(2.0 * maxRadii);
         camera.direction = camera.position.negate().normalize();
@@ -303,7 +303,7 @@ defineSuite([
     it('pick map in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new EquidistantCylindricalProjection(ellipsoid);
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         camera.direction = camera.position.negate().normalize();
@@ -342,7 +342,7 @@ defineSuite([
     it('pick map in columbus view', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new EquidistantCylindricalProjection(ellipsoid);
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
         camera.direction = Cartesian3.ZERO.subtract(camera.position).normalize();

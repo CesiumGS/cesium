@@ -30,6 +30,14 @@ define([
     var wgs84WRPrecessing = 7.2921158553E-5;
     var twoPiOverSecondsInDay = CesiumMath.TWO_PI / 86400.0;
 
+    var eastNorthUpToFixedFrameNormal = new Cartesian3();
+    var eastNorthUpToFixedFrameTangent = new Cartesian3();
+    var eastNorthUpToFixedFrameBitangent = new Cartesian3();
+
+    var northEastDownToFixedFrameNormal = new Cartesian3();
+    var northEastDownToFixedFrameTangent = new Cartesian3();
+    var northEastDownToFixedFrameBitangent = new Cartesian3();
+
     /**
      * @exports Transforms
      *
@@ -66,11 +74,11 @@ define([
                 throw new DeveloperError('position is required.');
             }
 
-            ellipsoid = ellipsoid || Ellipsoid.WGS84;
+            ellipsoid = typeof ellipsoid !== 'undefined' ? ellipsoid : Ellipsoid.WGS84;
 
+            // If x and y are zero, assume position is at a pole, which is a special case.
             if (CesiumMath.equalsEpsilon(position.x, 0.0, CesiumMath.EPSILON14) &&
-                    CesiumMath.equalsEpsilon(position.y, 0.0, CesiumMath.EPSILON14)) {
-                // The poles are special cases.  If x and y are zero, assume position is at a pole.
+                CesiumMath.equalsEpsilon(position.y, 0.0, CesiumMath.EPSILON14)) {
                 var sign = CesiumMath.sign(position.z);
                 return new Matrix4(
                     0.0, sign * -1.0,        0.0, position.x,
@@ -79,9 +87,16 @@ define([
                     0.0,         0.0,        0.0, 1.0);
             }
 
-            var normal = ellipsoid.geodeticSurfaceNormal(position);
-            var tangent = new Cartesian3(-position.y, position.x, 0.0).normalize();
-            var bitangent = normal.cross(tangent);
+            var normal = eastNorthUpToFixedFrameNormal;
+            var tangent  = eastNorthUpToFixedFrameTangent;
+            var bitangent = eastNorthUpToFixedFrameBitangent;
+
+            ellipsoid.geodeticSurfaceNormal(position, normal);
+            tangent.x = -position.y;
+            tangent.y = position.x;
+            tangent.z = 0.0;
+            Cartesian3.normalize(tangent, tangent);
+            normal.cross(tangent, bitangent);
 
             return new Matrix4(
                 tangent.x, bitangent.x, normal.x, position.x,
@@ -133,9 +148,16 @@ define([
                     0.0, 0.0,         0.0, 1.0);
             }
 
-            var normal = ellipsoid.geodeticSurfaceNormal(position);
-            var tangent = new Cartesian3(-position.y, position.x, 0.0).normalize();
-            var bitangent = normal.cross(tangent);
+            var normal = northEastDownToFixedFrameNormal;
+            var tangent = northEastDownToFixedFrameTangent;
+            var bitangent = northEastDownToFixedFrameBitangent;
+
+            ellipsoid.geodeticSurfaceNormal(position, normal);
+            tangent.x = -position.y;
+            tangent.y = position.x;
+            tangent.z = 0.0;
+            Cartesian3.normalize(tangent, tangent);
+            normal.cross(tangent, bitangent);
 
             return new Matrix4(
                 bitangent.x, tangent.x, -normal.x, position.x,
