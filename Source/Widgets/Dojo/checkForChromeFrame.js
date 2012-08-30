@@ -1,9 +1,11 @@
 /*global define*/
 define([
         'dojo/dom-construct',
+        'dojo/io/script',
         'dijit/Dialog'
        ], function(
          domConstruct,
+         script,
          Dialog) {
     "use strict";
     /*global require,CFInstall*/
@@ -53,7 +55,10 @@ define([
     }
 
     return function() {
-        require(['http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js'], function() {
+        script.get({
+            url : 'http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js',
+            checkString : 'CFInstall'
+        }).then(function() {
             CFInstall.check({
                 mode : 'overlay',
                 preventPrompt : true,
