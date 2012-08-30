@@ -49,6 +49,11 @@ html, body {
     width: 40%;
 }
 
+#galleryPanel {
+    width: 270px;
+    height: 100%;
+}
+
 #docPopup {
     display: block;
     position: absolute;

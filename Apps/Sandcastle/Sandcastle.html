@@ -28,6 +28,8 @@
     <script src="../../ThirdParty/CodeMirror-2.24/mode/htmlmixed/htmlmixed.js"></script>
 
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"> </script>
+
+    <script src="gallery/gallery-index.js"></script>
     <script src="CesiumSandcastle.js"> </script>
     <script type="text/javascript">
         if (window.location.host === "cesium.agi.com") {
@@ -71,7 +73,7 @@
                     <p>Any unsaved changes will be lost.</p>
                     <a class="linkButton" href="index.html">
                         <span data-dojo-type="Sandcastle.LinkButton">
-                            Return to Gallery
+                            Return to Index
                         </span>
                     </a>
                 </div>
@@ -108,19 +110,21 @@
             <div id="buttonThumbnail" data-dojo-type="dijit.form.ToggleButton" data-dojo-props="iconClass: 'dijitEditorIcon dijitEditorIconInsertImage', showLabel: true">
                 View as Thumbnail
             </div>
+            <span data-dojo-type="dijit.ToolbarSeparator"></span>
+            <div id="buttonGallery" data-dojo-type="dijit.form.ToggleButton" data-dojo-props="iconClass: 'dijitEditorIcon dijitEditorIconBackColor ', showLabel: true, checked: true">
+                Gallery
+            </div>
         </div>
         <div id="codeContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'leading', splitter: true, tabPosition: 'bottom'">
             <div id="jsContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'JavaScript code'">
             <textarea id="code" name="code">
-// You must specify a demo to load, for example:
-// Sandcastle.html?src=skeletonDemo.html
+// Select a demo from the gallery to load.
 </textarea>
             </div>
             <div id="htmlContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'HTML body &amp; CSS'">
                 <textarea id="htmlBody" name="htmlBody">
 &lt;!--
-You must specify a demo to load, for example:
-  Sandcastle.html?src=skeletonDemo.html
+Select a demo from the gallery to load.
 --&gt;
 </textarea>
             </div>
@@ -134,6 +138,9 @@ You must specify a demo to load, for example:
             <div class="logContainer">
                 <div id="logOutput"></div>
             </div>
+        </div>
+        <div id="galleryPanel" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'right', splitter: true" tabindex="10">
+            <div id="demos"></div>
         </div>
     </div>
     <div class="dijitTooltip dijitTooltipBelow" id="docPopup">

@@ -1,4 +1,4 @@
-/*global require,CodeMirror,JSHINT*/
+/*global require,CodeMirror,JSHINT,gallery_demos*/
 require({
         baseUrl: '../../Source',
         packages: [{
@@ -16,10 +16,12 @@ require({
         }]
     }, [
         'Widgets/Dojo/CesiumViewerWidget',
+        'dojo/on',
         'dojo/parser',
         'dojo/dom',
         'dojo/dom-class',
         'dojo/dom-construct',
+        'dojo/dom-style',
         'dojo/io-query',
         'dojo/_base/fx',
         'dojo/_base/window',
@@ -44,10 +46,12 @@ require({
         'dojo/domReady!'],
     function (
             CesiumViewerWidget,
+            on,
             parser,
             dom,
             domClass,
             domConstruct,
+            domStyle,
             ioQuery,
             fx,
             win,
@@ -467,4 +471,57 @@ require({
                 domClass.remove('bucketFrame', 'makeThumbnail');
             }
         });
+
+        registry.byId('buttonGallery').on('change', function (newValue) {
+            if (newValue) {
+                domStyle.set('galleryPanel', 'display', 'block');
+                registry.byId('appLayout').resize();
+            } else {
+                domStyle.set('galleryPanel', 'display', 'none');
+                registry.byId('appLayout').resize();
+            }
+        });
+
+        if (typeof gallery_demos === 'undefined') {
+            dom.byId('demos').textContent = 'No demos found, please run the build script.';
+        } else {
+            var i;
+            var len = gallery_demos.length;
+            var demos = dom.byId('demos');
+
+            // Sort by date descending.  This will eventually be a user option.
+            gallery_demos.sort(function(a, b) {
+                return b.date - a.date;
+            });
+
+            var loadDemoOnClick = function(demoName) {
+                on(dom.byId(demoName), 'click', function() {
+                    loadFromGallery(window.encodeURIComponent(demoName) + '.html');
+                });
+            };
+
+            for (i = 0; i < len; ++i) {
+                var demoName = gallery_demos[i].name;
+                var label = demoName;
+                var imgSrc = 'templates/Gallery_tile.jpg';
+                if (typeof gallery_demos[i].img !== 'undefined') {
+                    imgSrc = 'gallery/' + window.encodeURIComponent(gallery_demos[i].img);
+                }
+                label += '<br /><img src="' + imgSrc +
+                    '" alt="" width="225" height="150" id="' + demoName + '" onDragStart="return false;" />' +
+                    '<span id="buttons_' + i + '" class="insetButtons"></span>';
+
+                var tile = document.createElement('span');
+                tile.className = "dijit dijitReset dijitInline demoTile dijitButton";
+                tile.tabIndex = i * 3 + 1;
+                tile.innerHTML =
+                    '<span class="dijitReset dijitInline dijitButtonNode">' +
+                    '<span class="dijitReset dijitStretch dijitButtonContents">' +
+                    '<span class="dijitReset dijitInline dijitButtonText">' +
+                    label + '</span></span></span>';
+                demos.appendChild(tile);
+
+                loadDemoOnClick(demoName);
+            }
+        }
     });
