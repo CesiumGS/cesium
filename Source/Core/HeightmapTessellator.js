@@ -116,9 +116,6 @@ define([
         var minHeight = 65536.0;
         var maxHeight = -65536.0;
 
-        var maxVDifference = 0.0;
-        var maxUDifference = 0.0;
-
         var startRow = 0;
         var endRow = height;
         var startCol = 0;
@@ -258,9 +255,7 @@ define([
 
         return {
             maxHeight : maxHeight,
-            minHeight : minHeight,
-            maxUDifference : maxUDifference,
-            maxVDifference : maxVDifference
+            minHeight : minHeight
         };
     };
 
