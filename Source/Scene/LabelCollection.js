@@ -95,9 +95,11 @@ define([
         glyph.textureInfo = undefined;
         glyph.dimensions = undefined;
 
-        if (typeof glyph.billboard !== 'undefined') {
-            glyph.billboard.setShow(false);
-            labelCollection._spareBillboards.push(glyph.billboard);
+        var billboard = glyph.billboard;
+        if (typeof billboard !== 'undefined') {
+            billboard.setShow(false);
+            billboard.setImageIndex(-1);
+            labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }
     }
@@ -597,7 +599,7 @@ define([
     /**
      * @private
      */
-    LabelCollection.prototype.update = function(context, sceneState) {
+    LabelCollection.prototype.update = function(context, frameState) {
         var billboardCollection = this._billboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
@@ -654,7 +656,7 @@ define([
         }
         labelsToUpdate.length = 0;
 
-        return this._billboardCollection.update(context, sceneState);
+        return this._billboardCollection.update(context, frameState);
     };
 
     /**
@@ -672,13 +674,6 @@ define([
      */
     LabelCollection.prototype.render = function(context) {
         this._billboardCollection.render(context);
-    };
-
-    /**
-     * @private
-     */
-    LabelCollection.prototype.updateForPick = function(context) {
-        this._billboardCollection.updateForPick(context);
     };
 
     /**

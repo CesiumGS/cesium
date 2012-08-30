@@ -29,60 +29,59 @@
                 };
             };
 
-            Sandbox.ExamplePrimitive.prototype.update = function(context, sceneState) {
-                var vs = '';
-                vs += 'attribute vec4 position;';
-                vs += 'void main()';
-                vs += '{';
-                vs += '    gl_Position = czm_modelViewProjection * position;';
-                vs += '}';
-                var fs = '';
-                fs += 'uniform vec4 u_color;';
-                fs += 'void main()';
-                fs += '{';
-                fs += '    gl_FragColor = u_color;';
-                fs += '}';
+            Sandbox.ExamplePrimitive.prototype.update = function(context, frameState) {
+                if (typeof this._va === 'undefined') {
+                    var vs = '';
+                    vs += 'attribute vec4 position;';
+                    vs += 'void main()';
+                    vs += '{';
+                    vs += '    gl_Position = czm_modelViewProjection * position;';
+                    vs += '}';
+                    var fs = '';
+                    fs += 'uniform vec4 u_color;';
+                    fs += 'void main()';
+                    fs += '{';
+                    fs += '    gl_FragColor = u_color;';
+                    fs += '}';
 
-                var zLength = this._ellipsoid.getRadii().getMaximumComponent() * 0.1;
-                var x = zLength * 0.1;
-                var y = zLength * 0.5;
-                var z = zLength;
+                    var zLength = this._ellipsoid.getRadii().getMaximumComponent() * 0.1;
+                    var x = zLength * 0.1;
+                    var y = zLength * 0.5;
+                    var z = zLength;
 
-                var position = this._position;
-                position.height = Math.max(x, y, z) * 0.5;
-                position = this._ellipsoid.cartographicToCartesian(position);
-                this.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+                    var position = this._position;
+                    position.height = Math.max(x, y, z) * 0.5;
+                    position = this._ellipsoid.cartographicToCartesian(position);
+                    this.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
 
-                this._boundingVolume = Cesium.BoundingSphere.fromPoints([
-                    new Cesium.Cartesian3(-x, -y, -z),
-                    new Cesium.Cartesian3(x, y, z)
-                ]);
+                    this._boundingVolume = Cesium.BoundingSphere.fromPoints([
+                        new Cesium.Cartesian3(-x, -y, -z),
+                        new Cesium.Cartesian3(x, y, z)
+                    ]);
 
-                var mesh = Cesium.MeshFilters.toWireframeInPlace(
-                               Cesium.BoxTessellator.compute({
-                                  dimensions : new Cesium.Cartesian3(x, y, z)
-                                }));
-                var attributeIndices = Cesium.MeshFilters.createAttributeIndices(mesh);
+                    var mesh = Cesium.MeshFilters.toWireframeInPlace(
+                                   Cesium.BoxTessellator.compute({
+                                      dimensions : new Cesium.Cartesian3(x, y, z)
+                                    }));
+                    var attributeIndices = Cesium.MeshFilters.createAttributeIndices(mesh);
 
-                this._va = context.createVertexArrayFromMesh({
-                    mesh             : mesh,
-                    attributeIndices : attributeIndices,
-                    bufferUsage      : Cesium.BufferUsage.STATIC_DRAW
-                });
+                    this._va = context.createVertexArrayFromMesh({
+                        mesh             : mesh,
+                        attributeIndices : attributeIndices,
+                        bufferUsage      : Cesium.BufferUsage.STATIC_DRAW
+                    });
 
-                this._sp = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
+                    this._sp = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
 
-                this._rs = context.createRenderState({
-                    depthTest : {
-                        enabled : true
-                    }
-                });
+                    this._rs = context.createRenderState({
+                        depthTest : {
+                            enabled : true
+                        }
+                    });
 
-                this.update = this._update;
-                return this._update(context, sceneState);
-            };
+                    this._pickId = context.createPickId(this);
+                }
 
-            Sandbox.ExamplePrimitive.prototype._update = function(context, sceneState) {
                 return {
                     boundingVolume : this._boundingVolume,
                     modelMatrix : this.modelMatrix
@@ -97,11 +96,6 @@
                     vertexArray   : this._va,
                     renderState   : this._rs
                 });
-            };
-
-            Sandbox.ExamplePrimitive.prototype.updateForPick = function(context) {
-                this._pickId = this._pickId || context.createPickId(this);
-                this.updateForPick = function() {};
             };
 
             Sandbox.ExamplePrimitive.prototype.renderForPick = function(context, framebuffer) {
@@ -190,38 +184,9 @@
                 };
             };
 
-            Sandbox.ExamplePrimitive.prototype.update = function(context, sceneState) {
-                var vs = '';
-                vs += 'attribute vec3 position2D;';
-                vs += 'attribute vec3 position3D;';
-                vs += 'uniform float u_morphTime;';
-                vs += 'void main()';
-                vs += '{';
-                vs += '    vec4 p = czm_columbusViewMorph(position2D, position3D, u_morphTime);';
-                vs += '    gl_Position = czm_modelViewProjection * p;';
-                vs += '}';
-                var fs = '';
-                fs += 'uniform vec4 u_color;';
-                fs += 'void main()';
-                fs += '{';
-                fs += '    gl_FragColor = u_color;';
-                fs += '}';
-
-                this._sp = context.getShaderCache().getShaderProgram(vs, fs, this._attributeIndices);
-
-                this._rs = context.createRenderState({
-                    depthTest : {
-                        enabled : true
-                    }
-                });
-
-                this.update = this._update;
-                return this._update(context, sceneState);
-            };
-
-            Sandbox.ExamplePrimitive.prototype._update = function(context, sceneState) {
-                var mode = sceneState.mode;
-                var projection = sceneState.scene2D.projection;
+            Sandbox.ExamplePrimitive.prototype.update = function(context, frameState) {
+                var mode = frameState.mode;
+                var projection = frameState.scene2D.projection;
 
                 if (mode !== this._mode || projection !== this._projection) {
                     this._mode = mode;
@@ -306,6 +271,36 @@
                     });
                 }
 
+                if (typeof this._sp === 'undefined') {
+                    var vs = '';
+                    vs += 'attribute vec3 position2D;';
+                    vs += 'attribute vec3 position3D;';
+                    vs += 'uniform float u_morphTime;';
+                    vs += 'void main()';
+                    vs += '{';
+                    vs += '    vec4 p = czm_columbusViewMorph(position2D, position3D, u_morphTime);';
+                    vs += '    gl_Position = czm_modelViewProjection * p;';
+                    vs += '}';
+                    var fs = '';
+                    fs += 'uniform vec4 u_color;';
+                    fs += 'void main()';
+                    fs += '{';
+                    fs += '    gl_FragColor = u_color;';
+                    fs += '}';
+
+                    this._sp = context.getShaderCache().getShaderProgram(vs, fs, this._attributeIndices);
+
+                    this._rs = context.createRenderState({
+                        depthTest : {
+                            enabled : true
+                        }
+                    });
+                }
+
+                if (frameState.passes.pick && typeof this._pickId === 'undefined') {
+                    this._pickId = context.createPickId(this);
+                }
+
                 var modelMatrix = Cesium.Matrix4.IDENTITY;
                 if (mode === Cesium.SceneMode.SCENE3D) {
                     modelMatrix = this._modelMatrix;
@@ -325,11 +320,6 @@
                     vertexArray   : this._va,
                     renderState   : this._rs
                 });
-            };
-
-            Sandbox.ExamplePrimitive.prototype.updateForPick = function(context) {
-                this._pickId = this._pickId || context.createPickId(this);
-                this.updateForPick = function() {};
             };
 
             Sandbox.ExamplePrimitive.prototype.renderForPick = function(context, framebuffer) {
