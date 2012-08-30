@@ -251,8 +251,8 @@ define([
         var pickRay = camera._getPickRayPerspective(windowPosition);
         var pixelCenter = pickRay.getPoint(near);
 
-        var pickWidth = pixelSize.width * width;
-        var pickHeight = pixelSize.height * height;
+        var pickWidth = pixelSize.width * width * 0.5;
+        var pickHeight = pixelSize.height * height * 0.5;
 
         var up = camera.getUpWC();
         var right = camera.getRightWC();
