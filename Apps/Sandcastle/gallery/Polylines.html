@@ -103,7 +103,8 @@ require([
             alpha : 0.75
         });
         
-         // Set a polyline's width and outline width
+        // Set a polyline's width and outline width
+        // (Note that wide lines don't work with ANGLE enabled)
         var widePolyline = polylines.add();
         Sandcastle.declare(widePolyline);
         widePolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([

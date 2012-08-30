@@ -81,18 +81,21 @@
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
                 color : { red : 1.0, blue : 0.0, green : 0.0, alpha : 1.0 },
-                scale : 0.5
+                scale : 0.5,
+                imageIndex : 0
             });
 
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.50, 35.14)),
-                color : { red : 0.0, blue : 1.0, green : 0.0, alpha : 1.0 }
+                color : { red : 0.0, blue : 1.0, green : 0.0, alpha : 1.0 },
+                imageIndex : 0
             });
 
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.12, 25.46)),
                 color : { red : 0.0, blue : 0.0, green : 1.0, alpha : 1.0 },
-                scale : 2
+                scale : 2,
+                imageIndex : 0
             });
 
             primitives.add(billboards);
@@ -254,10 +257,10 @@
 
                 var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
                 billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-                billboards.add({ position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
-                billboards.add({ position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
-                billboards.add({ position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
-                billboards.add({ position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
+                billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
+                billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
+                billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
+                billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
                 primitives.add(billboards);
             };
             image.src = 'Images/facility.gif';

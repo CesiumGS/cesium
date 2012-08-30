@@ -22,6 +22,13 @@ defineSuite([
         destroyContext(context);
     });
 
+    it('has a unique ID', function() {
+        var c = createContext();
+        expect(c.getId()).toBeDefined();
+        expect(c.getId()).not.toEqual(context.getId());
+        destroyContext(c);
+    });
+
     it('getCanvas', function() {
         expect(context.getCanvas()).not.toBeNull();
     });

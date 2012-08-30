@@ -62,12 +62,13 @@ define([
         this._horizontalOrigin = b.horizontalOrigin || HorizontalOrigin.CENTER;
         this._verticalOrigin = b.verticalOrigin || VerticalOrigin.CENTER;
         this._scale = (typeof b.scale === 'undefined') ? 1.0 : b.scale;
-        this._imageIndex = b.imageIndex || 0;
+        this._imageIndex = (typeof b.imageIndex !== 'undefined') ? b.imageIndex : -1;
         this._color = (typeof b.color !== 'undefined') ? Color.clone(b.color) : new Color(1.0, 1.0, 1.0, 1.0);
         this._pickId = undefined;
         this._pickIdThis = b._pickIdThis;
         this._collection = collection;
         this._dirty = false;
+        this._index = -1; //Used only by BillboardCollection
     };
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
@@ -450,7 +451,10 @@ define([
      * @see BillboardCollection#setTextureAtlas
      */
     Billboard.prototype.setImageIndex = function(value) {
-        if ((typeof value !== 'undefined') && (this._imageIndex !== value)) {
+        if (typeof value !== 'number') {
+            throw new DeveloperError('value is required and must be a number.');
+        }
+        if (this._imageIndex !== value) {
             this._imageIndex = value;
             this._makeDirty(IMAGE_INDEX_INDEX);
         }
@@ -523,14 +527,14 @@ define([
 
     var tempCartesian4 = new Cartesian4();
     var tempCartesian3 = new Cartesian3();
-    Billboard._computeActualPosition = function(position, sceneState, morphTime, modelMatrix) {
-        var mode = sceneState.mode;
+    Billboard._computeActualPosition = function(position, frameState, morphTime, modelMatrix) {
+        var mode = frameState.mode;
 
         if (mode === SceneMode.SCENE3D) {
             return position;
         }
 
-        var projection = sceneState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
         var cartographic, projectedPosition;
 
         if (mode === SceneMode.MORPHING) {

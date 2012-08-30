@@ -71,7 +71,7 @@ define([
      * Update the display.  This function should only be called once per frame, because
      * each call records a frame in the internal buffer and redraws the display.
      */
-    PerformanceDisplay.prototype.update = function(context, sceneState) {
+    PerformanceDisplay.prototype.update = function(context, frameState) {
         if (typeof this._time === 'undefined') {
             //first update
             this._lastFpsSampleTime = this._time = Date.now();
@@ -148,7 +148,7 @@ define([
             this._quad.setRectangle(new BoundingRectangle(this._rectangle.x, viewportHeight - canvasHeight - this._rectangle.y, canvasWidth, canvasHeight));
         }
 
-        this._quad.update(context, sceneState);
+        return this._quad.update(context, frameState);
     };
 
     PerformanceDisplay.prototype._drawLine = function(style, x, valuePercent) {
