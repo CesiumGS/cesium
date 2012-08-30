@@ -6,6 +6,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/DeveloperError',
         '../Core/Occluder',
+        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Renderer/Context',
@@ -22,6 +23,7 @@ define([
         Ellipsoid,
         DeveloperError,
         Occluder,
+        BoundingRectangle,
         BoundingSphere,
         Cartesian3,
         Context,
@@ -274,6 +276,11 @@ define([
         return offCenter;
     }
 
+    // pick region width and height, assumed odd
+    var regionWidth = 3.0;
+    var regionHeight = 3.0;
+    var scratchRegion = new BoundingRectangle(0.0, 0.0, regionWidth, regionHeight);
+
     /**
      * DOC_TBA
      * @memberof Scene
@@ -289,17 +296,16 @@ define([
         updateFrameState(this);
         frameState.passes.pick = true;
         var oldFrustum = frameState.camera.frustum;
-        frameState.camera.frustum = getPickFrustum(this, windowPosition, 1.0, 1.0); // TODO: sizes other than 1x1
+        frameState.camera.frustum = getPickFrustum(this, windowPosition, regionWidth, regionHeight);
 
         primitives.update(context, frameState);
         primitives.renderForPick(context, fb);
 
         frameState.camera.frustum = oldFrustum;
 
-        return this._pickFramebuffer.end({
-            x : windowPosition.x,
-            y : (this._canvas.clientHeight - windowPosition.y)
-        });
+        scratchRegion.x = windowPosition.x - ((regionWidth - 1.0) * 0.5);
+        scratchRegion.y = (this._canvas.clientHeight - windowPosition.y) - ((regionHeight - 1.0) * 0.5);
+        return this._pickFramebuffer.end(scratchRegion);
     };
 
     /**
