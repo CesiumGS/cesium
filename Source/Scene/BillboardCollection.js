@@ -968,7 +968,15 @@ define([
         var toCenter = camera.getPositionWC().subtract(boundingVolume.center);
         var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()));
         var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
-        var tanPhi = Math.tan(frustum.fovy * 0.5);
+
+        var tanPhi;
+        if (typeof frustum.fovy !== 'undefined') {
+            tanPhi = Math.tan(frustum.fovy * 0.5);
+        } else {
+            // off-center perspective
+            tanPhi = frustum.top / frustum.near;
+        }
+
         var d1 = distance / tanPhi;
         pixelScale = d1 / context.getViewport().width;
 
