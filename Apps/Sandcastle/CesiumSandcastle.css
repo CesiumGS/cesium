@@ -52,6 +52,7 @@ html, body {
 #galleryPanel {
     width: 270px;
     height: 100%;
+    display: none;
 }
 
 #docPopup {
