@@ -23,7 +23,7 @@ define([
      * @constructor
      *
      * @example
-     * var maxRadii = ellipsoid.getMaximumRadius();
+     * var maxRadii = ellipsoid.maximumRadius;
      *
      * var frustum = new OrthographicFrustum();
      * frustum.right = maxRadii * CesiumMath.PI;

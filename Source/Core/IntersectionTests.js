@@ -78,7 +78,7 @@ define([
                 throw new DeveloperError('ellipsoid is required.');
             }
 
-            var inverseRadii = ellipsoid.getOneOverRadii();
+            var inverseRadii = ellipsoid.oneOverRadii;
             var q = inverseRadii.multiplyComponents(ray.origin);
             var w = inverseRadii.multiplyComponents(ray.direction);
 

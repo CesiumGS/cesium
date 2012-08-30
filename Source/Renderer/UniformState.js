@@ -37,7 +37,7 @@ define([
         this._projection = Matrix4.IDENTITY.clone();
         this._infiniteProjection = Matrix4.IDENTITY.clone();
         // Arbitrary.  The user will explicitly set this later.
-        this._sunPosition = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().x, 0.0, 0.0);
+        this._sunPosition = new Cartesian3(2.0 * Ellipsoid.WGS84.radii.x, 0.0, 0.0);
 
         // Derived members
         this._viewRotation = new Matrix3();

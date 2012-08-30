@@ -44,7 +44,7 @@
                     fs += '    gl_FragColor = u_color;';
                     fs += '}';
 
-                    var zLength = this._ellipsoid.getRadii().getMaximumComponent() * 0.1;
+                    var zLength = this._ellipsoid.radii.getMaximumComponent() * 0.1;
                     var x = zLength * 0.1;
                     var y = zLength * 0.5;
                     var z = zLength;
@@ -196,7 +196,7 @@
                         this.morphTime = mode.morphTime;
                     }
 
-                    var zLength = this._ellipsoid.getRadii().getMaximumComponent() * 0.1;
+                    var zLength = this._ellipsoid.radii.getMaximumComponent() * 0.1;
                     var x = zLength * 0.1;
                     var y = zLength * 0.5;
                     var z = zLength;

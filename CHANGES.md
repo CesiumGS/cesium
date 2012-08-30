@@ -45,6 +45,7 @@ Beta Releases
                 imageIndex : 0
             });
     * Renamed `SceneState` to `FrameState`.
+    * Ellipsoid is now mutable and all `get` properties have been replaced with public properties of the same name.  For instance; `getRadiiToTheFourth()` is now `radiiToTheFourth`.
 
 * All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * Added support for nested polygons with holes. See `Polygon.configureFromPolygonHierarchy`.
@@ -58,6 +59,7 @@ Beta Releases
 * Added `czm_viewRotation` and `czm_viewInverseRotation` automatic GLSL uniforms.
 * Added a `clampToPixel` property to `BillboardCollection` and `LabelCollection`.  When true, it aligns all billboards and text to a pixel in screen space, providing a crisper image at the cost of jumpier motion.
 * Improved picking performance and accuracy.
+* All `Ellipsoid` operations now have static versions that work with any objects exposing Ellipsoid properties, all Ellipsoid functions can now take result parameters.
 
 ### b7 - 08/01/2012
 

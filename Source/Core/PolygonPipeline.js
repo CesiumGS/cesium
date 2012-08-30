@@ -370,6 +370,9 @@ define([
         return newPolygonVertices;
     }
 
+    var scaleToGeodeticHeightN = new Cartesian3();
+    var scaleToGeodeticHeightP = new Cartesian3();
+
     /**
      * DOC_TBA
      *
@@ -712,6 +715,9 @@ define([
                 throw new DeveloperError('ellipsoid is required.');
             }
 
+            var n = scaleToGeodeticHeightN;
+            var p = scaleToGeodeticHeightP;
+
             height = height || 0.0;
 
             if (mesh && mesh.attributes && mesh.attributes.position) {
@@ -719,14 +725,14 @@ define([
                 var length = positions.length;
 
                 for ( var i = 0; i < length; i += 3) {
-                    var p = new Cartesian3(positions[i], positions[i + 1], positions[i + 2]);
-                    p = ellipsoid.scaleToGeodeticSurface(p);
+                    p.x = positions[i];
+                    p.y = positions[i + 1];
+                    p.z = positions[i + 2];
 
-                    var n = ellipsoid.geodeticSurfaceNormal(p);
-                    n = n.multiplyByScalar(height);
-
-                    // Translate from surface to height.
-                    p = p.add(n);
+                    Ellipsoid.scaleToGeodeticSurface(ellipsoid, p, p);
+                    Ellipsoid.geodeticSurfaceNormal(ellipsoid, p, n);
+                    Cartesian3.multiplyByScalar(n, height, n);
+                    Cartesian3.add(p, n, p);
 
                     positions[i] = p.x;
                     positions[i + 1] = p.y;

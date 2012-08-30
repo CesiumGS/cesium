@@ -43,7 +43,7 @@ define([
         var canvas = scene.getCanvas();
 
         // Position camera and size frustum so the entire 2D map is visible
-        var maxRadii = this._ellipsoid.getMaximumRadius();
+        var maxRadii = this._ellipsoid.maximumRadius;
         var position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         var direction = position.negate().normalize();
         var up = Cartesian3.UNIT_Y;
@@ -364,7 +364,7 @@ define([
 
         var scene = this._scene;
         var camera = scene.getCamera();
-        var maxRadii = this._ellipsoid.getMaximumRadius();
+        var maxRadii = this._ellipsoid.maximumRadius;
 
         this._changeCameraTransform(camera, this._cameraCV.transform);
 
@@ -408,7 +408,7 @@ define([
     SceneTransitioner.prototype._scene3DTo2D = function(duration, onComplete) {
         duration = duration * 0.5;
 
-        var maxRadii = this._ellipsoid.getMaximumRadius();
+        var maxRadii = this._ellipsoid.maximumRadius;
 
         var tanPhi = Math.tan(this._camera3D.frustum.fovy * 0.5);
         var tanTheta = this._camera3D.frustum.aspectRatio * tanPhi;
@@ -430,7 +430,7 @@ define([
 
         var scene = this._scene;
         var camera = scene.getCamera();
-        var maxRadii = this._ellipsoid.getMaximumRadius();
+        var maxRadii = this._ellipsoid.maximumRadius;
 
         var tanPhi = Math.tan(this._cameraCV.frustum.fovy * 0.5);
         var tanTheta = this._cameraCV.frustum.aspectRatio * tanPhi;
@@ -599,7 +599,7 @@ define([
         var startDir = camera.direction;
         var startUp = camera.up;
 
-        var maxRadii = this._ellipsoid.getMaximumRadius();
+        var maxRadii = this._ellipsoid.maximumRadius;
         var endPos = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 10.0));
         endPos = endPos.normalize().multiplyByScalar(2.0 * maxRadii);
         var endDir = Cartesian3.ZERO.subtract(endPos).normalize();

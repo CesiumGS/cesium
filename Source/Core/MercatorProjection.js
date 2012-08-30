@@ -21,7 +21,7 @@ define([
     var MercatorProjection = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
-        var radii = ellipsoid.getRadii();
+        var radii = ellipsoid.radii;
 
         this._ellipsoid = ellipsoid;
         this._halfEquatorCircumference = Math.PI * (Math.max(radii.x, radii.y));
