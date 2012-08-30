@@ -156,6 +156,10 @@ defineSuite([
         expect(frustum.equals(frustum2)).toEqual(true);
     });
 
+    it('equals undefined', function() {
+        expect(frustum.equals()).toEqual(false);
+    });
+
     it('throws with undefined frustum parameters', function() {
         var frustum = new PerspectiveFrustum();
         expect(function() {
