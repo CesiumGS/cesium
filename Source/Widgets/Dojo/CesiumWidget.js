@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,console*/
 define([
         'require',
         'dojo/_base/declare',
@@ -16,6 +16,7 @@ define([
         '../../Core/Cartesian2',
         '../../Core/JulianDate',
         '../../Core/DefaultProxy',
+        '../../Core/requestAnimationFrame',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
         '../../Scene/BingMapsTileProvider',
@@ -40,6 +41,7 @@ define([
         Cartesian2,
         JulianDate,
         DefaultProxy,
+        requestAnimationFrame,
         Scene,
         CentralBody,
         BingMapsTileProvider,
@@ -51,8 +53,6 @@ define([
 
     return declare('Cesium.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
         templateString : template,
-        preRender : undefined,
-        postSetup : undefined,
         useStreamingImagery : true,
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
@@ -68,6 +68,12 @@ define([
 
         postCreate : function() {
             ready(this, '_setupCesium');
+        },
+
+        postSetup : undefined,
+
+        onSetupError : function(widget, error) {
+            console.error(error);
         },
 
         resize : function() {
@@ -296,10 +302,12 @@ define([
             }
         },
 
-        render : function(time) {
-            var scene = this.scene;
-            scene.setSunPosition(SunPosition.compute(time).position);
-            scene.render();
+        update : function(currentTime) {
+            this.scene.setSunPosition(SunPosition.compute(currentTime).position);
+        },
+
+        render : function() {
+            this.scene.render();
         },
 
         _configureCentralBodyImagery : function() {
@@ -321,6 +329,21 @@ define([
             centralBody.specularMapSource = this.specularMapUrl;
             centralBody.cloudsMapSource = this.cloudsMapUrl;
             centralBody.bumpMapSource = this.bumpMapUrl;
+        },
+
+        startRenderLoop : function() {
+            var widget = this;
+
+            // Note that clients are permitted to use their own custom render loop.
+            // At a minimum it should include lines similar to the following:
+
+            function updateAndRender() {
+                var currentTime = new JulianDate();
+                widget.update(currentTime);
+                widget.render();
+                requestAnimationFrame(updateAndRender);
+            }
+            updateAndRender();
         }
     });
 });

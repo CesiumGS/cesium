@@ -245,7 +245,7 @@ define([
      *
      * @constant
      * @type {Number}
-     * @see agi_pi
+     * @see czm_pi
      */
     CesiumMath.PI = Math.PI;
 
@@ -254,7 +254,7 @@ define([
      *
      * @constant
      * @type {Number}
-     * @see agi_oneOverPi
+     * @see czm_oneOverPi
      */
     CesiumMath.ONE_OVER_PI = 1.0 / Math.PI;
 
@@ -263,7 +263,7 @@ define([
      *
      * @constant
      * @type {Number}
-     * @see agi_piOverTwo
+     * @see czm_piOverTwo
      */
     CesiumMath.PI_OVER_TWO = Math.PI * 0.5;
 
@@ -273,7 +273,7 @@ define([
      *
      * @constant
      * @type {Number}
-     * @see agi_piOverThree
+     * @see czm_piOverThree
      */
     CesiumMath.PI_OVER_THREE = Math.PI / 3.0;
 
@@ -282,7 +282,7 @@ define([
      *
      * @constant
      * @type {Number}
-     * @see agi_piOverFour
+     * @see czm_piOverFour
      */
     CesiumMath.PI_OVER_FOUR = Math.PI / 4.0;
 
@@ -291,7 +291,7 @@ define([
      *
      * @constant
      * @type {Number}
-     * @see agi_piOverSix
+     * @see czm_piOverSix
      */
     CesiumMath.PI_OVER_SIX = Math.PI / 6.0;
 
@@ -300,7 +300,7 @@ define([
      *
      * @constant
      * @type {Number}
-     * @see agi_threePiOver2
+     * @see czm_threePiOver2
      */
     CesiumMath.THREE_PI_OVER_TWO = (3.0 * Math.PI) * 0.5;
 
@@ -309,7 +309,7 @@ define([
      *
      * @constant
      * @type {Number}
-     * @see agi_twoPi
+     * @see czm_twoPi
      */
     CesiumMath.TWO_PI = 2.0 * Math.PI;
 
@@ -318,7 +318,7 @@ define([
      *
      * @constant
      * @type {Number}
-     * @see agi_oneOverTwoPi
+     * @see czm_oneOverTwoPi
      */
     CesiumMath.ONE_OVER_TWO_PI = 1.0 / (2.0 * Math.PI);
 
@@ -327,7 +327,7 @@ define([
      *
      * @constant
      * @type {Number}
-     * @see agi_radiansPerDegree
+     * @see czm_radiansPerDegree
      */
     CesiumMath.RADIANS_PER_DEGREE = Math.PI / 180.0;
 
@@ -336,7 +336,7 @@ define([
      *
      * @constant
      * @type {Number}
-     * @see agi_degreesPerRadian
+     * @see czm_degreesPerRadian
      */
     CesiumMath.DEGREES_PER_RADIAN = 180.0 / Math.PI;
 
@@ -430,11 +430,11 @@ define([
      * //Compute 7!, which is equal to 5040
      * var computedFactorial = CesiumMath.factorial(7);
      *
-     * @exception {DeveloperError} number greater than or equal to 0 is required.
+     * @exception {DeveloperError} A number greater than or equal to 0 is required.
      */
     CesiumMath.factorial = function(n) {
         if (typeof n !== 'number' || n < 0) {
-            throw new DeveloperError('number greater than or equal to 0 is required.');
+            throw new DeveloperError('A number greater than or equal to 0 is required.');
         }
 
         var length = factorials.length;
@@ -445,6 +445,30 @@ define([
             }
         }
         return factorials[n];
+    };
+
+    /**
+     * Determines if a positive integer is a power of two.
+     *
+     * @memberof CesiumMath
+     *
+     * @param {Number} n The positive integer to test.
+     *
+     * @return {Boolean} <code>true</code> if the number if a power of two; otherwise, <code>false</code>.
+     *
+     * @example
+     * var t = CesiumMath.isPowerOfTwo(16); // true
+     * var f = CesiumMath.isPowerOfTwo(20); // false
+     *
+     * @exception {DeveloperError} A number greater than or equal to 0 is required.
+     */
+    CesiumMath.isPowerOfTwo = function(n) {
+        if (typeof n !== 'number' || n < 0) {
+            throw new DeveloperError('A number greater than or equal to 0 is required.');
+        }
+
+        var m = n | 0;
+        return (m !== 0) && ((m & (m - 1)) === 0);
     };
 
     return CesiumMath;

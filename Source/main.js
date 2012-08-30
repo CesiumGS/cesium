@@ -3,5 +3,7 @@
 // This is meant for use with the Almond loader.
 require(['Cesium'], function(Cesium) {
     "use strict";
-    window.Cesium = Cesium;
+    /*global self*/
+
+    Cesium.defaultValue(window, self).Cesium = Cesium;
 }, undefined, true);

@@ -452,7 +452,7 @@ define([
      *
      * @see UniformState#getView
      * @see UniformState#setView
-     * @see agi_view
+     * @see czm_view
      */
     Camera.prototype.getViewMatrix = function() {
         this._update();
@@ -674,19 +674,17 @@ define([
      * @memberof Camera
      *
      * @param {Object} object The bounding volume whose intersection with the frustum is to be tested.
-     * @param {Function} planeIntersectTest The function that tests for intersections between a plane
-     * and the bounding volume type of object
      *
      * @return {Enumeration}  Intersect.OUTSIDE,
      *                                 Intersect.INTERSECTING, or
      *                                 Intersect.INSIDE.
      */
-    Camera.prototype.getVisibility = function(object, planeIntersectTest) {
+    Camera.prototype.getVisibility = function(object) {
         this._update();
         var planes = this._planes;
         var intersecting = false;
         for ( var k = 0; k < planes.length; k++) {
-            var result = planeIntersectTest(object, planes[k]);
+            var result = object.intersect(planes[k]);
             if (result === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
             } else if (result === Intersect.INTERSECTING) {

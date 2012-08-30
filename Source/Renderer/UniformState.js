@@ -1,16 +1,22 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/Ellipsoid',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Cartesian3',
-        '../Core/Cartesian4'
+        '../Core/Cartesian4',
+        '../Core/BoundingRectangle'
     ], function(
         DeveloperError,
+        defaultValue,
         Ellipsoid,
+        Matrix3,
         Matrix4,
         Cartesian3,
-        Cartesian4) {
+        Cartesian4,
+        BoundingRectangle) {
     "use strict";
 
     /**
@@ -22,36 +28,53 @@ define([
      */
     var UniformState = function(context) {
         this._context = context;
-        this._viewport = {
-            x : 0,
-            y : 0,
-            width : 0,
-            height : 0
-        };
-        this._viewportOrthographicMatrix = Matrix4.IDENTITY;
-        this._viewportTransformation = Matrix4.IDENTITY;
+        this._viewport = new BoundingRectangle();
+        this._viewportOrthographicMatrix = Matrix4.IDENTITY.clone();
+        this._viewportTransformation = Matrix4.IDENTITY.clone();
 
-        this._model = Matrix4.IDENTITY;
-        this._view = Matrix4.IDENTITY;
-        this._projection = Matrix4.IDENTITY;
-
-        this._infiniteProjection = Matrix4.IDENTITY;
-
+        this._model = Matrix4.IDENTITY.clone();
+        this._view = Matrix4.IDENTITY.clone();
+        this._projection = Matrix4.IDENTITY.clone();
+        this._infiniteProjection = Matrix4.IDENTITY.clone();
         // Arbitrary.  The user will explicitly set this later.
         this._sunPosition = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().x, 0.0, 0.0);
 
         // Derived members
+        this._viewRotation = new Matrix3();
+        this._inverseViewRotation = new Matrix3();
+
         this._inverseViewDirty = true;
+        this._inverseView = new Matrix4();
+
         this._inverseProjectionDirty = true;
+        this._inverseProjection = new Matrix4();
+
         this._modelViewDirty = true;
+        this._modelView = new Matrix4();
+
         this._inverseModelViewDirty = true;
+        this._inverseModelView = new Matrix4();
+
         this._viewProjectionDirty = true;
+        this._viewProjection = new Matrix4();
+
         this._modelViewProjectionDirty = true;
+        this._modelViewProjection = new Matrix4();
+
         this._modelViewInfiniteProjectionDirty = true;
+        this._modelViewInfiniteProjection = new Matrix4();
+
         this._normalDirty = true;
+        this._normal = new Matrix3();
+
         this._inverseNormalDirty = true;
+        this._inverseNormal = new Matrix3();
+
         this._sunDirectionECDirty = true;
+        this._sunDirectionEC = new Cartesian3();
+
         this._sunDirectionWCDirty = true;
+        this._sunDirectionWC = new Cartesian3();
     };
 
     /**
@@ -63,20 +86,12 @@ define([
     };
 
     UniformState.prototype._cleanViewport = function() {
-        var current = this._viewport;
         var v = this._context.getViewport();
 
-        if ((current.x !== v.x) ||
-            (current.y !== v.y) ||
-            (current.width !== v.width) ||
-            (current.height !== v.height)) {
-            current.x = v.x;
-            current.y = v.y;
-            current.width = v.width;
-            current.height = v.height;
-
-            this._viewportOrthographicMatrix = Matrix4.computeOrthographicOffCenter(v.x, v.x + v.width, v.y, v.y + v.height, 0.0, 1.0);
-            this._viewportTransformation = Matrix4.computeViewportTransformation(v);
+        if (!BoundingRectangle.equals(v, this._viewport)) {
+            BoundingRectangle.clone(v, this._viewport);
+            Matrix4.computeOrthographicOffCenter(v.x, v.x + v.width, v.y, v.y + v.height, 0.0, 1.0, this._viewportOrthographicMatrix);
+            Matrix4.computeViewportTransformation(v, 0.0, 1.0, this._viewportTransformation);
         }
     };
 
@@ -85,7 +100,7 @@ define([
      * @memberof UniformState
      *
      *
-     * @see agi_viewportOrthographic
+     * @see czm_viewportOrthographic
      */
     UniformState.prototype.getViewportOrthographic = function() {
         this._cleanViewport();
@@ -97,7 +112,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @see agi_viewportTransformation
+     * @see czm_viewportTransformation
      */
     UniformState.prototype.getViewportTransformation = function() {
         this._cleanViewport();
@@ -112,12 +127,11 @@ define([
      * @param {Matrix4} [matrix] DOC_TBA.
      *
      * @see UniformState#getModel
-     * @see agi_model
+     * @see czm_model
      */
     UniformState.prototype.setModel = function(matrix) {
-        matrix = matrix || Matrix4.IDENTITY;
+        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._model);
 
-        this._model = matrix;
         this._modelViewDirty = true;
         this._inverseModelViewDirty = true;
         this._modelViewProjectionDirty = true;
@@ -135,7 +149,7 @@ define([
      * @return {Matrix4} DOC_TBA.
      *
      * @see UniformState#setModel
-     * @see agi_model
+     * @see czm_model
      */
     UniformState.prototype.getModel = function() {
         return this._model;
@@ -149,12 +163,13 @@ define([
      * @param {Matrix4} [matrix] DOC_TBA.
      *
      * @see UniformState#getView
-     * @see agi_view
+     * @see czm_view
      */
     UniformState.prototype.setView = function(matrix) {
-        matrix = matrix || Matrix4.IDENTITY;
+        matrix = defaultValue(matrix, Matrix4.IDENTITY);
+        Matrix4.clone(matrix, this._view);
+        Matrix4.getRotation(matrix, this._viewRotation);
 
-        this._view = matrix;
         this._inverseViewDirty = true;
         this._modelViewDirty = true;
         this._inverseModelViewDirty = true;
@@ -174,18 +189,33 @@ define([
      * @return {Matrix4} DOC_TBA.
      *
      * @see UniformState#setView
-     * @see agi_view
+     * @see czm_view
      */
     UniformState.prototype.getView = function() {
         return this._view;
+    };
+
+    /**
+     * Returns the 3x3 rotation matrix of the current view matrix ({@link UniformState#getView}).
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix3} The 3x3 rotation matrix of the current view matrix.
+     *
+     * @see UniformState#getView
+     * @see czm_viewRotation
+     */
+    UniformState.prototype.getViewRotation = function() {
+        return this._viewRotation;
     };
 
     UniformState.prototype._cleanInverseView = function() {
         if (this._inverseViewDirty) {
             this._inverseViewDirty = false;
 
-            var n = this.getView().inverse();
-            this._inverseView = n;
+            var v = this.getView();
+            Matrix4.inverse(v, this._inverseView);
+            Matrix4.getRotation(this._inverseView, this._inverseViewRotation);
         }
     };
 
@@ -196,11 +226,25 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_inverseView
+     * @see czm_inverseView
      */
     UniformState.prototype.getInverseView = function() {
         this._cleanInverseView();
         return this._inverseView;
+    };
+
+    /**
+     * Returns the 3x3 rotation matrix of the current inverse-view matrix ({@link UniformState#getInverseView}).
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix3} The 3x3 rotation matrix of the current inverse-view matrix.
+     *
+     * @see UniformState#getInverseView
+     * @see czm_inverseViewRotation
+     */
+    UniformState.prototype.getInverseViewRotation = function() {
+        return this._inverseViewRotation;
     };
 
     /**
@@ -211,12 +255,11 @@ define([
      * @param {Matrix4} [matrix] DOC_TBA.
      *
      * @see UniformState#getProjection
-     * @see agi_projection
+     * @see czm_projection
      */
     UniformState.prototype.setProjection = function(matrix) {
-        matrix = matrix || Matrix4.IDENTITY;
+        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._projection);
 
-        this._projection = matrix;
         this._inverseProjectionDirty = true;
         this._viewProjectionDirty = true;
         this._modelViewProjectionDirty = true;
@@ -230,7 +273,7 @@ define([
      * @return {Matrix4} DOC_TBA.
      *
      * @see UniformState#setProjection
-     * @see agi_projection
+     * @see czm_projection
      */
     UniformState.prototype.getProjection = function() {
         return this._projection;
@@ -240,8 +283,7 @@ define([
         if (this._inverseProjectionDirty) {
             this._inverseProjectionDirty = false;
 
-            var n = this.getProjection().inverse();
-            this._inverseProjection = n;
+            Matrix4.inverse(this._projection, this._inverseProjection);
         }
     };
 
@@ -252,7 +294,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_inverseProjection
+     * @see czm_inverseProjection
      */
     UniformState.prototype.getInverseProjection = function() {
         this._cleanInverseProjection();
@@ -267,12 +309,11 @@ define([
      * @param {Matrix4} [matrix] DOC_TBA.
      *
      * @see UniformState#getInfiniteProjection
-     * @see agi_infiniteProjection
+     * @see czm_infiniteProjection
      */
     UniformState.prototype.setInfiniteProjection = function(matrix) {
-        matrix = matrix || Matrix4.IDENTITY;
+        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._infiniteProjection);
 
-        this._infiniteProjection = matrix;
         this._modelViewInfiniteProjectionDirty = true;
     };
 
@@ -284,7 +325,7 @@ define([
      * @return {Matrix4} DOC_TBA.
      *
      * @see UniformState#setInfiniteProjection
-     * @see agi_infiniteProjection
+     * @see czm_infiniteProjection
      */
     UniformState.prototype.getInfiniteProjection = function() {
         return this._infiniteProjection;
@@ -295,8 +336,7 @@ define([
         if (this._modelViewDirty) {
             this._modelViewDirty = false;
 
-            var mv = this._view.multiply(this._model);
-            this._modelView = mv;
+            Matrix4.multiply(this._view, this._model, this._modelView);
         }
     };
 
@@ -307,7 +347,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_modelView
+     * @see czm_modelView
      */
     UniformState.prototype.getModelView = function() {
         this._cleanModelView();
@@ -318,8 +358,7 @@ define([
         if (this._inverseModelViewDirty) {
             this._inverseModelViewDirty = false;
 
-            var m = this.getModelView().inverse();
-            this._inverseModelView = m;
+            Matrix4.inverse(this.getModelView(), this._inverseModelView);
         }
     };
 
@@ -330,7 +369,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_inverseModelView
+     * @see czm_inverseModelView
      */
     UniformState.prototype.getInverseModelView = function() {
         this._cleanInverseModelView();
@@ -341,8 +380,7 @@ define([
         if (this._viewProjectionDirty) {
             this._viewProjectionDirty = false;
 
-            var vp = this.getProjection().multiply(this.getView());
-            this._viewProjection = vp;
+            Matrix4.multiply(this._projection, this._view, this._viewProjection);
         }
     };
 
@@ -353,7 +391,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_viewProjection
+     * @see czm_viewProjection
      */
     UniformState.prototype.getViewProjection = function() {
         this._cleanViewProjection();
@@ -364,8 +402,7 @@ define([
         if (this._modelViewProjectionDirty) {
             this._modelViewProjectionDirty = false;
 
-            var mvp = this._projection.multiply(this.getModelView());
-            this._modelViewProjection = mvp;
+            Matrix4.multiply(this._projection, this.getModelView(), this._modelViewProjection);
         }
     };
 
@@ -376,7 +413,7 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_modelViewProjection
+     * @see czm_modelViewProjection
      */
     UniformState.prototype.getModelViewProjection = function() {
         this._cleanModelViewProjection();
@@ -387,8 +424,7 @@ define([
         if (this._modelViewInfiniteProjectionDirty) {
             this._modelViewInfiniteProjectionDirty = false;
 
-            var mvp = this._infiniteProjection.multiply(this.getModelView());
-            this._modelViewInfiniteProjection = mvp;
+            Matrix4.multiply(this._infiniteProjection, this.getModelView(), this._modelViewInfiniteProjection);
         }
     };
 
@@ -399,20 +435,23 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see agi_modelViewProjection
+     * @see czm_modelViewProjection
      */
     UniformState.prototype.getModelViewInfiniteProjection = function() {
         this._cleanModelViewInfiniteProjection();
         return this._modelViewInfiniteProjection;
     };
 
+    var normalScratch = new Matrix4();
+
     UniformState.prototype._cleanNormal = function() {
         if (this._normalDirty) {
             this._normalDirty = false;
 
             // TODO:  Inverse, transpose of the whole 4x4?  Or we can just do the 3x3?
-            var n = this.getModelView().inverse().transpose().getRotation();
-            this._normal = n;
+            Matrix4.inverse(this.getModelView(), normalScratch);
+            Matrix4.transpose(normalScratch, normalScratch);
+            Matrix4.getRotation(normalScratch, this._normal);
         }
     };
 
@@ -423,20 +462,22 @@ define([
      *
      * @return {Matrix3} DOC_TBA.
      *
-     * @see agi_normal
+     * @see czm_normal
      */
     UniformState.prototype.getNormal = function() {
         this._cleanNormal();
         return this._normal;
     };
 
+    var inverseNormalScratch = new Matrix4();
+
     UniformState.prototype._cleanInverseNormal = function() {
         if (this._inverseNormalDirty) {
             this._inverseNormalDirty = false;
 
             // TODO:  Inverse of the whole 4x4?  Or we can just do the 3x3?
-            var n = this.getModelView().inverse().getRotation();
-            this._inverseNormal = n;
+            Matrix4.inverse(this.getModelView(), inverseNormalScratch);
+            Matrix4.getRotation(inverseNormalScratch, this._inverseNormal);
         }
     };
 
@@ -447,22 +488,21 @@ define([
      *
      * @return {Matrix3} DOC_TBA.
      *
-     * @see agi_inverseNormal
+     * @see czm_inverseNormal
      */
     UniformState.prototype.getInverseNormal = function() {
         this._cleanInverseNormal();
         return this._inverseNormal;
     };
 
+    var sunPositionScratch = new Cartesian3();
+
     UniformState.prototype._cleanSunDirectionEC = function() {
         if (this._sunDirectionECDirty) {
             this._sunDirectionECDirty = false;
 
-            var sunPosition = new Cartesian4(this._sunPosition.x, this._sunPosition.y, this._sunPosition.z, 0.0);
-            var sunEC = this.getView().multiplyByVector(sunPosition);
-            var p = new Cartesian3(sunEC.x, sunEC.y, sunEC.z).normalize();
-
-            this._sunDirectionEC = p;
+            Matrix3.multiplyByVector(this.getViewRotation(), this._sunPosition, sunPositionScratch);
+            Cartesian3.normalize(sunPositionScratch, this._sunDirectionEC);
         }
     };
 
@@ -482,7 +522,7 @@ define([
             throw new DeveloperError('sunPosition is required.');
         }
 
-        this._sunPosition = sunPosition;
+        Cartesian3.clone(sunPosition, this._sunPosition);
         this._sunDirectionECDirty = true;
         this._sunDirectionWCDirty = true;
     };
@@ -505,7 +545,7 @@ define([
      *
      * @return {Cartesian3} The sun's direction in eye coordinates.
      *
-     * @see agi_sunDirectionEC
+     * @see czm_sunDirectionEC
      * @see UniformState#getSunDirectionEC
      */
     UniformState.prototype.getSunDirectionEC = function() {
@@ -516,7 +556,7 @@ define([
     UniformState.prototype._cleanSunDirectionWC = function() {
         if (this._sunDirectionWCDirty) {
             this._sunDirectionWCDirty = false;
-            this._sunDirectionWC = this._sunPosition.normalize();
+            Cartesian3.normalize(this._sunPosition, this._sunDirectionWC);
         }
     };
 
@@ -527,7 +567,7 @@ define([
     *
     * @return {Cartesian3} A normalized vector from the model's origin to the sun in model coordinates.
     *
-    * @see agi_sunDirectionWC
+    * @see czm_sunDirectionWC
     */
     UniformState.prototype.getSunDirectionWC = function() {
         this._cleanSunDirectionWC();

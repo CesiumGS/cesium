@@ -1,0 +1,181 @@
+@import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
+
+/* @import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/darker/darker.css');
+
+@import url('../../ThirdParty/dojo-release-1.7.2-src/dojox/mobile/themes/darker/Slider.css'); */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    font-family: sans-serif;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+
+#loading {
+    display: table;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 5000;
+    background: #eee;
+    border: none;
+    text-align: center;
+    color: #777;
+}
+#loading span {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+#appLayout {
+    width: 100%;
+    height: 100%;
+}
+
+.cesiumOverlay {
+    display: block;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 118px;
+    height: 26px;
+    background-image: url(../../Images/Cesium_Logo_overlay.png);
+}
+
+#codeContainer {
+    width: 40%;
+}
+
+#docPopup {
+    display: block;
+    position: absolute;
+    left: -999px;
+    top: 0;
+    font-family: sans-serif;
+    font-size: 10pt;
+}
+#docPopup a, #docPopup a:visited {
+    display: block;
+    text-decoration: none;
+    line-height: 12pt;
+}
+#docPopup a:focus, #docPopup a:hover {
+    text-decoration: underline;
+}
+
+.logContainer {
+	display: block;
+	width: 100%;
+	height: 100%;
+	overflow-x: hidden;
+	overflow-y: scroll;
+}
+
+#logOutput {
+	white-space: pre;
+	padding: 2px 4px;
+	font-size: 9pt;
+	font-family: monospace;
+}
+
+.consoleError {
+	color: #f00;
+}
+
+.fullFrame {
+    border: none;
+    width: 100%;
+    height: 100%;
+    -moz-transition-property: -moz-transform;
+    -moz-transition-duration: 0.5s;
+    -moz-transform-origin: 200px 150px;
+    -webkit-transition-property: -webkit-transform;
+    -webkit-transition-duration: 0.5s;
+    -webkit-transform-origin: 200px 150px;
+    transition-property: transform;
+    transition-duration: 0.5s;
+    transform-origin: 200px 150px;
+}
+
+.makeThumbnail {
+    width: 900px;
+    height: 600px;
+    -moz-transform: scale(0.25);
+    -webkit-transform: scale(0.25);
+    transform: scale(0.25);
+}
+
+.popDownDialog {
+    width: 360px;
+}
+
+a.linkButton, a.linkButton:visited {
+    display: inline-block;
+}
+
+a.linkButton:focus, a.linkButton:hover {
+    text-decoration: none;
+}
+
+.CodeMirror, .CodeMirror-scroll {
+    height: 100%;
+}
+
+.highlightToolbarButton {
+    background: #FE2;
+    border-radius: 4px;
+}
+
+.claro .bottomPanel {
+    padding: 0;
+    overflow: hidden;
+}
+
+.claro .dijitTabContainerBottom-tabs .dijitTabChecked .dijitTabContent {
+    background-position: 0 -115px;
+}
+
+.claro .dijitTabContainerBottom-dijitContentPane {
+    padding: 0;
+    overflow: hidden;
+}
+
+.CodeMirror pre.errorMarker {
+    color: #222;
+    font-weight: bold;
+    background: #F42;
+    border-radius: 3px;
+}
+
+.CodeMirror pre.errorLine {
+    background: rgba(200, 50, 0, 0.2);
+}
+
+.CodeMirror pre.hintMarker {
+    color: #222;
+    font-weight: bold;
+    background: #FE2;
+    border-radius: 3px;
+}
+
+.CodeMirror pre.hintLine {
+    background: rgba(200, 200, 0, 0.2);
+}
+
+.CodeMirror pre.highlightMarker {
+    color: #222;
+    font-weight: bold;
+    background: #2E2;
+    border-radius: 3px;
+}
+
+.CodeMirror pre.highlightLine {
+    background: rgba(0, 200, 0, 0.2);
+}
+
+.CodeMirror-gutter-text {
+    cursor: default;
+}

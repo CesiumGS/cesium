@@ -3,11 +3,13 @@ define([
         '../Core/DeveloperError',
         '../Core/Extent',
         '../Core/Math',
+        '../Core/writeTextToCanvas',
         './Projections'
     ], function(
         DeveloperError,
         Extent,
         CesiumMath,
+        writeTextToCanvas,
         Projections) {
     "use strict";
 
@@ -142,17 +144,9 @@ define([
      */
     OpenStreetMapTileProvider.prototype.getLogo = function() {
         if (!this._logo) {
-            var canvas = document.createElement('canvas');
-            canvas.width = 800.0;
-            canvas.height = 20.0;
-
-            var context = canvas.getContext('2d');
-            context.fillStyle = '#fff';
-            context.font = '12px sans-serif';
-            context.textBaseline = 'top';
-            context.fillText(this._credit, 0, 0);
-
-            this._logo = canvas;
+            this._logo = writeTextToCanvas(this._credit, {
+                font : '12px sans-serif'
+            });
         }
 
         return this._logo;

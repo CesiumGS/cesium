@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Cesium Demo</title>
+    <script>
+    var Sandcastle = {};
+    Sandcastle.declare = function () {};
+    Sandcastle.highlight = function () {};
+    Sandcastle.registered = [];
+    if (window.location.protocol === 'file:') {
+        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
+            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
+        }
+    }
+    </script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript">
+    require({
+        baseUrl : '../../..',
+        packages: [
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Source', location: 'Source' },
+            { name: 'Core', location: 'Source/Core' },
+            { name: 'DynamicScene', location: 'Source/DynamicScene' },
+            { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Scene', location: 'Source/Scene' },
+            { name: 'Shaders', location: 'Source/Shaders' },
+            { name: 'ThirdParty', location: 'Source/ThirdParty' },
+            { name: 'Widgets', location: 'Source/Widgets' }
+        ]
+    });
+    </script>
+    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
+</head>
+<body class="claro">
+
+
+<style>
+body {
+    background: #000;
+    color: #eee;
+    font-family: sans-serif;
+    font-size: 9pt;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.fullSize {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: none;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+#toolbar {
+    background: rgba(0, 0, 0, 0.5);
+    border: solid 1px rgba(0, 0, 0, 0.9);
+    padding: 2px 5px;
+    border-radius: 5px;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+}
+</style>
+
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="toolbar">Loading...</div>
+
+<script id="cesium_sandcastle_script">
+require([
+    'Source/Cesium', 'Widgets/Dojo/CesiumWidget',
+    'dojo/on', 'dojo/dom', 'dijit/form/Button'
+], function(
+    Cesium, CesiumWidget,
+    on, dom, ToggleButton)
+{
+    "use strict";
+
+    function flyToLosAngeles(scene) {
+        scene.getCamera().getControllers().addFlight({
+            destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
+                Cesium.Cartographic.fromDegrees(-118.26, 34.19, 100000.0)),
+            duration: 3.0
+        });        
+    }
+    
+    function flyToMyLocation(scene) {
+        function fly(position) {
+            scene.getCamera().getControllers().addFlight({
+                destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
+                    Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 100000.0)),
+                duration: 3.0
+            });        
+        }
+        
+        navigator.geolocation.getCurrentPosition(fly);
+    }
+    
+    function viewAnExtent(scene) {
+        var west = Cesium.Math.toRadians(-77.0);
+        var south = Cesium.Math.toRadians(38.0);
+        var east = Cesium.Math.toRadians(-72.0);
+        var north = Cesium.Math.toRadians(42.0);
+        
+        var extent = new Cesium.Extent(west, south, east, north);
+        scene.viewExtent(extent, Cesium.Ellipsoid.WGS84);
+        
+        // Show the extent.  Not required; just for show.
+        var polylines = new Cesium.PolylineCollection();
+        polylines.add({
+            positions: Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                new Cesium.Cartographic(west, south), 
+                new Cesium.Cartographic(west, north), 
+                new Cesium.Cartographic(east, north), 
+                new Cesium.Cartographic(east, south), 
+                new Cesium.Cartographic(west, south)])
+        });
+        scene.getPrimitives().add(polylines);        
+    }
+    
+    function createButtons(scene) {
+        new ToggleButton({
+            label: "Fly to Los Angeles",
+            onClick: function() { flyToLosAngeles(scene); }
+        }).placeAt("toolbar");
+        
+        new ToggleButton({
+            label: "Fly to My Location",
+            onClick: function() { flyToMyLocation(scene); }
+        }).placeAt("toolbar");
+
+        new ToggleButton({
+            label: "View an Extent",
+            onClick: function() { viewAnExtent(scene); }
+        }).placeAt("toolbar");
+    }
+    
+    var cesiumWidget = new CesiumWidget({
+        postSetup : function(widget) {
+            createButtons(widget.scene);
+            widget.startRenderLoop();
+        }
+    }).placeAt(dom.byId("cesiumContainer"));
+
+    on(window, 'resize', function() {
+        cesiumWidget.resize();
+    });
+    
+    dom.byId("toolbar").innerHTML = '';
+});
+
+</script>
+</body>
+</html>

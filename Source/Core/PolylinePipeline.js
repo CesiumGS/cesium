@@ -12,8 +12,22 @@ define(['./Cartographic',
      * @exports PolylinePipeline
      */
     var PolylinePipeline = {
-        /*
-         * DOC_TBA
+        /**
+         * Breaks a {@link Polyline} into segments such that it does not cross the &plusmn;180 degree meridian of an ellipsoid.
+         *
+         * @param {Ellipsoid} ellipsoid The ellipsoid to wrap around.
+         * @param {Array} positions The polyline's Cartesian positions.
+         *
+         * @returns An array of polyline segment objects containing the Cartesian and {@link Cartographic} positions and indices.
+         *
+         * @see Polyline
+         * @see PolylineCollection
+         *
+         * @example
+         * var polylines = new PolylineCollection();
+         * polylines.add(...);
+         * var positions = polylines.get(0).getPositions();
+         * var segments = PolylinePipeline.wrapLongitude(ellipsoid, positions);
          */
         wrapLongitude : function(ellipsoid, positions) {
             var segments = [];

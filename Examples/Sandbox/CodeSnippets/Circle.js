@@ -4,12 +4,13 @@
 
     Sandbox.OutlineCircle = function (scene, ellipsoid, primitives) {
         this.code = function () {
-            var polyline = new Cesium.Polyline(undefined);
-            polyline.setPositions(Cesium.Shapes.computeCircleBoundary(
-                ellipsoid, ellipsoid.cartographicToCartesian(
-                        Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)), 300000.0));
+            var polylines = new Cesium.PolylineCollection(undefined);
+            polylines.add({
+                positions : Cesium.Shapes.computeCircleBoundary(
+                    ellipsoid, ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)), 300000.0)
+            });
 
-            primitives.add(polyline);
+            primitives.add(polylines);
         };
     };
 
@@ -31,7 +32,7 @@
                 ellipsoid, ellipsoid.cartographicToCartesian(
                         Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)), 300000.0));
             // Any polygon-compatible material can be used
-            polygon.material = new Cesium.TieDyeMaterial(undefined);
+            polygon.material = Cesium.Material.fromType(scene.getContext(), 'TieDye');
 
             primitives.add(polygon);
         };

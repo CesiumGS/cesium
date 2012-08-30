@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,console*/
 define([
         'require',
         'dojo/_base/declare',
@@ -33,7 +33,7 @@ define([
         '../../Core/Transforms',
         '../../Core/requestAnimationFrame',
         '../../Core/Color',
-        '../../Scene/ColorMaterial',
+        '../../Scene/Material',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
         '../../Scene/BingMapsTileProvider',
@@ -79,7 +79,7 @@ define([
         Transforms,
         requestAnimationFrame,
         Color,
-        ColorMaterial,
+        Material,
         Scene,
         CentralBody,
         BingMapsTileProvider,
@@ -103,12 +103,6 @@ define([
     /** @lends CesiumViewerWidget */
     {
         templateString : template,
-        /**
-         * If supplied, this function will be called at the end of widget setup.
-         * @type {Function}
-         * @see CesiumViewerWidget.startRenderLoop
-         */
-        postSetup : undefined,
         /**
          * Enable streaming Imagery.  This is read-only after construction.
          *
@@ -165,6 +159,17 @@ define([
 
         postCreate : function() {
             ready(this, '_setupCesium');
+        },
+
+        /**
+         * If supplied, this function will be called at the end of widget setup.
+         * @type {Function}
+         * @see CesiumViewerWidget.startRenderLoop
+         */
+        postSetup : undefined,
+
+        onSetupError : function(widget, error) {
+            console.error(error);
         },
 
         /**
@@ -398,8 +403,8 @@ define([
             }
 
             if (typeof this.highlightMaterial === 'undefined') {
-                this.highlightMaterial = new ColorMaterial();
-                this.highlightMaterial.color = this.highlightColor;
+                this.highlightMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+                this.highlightMaterial.uniforms.color = this.highlightColor;
             }
 
             if (typeof this.onObjectRightClickSelected === 'undefined') {

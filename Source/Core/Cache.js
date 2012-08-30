@@ -121,7 +121,7 @@ define([
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see Cache.destroy
+     * @see Cache#destroy
      */
     Cache.prototype.isDestroyed = function() {
         return false;

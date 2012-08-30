@@ -26,7 +26,7 @@
                 Cesium.Cartographic.fromDegrees(-60.0, 40.0),
                 Cesium.Cartographic.fromDegrees(-70.0, 40.0)
             ]));
-            redPolygon.material.color = {
+            redPolygon.material.uniforms.color = {
                 red : 1.0,
                 green : 0.0,
                 blue : 0.0,
@@ -40,7 +40,7 @@
                 Cesium.Cartographic.fromDegrees(-63.0, 40.0),
                 Cesium.Cartographic.fromDegrees(-75.0, 40.0)
             ]));
-            bluePolygon.material.color = {
+            bluePolygon.material.uniforms.color = {
                 red : 0.0,
                 green : 0.0,
                 blue : 1.0,
@@ -54,7 +54,7 @@
                 Cesium.Cartographic.fromDegrees(-55.0, 30.0),
                 Cesium.Cartographic.fromDegrees(-67.0, 30.0)
             ]));
-            greenPolygon.material.color = {
+            greenPolygon.material.uniforms.color = {
                 red : 0.0,
                 green : 1.0,
                 blue : 0.0,

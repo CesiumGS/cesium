@@ -10,18 +10,18 @@ void main()
         discard;
     
     // TODO: make arbitrary ellipsoid
-    agi_ellipsoid ellipsoid = agi_getWgs84EllipsoidEC();
-    vec3 direction = normalize(agi_windowToEyeCoordinates(gl_FragCoord).xyz);
-    agi_ray ray = agi_ray(vec3(0.0, 0.0, 0.0), direction);
-    agi_raySegment intersection = agi_rayEllipsoidIntersectionInterval(ray, ellipsoid);
+    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
+    vec3 direction = normalize(czm_windowToEyeCoordinates(gl_FragCoord).xyz);
+    czm_ray ray = czm_ray(vec3(0.0, 0.0, 0.0), direction);
+    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
     
-    if (!agi_isEmpty(intersection))
+    if (!czm_isEmpty(intersection))
     {
-        vec3 positionEC = agi_pointAlongRay(ray, intersection.start);
-        vec3 positionMC = (agi_inverseModelView * vec4(positionEC, 1.0)).xyz;
+        vec3 positionEC = czm_pointAlongRay(ray, intersection.start);
+        vec3 positionMC = (czm_inverseModelView * vec4(positionEC, 1.0)).xyz;
 	    
-	    vec3 normalMC = normalize(agi_geodeticSurfaceNormal(positionMC, vec3(0.0), vec3(1.0)));
-	    vec3 normalEC = normalize(agi_normal * normalMC);
+	    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(positionMC, vec3(0.0), vec3(1.0)));
+	    vec3 normalEC = normalize(czm_normal * normalMC);
 	    
 	    AtmosphereColor atmosphereColor = computeGroundAtmosphereFromSpace(positionMC);
 	    vec3 mieColor = atmosphereColor.mie;

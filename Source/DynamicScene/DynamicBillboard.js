@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
+        '../Core/defaultValue',
         './CzmlBoolean',
         './CzmlCartesian2',
         './CzmlCartesian3',
@@ -12,6 +13,7 @@ define([
         './DynamicProperty'
     ], function(
         TimeInterval,
+        defaultValue,
         CzmlBoolean,
         CzmlCartesian2,
         CzmlCartesian3,
@@ -42,34 +44,42 @@ define([
     var DynamicBillboard = function() {
         /**
          * A DynamicProperty of type CzmlImage which determines the billboard's texture.
+         * @type DynamicProperty
          */
         this.image = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the billboard's scale.
+         * @type DynamicProperty
          */
         this.scale = undefined;
         /**
          * A DynamicProperty of type CzmlHorizontalOrigin which determines the billboard's horizontal origin.
+         * @type DynamicProperty
          */
         this.horizontalOrigin = undefined;
         /**
          * A DynamicProperty of type CzmlVerticalHorigin which determines the billboard's vertical origin.
+         * @type DynamicProperty
          */
         this.verticalOrigin = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the billboard's color.
+         * @type DynamicProperty
          */
         this.color = undefined;
         /**
          * A DynamicProperty of type CzmlCartesian3 which determines the billboard's eye offset.
+         * @type DynamicProperty
          */
         this.eyeOffset = undefined;
         /**
          * A DynamicProperty of type CzmlCartesian2 which determines the billboard's pixel offset.
+         * @type DynamicProperty
          */
         this.pixelOffset = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the billboard's visibility.
+         * @type DynamicProperty
          */
         this.show = undefined;
     };
@@ -206,14 +216,14 @@ define([
                 targetObject.billboard = targetBillboard = new DynamicBillboard();
             }
 
-            targetBillboard.color = targetBillboard.color || billboardToMerge.color;
-            targetBillboard.eyeOffset = targetBillboard.eyeOffset || billboardToMerge.eyeOffset;
-            targetBillboard.horizontalOrigin = targetBillboard.horizontalOrigin || billboardToMerge.horizontalOrigin;
-            targetBillboard.image = targetBillboard.image || billboardToMerge.image;
-            targetBillboard.pixelOffset = targetBillboard.pixelOffset || billboardToMerge.pixelOffset;
-            targetBillboard.scale = targetBillboard.scale || billboardToMerge.scale;
-            targetBillboard.show = targetBillboard.show || billboardToMerge.show;
-            targetBillboard.verticalOrigin = targetBillboard.verticalOrigin || billboardToMerge.verticalOrigin;
+            targetBillboard.color = defaultValue(targetBillboard.color, billboardToMerge.color);
+            targetBillboard.eyeOffset = defaultValue(targetBillboard.eyeOffset, billboardToMerge.eyeOffset);
+            targetBillboard.horizontalOrigin = defaultValue(targetBillboard.horizontalOrigin, billboardToMerge.horizontalOrigin);
+            targetBillboard.image = defaultValue(targetBillboard.image, billboardToMerge.image);
+            targetBillboard.pixelOffset = defaultValue(targetBillboard.pixelOffset, billboardToMerge.pixelOffset);
+            targetBillboard.scale = defaultValue(targetBillboard.scale, billboardToMerge.scale);
+            targetBillboard.show = defaultValue(targetBillboard.show, billboardToMerge.show);
+            targetBillboard.verticalOrigin = defaultValue(targetBillboard.verticalOrigin, billboardToMerge.verticalOrigin);
         }
     };
 
