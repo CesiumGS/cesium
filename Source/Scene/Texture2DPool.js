@@ -24,7 +24,7 @@ define([
                 this._pool = pool;
             };
 
-                //pass through all methods to the underlying texture
+            // pass through all methods to the underlying texture
             Object.keys(Texture.prototype).forEach(function(methodName) {
                 PooledTexture.prototype[methodName] = function() {
                     var texture = this._texture;
@@ -32,7 +32,7 @@ define([
                 };
             });
 
-            //except for destroy, which releases back into the pool
+            // except for destroy, which releases back into the pool
             PooledTexture.prototype.destroy = function() {
                 var freeList = this._pool._free[this._textureTypeKey];
                 if (typeof freeList === 'undefined') {
