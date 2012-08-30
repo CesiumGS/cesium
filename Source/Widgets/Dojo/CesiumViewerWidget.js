@@ -168,6 +168,13 @@ define([
          */
         postSetup : undefined,
 
+        /**
+         * This function will get a callback in the event of setup failure, likely indicating
+         * a problem with WebGL support or the availability of a GL context.
+         * @type {Function}
+         * @param {Object} widget - A reference to this widget
+         * @param {Object} error - The exception that was thrown during setup
+         */
         onSetupError : function(widget, error) {
             console.error(error);
         },
