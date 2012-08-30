@@ -1,11 +1,13 @@
 /*global define*/
 define([
         './DeveloperError',
+        './freezeObject',
         './Math',
         './Cartesian3',
         './Cartographic'
     ], function(
         DeveloperError,
+        freezeObject,
         CesiumMath,
         Cartesian3,
         Cartographic) {
@@ -65,7 +67,7 @@ define([
      *
      * @see czm_getWgs84EllipsoidEC
      */
-    Ellipsoid.WGS84 = Object.freeze(new Ellipsoid(new Cartesian3(6378137.0, 6378137.0, 6356752.314245)));
+    Ellipsoid.WGS84 = freezeObject(new Ellipsoid(new Cartesian3(6378137.0, 6378137.0, 6356752.314245)));
 
     /**
      * DOC_TBA
@@ -74,7 +76,7 @@ define([
      *
      * @return {Ellipsoid} DOC_TBA
      */
-    Ellipsoid.UNIT_SPHERE = Object.freeze(new Ellipsoid(new Cartesian3(1.0, 1.0, 1.0)));
+    Ellipsoid.UNIT_SPHERE = freezeObject(new Ellipsoid(new Cartesian3(1.0, 1.0, 1.0)));
 
     /**
      * DOC_TBA
