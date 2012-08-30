@@ -152,21 +152,7 @@ define([
             var nZ = sin(latitude);
             var kZ = radiiSquaredZ * nZ;
 
-            // texture coordinates for geographic imagery
-            var geographicV = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
-
-            // texture coordinates for web mercator imagery
-            var mercatorV = (height - row - 1) / (height - 1);
-
-            var vDifference = Math.abs(mercatorV - geographicV);
-            maxVDifference = Math.max(vDifference, maxVDifference);
-
-            var v = geographicV;
-            if (v < 0.0) {
-                v = 0.0;
-            } else if (v > 1.0) {
-                v = 1.0;
-            }
+            var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
 
             for ( var colIndex = startCol; colIndex < endCol; ++colIndex) {
                 var col = colIndex;
@@ -226,21 +212,7 @@ define([
                 vertices[vertexArrayIndex++] = rSurfaceZ + nZ * heightSample - relativeToCenter.z;
 
                 if (generateTextureCoordinates) {
-                    // texture coordinates for geographic imagery
-                    var geographicU = (longitude - geographicWest) / (geographicEast - geographicWest);
-
-                    // texture coordinates for web mercator imagery
-                    var mercatorU = col / (width - 1);
-
-                    var uDifference = Math.abs(mercatorU - geographicU);
-                    maxUDifference = Math.max(uDifference, maxUDifference);
-
-                    var u = geographicU;
-                    if (u < 0.0) {
-                        u = 0.0;
-                    } else if (u > 1.0) {
-                        u = 1.0;
-                    }
+                    var u = (longitude - geographicWest) / (geographicEast - geographicWest);
 
                     if (interleaveTextureCoordinates) {
                         vertices[vertexArrayIndex++] = u;
