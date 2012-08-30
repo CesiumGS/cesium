@@ -523,4 +523,6 @@ require({
                 loadDemoOnClick(demoName);
             }
         }
+
+        loadFromGallery('Minimalist.html');
     });
