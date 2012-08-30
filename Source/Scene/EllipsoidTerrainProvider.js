@@ -144,7 +144,7 @@ define([
 
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = 0;
-        tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
+        tile.boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
 
         var ellipsoid = this.tilingScheme.ellipsoid;
         var extent = tile.extent;
@@ -186,7 +186,7 @@ define([
         var lonScalar = 1.0 / width;
         var latScalar = 1.0 / height;
 
-        var center = tile.get3DBoundingSphere().center;
+        var center = tile.boundingSphere3D.center;
         var projectedRTC = tile.get2DBoundingSphere(projection).center.clone();
 
         var mesh = PlaneTessellator.compute({

@@ -467,7 +467,7 @@ define([
 
         if (this._boundingSphereTile) {
             if (!this._boundingSphereVA) {
-                var radius = this._boundingSphereTile.get3DBoundingSphere().radius;
+                var radius = this._boundingSphereTile.boundingSphere3D.radius;
                 var sphere = CubeMapEllipsoidTessellator.compute(new Ellipsoid({x:radius, y:radius, z:radius}), 10);
                 MeshFilters.toWireframeInPlace(sphere);
                 this._boundingSphereVA = context.createVertexArrayFromMesh({
@@ -476,7 +476,7 @@ define([
                 });
             }
 
-            var rtc2 = this._boundingSphereTile.get3DBoundingSphere().center;
+            var rtc2 = this._boundingSphereTile.boundingSphere3D.center;
             uniformMap.center3D = rtc2;
 
             var centerEye2 = mv.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
@@ -731,7 +731,7 @@ define([
     }
 
     function isTileVisible(surface, sceneState, tile) {
-        var boundingVolume = tile.get3DBoundingSphere();
+        var boundingVolume = tile.boundingSphere3D;
         if (sceneState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE) {
             return false;
         }
@@ -785,7 +785,7 @@ define([
         var latitudeFactor = Math.cos(latitudeClosestToEquator);
         var maxGeometricError = latitudeFactor * surface.terrainProvider.getLevelMaximumGeometricError(tile.level);
 
-        //var boundingVolume = tile.get3DBoundingSphere();
+        //var boundingVolume = tile.boundingSphere3D;
         var camera = sceneState.camera;
 
         //var toCenter = boundingVolume.center.subtract(cameraPosition);
