@@ -42,7 +42,6 @@ require({
         'dijit/layout/TabContainer',
         'dijit/Toolbar',
         'dijit/ToolbarSeparator',
-        'Sandcastle/LinkButton',
         'dojo/domReady!'],
     function (
             CesiumViewerWidget,
