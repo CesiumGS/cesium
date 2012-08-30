@@ -52,9 +52,8 @@ require({
 //        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
 //        proxy : new Cesium.DefaultProxy('/proxy/')
 //    });
-//    esriImageryProvider.discardPolicy = esriImageryProvider.createDiscardMissingTilePolicy();
 //    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
-
+//
 //    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
 //        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
 //        proxy : new Cesium.DefaultProxy('/proxy/')
@@ -68,7 +67,6 @@ require({
         // cross-origin image loading, so we need to load Bing imagery using a proxy.
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
-    bingAerialImageryProvider.discardPolicy = bingAerialImageryProvider.createDiscardMissingTilePolicy();
     var bingAerialLayer = imageryLayerCollection.addImageryProvider(bingAerialImageryProvider);
 
 //    var bingRoadImageryProvider = new Cesium.BingMapsImageryProvider({
@@ -78,7 +76,6 @@ require({
 //        // cross-origin image loading, so we need to load Bing imagery using a proxy.
 //        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
 //    });
-//    bingRoadImageryProvider.discardPolicy = bingRoadImageryProvider.createDiscardMissingTilePolicy();
 //    var bingRoadLayer = imageryLayerCollection.addImageryProvider(bingRoadImageryProvider);
 
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());

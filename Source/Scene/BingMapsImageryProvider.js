@@ -114,7 +114,7 @@ define([
      *        <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
      *        imagery to load.
-     * @param {TileDiscardPolicy} [description.discardPolicy] If the service returns "missing" tiles,
+     * @param {TileDiscardPolicy} [description.tileDiscardPolicy] If the service returns "missing" tiles,
      *        these can be filtered out by providing an object which is expected to have a
      *        shouldDiscardImage function.  By default, no tiles will be filtered.
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
@@ -146,7 +146,7 @@ define([
         this._server = description.server;
         this._key = defaultValue(description.key, 'AquXz3981-1ND5jGs8qQn7R7YUP8qkWi77yZSVM7o3nIvzb-Mg0W2Ta57xuUyywX');
         this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
-        this._tileDiscardPolicy = description.discardPolicy;
+        this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
 
         this._tilingScheme = new WebMercatorTilingScheme({
@@ -179,6 +179,16 @@ define([
             that._imageUrlHostnames = that._imageUrlSubdomains.map(function(subdomain) {
                 return getHostname(that._imageUrlTemplate.replace('{subdomain}', subdomain));
             });
+
+            // Install the default tile discard policy if none has been supplied.
+            if (typeof that._tileDiscardPolicy === 'undefined') {
+                that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
+                    missingImageUrl : that._buildImageUrl(0, 0, 0, that._maximumLevel),
+                    pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
+                    disableCheckIfAllPixelsAreTransparent : true
+                });
+            }
+
             that._ready = true;
 
             return that._imageUrlTemplate;
@@ -273,23 +283,6 @@ define([
      */
     BingMapsImageryProvider.prototype.isReady = function() {
         return this._ready;
-    };
-
-    /**
-     * Creates a {@link DiscardMissingTileImagePolicy} that compares tiles
-     * against the tile at coordinate (0, 0), at the maximum zoom level, which is
-     * assumed to be missing.  Only a subset of the pixels are compared, based on the
-     * current visual appearance of the tile on the default Bing server, to improve
-     * performance.
-     */
-    BingMapsImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
-        var that = this;
-        var missingTileUrl = when(this._imageUrlTemplate, function() {
-            return that._buildImageUrl(0, 0, 0, that._maximumLevel);
-        });
-        var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)];
-
-        return new DiscardMissingTileImagePolicy(missingTileUrl, pixelsToCheck);
     };
 
     /**
@@ -402,7 +395,7 @@ define([
      */
     BingMapsImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
         var imageUrl = this._buildImageUrl(hostnameIndex, x, y, level);
-        return ImageryProvider.loadImageAndCheckDiscardPolicy(imageUrl, this.discardPolicy);
+        return ImageryProvider.loadImageAndCheckDiscardPolicy(imageUrl, this._tileDiscardPolicy);
     };
 
     /**

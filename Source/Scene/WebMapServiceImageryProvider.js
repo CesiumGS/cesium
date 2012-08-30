@@ -8,7 +8,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/Math',
-        './DiscardMissingTileImagePolicy',
         './ImageryProvider',
         './ImageryState',
         './Projections',
@@ -24,7 +23,6 @@ define([
         Cartesian2,
         Extent,
         CesiumMath,
-        DiscardMissingTileImagePolicy,
         ImageryProvider,
         ImageryState,
         Projections,
@@ -154,43 +152,12 @@ define([
     };
 
     /**
-     * Gets the tile discard policy.  If not undefined, the discard policy is responsible
-     * for filtering out "missing" tiles via its shouldDiscardImage function.
-     * By default, no tiles will be filtered.
-     * @returns {TileDiscardPolicy} The discard policy.
-     */
-    WebMapServiceImageryProvider.prototype.getTileDiscardPolicy = function() {
-        return this._tileDiscardPolicy;
-    };
-
-    /**
      * Gets a value indicating whether or not the provider is ready for use.
      *
      * @returns {Boolean} True if the provider is ready to use; otherwise, false.
      */
     WebMapServiceImageryProvider.prototype.isReady = function() {
         return this._ready;
-    };
-
-    /**
-     * Creates a {@link DiscardMissingTileImagePolicy} that compares tiles
-     * against the tile at coordinate (0, 0), at the maximum level of detail, which is
-     * assumed to be missing.  Only a subset of the pixels are compared to improve performance.
-     * These pixels were chosen based on the current visual appearance of the tile on the ESRI servers at
-     * <a href="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/19/0/0">http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/19/0/0</a>.
-     *
-     * Before using this discard policy, check to make sure that the ArcGIS service actually has
-     * missing tiles.  In particular, overlay maps may just provide fully transparent tiles, in
-     * which case no discard policy is necessary.
-     */
-    WebMapServiceImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
-        var that = this;
-        var missingTileUrl = when(this._isReady, function() {
-            return that._buildImageUrl(0, 0, that._maximumLevel);
-        });
-        var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
-
-        return new DiscardMissingTileImagePolicy(missingTileUrl, pixelsToCheck);
     };
 
     /**

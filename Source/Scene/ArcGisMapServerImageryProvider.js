@@ -32,7 +32,7 @@ define([
      * @constructor
      *
      * @param {String} description.url The URL of the ArcGIS MapServer service.
-     * @param {TileDiscardPolicy} [description.discardPolicy] If the service returns "missing" tiles,
+     * @param {TileDiscardPolicy} [description.tileDiscardPolicy] If the service returns "missing" tiles,
      *        these can be filtered out by providing an object which is expected to have a
      *        shouldDiscardImage function.  By default, no tiles will be filtered.
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
@@ -61,7 +61,7 @@ define([
         }
 
         this._url = description.url;
-        this._tileDiscardPolicy = description.discardPolicy;
+        this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
         this._imageUrlHostnames = [getHostname(this.url)];
 
@@ -100,6 +100,15 @@ define([
             that._logo = writeTextToCanvas(data.copyrightText, {
                 font : '12px sans-serif'
             });
+
+            // Install the default tile discard policy if none has been supplied.
+            if (typeof that._tileDiscardPolicy === 'undefined') {
+                that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
+                    missingImageUrl : that._buildImageUrl(0, 0, that._maximumLevel),
+                    pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)],
+                    disableCheckIfAllPixelsAreTransparent : true
+                });
+            }
 
             that._ready = true;
 
@@ -196,27 +205,6 @@ define([
      */
     ArcGisMapServerImageryProvider.prototype.getAvailableHostnames = function(x, y, level) {
         return this._imageUrlHostnames;
-    };
-
-    /**
-     * Creates a {@link DiscardMissingTileImagePolicy} that compares tiles
-     * against the tile at coordinate (0, 0), at the maximum level of detail, which is
-     * assumed to be missing.  Only a subset of the pixels are compared to improve performance.
-     * These pixels were chosen based on the current visual appearance of the tile on the ESRI servers at
-     * <a href="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/19/0/0">http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/19/0/0</a>.
-     *
-     * Before using this discard policy, check to make sure that the ArcGIS service actually has
-     * missing tiles.  In particular, overlay maps may just provide fully transparent tiles, in
-     * which case no discard policy is necessary.
-     */
-    ArcGisMapServerImageryProvider.prototype.createDiscardMissingTilePolicy = function() {
-        var that = this;
-        var missingTileUrl = when(this._isReady, function() {
-            return that._buildImageUrl(0, 0, that._maximumLevel);
-        });
-        var pixelsToCheck = [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)];
-
-        return new DiscardMissingTileImagePolicy(missingTileUrl, pixelsToCheck);
     };
 
     /**
