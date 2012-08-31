@@ -21,7 +21,7 @@ define([
     var EquidistantCylindricalProjection = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
-        var radii = ellipsoid.radii;
+        var radii = ellipsoid.getRadii();
 
         this._ellipsoid = ellipsoid;
         this._halfEquatorCircumference = Math.PI * (Math.max(radii.x, radii.y));

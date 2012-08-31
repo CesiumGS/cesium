@@ -231,7 +231,7 @@ defineSuite([
     });
 
     it('can reorder indices for the post vertex cache', function() {
-        var mesh = CubeMapEllipsoidTessellator.compute(Ellipsoid.fromRadii(10.0, 10.0, 10.0), 100);
+        var mesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(10.0, 10.0, 10.0), 100);
         var indices = mesh.indexLists[0].values;
         var numIndices = indices.length;
         var maximumIndex = 0;

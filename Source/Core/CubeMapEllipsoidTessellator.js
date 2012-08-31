@@ -163,7 +163,7 @@ define([
         addFaceTriangles(edge1to2, edge0to1.slice(0).reverse(), edge3to0.slice(0).reverse(), edge2to3); // Plane z = -1
 
         // Expand cube into ellipsoid and flatten values
-        var radii = ellipsoid.radii;
+        var radii = ellipsoid.getRadii();
         var length = positions.length;
         var q = 0;
         var flattenedPositions = new Array(length * 3);

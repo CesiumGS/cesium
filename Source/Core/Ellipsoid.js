@@ -17,77 +17,14 @@ define([
      * by Cesium to represent the shape of planetary bodies.
      *
      * Rather than constructing this object directly, one of the provided
-     * constants is normally used.  If a custom Ellipsoid is needed,
-     * consider using one of the helper constructor functions which will
-     * compute all necessary values from the supplied radii.
+     * constants is normally used.
      * @alias Ellipsoid
      * @constructor
-     *
-     * @param {Cartesian3} [radii=Cartesian3.ZERO] The radii of the ellipsoid.
-     * @param {Cartesian3} [radiiSquared=Cartesian3.ZERO] The squared radii of the ellipsoid.
-     * @param {Cartesian3} [radiiToTheFourth=Cartesian3.ZERO] The radii of the ellipsoid raised to the fourth power.
-     * @param {Cartesian3} [oneOverRadii=Cartesian3.ZERO] One over the radii of the ellipsoid.
-     * @param {Cartesian3} [oneOverRadiiSquared=Cartesian3.ZERO] One over the squared radii of the ellipsoid.
-     * @param {Number} [minimumRadius=0.0] The minimum radius of the ellipsoid.
-     * @param {Number} [maximumRadius=0.0] The maximum radius of the ellipsoid.
-     *
-     * @see Ellipsoid.fromRadii
-     * @see Ellipsoid.fromCartesian3
-     * @see Ellipsoid.WGS84
-     * @see Ellipsoid.UNIT_SPHERE
-     */
-    var Ellipsoid = function(radii, radiiSquared, radiiToTheFourth, oneOverRadii, oneOverRadiiSquared, minimumRadius, maximumRadius) {
-        /**
-         * The radii of the ellipsoid.
-         * @type {Cartesian3}
-         */
-        this.radii = Cartesian3.clone(typeof radii !== 'undefined' ? radii : Cartesian3.ZERO);
-
-        /**
-         * The squared radii of the ellipsoid.
-         * @type {Cartesian3}
-         */
-        this.radiiSquared = Cartesian3.clone(typeof radiiSquared !== 'undefined' ? radiiSquared : Cartesian3.ZERO);
-
-        /**
-         * The radii of the ellipsoid raised to the fourth power.
-         * @type {Cartesian3}
-         */
-        this.radiiToTheFourth = Cartesian3.clone(typeof radiiToTheFourth !== 'undefined' ? radiiToTheFourth : Cartesian3.ZERO);
-
-        /**
-         * One over the radii of the ellipsoid.
-         * @type {Cartesian3}
-         */
-        this.oneOverRadii = Cartesian3.clone(typeof oneOverRadii !== 'undefined' ? oneOverRadii : Cartesian3.ZERO);
-
-        /**
-         * One over the squared radii of the ellipsoid.
-         * @type {Cartesian3}
-         */
-        this.oneOverRadiiSquared = Cartesian3.clone(typeof oneOverRadiiSquared !== 'undefined' ? oneOverRadiiSquared : Cartesian3.ZERO);
-
-        /**
-         * The minimum radius of the ellipsoid.
-         * @type {Number}
-         */
-        this.minimumRadius = typeof minimumRadius !== 'undefined' ? minimumRadius : 0.0;
-
-        /**
-         * The maximum radius of the ellipsoid.
-         * @type {Number}
-         */
-        this.maximumRadius = typeof maximumRadius !== 'undefined' ? maximumRadius : 0.0;
-    };
-
-    /**
-     * Computes an Ellipsoid from x, y, and z radii.
+     * @immutable
      *
      * @param {Number} [x=0] The radius in the x direction.
      * @param {Number} [y=0] The radius in the y direction.
      * @param {Number} [z=0] The radius in the z direction.
-     * @param {Ellipsoid} [result] The object onto which to store the result.
-     * @return {Ellipsoid} The modified result parameter or a new Ellipsoid instance if none was provided.
      *
      * @exception {DeveloperError} All radii components must be greater than or equal to zero.
      *
@@ -95,7 +32,7 @@ define([
      * @see Ellipsoid.WGS84
      * @see Ellipsoid.UNIT_SPHERE
      */
-    Ellipsoid.fromRadii = function(x, y, z, result) {
+    var Ellipsoid = function(x, y, z) {
         x = typeof x !== 'undefined' ? x : 0;
         y = typeof y !== 'undefined' ? y : 0;
         z = typeof z !== 'undefined' ? z : 0;
@@ -104,91 +41,123 @@ define([
             throw new DeveloperError('All radii components must be greater than or equal to zero.');
         }
 
-        if (typeof result === 'undefined') {
-            result = new Ellipsoid();
-        }
-
-        var radii = result.radii;
-        radii.x = x;
-        radii.y = y;
-        radii.z = z;
-
-        var radiiSquared = result.radiiSquared;
-        radiiSquared.x = x * x;
-        radiiSquared.y = y * y;
-        radiiSquared.z = z * z;
-
-        var radiiToTheFourth = result.radiiToTheFourth;
-        radiiToTheFourth.x = x * x * x * x;
-        radiiToTheFourth.y = y * y * y * y;
-        radiiToTheFourth.z = z * z * z * z;
-
-        var oneOverRadii = result.oneOverRadii;
-        oneOverRadii.x = x === 0.0 ? 0.0 : 1.0 / x;
-        oneOverRadii.y = y === 0.0 ? 0.0 : 1.0 / y;
-        oneOverRadii.z = z === 0.0 ? 0.0 : 1.0 / z;
-
-        var oneOverRadiiSquared = result.oneOverRadiiSquared;
-        oneOverRadiiSquared.x = x === 0.0 ? 0.0 : 1.0 / (x * x);
-        oneOverRadiiSquared.y = y === 0.0 ? 0.0 : 1.0 / (y * y);
-        oneOverRadiiSquared.z = z === 0.0 ? 0.0 : 1.0 / (z * z);
-
-        result.minimumRadius = Math.min(x, y, z);
-        result.maximumRadius = Math.max(x, y, z);
-
-        return result;
+        this._radii = new Cartesian3(x, y, z);
+        this._radiiSquared = new Cartesian3(x * x, y * y, z * z);
+        this._radiiToTheFourth = new Cartesian3(x * x * x * x, y * y * y * y, z * z * z * z);
+        this._oneOverRadii = new Cartesian3(x === 0.0 ? 0.0 : 1.0 / x, y === 0.0 ? 0.0 : 1.0 / y, z === 0.0 ? 0.0 : 1.0 / z);
+        this._oneOverRadiiSquared = new Cartesian3(x === 0.0 ? 0.0 : 1.0 / (x * x), y === 0.0 ? 0.0 : 1.0 / (y * y), z === 0.0 ? 0.0 : 1.0 / (z * z));
+        this._minimumRadius = Math.min(x, y, z);
+        this._maximumRadius = Math.max(x, y, z);
     };
 
     /**
      * Computes an Ellipsoid from a Cartesian specifying the radii in x, y, and z directions.
      *
      * @param {Cartesian3} [radii=Cartesian3.ZERO] The ellipsoid's radius in the x, y, and z directions.
-     * @param {Ellipsoid} [result] The object onto which to store the result.
-     * @return {Ellipsoid} The modified result parameter or a new Ellipsoid instance if none was provided.
+     * @return {Ellipsoid} A new Ellipsoid instance.
      *
      * @exception {DeveloperError} All radii components must be greater than or equal to zero.
      *
-     * @see Ellipsoid.fromCartesian3
      * @see Ellipsoid.WGS84
      * @see Ellipsoid.UNIT_SPHERE
      */
-    Ellipsoid.fromCartesian3 = function(cartesian, result) {
+    Ellipsoid.fromCartesian3 = function(cartesian) {
         if (typeof cartesian === 'undefined') {
-            return Ellipsoid.fromRadii(0.0, 0.0, 0.0, result);
+            return new Ellipsoid();
         }
-        return Ellipsoid.fromRadii(cartesian.x, cartesian.y, cartesian.z, result);
+        return new Ellipsoid(cartesian.x, cartesian.y, cartesian.z);
     };
 
     /**
-     * Duplicates an Ellipsoid instance.
+     * An Ellipsoid instance initialized to the WGS84 standard.
      * @memberof Ellipsoid
      *
-     * @param {Ellipsoid} ellipsoid The Ellipsoid to duplicate.
-     * @param {Ellipsoid} [result] The object onto which to store the result.
-     * @return {Ellipsoid} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} ellipsoid is required.
+     * @see czm_getWgs84EllipsoidEC
      */
-    Ellipsoid.clone = function(ellipsoid, result) {
-        if (typeof ellipsoid === 'undefined') {
-            throw new DeveloperError('ellipsoid is required.');
-        }
+    Ellipsoid.WGS84 = freezeObject(new Ellipsoid(6378137.0, 6378137.0, 6356752.3142451793));
 
-        if (typeof result === 'undefined') {
-            result = new Ellipsoid();
-        }
-        result.radii = Cartesian3.clone(ellipsoid.radii, result.radii);
-        result.radiiSquared = Cartesian3.clone(ellipsoid.radiiSquared, result.radiiSquared);
-        result.radiiToTheFourth = Cartesian3.clone(ellipsoid.radiiToTheFourth, result.radiiToTheFourth);
-        result.oneOverRadii = Cartesian3.clone(ellipsoid.oneOverRadii, result.oneOverRadii);
-        result.oneOverRadiiSquared = Cartesian3.clone(ellipsoid.oneOverRadiiSquared, result.oneOverRadiiSquared);
-        result.minimumRadius = ellipsoid.minimumRadius;
-        result.maximumRadius = ellipsoid.maximumRadius;
-        return result;
+    /**
+     * An Ellipsoid instance initialized to radii of (1.0, 1.0, 1.0).
+     * @memberof Ellipsoid
+     */
+    Ellipsoid.UNIT_SPHERE = freezeObject(new Ellipsoid(1.0, 1.0, 1.0));
+
+    /**
+     * Gets the radii of the ellipsoid.
+     * @memberof Ellipsoid
+     * @return {Cartesian3} The radii of the ellipsoid.
+     */
+    Ellipsoid.prototype.getRadii = function() {
+        return this._radii;
     };
 
     /**
-     * Computes the unit vector directed from the center of an ellipsoid toward the provided Cartesian position.
+     * Gets the sqaured radii of the ellipsoid.
+     * @memberof Ellipsoid
+     * @return {Cartesian3} The sqaured radii of the ellipsoid.
+     */
+    Ellipsoid.prototype.getRadiiSquared = function() {
+        return this._radiiSquared;
+    };
+
+    /**
+     * Gets the radii of the ellipsoid raised to the fourth power.
+     * @memberof Ellipsoid
+     * @return {Cartesian3} The radii of the ellipsoid raised to the fourth power.
+     */
+    Ellipsoid.prototype.getRadiiToTheFourth = function() {
+        return this._radiiToTheFourth;
+    };
+
+    /**
+     * Gets one over the radii of the ellipsoid.
+     * @memberof Ellipsoid
+     * @return {Cartesian3} One over the radii of the ellipsoid.
+     */
+    Ellipsoid.prototype.getOneOverRadii = function() {
+        return this._oneOverRadii;
+    };
+
+    /**
+     * Gets one over the squared radii of the ellipsoid.
+     * @memberof Ellipsoid
+     * @return {Cartesian3} One over the squared radii of the ellipsoid.
+     */
+    Ellipsoid.prototype.getOneOverRadiiSquared = function() {
+        return this._oneOverRadiiSquared;
+    };
+
+    /**
+     * Gets the minimum radius of the ellipsoid.
+     * @memberof Ellipsoid
+     * @return {Cartesian3} The minimum radius of the ellipsoid.
+     */
+    Ellipsoid.prototype.getMinimumRadius = function() {
+        return this._minimumRadius;
+    };
+
+    /**
+     * Gets the maximum radius of the ellipsoid.
+     * @memberof Ellipsoid
+     * @return {Cartesian3} The maximum radius of the ellipsoid.
+     */
+    Ellipsoid.prototype.getMaximumRadius = function() {
+        return this._maximumRadius;
+    };
+
+    /**
+     * Duplicates this ellipsoid instance.
+     * @memberof Ellipsoid
+     *
+     * @param {Ellipsoid} [result] The object onto which to store the result.
+     * @return {Ellipsoid} The modified result parameter or a new Cartesian3 instance if none was provided.
+     */
+    Ellipsoid.prototype.clone = function() {
+        return Ellipsoid.fromCartesian3(this._radii);
+    };
+
+    /**
+     * Computes the unit vector directed from the center of this ellipsoid toward the provided Cartesian position.
      * @memberof Ellipsoid
      *
      * @param {Cartesian3} cartesian The Cartesian for which to to determine the geocentric normal.
@@ -197,10 +166,10 @@ define([
      *
      * @exception {DeveloperError} cartesian is required.
      */
-    Ellipsoid.geocentricSurfaceNormal = Cartesian3.normalize;
+    Ellipsoid.prototype.geocentricSurfaceNormal = Cartesian3.normalize;
 
     /**
-     * Computes the unit vector directed from the surface of an ellipsoid toward the provided cartographic position.
+     * Computes the unit vector directed from the surface this ellipsoid toward the provided cartographic position.
      * @memberof Ellipsoid
      *
      * @param {Cartographic} cartographic The cartographic position for which to to determine the geodetic normal.
@@ -209,7 +178,7 @@ define([
      *
      * @exception {DeveloperError} cartographic is required.
      */
-    Ellipsoid.geodeticSurfaceNormalCartographic = function(cartographic, result) {
+    Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function(cartographic, result) {
         if (typeof cartographic === 'undefined') {
             throw new DeveloperError('cartographic is required.');
         }
@@ -232,22 +201,17 @@ define([
     };
 
     /**
-     * Computes the unit vector directed from the surface of the provided ellipsoid toward the provided Cartesian position.
+     * Computes the unit vector directed from the surface of this ellipsoid toward the provided Cartesian position.
      * @memberof Ellipsoid
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} cartesian The Cartesian position for which to to determine the surface normal.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
-     * @exception {DeveloperError} ellipsoid is required.
      * @exception {DeveloperError} cartesian is required.
      */
-    Ellipsoid.geodeticSurfaceNormal = function(ellipsoid, cartesian, result) {
-        if (typeof ellipsoid === 'undefined') {
-            throw new DeveloperError('ellipsoid is required.');
-        }
-        result = Cartesian3.multiplyComponents(cartesian, ellipsoid.oneOverRadiiSquared, result);
+    Ellipsoid.prototype.geodeticSurfaceNormal = function(cartesian, result) {
+        result = Cartesian3.multiplyComponents(cartesian, this._oneOverRadiiSquared, result);
         return Cartesian3.normalize(result, result);
     };
 
@@ -258,25 +222,18 @@ define([
      * Converts the provided cartographic to Cartesian representation.
      * @memberof Ellipsoid
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartographic} cartographic The cartographic position.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
-     * @exception {DeveloperError} ellipsoid is required.
      * @exception {DeveloperError} cartographic is required.
      */
-    Ellipsoid.cartographicToCartesian = function(ellipsoid, cartographic, result) {
-        if (typeof ellipsoid === 'undefined') {
-            throw new DeveloperError('ellipsoid is required');
-        }
-
+    Ellipsoid.prototype.cartographicToCartesian = function(cartographic, result) {
         //`cartographic is required` is thrown from geodeticSurfaceNormalCartographic.
-
         var n = cartographicToCartesianNormal;
         var k = cartographicToCartesianK;
-        Ellipsoid.geodeticSurfaceNormalCartographic(cartographic, n);
-        Cartesian3.multiplyComponents(ellipsoid.radiiSquared, n, k);
+        this.geodeticSurfaceNormalCartographic(cartographic, n);
+        Cartesian3.multiplyComponents(this._radiiSquared, n, k);
         var gamma = Math.sqrt(Cartesian3.dot(n, k));
         Cartesian3.divideByScalar(k, gamma, k);
         Cartesian3.multiplyByScalar(n, cartographic.height, n);
@@ -287,15 +244,13 @@ define([
      * Converts the provided array of cartographics to an array of Cartesians.
      * @memberof Ellipsoid
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Array} cartographics An array of cartographic positions.
      * @param {Array} [result] The object onto which to store the result.
      * @return {Array} The modified result parameter or a new Array instance if none was provided.
      *
-     * @exception {DeveloperError} ellipsoid is required.
      * @exception {DeveloperError} cartographics is required.
      */
-    Ellipsoid.cartographicArrayToCartesianArray = function(ellipsoid, cartographics, result) {
+    Ellipsoid.prototype.cartographicArrayToCartesianArray = function(cartographics, result) {
         //Ellipsoid exception is thrown from cartographicToCartesian.
         if (typeof cartographics === 'undefined') {
             throw new DeveloperError('cartographics is required.');
@@ -308,7 +263,7 @@ define([
             result.length = length;
         }
         for ( var i = 0; i < length; i++) {
-            result[i] = Ellipsoid.cartographicToCartesian(ellipsoid, cartographics[i], result[i]);
+            result[i] = this.cartographicToCartesian(cartographics[i], result[i]);
         }
         return result;
     };
@@ -321,18 +276,16 @@ define([
      * Converts the provided cartesian to cartographic representation.
      * @memberof Ellipsoid
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} cartesian The Cartesian position to convert to cartographic representation.
      * @param {Cartographic} [result] The object onto which to store the result.
      * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      *
-     * @exception {DeveloperError} ellipsoid is required.
      * @exception {DeveloperError} cartesian is required.
      */
-    Ellipsoid.cartesianToCartographic = function(ellipsoid, cartesian, result) {
+    Ellipsoid.prototype.cartesianToCartographic = function(cartesian, result) {
         //Exceptions are thrown from geodeticSurfaceNormal
-        var p = Ellipsoid.scaleToGeodeticSurface(ellipsoid, cartesian, cartesianToCartographicP);
-        var n = Ellipsoid.geodeticSurfaceNormal(ellipsoid, p, cartesianToCartographicN);
+        var p = this.scaleToGeodeticSurface(cartesian, cartesianToCartographicP);
+        var n = this.geodeticSurfaceNormal(p, cartesianToCartographicN);
         var h = Cartesian3.subtract(cartesian, p, cartesianToCartographicH);
 
         var longitude = Math.atan2(n.y, n.x);
@@ -352,15 +305,13 @@ define([
      * Converts the provided array of cartesians to an array of cartographics.
      * @memberof Ellipsoid
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Array} cartesians An array of Cartesian positions.
      * @param {Array} [result] The object onto which to store the result.
      * @return {Array} The modified result parameter or a new Array instance if none was provided.
      *
-     * @exception {DeveloperError} ellipsoid is required.
      * @exception {DeveloperError} cartesians is required.
      */
-    Ellipsoid.cartesianArrayToCartographicArray = function(ellipsoid, cartesians, result) {
+    Ellipsoid.prototype.cartesianArrayToCartographicArray = function(cartesians, result) {
         //Ellipsoid exception is thrown from cartesianToCartographic.
         if (typeof cartesians === 'undefined') {
             throw new DeveloperError('cartesians is required.');
@@ -373,29 +324,23 @@ define([
             result.length = length;
         }
         for ( var i = 0; i < length; ++i) {
-            result[i] = Ellipsoid.cartesianToCartographic(ellipsoid, cartesians[i], result[i]);
+            result[i] = this.cartesianToCartographic(cartesians[i], result[i]);
         }
         return result;
     };
 
     /**
      * Scales the provided Cartesian position along the geodetic surface normal
-     * so that it is on the surface of the provided ellipsoid.
+     * so that it is on the surface of this ellipsoid.
      * @memberof Ellipsoid
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} cartesian The Cartesian position to scale.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
-     * @exception {DeveloperError} ellipsoid is required.
      * @exception {DeveloperError} cartesian is required.
      */
-    Ellipsoid.scaleToGeodeticSurface = function(ellipsoid, cartesian, result) {
-        if (typeof ellipsoid === 'undefined') {
-            throw new DeveloperError('ellipsoid is required.');
-        }
-
+    Ellipsoid.prototype.scaleToGeodeticSurface = function(cartesian, result) {
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required.');
         }
@@ -404,17 +349,17 @@ define([
         var positionY = cartesian.y;
         var positionZ = cartesian.z;
 
-        var oneOverRadiiSquared = ellipsoid.oneOverRadiiSquared;
+        var oneOverRadiiSquared = this._oneOverRadiiSquared;
         var oneOverRadiiSquaredX = oneOverRadiiSquared.x;
         var oneOverRadiiSquaredY = oneOverRadiiSquared.y;
         var oneOverRadiiSquaredZ = oneOverRadiiSquared.z;
 
-        var radiiSquared = ellipsoid.radiiSquared;
+        var radiiSquared = this._radiiSquared;
         var radiiSquaredX = radiiSquared.x;
         var radiiSquaredY = radiiSquared.y;
         var radiiSquaredZ = radiiSquared.z;
 
-        var radiiToTheFourth = ellipsoid.radiiToTheFourth;
+        var radiiToTheFourth = this._radiiToTheFourth;
         var radiiToTheFourthX = radiiToTheFourth.x;
         var radiiToTheFourthY = radiiToTheFourth.y;
         var radiiToTheFourthZ = radiiToTheFourth.z;
@@ -477,22 +422,16 @@ define([
 
     /**
      * Scales the provided Cartesian position along the geocentric surface normal
-     * so that it is on the surface of the provided ellipsoid.
+     * so that it is on the surface of this ellipsoid.
      * @memberof Ellipsoid
      *
-     * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} cartesian The Cartesian position to scale.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
-     * @exception {DeveloperError} ellipsoid is required.
      * @exception {DeveloperError} cartesian is required.
      */
-    Ellipsoid.scaleToGeocentricSurface = function(ellipsoid, cartesian, result) {
-        if (typeof ellipsoid === 'undefined') {
-            throw new DeveloperError('ellipsoid is required.');
-        }
-
+    Ellipsoid.prototype.scaleToGeocentricSurface = function(cartesian, result) {
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required.');
         }
@@ -500,184 +439,13 @@ define([
         var positionX = cartesian.x;
         var positionY = cartesian.y;
         var positionZ = cartesian.z;
-        var oneOverRadiiSquared = ellipsoid.oneOverRadiiSquared;
+        var oneOverRadiiSquared = this._oneOverRadiiSquared;
 
         var beta = 1.0 / Math.sqrt((positionX * positionX) * oneOverRadiiSquared.x +
                                    (positionY * positionY) * oneOverRadiiSquared.y +
                                    (positionZ * positionZ) * oneOverRadiiSquared.z);
 
         return Cartesian3.multiplyByScalar(cartesian, beta, result);
-    };
-
-    /**
-     * Compares the provided Ellipsoid componentwise and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Ellipsoid
-     *
-     * @param {Ellipsoid} [left] The first Ellipsoid.
-     * @param {Ellipsoid} [right] The second Ellipsoid.
-     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
-     */
-    Ellipsoid.equals = function(left, right) {
-        return (left === right) ||
-               (typeof left !== 'undefined' &&
-                typeof right !== 'undefined' &&
-                Cartesian3.equals(left.radii, right.radii) &&
-                Cartesian3.equals(left.radiiSquared, right.radiiSquared) &&
-                Cartesian3.equals(left.radiiToTheFourth, right.radiiToTheFourth) &&
-                Cartesian3.equals(left.oneOverRadii, right.oneOverRadii) &&
-                Cartesian3.equals(left.oneOverRadiiSquared, right.oneOverRadiiSquared) &&
-                left.minimumRadius === right.minimumRadius &&
-                left.maximumRadius === right.maximumRadius);
-    };
-
-    /**
-     * An immutable Ellipsoid instance initialized to the WGS84 standard.
-     * @memberof Ellipsoid
-     *
-     * @see czm_getWgs84EllipsoidEC
-     */
-    Ellipsoid.WGS84 = Object.freeze(Ellipsoid.fromRadii(6378137.0, 6378137.0, 6356752.3142451793));
-
-    /**
-     * An immutable Ellipsoid instance initialized to radii of (1.0, 1.0, 1.0).
-     * @memberof Ellipsoid
-     */
-    Ellipsoid.UNIT_SPHERE = Object.freeze(Ellipsoid.fromRadii(1.0, 1.0, 1.0));
-
-    /**
-     * Duplicates this ellipsoid instance.
-     * @memberof Ellipsoid
-     *
-     * @param {Ellipsoid} [result] The object onto which to store the result.
-     * @return {Ellipsoid} The modified result parameter or a new Cartesian3 instance if none was provided.
-     */
-    Ellipsoid.prototype.clone = function(result) {
-        return Ellipsoid.clone(this, result);
-    };
-
-    /**
-     * Computes the unit vector directed from the center of this ellipsoid toward the provided Cartesian position.
-     * @memberof Ellipsoid
-     *
-     * @param {Cartesian3} cartesian The Cartesian for which to to determine the geocentric normal.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Ellipsoid.prototype.geocentricSurfaceNormal = Ellipsoid.geocentricSurfaceNormal;
-
-    /**
-     * Computes the unit vector directed from the surface this ellipsoid toward the provided cartographic position.
-     * @memberof Ellipsoid
-     *
-     * @param {Cartographic} cartographic The cartographic position for which to to determine the geodetic normal.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartographic is required.
-     */
-    Ellipsoid.prototype.geodeticSurfaceNormalCartographic = Ellipsoid.geodeticSurfaceNormalCartographic;
-
-    /**
-     * Computes the unit vector directed from the surface of this ellipsoid toward the provided Cartesian position.
-     * @memberof Ellipsoid
-     *
-     * @param {Cartesian3} cartesian The Cartesian position for which to to determine the surface normal.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Ellipsoid.prototype.geodeticSurfaceNormal = function(cartesian, result) {
-        return Ellipsoid.geodeticSurfaceNormal(this, cartesian, result);
-    };
-
-    /**
-     * Converts the provided cartographic to Cartesian representation.
-     * @memberof Ellipsoid
-     *
-     * @param {Cartographic} cartographic The cartographic position.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartographic is required.
-     */
-    Ellipsoid.prototype.cartographicToCartesian = function(cartographic, result) {
-        return Ellipsoid.cartographicToCartesian(this, cartographic, result);
-    };
-
-    /**
-     * Converts the provided array of cartographics to an array of Cartesians.
-     * @memberof Ellipsoid
-     *
-     * @param {Array} cartographics An array of cartographic positions.
-     * @param {Array} [result] The object onto which to store the result.
-     * @return {Array} The modified result parameter or a new Array instance if none was provided.
-     *
-     * @exception {DeveloperError} cartographics is required.
-     */
-    Ellipsoid.prototype.cartographicArrayToCartesianArray = function(cartographics, result) {
-        return Ellipsoid.cartographicArrayToCartesianArray(this, cartographics, result);
-    };
-
-    /**
-     * Converts the provided cartesian to cartographic representation.
-     * @memberof Ellipsoid
-     *
-     * @param {Cartesian3} cartesian The Cartesian position to convert to cartographic representation.
-     * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Ellipsoid.prototype.cartesianToCartographic = function(cartesian, result) {
-        return Ellipsoid.cartesianToCartographic(this, cartesian, result);
-    };
-
-    /**
-     * Converts the provided array of cartesians to an array of cartographics.
-     * @memberof Ellipsoid
-     *
-     * @param {Array} cartesians An array of Cartesian positions.
-     * @param {Array} [result] The object onto which to store the result.
-     * @return {Array} The modified result parameter or a new Array instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesians is required.
-     */
-    Ellipsoid.prototype.cartesianArrayToCartographicArray = function(cartesians, result) {
-        return Ellipsoid.cartesianArrayToCartographicArray(this, cartesians, result);
-    };
-
-    /**
-     * Scales the provided Cartesian position along the geodetic surface normal
-     * so that it is on the surface of this ellipsoid.
-     * @memberof Ellipsoid
-     *
-     * @param {Cartesian3} cartesian The Cartesian position to scale.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Ellipsoid.prototype.scaleToGeodeticSurface = function(position, result) {
-        return Ellipsoid.scaleToGeodeticSurface(this, position, result);
-    };
-
-    /**
-     * Scales the provided Cartesian position along the geocentric surface normal
-     * so that it is on the surface of this ellipsoid.
-     * @memberof Ellipsoid
-     *
-     * @param {Cartesian3} cartesian The Cartesian position to scale.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Ellipsoid.prototype.scaleToGeocentricSurface = function(position, result) {
-        return Ellipsoid.scaleToGeocentricSurface(this, position, result);
     };
 
     /**
@@ -689,7 +457,9 @@ define([
      * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     Ellipsoid.prototype.equals = function(right) {
-        return Ellipsoid.equals(this, right);
+        return (this === right) ||
+               (typeof right !== 'undefined' &&
+                Cartesian3.equals(this._radii, right._radii));
     };
 
     /**
@@ -699,7 +469,7 @@ define([
      * @return {String} A string representing this ellipsoid in the format '(radii.x, radii.y, radii.z)'.
      */
     Ellipsoid.prototype.toString = function() {
-        return this.radii.toString();
+        return this._radii.toString();
     };
 
     return Ellipsoid;

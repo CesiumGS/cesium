@@ -165,7 +165,7 @@ defineSuite([
     it('fromExtent3D', function() {
         var extent = Extent.MAX_VALUE;
         var ellipsoid = Ellipsoid.WGS84;
-        var expected = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
+        var expected = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
         expect(BoundingSphere.fromExtent3D(extent, ellipsoid)).toEqual(expected);
     });
 

@@ -729,8 +729,8 @@ define([
                     p.y = positions[i + 1];
                     p.z = positions[i + 2];
 
-                    Ellipsoid.scaleToGeodeticSurface(ellipsoid, p, p);
-                    Ellipsoid.geodeticSurfaceNormal(ellipsoid, p, n);
+                    ellipsoid.scaleToGeodeticSurface(p, p);
+                    ellipsoid.geodeticSurfaceNormal(p, n);
                     Cartesian3.multiplyByScalar(n, height, n);
                     Cartesian3.add(p, n, p);
 

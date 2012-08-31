@@ -109,7 +109,7 @@ defineSuite([
         var camera = scene.getCamera();
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new EquidistantCylindricalProjection(ellipsoid);
-        var maxRadii = ellipsoid.maximumRadius;
+        var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         camera.direction = camera.position.negate().normalize();
