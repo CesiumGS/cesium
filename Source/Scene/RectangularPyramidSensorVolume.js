@@ -208,22 +208,6 @@ define([
      * DOC_TBA
      * @memberof RectangularPyramidSensorVolume
      */
-    RectangularPyramidSensorVolume.prototype.render = function(context) {
-        this._customSensor.render(context);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
-     */
-    RectangularPyramidSensorVolume.prototype.renderForPick = function(context, framebuffer) {
-        this._customSensor.renderForPick(context, framebuffer);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
-     */
     RectangularPyramidSensorVolume.prototype.isDestroyed = function() {
         return false;
     };

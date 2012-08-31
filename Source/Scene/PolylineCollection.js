@@ -425,91 +425,6 @@ define([
     };
 
     /**
-     * Renders the polylines.  In order for changes to properties to be realized,
-     * {@link PolylineCollection#update} must be called before <code>render</code>.
-     * <br /><br />
-     * <br /><br />
-     * Polylines are rendered in a single pass using an uber-shader.
-     *
-     * @memberof PolylineCollection
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see PolylineCollection#update
-     */
-    PolylineCollection.prototype.render = function(context) {
-        var polylineBuckets = this._polylineBuckets;
-        if (polylineBuckets) {
-            var length = this._colorVertexArrays.length;
-            for ( var i = 0; i < length; ++i) {
-                var vaColor = this._colorVertexArrays[i];
-                var vaOutlineColor = this._outlineColorVertexArrays[i];
-                var buckets = this._colorVertexArrays[i].buckets;
-                var bucketLength = buckets.length;
-                for ( var j = 0; j < bucketLength; ++j) {
-                    var bucketLocator = buckets[j];
-                    context.draw({
-                        primitiveType : PrimitiveType.LINES,
-                        count : bucketLocator.count,
-                        offset : bucketLocator.offset,
-                        shaderProgram : this._sp,
-                        uniformMap : this._drawUniformsOne,
-                        vertexArray : vaOutlineColor.va,
-                        renderState : bucketLocator.rsOne
-                    });
-                    context.draw({
-                        primitiveType : PrimitiveType.LINES,
-                        count : bucketLocator.count,
-                        offset : bucketLocator.offset,
-                        shaderProgram : this._sp,
-                        uniformMap : this._drawUniformsTwo,
-                        vertexArray : vaColor.va,
-                        renderState : bucketLocator.rsTwo
-                    });
-                    context.draw({
-                        primitiveType : PrimitiveType.LINES,
-                        count : bucketLocator.count,
-                        offset : bucketLocator.offset,
-                        shaderProgram : this._sp,
-                        uniformMap : this._drawUniformsThree,
-                        vertexArray : vaOutlineColor.va,
-                        renderState : bucketLocator.rsThree
-                    });
-                }
-            }
-        }
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof PolylineCollection
-     */
-    PolylineCollection.prototype.renderForPick = function(context, framebuffer) {
-        var polylineBuckets = this._polylineBuckets;
-        if (polylineBuckets) {
-            var length = this._pickColorVertexArrays.length;
-            for ( var i = 0; i < length; ++i) {
-                var vaPickColor = this._pickColorVertexArrays[i];
-                var buckets = vaPickColor.buckets;
-                var bucketLength = buckets.length;
-                for ( var j = 0; j < bucketLength; ++j) {
-                    var bucketLocator = buckets[j];
-                    context.draw({
-                        primitiveType : PrimitiveType.LINES,
-                        count : bucketLocator.count,
-                        offset : bucketLocator.offset,
-                        shaderProgram : this._sp,
-                        uniformMap : this._pickUniforms,
-                        vertexArray : vaPickColor.va,
-                        renderState : bucketLocator.rsPick,
-                        framebuffer : framebuffer
-                    });
-                }
-            }
-        }
-    };
-
-    /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
      * This must be called before calling {@link PolylineCollection#render} in order to realize
      * changes to PolylineCollection positions and properties.
@@ -519,7 +434,7 @@ define([
      *
      */
     PolylineCollection.prototype.update = function(context, frameState) {
-        if (!this._sp) {
+        if (typeof this._sp === 'undefined') {
             this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
         }
         this._removePolylines();
@@ -605,10 +520,79 @@ define([
             boundingVolume = this._boundingVolume && this._boundingVolume2D && this._boundingVolume.union(this._boundingVolume2D);
         }
 
-        return {
-            boundingVolume : boundingVolume,
-            modelMatrix : modelMatrix
-        };
+        var pass = frameState.passes;
+        var polylineBuckets = this._polylineBuckets;
+        var commandList = [];
+        if (polylineBuckets) {
+            if (pass.color) {
+                var length = this._colorVertexArrays.length;
+                for (var i = 0; i < length; ++i) {
+                    var vaColor = this._colorVertexArrays[i];
+                    var vaOutlineColor = this._outlineColorVertexArrays[i];
+                    var buckets = this._colorVertexArrays[i].buckets;
+                    var bucketLength = buckets.length;
+                    for ( var j = 0; j < bucketLength; ++j) {
+                        var bucketLocator = buckets[j];
+                        commandList.push({
+                            boundingVolume : boundingVolume,
+                            modelMatrix : modelMatrix,
+                            primitiveType : PrimitiveType.LINES,
+                            count : bucketLocator.count,
+                            offset : bucketLocator.offset,
+                            shaderProgram : this._sp,
+                            uniformMap : this._drawUniformsOne,
+                            vertexArray : vaOutlineColor.va,
+                            renderState : bucketLocator.rsOne
+                        },
+                        {
+                            boundingVolume : boundingVolume,
+                            modelMatrix : modelMatrix,
+                            primitiveType : PrimitiveType.LINES,
+                            count : bucketLocator.count,
+                            offset : bucketLocator.offset,
+                            shaderProgram : this._sp,
+                            uniformMap : this._drawUniformsTwo,
+                            vertexArray : vaColor.va,
+                            renderState : bucketLocator.rsTwo
+                        },
+                        {
+                            boundingVolume : boundingVolume,
+                            modelMatrix : modelMatrix,
+                            primitiveType : PrimitiveType.LINES,
+                            count : bucketLocator.count,
+                            offset : bucketLocator.offset,
+                            shaderProgram : this._sp,
+                            uniformMap : this._drawUniformsThree,
+                            vertexArray : vaOutlineColor.va,
+                            renderState : bucketLocator.rsThree
+                        });
+                    }
+                }
+            } else if (pass.pick) {
+                var length = this._pickColorVertexArrays.length;
+                for ( var i = 0; i < length; ++i) {
+                    var vaPickColor = this._pickColorVertexArrays[i];
+                    var buckets = vaPickColor.buckets;
+                    var bucketLength = buckets.length;
+                    for ( var j = 0; j < bucketLength; ++j) {
+                        var bucketLocator = buckets[j];
+                        commandList.push({
+                            boundingVolume : boundingVolume,
+                            modelMatrix : modelMatrix,
+                            primitiveType : PrimitiveType.LINES,
+                            count : bucketLocator.count,
+                            offset : bucketLocator.offset,
+                            shaderProgram : this._sp,
+                            uniformMap : this._pickUniforms,
+                            vertexArray : vaPickColor.va,
+                            renderState : bucketLocator.rsPick
+                        });
+                    }
+                }
+            }
+        }
+
+        return commandList;
     };
 
     /**

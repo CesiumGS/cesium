@@ -660,31 +660,6 @@ define([
     };
 
     /**
-     * Renders the labels.  In order for changes to properties to be realized,
-     * {@link LabelCollection#update} must be called before <code>render</code>.
-     * <br /><br />
-     * Labels are rendered in a single pass using an uber-shader with a texture atlas, where
-     * each image in the atlas corresponds to one label.
-     *
-     * @memberof LabelCollection
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see LabelCollection#update
-     */
-    LabelCollection.prototype.render = function(context) {
-        this._billboardCollection.render(context);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof LabelCollection
-     */
-    LabelCollection.prototype.renderForPick = function(context, framebuffer) {
-        this._billboardCollection.renderForPick(context, framebuffer);
-    };
-
-    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than

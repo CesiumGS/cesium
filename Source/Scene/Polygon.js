@@ -588,7 +588,7 @@ define([
         }
 
         if (!this.show) {
-            return undefined;
+            return [];
         }
 
         if (this._ellipsoid !== this.ellipsoid) {
@@ -634,10 +634,10 @@ define([
         }
 
         if (typeof this._vertices.getVertexArrays() === 'undefined') {
-            return undefined;
+            return [];
         }
 
-        if (!this._rs) {
+        if (typeof this._rs === 'undefined') {
             // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
             this._rs = context.createRenderState({
                 cull : {
@@ -648,11 +648,14 @@ define([
             });
         }
 
-        // Recompile shader when material or lighting changes
-        if (typeof this._material === 'undefined' ||
-            this._material !== this.material ||
-            this._affectedByLighting !== this.affectedByLighting) {
+        var pass = frameState.passes;
 
+        var materialChanged = typeof this._material === 'undefined' ||
+            this._material !== this.material ||
+            this._affectedByLighting !== this.affectedByLighting;
+
+        // Recompile shader when material or lighting changes
+        if (pass.color && materialChanged) {
             this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
             this._material = this.material;
             this._affectedByLighting = this.affectedByLighting;
@@ -672,7 +675,7 @@ define([
             this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
         }
 
-        if (frameState.passes.pick && typeof this._pickId === 'undefined') {
+        if (pass.pick && typeof this._pickId === 'undefined') {
             this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
 
             this._rsPick = context.createRenderState({
@@ -710,56 +713,36 @@ define([
             boundingVolume = this._boundingVolume.union(this._boundingVolume2D);
         }
 
-        return {
-            boundingVolume : boundingVolume
-        };
-    };
-
-    /**
-     * Renders the polygon.  In order for changes to positions and properties to be realized,
-     * {@link Polygon#update} must be called before <code>render</code>.
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Polygon#update
-     * @see Polygon#setTextureAtlas
-     */
-    Polygon.prototype.render = function(context) {
         var vas = this._vertices.getVertexArrays();
         var length = vas.length;
-        for ( var j = 0; j < length; ++j) {
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLES,
-                shaderProgram : this._sp,
-                uniformMap : this._drawUniforms,
-                vertexArray : vas[j],
-                renderState : this._rs
-            });
+        var commandList = new Array(length);
+        if (pass.color) {
+            for (var i = 0; i < length; ++i) {
+                commandList[i] = {
+                    boundingVolume : boundingVolume,
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    shaderProgram : this._sp,
+                    uniformMap : this._drawUniforms,
+                    vertexArray : vas[i],
+                    renderState : this._rs
+                };
+            }
+            return commandList;
+        } else if (pass.pick) {
+            for ( var i = 0; i < length; ++i) {
+                commandList[i] = {
+                    boundingVolume : boundingVolume,
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    shaderProgram : this._spPick,
+                    uniformMap : this._pickUniforms,
+                    vertexArray : vas[i],
+                    renderState : this._rsPick
+                };
+            }
+            return commandList;
         }
-    };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    Polygon.prototype.renderForPick = function(context, framebuffer) {
-        var vas = this._vertices.getVertexArrays();
-        var length = vas.length;
-        for ( var j = 0; j < length; ++j) {
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLES,
-                shaderProgram : this._spPick,
-                uniformMap : this._pickUniforms,
-                vertexArray : vas[j],
-                renderState : this._rsPick,
-                framebuffer : framebuffer
-            });
-        }
+        return [];
     };
 
     /**

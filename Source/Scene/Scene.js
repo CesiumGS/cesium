@@ -177,6 +177,7 @@ define([
     };
 
     function clearPasses(passes) {
+        passes.color = false;
         passes.pick = false;
     }
 
@@ -224,7 +225,9 @@ define([
         }
 
         updateFrameState(scene);
-        scene._primitives.update(scene._context, scene._frameState);
+        scene._frameState.passes.color = true;
+
+        return scene._primitives.update(scene._context, scene._frameState);
     }
 
     /**
@@ -232,10 +235,13 @@ define([
      * @memberof Scene
      */
     Scene.prototype.render = function() {
-        update(this);
-
+        var commandList = update(this);
         this._context.clear(this._clearState);
-        this._primitives.render(this._context);
+
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            this._context.draw(commandList[i]);
+        }
     };
 
     function getPickFrustum(scene, windowPosition, width, height) {
@@ -302,11 +308,17 @@ define([
 
         updateFrameState(this);
         frameState.passes.pick = true;
+
         var oldFrustum = frameState.camera.frustum;
         frameState.camera.frustum = getPickFrustum(this, windowPosition, regionWidth, regionHeight);
 
-        primitives.update(context, frameState);
-        primitives.renderForPick(context, fb);
+        var commandList = primitives.update(context, frameState);
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            var command = commandList[i];
+            command.framebuffer = fb;
+            context.draw(command);
+        }
 
         frameState.camera.frustum = oldFrustum;
 

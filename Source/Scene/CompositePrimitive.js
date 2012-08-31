@@ -54,7 +54,6 @@ define([
         this._centralBody = null;
         this._primitives = [];
         this._guid = createGuid();
-        this._renderList = [];
 
         /**
          * DOC_TBA
@@ -143,7 +142,7 @@ define([
      * primitives.add(labels);
      */
     CompositePrimitive.prototype.add = function(primitive) {
-        if (!primitive) {
+        if (typeof primitive === 'undefined') {
             throw new DeveloperError('primitive is required.');
         }
 
@@ -261,7 +260,7 @@ define([
      * @see CompositePrimitive#addGround
      */
     CompositePrimitive.prototype.bringForward = function(primitive) {
-        if (primitive) {
+        if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;
 
@@ -287,7 +286,7 @@ define([
      * @see CompositePrimitive#addGround
      */
     CompositePrimitive.prototype.bringToFront = function(primitive) {
-        if (primitive) {
+        if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;
 
@@ -313,7 +312,7 @@ define([
      * @see CompositePrimitive#addGround
      */
     CompositePrimitive.prototype.sendBackward = function(primitive) {
-        if (primitive) {
+        if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;
 
@@ -339,7 +338,7 @@ define([
      * @see CompositePrimitive#addGround
      */
     CompositePrimitive.prototype.sendToBack = function(primitive) {
-        if (primitive) {
+        if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;
 
@@ -430,23 +429,25 @@ define([
         }
 
         var length = primitives.length;
+        var commandList = [];
         for ( var i = 0; i < length; ++i) {
             var primitive = primitives[i];
-            var spatialState = primitive.update(context, frameState);
+            var primitiveCommandList = primitive.update(context, frameState);
 
-            if (typeof spatialState === 'undefined') {
-                continue;
+            var commandLength = primitiveCommandList.length;
+            for (var j = 0; j < commandLength; ++j) {
+                var command = primitiveCommandList[j];
+                var boundingVolume = command.boundingVolume;
+                if (typeof boundingVolume !== 'undefined' &&
+                        typeof frustumRect !== 'undefined' &&
+                        boundingVolume.intersect(frustumRect) === Intersect.OUTSIDE) {
+                    continue;
+                }
+                commandList.push(command);
             }
-
-            var boundingVolume = spatialState.boundingVolume;
-            if (typeof boundingVolume !== 'undefined' &&
-                    typeof frustumRect !== 'undefined' &&
-                    boundingVolume.intersect(frustumRect) === Intersect.OUTSIDE) {
-                continue;
-            }
-
-            renderList.push(primitive);
         }
+
+        return commandList;
     }
 
     function update3D(context, frameState, primitives, renderList) {
@@ -455,34 +456,37 @@ define([
         var occluder = frameState.occluder;
 
         var length = primitives.length;
-        for ( var i = 0; i < length; ++i) {
+        var commandList = [];
+        for (var i = 0; i < length; ++i) {
             var primitive = primitives[i];
-            var spatialState = primitive.update(context, frameState);
+            var primitiveCommandList = primitive.update(context, frameState);
 
-            if (typeof spatialState === 'undefined') {
-                continue;
-            }
+            var commandLength = primitiveCommandList.length;
+            for (var j = 0; j < commandLength; ++j) {
+                var command = primitiveCommandList[j];
+                var boundingVolume = command.boundingVolume;
+                if (typeof boundingVolume !== 'undefined') {
+                    var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
+                    var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
+                    center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
+                    boundingVolume = new BoundingSphere(center, boundingVolume.radius);
 
-            var boundingVolume = spatialState.boundingVolume;
-            if (typeof boundingVolume !== 'undefined') {
-                var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
-                var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
-                center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
-                boundingVolume = new BoundingSphere(center, boundingVolume.radius);
+                    if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+                        continue;
+                    }
 
-                if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
-                    continue;
+                    if (mode === SceneMode.SCENE3D &&
+                            typeof occluder !== 'undefined' &&
+                            !occluder.isVisible(boundingVolume)) {
+                        continue;
+                    }
                 }
 
-                if (mode === SceneMode.SCENE3D &&
-                        typeof occluder !== 'undefined' &&
-                        !occluder.isVisible(boundingVolume)) {
-                    continue;
-                }
+                commandList.push(command);
             }
-
-            renderList.push(primitive);
         }
+
+        return commandList;
     }
 
     /**
@@ -490,62 +494,20 @@ define([
      */
     CompositePrimitive.prototype.update = function(context, frameState) {
         if (!this.show) {
-            return undefined;
+            return [];
         }
 
-        if (this._centralBody) {
-            this._centralBody.update(context, frameState);
-        }
+        //TODO:
+        //if (this._centralBody) {
+        //    this._centralBody.update(context, frameState);
+        //}
 
         var mode = frameState.mode;
         if (mode === SceneMode.SCENE2D) {
-            update2D(context, frameState, this._primitives, this._renderList);
-        } else {
-            update3D(context, frameState, this._primitives, this._renderList);
+            return update2D(context, frameState, this._primitives, this._renderList);
         }
 
-        return {};
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof CompositePrimitive
-     */
-    CompositePrimitive.prototype.render = function(context) {
-        var cb = this._centralBody;
-        var primitives = this._renderList;
-        var primitivesLen = primitives.length;
-
-        if (cb) {
-            cb.render(context);
-        }
-        for ( var i = 0; i < primitivesLen; ++i) {
-            var primitive = primitives[i];
-            primitive.render(context);
-        }
-        this._renderList.length = 0;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof CompositePrimitive
-     */
-    CompositePrimitive.prototype.renderForPick = function(context, framebuffer) {
-        var cb = this._centralBody;
-        var primitives = this._renderList;
-        var primitivesLen = primitives.length;
-
-        if (cb) {
-            cb.renderForPick(context, framebuffer);
-        }
-
-        for ( var i = 0; i < primitivesLen; ++i) {
-            var primitive = primitives[i];
-            if (primitive.renderForPick) {
-                primitive.renderForPick(context, framebuffer);
-            }
-        }
-        this._renderList.length = 0;
+        return update3D(context, frameState, this._primitives, this._renderList);
     };
 
     /**
