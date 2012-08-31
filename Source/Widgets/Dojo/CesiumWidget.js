@@ -208,7 +208,7 @@ define([
 
             scene.getPrimitives().setCentralBody(centralBody);
 
-            var camera = scene.getCamera(), maxRadii = ellipsoid.getRadii().getMaximumComponent();
+            var camera = scene.getCamera(), maxRadii = ellipsoid.getMaximumRadius();
 
             camera.position = camera.position.multiplyByScalar(1.5);
             camera.frustum.near = 0.0002 * maxRadii;
