@@ -1,6 +1,4 @@
 //#define SHOW_TILE_BOUNDARIES
-//#define SHOW_LEVELS
-//#define SHOW_CAMERA_INSIDE_BOUNDING_SPHERE
 
 #ifndef TEXTURE_UNITS
 #define TEXTURE_UNITS 8
@@ -9,7 +7,7 @@
 uniform int u_numberOfDayTextures;
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec2 u_dayTextureTranslation[TEXTURE_UNITS];
-uniform vec2 u_dayTextureScale[TEXTURE_UNITS];
+uniform vec2 u_oneOverDayTextureScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 uniform vec2 u_dayTextureMinTexCoords[TEXTURE_UNITS];
 uniform vec2 u_dayTextureMaxTexCoords[TEXTURE_UNITS];
@@ -25,68 +23,46 @@ varying vec3 v_mieColor;
 
 varying vec2 v_textureCoordinates;
 
+vec3 sampleAndBlend(
+    vec3 previousColor,
+    sampler2D texture,
+    vec2 tileTextureCoordinates,
+    vec4 textureCoordinateExtent,
+    vec2 textureCoordinateTranslation,
+    vec2 oneOverTextureCoordinateScale,
+    float textureAlpha)
+{
+    // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
+    //    tileTextureCoordinates.s < textureCoordinateExtent.s ||
+    //    tileTextureCoordinates.s > textureCoordinateExtent.p ||
+    //    tileTextureCoordinates.t < textureCoordinateExtent.t ||
+    //    tileTextureCoordinates.t > textureCoordinateExtent.q
+    // In other words, the alpha is zero if the fragment is outside the extent
+    // covered by this texture.  Would an actual 'if' yield better performance?
+    vec2 alphaMultiplier = step(textureCoordinateExtent.st, tileTextureCoordinates); 
+    textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
+    
+    alphaMultiplier = step(vec2(0.0), textureCoordinateExtent.pq - tileTextureCoordinates);
+    textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
+    
+    vec2 textureCoordinates = (tileTextureCoordinates - textureCoordinateTranslation) * oneOverTextureCoordinateScale;
+    vec4 color = texture2D(texture, textureCoordinates);
+    return mix(previousColor, color.rgb, color.a * textureAlpha);
+}
+
+vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);
+
 void main()
 {
-    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
-    vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
-    
 #ifdef SHOW_DAY
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
-    vec2 geographicUV = clamp(v_textureCoordinates, 0.0, 1.0);
-
-    vec3 startDayColor = vec3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
-    for (int i = 0; i < TEXTURE_UNITS; ++i)
-    {
-        if (i >= u_numberOfDayTextures)
-            break;
-            
-        vec2 minTexCoords = u_dayTextureMinTexCoords[i];
-        vec2 maxTexCoords = u_dayTextureMaxTexCoords[i];
-            
-        if (geographicUV.x >= minTexCoords.x &&
-            geographicUV.x <= maxTexCoords.x &&
-            geographicUV.y >= minTexCoords.y &&
-            geographicUV.y <= maxTexCoords.y)
-        {
-	        vec2 textureCoordinates = (geographicUV - u_dayTextureTranslation[i]) / u_dayTextureScale[i];
-	        
-            vec4 color = texture2D(u_dayTextures[i], textureCoordinates);
-	        startDayColor = mix(startDayColor, color.rgb, color.a * u_dayTextureAlpha[i]);
-        }
-    }
-#ifdef SHOW_CAMERA_INSIDE_BOUNDING_SPHERE
-    if (u_cameraInsideBoundingSphere)
-    {
-        startDayColor = mix(startDayColor, vec3(1.0, 0.0, 0.0), 0.2);
-    }
-#endif
-   
-#ifdef SHOW_LEVELS
-    startDayColor = vec3(0.0, 0.0, 0.0);
-    if (u_numberOfDayTextures > 0)
-    {
-	    float x = float(u_level) / 20.0;
-	    if (x < 0.25) {
-	        // blue to cyan
-	        startDayColor.g = 4.0 * x;
-	        startDayColor.b = 1.0;
-	    } else if (x < 0.5) {
-	        // cyan to green
-	        startDayColor.g = 1.0;
-	        startDayColor.b = 2.0 - 4.0 * x;
-	    } else if (x < 0.75) {
-	        // green to yellow
-	        startDayColor.r = 4.0 * x - 2.0;
-	        startDayColor.g = 1.0;
-	    } else {
-	        // yellow to red
-	        startDayColor.r = 1.0;
-	        startDayColor.g = 4.0 * (1.0 - x);
-	    }
-    }
+    vec3 initialColor = vec3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
+    vec3 startDayColor = computeDayColor(initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
+#else
+    vec3 startDayColor = vec3(1.0);
 #endif
     
 #ifdef SHOW_TILE_BOUNDARIES
@@ -96,15 +72,34 @@ void main()
         startDayColor = vec3(1.0, 0.0, 0.0);
     }
 #endif
-#else
-    vec3 startDayColor = vec3(1.0);
-#endif
 
 #ifdef AFFECTED_BY_LIGHTING
+    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
+    vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
     vec3 rgb = getCentralBodyColor(v_positionMC, v_positionEC, normalMC, normalEC, startDayColor, v_rayleighColor, v_mieColor);
 #else
     vec3 rgb = startDayColor;
 #endif
     
     gl_FragColor = vec4(rgb, 1.0);
+}
+
+vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)
+{
+    vec3 color = initialColor;
+    for (int i = 0; i < TEXTURE_UNITS; ++i)
+    {
+        if (i >= u_numberOfDayTextures)
+            break;
+
+	    color = sampleAndBlend(
+	        color,
+	        u_dayTextures[i],
+	        textureCoordinates,
+	        vec4(u_dayTextureMinTexCoords[i], u_dayTextureMaxTexCoords[i]),
+	        u_dayTextureTranslation[i],
+	        u_oneOverDayTextureScale[i],
+	        u_dayTextureAlpha[i]);
+    }
+    return color;
 }

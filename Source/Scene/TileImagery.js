@@ -19,10 +19,10 @@ define([
         TileState) {
     "use strict";
 
-    var TileImagery = function(imagery, textureTranslation, textureScale, minTexCoords, maxTexCoords) {
+    var TileImagery = function(imagery, textureTranslation, oneOverTextureScale, minTexCoords, maxTexCoords) {
         this.imagery = imagery;
         this.textureTranslation = textureTranslation;
-        this.textureScale = textureScale;
+        this.oneOverTextureScale = oneOverTextureScale;
         this.minTexCoords = minTexCoords;
         this.maxTexCoords = maxTexCoords;
     };

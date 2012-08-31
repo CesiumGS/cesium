@@ -257,14 +257,14 @@ define([
                         (imageryExtent.west - terrainExtent.west) / terrainWidth,
                         (imageryExtent.south - terrainExtent.south) / terrainHeight);
 
-                var textureScale = new Cartesian2(
-                        (imageryExtent.east - imageryExtent.west) / terrainWidth,
-                        (imageryExtent.north - imageryExtent.south) / terrainHeight);
+                var oneOverTextureScale = new Cartesian2(
+                        terrainWidth / (imageryExtent.east - imageryExtent.west),
+                        terrainHeight / (imageryExtent.north - imageryExtent.south));
 
                 var minTexCoords = new Cartesian2(minU, minV);
                 var maxTexCoords = new Cartesian2(maxU, maxV);
 
-                tile.imagery.push(new TileImagery(imagery, textureTranslation, textureScale, minTexCoords, maxTexCoords));
+                tile.imagery.push(new TileImagery(imagery, textureTranslation, oneOverTextureScale, minTexCoords, maxTexCoords));
             }
         }
 

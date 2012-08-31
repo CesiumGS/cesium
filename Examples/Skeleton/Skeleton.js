@@ -80,14 +80,14 @@ require({
 
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
-//    var testLayer = imageryLayerCollection.addImageryProvider(
-//            new Cesium.SingleTileImageryProvider({
-//                url : '../../Images/TestLayer.png',
-//                extent : new Cesium.Extent(Cesium.Math.toRadians(-120),
-//                        Cesium.Math.toRadians(37),
-//                        Cesium.Math.toRadians(-119),
-//                        Cesium.Math.toRadians(38))
-//            }));
+    var testLayer = imageryLayerCollection.addImageryProvider(
+            new Cesium.SingleTileImageryProvider({
+                url : '../../Images/TestLayer.png',
+                extent : new Cesium.Extent(Cesium.Math.toRadians(-120),
+                        Cesium.Math.toRadians(37),
+                        Cesium.Math.toRadians(-119),
+                        Cesium.Math.toRadians(38))
+            }));
 
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';

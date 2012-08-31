@@ -328,8 +328,8 @@ define([
         u_dayTextureTranslation : function() {
             return this.dayTextureTranslation;
         },
-        u_dayTextureScale : function() {
-            return this.dayTextureScale;
+        u_oneOverDayTextureScale : function() {
+            return this.oneOverDayTextureScale;
         },
         u_dayTextureMinTexCoords : function() {
             return this.dayTextureMinTexCoords;
@@ -372,7 +372,7 @@ define([
         numberOfDayTextures : 0,
         dayTextures : [],
         dayTextureTranslation : [],
-        dayTextureScale : [],
+        oneOverDayTextureScale : [],
         dayTextureMinTexCoords : [],
         dayTextureMaxTexCoords : [],
         dayTextureAlpha : [],
@@ -438,7 +438,7 @@ define([
 
                     uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
                     uniformMap.dayTextureTranslation[numberOfDayTextures] = tileImagery.textureTranslation;
-                    uniformMap.dayTextureScale[numberOfDayTextures] = tileImagery.textureScale;
+                    uniformMap.oneOverDayTextureScale[numberOfDayTextures] = tileImagery.oneOverTextureScale;
                     uniformMap.dayTextureMinTexCoords[numberOfDayTextures] = tileImagery.minTexCoords;
                     uniformMap.dayTextureMaxTexCoords[numberOfDayTextures] = tileImagery.maxTexCoords;
                     uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
