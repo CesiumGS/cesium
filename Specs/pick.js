@@ -1,18 +1,27 @@
 /*global define*/
-define(function() {
+define([
+        'Scene/FrameState'
+    ], function(
+        FrameState) {
     "use strict";
 
     function pick(context, frameState, primitives, x, y) {
         var pickFramebuffer = context.createPickFramebuffer();
         var fb = pickFramebuffer.begin();
 
-        var oldPick = frameState.passes.pick;
+        var oldPasses = frameState.passes;
+        frameState.passes = (new FrameState()).passes;
         frameState.passes.pick = true;
 
-        primitives.update(context, frameState);
-        primitives.renderForPick(context, fb);
+        var commandList = primitives.update(context, frameState);
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            var command = commandList[i];
+            command.framebuffer = fb;
+            context.draw(command);
+        }
 
-        frameState.passes.pick = oldPick;
+        frameState.passes = oldPasses;
 
         var primitive = pickFramebuffer.end({
             x : x,

@@ -26,5 +26,8 @@ define([
         clientWidth : 1
     });
 
+    frameState.passes.color = true;
+    frameState.passes.pick = false;
+
     return frameState;
 });
