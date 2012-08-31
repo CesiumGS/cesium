@@ -5,6 +5,7 @@ defineSuite([
          '../Specs/destroyContext',
          '../Specs/frameState',
          '../Specs/pick',
+         '../Specs/render',
          'Core/BoundingSphere',
          'Core/Cartesian2',
          'Core/Cartesian3',
@@ -32,6 +33,7 @@ defineSuite([
          destroyContext,
          frameState,
          pick,
+         render,
          BoundingSphere,
          Cartesian2,
          Cartesian3,
@@ -273,8 +275,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         primitives.add(createLabels());
-        primitives.update(context, frameState);
-        primitives.render(context, us);
+        render(context, primitives.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -284,8 +285,7 @@ defineSuite([
 
         primitives.show = false;
         primitives.add(createLabels());
-        primitives.update(context, frameState);
-        primitives.render(context, us);
+        render(context, primitives.update(context, frameState));
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
@@ -300,16 +300,14 @@ defineSuite([
         otherPrimitives.add(p);
         otherPrimitives.destroyPrimitives = false;
 
-        primitives.update(context, frameState);
-        primitives.render(context, us);
+        render(context, primitives.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         // Render using other composite
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        otherPrimitives.update(context, frameState);
-        otherPrimitives.render(context, us);
+        render(context, otherPrimitives.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         otherPrimitives.destroy();
@@ -323,8 +321,7 @@ defineSuite([
         children.add(createLabels());
         primitives.add(children);
 
-        primitives.update(context, frameState);
-        primitives.render(context, us);
+        render(context, primitives.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -485,8 +482,7 @@ defineSuite([
         var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
         primitives.setCentralBody(cb);
 
-        primitives.update(context, frameState);
-        primitives.render(context, us);
+        render(context, primitives.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -653,9 +649,9 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        primitives.update(context, frameState);
-        var numRendered = primitives._renderList.length;
-        primitives.render(context);
+        var commandList = primitives.update(context, frameState);
+        var numRendered = commandList.length;
+        render(context, commandList);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         return numRendered;
@@ -665,9 +661,9 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        primitives.update(context, frameState);
-        var numRendered = primitives._renderList.length;
-        primitives.render(context);
+        var commandList = primitives.update(context, frameState);
+        var numRendered = commandList.length;
+        render(context, commandList);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         return numRendered;
@@ -681,7 +677,7 @@ defineSuite([
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var state = primitive.update(context, frameState);
-        var bv = state.boundingVolume;
+        var bv = state[0].boundingVolume;
         camera.position = bv.center.clone();
         camera.position = camera.position.normalize().multiplyByScalar(camera.position.magnitude() + 1.0);
         camera.direction = camera.position.negate().normalize();
@@ -711,7 +707,7 @@ defineSuite([
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var state = primitive.update(context, frameState);
-        var bv = state.boundingVolume;
+        var bv = state[0].boundingVolume;
         camera.position = bv.center.clone();
         camera.position.z += 1.0;
         camera.direction = Cartesian3.UNIT_Z.negate();
@@ -751,7 +747,7 @@ defineSuite([
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var state = primitive.update(context, frameState);
-        var bv = state.boundingVolume;
+        var bv = state[0].boundingVolume;
         camera.position = new Cartesian3(bv.x + bv.width * 0.5, bv.y + bv.height * 0.5, 1.0);
         camera.direction = Cartesian3.UNIT_Z.negate();
         camera.up = Cartesian3.UNIT_Y;
@@ -778,7 +774,7 @@ defineSuite([
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var state = primitive.update(context, frameState);
-        var bv = state.boundingVolume;
+        var bv = state[0].boundingVolume;
         camera.position = bv.center.clone();
         camera.position = camera.position.normalize().multiplyByScalar(camera.position.magnitude() + 1.0);
         camera.direction = camera.position.negate().normalize();

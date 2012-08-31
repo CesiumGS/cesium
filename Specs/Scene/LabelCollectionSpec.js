@@ -5,6 +5,7 @@ defineSuite([
          '../Specs/destroyContext',
          '../Specs/frameState',
          '../Specs/pick',
+         '../Specs/render',
          'Core/BoundingRectangle',
          'Core/BoundingSphere',
          'Core/Cartesian2',
@@ -25,6 +26,7 @@ defineSuite([
          destroyContext,
          frameState,
          pick,
+         render,
          BoundingRectangle,
          BoundingSphere,
          Cartesian2,
@@ -299,7 +301,7 @@ defineSuite([
     });
 
     it('does not render when constructed', function() {
-        expect(typeof labels.update(context, frameState) === 'undefined').toEqual(true);
+        expect(labels.update(context, frameState).length).toEqual(0);
     });
 
     it('can render after modifying and removing a label', function() {
@@ -327,8 +329,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         label.setScale(2.0);
@@ -337,8 +338,8 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
+
         var p = context.readPixels();
         expect(p[0]).toEqual(0);
         expect(p[1]).toEqual(0);
@@ -361,8 +362,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -381,8 +381,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         labels.add({
@@ -402,8 +401,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]); // Not the most precise check
     });
 
@@ -422,16 +420,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         labels.remove(label);
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
@@ -450,15 +446,13 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         labels.remove(label);
 
         context.clear();
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         labels.add({
@@ -473,8 +467,7 @@ defineSuite([
         });
 
         context.clear();
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -493,16 +486,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         labels.removeAll();
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
@@ -521,8 +512,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         context.clear();
@@ -540,8 +530,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -560,15 +549,13 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -587,21 +574,18 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setShow(false);
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setShow(true);
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -620,8 +604,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         context.clear();
@@ -632,8 +615,7 @@ defineSuite([
             y : 0.0,
             z : 0.0
         }); // Behind viewer
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setPosition({
@@ -641,8 +623,7 @@ defineSuite([
             y : 0.0,
             z : 0.0
         }); // Back in front of viewer
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -661,21 +642,18 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setScale(0.0);
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setScale(2.0);
-        labels.update(context, frameState);
-        labels.render(context, us);
+        render(context, labels.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -1377,7 +1355,7 @@ defineSuite([
             text : 'two'
         });
 
-        var actual = labels.update(context, frameState).boundingVolume;
+        var actual = labels.update(context, frameState)[0].boundingVolume;
 
         var positions = [one.getPosition(), two.getPosition()];
         var bs = BoundingSphere.fromPoints(positions);
@@ -1400,7 +1378,7 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = SceneMode.COLUMBUS_VIEW;
-        var actual = labels.update(context, frameState).boundingVolume;
+        var actual = labels.update(context, frameState)[0].boundingVolume;
         frameState.mode = mode;
 
         var projectedPositions = [
@@ -1441,7 +1419,7 @@ defineSuite([
         frameState.mode = SceneMode.SCENE2D;
         camera.frustum = orthoFrustum;
 
-        var actual = labels.update(context, frameState).boundingVolume;
+        var actual = labels.update(context, frameState)[0].boundingVolume;
 
         camera.frustum = frustum;
         frameState.mode = mode;
