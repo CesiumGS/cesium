@@ -118,10 +118,12 @@ define([
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
-        this._spWithoutAtmosphere = undefined;
-        this._spGroundFromSpace = undefined;
-        this._spGroundFromAtmosphere = undefined;
-        this._sp = undefined; // Reference to without-atmosphere, ground-from-space, or ground-from-atmosphere
+        this._activeSurfaceShaderSet = undefined;
+
+        this._surfaceShaderSetWithoutAtmosphere = new SurfaceShaderSet();
+        this._surfaceShaderSetGroundFromSpace = new SurfaceShaderSet();
+        this._surfaceShaderSetGroundFromAtmosphere = new SurfaceShaderSet();
+
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
 
@@ -1191,10 +1193,10 @@ define([
         var specularChanged = ((this._showSpecular !== this.showSpecular) && (!this.showSpecular || this._specularTexture));
         var bumpsChanged = ((this._showBumps !== this.showBumps) && (!this.showBumps || this._bumpTexture));
 
-        if (typeof this._sp === 'undefined' || typeof this._spPoles === 'undefined' ||
-            (dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged) ||
-            (this._showTerminator !== this.showTerminator) ||
-            (this._affectedByLighting !== this.affectedByLighting)) {
+        if (typeof this._activeSurfaceShaderSet === 'undefined' || typeof this._spPoles === 'undefined' ||
+            dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged ||
+            this._showTerminator !== this.showTerminator ||
+            this._affectedByLighting !== this.affectedByLighting) {
 
             var fsPrepend = ((this.showDay && this._imageryLayerCollection.getLength() > 0) ? '#define SHOW_DAY 1\n' : '') +
                 ((this.showNight && this._nightTexture) ? '#define SHOW_NIGHT 1\n' : '') +
@@ -1206,30 +1208,36 @@ define([
                 (this.affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                 '#line 0\n' +
                 CentralBodyFSCommon;
-            var groundFromSpacePrepend = '#define SHOW_GROUND_ATMOSPHERE 1\n' +
+
+            this._surfaceShaderSetWithoutAtmosphere.baseVertexShaderString =
+                '#line 0\n' +
+                GroundAtmosphere +
+                '#line 0\n' +
+                CentralBodyVS;
+            this._surfaceShaderSetWithoutAtmosphere.baseFragmentShaderString =
+                fsPrepend +
+                '#line 0\n' +
+                CentralBodyFS;
+
+            var groundFromSpacePrepend =
+                '#define SHOW_GROUND_ATMOSPHERE 1\n' +
                 '#define SHOW_GROUND_ATMOSPHERE_FROM_SPACE 1\n';
-            var groundFromAtmospherePrepend = '#define SHOW_GROUND_ATMOSPHERE 1\n' +
+            this._surfaceShaderSetGroundFromSpace.baseVertexShaderString =
+                groundFromSpacePrepend +
+                this._surfaceShaderSetWithoutAtmosphere.baseVertexShaderString;
+            this._surfaceShaderSetGroundFromSpace.baseFragmentShaderString =
+                groundFromSpacePrepend +
+                this._surfaceShaderSetWithoutAtmosphere.baseFragmentShaderString;
+
+            var groundFromAtmospherePrepend =
+                '#define SHOW_GROUND_ATMOSPHERE 1\n' +
                 '#define SHOW_GROUND_ATMOSPHERE_FROM_ATMOSPHERE 1\n';
-
-            vs = '#line 0\n' +
-                 GroundAtmosphere +
-                 CentralBodyVS;
-
-            fs = fsPrepend + CentralBodyFS;
-
-            this._spWithoutAtmosphere = this._spWithoutAtmosphere && this._spWithoutAtmosphere.release();
-            this._spGroundFromSpace = this._spGroundFromSpace && this._spGroundFromSpace.release();
-            this._spGroundFromAtmosphere = this._spGroundFromAtmosphere && this._spGroundFromAtmosphere.release();
-
-            this._spWithoutAtmosphere = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
-            this._spGroundFromSpace = context.getShaderCache().getShaderProgram(
-                    groundFromSpacePrepend + vs,
-                    groundFromSpacePrepend + fs,
-                    attributeIndices);
-            this._spGroundFromAtmosphere = context.getShaderCache().getShaderProgram(
-                    groundFromAtmospherePrepend + vs,
-                    groundFromAtmospherePrepend + fs,
-                    attributeIndices);
+            this._surfaceShaderSetGroundFromAtmosphere.baseVertexShaderString =
+                groundFromAtmospherePrepend +
+                this._surfaceShaderSetWithoutAtmosphere.baseVertexShaderString;
+            this._surfaceShaderSetGroundFromAtmosphere.baseFragmentShaderString =
+                groundFromAtmospherePrepend +
+                this._surfaceShaderSetWithoutAtmosphere.baseFragmentShaderString;
 
             vs = CentralBodyVSPole;
             fs = fsPrepend + GroundAtmosphere + CentralBodyFSPole;
@@ -1268,20 +1276,20 @@ define([
             // Viewer in space
             this._spSky = this._spSkyFromSpace;
             if (this.showGroundAtmosphere) {
-                this._sp = this._spGroundFromSpace;
+                this._activeSurfaceShaderSet = this._surfaceShaderSetGroundFromSpace;
                 this._spPoles = this._spPolesGroundFromSpace;
             } else {
-                this._sp = this._spWithoutAtmosphere;
+                this._activeSurfaceShaderSet = this._surfaceShaderSetWithoutAtmosphere;
                 this._spPoles = this._spPolesWithoutAtmosphere;
             }
         } else {
             // after the camera passes the minimum height, there is no ground atmosphere effect
             var showAtmosphere = this._ellipsoid.cartesianToCartographic(cameraPosition).height >= this._minGroundFromAtmosphereHeight;
             if (this.showGroundAtmosphere && showAtmosphere) {
-                this._sp = this._spGroundFromAtmosphere;
+                this._activeSurfaceShaderSet = this._surfaceShaderSetGroundFromAtmosphere;
                 this._spPoles = this._spPolesGroundFromAtmosphere;
             } else {
-                this._sp = this._spWithoutAtmosphere;
+                this._activeSurfaceShaderSet = this._surfaceShaderSetWithoutAtmosphere;
                 this._spPoles = this._spPolesWithoutAtmosphere;
             }
             this._spSky = this._spSkyFromAtmosphere;
@@ -1344,10 +1352,11 @@ define([
                 }
             }
 
-            this._surface.render(context, this._drawUniforms, {
-                shaderProgram : this._sp,
-                renderState : this._rsColor
-            });
+            this._surface.render(
+                context,
+                this._drawUniforms,
+                this._activeSurfaceShaderSet,
+                this._rsColor);
 
             // render depth plane
             if (this._mode === SceneMode.SCENE3D) {
@@ -1422,6 +1431,10 @@ define([
         this._vaNorthPole = this._vaNorthPole && this._vaNorthPole.destroy();
         this._vaSouthPole = this._vaSouthPole && this._vaSouthPole.destroy();
 
+        this._surfaceShaderSetWithoutAtmosphere = this._surfaceShaderSetWithoutAtmosphere && this._surfaceShaderSetWithoutAtmosphere.destroy();
+        this._surfaceShaderSetGroundFromSpace = this._surfaceShaderSetGroundFromSpace && this._surfaceShaderSetGroundFromSpace.destroy();
+        this._surfaceShaderSetGroundFromAtmosphere = this._surfaceShaderSetGroundFromAtmosphere && this._surfaceShaderSetGroundFromAtmosphere.destroy();
+
         this._spPolesWithoutAtmosphere = this._spPolesWithoutAtmosphere && this._spPolesWithoutAtmosphere.release();
         this._spPolesGroundFromSpace = this._spPolesGroundFromSpace && this._spPolesGroundFromSpace.release();
         this._spPolesGroundFromAtmosphere = this._spPolesGroundFromAtmosphere && this._spPolesGroundFromAtmosphere.release();
@@ -1442,6 +1455,56 @@ define([
         this._cloudsTexture = this._cloudsTexture && this._cloudsTexture.destroy();
         this._bumpTexture = this._bumpTexture && this._bumpTexture.destroy();
 
+        return destroyObject(this);
+    };
+
+    function SurfaceShaderSet() {
+        this.shadersByTextureCount = [];
+        this.baseVertexShaderString = undefined;
+        this.baseFragmentShaderString = undefined;
+    }
+
+    SurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount) {
+        var shader = this.shadersByTextureCount[textureCount];
+        if (typeof shader === 'undefined') {
+            var vs = this.baseVertexShaderString;
+            var fs = this.baseFragmentShaderString +
+                'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
+                '{\n' +
+                '    vec3 color = initialColor;\n';
+
+            for (var i = 0; i < textureCount; ++i) {
+                fs +=
+                    'color = sampleAndBlend(\n' +
+                    '   color,\n' +
+                    '   u_dayTextures[' + i + '],\n' +
+                    '   textureCoordinates,\n' +
+                    '   u_dayTextureTexCoordsExtent[' + i + '],\n' +
+                    '   u_dayTextureTranslationAndScale[' + i + '],\n' +
+                    '   u_dayTextureAlpha[' + i + ']);\n';
+            }
+
+            fs +=
+                '    return color;\n' +
+                '}';
+
+            shader = context.getShaderCache().getShaderProgram(
+                vs,
+                fs,
+                attributeIndices);
+            this.shadersByTextureCount[textureCount] = shader;
+        }
+        return shader;
+    };
+
+    SurfaceShaderSet.prototype.destroy = function() {
+        var shadersByTextureCount = this.shadersByTextureCount;
+        for (var i = 0, len = shadersByTextureCount.length; i < len; ++i) {
+            var shader = shadersByTextureCount[i];
+            if (typeof shader !== 'undefined') {
+                shader.release();
+            }
+        }
         return destroyObject(this);
     };
 

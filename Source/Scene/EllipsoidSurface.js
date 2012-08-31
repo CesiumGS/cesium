@@ -378,15 +378,16 @@ define([
         oneOverMercatorHeight : 0
     };
 
-    var float32ArrayScratch = new Float32Array(1);
-
-    EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, drawArguments) {
+    EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, shaderSet, renderState) {
         var renderList = this._renderList;
         if (renderList.length === 0) {
             return;
         }
 
         renderList.sort(function(a, b) {
+            if (a.numberOfReadyTextures !== b.numberOfReadyTextures) {
+                return a.numberOfReadyTextures - b.numberOfReadyTextures;
+            }
             return a.distance - b.distance;
         });
 
@@ -394,14 +395,28 @@ define([
         var mv = uniformState.getModelView();
         var projection = uniformState.getProjection();
 
-        context.beginDraw(drawArguments);
-
         var uniformMap = combine([uniformMapTemplate, centralBodyUniformMap], false, false);
 
         var maxTextures = context.getMaximumTextureImageUnits();
 
+        var lastNumberOfReadyTextures;
+
         for ( var i = 0, len = renderList.length; i < len; i++) {
             var tile = renderList[i];
+
+            if (tile.numberOfReadyTextures !== lastNumberOfReadyTextures) {
+                if (typeof lastNumberOfReadyTextures !== 'undefined') {
+                    context.endDraw();
+                }
+
+                context.beginDraw({
+                    shaderProgram : shaderSet.getShaderProgram(context, tile.numberOfReadyTextures),
+                    renderState : renderState
+                });
+
+                lastNumberOfReadyTextures = tile.numberOfReadyTextures;
+            }
+
             uniformMap.level = tile.level;
 
             var rtc = tile.center;
@@ -424,7 +439,7 @@ define([
                     var imageryLayer = imagery.imageryLayer;
                     ++imageryIndex;
 
-                    if (typeof tileImagery === 'undefined' || imagery.state !== ImageryState.READY) {
+                    if (imagery.state !== ImageryState.READY) {
                         continue;
                     }
 
@@ -466,6 +481,14 @@ define([
                 });
             }
 
+            if (typeof lastNumberOfReadyTextures === 'undefined') {
+                context.beginDraw({
+                    shaderProgram : shaderSet.getShaderProgram(context, 1),
+                    renderState : renderState
+                });
+                lastNumberOfReadyTextures = 1;
+            }
+
             var rtc2 = this._boundingSphereTile.boundingSphere3D.center;
             uniformMap.center3D = rtc2;
 
@@ -478,10 +501,11 @@ define([
                 vertexArray : this._boundingSphereVA,
                 uniformMap : uniformMap
             });
-
         }
 
-        context.endDraw();
+        if (typeof lastNumberOfReadyTextures !== 'undefined') {
+            context.endDraw();
+        }
     };
 
     EllipsoidSurface.prototype._renderLogos = function(context) {
@@ -630,6 +654,17 @@ define([
         }
     }
 
+    function countReadyTextures(tile) {
+        var count = 0;
+        var imageryList = tile.imagery;
+        for (var i = 0, len = imageryList.length; i < len; ++i) {
+            if (imageryList[i].imagery.state === ImageryState.READY) {
+                ++count;
+            }
+        }
+        tile.numberOfReadyTextures = count;
+    }
+
     function addBestAvailableTilesToRenderList(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) {
         ++tilesVisited;
 
@@ -649,6 +684,7 @@ define([
         if (screenSpaceError(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) < surface.maxScreenSpaceError) {
             // This tile meets SSE requirements, so render it.
             surface._renderList.push(tile);
+            countReadyTextures(tile);
             ++tilesRendered;
             ++minimumTilesNeeded;
         } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile)) {
@@ -665,6 +701,7 @@ define([
         } else {
             // SSE is not good enough but not all children are loaded, so render this tile anyway.
             surface._renderList.push(tile);
+            countReadyTextures(tile);
             ++tilesRendered;
             ++minimumTilesNeeded;
         }

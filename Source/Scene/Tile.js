@@ -182,6 +182,8 @@ define([
          */
         this.transientData = undefined;
 
+        this.numberOfReadyTextures = 0;
+
         // TODO: write doc for these.
         this.occludeePoint = undefined;
         this.occludeePointComputed = false;

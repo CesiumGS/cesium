@@ -1,7 +1,7 @@
 //#define SHOW_TILE_BOUNDARIES
 
 #ifndef TEXTURE_UNITS
-#define TEXTURE_UNITS 8
+#define TEXTURE_UNITS 16
 #endif
 
 uniform int u_numberOfDayTextures;
@@ -78,23 +78,4 @@ void main()
 #endif
     
     gl_FragColor = vec4(rgb, 1.0);
-}
-
-vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)
-{
-    vec3 color = initialColor;
-    for (int i = 0; i < TEXTURE_UNITS; ++i)
-    {
-        if (i >= u_numberOfDayTextures)
-            break;
-
-	    color = sampleAndBlend(
-	        color,
-	        u_dayTextures[i],
-	        textureCoordinates,
-	        u_dayTextureTexCoordsExtent[i],
-	        u_dayTextureTranslationAndScale[i],
-	        u_dayTextureAlpha[i]);
-    }
-    return color;
 }
