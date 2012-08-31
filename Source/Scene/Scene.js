@@ -9,6 +9,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/IntersectionTests',
         '../Renderer/Context',
         './Camera',
         './CompositePrimitive',
@@ -26,6 +27,7 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        IntersectionTests,
         Context,
         Camera,
         CompositePrimitive,
@@ -247,7 +249,13 @@ define([
 
         var pixelSize = frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
         var pickRay = camera._getPickRayPerspective(windowPosition);
-        var pixelCenter = pickRay.getPoint(near);
+        var planeNormal = camera.direction;
+        var ptOnPlane = pickRay.origin.add(planeNormal.multiplyByScalar(near));
+        var planeConstant = -planeNormal.dot(ptOnPlane);
+        var pixelCenter = IntersectionTests.rayPlane(pickRay, planeNormal, planeConstant);
+        if (typeof pixelCenter === 'undefined') {
+            return frustum;
+        }
 
         var pickWidth = pixelSize.x * width * 0.5;
         var pickHeight = pixelSize.y * height * 0.5;
