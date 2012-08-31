@@ -1,11 +1,13 @@
 /*global define*/
 define([
-        '../Core/Cartographic',
-        '../Core/DeveloperError',
-        '../Core/Math'
+        './Cartographic',
+        './DeveloperError',
+        './freezeObject',
+        './Math'
     ], function(
         Cartographic,
         DeveloperError,
+        freezeObject,
         CesiumMath) {
     "use strict";
 
@@ -182,10 +184,11 @@ define([
 
         return positions;
     };
+
     /**
      * The largest possible extent.
      */
-    Extent.MAX_VALUE = Object.freeze(new Extent(-Math.PI, -CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO));
+    Extent.MAX_VALUE = freezeObject(new Extent(-Math.PI, -CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO));
 
     return Extent;
 });
