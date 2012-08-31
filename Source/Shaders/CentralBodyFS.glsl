@@ -41,7 +41,7 @@ vec3 sampleAndBlend(
     
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
-    vec2 textureCoordinates = (tileTextureCoordinates - translation) * scale;
+    vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
     vec4 color = texture2D(texture, textureCoordinates);
     return mix(previousColor, color.rgb, color.a * textureAlpha);
 }

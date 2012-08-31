@@ -255,11 +255,13 @@ define([
                 imageryExtent = imageryTilingScheme.tileXYToExtent(i, j, imageryLevel);
                 minV = Math.max(0.0, (imageryExtent.south - tile.extent.south) / (tile.extent.north - tile.extent.south));
 
+                var scaleX = terrainWidth / (imageryExtent.east - imageryExtent.west);
+                var scaleY = terrainHeight / (imageryExtent.north - imageryExtent.south);
                 var textureTranslationAndScale = new Cartesian4(
-                        (imageryExtent.west - terrainExtent.west) / terrainWidth,
-                        (imageryExtent.south - terrainExtent.south) / terrainHeight,
-                        terrainWidth / (imageryExtent.east - imageryExtent.west),
-                        terrainHeight / (imageryExtent.north - imageryExtent.south));
+                        scaleX * (terrainExtent.west - imageryExtent.west) / terrainWidth,
+                        scaleY * (terrainExtent.south - imageryExtent.south) / terrainHeight,
+                        scaleX,
+                        scaleY);
                 var texCoordsExtent = new Cartesian4(minU, minV, maxU, maxV);
                 tile.imagery.push(new TileImagery(imagery, textureTranslationAndScale, texCoordsExtent));
             }
