@@ -4,6 +4,7 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
     /*global self*/
+    var scope = typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : {};
 
-    Cesium.defaultValue(window, self).Cesium = Cesium;
+    scope.Cesium = Cesium;
 }, undefined, true);
