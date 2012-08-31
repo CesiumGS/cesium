@@ -34,7 +34,7 @@ define([
      */
     var CameraFlightController = function(canvas, camera, ellipsoid, destination, duration, complete) {
         // get minimum altitude from which the whole ellipsoid is visible
-        var radius = ellipsoid.radii.getMaximumComponent();
+        var radius = ellipsoid.getMaximumRadius();
 
         var frustum = camera.frustum;
         var near = frustum.near;
@@ -67,7 +67,7 @@ define([
     CameraFlightController.prototype._createPath = function(ellipsoid, altitude, endPoint, duration) {
         var start = this._camera.position;
 
-        var maxStartAlt = ellipsoid.maximumRadius + altitude;
+        var maxStartAlt = ellipsoid.getMaximumRadius() + altitude;
         var dot = start.normalize().dot(endPoint.normalize());
 
         var abovePercentage, incrementPercentage;
@@ -81,7 +81,7 @@ define([
             incrementPercentage = 0.5;
         }
 
-        maxStartAlt = ellipsoid.maximumRadius + abovePercentage * altitude;
+        maxStartAlt = ellipsoid.getMaximumRadius() + abovePercentage * altitude;
 
         var aboveEnd = endPoint.normalize().multiplyByScalar(maxStartAlt);
         var afterStart = start.normalize().multiplyByScalar(maxStartAlt);

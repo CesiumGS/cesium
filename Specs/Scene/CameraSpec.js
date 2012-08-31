@@ -163,7 +163,7 @@ defineSuite([
         frustum.far = 21.0;
         camera.frustum = frustum;
 
-        var maxRadii = Ellipsoid.WGS84.maximumRadius;
+        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
         camera.position = new Cartesian3(0.0, 0.0, maxRadii * 2.0);
 
         var extent = new Extent(
@@ -265,7 +265,7 @@ defineSuite([
 
     it('pick ellipsoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var maxRadii = ellipsoid.maximumRadius;
+        var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = Cartesian3.UNIT_X.multiplyByScalar(2.0 * maxRadii);
         camera.direction = camera.position.negate().normalize();
@@ -303,7 +303,7 @@ defineSuite([
     it('pick map in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new EquidistantCylindricalProjection(ellipsoid);
-        var maxRadii = ellipsoid.maximumRadius;
+        var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         camera.direction = camera.position.negate().normalize();
@@ -342,7 +342,7 @@ defineSuite([
     it('pick map in columbus view', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new EquidistantCylindricalProjection(ellipsoid);
-        var maxRadii = ellipsoid.maximumRadius;
+        var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
         camera.direction = Cartesian3.ZERO.subtract(camera.position).normalize();

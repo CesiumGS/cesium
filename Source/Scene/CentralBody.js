@@ -201,7 +201,7 @@ define([
             zoom : 0,
             ellipsoid : ellipsoid
         });
-        this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), Cartesian3.ZERO);
+        this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
         this._renderQueue = new Queue();
         this._imageQueue = new Queue();
@@ -683,7 +683,7 @@ define([
 
         this._fCameraHeight = undefined;
         this._fCameraHeight2 = undefined;
-        this._outerRadius = ellipsoid.radii.multiplyByScalar(1.025).getMaximumComponent();
+        this._outerRadius = ellipsoid.getRadii().multiplyByScalar(1.025).getMaximumComponent();
 
         // TODO: Do we want to expose any of these atmosphere constants?
         var Kr = 0.0025;
@@ -692,7 +692,7 @@ define([
         var Km4PI = Km * 4.0 * Math.PI;
         var ESun = 15.0;
         var g = -0.95;
-        var innerRadius = ellipsoid.radii.getMaximumComponent();
+        var innerRadius = ellipsoid.getMaximumRadius();
         var rayleighScaleDepth = 0.25;
         var inverseWaveLength = {
             x : 1.0 / Math.pow(0.650, 4.0), // Red
@@ -1223,7 +1223,7 @@ define([
         var texelWidth = (extent.east - extent.west) / provider.tileWidth;
         var texelSize = (texelWidth > texelHeight) ? texelWidth : texelHeight;
         var dmin = texelSize * invPixelSizePerDistance;
-        dmin *= this._ellipsoid.maximumRadius;
+        dmin *= this._ellipsoid.getMaximumRadius();
 
         return function(zoom, pixelError) {
             return (dmin / pixelError) * Math.exp(-0.693147181 * zoom);
@@ -1371,11 +1371,11 @@ define([
     };
 
     CentralBody.prototype._computeDepthQuad = function(frameState) {
-        var radii = this._ellipsoid.radii;
+        var radii = this._ellipsoid.getRadii();
         var p = frameState.camera.getPositionWC();
 
         // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = this._ellipsoid.oneOverRadii.multiplyComponents(p);
+        var q = this._ellipsoid.getOneOverRadii().multiplyComponents(p);
 
         var qMagnitude = q.magnitude();
         var qUnit = q.normalize();
@@ -1713,7 +1713,7 @@ define([
         if (this.showSkyAtmosphere && !this._vaSky) {
             // PERFORMANCE_IDEA:  Is 60 the right amount to tessellate?  I think scaling the original
             // geometry in a vertex is a bad idea; at least, because it introduces a draw call per tile.
-            var skyMesh = CubeMapEllipsoidTessellator.compute(Ellipsoid.fromCartesian3(this._ellipsoid.radii.multiplyByScalar(1.025)), 60);
+            var skyMesh = CubeMapEllipsoidTessellator.compute(Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
             this._vaSky = context.createVertexArrayFromMesh({
                 mesh : skyMesh,
                 attributeIndices : MeshFilters.createAttributeIndices(skyMesh),

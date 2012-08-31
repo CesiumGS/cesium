@@ -1426,7 +1426,7 @@ defineSuite([
             text : 'two'
         });
 
-        var maxRadii = ellipsoid.maximumRadius;
+        var maxRadii = ellipsoid.getMaximumRadius();
         var orthoFrustum = new OrthographicFrustum();
         orthoFrustum.right = maxRadii * Math.PI;
         orthoFrustum.left = -orthoFrustum.right;

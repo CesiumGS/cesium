@@ -190,7 +190,7 @@ define([
         var cb = scene._primitives.getCentralBody();
         if (scene.mode === SceneMode.SCENE3D && typeof cb !== 'undefined') {
             var ellipsoid = cb.getEllipsoid();
-            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), camera.getPositionWC());
+            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
             frameState.occluder = occluder;
         }
 
