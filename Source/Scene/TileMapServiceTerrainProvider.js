@@ -160,12 +160,9 @@ define([
     TileMapServiceTerrainProvider.prototype.transformGeometry = function(context, tile) {
         // Get the height data from the image by copying it to a canvas.
         var image = tile.geometry;
-//        var width = image.width;
-//        var height = image.height;
-//        var pixels = getImagePixels(image);
-        var width = 129;
-        var height = 129;
-        var pixels = getImagePixels(image, width, height);
+        var width = image.width;
+        var height = image.height;
+        var pixels = getImagePixels(image);
 
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
