@@ -74,12 +74,6 @@ defineSuite([
         expect(ellipsoid.getMaximumRadius()).toEqual(maximumRadius);
     });
 
-    it('clone works', function() {
-        var ellipsoid = Ellipsoid.fromCartesian3(radii);
-        var returnedResult = ellipsoid.clone();
-        expect(returnedResult).toEqual(ellipsoid);
-    });
-
     it('geodeticSurfaceNormalCartographic works without a result parameter', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var returnedResult = ellipsoid.geodeticSurfaceNormalCartographic(spaceCartographic);
