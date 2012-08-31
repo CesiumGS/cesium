@@ -321,7 +321,7 @@ define([
         }
 
         // Project points onto a tangent plane to find the mutually visible vertex.
-        var tangentPlane = EllipsoidTangentPlane.create(Ellipsoid.WGS84, outerRing);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(Ellipsoid.WGS84, outerRing);
         var tangentOuterRing = tangentPlane.projectPointsOntoPlane(outerRing);
         var tangentInnerRings = [];
         for (i = 0; i < innerRings.length; i++) {
