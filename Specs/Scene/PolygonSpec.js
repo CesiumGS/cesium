@@ -386,7 +386,7 @@ defineSuite([
         var rect = BoundingRectangle.fromPoints(projectedPositions);
         expect(boundingVolume.x).toEqualEpsilon(rect.x, CesiumMath.EPSILON10);
         expect(boundingVolume.y).toEqualEpsilon(rect.y, CesiumMath.EPSILON10);
-        expect(boundingVolume.width).toEqualEpsilon(rect.width, CesiumMath.EPSILON10);
+        expect(boundingVolume.width).toEqualEpsilon(rect.width, CesiumMath.EPSILON9);
         expect(boundingVolume.height).toEqualEpsilon(rect.height, CesiumMath.EPSILON10);
     });
 
@@ -426,7 +426,7 @@ defineSuite([
 
         var sphere = BoundingSphere.fromExtent2D(extent, projection);
         sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
-        expect(boundingVolume).toEqual(sphere);
+        expect(boundingVolume).toEqualEpsilon(sphere, CesiumMath.EPSILON9);
     });
 
     it('test 2D bounding rectangle from extent', function() {
@@ -448,7 +448,7 @@ defineSuite([
         frameState.mode = mode;
 
         var rect = BoundingRectangle.fromExtent(extent, projection);
-        expect(boundingVolume).toEqual(rect);
+        expect(boundingVolume).toEqualEpsilon(rect, CesiumMath.EPSILON9);
     });
 
     it('isDestroyed', function() {
