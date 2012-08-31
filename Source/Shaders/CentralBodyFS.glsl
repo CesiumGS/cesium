@@ -9,8 +9,7 @@ uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec2 u_dayTextureTranslation[TEXTURE_UNITS];
 uniform vec2 u_oneOverDayTextureScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
-uniform vec2 u_dayTextureMinTexCoords[TEXTURE_UNITS];
-uniform vec2 u_dayTextureMaxTexCoords[TEXTURE_UNITS];
+uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 
 uniform bool u_cameraInsideBoundingSphere;
 uniform int u_level;
@@ -96,7 +95,7 @@ vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)
 	        color,
 	        u_dayTextures[i],
 	        textureCoordinates,
-	        vec4(u_dayTextureMinTexCoords[i], u_dayTextureMaxTexCoords[i]),
+	        u_dayTextureTexCoordsExtent[i],
 	        u_dayTextureTranslation[i],
 	        u_oneOverDayTextureScale[i],
 	        u_dayTextureAlpha[i]);

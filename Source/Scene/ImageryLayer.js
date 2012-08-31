@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Cartesian2',
+        '../Core/Cartesian4',
         '../Core/Color',
         '../Core/Extent',
         '../Core/PlaneTessellator',
@@ -35,6 +36,7 @@ define([
         DeveloperError,
         CesiumMath,
         Cartesian2,
+        Cartesian4,
         Color,
         Extent,
         PlaneTessellator,
@@ -261,10 +263,8 @@ define([
                         terrainWidth / (imageryExtent.east - imageryExtent.west),
                         terrainHeight / (imageryExtent.north - imageryExtent.south));
 
-                var minTexCoords = new Cartesian2(minU, minV);
-                var maxTexCoords = new Cartesian2(maxU, maxV);
-
-                tile.imagery.push(new TileImagery(imagery, textureTranslation, oneOverTextureScale, minTexCoords, maxTexCoords));
+                var texCoordsExtent = new Cartesian4(minU, minV, maxU, maxV);
+                tile.imagery.push(new TileImagery(imagery, textureTranslation, oneOverTextureScale, texCoordsExtent));
             }
         }
 

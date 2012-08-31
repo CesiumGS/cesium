@@ -458,7 +458,9 @@ define([
                     for ( var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
 
-                        if (typeof v.red !== 'undefined') {
+                        if (typeof v === 'undefined') {
+                            _gl.uniform4f(_locations[i], 0.0, 0.0, 0.0, 0.0);
+                        } else if (typeof v.red !== 'undefined') {
                             _gl.uniform4f(_locations[i], v.red, v.green, v.blue, v.alpha);
                         } else if (typeof v.x !== 'undefined') {
                             _gl.uniform4f(_locations[i], v.x, v.y, v.z, v.w);
