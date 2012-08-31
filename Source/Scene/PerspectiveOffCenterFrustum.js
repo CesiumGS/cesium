@@ -1,13 +1,17 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Matrix4'
     ], function(
         DeveloperError,
+        defaultValue,
         destroyObject,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Matrix4) {
@@ -310,24 +314,23 @@ define([
     };
 
     /**
-     * Returns the pixels width and height in meters.
+     * Returns the pixel's width and height in meters.
      *
      * @memberof PerspectiveOffCenterFrustum
      *
-     * @param {Object} canvasDimensions An object with width and height properties of the canvas.
-     * @param {Number} [distance=near plane distance] The distance of the near plane from the camera.
+     * @param {Cartesian2} canvasDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
+     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      *
      * @exception {DeveloperError} canvasDimensions is required.
+     * @exception {DeveloperError} canvasDimensions.x must be greater than zero.
+     * @exception {DeveloperError} canvasDimensione.y must be greater than zero.
      *
-     * @returns {Object} An object with width and height properties of a pixel.
+     * @returns {Cartesian2} A {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelSize({
-     *     width : canvas.clientWidth,
-     *     height : canvas.clientHeight
-     * });
+     * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
      *
      * // Example 2
      * // Get the width and height of a pixel if the near plane was set to 'distance'.
@@ -337,10 +340,7 @@ define([
      * var toCenter = primitive.boundingVolume.center.subtract(position);      // vector from camera to a primitive
      * var toCenterProj = direction.multiplyByScalar(direction.dot(toCenter)); // project vector onto camera direction vector
      * var distance = toCenterProj.magnitude();
-     * var pixelSize = camera.frustum.getPixelSize({
-     *     width : canvas.clientWidth,
-     *     height : canvas.clientHeight
-     * }, distance);
+     * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight), distance);
      */
     PerspectiveOffCenterFrustum.prototype.getPixelSize = function(canvasDimensions, distance) {
         update(this);
@@ -349,20 +349,26 @@ define([
             throw new DeveloperError('canvasDimensions is required.');
         }
 
-        if (typeof distance === 'undefined') {
-            distance = this.near;
+        var width = canvasDimensions.x;
+        var height = canvasDimensions.y;
+
+        if (width <= 0) {
+            throw new DeveloperError('canvasDimensions.x must be grater than zero.');
         }
+
+        if (height <= 0) {
+            throw new DeveloperError('canvasDimensions.y must be grater than zero.');
+        }
+
+        distance = defaultValue(distance, this.near);
 
         var inverseNear = 1.0 / this.near;
         var tanTheta = this.top * inverseNear;
-        var pixelHeight = 2.0 * distance * tanTheta / canvasDimensions.height;
+        var pixelHeight = 2.0 * distance * tanTheta / height;
         tanTheta = this.right * inverseNear;
-        var pixelWidth = 2.0 * distance * tanTheta / canvasDimensions.width;
+        var pixelWidth = 2.0 * distance * tanTheta / width;
 
-        return {
-            width : pixelWidth,
-            height : pixelHeight
-        };
+        return new Cartesian2(pixelWidth, pixelHeight);
     };
 
     /**

@@ -164,17 +164,18 @@ define([
     };
 
     /**
-     * Returns the pixels width and height in meters.
+     * Returns the pixel's width and height in meters.
      *
      * @memberof PerspectiveFrustum
      *
-     * @param {Object} canvasDimensions An object with width and height properties of the canvas.
-     * @param {Number} [distance=near plane distance] The distance of the near plane from the camera.
+     * @param {Cartesian2} canvasDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
+     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      *
      * @exception {DeveloperError} canvasDimensions is required.
-     * @exceltion {DeveloperError} distance must be greater than zero.
+     * @exception {DeveloperError} canvasDimensions.x must be greater than zero.
+     * @exception {DeveloperError} canvasDimensione.y must be greater than zero.
      *
-     * @returns {Object} An object with width and height properties of a pixel.
+     * @returns {Cartesian2} A {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @example
      * // Example 1

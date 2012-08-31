@@ -4,6 +4,7 @@ define([
         '../Core/combine',
         '../Core/destroyObject',
         '../Core/Math',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Matrix4',
@@ -25,6 +26,7 @@ define([
         combine,
         destroyObject,
         CesiumMath,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Matrix4,
@@ -930,6 +932,8 @@ define([
         }
     };
 
+    var scratchCanvasDimensions = new Cartesian2();
+
     function updateBoundingVolumes(collection, context, frameState) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
@@ -970,11 +974,10 @@ define([
         var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
 
         var canvas = context.getCanvas();
-        var pixelSize = camera.frustum.getPixelSize({
-            width : canvas.clientWidth,
-            height : canvas.clientHeight
-        }, distance);
-        pixelScale = Math.max(pixelSize.width, pixelSize.height);
+        scratchCanvasDimensions.x = canvas.clientWidth;
+        scratchCanvasDimensions.y = canvas.clientHeight;
+        var pixelSize = camera.frustum.getPixelSize(scratchCanvasDimensions, distance);
+        pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         size = pixelScale * collection._maxScale * collection._maxSize * textureSize;
         if (collection._allHorizontalCenter) {

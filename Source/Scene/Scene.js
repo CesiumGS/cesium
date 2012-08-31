@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Occluder',
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Renderer/Context',
         './Camera',
@@ -23,6 +24,7 @@ define([
         DeveloperError,
         Occluder,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Context,
         Camera,
@@ -243,16 +245,12 @@ define([
         var frustum = camera.frustum;
         var near = frustum.near;
 
-        var pixelSize = frustum.getPixelSize({
-            width : canvas.clientWidth,
-            height : canvas.clientHeight
-        });
-
+        var pixelSize = frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
         var pickRay = camera._getPickRayPerspective(windowPosition);
         var pixelCenter = pickRay.getPoint(near);
 
-        var pickWidth = pixelSize.width * width * 0.5;
-        var pickHeight = pixelSize.height * height * 0.5;
+        var pickWidth = pixelSize.x * width * 0.5;
+        var pickHeight = pixelSize.y * height * 0.5;
 
         var up = camera.getUpWC();
         var right = camera.getRightWC();

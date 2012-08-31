@@ -1,12 +1,14 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/PerspectiveOffCenterFrustum',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Matrix4',
          'Core/Math'
      ], function(
          PerspectiveOffCenterFrustum,
+         Cartesian2,
          Cartesian3,
          Cartesian4,
          Matrix4,
@@ -132,12 +134,9 @@ defineSuite([
     });
 
     it('get pixel size', function() {
-        var pixelSize = frustum.getPixelSize({
-            width : 1.0,
-            height : 1.0
-        });
-        expect(pixelSize.width).toEqual(2.0);
-        expect(pixelSize.height).toEqual(2.0);
+        var pixelSize = frustum.getPixelSize(new Cartesian2(1.0, 1.0));
+        expect(pixelSize.x).toEqual(2.0);
+        expect(pixelSize.y).toEqual(2.0);
     });
 
     it('equals', function() {
