@@ -75,7 +75,7 @@ define([
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 1
         });
-        this.maxLevel = 9;
+        this.maxLevel = 11;
         this.heightmapWidth = 64;
         this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, this.heightmapWidth, this.tilingScheme.numberOfLevelZeroTilesX);
 
@@ -141,6 +141,7 @@ define([
             /*global console*/
             console.error('failed to load tile geometry: ' + e);
             tile.state = TileState.FAILED;
+            --requestsInFlight;
         });
     };
 

@@ -939,7 +939,7 @@ define([
                 tileLoadQueue.remove(tile);
             }
 
-            tile = tile._next;
+            tile = tile.loadNext;
         }
     }
 

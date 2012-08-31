@@ -210,6 +210,7 @@ define([
             /*global console*/
             console.error('failed to load tile geometry: ' + e);
             tile.state = TileState.FAILED;
+            --requestsInFlight;
         });
     };
 
