@@ -1,14 +1,16 @@
 /*global define*/
 define([
         './DeveloperError',
+        './freezeObject',
         './Math',
         './Cartesian3',
         './Cartographic'
-       ], function(
-         DeveloperError,
-         CesiumMath,
-         Cartesian3,
-         Cartographic) {
+    ], function(
+        DeveloperError,
+        freezeObject,
+        CesiumMath,
+        Cartesian3,
+        Cartographic) {
     "use strict";
 
     /**
@@ -537,13 +539,13 @@ define([
      *
      * @see czm_getWgs84EllipsoidEC
      */
-    Ellipsoid.WGS84 = Object.freeze(Ellipsoid.fromRadii(6378137.0, 6378137.0, 6356752.3142451793));
+    Ellipsoid.WGS84 = freezeObject(Ellipsoid.fromRadii(6378137.0, 6378137.0, 6356752.3142451793));
 
     /**
      * An immutable Ellipsoid instance initialized to radii of (1.0, 1.0, 1.0).
      * @memberof Ellipsoid
      */
-    Ellipsoid.UNIT_SPHERE = Object.freeze(Ellipsoid.fromRadii(1.0, 1.0, 1.0));
+    Ellipsoid.UNIT_SPHERE = freezeObject(Ellipsoid.fromRadii(1.0, 1.0, 1.0));
 
     /**
      * Duplicates this ellipsoid instance.
