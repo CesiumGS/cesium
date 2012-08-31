@@ -81,7 +81,7 @@ require([
     'dojo/on', 'dojo/dom', 'dijit/form/Button', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem'
 ], function(
     Cesium, CesiumWidget,
-    on, dom, ToggleButton, DropDownButton, DropDownMenu, MenuItem)
+    on, dom, Button, DropDownButton, DropDownMenu, MenuItem)
 {
     "use strict";
     
@@ -348,7 +348,7 @@ require([
             fabric : {
                 type : 'Image',
                 uniforms : {
-                    image : '../../../Images/Cesium_Logo_overlay.png'
+                    image : '../../../Images/Cesium_Logo_Color.jpg'
                 }
             }
          });
@@ -483,14 +483,17 @@ require([
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
         
-        var menu = new DropDownMenu({ style: "display: none;"});
+        var commonMaterialMenu = new DropDownMenu({ style: "display: none;"});
+        var proceduralTextureMenu = new DropDownMenu({ style: "display: none;"});
+        var baseMaterialMenu = new DropDownMenu({ style: "display: none;"});
+        var compositeMaterialMenu = new DropDownMenu({ style: "display: none;"});
         
         function togglePolygonVisibility(polygonToShow, polygonToHide) {
             polygonToShow.show = true;
             polygonToHide.show = false;   
         }
         
-        menu.addChild(new MenuItem({
+        baseMaterialMenu.addChild(new MenuItem({
             label: 'Alpha Map',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -499,7 +502,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
             label: 'Asphalt',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -508,7 +511,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
             label: 'Blob',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -517,7 +520,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
             label: 'Brick',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -526,7 +529,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        baseMaterialMenu.addChild(new MenuItem({
             label: 'Bump Map',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -535,7 +538,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
             label: 'Cement',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -544,7 +547,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
             label: 'Checkerboard',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -553,7 +556,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        compositeMaterialMenu.addChild(new MenuItem({
             label: 'Composite Example 1',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -562,7 +565,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        compositeMaterialMenu.addChild(new MenuItem({
             label: 'Composite Example 2',
             onClick: function() { 
                 togglePolygonVisibility(worldPolygon, polygon);
@@ -571,7 +574,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        commonMaterialMenu.addChild(new MenuItem({
             label: 'Color',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -580,7 +583,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        baseMaterialMenu.addChild(new MenuItem({
             label: 'Diffuse',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -589,7 +592,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
             label: 'Dot',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -598,7 +601,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        baseMaterialMenu.addChild(new MenuItem({
             label: 'Emission Map',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -607,7 +610,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
             label: 'Facet',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -616,7 +619,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        baseMaterialMenu.addChild(new MenuItem({
             label: 'Fresnel',
             onClick: function() { 
                 togglePolygonVisibility(worldPolygon, polygon);
@@ -625,7 +628,7 @@ require([
             }
         }));        
         
-        menu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
             label: 'Grass',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -634,7 +637,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        commonMaterialMenu.addChild(new MenuItem({
             label: 'Image',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -643,7 +646,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        baseMaterialMenu.addChild(new MenuItem({
             label: 'Normal Map',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -652,7 +655,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        baseMaterialMenu.addChild(new MenuItem({
             label: 'Reflection',
             onClick: function() { 
                 togglePolygonVisibility(worldPolygon, polygon);
@@ -661,7 +664,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        baseMaterialMenu.addChild(new MenuItem({
             label: 'Refraction',
             onClick: function() { 
                 togglePolygonVisibility(worldPolygon, polygon);
@@ -670,7 +673,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        baseMaterialMenu.addChild(new MenuItem({
             label: 'Specular Map',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -679,7 +682,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
             label: 'Stripe',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -688,7 +691,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
             label: 'TieDye',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -697,7 +700,7 @@ require([
             }
         }));
         
-        menu.addChild(new MenuItem({
+        proceduralTextureMenu.addChild(new MenuItem({
             label: 'Wood',
             onClick: function() { 
                 togglePolygonVisibility(polygon, worldPolygon);
@@ -707,8 +710,26 @@ require([
         }));
         
         new DropDownButton({
-            label : 'Select a material',
-            dropDown: menu,
+            label : 'Common materials',
+            dropDown: commonMaterialMenu,
+            maxHeight: -1
+        }).placeAt('toolbar');
+        
+        new DropDownButton({
+            label : 'Procedural textures',
+            dropDown: proceduralTextureMenu,
+            maxHeight: -1
+        }).placeAt('toolbar');
+        
+        new DropDownButton({
+            label : 'Base materials',
+            dropDown: baseMaterialMenu,
+            maxHeight: -1
+        }).placeAt('toolbar');
+        
+        new DropDownButton({
+            label : 'Composite materials',
+            dropDown: compositeMaterialMenu,
             maxHeight: -1
         }).placeAt('toolbar');
     }
@@ -719,9 +740,9 @@ require([
         
         polygon = new Cesium.Polygon();
         polygon.configureExtent(new Cesium.Extent(
-            Cesium.Math.toRadians(-140.0), 
-            Cesium.Math.toRadians(0.0), 
-            Cesium.Math.toRadians(-40.0), 
+            Cesium.Math.toRadians(-120.0), 
+            Cesium.Math.toRadians(20.0), 
+            Cesium.Math.toRadians(-60.0), 
             Cesium.Math.toRadians(40.0)));
         primitives.add(polygon);
         
