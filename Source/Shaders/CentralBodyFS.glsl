@@ -6,13 +6,9 @@
 
 uniform int u_numberOfDayTextures;
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
-uniform vec2 u_dayTextureTranslation[TEXTURE_UNITS];
-uniform vec2 u_oneOverDayTextureScale[TEXTURE_UNITS];
+uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
-
-uniform bool u_cameraInsideBoundingSphere;
-uniform int u_level;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -27,8 +23,7 @@ vec3 sampleAndBlend(
     sampler2D texture,
     vec2 tileTextureCoordinates,
     vec4 textureCoordinateExtent,
-    vec2 textureCoordinateTranslation,
-    vec2 oneOverTextureCoordinateScale,
+    vec4 textureCoordinateTranslationAndScale,
     float textureAlpha)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
@@ -44,7 +39,9 @@ vec3 sampleAndBlend(
     alphaMultiplier = step(vec2(0.0), textureCoordinateExtent.pq - tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
     
-    vec2 textureCoordinates = (tileTextureCoordinates - textureCoordinateTranslation) * oneOverTextureCoordinateScale;
+    vec2 translation = textureCoordinateTranslationAndScale.xy;
+    vec2 scale = textureCoordinateTranslationAndScale.zw;
+    vec2 textureCoordinates = (tileTextureCoordinates - translation) * scale;
     vec4 color = texture2D(texture, textureCoordinates);
     return mix(previousColor, color.rgb, color.a * textureAlpha);
 }
@@ -96,8 +93,7 @@ vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)
 	        u_dayTextures[i],
 	        textureCoordinates,
 	        u_dayTextureTexCoordsExtent[i],
-	        u_dayTextureTranslation[i],
-	        u_oneOverDayTextureScale[i],
+	        u_dayTextureTranslationAndScale[i],
 	        u_dayTextureAlpha[i]);
     }
     return color;
