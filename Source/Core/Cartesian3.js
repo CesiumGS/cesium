@@ -46,8 +46,8 @@ define([
      * @memberof Cartesian3
      *
      * @param {Spherical} spherical The Spherical to be converted to Cartesian3.
-     * @param {Cartesian3} [cartesian3] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new instance if none was provided.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} spherical is required.
      */

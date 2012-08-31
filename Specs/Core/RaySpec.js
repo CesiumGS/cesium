@@ -8,29 +8,55 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('constructor throws without a position', function() {
-        expect(function() {
-            return new Ray();
-        }).toThrow();
+    it('default constructor create zero valued Ray', function() {
+        var ray = new Ray();
+        expect(ray.origin).toEqual(Cartesian3.ZERO);
+        expect(ray.direction).toEqual(Cartesian3.ZERO);
     });
 
-    it('constructor throws without a direction', function() {
-        expect(function() {
-            return new Ray(Cartesian3.ZERO);
-        });
-    });
-
-    it('constructor', function() {
-        var origin = Cartesian3.ZERO;
+    it('constructor sets expected properties', function() {
+        var origin = Cartesian3.UNIT_Y;
         var direction = Cartesian3.UNIT_X;
         var ray = new Ray(origin, direction);
-        expect(ray.origin.equals(origin)).toEqual(true);
-        expect(ray.direction.equals(direction)).toEqual(true);
+        expect(ray.origin).toEqual(origin);
+        expect(ray.direction).toEqual(direction);
     });
 
-    it('get point along ray', function() {
-        var t = 5.0;
-        var ray = new Ray(Cartesian3.ZERO, Cartesian3.UNIT_X);
-        expect(ray.getPoint(t).equals(Cartesian3.UNIT_X.multiplyByScalar(t))).toEqual(true);
+    it('constructor normalizes direction', function() {
+        var origin = Cartesian3.UNIT_Y;
+        var direction = Cartesian3.UNIT_X.multiplyByScalar(18);
+        var ray = new Ray(origin, direction);
+        expect(ray.origin).toEqual(origin);
+        expect(ray.direction).toEqual(Cartesian3.UNIT_X);
+    });
+
+    it('getPoint along ray works without a result parameter', function() {
+        var direction = new Cartesian3(1, 2, 3).normalize();
+        var ray = new Ray(Cartesian3.UNIT_X, direction);
+        for ( var i = -10; i < 11; i++) {
+            var expectedResult = direction.multiplyByScalar(i).add(Cartesian3.UNIT_X);
+            var returnedResult = ray.getPoint(i);
+            expect(returnedResult).toEqual(expectedResult);
+        }
+    });
+
+    it('getPoint works with a result parameter', function() {
+        var direction = new Cartesian3(1, 2, 3).normalize();
+        var ray = new Ray(Cartesian3.UNIT_X, direction);
+        var result = new Cartesian3();
+        for ( var i = -10; i < 11; i++) {
+            var expectedResult = direction.multiplyByScalar(i).add(Cartesian3.UNIT_X);
+            var returnedResult = ray.getPoint(i, result);
+            expect(result).toBe(returnedResult);
+            expect(returnedResult).toEqual(expectedResult);
+        }
+    });
+
+    it('getPoint throws without a point', function() {
+        var direction = new Cartesian3(1, 2, 3).normalize();
+        var ray = new Ray(Cartesian3.UNIT_X, direction);
+        expect(function() {
+            ray.getPoint(undefined);
+        }).toThrow();
     });
 });

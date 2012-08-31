@@ -525,7 +525,7 @@ define([
         var yDir = this.getUpWC().multiplyByScalar(y * near * tanPhi);
         var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
 
-        return new Ray(position.clone(), direction);
+        return new Ray(position, direction);
     };
 
     Camera.prototype._getPickRayOrthographic = function(windowPosition) {
