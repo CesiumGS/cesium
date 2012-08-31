@@ -171,7 +171,7 @@ define([
     Ellipsoid.prototype.geocentricSurfaceNormal = Cartesian3.normalize;
 
     /**
-     * Computes the unit vector directed from the surface this ellipsoid toward the provided cartographic position.
+     * Computes the normal of the plane tangent to the surface of the ellipsoid at the provided position.
      * @memberof Ellipsoid
      *
      * @param {Cartographic} cartographic The cartographic position for which to to determine the geodetic normal.
@@ -203,7 +203,7 @@ define([
     };
 
     /**
-     * Computes the unit vector directed from the surface of this ellipsoid toward the provided Cartesian position.
+     * Computes the normal of the plane tangent to the surface of the ellipsoid at the provided position.
      * @memberof Ellipsoid
      *
      * @param {Cartesian3} cartesian The Cartesian position for which to to determine the surface normal.
@@ -229,6 +229,11 @@ define([
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} cartographic is required.
+     *
+     * @example
+     * //Create a Cartographic and determine it's Cartesian representation on a WGS84 ellipsoid.
+     * var position = new Cartographic(Math.toRadians(21), Math.toRadians(78), 5000);
+     * var cartesianPosition = Ellipsoid.WGS84.cartographicToCartesian(position);
      */
     Ellipsoid.prototype.cartographicToCartesian = function(cartographic, result) {
         //`cartographic is required` is thrown from geodeticSurfaceNormalCartographic.
@@ -251,9 +256,15 @@ define([
      * @return {Array} The modified result parameter or a new Array instance if none was provided.
      *
      * @exception {DeveloperError} cartographics is required.
+     *
+     * @example
+     * //Convert an array of Cartographics and determine their Cartesian representation on a WGS84 ellipsoid.
+     * var positions = [new Cartographic(Math.toRadians(21), Math.toRadians(78), 0),
+     *                  new Cartographic(Math.toRadians(21.321), Math.toRadians(78.123), 100),
+     *                  new Cartographic(Math.toRadians(21.645), Math.toRadians(78.456), 250)
+     * var cartesianPositions = Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions);
      */
     Ellipsoid.prototype.cartographicArrayToCartesianArray = function(cartographics, result) {
-        //Ellipsoid exception is thrown from cartographicToCartesian.
         if (typeof cartographics === 'undefined') {
             throw new DeveloperError('cartographics is required.');
         }
@@ -283,9 +294,14 @@ define([
      * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      *
      * @exception {DeveloperError} cartesian is required.
+     *
+     * @example
+     * //Create a Cartesian and determine it's Cartographic representation on a WGS84 ellipsoid.
+     * var position = new Cartesian(17832.12, 83234.52, 952313.73);
+     * var cartographicPosition = Ellipsoid.WGS84.cartesianToCartographic(position);
      */
     Ellipsoid.prototype.cartesianToCartographic = function(cartesian, result) {
-        //Exceptions are thrown from geodeticSurfaceNormal
+        //`cartesian is required.` is thrown from scaleToGeodeticSurface
         var p = this.scaleToGeodeticSurface(cartesian, cartesianToCartographicP);
         var n = this.geodeticSurfaceNormal(p, cartesianToCartographicN);
         var h = Cartesian3.subtract(cartesian, p, cartesianToCartographicH);
@@ -312,9 +328,15 @@ define([
      * @return {Array} The modified result parameter or a new Array instance if none was provided.
      *
      * @exception {DeveloperError} cartesians is required.
+     *
+     * @example
+     * //Create an array of Cartesians and determine their Cartographic representation on a WGS84 ellipsoid.
+     * var positions = [new Cartesian(17832.12, 83234.52, 952313.73),
+     *                  new Cartesian(17832.13, 83234.53, 952313.73),
+     *                  new Cartesian(17832.14, 83234.54, 952313.73)]
+     * var cartographicPositions = Ellipsoid.WGS84.cartesianArrayToCartographicArray(positions);
      */
     Ellipsoid.prototype.cartesianArrayToCartographicArray = function(cartesians, result) {
-        //Ellipsoid exception is thrown from cartesianToCartographic.
         if (typeof cartesians === 'undefined') {
             throw new DeveloperError('cartesians is required.');
         }
