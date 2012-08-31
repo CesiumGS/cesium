@@ -82,31 +82,31 @@
                     this._pickId = context.createPickId(this);
                 }
 
-                return {
-                    boundingVolume : this._boundingVolume,
-                    modelMatrix : this.modelMatrix
-                };
-            };
+                var pass = frameState.passes;
 
-            Sandbox.ExamplePrimitive.prototype.render = function(context) {
-                context.draw({
-                    primitiveType : Cesium.PrimitiveType.LINES,
-                    shaderProgram : this._sp,
-                    uniformMap    : this._drawUniforms,
-                    vertexArray   : this._va,
-                    renderState   : this._rs
-                });
-            };
+                if (pass.color) {
+                    return [{
+                        boundingVolume : this._boundingVolume,
+                        modelMatrix : this.modelMatrix,
+                        primitiveType : Cesium.PrimitiveType.LINES,
+                        shaderProgram : this._sp,
+                        uniformMap    : this._drawUniforms,
+                        vertexArray   : this._va,
+                        renderState   : this._rs
+                    }];
+                } else if (pass.pick) {
+                    return [{
+                        boundingVolume : this._boundingVolume,
+                        modelMatrix : this.modelMatrix,
+                        primitiveType : Cesium.PrimitiveType.LINES,
+                        shaderProgram : this._sp,
+                        uniformMap    : this._pickUniforms,
+                        vertexArray   : this._va,
+                        renderState   : this._rs
+                    }];
+                }
 
-            Sandbox.ExamplePrimitive.prototype.renderForPick = function(context, framebuffer) {
-                context.draw({
-                    primitiveType : Cesium.PrimitiveType.LINES,
-                    shaderProgram : this._sp,
-                    uniformMap    : this._pickUniforms,
-                    vertexArray   : this._va,
-                    renderState   : this._rs,
-                    framebuffer   : framebuffer
-                });
+                return [];
             };
 
             Sandbox.ExamplePrimitive.prototype.isDestroyed = function() {
@@ -271,7 +271,9 @@
                     });
                 }
 
-                if (typeof this._sp === 'undefined') {
+                var pass = frameState.passes;
+
+                if (pass.color && typeof this._sp === 'undefined') {
                     var vs = '';
                     vs += 'attribute vec3 position2D;';
                     vs += 'attribute vec3 position3D;';
@@ -297,7 +299,7 @@
                     });
                 }
 
-                if (frameState.passes.pick && typeof this._pickId === 'undefined') {
+                if (pass.pick && typeof this._pickId === 'undefined') {
                     this._pickId = context.createPickId(this);
                 }
 
@@ -306,31 +308,29 @@
                     modelMatrix = this._modelMatrix;
                 }
 
-                return {
-                    boundingVolume : this._boundingVolume,
-                    modelMatrix : modelMatrix
-                };
-            };
+                if (pass.color) {
+                    return [{
+                        boundingVolume : this._boundingVolume,
+                        modelMatrix : modelMatrix,
+                        primitiveType : Cesium.PrimitiveType.LINES,
+                        shaderProgram : this._sp,
+                        uniformMap    : this._drawUniforms,
+                        vertexArray   : this._va,
+                        renderState   : this._rs
+                    }];
+                } else if (pass.pick) {
+                    return [{
+                        boundingVolume : this._boundingVolume,
+                        modelMatrix : modelMatrix,
+                        primitiveType : Cesium.PrimitiveType.LINES,
+                        shaderProgram : this._sp,
+                        uniformMap    : this._pickUniforms,
+                        vertexArray   : this._va,
+                        renderState   : this._rs
+                    }];
+                }
 
-            Sandbox.ExamplePrimitive.prototype.render = function(context) {
-                context.draw({
-                    primitiveType : Cesium.PrimitiveType.LINES,
-                    shaderProgram : this._sp,
-                    uniformMap    : this._drawUniforms,
-                    vertexArray   : this._va,
-                    renderState   : this._rs
-                });
-            };
-
-            Sandbox.ExamplePrimitive.prototype.renderForPick = function(context, framebuffer) {
-                context.draw({
-                    primitiveType : Cesium.PrimitiveType.LINES,
-                    shaderProgram : this._sp,
-                    uniformMap    : this._pickUniforms,
-                    vertexArray   : this._va,
-                    renderState   : this._rs,
-                    framebuffer   : framebuffer
-                });
+                return [];
             };
 
             Sandbox.ExamplePrimitive.prototype.isDestroyed = function() {
