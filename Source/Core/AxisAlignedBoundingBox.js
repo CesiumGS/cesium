@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Cartesian3',
         './Intersect'
     ], function(
+        defaultValue,
         DeveloperError,
         Cartesian3,
         Intersect) {
@@ -21,31 +23,31 @@ define([
      * @see BoundingSphere
      */
     var AxisAlignedBoundingBox = function(minimum, maximum, center) {
-        var centerDefined = typeof center !== 'undefined';
-
         /**
          * The minimum point defining the bounding box.
          * @type {Cartesian3}
          */
-        this.minimum = Cartesian3.clone(typeof minimum !== 'undefined' ? minimum : Cartesian3.ZERO);
+        this.minimum = Cartesian3.clone(defaultValue(minimum, Cartesian3.ZERO));
 
         /**
          * The maximum point defining the bounding box.
          * @type {Cartesian3}
          */
-        this.maximum = Cartesian3.clone(typeof maximum !== 'undefined' ? maximum : Cartesian3.ZERO);
+        this.maximum = Cartesian3.clone(defaultValue(maximum, Cartesian3.ZERO));
+
+        //If center was not defined, compute it.
+        if (typeof center === 'undefined') {
+            center = Cartesian3.add(this.minimum, this.maximum);
+            Cartesian3.multiplyByScalar(center, 0.5, center);
+        } else {
+            center = Cartesian3.clone(center);
+        }
 
         /**
          * The center point of the bounding box.
          * @type {Cartesian3}
          */
-        this.center = Cartesian3.clone(centerDefined ? center : Cartesian3.ZERO);
-
-        //If center was not defined, compute it.
-        if (!centerDefined) {
-            center = Cartesian3.add(this.minimum, this.maximum, this.center);
-            Cartesian3.multiplyByScalar(center, 0.5, center);
-        }
+        this.center = center;
     };
 
     /**
