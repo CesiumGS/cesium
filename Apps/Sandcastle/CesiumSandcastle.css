@@ -35,14 +35,14 @@ html, body {
     height: 100%;
 }
 
-.cesiumOverlay {
+.cesiumTitle {
     display: block;
     position: absolute;
     top: 2px;
-    right: 2px;
-    width: 118px;
-    height: 26px;
-    background-image: url(../../Images/Cesium_Logo_overlay.png);
+    right: 5px;
+    color: #DDD;
+    font-style: italic;
+    font-size: 24px;
 }
 
 #codeContainer {
