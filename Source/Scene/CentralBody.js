@@ -1468,7 +1468,9 @@ define([
         var shader = this.shadersByTextureCount[textureCount];
         if (typeof shader === 'undefined') {
             var vs = this.baseVertexShaderString;
-            var fs = this.baseFragmentShaderString +
+            var fs =
+                '#define TEXTURE_UNITS ' + textureCount + '\n' +
+                this.baseFragmentShaderString +
                 'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
                 '{\n' +
                 '    vec3 color = initialColor;\n';

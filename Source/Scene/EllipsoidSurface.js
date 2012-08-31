@@ -89,7 +89,7 @@ define([
         this._logoQuad = undefined;
 
         this._levelZeroTiles = undefined;
-        this._renderList = [];
+        this._tilesToRenderByTextureCount = [];
         this._tileLoadQueue = new TileLoadQueue();
         this._tileReplacementQueue = new TileReplacementQueue();
         this._tilingScheme = undefined;
@@ -238,13 +238,21 @@ define([
             return;
         }
 
-        this._renderList.length = 0;
+        var i, len;
+
+        // Clear the render list.
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        for (i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
+            var tiles = tilesToRenderByTextureCount[i];
+            if (typeof tiles !== 'undefined') {
+                tiles.length = 0;
+            }
+        }
 
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
 
-        var i, len;
         var imageryLayerCollection = this._imageryLayerCollection;
         for (i = 0, len = imageryLayerCollection.getLength(); i < len; i++) {
             if (!imageryLayerCollection.get(i).imageryProvider.isReady()) {
@@ -319,9 +327,6 @@ define([
         u_modifiedModelViewProjection : function() {
             return this.modifiedModelViewProjection;
         },
-        u_numberOfDayTextures : function() {
-            return this.numberOfDayTextures;
-        },
         u_dayTextures : function() {
             return this.dayTextures;
         },
@@ -363,7 +368,6 @@ define([
         modifiedModelView : undefined,
         modifiedModelViewProjection : undefined,
 
-        numberOfDayTextures : 0,
         dayTextures : [],
         dayTextureTranslationAndScale : [],
         dayTextureTexCoordsExtent : [],
@@ -378,18 +382,15 @@ define([
         oneOverMercatorHeight : 0
     };
 
+    var tileDistanceSortFunction = function(a, b) {
+        return a.distance - b.distance;
+    };
+
     EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, shaderSet, renderState) {
-        var renderList = this._renderList;
-        if (renderList.length === 0) {
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        if (tilesToRenderByTextureCount.length === 0) {
             return;
         }
-
-        renderList.sort(function(a, b) {
-            if (a.numberOfReadyTextures !== b.numberOfReadyTextures) {
-                return a.numberOfReadyTextures - b.numberOfReadyTextures;
-            }
-            return a.distance - b.distance;
-        });
 
         var uniformState = context.getUniformState();
         var mv = uniformState.getModelView();
@@ -399,75 +400,69 @@ define([
 
         var maxTextures = context.getMaximumTextureImageUnits();
 
-        var lastNumberOfReadyTextures;
-
-        for ( var i = 0, len = renderList.length; i < len; i++) {
-            var tile = renderList[i];
-
-            if (tile.numberOfReadyTextures !== lastNumberOfReadyTextures) {
-                if (typeof lastNumberOfReadyTextures !== 'undefined') {
-                    context.endDraw();
-                }
-
-                context.beginDraw({
-                    shaderProgram : shaderSet.getShaderProgram(context, tile.numberOfReadyTextures),
-                    renderState : renderState
-                });
-
-                lastNumberOfReadyTextures = tile.numberOfReadyTextures;
+        for (var tileSetIndex = 0, tileSetLength = tilesToRenderByTextureCount.length; tileSetIndex < tileSetLength; ++tileSetIndex) {
+            var tileSet = tilesToRenderByTextureCount[tileSetIndex];
+            if (typeof tileSet === 'undefined' || tileSet.length === 0) {
+                continue;
             }
 
-            uniformMap.level = tile.level;
+            tileSet.sort(tileDistanceSortFunction);
 
-            var rtc = tile.center;
-            uniformMap.center3D = rtc;
+            context.beginDraw({
+                shaderProgram : shaderSet.getShaderProgram(context, tileSetIndex),
+                renderState : renderState
+            });
 
-            var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
-            uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);
-            uniformMap.modifiedModelViewProjection = Matrix4.multiply(projection, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
+            for ( var i = 0, len = tileSet.length; i < len; i++) {
+                var tile = tileSet[i];
 
-            var tileImageryCollection = tile.imagery;
-            var imageryIndex = 0;
-            var imageryLen = tileImageryCollection.length;
+                uniformMap.level = tile.level;
 
-            while (imageryIndex < imageryLen) {
-                var numberOfDayTextures = 0;
+                var rtc = tile.center;
+                uniformMap.center3D = rtc;
 
-                while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
-                    var tileImagery = tileImageryCollection[imageryIndex];
-                    var imagery = tileImagery.imagery;
-                    var imageryLayer = imagery.imageryLayer;
-                    ++imageryIndex;
+                var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
+                uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);
+                uniformMap.modifiedModelViewProjection = Matrix4.multiply(projection, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
 
-                    if (imagery.state !== ImageryState.READY) {
-                        continue;
+                var tileImageryCollection = tile.imagery;
+                var imageryIndex = 0;
+                var imageryLen = tileImageryCollection.length;
+
+                while (imageryIndex < imageryLen) {
+                    var numberOfDayTextures = 0;
+
+                    while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
+                        var tileImagery = tileImageryCollection[imageryIndex];
+                        var imagery = tileImagery.imagery;
+                        var imageryLayer = imagery.imageryLayer;
+                        ++imageryIndex;
+
+                        if (imagery.state !== ImageryState.READY) {
+                            continue;
+                        }
+
+                        uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
+                        uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
+                        uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = tileImagery.textureCoordinateExtent;
+                        uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
+
+                        ++numberOfDayTextures;
                     }
 
-                    uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
-                    uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
-                    uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = tileImagery.textureCoordinateExtent;
-                    uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
+                    // trim texture array to the used length so we don't end up using old textures
+                    // which might get destroyed eventually
+                    uniformMap.dayTextures.length = numberOfDayTextures;
 
-                    ++numberOfDayTextures;
+                    context.continueDraw({
+                        primitiveType : TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES,
+                                vertexArray : tile.vertexArray,
+                                uniformMap : uniformMap
+                    });
                 }
-
-                // trim texture array to the used length so we don't end up using old textures
-                // which might get destroyed eventually
-                uniformMap.dayTextures.length = numberOfDayTextures;
-                uniformMap.numberOfDayTextures = numberOfDayTextures;
-
-//                if (typeof tile.parent !== 'undefined' && tile.parent.cameraInsideBoundingSphere) {
-//                    uniformMap.cameraInsideBoundingSphere = true;
-//                } else {
-//                    uniformMap.cameraInsideBoundingSphere = false;
-//                }
-
-                context.continueDraw({
-                    primitiveType : TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES,
-                            vertexArray : tile.vertexArray,
-                            uniformMap : uniformMap
-                });
             }
+
+            context.endDraw();
         }
 
         if (this._boundingSphereTile) {
@@ -481,13 +476,10 @@ define([
                 });
             }
 
-            if (typeof lastNumberOfReadyTextures === 'undefined') {
-                context.beginDraw({
-                    shaderProgram : shaderSet.getShaderProgram(context, 1),
-                    renderState : renderState
-                });
-                lastNumberOfReadyTextures = 1;
-            }
+            context.beginDraw({
+                shaderProgram : shaderSet.getShaderProgram(context, 1),
+                renderState : renderState
+            });
 
             var rtc2 = this._boundingSphereTile.boundingSphere3D.center;
             uniformMap.center3D = rtc2;
@@ -501,9 +493,7 @@ define([
                 vertexArray : this._boundingSphereVA,
                 uniformMap : uniformMap
             });
-        }
 
-        if (typeof lastNumberOfReadyTextures !== 'undefined') {
             context.endDraw();
         }
     };
@@ -557,12 +547,15 @@ define([
 
     EllipsoidSurface.prototype.showBoundingSphereOfTileAt = function(cartographicPick) {
         // Find the tile in the render list that overlaps this extent
-        var renderList = this._renderList;
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         var tile;
-        for (var i = 0, len = renderList.length; i < len; ++i) {
-            tile = renderList[i];
-            if (tile.extent.contains(cartographicPick)) {
-                break;
+        for (var i = 0; i < tilesToRenderByTextureCount.length; ++i) {
+            var tileSet = tilesToRenderByTextureCount[i];
+            for (var j = 0; j < tileSet.length; ++j) {
+                tile = tileSet[j];
+                if (tile.extent.contains(cartographicPick)) {
+                    break;
+                }
             }
         }
 
@@ -654,15 +647,25 @@ define([
         }
     }
 
-    function countReadyTextures(tile) {
-        var count = 0;
+    function addTileToRenderList(surface, tile) {
+        var readyTextureCount = 0;
         var imageryList = tile.imagery;
         for (var i = 0, len = imageryList.length; i < len; ++i) {
             if (imageryList[i].imagery.state === ImageryState.READY) {
-                ++count;
+                ++readyTextureCount;
             }
         }
-        tile.numberOfReadyTextures = count;
+
+        var tileSet = surface._tilesToRenderByTextureCount[readyTextureCount];
+        if (typeof tileSet === 'undefined') {
+            tileSet = [];
+            surface._tilesToRenderByTextureCount[readyTextureCount] = tileSet;
+        }
+
+        tileSet.push(tile);
+
+        ++tilesRendered;
+        ++minimumTilesNeeded;
     }
 
     function addBestAvailableTilesToRenderList(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) {
@@ -672,7 +675,6 @@ define([
 
         if (!isTileVisible(surface, sceneState, tile)) {
             ++tilesCulled;
-            //surface._renderList.push(tile);
             return;
         }
 
@@ -683,10 +685,7 @@ define([
         // Algorithm #1: Don't load children unless we refine to them.
         if (screenSpaceError(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) < surface.maxScreenSpaceError) {
             // This tile meets SSE requirements, so render it.
-            surface._renderList.push(tile);
-            countReadyTextures(tile);
-            ++tilesRendered;
-            ++minimumTilesNeeded;
+            addTileToRenderList(surface, tile);
         } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile)) {
             // SSE is not good enough and children are loaded, so refine.
             var children = tile.children;
@@ -700,61 +699,8 @@ define([
             }
         } else {
             // SSE is not good enough but not all children are loaded, so render this tile anyway.
-            surface._renderList.push(tile);
-            countReadyTextures(tile);
-            ++tilesRendered;
-            ++minimumTilesNeeded;
+            addTileToRenderList(surface, tile);
         }
-
-        // Algorithm #2: Pre-load children of rendered tiles.
-        /*if (screenSpaceError(surface, context, sceneState, tile) < surface.maxScreenSpaceError) {
-            // This tile meets SSE requirements, so render it.
-            surface._renderList.push(tile);
-            ++tilesRendered;
-            ++minimumTilesNeeded;
-            queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile);
-        } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile)) {
-            // SSE is not good enough and children are loaded, so refine.
-            var children = tile.children;
-            // PERFORMANCE_TODO: traverse children front-to-back
-            var tilesRenderedBefore = tilesRendered;
-            for (var i = 0, len = children.length; i < len; ++i) {
-                addBestAvailableTilesToRenderList(surface, context, sceneState, children[i]);
-            }
-            if (tilesRendered !== tilesRenderedBefore) {
-                ++minimumTilesNeeded;
-            }
-        } else {
-            // SSE is not good enough but not all children are loaded, so render this tile anyway.
-            surface._renderList.push(tile);
-            ++tilesRendered;
-            ++minimumTilesNeeded;
-        }*/
-
-        // Algorithm #3: Pre-load children of all visited tiles
-        /*if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile)) {
-            // All children are renderable.
-            if (screenSpaceError(surface, context, sceneState, tile) < surface.maxScreenSpaceError) {
-                surface._renderList.push(tile);
-                ++tilesRendered;
-                ++minimumTilesNeeded;
-            } else {
-                var children = tile.children;
-                // PERFORMANCE_TODO: traverse children front-to-back
-                var tilesRenderedBefore = tilesRendered;
-                for (var i = 0, len = children.length; i < len; ++i) {
-                    addBestAvailableTilesToRenderList(surface, context, sceneState, children[i]);
-                }
-                if (tilesRendered !== tilesRenderedBefore) {
-                    ++minimumTilesNeeded;
-                }
-            }
-        } else {
-            // At least one child is not renderable, so render this tile.
-            surface._renderList.push(tile);
-            ++tilesRendered;
-            ++minimumTilesNeeded;
-        }*/
     }
 
     function isTileVisible(surface, sceneState, tile) {

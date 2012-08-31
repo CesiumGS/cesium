@@ -1937,7 +1937,7 @@ define([
 
                 // Ignore GLSL built-in uniforms returned in Firefox.
                 if (uniformName.indexOf('gl_') !== 0) {
-                    if (activeUniform.size === 1) {
+                    if (activeUniform.size === 1 && activeUniform.name.indexOf('[') < 0) {
                         // Single uniform
                         var location = gl.getUniformLocation(program, uniformName);
                         var uniformValue = gl.getUniform(program, location);

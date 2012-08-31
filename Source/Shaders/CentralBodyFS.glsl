@@ -1,10 +1,5 @@
 //#define SHOW_TILE_BOUNDARIES
 
-#ifndef TEXTURE_UNITS
-#define TEXTURE_UNITS 16
-#endif
-
-uniform int u_numberOfDayTextures;
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
