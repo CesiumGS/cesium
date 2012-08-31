@@ -526,7 +526,6 @@ define([
     };
 
     var tempCartesian4 = new Cartesian4();
-    var tempCartesian3 = new Cartesian3();
     Billboard._computeActualPosition = function(position, frameState, morphTime, modelMatrix) {
         var mode = frameState.mode;
 
@@ -554,11 +553,7 @@ define([
 
         modelMatrix.multiplyByVector(tempCartesian4, tempCartesian4);
 
-        // TODO: eventually cartesianToCartographic should work with a Cartesian4 directly,
-        // ignoring the w value.  Until then, it needs an actual Cartesian3 instance.
-        tempCartesian4.clone(tempCartesian3);
-
-        cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian3);
+        cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian4);
         projectedPosition = projection.project(cartographic);
 
         if (mode === SceneMode.SCENE2D) {

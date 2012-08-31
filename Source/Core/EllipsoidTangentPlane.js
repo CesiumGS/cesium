@@ -89,6 +89,7 @@ define([
         }
     };
 
+    var projectPointsOntoEllipsoidScratch = new Cartesian3();
     /**
      * DOC_TBA
      * @memberof EllipsoidTangentPlane
@@ -98,15 +99,23 @@ define([
             throw new DeveloperError('positions is required.');
         }
 
-        var positionsOnEllipsoid = [];
+        var origin = this.origin;
+        var xAxis = this.xAxis;
+        var yAxis = this.yAxis;
+        var tmp = projectPointsOntoEllipsoidScratch;
 
         var length = positions.length;
+        var positionsOnEllipsoid = new Array(length);
         for ( var i = 0; i < length; ++i) {
-            var p = this.origin;
-            p = p.add(this.xAxis.multiplyByScalar(positions[i].x));
-            p = p.add(this.yAxis.multiplyByScalar(positions[i].y));
+            var position = positions[i];
 
-            positionsOnEllipsoid.push(this.ellipsoid.scaleToGeocentricSurface(p));
+            xAxis.multiplyByScalar(position.x, tmp);
+            var result = Cartesian3.add(origin, tmp);
+
+            yAxis.multiplyByScalar(position.y, tmp);
+            Cartesian3.add(result, tmp, result);
+
+            positionsOnEllipsoid[i] = this.ellipsoid.scaleToGeocentricSurface(result, result);
         }
 
         return positionsOnEllipsoid;

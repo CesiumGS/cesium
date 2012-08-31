@@ -788,10 +788,10 @@ define([
     };
 
     /**
-     * Creates a string representing this Cartesian in the format '(x, y)'.
+     * Creates a string representing this Cartesian in the format '(x, y, z)'.
      * @memberof Cartesian3
      *
-     * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
+     * @return {String} A string representing this Cartesian in the format '(x, y, z)'.
      */
     Cartesian3.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
