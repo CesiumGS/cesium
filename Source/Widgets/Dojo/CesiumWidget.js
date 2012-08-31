@@ -8,6 +8,7 @@ define([
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
+        '../../Core/BoundingRectangle',
         '../../Core/Ellipsoid',
         '../../Core/SunPosition',
         '../../Core/EventHandler',
@@ -33,6 +34,7 @@ define([
         on,
         _WidgetBase,
         _TemplatedMixin,
+        BoundingRectangle,
         Ellipsoid,
         SunPosition,
         EventHandler,
@@ -86,12 +88,7 @@ define([
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.scene.getContext().setViewport({
-                x : 0,
-                y : 0,
-                width : width,
-                height : height
-            });
+            this.scene.getContext().setViewport(new BoundingRectangle(0, 0, width, height));
 
             this.scene.getCamera().frustum.aspectRatio = width / height;
         },

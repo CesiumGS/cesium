@@ -15,6 +15,7 @@ define([
         'dijit/TooltipDialog',
         './getJson',
         './TimelineWidget',
+        '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
@@ -61,6 +62,7 @@ define([
         TooltipDialog,
         getJson,
         TimelineWidget,
+        BoundingRectangle,
         Clock,
         ClockStep,
         ClockRange,
@@ -131,12 +133,7 @@ define([
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.scene.getContext().setViewport({
-                x : 0,
-                y : 0,
-                width : width,
-                height : height
-            });
+            this.scene.getContext().setViewport(new BoundingRectangle(0, 0, width, height));
 
             this.scene.getCamera().frustum.aspectRatio = width / height;
         },
