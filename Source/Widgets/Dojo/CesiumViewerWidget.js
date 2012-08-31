@@ -646,7 +646,7 @@ define([
                     if (typeof this.highlightedObject.material !== 'undefined') {
                         this.highlightedObject.material = this._originalMaterial;
                     } else {
-                        this.highlightedObject.color = this._originalColor;
+                        this.highlightedObject.setColor(this._originalColor);
                     }
                 }
                 this.highlightedObject = selectedObject;
@@ -655,8 +655,8 @@ define([
                         this._originalMaterial = selectedObject.material;
                         selectedObject.material = this.highlightMaterial;
                     } else {
-                        this._originalColor = selectedObject.color;
-                        selectedObject.color = this.highlightColor;
+                        this._originalColor = selectedObject.getColor();
+                        selectedObject.setColor(this.highlightColor);
                     }
                 }
             }
