@@ -99,9 +99,11 @@ define([
             throw new DeveloperError('cartesian is required.');
         }
 
-        projectPointOntoPlaneRay.origin = cartesian;
-        Cartesian3.normalize(cartesian, projectPointOntoPlaneRay.direction);
-        var intersectionPoint = IntersectionTests.rayPlane(projectPointOntoPlaneRay, this._normal, this._direction, projectPointOntoPlaneCartesian3);
+        var ray = projectPointOntoPlaneRay;
+        ray.origin = cartesian;
+        Cartesian3.normalize(cartesian, ray.direction);
+
+        var intersectionPoint = IntersectionTests.rayPlane(ray, this._normal, this._direction, projectPointOntoPlaneCartesian3);
 
         if (typeof intersectionPoint !== 'undefined') {
             var v = intersectionPoint.subtract(this._origin, intersectionPoint);
