@@ -476,7 +476,7 @@ define([
     var _createMeshFromPositionsPositions = [];
     Polygon.prototype._createMeshFromPositions = function (positions, outerPositions2D) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(this.ellipsoid, cleanedPositions);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, this.ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, _createMeshFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
@@ -517,7 +517,7 @@ define([
             this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
         } else if (typeof this._polygonHierarchy !== 'undefined') {
             var outerPositions =  this._polygonHierarchy[0];
-            var tangentPlane = EllipsoidTangentPlane.fromPoints(this.ellipsoid, outerPositions);
+            var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, this.ellipsoid);
             var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions, _createMeshesOuterPositions2D);
             for (i = 0; i < this._polygonHierarchy.length; i++) {
                  meshes.push(this._createMeshFromPositions(this._polygonHierarchy[i], outerPositions2D));

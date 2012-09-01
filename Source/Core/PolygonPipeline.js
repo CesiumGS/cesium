@@ -4,7 +4,6 @@ define([
         './Math',
         './Cartesian2',
         './Cartesian3',
-        './Ellipsoid',
         './EllipsoidTangentPlane',
         './defaultValue',
         './pointInsideTriangle2D',
@@ -17,7 +16,6 @@ define([
         CesiumMath,
         Cartesian2,
         Cartesian3,
-        Ellipsoid,
         EllipsoidTangentPlane,
         defaultValue,
         pointInsideTriangle2D,
@@ -321,7 +319,7 @@ define([
         }
 
         // Project points onto a tangent plane to find the mutually visible vertex.
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(Ellipsoid.WGS84, outerRing);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing);
         var tangentOuterRing = tangentPlane.projectPointsOntoPlane(outerRing);
         var tangentInnerRings = [];
         for (i = 0; i < innerRings.length; i++) {
