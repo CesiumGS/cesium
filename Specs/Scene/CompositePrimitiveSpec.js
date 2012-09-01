@@ -676,8 +676,11 @@ defineSuite([
     function testCullIn3D(primitive) {
         primitives.add(primitive);
 
+        var savedPlanes = frameState.cullingPlanes;
         var savedCamera = frameState.camera;
+
         frameState.camera = camera;
+        frameState.cullingPlanes = camera.frustum.getPlanes(camera.position, camera.direction, camera.up);
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var state = primitive.update(context, frameState);
@@ -687,26 +690,31 @@ defineSuite([
         camera.direction = camera.position.negate().normalize();
         camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
         camera.up = camera.right.cross(camera.direction);
+        frameState.cullingPlanes = camera.frustum.getPlanes(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        frameState.cullingPlanes = camera.frustum.getPlanes(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
 
         frameState.camera = savedCamera;
+        frameState.cullingPlanes = savedPlanes;
     }
 
     function testCullInColumbusView(primitive) {
         primitives.add(primitive);
 
+        var savedPlanes = frameState.cullingPlanes;
         var savedCamera = frameState.camera;
-        frameState.camera = camera;
+        var savedMode = frameState.mode;
 
-        var mode = frameState.mode;
+        frameState.camera = camera;
+        frameState.cullingPlanes = camera.frustum.getPlanes(camera.position, camera.direction, camera.up);
         frameState.mode = SceneMode.COLUMBUS_VIEW;
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
@@ -717,26 +725,33 @@ defineSuite([
         camera.direction = Cartesian3.UNIT_Z.negate();
         camera.up = Cartesian3.UNIT_Y;
         camera.right = camera.direction.cross(camera.up);
+        frameState.cullingPlanes = camera.frustum.getPlanes(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        frameState.cullingPlanes = camera.frustum.getPlanes(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
 
-        frameState.mode = mode;
+        frameState.mode = savedMode;
         frameState.camera = savedCamera;
+        frameState.cullingPlanes = savedPlanes;
     }
 
     function testCullIn2D(primitive) {
         primitives.add(primitive);
 
+        var mode = frameState.mode;
+        frameState.mode = SceneMode.SCENE2D;
+
         var savedCamera = frameState.camera;
         frameState.camera = camera;
 
+        var savedPlanes = frameState.cullingPlanes;
         var orthoFrustum = new OrthographicFrustum();
         orthoFrustum.right = 1.0;
         orthoFrustum.left = -orthoFrustum.right;
@@ -744,10 +759,7 @@ defineSuite([
         orthoFrustum.bottom = -orthoFrustum.top;
         orthoFrustum.near = camera.frustum.near;
         orthoFrustum.far = camera.frustum.far;
-        camera.frustum = orthoFrustum;
-
-        var mode = frameState.mode;
-        frameState.mode = SceneMode.SCENE2D;
+        frameState.cullingPlanes = orthoFrustum.getPlanes(camera.position, camera.direction, camera.up);
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var state = primitive.update(context, frameState);
@@ -756,18 +768,21 @@ defineSuite([
         camera.direction = Cartesian3.UNIT_Z.negate();
         camera.up = Cartesian3.UNIT_Y;
         camera.right = camera.direction.cross(camera.up);
+        frameState.cullingPlanes = orthoFrustum.getPlanes(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        frameState.cullingPlanes = orthoFrustum.getPlanes(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
 
         frameState.mode = mode;
         frameState.camera = savedCamera;
+        frameState.cullingPlanes = savedPlanes;
     }
 
     function testOcclusionCull(primitive) {
@@ -784,7 +799,6 @@ defineSuite([
         camera.direction = camera.position.negate().normalize();
         camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
         camera.up = camera.right.cross(camera.direction);
-
 
         var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, bv.radius * 2.0), camera.position);
         frameState.occluder = occluder;
@@ -928,7 +942,7 @@ defineSuite([
         testCullIn2D(billboards);
     });
 
-    it('billboards occlusion', function() {
+    it('billboard occlusion', function() {
         var billboards = createBillboard();
         testOcclusionCull(billboards);
     });

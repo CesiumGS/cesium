@@ -402,57 +402,13 @@ define([
         return this._primitives.length;
     };
 
-    function update2D(context, frameState, primitives, renderList) {
-        var camera = frameState.camera;
-        var frustum = camera.frustum;
+    function cull(context, frameState, primitives, renderList) {
+        var planes = frameState.cullingPlanes;
+        var occluder;
 
-        var frustumRect;
-        if (typeof frustum.top !== 'undefined') {
-            var position = camera.position;
-            var up = camera.up;
-            var right = camera.right;
-
-            var width = frustum.right - frustum.left;
-            var height = frustum.top - frustum.bottom;
-
-            var lowerLeft = position.add(right.multiplyByScalar(frustum.left));
-            lowerLeft = lowerLeft.add(up.multiplyByScalar(frustum.bottom));
-            var upperLeft = lowerLeft.add(up.multiplyByScalar(height));
-            var upperRight = upperLeft.add(right.multiplyByScalar(width));
-            var lowerRight = upperRight.add(up.multiplyByScalar(-height));
-
-            var x = Math.min(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x);
-            var y = Math.min(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y);
-            var w = Math.max(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x) - x;
-            var h = Math.max(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y) - y;
-
-            frustumRect = new BoundingRectangle(x, y, w, h);
+        if (frameState.mode === SceneMode.SCENE3D) {
+            occluder = frameState.occluder;
         }
-
-        var length = primitives.length;
-        for ( var i = 0; i < length; ++i) {
-            var primitive = primitives[i];
-            var spatialState = primitive.update(context, frameState);
-
-            if (typeof spatialState === 'undefined') {
-                continue;
-            }
-
-            var boundingVolume = spatialState.boundingVolume;
-            if (typeof boundingVolume !== 'undefined' &&
-                    typeof frustumRect !== 'undefined' &&
-                    boundingVolume.intersect(frustumRect) === Intersect.OUTSIDE) {
-                continue;
-            }
-
-            renderList.push(primitive);
-        }
-    }
-
-    function update3D(context, frameState, primitives, renderList) {
-        var mode = frameState.mode;
-        var camera = frameState.camera;
-        var occluder = frameState.occluder;
 
         var length = primitives.length;
         for ( var i = 0; i < length; ++i) {
@@ -470,13 +426,16 @@ define([
                 center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
                 boundingVolume = new BoundingSphere(center, boundingVolume.radius);
 
-                if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
-                    continue;
+                var cull = false;
+                for ( var k = 0; k < planes.length; k++) {
+                    var result = boundingVolume.intersect(planes[k]);
+                    if (result === Intersect.OUTSIDE) {
+                        cull = true;
+                        break;
+                    }
                 }
 
-                if (mode === SceneMode.SCENE3D &&
-                        typeof occluder !== 'undefined' &&
-                        !occluder.isVisible(boundingVolume)) {
+                if (cull || (typeof occluder !== 'undefined' && !occluder.isVisible(boundingVolume))) {
                     continue;
                 }
             }
@@ -497,12 +456,7 @@ define([
             this._centralBody.update(context, frameState);
         }
 
-        var mode = frameState.mode;
-        if (mode === SceneMode.SCENE2D) {
-            update2D(context, frameState, this._primitives, this._renderList);
-        } else {
-            update3D(context, frameState, this._primitives, this._renderList);
-        }
+        cull(context, frameState, this._primitives, this._renderList);
 
         return {};
     };

@@ -12,7 +12,6 @@ define([], function() {
     var FrameState = function() {
         /**
          * The current mode of the scene.
-         *
          * @type SceneMode
          */
         this.mode = undefined;
@@ -26,14 +25,18 @@ define([], function() {
 
         /**
          * The current camera.
-         *
          * @type Camera
          */
         this.camera = undefined;
 
         /**
+         * An array of the current culling planes.
+         * @type Array
+         */
+        this.cullingPlanes = undefined;
+
+        /**
          * The current occluder.
-         *
          * @type Occluder
          */
         this.occluder = undefined;
@@ -41,7 +44,6 @@ define([], function() {
         this.passes = {
                 /**
                  * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
-                 *
                  * @type Boolean
                  */
                 pick : false
