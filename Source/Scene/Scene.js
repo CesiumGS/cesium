@@ -186,7 +186,7 @@ define([
 
     function updateFrameState(scene) {
         var camera = scene._camera;
-        var cullingPlanes = camera.frustum.getPlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+        var cullingPlanes = camera.frustum.getPlanes(camera.position, camera.direction, camera.up);
 
         var frameState = scene._frameState;
         frameState.mode = scene.mode;
@@ -253,14 +253,14 @@ define([
         var pickRay = camera._getPickRayOrthographic(windowPosition);
 
         var ortho = new OrthographicFrustum();
-        ortho.right = pixelSize.width * 0.5;
+        ortho.right = pixelSize.x * 0.5;
         ortho.left = -ortho.right;
-        ortho.top = pixelSize.height * 0.5;
+        ortho.top = pixelSize.y * 0.5;
         ortho.bottom = -ortho.top;
         ortho.near = frustum.near;
         ortho.far = frustum.far;
 
-        return ortho.getPlanes(pickRay.origin, camera.getDirectionWC(), camera.getUpWC());
+        return ortho.getPlanes(pickRay.origin, camera.direction, camera.up);
     }
 
     function getPickPerspectiveCullingPlanes(scene, windowPosition, width, height) {

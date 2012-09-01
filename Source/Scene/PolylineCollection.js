@@ -10,7 +10,6 @@ define([
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
         '../Core/Color',
-        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/Intersect',
         '../Renderer/BlendingState',
@@ -32,7 +31,6 @@ define([
         IndexDatatype,
         PrimitiveType,
         Color,
-        BoundingRectangle,
         BoundingSphere,
         Intersect,
         BlendingState,
@@ -133,9 +131,9 @@ define([
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
 
-        this._boundingVolume = undefined;
-        this._boundingVolume2D = undefined;
-        this._boundingRectangle = undefined;
+        this._boundingVolume = new BoundingSphere();
+        this._boundingVolumeCV = new BoundingSphere();
+        this._boundingVolume2D = new BoundingSphere();
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -598,9 +596,9 @@ define([
             boundingVolume = this._boundingVolume;
             modelMatrix = this.modelMatrix;
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingVolume = this._boundingVolume2D;
+            boundingVolume = this._boundingVolumeCV;
         } else if (frameState.mode === SceneMode.SCENE2D) {
-            boundingVolume = this._boundingRectangle;
+            boundingVolume = this._boundingVolume2D;
         } else {
             boundingVolume = this._boundingVolume && this._boundingVolume2D && this._boundingVolume.union(this._boundingVolume2D);
         }
@@ -1425,7 +1423,7 @@ define([
 
         if (positions.length > 0) {
             if (typeof polyline._collection._boundingVolume === 'undefined') {
-                polyline._collection._boundingVolume = polyline._boundingVolume.clone();
+                BoundingSphere.clone(polyline._boundingVolume, polyline._collection._boundingVolume);
             } else {
                 polyline._collection._boundingVolume.union(polyline._boundingVolume, polyline._collection._boundingVolume);
             }
@@ -1454,19 +1452,24 @@ define([
         }
 
         if (newPositions.length > 0) {
-            polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions);
-            polyline._boundingVolume2D.center = new Cartesian3(polyline._boundingVolume2D.center.z, polyline._boundingVolume2D.center.x, polyline._boundingVolume2D.center.y);
+            polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions, polyline._boundingVolume2D);
             if (typeof polyline._collection._boundingVolume2D === 'undefined') {
-                polyline._collection._boundingVolume2D = polyline._boundingVolume2D.clone();
+                BoundingSphere.clone(polyline._boundingVolume2D, polyline._collection._boundingVolume2D);
             } else {
                 polyline._collection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._collection._boundingVolume2D);
             }
 
-            polyline._boundingRectangle = BoundingRectangle.fromPoints(newPositions);
-            if (typeof polyline._collection._boundingRectangle === 'undefined') {
-                polyline._collection._boundingRectangle = polyline._boundingRectangle.clone();
+            var center2D = polyline._boundingVolume2D.center;
+            var centerCV = polyline._boundingVolumeCV.center;
+            centerCV.x = center2D.z;
+            centerCV.y = center2D.x;
+            centerCV.z = center2D.y;
+            polyline._boundingVolumeCV.radius = polyline._boundingVolume2D.radius;
+
+            if (typeof polyline._collection._boundingVolumeCV === 'undefined') {
+                BoundingSphere.clone(polyline._boundingVolumeCV, polyline._collection._boundingVolumeCV);
             } else {
-                polyline._collection._boundingRectangle.union(polyline._boundingRectangle, polyline._collection._boundingRectangle);
+                polyline._collection._boundingVolume2D.union(polyline._boundingVolumeCV, polyline._collection._boundingVolumeCV);
             }
         }
 
