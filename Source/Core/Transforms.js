@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Math',
         './Matrix3',
@@ -11,6 +12,7 @@ define([
         './Ellipsoid'
     ],
     function(
+        defaultValue,
         DeveloperError,
         CesiumMath,
         Matrix3,
@@ -37,6 +39,8 @@ define([
     var northEastDownToFixedFrameNormal = new Cartesian3();
     var northEastDownToFixedFrameTangent = new Cartesian3();
     var northEastDownToFixedFrameBitangent = new Cartesian3();
+
+    var pointToWindowCoordinatesTemp = new Cartesian4();
 
     /**
      * @exports Transforms
@@ -69,40 +73,79 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
          * var transform = Transforms.eastNorthUpToFixedFrame(center);
          */
-        eastNorthUpToFixedFrame : function(position, ellipsoid) {
-            if (!position) {
+        eastNorthUpToFixedFrame : function(position, ellipsoid, result) {
+            if (typeof position === 'undefined') {
                 throw new DeveloperError('position is required.');
             }
-
-            ellipsoid = typeof ellipsoid !== 'undefined' ? ellipsoid : Ellipsoid.WGS84;
 
             // If x and y are zero, assume position is at a pole, which is a special case.
             if (CesiumMath.equalsEpsilon(position.x, 0.0, CesiumMath.EPSILON14) &&
                 CesiumMath.equalsEpsilon(position.y, 0.0, CesiumMath.EPSILON14)) {
                 var sign = CesiumMath.sign(position.z);
-                return new Matrix4(
-                    0.0, sign * -1.0,        0.0, position.x,
-                    1.0,         0.0,        0.0, position.y,
-                    0.0,         0.0, sign * 1.0, position.z,
-                    0.0,         0.0,        0.0, 1.0);
+                if (typeof result === 'undefined') {
+                    return new Matrix4(
+                            0.0, -sign,  0.0, position.x,
+                            1.0,   0.0,  0.0, position.y,
+                            0.0,   0.0, sign, position.z,
+                            0.0,   0.0,  0.0, 1.0);
+                }
+                result[0] = 0.0;
+                result[1] = 1.0;
+                result[2] = 0.0;
+                result[3] = 0.0;
+                result[4] = -sign;
+                result[5] = 0.0;
+                result[6] = 0.0;
+                result[7] = 0.0;
+                result[8] = 0.0;
+                result[9] = 0.0;
+                result[10] = sign;
+                result[11] = 0.0;
+                result[12] = position.x;
+                result[13] = position.y;
+                result[14] = position.z;
+                result[15] = 1.0;
+                return result;
             }
 
             var normal = eastNorthUpToFixedFrameNormal;
             var tangent  = eastNorthUpToFixedFrameTangent;
             var bitangent = eastNorthUpToFixedFrameBitangent;
 
+            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
             ellipsoid.geodeticSurfaceNormal(position, normal);
+
             tangent.x = -position.y;
             tangent.y = position.x;
             tangent.z = 0.0;
             Cartesian3.normalize(tangent, tangent);
+
             normal.cross(tangent, bitangent);
 
-            return new Matrix4(
-                tangent.x, bitangent.x, normal.x, position.x,
-                tangent.y, bitangent.y, normal.y, position.y,
-                tangent.z, bitangent.z, normal.z, position.z,
-                0.0,       0.0,         0.0,      1.0);
+            if (typeof result === 'undefined') {
+                return new Matrix4(
+                        tangent.x, bitangent.x, normal.x, position.x,
+                        tangent.y, bitangent.y, normal.y, position.y,
+                        tangent.z, bitangent.z, normal.z, position.z,
+                        0.0,       0.0,         0.0,      1.0);
+            }
+            result[0] = tangent.x;
+            result[1] = tangent.y;
+            result[2] = tangent.z;
+            result[3] = 0.0;
+            result[4] = bitangent.x;
+            result[5] = bitangent.y;
+            result[6] = bitangent.z;
+            result[7] = 0.0;
+            result[8] = normal.x;
+            result[9] = normal.y;
+            result[10] = normal.z;
+            result[11] = 0.0;
+            result[12] = position.x;
+            result[13] = position.y;
+            result[14] = position.z;
+            result[15] = 1.0;
+            return result;
         },
 
         /**
@@ -130,40 +173,79 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
          * var transform = Transforms.northEastDownToFixedFrame(center);
          */
-        northEastDownToFixedFrame : function(position, ellipsoid) {
-            if (!position) {
+        northEastDownToFixedFrame : function(position, ellipsoid, result) {
+            if (typeof position === 'undefined') {
                 throw new DeveloperError('position is required.');
             }
 
-            ellipsoid = ellipsoid || Ellipsoid.WGS84;
-
             if (CesiumMath.equalsEpsilon(position.x, 0.0, CesiumMath.EPSILON14) &&
-                    CesiumMath.equalsEpsilon(position.y, 0.0, CesiumMath.EPSILON14)) {
+                CesiumMath.equalsEpsilon(position.y, 0.0, CesiumMath.EPSILON14)) {
                 // The poles are special cases.  If x and y are zero, assume position is at a pole.
                 var sign = CesiumMath.sign(position.z);
-                return new Matrix4(
-                    sign * -1.0, 0.0, 0.0, position.x,
-                    0.0, 1.0,         0.0, position.y,
-                    0.0, 0.0, sign * -1.0, position.z,
-                    0.0, 0.0,         0.0, 1.0);
+                if (typeof result === 'undefined') {
+                    return new Matrix4(
+                      -sign, 0.0,   0.0, position.x,
+                        0.0, 1.0,   0.0, position.y,
+                        0.0, 0.0, -sign, position.z,
+                        0.0, 0.0,   0.0, 1.0);
+                }
+                result[0] = -sign;
+                result[1] = 0.0;
+                result[2] = 0.0;
+                result[3] = 0.0;
+                result[4] = 0.0;
+                result[5] = 1.0;
+                result[6] = 0.0;
+                result[7] = 0.0;
+                result[8] = 0.0;
+                result[9] = 0.0;
+                result[10] = -sign;
+                result[11] = 0.0;
+                result[12] = position.x;
+                result[13] = position.y;
+                result[14] = position.z;
+                result[15] = 1.0;
+                return result;
             }
 
             var normal = northEastDownToFixedFrameNormal;
             var tangent = northEastDownToFixedFrameTangent;
             var bitangent = northEastDownToFixedFrameBitangent;
 
+            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
             ellipsoid.geodeticSurfaceNormal(position, normal);
+
             tangent.x = -position.y;
             tangent.y = position.x;
             tangent.z = 0.0;
             Cartesian3.normalize(tangent, tangent);
+
             normal.cross(tangent, bitangent);
 
-            return new Matrix4(
-                bitangent.x, tangent.x, -normal.x, position.x,
-                bitangent.y, tangent.y, -normal.y, position.y,
-                bitangent.z, tangent.z, -normal.z, position.z,
-                0.0,         0.0,        0.0,      1.0);
+            if (typeof result === 'undefined') {
+                return new Matrix4(
+                        bitangent.x, tangent.x, -normal.x, position.x,
+                        bitangent.y, tangent.y, -normal.y, position.y,
+                        bitangent.z, tangent.z, -normal.z, position.z,
+                        0.0,       0.0,         0.0,      1.0);
+            }
+            result[0] = bitangent.x;
+            result[1] = bitangent.y;
+            result[2] = bitangent.z;
+            result[3] = 0.0;
+            result[4] = tangent.x;
+            result[5] = tangent.y;
+            result[6] = tangent.z;
+            result[7] = 0.0;
+            result[8] = -normal.x;
+            result[9] = -normal.y;
+            result[10] = -normal.z;
+            result[11] = 0.0;
+            result[12] = position.x;
+            result[13] = position.y;
+            result[14] = position.z;
+            result[15] = 1.0;
+            return result;
         },
 
         /**
@@ -183,7 +265,7 @@ define([
          *     scene.getCamera().transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(time), Cesium.Cartesian3.ZERO);
          * });
          */
-        computeTemeToPseudoFixedMatrix : function (date) {
+        computeTemeToPseudoFixedMatrix : function (date, result) {
             if (typeof date === 'undefined') {
                 throw new DeveloperError('date is required.');
             }
@@ -212,7 +294,21 @@ define([
 
             var cosGha = Math.cos(gha);
             var sinGha = Math.sin(gha);
-            return new Matrix3(cosGha, sinGha, 0.0, -sinGha, cosGha, 0.0, 0.0, 0.0, 1.0);
+            if (typeof result === 'undefined') {
+                return new Matrix3(cosGha, sinGha, 0.0,
+                                  -sinGha, cosGha, 0.0,
+                                      0.0,    0.0, 1.0);
+            }
+            result[0] = cosGha;
+            result[1] = -sinGha;
+            result[2] = 0.0;
+            result[3] = sinGha;
+            result[4] = cosGha;
+            result[5] = 0.0;
+            result[6] = 0.0;
+            result[7] = 0.0;
+            result[8] = 1.0;
+            return result;
         },
 
         /**
@@ -233,7 +329,7 @@ define([
          * @exception {DeveloperError} viewportTransformation is required.
          * @exception {DeveloperError} point is required.
          */
-        pointToWindowCoordinates : function (modelViewProjectionMatrix, viewportTransformation, point) {
+        pointToWindowCoordinates : function (modelViewProjectionMatrix, viewportTransformation, point, result) {
             if (typeof modelViewProjectionMatrix === 'undefined') {
                 throw new DeveloperError('modelViewProjectionMatrix is required.');
             }
@@ -246,11 +342,16 @@ define([
                 throw new DeveloperError('point is required.');
             }
 
-            var pnt = new Cartesian4(point.x, point.y, point.z, 1.0);
-            pnt = modelViewProjectionMatrix.multiplyByVector(pnt);
-            pnt = pnt.multiplyByScalar(1.0 / pnt.w);
-            pnt = viewportTransformation.multiplyByVector(pnt);
-            return Cartesian2.fromCartesian4(pnt);
+            var tmp = pointToWindowCoordinatesTemp;
+            tmp.x = point.x;
+            tmp.y = point.y;
+            tmp.z = point.z;
+            tmp.w = 1.0;
+
+            Matrix4.multiplyByVector(modelViewProjectionMatrix, tmp, tmp);
+            Cartesian4.multiplyByScalar(tmp, 1.0 / tmp.w, tmp);
+            Matrix4.multiplyByVector(viewportTransformation, tmp, tmp);
+            return Cartesian2.fromCartesian4(tmp, result);
         }
     };
 
