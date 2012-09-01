@@ -156,7 +156,7 @@ defineSuite([
         expect(frustum.bottom).toEqual(-0.5, CesiumMath.EPSILON10);
     });
 
-    it('zoomIn throws with null OrthogrphicFrustum properties', function() {
+    it('zoomIn throws with undefined OrthogrphicFrustum properties', function() {
         var camera = new Camera(document);
         camera.frustum = new OrthographicFrustum();
         controller2 = new Camera2DController(document, camera, projection);

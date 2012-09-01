@@ -1,12 +1,14 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/OrthographicFrustum',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Matrix4',
          'Core/Math'
      ], function(
          OrthographicFrustum,
+         Cartesian2,
          Cartesian3,
          Cartesian4,
          Matrix4,
@@ -119,6 +121,18 @@ defineSuite([
         var projectionMatrix = frustum.getProjectionMatrix();
         var expected = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far);
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+    });
+
+    it('get pixel size throws without canvas dimensions', function() {
+        expect(function() {
+            return frustum.getPixelSize();
+        }).toThrow();
+    });
+
+    it('get pixel size', function() {
+        var pixelSize = frustum.getPixelSize(new Cartesian2(1.0, 1.0));
+        expect(pixelSize.x).toEqual(2.0);
+        expect(pixelSize.y).toEqual(2.0);
     });
 
     it('clone', function() {

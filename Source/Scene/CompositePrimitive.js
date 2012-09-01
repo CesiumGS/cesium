@@ -451,7 +451,7 @@ define([
 
     function update3D(context, frameState, primitives, renderList) {
         var mode = frameState.mode;
-        var camera = frameState.camera;
+        var planes = frameState.cullingPlanes;
         var occluder = frameState.occluder;
 
         var length = primitives.length;
@@ -470,7 +470,16 @@ define([
                 center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
                 boundingVolume = new BoundingSphere(center, boundingVolume.radius);
 
-                if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+                var cull = false;
+                for ( var k = 0; k < planes.length; k++) {
+                    var result = boundingVolume.intersect(planes[k]);
+                    if (result === Intersect.OUTSIDE) {
+                        cull = true;
+                        break;
+                    }
+                }
+
+                if (cull) {
                     continue;
                 }
 
