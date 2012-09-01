@@ -65,11 +65,8 @@ body {
     z-index: -1;
 }
 #toolbar {
-    background: rgba(0, 0, 0, 0.5);
-    border: solid 1px rgba(0, 0, 0, 0.9);
     margin: 5px;
     padding: 2px 5px;
-    border-radius: 5px;
 }
 </style>
 
@@ -130,32 +127,7 @@ require([
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
     ///////////////////////////////////////////////////////////////////////////
-    // Add examples from the Sandbox here:
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Demo buttons:
-
-    dom.byId('toolbar').innerHTML = 'Demo buttons: ';
-
-    var button1 = new ToggleButton({
-        label: 'Ground Atmosphere',
-        iconClass: 'dijitCheckBoxIcon',
-        checked: cb.showGroundAtmosphere,
-        onChange: function (newValue) {
-            cb.showGroundAtmosphere = newValue;
-            console.log('Show ground atmosphere: ' + newValue);
-        }
-    }).placeAt('toolbar');
-
-    var button2 = new ToggleButton({
-        label: 'Sky Atmosphere',
-        iconClass: 'dijitCheckBoxIcon',
-        checked: cb.showSkyAtmosphere,
-        onChange: function (newValue) {
-            cb.showSkyAtmosphere = newValue;
-            console.log('Show sky atmosphere: ' + newValue);
-        }
-    }).placeAt('toolbar');
+    // Add your code here:
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -230,17 +202,14 @@ require([
         canvas.width = width;
         canvas.height = height;
 
-        scene.getContext().setViewport({
-            x: 0,
-            y: 0,
-            width: width,
-            height: height
-        });
+        scene.getContext().setViewport(new Cesium.BoundingRectangle(0, 0, width, height));
 
         scene.getCamera().frustum.aspectRatio = width / height;
     };
     window.addEventListener('resize', onResize, false);
     onResize();
+    
+    dom.byId("toolbar").innerHTML = '';
 });
 
 </script>

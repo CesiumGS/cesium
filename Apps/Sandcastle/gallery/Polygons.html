@@ -117,12 +117,7 @@ require([
                 }]
             };
         polygonHierarchy.material = Cesium.Material.fromType(scene.getContext(), 'Color');
-        polygonHierarchy.material.uniforms.color = {
-            red : 0.0,
-            green : 1.0,
-            blue : 1.0,
-            alpha : 0.75
-        };
+        polygonHierarchy.material.uniforms.color = new Cesium.Color(0.0, 1.0, 1.0, 0.75);
         polygonHierarchy.configureFromPolygonHierarchy(hierarchy);
         primitives.add(polygonHierarchy);
         
