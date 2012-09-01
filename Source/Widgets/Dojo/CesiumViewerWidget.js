@@ -642,6 +642,8 @@ define([
                 if (typeof this.highlightedObject !== 'undefined') {
                     if (typeof this.highlightedObject.material !== 'undefined') {
                         this.highlightedObject.material = this._originalMaterial;
+                    } else if (typeof this.highlightedObject.outerMaterial !== 'undefined') {
+                        this.highlightedObject.outerMaterial = this._originalMaterial;
                     } else {
                         this.highlightedObject.setColor(this._originalColor);
                     }
@@ -651,6 +653,9 @@ define([
                     if (typeof selectedObject.material !== 'undefined') {
                         this._originalMaterial = selectedObject.material;
                         selectedObject.material = this.highlightMaterial;
+                    } else if (typeof selectedObject.outerMaterial !== 'undefined') {
+                        this._originalMaterial = selectedObject.outerMaterial;
+                        selectedObject.outerMaterial = this.highlightMaterial;
                     } else {
                         this._originalColor = selectedObject.getColor();
                         selectedObject.setColor(this.highlightColor);

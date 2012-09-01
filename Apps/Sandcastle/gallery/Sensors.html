@@ -61,48 +61,52 @@ body {
     height: 100%;
     z-index: -1;
 }
+#toolbar {
+    background: rgba(0, 0, 0, 0.5);
+    border: solid 1px rgba(0, 0, 0, 0.9);
+    margin: 5px;
+    padding: 2px 5px;
+    border-radius: 5px;
+}
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
+<div id="toolbar">Loading...</div>
 
 <script id="cesium_sandcastle_script">
 require([
     'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
-    'dojo/on', 'dojo/dom'
+    'dojo/on', 'dojo/dom', 'dijit/form/Button', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem'
 ], function(
     Cesium, CesiumViewerWidget,
-    on, dom)
+    on, dom, Button, DropDownButton, DropDownMenu, MenuItem)
 {
     "use strict";
 
-    function createPrimitives(widget) {
-
-        var ellipsoid = widget.ellipsoid;
-        var scene = widget.scene;
-        var primitives = scene.getPrimitives();
-        var sensors = new Cesium.SensorVolumeCollection();
+    function addRectangularSensor(sensors, ellipsoid, scene) {
+        Sandcastle.declare(addRectangularSensor);
         
         var rectangularSensormodelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-120.0, 25.0)));
         rectangularSensormodelMatrix = rectangularSensormodelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(2000000.0, 0.0, -1000000.0)));
     
-        // Add a rectangular pyramid sensor
         var rectangularPyramidSensor = sensors.addRectangularPyramid();
-        Sandcastle.declare(rectangularPyramidSensor);
         rectangularPyramidSensor.modelMatrix = rectangularSensormodelMatrix;
         rectangularPyramidSensor.radius = 20000000.0;
         rectangularPyramidSensor.xHalfAngle = Cesium.Math.toRadians(40.0);
         rectangularPyramidSensor.yHalfAngle = Cesium.Math.toRadians(20.0);
         
-        // Add a material to the rectangular sensor
         rectangularPyramidSensor.material = Cesium.Material.fromType(scene.getContext(), 'Color');
         rectangularPyramidSensor.material.uniforms.color = {
-            red   : 0.0,
-            green : 1.0,
-            blue  : 1.0,
-            alpha : 0.5
-        };        
-        
-        // Custom sensor
+                         red : 0.0,
+                         green : 1.0,
+                         blue : 1.0,
+                         alpha : 0.5
+        };
+    }
+    
+    function addCustomSensor(sensors, ellipsoid, scene) {
+        Sandcastle.declare(addCustomSensor);
+
         var customSensorModelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.0, 15.0)));
         customSensorModelMatrix = customSensorModelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(2000000.0, 0.0, -2000000.0)));
         var directions = [];
@@ -112,70 +116,127 @@ require([
                 cone : Cesium.Math.toRadians(25.0)
             });
         }
+        
         var customSensor = sensors.addCustom();
         Sandcastle.declare(customSensor);
         customSensor.modelMatrix = customSensorModelMatrix;
         customSensor.radius = 10000000.0;
         customSensor.setDirections(directions);
+    }
+    
+    function addComplexConicSensor(sensors, ellipsoid, scene) {
+        Sandcastle.declare(addComplexConicSensor);
 
         // Complex conic sensor - Works with ANGLE turned off.
-//         var complexConicSensor = sensors.addComplexConic();
-//         Sandcastle.declare(complexConicSensor);
-//         var complexConicModelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 50.0)));
-//         complexConicModelMatrix = complexConicModelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(2000000.0, 0.0, -2000000.0)));
-//         complexConicSensor.modelMatrix = complexConicModelMatrix;
-//         complexConicSensor.radius = 15000000.0;
-//         complexConicSensor.outerHalfAngle = Cesium.Math.toRadians(30.0);
-//         complexConicSensor.innerHalfAngle = Cesium.Math.toRadians(20.0);
-        
+        var complexConicSensor = sensors.addComplexConic();
+        var complexConicModelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 50.0)));
+        complexConicModelMatrix = complexConicModelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(2000000.0, 0.0, -2000000.0)));
+        complexConicSensor.modelMatrix = complexConicModelMatrix;
+        complexConicSensor.radius = 15000000.0;
+        complexConicSensor.outerHalfAngle = Cesium.Math.toRadians(30.0);
+        complexConicSensor.innerHalfAngle = Cesium.Math.toRadians(20.0);
+
         // Apply a distance interval material to the conic sensor
-//         var distanceMaterial = new Cesium.DistanceIntervalMaterial({
-//             intervals : [
-//                 {
-//                     distance : 500000.0,
-//                     color : {
-//                         red : 1.0,
-//                         green : 0.0,
-//                         blue : 0.0,
-//                         alpha : 0.5
-//                     }
-//                 }, {
-//                     distance : 1000000.0,
-//                     color : {
-//                         red : 0.0,
-//                         green : 1.0,
-//                         blue : 0.0,
-//                         alpha : 0.5
-//                     }
-//                 }, {
-//                     distance : 20000000.0,
-//                     color : {
-//                         red : 0.0,
-//                         green : 0.0,
-//                         blue : 1.0,
-//                         alpha : 0.5
-//                     }
-//                 }
-//             ]
-//         });
+        var distanceMaterial = new Cesium.DistanceIntervalMaterial({
+            intervals : [
+                {
+                    distance : 500000.0,
+                    color : {
+                        red : 1.0,
+                        green : 0.0,
+                        blue : 0.0,
+                        alpha : 0.5
+                    }
+                }, {
+                    distance : 1000000.0,
+                    color : {
+                        red : 0.0,
+                        green : 1.0,
+                        blue : 0.0,
+                        alpha : 0.5
+                    }
+                }, {
+                    distance : 20000000.0,
+                    color : {
+                        red : 0.0,
+                        green : 0.0,
+                        blue : 1.0,
+                        alpha : 0.5
+                    }
+                }
+            ]
+        });
         
-//         complexConicSensor.outerMaterial = distanceMaterial;
-//         complexConicSensor.innerMaterial = distanceMaterial;
-//         complexConicSensor.capMaterial = distanceMaterial;
-
+        complexConicSensor.outerMaterial = distanceMaterial;
+        complexConicSensor.innerMaterial = distanceMaterial;
+        complexConicSensor.capMaterial = distanceMaterial;
+    }
+    
+    function addComplexConicWithClockAngles(sensors, ellipsoid, scene) {
+        Sandcastle.declare(addComplexConicWithClockAngles);
+        
         // Draw a complex conic sensor with clock angles
-//         var complexConicModelMatrix2 = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-50.0, 25.0)));
-//         complexConicModelMatrix2 = complexConicModelMatrix2.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(2000000.0, 0.0, -2000000.0)));
-//         var complexConicSensor2 =  sensors.addComplexConic();
-//         Sandcastle.declare(complexConicSensor2);
-//         complexConicSensor2.modelMatrix = complexConicModelMatrix2;
-//         complexConicSensor2.outerHalfAngle = Cesium.Math.toRadians(30.0);
-//         complexConicSensor2.innerHalfAngle = Cesium.Math.toRadians(20.0);
-//         complexConicSensor2.maximumClockAngle = Cesium.Math.toRadians(45.0);
-//         complexConicSensor2.minimumClockAngle = Cesium.Math.toRadians(-45.0);
-//         complexConicSensor2.radius = 20000000.0
-
+        var complexConicModelMatrix2 = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-50.0, 25.0)));
+        complexConicModelMatrix2 = complexConicModelMatrix2.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(2000000.0, 0.0, -2000000.0)));
+        
+        var complexConicSensor2 =  sensors.addComplexConic();
+        complexConicSensor2.modelMatrix = complexConicModelMatrix2;
+        complexConicSensor2.outerHalfAngle = Cesium.Math.toRadians(30.0);
+        complexConicSensor2.innerHalfAngle = Cesium.Math.toRadians(20.0);
+        complexConicSensor2.maximumClockAngle = Cesium.Math.toRadians(45.0);
+        complexConicSensor2.minimumClockAngle = Cesium.Math.toRadians(-45.0);
+        complexConicSensor2.radius = 20000000.0;
+    }
+    
+    function createButtons(widget) {
+        var ellipsoid = widget.ellipsoid;
+        var scene = widget.scene;
+        var primitives = scene.getPrimitives();
+        var sensors = new Cesium.SensorVolumeCollection();
         primitives.add(sensors);
+        
+        var sensorMenu = new DropDownMenu({ style: "display: none;"});
+        
+        sensorMenu.addChild(new MenuItem({
+            label: "Rectangular",
+            onClick: function() {
+                sensors.removeAll();
+                addRectangularSensor(sensors, ellipsoid, scene); 
+                Sandcastle.highlight(addRectangularSensor);
+            }
+        }));
+        
+        sensorMenu.addChild(new MenuItem({
+            label: "Custom",
+            onClick: function() {
+                sensors.removeAll();
+                addCustomSensor(sensors, ellipsoid, scene); 
+                Sandcastle.highlight(addCustomSensor);
+            }
+        }));
+       
+        sensorMenu.addChild(new MenuItem({
+            label: "Complex Conic",
+            onClick: function() {
+                sensors.removeAll();
+                addComplexConicSensor(sensors, ellipsoid, scene); 
+                Sandcastle.highlight(addComplexConicSensor);
+            }
+        }));
+        
+        sensorMenu.addChild(new MenuItem({
+            label: "Complex Conic with clock angles",
+            onClick: function() {
+                sensors.removeAll();
+                addComplexConicWithClockAngles(sensors, ellipsoid, scene); 
+                Sandcastle.highlight(addComplexConicWithClockAngles);
+            }
+        }));
+       
+        new DropDownButton({
+            label : 'Add a sensor',
+            dropDown: sensorMenu
+        }).placeAt('toolbar');
     }
 
     var cesiumViewerWidget = new CesiumViewerWidget({
@@ -184,10 +245,16 @@ require([
             Sandcastle.highlight(mousedOverObject);
         },
         postSetup : function(widget) {
-            createPrimitives(widget);
+            createButtons(widget);
             widget.startRenderLoop();
         }
     }).placeAt(dom.byId("cesiumContainer"));
+    
+    on(window, 'resize', function() {
+        cesiumViewerWidget.resize();
+    });
+    
+    dom.byId("toolbar").innerHTML = '';
 });
 </script>
 </body>
