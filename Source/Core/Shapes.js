@@ -5,16 +5,14 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Quaternion',
-        './Matrix3',
-        './EllipsoidTangentPlane'
+        './Matrix3'
     ], function(
         DeveloperError,
         CesiumMath,
         Cartesian2,
         Cartesian3,
         Quaternion,
-        Matrix3,
-        EllipsoidTangentPlane) {
+        Matrix3) {
     "use strict";
 
     function _computeEllipseQuadrant(cb, cbRadius, aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
