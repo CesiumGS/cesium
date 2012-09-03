@@ -1179,7 +1179,7 @@ define([
                     return rtc;
                 },
                 u_center2D : function() {
-                    return (projectedRTC) ? Cartesian2.fromCartesian3(projectedRTC) : Cartesian2.ZERO;
+                    return typeof projectedRTC !== 'undefined' ? projectedRTC : Cartesian2.ZERO;
                 },
                 u_modifiedModelView : function() {
                     return tile.modelView;
@@ -1349,9 +1349,9 @@ define([
         }
 
         lowerLeft = center.add(camera.up.multiplyByScalar(-halfHeight)).add(camera.right.multiplyByScalar(-halfWidth));
-        lowerLeft = Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft);
+        Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft, lowerLeft);
         upperRight = center.add(camera.up.multiplyByScalar(halfHeight)).add(camera.right.multiplyByScalar(halfWidth));
-        upperRight = Transforms.pointToWindowCoordinates(mvp, vt, upperRight);
+        Transforms.pointToWindowCoordinates(mvp, vt, upperRight, upperRight);
 
         lowerLeft.x = Math.max(0.0, Math.min(lowerLeft.x, description.width));
         lowerLeft.y = Math.max(0.0, Math.min(lowerLeft.y, description.height));
@@ -1419,9 +1419,9 @@ define([
         var screenRight = center.add(right.multiplyByScalar(radius));
         var screenUp = center.add(Cartesian3.UNIT_Z.cross(right).normalize().multiplyByScalar(radius));
 
-        center = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center);
-        screenRight = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight);
-        screenUp = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp);
+        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center, center);
+        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);
+        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp, screenUp);
 
         var halfWidth = Math.floor(Math.max(screenUp.subtract(center).magnitude(), screenRight.subtract(center).magnitude()));
         var halfHeight = halfWidth;
