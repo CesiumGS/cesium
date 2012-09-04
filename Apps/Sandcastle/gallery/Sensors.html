@@ -194,10 +194,10 @@ require([
         var sensors = new Cesium.SensorVolumeCollection();
         primitives.add(sensors);
         
-        var sensorMenu = new DropDownMenu({ style: "display: none;"});
+        var sensorMenu = new DropDownMenu({ style: 'display: none;'});
         
         sensorMenu.addChild(new MenuItem({
-            label: "Rectangular",
+            label: 'Rectangular',
             onClick: function() {
                 sensors.removeAll();
                 addRectangularSensor(sensors, ellipsoid, scene); 
@@ -206,7 +206,7 @@ require([
         }));
         
         sensorMenu.addChild(new MenuItem({
-            label: "Custom",
+            label: 'Custom',
             onClick: function() {
                 sensors.removeAll();
                 addCustomSensor(sensors, ellipsoid, scene); 
@@ -215,7 +215,7 @@ require([
         }));
        
         sensorMenu.addChild(new MenuItem({
-            label: "Complex Conic",
+            label: 'Complex Conic',
             onClick: function() {
                 sensors.removeAll();
                 addComplexConicSensor(sensors, ellipsoid, scene); 
@@ -224,7 +224,7 @@ require([
         }));
         
         sensorMenu.addChild(new MenuItem({
-            label: "Complex Conic with clock angles",
+            label: 'Complex Conic with clock angles',
             onClick: function() {
                 sensors.removeAll();
                 addComplexConicWithClockAngles(sensors, ellipsoid, scene); 
@@ -247,13 +247,13 @@ require([
             createButtons(widget);
             widget.startRenderLoop();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId('cesiumContainer'));
     
     on(window, 'resize', function() {
         cesiumViewerWidget.resize();
     });
     
-    dom.byId("toolbar").innerHTML = '';
+    dom.byId('toolbar').innerHTML = '';
 });
 </script>
 </body>
