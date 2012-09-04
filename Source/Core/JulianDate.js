@@ -1058,8 +1058,8 @@ define([
 
     //To avoid circular dependencies, we load the default list of leap seconds
     //here, rather than in the LeapSecond class itself.
-    if (LeapSecond.getLeapSeconds().length === 0) {
-        LeapSecond.setLeapSeconds([
+    if (LeapSecond._leapSeconds.length === 0) {
+        LeapSecond._leapSeconds = [
                                    new LeapSecond(new JulianDate(2441317, 43210.0, TimeStandard.TAI), 10), // January 1, 1972 00:00:00 UTC
                                    new LeapSecond(new JulianDate(2441499, 43211.0, TimeStandard.TAI), 11), // July 1, 1972 00:00:00 UTC
                                    new LeapSecond(new JulianDate(2441683, 43212.0, TimeStandard.TAI), 12), // January 1, 1973 00:00:00 UTC
@@ -1086,7 +1086,7 @@ define([
                                    new LeapSecond(new JulianDate(2453736, 43233.0, TimeStandard.TAI), 33), // January 1, 2006 00:00:00 UTC
                                    new LeapSecond(new JulianDate(2454832, 43234.0, TimeStandard.TAI), 34), // January 1, 2009 00:00:00 UTC
                                    new LeapSecond(new JulianDate(2456109, 43235.0, TimeStandard.TAI), 35)  // July 1, 2012 00:00:00 UTC
-                                 ]);
+                                 ];
     }
 
     return JulianDate;

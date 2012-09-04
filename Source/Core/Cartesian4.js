@@ -1,7 +1,12 @@
 /*global define*/
-define(['./DeveloperError'
-       ], function(
-        DeveloperError) {
+define([
+        './defaultValue',
+        './DeveloperError',
+        './freezeObject'
+    ], function(
+        defaultValue,
+        DeveloperError,
+        freezeObject) {
     "use strict";
 
     /**
@@ -18,30 +23,29 @@ define(['./DeveloperError'
      * @see Cartesian3
      */
     var Cartesian4 = function(x, y, z, w) {
-
         /**
          * The X component.
          * @type Number
          */
-        this.x = (typeof x !== 'undefined') ? x : 0.0;
+        this.x = defaultValue(x, 0.0);
 
         /**
          * The Y component.
          * @type Number
          */
-        this.y = (typeof y !== 'undefined') ? y : 0.0;
+        this.y = defaultValue(y, 0.0);
 
         /**
          * The Z component.
          * @type Number
          */
-        this.z = (typeof z !== 'undefined') ? z : 0.0;
+        this.z = defaultValue(z, 0.0);
 
         /**
          * The W component.
          * @type Number
          */
-        this.w = (typeof w !== 'undefined') ? w : 0.0;
+        this.w = defaultValue(w, 0.0);
     };
 
     /**
@@ -115,7 +119,7 @@ define(['./DeveloperError'
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required');
         }
-        return cartesian.x * cartesian.x + cartesian.y * cartesian.y + cartesian.z * cartesian.z+ cartesian.w * cartesian.w;
+        return cartesian.x * cartesian.x + cartesian.y * cartesian.y + cartesian.z * cartesian.z + cartesian.w * cartesian.w;
     };
 
     /**
@@ -284,7 +288,7 @@ define(['./DeveloperError'
             throw new DeveloperError('scalar is required and must be a number.');
         }
         if (typeof result === 'undefined') {
-            return new Cartesian4(cartesian.x * scalar,  cartesian.y * scalar, cartesian.z * scalar, cartesian.w * scalar);
+            return new Cartesian4(cartesian.x * scalar, cartesian.y * scalar, cartesian.z * scalar, cartesian.w * scalar);
         }
         result.x = cartesian.x * scalar;
         result.y = cartesian.y * scalar;
@@ -449,31 +453,31 @@ define(['./DeveloperError'
      * An immutable Cartesian4 instance initialized to (0.0, 0.0, 0.0, 0.0).
      * @memberof Cartesian4
      */
-    Cartesian4.ZERO = Object.freeze(new Cartesian4(0.0, 0.0, 0.0, 0.0));
+    Cartesian4.ZERO = freezeObject(new Cartesian4(0.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (1.0, 0.0, 0.0, 0.0).
      * @memberof Cartesian4
      */
-    Cartesian4.UNIT_X = Object.freeze(new Cartesian4(1.0, 0.0, 0.0, 0.0));
+    Cartesian4.UNIT_X = freezeObject(new Cartesian4(1.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 1.0, 0.0, 0.0).
      * @memberof Cartesian4
      */
-    Cartesian4.UNIT_Y = Object.freeze(new Cartesian4(0.0, 1.0, 0.0, 0.0));
+    Cartesian4.UNIT_Y = freezeObject(new Cartesian4(0.0, 1.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 0.0, 1.0, 0.0).
      * @memberof Cartesian4
      */
-    Cartesian4.UNIT_Z = Object.freeze(new Cartesian4(0.0, 0.0, 1.0, 0.0));
+    Cartesian4.UNIT_Z = freezeObject(new Cartesian4(0.0, 0.0, 1.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 0.0, 0.0, 1.0).
      * @memberof Cartesian4
      */
-    Cartesian4.UNIT_W = Object.freeze(new Cartesian4(0.0, 0.0, 0.0, 1.0));
+    Cartesian4.UNIT_W = freezeObject(new Cartesian4(0.0, 0.0, 0.0, 1.0));
 
     /**
      * Computes the value of the maximum component for this Cartesian.

@@ -2,10 +2,12 @@
 define([
         './defaultValue',
         './DeveloperError',
+        './freezeObject',
         './Math'
     ], function(
         defaultValue,
         DeveloperError,
+        freezeObject,
         CesiumMath) {
     "use strict";
 
@@ -154,7 +156,7 @@ define([
      *
      * @memberof Cartographic
      */
-    Cartographic.ZERO = Object.freeze(new Cartographic(0.0, 0.0, 0.0));
+    Cartographic.ZERO = freezeObject(new Cartographic(0.0, 0.0, 0.0));
 
     /**
      * Duplicates this instance.

@@ -1,13 +1,17 @@
 /*global define*/
 define([
-        './DeveloperError',
-        './Math',
         './Cartesian3',
+        './defaultValue',
+        './DeveloperError',
+        './freezeObject',
+        './Math',
         './Matrix3'
     ], function(
-        DeveloperError,
-        CesiumMath,
         Cartesian3,
+        defaultValue,
+        DeveloperError,
+        freezeObject,
+        CesiumMath,
         Matrix3) {
     "use strict";
 
@@ -22,30 +26,29 @@ define([
      * @param {Number} [w=0.0] The W component.
      */
     var Quaternion = function(x, y, z, w) {
-
         /**
          * The X component.
          * @type Number
          */
-        this.x = (typeof x !== 'undefined') ? x : 0.0;
+        this.x = defaultValue(x, 0.0);
 
         /**
          * The Y component.
          * @type Number
          */
-        this.y = (typeof y !== 'undefined') ? y : 0.0;
+        this.y = defaultValue(y, 0.0);
 
         /**
          * The Z component.
          * @type Number
          */
-        this.z = (typeof z !== 'undefined') ? z : 0.0;
+        this.z = defaultValue(z, 0.0);
 
         /**
          * The W component.
          * @type Number
          */
-        this.w = (typeof w !== 'undefined') ? w : 0.0;
+        this.w = defaultValue(w, 0.0);
     };
 
     var fromAxisAngleScratch;
@@ -694,13 +697,13 @@ define([
      * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 0.0).
      * @memberof Quaternion
      */
-    Quaternion.ZERO = Object.freeze(new Quaternion(0.0, 0.0, 0.0, 0.0));
+    Quaternion.ZERO = freezeObject(new Quaternion(0.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 1.0).
      * @memberof Quaternion
      */
-    Quaternion.IDENTITY = Object.freeze(new Quaternion(0.0, 0.0, 0.0, 1.0));
+    Quaternion.IDENTITY = freezeObject(new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     /**
      * Duplicates this Quaternion instance.
