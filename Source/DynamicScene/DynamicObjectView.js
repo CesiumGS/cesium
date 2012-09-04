@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Cartesian3',
         '../Core/Ellipsoid',
         '../Core/Transforms',
         '../Scene/SceneMode'
        ], function(
+         defaultValue,
          DeveloperError,
          Cartesian3,
          Ellipsoid,
@@ -13,14 +15,119 @@ define([
          SceneMode) {
     "use strict";
 
+    function update2D(that, camera, objectChanged, offset, positionProperty, scene, time) {
+        var viewDistance;
+        var controller = that._controller2d;
+        var controllerChanged = typeof controller === 'undefined' || controller.isDestroyed() || controller !== that._lastController;
+
+        if (controllerChanged) {
+            var controllers = camera.getControllers();
+            controllers.removeAll();
+            that._lastController = that._controller2d = controller = controllers.add2D(scene.scene2D.projection);
+            controller.zoomOnly = true;
+            viewDistance = typeof that._lastOffset === 'undefined' ? offset.magnitude() : that._lastOffset.magnitude();
+        } else if (objectChanged) {
+            viewDistance = offset.magnitude();
+        } else {
+            viewDistance = camera.position.z;
+        }
+
+        var cartographic = that._lastCartographic = positionProperty.getValueCartographic(time, that._lastCartographic);
+        if (typeof cartographic !== 'undefined') {
+            cartographic.height = viewDistance;
+            if (objectChanged || controllerChanged) {
+                camera.frustum.near = viewDistance;
+                controller.setCameraPosition(cartographic);
+            } else {
+                camera.position = scene.scene2D.projection.project(cartographic);
+            }
+        }
+        that._lastDistance = camera.frustum.right - camera.frustum.left;
+    }
+
+    var update3DTransform;
+    function update3D(that, camera, ellipsoid, objectChanged, offset, positionProperty, time) {
+        var viewDistance;
+        var controller = that._controller3d;
+        var controllerChanged = typeof controller === 'undefined' || controller.isDestroyed() || controller !== that._lastController;
+
+        if (controllerChanged) {
+            var controllers = camera.getControllers();
+            controllers.removeAll();
+            that._lastController = that._controller3d = controller = controllers.addSpindle();
+            controller.constrainedAxis = Cartesian3.UNIT_Z;
+        }
+
+        var cartesian = that._lastCartesian = positionProperty.getValueCartesian(time, that._lastCartesian);
+        if (typeof cartesian !== 'undefined') {
+            if (objectChanged) {
+                //If looking straight down, move the camera slightly south the avoid gimbal lock.
+                if (Cartesian3.equals(offset.normalize(), Cartesian3.UNIT_Z)) {
+                    offset.y -= 0.01;
+                }
+                camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
+
+                //TODO There are all kinds of near plane issues in our code base right now,
+                //hack around it until the multi-frustum code is in place.
+                viewDistance = offset.magnitude();
+                camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * that.ellipsoid.getRadii().getMaximumComponent());
+            } else if (controllerChanged) {
+                if (typeof that._lastOffset !== 'undefined') {
+                    that._lastOffset.normalize(offset).multiplyByScalar(that._lastDistance, offset);
+                }
+                camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
+
+                //TODO There are all kinds of near plane issues in our code base right now,
+                //hack around it until the multi-frustum code is in place.
+                viewDistance = offset.magnitude();
+                camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * that.ellipsoid.getRadii().getMaximumComponent());
+            }
+
+            update3DTransform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
+            controller.setReferenceFrame(update3DTransform, Ellipsoid.UNIT_SPHERE);
+            that._lastOffset = camera.position;
+            that._lastDistance = camera.position.magnitude();
+        }
+    }
+
+    function updateColumbus(that, camera) {
+        var controller = that._controllerColumbusView;
+        var controllerChanged = typeof controller === 'undefined' || controller.isDestroyed() || controller !== that._lastController;
+
+        if (controllerChanged) {
+            var controllers = camera.getControllers();
+            controllers.removeAll();
+            that._lastController = that._controllerColumbusView = controller = controllers.addColumbusView();
+        }
+    }
+
     /**
+     * A utility object for tracking an object with the camera.
      * @alias DynamicObject
      * @constructor
+     *
+     * @param {DynamicObject} dynamicObject The object to track with the camera.
+     * @param {Scene} scene The scene to use.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
      */
     var DynamicObjectView = function(dynamicObject, scene, ellipsoid) {
+        /**
+         * The object to track with the camera.
+         * @type DynamicObject
+         */
         this.dynamicObject = dynamicObject;
+
+        /**
+         * The Scene to use.
+         * @type Scene
+         */
         this.scene = scene;
-        this.ellipsoid = ellipsoid;
+
+        /**
+         * The ellipsoid to use for orienting the camera.
+         * @type Ellipsoid
+         */
+        this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         this._lastScene = undefined;
         this._lastDynamicObject = undefined;
@@ -37,9 +144,16 @@ define([
     };
 
     /**
-     *
-     * @param time
-     */
+    * Should be called each animation frame to update the camera
+    * to the latest settings.
+    * @param {JulianDate} time The current animation time.
+    *
+    * @exception {DeveloperError} time is required.
+    * @exception {DeveloperError} DynamicObjectView.scene is required.
+    * @exception {DeveloperError} DynamicObjectView.dynamicObject is required.
+    * @exception {DeveloperError} DynamicObjectView.ellipsoid is required.
+    * @exception {DeveloperError} DynamicObjectView.dynamicObject.position is required.
+    */
     DynamicObjectView.prototype.update = function(time) {
         if (typeof time === 'undefined') {
             throw new DeveloperError('time is required.');
@@ -84,92 +198,12 @@ define([
             this._lastScene = scene;
         }
 
-        var camera = this.scene.getCamera();
-
-        var controller;
-        var controllers;
-        var viewDistance;
-        var controllerChanged;
-
-        switch (scene.mode) {
-        case SceneMode.SCENE2D:
-            controller = this._controller2d;
-            controllerChanged = typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController;
-
-            if (controllerChanged) {
-                controllers = camera.getControllers();
-                controllers.removeAll();
-                this._lastController = this._controller2d = controller = controllers.add2D(scene.scene2D.projection);
-                controller.zoomOnly = true;
-                viewDistance = typeof this._lastOffset === 'undefined' ? offset.magnitude() : this._lastOffset.magnitude();
-            } else if (objectChanged) {
-                viewDistance = offset.magnitude();
-            } else {
-                viewDistance = camera.position.z;
-            }
-
-            var cartographic = this._lastCartographic = positionProperty.getValueCartographic(time, this._lastCartographic);
-            if (typeof cartographic !== 'undefined') {
-                cartographic.height = viewDistance;
-                if (objectChanged || controllerChanged) {
-                    camera.frustum.near = viewDistance;
-                    controller.setCameraPosition(cartographic);
-                } else {
-                    camera.position = scene.scene2D.projection.project(cartographic);
-                }
-            }
-            this._lastDistance = camera.frustum.right - camera.frustum.left;
-            break;
-        case SceneMode.SCENE3D:
-            controller = this._controller3d;
-            controllerChanged = typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController;
-
-            if (controllerChanged) {
-                controllers = camera.getControllers();
-                controllers.removeAll();
-                this._lastController = this._controller3d = controller = controllers.addSpindle();
-                controller.constrainedAxis = Cartesian3.UNIT_Z;
-            }
-
-            var cartesian = this._lastCartesian = positionProperty.getValueCartesian(time, this._lastCartesian);
-            if (typeof cartesian !== 'undefined') {
-                if (objectChanged) {
-                    //If looking straight down, move the camera slightly south the avoid gimbal lock.
-                    if (Cartesian3.equals(offset.normalize(), Cartesian3.UNIT_Z)) {
-                        offset.y -= 0.01;
-                    }
-                    camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
-
-                    //TODO There are all kinds of near plane issues in our code base right now,
-                    //hack around it until the multi-frustum code is in place.
-                    viewDistance = offset.magnitude();
-                    camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * this.ellipsoid.getRadii().getMaximumComponent());
-                } else if (controllerChanged) {
-                    if (typeof this._lastOffset !== 'undefined') {
-                        this._lastOffset.normalize(offset).multiplyByScalar(this._lastDistance, offset);
-                    }
-                    camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
-
-                    //TODO There are all kinds of near plane issues in our code base right now,
-                    //hack around it until the multi-frustum code is in place.
-                    viewDistance = offset.magnitude();
-                    camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * this.ellipsoid.getRadii().getMaximumComponent());
-                }
-
-                var transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid);
-                controller.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
-                this._lastOffset = camera.position;
-                this._lastDistance = camera.position.magnitude();
-            }
-            break;
-        case SceneMode.COLUMBUS_VIEW:
-            controller = this._controllerColumbusView;
-            if (objectChanged || typeof controller === 'undefined' || controller.isDestroyed() || controller !== this._lastController) {
-                controllers = camera.getControllers();
-                controllers.removeAll();
-                this._lastController = this._controller3d = controller = controllers.addColumbusView();
-            }
-            break;
+        if (scene.mode === SceneMode.SCENE2D) {
+            update2D(this, this.scene.getCamera(), objectChanged, offset, positionProperty, scene, time);
+        } else if (scene.mode === SceneMode.SCENE3D) {
+            update3D(this, this.scene.getCamera(), ellipsoid, objectChanged, offset, positionProperty, time);
+        } else if (scene.mode === SceneMode.COLUMBUS_VIEW) {
+            updateColumbus(this, this.scene.getCamera());
         }
     };
 
