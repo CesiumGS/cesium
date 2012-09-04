@@ -218,6 +218,9 @@ define([
             --southeastTileCoordinates.x;
         }
 
+        var imageryMaxX = imageryTilingScheme.numberOfLevelZeroTilesX << imageryLevel;
+        var imageryMaxY = imageryTilingScheme.numberOfLevelZeroTilesY << imageryLevel;
+
         // Create TileImagery instances for each imagery tile overlapping this terrain tile.
         // We need to do all texture coordinate computations in the imagery tile's tiling scheme.
         var terrainExtent = tile.extent;
@@ -227,16 +230,35 @@ define([
         var imageryExtent = imageryTilingScheme.tileXYToExtent(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
 
         var minU;
-        var maxU = Math.min(1.0, (imageryExtent.west - tile.extent.west) / (tile.extent.east - tile.extent.west));
+        var maxU = 0.0;
 
-        var minV = Math.max(0.0, (imageryExtent.north - tile.extent.south) / (tile.extent.north - tile.extent.south));
+        var minV = 1.0;
         var maxV;
+
+        // If this is the northern-most or western-most tile in the imagery tiling scheme,
+        // it may not start at the northern or western edge of the terrain tile.
+        // Calculate where it does start.
+        if (northwestTileCoordinates.x === 0) {
+            maxU = Math.min(1.0, (imageryExtent.west - tile.extent.west) / (tile.extent.east - tile.extent.west));
+        }
+
+        if (northwestTileCoordinates.y === 0) {
+            minV = Math.max(0.0, (imageryExtent.north - tile.extent.south) / (tile.extent.north - tile.extent.south));
+        }
 
         for (var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
             minU = maxU;
 
             imageryExtent = imageryTilingScheme.tileXYToExtent(i, northwestTileCoordinates.y, imageryLevel);
             maxU = Math.min(1.0, (imageryExtent.east - tile.extent.west) / (tile.extent.east - tile.extent.west));
+
+            // If this is the eastern-most imagery tile mapped to this terrain tile,
+            // and there are more imagery tiles to the east of this one, the maxU
+            // should be 1.0 to make sure rounding errors don't make the last
+            // image fall shy of the edge of the terrain tile.
+            if (i === southeastTileCoordinates.x && i < imageryMaxX - 1) {
+                maxU = 1.0;
+            }
 
             for (var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
 
@@ -254,6 +276,14 @@ define([
 
                 imageryExtent = imageryTilingScheme.tileXYToExtent(i, j, imageryLevel);
                 minV = Math.max(0.0, (imageryExtent.south - tile.extent.south) / (tile.extent.north - tile.extent.south));
+
+                // If this is the southern-most imagery tile mapped to this terrain tile,
+                // and there are more imagery tiles to the south of this one, the minV
+                // should be 0.0 to make sure rounding errors don't make the last
+                // image fall shy of the edge of the terrain tile.
+                if (j === southeastTileCoordinates.y && j < imageryMaxY - 1) {
+                    minV = 0.0;
+                }
 
                 var scaleX = terrainWidth / (imageryExtent.east - imageryExtent.west);
                 var scaleY = terrainHeight / (imageryExtent.north - imageryExtent.south);
