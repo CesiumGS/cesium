@@ -1,80 +1,80 @@
 /**
  * DOC_TBA
  *
- * @name agi_infinity
+ * @name czm_infinity
  * @glslConstant 
  */
-const float agi_infinity = 5906376272000.0; // Distance from the Sun to Pluto in meters.  TODO: What is best given lowp, mediump, and highp?
+const float czm_infinity = 5906376272000.0; // Distance from the Sun to Pluto in meters.  TODO: What is best given lowp, mediump, and highp?
 
 /**
  * DOC_TBA
  *
- * @name agi_epsilon1
+ * @name czm_epsilon1
  * @glslConstant 
  */
-const float agi_epsilon1 = 0.1;
+const float czm_epsilon1 = 0.1;
         
 /**
  * DOC_TBA
  *
- * @name agi_epsilon2
+ * @name czm_epsilon2
  * @glslConstant 
  */
-const float agi_epsilon2 = 0.01;
+const float czm_epsilon2 = 0.01;
         
 /**
  * DOC_TBA
  *
- * @name agi_epsilon3
+ * @name czm_epsilon3
  * @glslConstant 
  */
-const float agi_epsilon3 = 0.001;
+const float czm_epsilon3 = 0.001;
         
 /**
  * DOC_TBA
  *
- * @name agi_epsilon4
+ * @name czm_epsilon4
  * @glslConstant 
  */
-const float agi_epsilon4 = 0.0001;
+const float czm_epsilon4 = 0.0001;
         
 /**
  * DOC_TBA
  *
- * @name agi_epsilon5
+ * @name czm_epsilon5
  * @glslConstant 
  */
-const float agi_epsilon5 = 0.00001;
+const float czm_epsilon5 = 0.00001;
         
 /**
  * DOC_TBA
  *
- * @name agi_epsilon6
+ * @name czm_epsilon6
  * @glslConstant 
  */
-const float agi_epsilon6 = 0.000001;
+const float czm_epsilon6 = 0.000001;
         
 /**
  * DOC_TBA
  *
- * @name agi_epsilon7
+ * @name czm_epsilon7
  * @glslConstant 
  */
-const float agi_epsilon7 = 0.0000001;
+const float czm_epsilon7 = 0.0000001;
 
 /**
  * DOC_TBA
  *
- * @name agi_equalsEpsilon
+ * @name czm_equalsEpsilon
  * @glslFunction
  */
-bool agi_equalsEpsilon(float left, float right, float epsilon) {
+bool czm_equalsEpsilon(float left, float right, float epsilon) {
     return (abs(left - right) <= epsilon);
 }
 
-bool agi_equalsEpsilon(float left, float right) {
-    // Workaround bug in Opera Next 12.  Do not delegate to the other agi_equalsEpsilon.
-    return (abs(left - right) <= agi_epsilon7);
+bool czm_equalsEpsilon(float left, float right) {
+    // Workaround bug in Opera Next 12.  Do not delegate to the other czm_equalsEpsilon.
+    return (abs(left - right) <= czm_epsilon7);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -83,7 +83,7 @@ bool agi_equalsEpsilon(float left, float right) {
  * Returns the transpose of the matrix.  The input <code>matrix</code> can be 
  * a <code>mat2</code>, <code>mat3</code>, or <code>mat4</code>.
  *
- * @name agi_transpose
+ * @name czm_transpose
  * @glslFunction
  *
  * @param {} matrix The matrix to transpose.
@@ -92,23 +92,23 @@ bool agi_equalsEpsilon(float left, float right) {
  *
  * @example
  * // GLSL declarations
- * mat2 agi_transpose(mat2 matrix);
- * mat3 agi_transpose(mat3 matrix);
- * mat4 agi_transpose(mat4 matrix);
+ * mat2 czm_transpose(mat2 matrix);
+ * mat3 czm_transpose(mat3 matrix);
+ * mat4 czm_transpose(mat4 matrix);
  *
  * // Tranpose a 3x3 rotation matrix to find its inverse.
- * mat3 eastNorthUpToEye = agi_eastNorthUpToEyeCoordinates(
+ * mat3 eastNorthUpToEye = czm_eastNorthUpToEyeCoordinates(
  *     positionMC, normalEC);
- * mat3 eyeToEastNorthUp = agi_transpose(eastNorthUpToEye);
+ * mat3 eyeToEastNorthUp = czm_transpose(eastNorthUpToEye);
  */
-mat2 agi_transpose(mat2 matrix)
+mat2 czm_transpose(mat2 matrix)
 {
     return mat2(
         matrix[0][0], matrix[1][0],
         matrix[0][1], matrix[1][1]);
 }
 
-mat3 agi_transpose(mat3 matrix)
+mat3 czm_transpose(mat3 matrix)
 {
     return mat3(
         matrix[0][0], matrix[1][0], matrix[2][0],
@@ -116,7 +116,7 @@ mat3 agi_transpose(mat3 matrix)
         matrix[0][2], matrix[1][2], matrix[2][2]);
 }
 
-mat4 agi_transpose(mat4 matrix)
+mat4 czm_transpose(mat4 matrix)
 {
     return mat4(
         matrix[0][0], matrix[1][0], matrix[2][0], matrix[3][0],
@@ -129,108 +129,108 @@ mat4 agi_transpose(mat4 matrix)
 
 /**
  * Transforms a position from model to window coordinates.  The transformation
- * from model to clip coordinates is done using {@link agi_modelViewProjection}.
+ * from model to clip coordinates is done using {@link czm_modelViewProjection}.
  * The transform from normalized device coordinates to window coordinates is
- * done using {@link agi_viewportTransformation}, which assumes a depth range
+ * done using {@link czm_viewportTransformation}, which assumes a depth range
  * of <code>near = 0</code> and <code>far = 1</code>.
  * <br /><br />
  * This transform is useful when there is a need to manipulate window coordinates
  * in a vertex shader as done by {@link BillboardCollection}.
  * <br /><br />
- * This function should not be confused with {@link agi_viewportOrthographic},
+ * This function should not be confused with {@link czm_viewportOrthographic},
  * which is an orthographic projection matrix that transforms from window 
  * coordinates to clip coordinates.
  *
- * @name agi_modelToWindowCoordinates
+ * @name czm_modelToWindowCoordinates
  * @glslFunction
  *
  * @param {vec4} position The position in model coordinates to transform.
  *
  * @returns {vec4} The transformed position in window coordinates.
  *
- * @see agi_eyeToWindowCoordinates
- * @see agi_modelViewProjection
- * @see agi_viewportTransformation
- * @see agi_viewportOrthographic
+ * @see czm_eyeToWindowCoordinates
+ * @see czm_modelViewProjection
+ * @see czm_viewportTransformation
+ * @see czm_viewportOrthographic
  * @see BillboardCollection
  *
  * @example
- * vec4 positionWC = agi_modelToWindowCoordinates(positionMC);
+ * vec4 positionWC = czm_modelToWindowCoordinates(positionMC);
  */
-vec4 agi_modelToWindowCoordinates(vec4 position)
+vec4 czm_modelToWindowCoordinates(vec4 position)
 {
-    vec4 q = agi_modelViewProjection * position;                // clip coordinates
+    vec4 q = czm_modelViewProjection * position;                // clip coordinates
     q.xyz /= q.w;                                                // normalized device coordinates
-    q.xyz = (agi_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // window coordinates
+    q.xyz = (czm_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // window coordinates
     return q;
 }
 
 /**
  * Transforms a position from eye to window coordinates.  The transformation
- * from eye to clip coordinates is done using {@link agi_projection}.
+ * from eye to clip coordinates is done using {@link czm_projection}.
  * The transform from normalized device coordinates to window coordinates is
- * done using {@link agi_viewportTransformation}, which assumes a depth range
+ * done using {@link czm_viewportTransformation}, which assumes a depth range
  * of <code>near = 0</code> and <code>far = 1</code>.
  * <br /><br />
  * This transform is useful when there is a need to manipulate window coordinates
  * in a vertex shader as done by {@link BillboardCollection}.
  *
- * @name agi_eyeToWindowCoordinates
+ * @name czm_eyeToWindowCoordinates
  * @glslFunction
  *
  * @param {vec4} position The position in eye coordinates to transform.
  *
  * @returns {vec4} The transformed position in window coordinates.
  *
- * @see agi_modelToWindowCoordinates
- * @see agi_projection
- * @see agi_viewportTransformation
+ * @see czm_modelToWindowCoordinates
+ * @see czm_projection
+ * @see czm_viewportTransformation
  * @see BillboardCollection
  *
  * @example
- * vec4 positionWC = agi_eyeToWindowCoordinates(positionEC);
+ * vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
  */
-vec4 agi_eyeToWindowCoordinates(vec4 positionEC)
+vec4 czm_eyeToWindowCoordinates(vec4 positionEC)
 {
-    vec4 q = agi_projection * positionEC;                       // clip coordinates
+    vec4 q = czm_projection * positionEC;                       // clip coordinates
     q.xyz /= q.w;                                                // normalized device coordinates
-    q.xyz = (agi_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // window coordinates
+    q.xyz = (czm_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // window coordinates
     return q;
 }
 
 /**
  * Transforms a position from window to eye coordinates.
  * The transform from window to normalized device coordinates is done using components
- * of (@link agi_viewport} and {@link agi_viewportTransformation} instead of calculating
- * the inverse of <code>agi_viewportTransformation</code>. The transformation from 
+ * of (@link czm_viewport} and {@link czm_viewportTransformation} instead of calculating
+ * the inverse of <code>czm_viewportTransformation</code>. The transformation from 
  * normalized device coordinates to clip coordinates is done using <code>positionWC.w</code>,
  * which is expected to be the scalar used in the perspective divide. The transformation
- * from clip to eye coordinates is done using {@link agi_inverseProjection}.
+ * from clip to eye coordinates is done using {@link czm_inverseProjection}.
  *
- * @name agi_windowToEyeCoordinates
+ * @name czm_windowToEyeCoordinates
  * @glslFunction
  *
  * @param {vec4} fragmentCoordinate The position in window coordinates to transform.
  *
  * @returns {vec4} The transformed position in eye coordinates.
  *
- * @see agi_modelToWindowCoordinates
- * @see agi_eyeToWindowCoordinates
- * @see agi_inverseProjection
- * @see agi_viewport
- * @see agi_viewportTransformation
+ * @see czm_modelToWindowCoordinates
+ * @see czm_eyeToWindowCoordinates
+ * @see czm_inverseProjection
+ * @see czm_viewport
+ * @see czm_viewportTransformation
  *
  * @example
- * vec4 positionEC = agi_windowToEyeCoordinates(gl_FragCoord);
+ * vec4 positionEC = czm_windowToEyeCoordinates(gl_FragCoord);
  */
-vec4 agi_windowToEyeCoordinates(vec4 fragmentCoordinate)
+vec4 czm_windowToEyeCoordinates(vec4 fragmentCoordinate)
 {
-    float x = 2.0 * (fragmentCoordinate.x - float(agi_viewport.x)) / float(agi_viewport.z) - 1.0;
-    float y = 2.0 * (fragmentCoordinate.y - float(agi_viewport.y)) / float(agi_viewport.w) - 1.0;
-    float z = (fragmentCoordinate.z - agi_viewportTransformation[3][2]) / agi_viewportTransformation[2][2];
+    float x = 2.0 * (fragmentCoordinate.x - czm_viewport.x) / czm_viewport.z - 1.0;
+    float y = 2.0 * (fragmentCoordinate.y - czm_viewport.y) / czm_viewport.w - 1.0;
+    float z = (fragmentCoordinate.z - czm_viewportTransformation[3][2]) / czm_viewportTransformation[2][2];
     vec4 q = vec4(x, y, z, 1.0);
     q /= fragmentCoordinate.w;
-    q = agi_inverseProjection * q;
+    q = czm_inverseProjection * q;
     return q;
 }
 
@@ -239,7 +239,7 @@ vec4 agi_windowToEyeCoordinates(vec4 fragmentCoordinate)
 /**
  * DOC_TBA
  *
- * @name agi_eyeOffset
+ * @name czm_eyeOffset
  * @glslFunction
  *
  * @param {vec4} positionEC DOC_TBA.
@@ -247,7 +247,7 @@ vec4 agi_windowToEyeCoordinates(vec4 fragmentCoordinate)
  *
  * @returns {vec4} DOC_TBA.
  */
-vec4 agi_eyeOffset(vec4 positionEC, vec3 eyeOffset)
+vec4 czm_eyeOffset(vec4 positionEC, vec3 eyeOffset)
 {
     // This equation is approximate in x and y.
     vec4 p = positionEC;
@@ -262,7 +262,7 @@ vec4 agi_eyeOffset(vec4 positionEC, vec3 eyeOffset)
 /**
  * DOC_TBA
  *
- * @name agi_geodeticSurfaceNormal
+ * @name czm_geodeticSurfaceNormal
  * @glslFunction
  *
  * @param {vec3} positionOnEllipsoid DOC_TBA
@@ -271,7 +271,7 @@ vec4 agi_eyeOffset(vec4 positionEC, vec3 eyeOffset)
  * 
  * @returns {vec3} DOC_TBA.
  */
-vec3 agi_geodeticSurfaceNormal(vec3 positionOnEllipsoid, vec3 ellipsoidCenter, vec3 oneOverEllipsoidRadiiSquared)
+vec3 czm_geodeticSurfaceNormal(vec3 positionOnEllipsoid, vec3 ellipsoidCenter, vec3 oneOverEllipsoidRadiiSquared)
 {
     return normalize((positionOnEllipsoid - ellipsoidCenter) * oneOverEllipsoidRadiiSquared);
 }
@@ -279,12 +279,12 @@ vec3 agi_geodeticSurfaceNormal(vec3 positionOnEllipsoid, vec3 ellipsoidCenter, v
 /**
  * DOC_TBA
  *
- * @name agi_ellipsoidWgs84TextureCoordinates
+ * @name czm_ellipsoidWgs84TextureCoordinates
  * @glslFunction
  */
-vec2 agi_ellipsoidWgs84TextureCoordinates(vec3 normal)
+vec2 czm_ellipsoidWgs84TextureCoordinates(vec3 normal)
 {
-    return vec2(atan(normal.y, normal.x) * agi_oneOverTwoPi + 0.5, asin(normal.z) * agi_oneOverPi + 0.5);
+    return vec2(atan(normal.y, normal.x) * czm_oneOverTwoPi + 0.5, asin(normal.z) * czm_oneOverPi + 0.5);
 }
 
 /**
@@ -294,7 +294,7 @@ vec2 agi_ellipsoidWgs84TextureCoordinates(vec3 normal)
  * <br /><br />
  * The ellipsoid is assumed to be centered at the model coordinate's origin.
  *
- * @name agi_eastNorthUpToEyeCoordinates
+ * @name czm_eastNorthUpToEyeCoordinates
  * @glslFunction
  *
  * @param {vec3} positionMC The position on the ellipsoid in model coordinates.
@@ -306,13 +306,13 @@ vec2 agi_ellipsoidWgs84TextureCoordinates(vec3 normal)
  * // Transform a vector defined in the east-north-up coordinate 
  * // system, (0, 0, 1) which is the surface normal, to eye 
  * // coordinates.
- * mat3 m = agi_eastNorthUpToEyeCoordinates(positionMC, normalEC);
+ * mat3 m = czm_eastNorthUpToEyeCoordinates(positionMC, normalEC);
  * vec3 normalEC = m * vec3(0.0, 0.0, 1.0);
  */
-mat3 agi_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
+mat3 czm_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
 {
     vec3 tangentMC = normalize(vec3(-positionMC.y, positionMC.x, 0.0));  // normalized surface tangent in model coordinates
-    vec3 tangentEC = normalize(agi_normal * tangentMC);                  // normalized surface tangent in eye coordiantes
+    vec3 tangentEC = normalize(czm_normal * tangentMC);                  // normalized surface tangent in eye coordiantes
     vec3 bitangentEC = normalize(cross(normalEC, tangentEC));            // normalized surface bitangent in eye coordinates
 
     return mat3(
@@ -324,9 +324,9 @@ mat3 agi_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Used as input to every material's agi_getMaterial function. 
+ * Used as input to every material's czm_getMaterial function. 
  *
- * @name agi_materialInput
+ * @name czm_materialInput
  * @glslStruct
  *
  * @property {float} s 1D texture coordinates.
@@ -334,24 +334,24 @@ mat3 agi_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
  * @property {vec3} str 3D texture coordinates.
  * @property {vec3} normalEC Unperturbed surface normal in eye coordinates.
  * @property {mat3} tangentToEyeMatrix Matrix for converting a tangent space normal to eye space.
- * @property {vec3} positionToEyeWC Direction from the fragment to the eye.
+ * @property {vec3} positionToEyeEC Direction from the fragment to the eye in eye coordinates.
  * @property {vec3} positionMC Position in model coordinates.
  */
-struct agi_materialInput
+struct czm_materialInput
 {
     float s;
     vec2 st;
     vec3 str;
     vec3 normalEC;
     mat3 tangentToEyeMatrix;
-    vec3 positionToEyeWC;
+    vec3 positionToEyeEC;
     vec3 positionMC;
 };
 
 /**
- * Holds material information that can be used for lighting. Returned by all agi_getMaterial functions.
+ * Holds material information that can be used for lighting. Returned by all czm_getMaterial functions.
  *
- * @name agi_material
+ * @name czm_material
  * @glslStruct
  *
  * @property {vec3} diffuse Incoming light that scatters evenly in all directions.
@@ -360,7 +360,7 @@ struct agi_materialInput
  * @property {vec3} emission Light emitted by the material equally in all directions. The default is vec3(0.0), which emits no light.
  * @property {float} alpha Opacity of this material. 0.0 is completely transparent; 1.0 is completely opaque.
  */
-struct agi_material
+struct czm_material
 {
     vec3 diffuse;
     float specular;
@@ -370,24 +370,24 @@ struct agi_material
 };
 
 /**
- * An agi_material with default values. Every material's agi_getMaterial
+ * An czm_material with default values. Every material's czm_getMaterial
  * should use this default material as a base for the material it returns.
  * The default normal value is given by materialInput.normalEC.
  *
- * @name agi_getDefaultMaterial
+ * @name czm_getDefaultMaterial
  * @glslFunction 
  *
- * @param {agi_materialInput} input The input used to construct the default material.
+ * @param {czm_materialInput} input The input used to construct the default material.
  * 
- * @returns {agi_material} The default material.
+ * @returns {czm_material} The default material.
  *
- * @see agi_materialInput
- * @see agi_material
- * @see agi_getMaterial
+ * @see czm_materialInput
+ * @see czm_material
+ * @see czm_getMaterial
  */
-agi_material agi_getDefaultMaterial(agi_materialInput materialInput)
+czm_material czm_getDefaultMaterial(czm_materialInput materialInput)
 {
-    agi_material material;
+    czm_material material;
     material.diffuse = vec3(0.0);
     material.specular = 0.0;
     material.normal = materialInput.normalEC;
@@ -399,19 +399,19 @@ agi_material agi_getDefaultMaterial(agi_materialInput materialInput)
 /**
  * Fast phong light computation.
  *
- * @name agi_lightValuePhong
+ * @name czm_lightValuePhong
  * @glslFunction
  *
  * @param {vec3} toLight Direction to light in eye coordinates.
  * @param {vec3} toEye Direction to eye in eye coordinates.
- * @param {agi_material} material Material value used for light computation.
+ * @param {czm_material} material Material value used for light computation.
  *
  * @returns {vec4} Final rgba light value.
  *
- * @see agi_material
+ * @see czm_material
  */
 
-vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, agi_material material)
+vec4 czm_lightValuePhong(vec3 toLight, vec3 toEye, czm_material material)
 {
     vec3 diffuseColor = material.diffuse;
     float specularIntensity = material.specular;
@@ -442,10 +442,10 @@ vec4 agi_lightValuePhong(vec3 toLight, vec3 toEye, agi_material material)
 /**
  * DOC_TBA
  *
- * @name agi_multiplyWithColorBalance
+ * @name czm_multiplyWithColorBalance
  * @glslFunction
  */
-vec3 agi_multiplyWithColorBalance(vec3 left, vec3 right)
+vec3 czm_multiplyWithColorBalance(vec3 left, vec3 right)
 {
     // Algorithm from Chapter 10 of Graphics Shaders.
     const vec3 W = vec3(0.2125, 0.7154, 0.0721);
@@ -463,10 +463,10 @@ vec3 agi_multiplyWithColorBalance(vec3 left, vec3 right)
 /**
  * DOC_TBA
  *
- * @name agi_columbusViewMorph
+ * @name czm_columbusViewMorph
  * @glslFunction
  */
-vec4 agi_columbusViewMorph(vec3 position2D, vec3 position3D, float time)
+vec4 czm_columbusViewMorph(vec3 position2D, vec3 position3D, float time)
 {
     // Just linear for now.
     vec3 p = mix(position2D, position3D, time);
@@ -478,10 +478,10 @@ vec4 agi_columbusViewMorph(vec3 position2D, vec3 position3D, float time)
 /**
  * DOC_TBA
  *
- * @name agi_ray
+ * @name czm_ray
  * @glslStruct
  */
-struct agi_ray
+struct czm_ray
 {
     vec3 origin;
     vec3 direction;
@@ -490,19 +490,19 @@ struct agi_ray
 /**
  * Computes the point along a ray at the given time.  <code>time</code> can be positive, negative, or zero.
  *
- * @name agi_pointAlongRay
+ * @name czm_pointAlongRay
  * @glslFunction
  *
- * @param {agi_ray} ray The ray to compute the point along.
+ * @param {czm_ray} ray The ray to compute the point along.
  * @param {float} time The time along the ray.
  * 
  * @returns {vec3} The point along the ray at the given time.
  * 
  * @example
- * agi_ray ray = agi_ray(vec3(0.0), vec3(1.0, 0.0, 0.0)); // origin, direction
- * vec3 v = agi_pointAlongRay(ray, 2.0); // (2.0, 0.0, 0.0)
+ * czm_ray ray = czm_ray(vec3(0.0), vec3(1.0, 0.0, 0.0)); // origin, direction
+ * vec3 v = czm_pointAlongRay(ray, 2.0); // (2.0, 0.0, 0.0)
  */
-vec3 agi_pointAlongRay(agi_ray ray, float time)
+vec3 czm_pointAlongRay(czm_ray ray, float time)
 {
     return ray.origin + (time * ray.direction);
 }
@@ -512,10 +512,10 @@ vec3 agi_pointAlongRay(agi_ray ray, float time)
 /**
  * DOC_TBA
  *
- * @name agi_raySegment
+ * @name czm_raySegment
  * @glslStruct
  */
-struct agi_raySegment
+struct czm_raySegment
 {
     float start;
     float stop;
@@ -524,35 +524,35 @@ struct agi_raySegment
 /**
  * DOC_TBA
  *
- * @name agi_emptyRaySegment
+ * @name czm_emptyRaySegment
  * @glslConstant 
  */
-const agi_raySegment agi_emptyRaySegment = agi_raySegment(-agi_infinity, -agi_infinity);
+const czm_raySegment czm_emptyRaySegment = czm_raySegment(-czm_infinity, -czm_infinity);
 
 /**
  * DOC_TBA
  *
- * @name agi_fullRaySegment
+ * @name czm_fullRaySegment
  * @glslConstant 
  */
-const agi_raySegment agi_fullRaySegment = agi_raySegment(0.0, agi_infinity);
+const czm_raySegment czm_fullRaySegment = czm_raySegment(0.0, czm_infinity);
 
 /**
  * Determines if a time interval is empty.
  *
- * @name agi_isEmpty
+ * @name czm_isEmpty
  * @glslFunction 
  * 
- * @param {agi_raySegment} interval The interval to test.
+ * @param {czm_raySegment} interval The interval to test.
  * 
  * @returns {bool} <code>true</code> if the time interval is empty; otherwise, <code>false</code>.
  *
  * @example
- * bool b0 = agi_isEmpty(agi_emptyRaySegment);      // true
- * bool b1 = agi_isEmpty(agi_raySegment(0.0, 1.0)); // false
- * bool b2 = agi_isEmpty(agi_raySegment(1.0, 1.0)); // false, contains 1.0.
+ * bool b0 = czm_isEmpty(czm_emptyRaySegment);      // true
+ * bool b1 = czm_isEmpty(czm_raySegment(0.0, 1.0)); // false
+ * bool b2 = czm_isEmpty(czm_raySegment(1.0, 1.0)); // false, contains 1.0.
  */
-bool agi_isEmpty(agi_raySegment interval)
+bool czm_isEmpty(czm_raySegment interval)
 {
     return (interval.stop < 0.0);
 }
@@ -560,21 +560,21 @@ bool agi_isEmpty(agi_raySegment interval)
 /**
  * Determines if a time interval is empty.
  *
- * @name agi_isFull
+ * @name czm_isFull
  * @glslFunction 
  * 
- * @param {agi_raySegment} interval The interval to test.
+ * @param {czm_raySegment} interval The interval to test.
  * 
  * @returns {bool} <code>true</code> if the time interval is empty; otherwise, <code>false</code>.
  *
  * @example
- * bool b0 = agi_isEmpty(agi_emptyRaySegment);      // true
- * bool b1 = agi_isEmpty(agi_raySegment(0.0, 1.0)); // false
- * bool b2 = agi_isEmpty(agi_raySegment(1.0, 1.0)); // false, contains 1.0.
+ * bool b0 = czm_isEmpty(czm_emptyRaySegment);      // true
+ * bool b1 = czm_isEmpty(czm_raySegment(0.0, 1.0)); // false
+ * bool b2 = czm_isEmpty(czm_raySegment(1.0, 1.0)); // false, contains 1.0.
  */
-bool agi_isFull(agi_raySegment interval)
+bool czm_isFull(czm_raySegment interval)
 {
-    return (interval.start == 0.0 && interval.stop == agi_infinity);
+    return (interval.start == 0.0 && interval.stop == czm_infinity);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -582,10 +582,10 @@ bool agi_isFull(agi_raySegment interval)
 /**
  * DOC_TBA
  *
- * @name agi_ellipsoid
+ * @name czm_ellipsoid
  * @glslStruct
  */
-struct agi_ellipsoid
+struct czm_ellipsoid
 {
     vec3 center;
     vec3 radii;
@@ -596,42 +596,42 @@ struct agi_ellipsoid
 /**
  * DOC_TBA
  *
- * @name agi_ellipsoidNew
+ * @name czm_ellipsoidNew
  * @glslFunction
  *
  */
-agi_ellipsoid agi_ellipsoidNew(vec3 center, vec3 radii)
+czm_ellipsoid czm_ellipsoidNew(vec3 center, vec3 radii)
 {
     vec3 inverseRadii = vec3(1.0 / radii.x, 1.0 / radii.y, 1.0 / radii.z);
     vec3 inverseRadiiSquared = inverseRadii * inverseRadii;
-    agi_ellipsoid temp = agi_ellipsoid(center, radii, inverseRadii, inverseRadiiSquared);
+    czm_ellipsoid temp = czm_ellipsoid(center, radii, inverseRadii, inverseRadiiSquared);
     return temp;
 }
 
 /**
  * DOC_TBA
  *
- * @name agi_ellipsoidContainsPoint
+ * @name czm_ellipsoidContainsPoint
  * @glslFunction
  *
  */
-bool agi_ellipsoidContainsPoint(agi_ellipsoid ellipsoid, vec3 point)
+bool czm_ellipsoidContainsPoint(czm_ellipsoid ellipsoid, vec3 point)
 {
-    vec3 scaled = ellipsoid.inverseRadii * (agi_inverseView * vec4(point, 1.0)).xyz;
+    vec3 scaled = ellipsoid.inverseRadii * (czm_inverseView * vec4(point, 1.0)).xyz;
     return (dot(scaled, scaled) <= 1.0);
 }
 
 /**
  * DOC_TBA
  *
- * @name agi_ellipsoidNormal
+ * @name czm_ellipsoidNormal
  * @glslFunction
  *
  */
-vec3 agi_ellipsoidNormal(agi_ellipsoid ellipsoid, vec3 pointOnEllipsoid)
+vec3 czm_ellipsoidNormal(czm_ellipsoid ellipsoid, vec3 pointOnEllipsoid)
 {
-    vec3 n = ellipsoid.inverseRadiiSquared * (agi_inverseView * vec4(pointOnEllipsoid, 1.0)).xyz;
-    vec3 rotated = (agi_view * vec4(n, 0.0)).xyz;
+    vec3 n = ellipsoid.inverseRadiiSquared * (czm_inverseView * vec4(pointOnEllipsoid, 1.0)).xyz;
+    vec3 rotated = czm_viewRotation * n;
     return normalize(rotated);
 }
 
@@ -639,13 +639,13 @@ vec3 agi_ellipsoidNormal(agi_ellipsoid ellipsoid, vec3 pointOnEllipsoid)
  * DOC_TBA
  *
  *
- * @name agi_rayEllipsoidIntersectionInterval
+ * @name czm_rayEllipsoidIntersectionInterval
  * @glslFunction
  */
-agi_raySegment agi_rayEllipsoidIntersectionInterval(agi_ray ray, agi_ellipsoid ellipsoid)
+czm_raySegment czm_rayEllipsoidIntersectionInterval(czm_ray ray, czm_ellipsoid ellipsoid)
 {
-    vec3 q = ellipsoid.inverseRadii * (agi_inverseView * vec4(ray.origin, 1.0)).xyz;
-    vec3 w = ellipsoid.inverseRadii * (agi_inverseView * vec4(ray.direction, 0.0)).xyz;
+    vec3 q = ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.origin, 1.0)).xyz;
+    vec3 w = ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.direction, 0.0)).xyz;
    
     float q2 = dot(q, q);
     float qw = dot(q, w);
@@ -654,7 +654,7 @@ agi_raySegment agi_rayEllipsoidIntersectionInterval(agi_ray ray, agi_ellipsoid e
     {
         if (qw >= 0.0) // Looking outward or tangent (0 intersections).
         {
-            return agi_emptyRaySegment;
+            return czm_emptyRaySegment;
         }
         else // qw < 0.0.
         {
@@ -665,7 +665,7 @@ agi_raySegment agi_rayEllipsoidIntersectionInterval(agi_ray ray, agi_ellipsoid e
             
             if (qw2 < product) // Imaginary roots (0 intersections).
             {
-                return agi_emptyRaySegment;     
+                return czm_emptyRaySegment;     
             }   
             else if (qw2 > product) // Distinct roots (2 intersections).
             {
@@ -675,19 +675,19 @@ agi_raySegment agi_rayEllipsoidIntersectionInterval(agi_ray ray, agi_ellipsoid e
                 float root1 = difference / temp;
                 if (root0 < root1)
                 {
-                    agi_raySegment i = agi_raySegment(root0, root1);
+                    czm_raySegment i = czm_raySegment(root0, root1);
                     return i;
                 }
                 else
                 {
-                    agi_raySegment i = agi_raySegment(root1, root0);
+                    czm_raySegment i = czm_raySegment(root1, root0);
                     return i;
                 }
             }
             else // qw2 == product.  Repeated roots (2 intersections).
             {
                 float root = sqrt(difference / w2);
-                agi_raySegment i = agi_raySegment(root, root);
+                czm_raySegment i = czm_raySegment(root, root);
                 return i;
             }
         }
@@ -701,20 +701,20 @@ agi_raySegment agi_rayEllipsoidIntersectionInterval(agi_ray ray, agi_ellipsoid e
         {
             float discriminant = qw * qw - product;
             float temp = qw - sqrt(discriminant); // Avoid cancellation.  Negatively valued.
-            agi_raySegment i = agi_raySegment(0.0, difference / temp);
+            czm_raySegment i = czm_raySegment(0.0, difference / temp);
             return i;
         }
         else if (qw > 0.0) // Looking outward.
         {
             float discriminant = qw * qw - product;
             float temp = qw + sqrt(discriminant); // Avoid cancellation. Positively valued.
-            agi_raySegment i = agi_raySegment(0.0, temp / w2);
+            czm_raySegment i = czm_raySegment(0.0, temp / w2);
             return i;
         }
         else // qw == 0.0 // Looking tangent.
         {
             float temp = sqrt(-product);
-            agi_raySegment i = agi_raySegment(0.0, temp / w2);
+            czm_raySegment i = czm_raySegment(0.0, temp / w2);
             return i;
         }
     }
@@ -723,12 +723,12 @@ agi_raySegment agi_rayEllipsoidIntersectionInterval(agi_ray ray, agi_ellipsoid e
         if (qw < 0.0) // Looking inward.
         {
             float w2 = dot(w, w);
-            agi_raySegment i = agi_raySegment(0.0, -qw / w2);
+            czm_raySegment i = czm_raySegment(0.0, -qw / w2);
             return i;
         }
         else // qw >= 0.0.  Looking outward or tangent.
         {
-            return agi_emptyRaySegment;
+            return czm_emptyRaySegment;
         }
     }
 }
@@ -736,19 +736,19 @@ agi_raySegment agi_rayEllipsoidIntersectionInterval(agi_ray ray, agi_ellipsoid e
 /**
  * Returns the WGS84 ellipsoid, with its center at the origin of world coordinates, in eye coordinates.
  *
- * @name agi_getWgs84EllipsoidEC
+ * @name czm_getWgs84EllipsoidEC
  * @glslFunction
  *
- * @returns {agi_ellipsoid} The WGS84 ellipsoid, with its center at the origin of world coordinates, in eye coordinates.
+ * @returns {czm_ellipsoid} The WGS84 ellipsoid, with its center at the origin of world coordinates, in eye coordinates.
  *
  * @see Ellipsoid.getWgs84
  *
  * @example
- * agi_ellipsoid ellipsoid = agi_getWgs84EllipsoidEC();
+ * czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
  */
-agi_ellipsoid agi_getWgs84EllipsoidEC()
+czm_ellipsoid czm_getWgs84EllipsoidEC()
 {
-    return agi_ellipsoidNew(
-        vec3(agi_view[3].x, agi_view[3].y, agi_view[3].z),              // center
+    return czm_ellipsoidNew(
+        vec3(czm_view[3].x, czm_view[3].y, czm_view[3].z),              // center
         vec3(6378137.0, 6378137.0, 6356752.314245));                    // radii
 }

@@ -285,52 +285,37 @@ define([
      * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric wiki page</a> for a more detailed description of Fabric.
      */
     var Material = function(description) {
-        this._description = defaultValue(description, {});
-        this._context = this._description.context;
-        this._strict = defaultValue(this._description.strict, false);
-        this._template = defaultValue(this._description.fabric, {});
-        this._template.uniforms = defaultValue(this._template.uniforms, {});
-        this._template.materials = defaultValue(this._template.materials, {});
-
         /**
-         * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is undefined.
+         * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is a GUID.
          * @type String
          */
-        Object.defineProperty(this, 'type', { value : this._template.type, writable : false});
+        this.type = undefined;
+
         /**
          * The glsl shader source for this material.
          * @type String
          */
-        this.shaderSource = '';
+        this.shaderSource = undefined;
+
         /**
          * Maps sub-material names to Material objects.
          * @type Object
          */
-        this.materials = {};
+        this.materials = undefined;
+
         /**
          * Maps uniform names to their values.
          * @type Object
          */
-        this.uniforms = {};
-        this._uniforms = {};
+        this.uniforms = undefined;
+        this._uniforms = undefined;
 
-        // If the cache contains this material type, build the material template off of the stored template.
-        var oldMaterialTemplate = Material._materialCache.getMaterial(this.type);
-        if (typeof oldMaterialTemplate !== 'undefined') {
-            this._template = combine([this._template, oldMaterialTemplate]);
-        }
+        this._context = undefined;
+        this._strict = undefined;
+        this._template = undefined;
 
-        // Make sure the template has no obvious errors. More error checking happens later.
-        checkForTemplateErrors(this);
-
-        // If the material has a new type, add it to the cache.
-        if ((typeof oldMaterialTemplate === 'undefined') && (typeof this.type !== 'undefined')){
-            Material._materialCache.addMaterial(this.type, this._template);
-        }
-
-        createMethodDefinition(this);
-        createUniforms(this);
-        createSubMaterials(this);
+        initializeMaterial(description, 0, this);
+        Object.defineProperty(this, 'type', { value : this.type, writable : false});
     };
 
     /**
@@ -415,48 +400,88 @@ define([
         return destroyObject(this);
     };
 
-    var checkForTemplateErrors = function(material) {
-        var template = material._template;
-        var uniforms = material._template.uniforms;
-        var materials = material._template.materials;
-        var components = material._template.components;
-        var source = material._template.source;
+    function initializeMaterial(description, count, result) {
+        description = defaultValue(description, {});
+        result._context = description.context;
+        result._strict = defaultValue(description.strict, false);
+        result._template = defaultValue(description.fabric, {});
+        result._template.uniforms = defaultValue(result._template.uniforms, {});
+        result._template.materials = defaultValue(result._template.materials, {});
 
-        // Make sure source and components do not exist in the same template.
-        if ((typeof components !== 'undefined') && (typeof source !== 'undefined')) {
-            throw new DeveloperError('fabric: cannot have source and components in the same template.');
+        result.type = (typeof result._template.type !== 'undefined') ? result._template.type : createGuid();
+
+        result.shaderSource = '';
+        result.materials = {};
+        result.uniforms = {};
+        result._uniforms = {};
+
+        // If the cache contains this material type, build the material template off of the stored template.
+        var cachedTemplate = Material._materialCache.getMaterial(result.type);
+        if (typeof cachedTemplate !== 'undefined') {
+            var template = clone(cachedTemplate);
+            result._template = combine([result._template, template]);
         }
 
-        var checkForValidProperties = function(object, properties, result, throwNotFound) {
-            if (typeof object !== 'undefined') {
-                for (var property in object) {
-                    if (object.hasOwnProperty(property)) {
-                        var hasProperty = properties.indexOf(property) !== -1;
-                        if ((throwNotFound && !hasProperty) || (!throwNotFound && hasProperty)) {
-                            result(property, properties);
-                        }
+        // Make sure the template has no obvious errors. More error checking happens later.
+        checkForTemplateErrors(result);
+
+        // If the material has a new type, add it to the cache.
+        if (typeof cachedTemplate === 'undefined'){
+            Material._materialCache.addMaterial(result.type, result._template);
+        }
+
+        createMethodDefinition(result);
+        count = createUniforms(result, count);
+        count = createSubMaterials(result, count);
+        return count;
+    }
+
+    function checkForValidProperties(object, properties, result, throwNotFound) {
+        if (typeof object !== 'undefined') {
+            for (var property in object) {
+                if (object.hasOwnProperty(property)) {
+                    var hasProperty = properties.indexOf(property) !== -1;
+                    if ((throwNotFound && !hasProperty) || (!throwNotFound && hasProperty)) {
+                        result(property, properties);
                     }
                 }
             }
-        };
+        }
+    }
+
+    function invalidNameError(property, properties) {
+        var errorString = 'fabric: property name \'' + property + '\' is not valid. It should be ';
+        for (var i = 0; i < properties.length; i++) {
+            var propertyName = '\'' + properties[i] + '\'';
+            errorString += (i === properties.length - 1) ? ('or ' + propertyName + '.') : (propertyName + ', ');
+        }
+        throw new DeveloperError(errorString);
+    }
+
+    function duplicateNameError(property, properties) {
+        var errorString = 'fabric: uniforms and materials cannot share the same property \'' + property + '\'';
+        throw new DeveloperError(errorString);
+    }
+
+    var templateProperties = ['type', 'materials', 'uniforms', 'components', 'source'];
+    var componentProperties = ['diffuse', 'specular', 'normal', 'emission', 'alpha'];
+
+    function checkForTemplateErrors(material) {
+        var template = material._template;
+        var uniforms = template.uniforms;
+        var materials = template.materials;
+        var components = template.components;
+
+        // Make sure source and components do not exist in the same template.
+        if ((typeof components !== 'undefined') && (typeof template.source !== 'undefined')) {
+            throw new DeveloperError('fabric: cannot have source and components in the same template.');
+        }
 
         // Make sure all template and components properties are valid.
-        var invalidNameError = function(property, properties) {
-            var errorString = 'fabric: property name \'' + property + '\' is not valid. It should be ';
-            for (var i = 0; i < properties.length; i++) {
-                var propertyName = '\'' + properties[i] + '\'';
-                errorString += (i === properties.length - 1) ? ('or ' + propertyName + '.') : (propertyName + ', ');
-            }
-            throw new DeveloperError(errorString);
-        };
-        checkForValidProperties(template, ['type', 'materials', 'uniforms', 'components', 'source'], invalidNameError, true);
-        checkForValidProperties(components,  ['diffuse', 'specular', 'normal', 'emission', 'alpha'], invalidNameError, true);
+        checkForValidProperties(template, templateProperties, invalidNameError, true);
+        checkForValidProperties(components, componentProperties, invalidNameError, true);
 
         // Make sure uniforms and materials do not share any of the same names.
-        var duplicateNameError = function(property, properties) {
-            var errorString = 'fabric: uniforms and materials cannot share the same property \'' + property + '\'';
-            throw new DeveloperError(errorString);
-        };
         var materialNames = [];
         for (var property in materials) {
             if (materials.hasOwnProperty(property)) {
@@ -464,18 +489,18 @@ define([
             }
         }
         checkForValidProperties(uniforms, materialNames, duplicateNameError, false);
-    };
+    }
 
-    // Create the agi_getMaterial method body using source or components.
-    var createMethodDefinition = function(material) {
+    // Create the czm_getMaterial method body using source or components.
+    function createMethodDefinition(material) {
         var components = material._template.components;
         var source = material._template.source;
         if (typeof source !== 'undefined') {
             material.shaderSource += source + '\n';
         }
         else {
-            material.shaderSource += 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n';
-            material.shaderSource += 'agi_material material = agi_getDefaultMaterial(materialInput);\n';
+            material.shaderSource += 'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n';
+            material.shaderSource += 'czm_material material = czm_getDefaultMaterial(materialInput);\n';
             if (typeof components !== 'undefined') {
                 for (var component in components) {
                     if (components.hasOwnProperty(component)) {
@@ -485,21 +510,21 @@ define([
             }
             material.shaderSource += 'return material;\n}\n';
         }
-    };
+    }
 
-    var createUniforms = function(material) {
+    function createUniforms(material, count) {
         var uniforms = material._template.uniforms;
         for (var uniformId in uniforms) {
             if (uniforms.hasOwnProperty(uniformId)) {
-                createUniform(material, uniformId);
+                count = createUniform(material, uniformId, count);
             }
         }
-    };
+        return count;
+    }
 
     // Writes uniform declarations to the shader file and connects uniform values with
     // corresponding material properties through the returnUniforms function.
-    var createUniform = function(material, uniformId) {
-        var context = material._context;
+    function createUniform(material, uniformId, count) {
         var strict = material._strict;
         var materialUniforms = material._template.uniforms;
         var uniformValue = materialUniforms[uniformId];
@@ -515,7 +540,7 @@ define([
         else {
             // If uniform type is an image, add image dimension uniforms.
             if (uniformType.indexOf('sampler') !== -1) {
-                if (typeof context === 'undefined') {
+                if (typeof material._context === 'undefined') {
                     throw new DeveloperError('image: context is not defined');
                 }
             }
@@ -533,8 +558,8 @@ define([
             if (material.shaderSource.indexOf(uniformPhrase) === -1) {
                 material.shaderSource = uniformPhrase + material.shaderSource;
             }
-            // Replace uniform name with guid version.
-            var newUniformId = uniformId + '_' + getRandomId();
+
+            var newUniformId = uniformId + '_' + count++;
             if (replaceToken(material, uniformId, newUniformId) === 1 && strict) {
                 throw new DeveloperError('strict: shader source does not use uniform \'' + uniformId + '\'.');
             }
@@ -542,11 +567,13 @@ define([
             material.uniforms[uniformId] = uniformValue;
             material._uniforms[newUniformId] = returnUniform(material, uniformId, uniformType);
         }
-    };
+
+        return count;
+    }
 
     // Checks for updates to material values to refresh the uniforms.
     var matrixMap = {'mat2' : Matrix2, 'mat3' : Matrix3, 'mat4' : Matrix4};
-    var returnUniform = function (material, uniformId, originalUniformType) {
+    function returnUniform(material, uniformId, originalUniformType) {
         return function() {
             var uniforms = material.uniforms;
             var uniformValue = uniforms[uniformId];
@@ -580,10 +607,10 @@ define([
             uniforms[uniformId] = uniformValue;
             return uniforms[uniformId];
         };
-    };
+    }
 
     // Determines the uniform type based on the uniform in the template.
-    var getUniformType = function(uniformValue) {
+    function getUniformType(uniformValue) {
         var uniformType = uniformValue.type;
         if (typeof uniformType === 'undefined') {
             var type = typeof uniformValue;
@@ -627,39 +654,46 @@ define([
             }
         }
         return uniformType;
-    };
+    }
 
     // Create all sub-materials by combining source and uniforms together.
-    var createSubMaterials = function(material) {
+    function createSubMaterials(material, count) {
         var context = material._context;
         var strict = material._strict;
         var subMaterialTemplates = material._template.materials;
         for (var subMaterialId in subMaterialTemplates) {
             if (subMaterialTemplates.hasOwnProperty(subMaterialId)) {
                 // Construct the sub-material.
-                var subMaterial = new Material({context : context, strict : strict, fabric : subMaterialTemplates[subMaterialId]});
+                var subMaterial = {};
+                count = initializeMaterial({
+                    context : context,
+                    strict : strict,
+                    fabric : subMaterialTemplates[subMaterialId]
+                }, count, subMaterial);
+
                 material._uniforms = combine([material._uniforms, subMaterial._uniforms]);
                 material.materials[subMaterialId] = subMaterial;
 
-                // Make the material's agi_getMaterial unique by appending a guid.
-                var originalMethodName = 'agi_getMaterial';
-                var newMethodName = originalMethodName + '_' + getRandomId();
+                // Make the material's czm_getMaterial unique by appending the sub-material type.
+                var originalMethodName = 'czm_getMaterial';
+                var newMethodName = originalMethodName + '_' + count++;
                 replaceToken(subMaterial, originalMethodName, newMethodName);
                 material.shaderSource = subMaterial.shaderSource + material.shaderSource;
 
-                // Replace each material id with an agi_getMaterial method call.
+                // Replace each material id with an czm_getMaterial method call.
                 var materialMethodCall = newMethodName + '(materialInput)';
                 if (replaceToken(material, subMaterialId, materialMethodCall) === 0 && strict) {
                     throw new DeveloperError('strict: shader source does not use material \'' + subMaterialId + '\'.');
                 }
             }
         }
-    };
+        return count;
+    }
 
     // Used for searching or replacing a token in a material's shader source with something else.
     // If excludePeriod is true, do not accept tokens that are preceded by periods.
     // http://stackoverflow.com/questions/641407/javascript-negative-lookbehind-equivalent
-    var replaceToken = function(material, token, newToken, excludePeriod) {
+    function replaceToken(material, token, newToken, excludePeriod) {
         excludePeriod = defaultValue(excludePeriod, true);
         var count = 0;
         var invalidCharacters = 'a-zA-Z0-9_';
@@ -674,16 +708,11 @@ define([
             return newToken;
         });
         return count;
-    };
+    }
 
-    var getNumberOfTokens = function(material, token, excludePeriod) {
+    function getNumberOfTokens(material, token, excludePeriod) {
         return replaceToken(material, token, token, excludePeriod);
-    };
-
-    // Returns a random id for differentiating uniforms and materials with the same names.
-    var getRandomId = function() {
-        return createGuid().slice(0,8);
-    };
+    }
 
     Material._textureCache = {
         _pathsToMaterials : {},
@@ -785,8 +814,8 @@ define([
         }
     };
 
-    Material.DefaultImageId = 'agi_defaultImage';
-    Material.DefaultCubeMapId = 'agi_defaultCubeMap';
+    Material.DefaultImageId = 'czm_defaultImage';
+    Material.DefaultCubeMapId = 'czm_defaultCubeMap';
 
     Material.ColorType = 'Color';
     Material._materialCache.addMaterial(Material.ColorType, {

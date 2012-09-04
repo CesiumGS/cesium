@@ -70,7 +70,7 @@ define([
         this._transform = this.transform.clone();
         this._invTransform = Matrix4.IDENTITY;
 
-        var maxRadii = Ellipsoid.WGS84.getRadii().getMaximumComponent();
+        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
         var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * maxRadii);
 
         /**
@@ -452,7 +452,7 @@ define([
      *
      * @see UniformState#getView
      * @see UniformState#setView
-     * @see agi_view
+     * @see czm_view
      */
     Camera.prototype.getViewMatrix = function() {
         this._update();
@@ -525,7 +525,7 @@ define([
         var yDir = this.getUpWC().multiplyByScalar(y * near * tanPhi);
         var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
 
-        return new Ray(position.clone(), direction);
+        return new Ray(position, direction);
     };
 
     Camera.prototype._getPickRayOrthographic = function(windowPosition) {
@@ -674,19 +674,17 @@ define([
      * @memberof Camera
      *
      * @param {Object} object The bounding volume whose intersection with the frustum is to be tested.
-     * @param {Function} planeIntersectTest The function that tests for intersections between a plane
-     * and the bounding volume type of object
      *
      * @return {Enumeration}  Intersect.OUTSIDE,
      *                                 Intersect.INTERSECTING, or
      *                                 Intersect.INSIDE.
      */
-    Camera.prototype.getVisibility = function(object, planeIntersectTest) {
+    Camera.prototype.getVisibility = function(object) {
         this._update();
         var planes = this._planes;
         var intersecting = false;
         for ( var k = 0; k < planes.length; k++) {
-            var result = planeIntersectTest(object, planes[k]);
+            var result = object.intersect(planes[k]);
             if (result === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
             } else if (result === Intersect.INTERSECTING) {

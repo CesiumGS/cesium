@@ -10,6 +10,7 @@ define([
         '../Core/Matrix4',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
+        '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
@@ -30,6 +31,7 @@ define([
         Matrix4,
         ComponentDatatype,
         PrimitiveType,
+        BoundingSphere,
         BufferUsage,
         BlendEquation,
         BlendFunction,
@@ -65,6 +67,8 @@ define([
         this._pickId = undefined;
         this._pickIdThis = t._pickIdThis || this;
 
+        this._boundingVolume = undefined;
+
         /**
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
          *
@@ -98,7 +102,7 @@ define([
          * called azimuth, is the angle in the sensor's X-Y plane measured from the positive X-axis toward the positive
          * Y-axis.  The cone angle, sometimes called elevation, is the angle out of the X-Y plane along the positive Z-axis.
          * This matrix is available to GLSL vertex and fragment shaders via
-         * {@link agi_model} and derived uniforms.
+         * {@link czm_model} and derived uniforms.
          * <br /><br />
          * <div align='center'>
          * <img src='images/CustomSensorVolume.setModelMatrix.png' /><br />
@@ -107,7 +111,7 @@ define([
          *
          * @type Matrix4
          *
-         * @see agi_model
+         * @see czm_model
          *
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
@@ -116,6 +120,19 @@ define([
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY.clone();
+
+        /**
+         * <p>
+         * Determines if the sensor is affected by lighting, i.e., if the sensor is bright on the
+         * day side of the globe, and dark on the night side.  When <code>true</code>, the sensor
+         * is affected by lighting; when <code>false</code>, the sensor is uniformly shaded regardless
+         * of the sun position.
+         * </p>
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
+         */
+        this.affectedByLighting = this._affectedByLighting = (typeof t.affectedByLighting !== 'undefined') ? t.affectedByLighting : true;
 
         /**
          * DOC_TBA
@@ -204,10 +221,13 @@ define([
         return this._directions;
     };
 
-    CustomSensorVolume._computePositions = function(directions, radius) {
+    CustomSensorVolume.prototype._computePositions = function() {
+        var directions = this._directions;
         var length = directions.length;
         var positions = new Float32Array(3 * length);
-        var r = isFinite(radius) ? radius : FAR;
+        var r = isFinite(this.radius) ? this.radius : FAR;
+
+        var boundingVolumePositions = [Cartesian3.ZERO];
 
         for ( var i = length - 2, j = length - 1, k = 0; k < length; i = j++, j = k++) {
             // PERFORMANCE_IDEA:  We can avoid redundant operations for adjacent edges.
@@ -223,15 +243,19 @@ define([
             positions[(j * 3) + 0] = p.x;
             positions[(j * 3) + 1] = p.y;
             positions[(j * 3) + 2] = p.z;
+
+            boundingVolumePositions.push(p);
         }
+
+        this._boundingVolume = BoundingSphere.fromPoints(boundingVolumePositions);
 
         return positions;
     };
 
-    CustomSensorVolume._createVertexArray = function(context, directions, radius, bufferUsage) {
-        var positions = this._computePositions(directions, radius);
+    CustomSensorVolume.prototype._createVertexArray = function(context) {
+        var positions = this._computePositions();
 
-        var length = directions.length;
+        var length = this._directions.length;
         var vertices = new Float32Array(2 * 3 * 3 * length);
 
         var k = 0;
@@ -262,7 +286,7 @@ define([
             vertices[k++] = n.z;
         }
 
-        var vertexBuffer = context.createVertexBuffer(new Float32Array(vertices), bufferUsage);
+        var vertexBuffer = context.createVertexBuffer(new Float32Array(vertices), this.bufferUsage);
         var stride = 2 * 3 * Float32Array.BYTES_PER_ELEMENT;
 
         var attributes = [{
@@ -291,108 +315,79 @@ define([
      *
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
-    CustomSensorVolume.prototype.update = function(context, sceneState) {
-        this._mode = sceneState.mode;
+    CustomSensorVolume.prototype.update = function(context, frameState) {
+        this._mode = frameState.mode;
         if (this._mode !== SceneMode.SCENE3D) {
-            return;
+            return undefined;
+        }
+
+        if (!this.show) {
+            return undefined;
         }
 
         if (this.radius < 0.0) {
             throw new DeveloperError('this.radius must be greater than or equal to zero.');
         }
 
-        if (this.show) {
-            // Initial render state creation
-            if (!this._rs) {
-                this._rs = context.createRenderState({
-                    blending : {
-                        enabled : true,
-                        equationRgb : BlendEquation.ADD,
-                        equationAlpha : BlendEquation.ADD,
-                        functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-                        functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
-                        functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
-                        functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
-                    },
-                    depthTest : {
-                        enabled : true
-                    },
-                    depthMask : false
-                });
-            }
-            // This would be better served by depth testing with a depth buffer that does not
-            // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-            // so we can selectively depth test.
-            this._rs.depthTest.enabled = !this.showThroughEllipsoid;
-
-            // Recompile shader when material changes
-            if (!this._material || (this._material !== this.material)) {
-
-
-                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
-                this._material = this.material;
-
-                var fsSource =
-                    '#line 0\n' +
-                    ShadersNoise +
-                    '#line 0\n' +
-                    ShadersSensorVolume +
-                    '#line 0\n' +
-                    this._material.shaderSource +
-                    '#line 0\n' +
-                    CustomSensorVolumeFS;
-
-                this._sp = this._sp && this._sp.release();
-                this._sp = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
-
-                this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
-            }
-
-            // Recreate vertex buffer when directions change
-            if ((this._directionsDirty) || (this._bufferUsage !== this.bufferUsage)) {
-                this._directionsDirty = false;
-                this._bufferUsage = this.bufferUsage;
-                this._va = this._va && this._va.destroy();
-
-                var directions = this._directions;
-                if (directions && (directions.length >= 3)) {
-                    this._va = CustomSensorVolume._createVertexArray(context, directions, this.radius, this.bufferUsage);
-                }
-            }
-        }
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof CustomSensorVolume
-     */
-    CustomSensorVolume.prototype.render = function(context) {
-        if (this._mode === SceneMode.SCENE3D && this.show && this._va) {
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLES,
-                shaderProgram : this._sp,
-                uniformMap : this._drawUniforms,
-                vertexArray : this._va,
-                renderState : this._rs
+        // Initial render state creation
+        if (!this._rs) {
+            this._rs = context.createRenderState({
+                blending : {
+                    enabled : true,
+                    equationRgb : BlendEquation.ADD,
+                    equationAlpha : BlendEquation.ADD,
+                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
+                    functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
+                    functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
+                },
+                depthTest : {
+                    enabled : true
+                },
+                depthMask : false
             });
         }
-    };
+        // This would be better served by depth testing with a depth buffer that does not
+        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
+        // so we can selectively depth test.
+        this._rs.depthTest.enabled = !this.showThroughEllipsoid;
 
-    /**
-     * DOC_TBA
-     * @memberof CustomSensorVolume
-     */
-    CustomSensorVolume.prototype.updateForPick = function(context) {
-        if (this._mode === SceneMode.SCENE3D && this.show && this._va) {
-            // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
+        // Recompile shader when material changes
+        if (typeof this._material === 'undefined' ||
+            this._material !== this.material ||
+            this._affectedByLighting !== this.affectedByLighting) {
+
+            this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
+            this._material = this.material;
+            this._affectedByLighting = this.affectedByLighting;
+
             var fsSource =
+                '#line 0\n' +
+                ShadersNoise +
+                '#line 0\n' +
+                ShadersSensorVolume +
+                '#line 0\n' +
+                this._material.shaderSource +
+                (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                '#line 0\n' +
+                CustomSensorVolumeFS;
+
+            this._sp = this._sp && this._sp.release();
+            this._sp = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
+
+            this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
+        }
+
+        if (frameState.passes.pick && typeof this._pickId === 'undefined') {
+            // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
+            var fsPickSource =
                 '#define RENDER_FOR_PICK 1\n' +
                 '#line 0\n' +
                 ShadersSensorVolume +
                 '#line 0\n' +
                 CustomSensorVolumeFS;
 
-            this._spPick = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
+            this._spPick = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsPickSource, attributeIndices);
             this._pickId = context.createPickId(this._pickIdThis);
 
             var that = this;
@@ -401,8 +396,42 @@ define([
                     return that._pickId.normalizedRgba;
                 }
             }], false, false);
-            this.updateForPick = function(context) {};
         }
+
+        // Recreate vertex buffer when directions change
+        if ((this._directionsDirty) || (this._bufferUsage !== this.bufferUsage)) {
+            this._directionsDirty = false;
+            this._bufferUsage = this.bufferUsage;
+            this._va = this._va && this._va.destroy();
+
+            var directions = this._directions;
+            if (directions && (directions.length >= 3)) {
+                this._va = this._createVertexArray(context);
+            }
+        }
+
+        if (typeof this._va === 'undefined') {
+            return undefined;
+        }
+
+        return {
+            boundingVolume : this._boundingVolume,
+            modelMatrix : this.modelMatrix
+        };
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof CustomSensorVolume
+     */
+    CustomSensorVolume.prototype.render = function(context) {
+        context.draw({
+            primitiveType : PrimitiveType.TRIANGLES,
+            shaderProgram : this._sp,
+            uniformMap : this._drawUniforms,
+            vertexArray : this._va,
+            renderState : this._rs
+        });
     };
 
     /**
@@ -410,16 +439,14 @@ define([
      * @memberof CustomSensorVolume
      */
     CustomSensorVolume.prototype.renderForPick = function(context, framebuffer) {
-        if (this._mode === SceneMode.SCENE3D && this.show && this._va) {
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLES,
-                shaderProgram : this._spPick,
-                uniformMap : this._pickUniforms,
-                vertexArray : this._va,
-                renderState : this._rs,
-                framebuffer : framebuffer
-            });
-        }
+        context.draw({
+            primitiveType : PrimitiveType.TRIANGLES,
+            shaderProgram : this._spPick,
+            uniformMap : this._pickUniforms,
+            vertexArray : this._va,
+            renderState : this._rs,
+            framebuffer : framebuffer
+        });
     };
 
     /**

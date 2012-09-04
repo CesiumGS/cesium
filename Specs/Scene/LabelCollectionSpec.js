@@ -3,32 +3,42 @@ defineSuite([
          'Scene/LabelCollection',
          '../Specs/createContext',
          '../Specs/destroyContext',
-         '../Specs/sceneState',
+         '../Specs/frameState',
          '../Specs/pick',
+         'Core/BoundingRectangle',
+         'Core/BoundingSphere',
          'Core/Cartesian2',
          'Core/Cartesian3',
+         'Core/Cartographic',
          'Core/Color',
          'Core/Matrix4',
          'Core/Math',
          'Renderer/BufferUsage',
          'Scene/HorizontalOrigin',
          'Scene/VerticalOrigin',
-         'Scene/LabelStyle'
+         'Scene/LabelStyle',
+         'Scene/SceneMode',
+         'Scene/OrthographicFrustum'
      ], function(
          LabelCollection,
          createContext,
          destroyContext,
-         sceneState,
+         frameState,
          pick,
+         BoundingRectangle,
+         BoundingSphere,
          Cartesian2,
          Cartesian3,
+         Cartographic,
          Color,
          Matrix4,
          CesiumMath,
          BufferUsage,
          HorizontalOrigin,
          VerticalOrigin,
-         LabelStyle) {
+         LabelStyle,
+         SceneMode,
+         OrthographicFrustum) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -138,7 +148,7 @@ defineSuite([
             font : '12pt Arial',
             text : 'Hello there'
         });
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
 
         var dimensions = label._glyphs[0].dimensions;
         expect(dimensions.height).toBeGreaterThan(0);
@@ -289,12 +299,7 @@ defineSuite([
     });
 
     it('does not render when constructed', function() {
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        labels.update(context, sceneState);
-        labels.render(context, us);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(typeof labels.update(context, frameState) === 'undefined').toEqual(true);
     });
 
     it('can render after modifying and removing a label', function() {
@@ -322,7 +327,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -332,7 +337,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         var p = context.readPixels();
         expect(p[0]).toEqual(0);
@@ -356,7 +361,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -376,7 +381,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -397,7 +402,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]); // Not the most precise check
     });
@@ -417,7 +422,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -425,7 +430,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         labels.remove(label);
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
@@ -445,14 +450,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         labels.remove(label);
 
         context.clear();
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
@@ -468,7 +473,7 @@ defineSuite([
         });
 
         context.clear();
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -488,7 +493,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -496,7 +501,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         labels.removeAll();
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
@@ -516,7 +521,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -535,7 +540,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -555,14 +560,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -582,7 +587,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -590,12 +595,12 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setShow(false);
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setShow(true);
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -615,7 +620,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -627,7 +632,7 @@ defineSuite([
             y : 0.0,
             z : 0.0
         }); // Behind viewer
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
@@ -636,7 +641,7 @@ defineSuite([
             y : 0.0,
             z : 0.0
         }); // Back in front of viewer
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -656,7 +661,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -664,12 +669,12 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setScale(0.0);
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         label.setScale(2.0);
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         labels.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -686,9 +691,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        labels.update(context, sceneState);
-
-        var pickedObject = pick(context, labels, 0, 0);
+        var pickedObject = pick(context, frameState, labels, 0, 0);
         expect(pickedObject).toEqual(label);
     });
 
@@ -705,9 +708,7 @@ defineSuite([
             verticalOrigin : VerticalOrigin.CENTER
         });
 
-        labels.update(context, sceneState);
-
-        var pickedObject = pick(context, labels, 0, 0);
+        var pickedObject = pick(context, frameState, labels, 0, 0);
         expect(pickedObject).toBeUndefined();
     });
 
@@ -721,39 +722,39 @@ defineSuite([
         labels.add({
             text : 'a'
         });
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(1);
 
         labels.add({
             text : 'a'
         });
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(1);
 
         labels.add({
             text : 'abcd'
         });
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(4);
 
         labels.add({
             text : 'abc'
         });
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(4);
 
         var label = labels.add({
             text : 'de'
         });
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(5);
 
         label.setFont('30px arial');
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(7);
 
         label.setStyle(LabelStyle.OUTLINE);
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(9);
 
         label.setFillColor({
@@ -762,7 +763,7 @@ defineSuite([
             blue : 0.0,
             alpha : 1.0
         });
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(11);
 
         label.setOutlineColor({
@@ -771,20 +772,20 @@ defineSuite([
             blue : 1.0,
             alpha : 1.0
         });
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(13);
 
         // vertical origin only affects glyph positions, not glyphs themselves.
         label.setVerticalOrigin(VerticalOrigin.CENTER);
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(13);
         label.setVerticalOrigin(VerticalOrigin.TOP);
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(13);
 
         //even though we originally started with 30px sans-serif, other properties used to create the id have changed
         label.setFont('30px sans-serif');
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._textureCount).toEqual(15);
     });
 
@@ -792,15 +793,15 @@ defineSuite([
         var label = labels.add({
             text : 'abc'
         });
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._billboardCollection.getLength()).toEqual(3);
 
         label.setText('a');
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._billboardCollection.getLength()).toEqual(3);
 
         label.setText('def');
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._billboardCollection.getLength()).toEqual(3);
     });
 
@@ -808,15 +809,15 @@ defineSuite([
         var label = labels.add({
             text : 'abc'
         });
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._billboardCollection.getLength()).toEqual(3);
 
         label.setText('a');
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
         expect(labels._billboardCollection.getLength()).toEqual(3);
 
         for ( var i = 0; i < 150; ++i) {
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
         }
 
         expect(labels._billboardCollection.getLength()).toEqual(1);
@@ -826,7 +827,7 @@ defineSuite([
         var label = labels.add({
             text : 'blah blah'
         });
-        labels.update(context, sceneState);
+        labels.update(context, frameState);
 
         expect(labels._textureCount).toEqual(5);
         expect(labels._billboardCollection.getLength()).toEqual(8);
@@ -834,7 +835,7 @@ defineSuite([
         labels.remove(label);
 
         for ( var i = 0; i < 150; ++i) {
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
         }
 
         expect(labels._textureCount).toEqual(0);
@@ -922,7 +923,7 @@ defineSuite([
                 }
             });
 
-            expect(label.computeScreenSpacePosition(us, sceneState).equals(new Cartesian2(0.5, 0.5)));
+            expect(label.computeScreenSpacePosition(us, frameState).equals(new Cartesian2(0.5, 0.5)));
         });
 
         it('can compute screen space position (2)', function() {
@@ -938,7 +939,7 @@ defineSuite([
                 }
             });
 
-            expect(label.computeScreenSpacePosition(us, sceneState).equals(new Cartesian2(1.5, 2.5)));
+            expect(label.computeScreenSpacePosition(us, frameState).equals(new Cartesian2(1.5, 2.5)));
         });
 
         it('can compute screen space position (3)', function() {
@@ -955,7 +956,7 @@ defineSuite([
                 }
             });
 
-            var p = label.computeScreenSpacePosition(us, sceneState);
+            var p = label.computeScreenSpacePosition(us, frameState);
             expect(p.x).toBeGreaterThan(0.5);
             expect(p.y).toBeGreaterThan(0.5);
         });
@@ -1017,19 +1018,19 @@ defineSuite([
             var label = labels.add({
                 text : 'abc'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
             expect(label._glyphs.length).toEqual(3);
 
             label.setText('abcd');
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
             expect(label._glyphs.length).toEqual(4);
 
             label.setText('');
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
             expect(label._glyphs.length).toEqual(0);
 
             label = labels.add();
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
             expect(label._glyphs.length).toEqual(0);
         });
 
@@ -1037,12 +1038,12 @@ defineSuite([
             var label = labels.add({
                 text : 'abc'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
             expect(label._glyphs.length).toEqual(3);
             expect(labels._billboardCollection.getLength()).toEqual(3);
 
             label.setText(' ab c');
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
             expect(label._glyphs.length).toEqual(5);
             expect(labels._billboardCollection.getLength()).toEqual(3);
         });
@@ -1056,21 +1057,21 @@ defineSuite([
                 text : 'apl',
                 font : '30px arial'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var offset0 = getGlyphBillboardPixelOffset(label, 0);
             var offset1 = getGlyphBillboardPixelOffset(label, 1);
             var offset2 = getGlyphBillboardPixelOffset(label, 2);
 
             label.setVerticalOrigin(VerticalOrigin.TOP);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).y).toBeLessThan(offset0.y);
             expect(getGlyphBillboardPixelOffset(label, 1).y).toEqual(offset1.y);
             expect(getGlyphBillboardPixelOffset(label, 2).y).toEqual(offset2.y);
 
             label.setVerticalOrigin(VerticalOrigin.CENTER);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).y).toBeLessThan(offset0.y);
             expect(getGlyphBillboardPixelOffset(label, 1).y).toEqual(offset1.y);
@@ -1082,14 +1083,14 @@ defineSuite([
                 text : 'apl',
                 font : '30px arial'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var offset0 = getGlyphBillboardPixelOffset(label, 0);
             var offset1 = getGlyphBillboardPixelOffset(label, 1);
             var offset2 = getGlyphBillboardPixelOffset(label, 2);
 
             label.setScale(2);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).x).toEqual(offset0.x);
             expect(getGlyphBillboardPixelOffset(label, 0).y).toBeGreaterThan(offset0.y);
@@ -1099,7 +1100,7 @@ defineSuite([
             expect(getGlyphBillboardPixelOffset(label, 2).y).toBeGreaterThan(offset2.y);
 
             label.setVerticalOrigin(VerticalOrigin.TOP);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).x).toEqual(offset0.x);
             expect(getGlyphBillboardPixelOffset(label, 0).y).toBeLessThan(offset0.y);
@@ -1109,7 +1110,7 @@ defineSuite([
             expect(getGlyphBillboardPixelOffset(label, 2).y).toBeGreaterThan(offset2.y);
 
             label.setVerticalOrigin(VerticalOrigin.CENTER);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).x).toEqual(offset0.x);
             expect(getGlyphBillboardPixelOffset(label, 0).y).toBeLessThan(offset0.y);
@@ -1124,12 +1125,12 @@ defineSuite([
                 text : 'apl',
                 font : '30px arial'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var offset0 = getGlyphBillboardPixelOffset(label, 0);
 
             label.setHorizontalOrigin(HorizontalOrigin.CENTER);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var center0 = getGlyphBillboardPixelOffset(label, 0);
             var center1 = getGlyphBillboardPixelOffset(label, 1);
@@ -1139,7 +1140,7 @@ defineSuite([
             expect(center2.x).toBeGreaterThan(center1.x);
 
             label.setHorizontalOrigin(HorizontalOrigin.RIGHT);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).x).toBeLessThan(center0.x);
             expect(getGlyphBillboardPixelOffset(label, 1).x).toBeLessThan(center1.x);
@@ -1151,21 +1152,21 @@ defineSuite([
                 text : 'apl',
                 font : '30px arial'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var offset0 = getGlyphBillboardPixelOffset(label, 0);
             var offset1 = getGlyphBillboardPixelOffset(label, 1);
             var offset2 = getGlyphBillboardPixelOffset(label, 2);
 
             label.setScale(2);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).x).toEqual(offset0.x);
             expect(getGlyphBillboardPixelOffset(label, 1).x).toBeGreaterThan(offset1.x);
             expect(getGlyphBillboardPixelOffset(label, 2).x).toBeGreaterThan(offset2.x);
 
             label.setHorizontalOrigin(HorizontalOrigin.CENTER);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var centerX0 = getGlyphBillboardPixelOffset(label, 0).x;
             var centerX1 = getGlyphBillboardPixelOffset(label, 1).x;
@@ -1175,7 +1176,7 @@ defineSuite([
             expect(centerX2).toBeGreaterThan(centerX1);
 
             label.setHorizontalOrigin(HorizontalOrigin.RIGHT);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).x).toBeLessThan(centerX0);
             expect(getGlyphBillboardPixelOffset(label, 1).x).toBeLessThan(centerX1);
@@ -1187,7 +1188,7 @@ defineSuite([
                 text : 'apl',
                 font : '30px arial'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var offset0 = getGlyphBillboardPixelOffset(label, 0);
             var offset1 = getGlyphBillboardPixelOffset(label, 1);
@@ -1198,7 +1199,7 @@ defineSuite([
                 y : 10
             });
             label.setScale(2);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).x).toBeGreaterThan(offset0.x);
             expect(getGlyphBillboardPixelOffset(label, 0).y).toBeGreaterThan(offset0.y);
@@ -1208,7 +1209,7 @@ defineSuite([
             expect(getGlyphBillboardPixelOffset(label, 2).y).toBeGreaterThan(offset2.y);
 
             label.setVerticalOrigin(VerticalOrigin.TOP);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).x).toBeGreaterThan(offset0.x);
             expect(getGlyphBillboardPixelOffset(label, 0).y).toBeLessThan(offset0.y);
@@ -1218,7 +1219,7 @@ defineSuite([
             expect(getGlyphBillboardPixelOffset(label, 2).y).toBeGreaterThan(offset2.y);
 
             label.setVerticalOrigin(VerticalOrigin.CENTER);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).x).toBeGreaterThan(offset0.x);
             expect(getGlyphBillboardPixelOffset(label, 0).y).toBeGreaterThan(offset0.y);
@@ -1233,14 +1234,14 @@ defineSuite([
                 text : 'apl',
                 font : '30px arial'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var offset0 = getGlyphBillboardPixelOffset(label, 0);
             var offset1 = getGlyphBillboardPixelOffset(label, 1);
             var offset2 = getGlyphBillboardPixelOffset(label, 2);
 
             label.setFont('20px arial');
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0).x).toEqual(offset0.x);
             expect(getGlyphBillboardPixelOffset(label, 0).y).toEqual(offset0.y);
@@ -1267,7 +1268,7 @@ defineSuite([
                 verticalOrigin : verticalOrigin,
                 pixelOffset : pixelOffset
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var two = labels.add();
             two.setText(text);
@@ -1276,7 +1277,7 @@ defineSuite([
             two.setVerticalOrigin(verticalOrigin);
             two.setPixelOffset(pixelOffset);
 
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(one, 0)).toEqual(getGlyphBillboardPixelOffset(two, 0));
             expect(getGlyphBillboardPixelOffset(one, 1)).toEqual(getGlyphBillboardPixelOffset(two, 1));
@@ -1287,7 +1288,7 @@ defineSuite([
             var label = labels.add({
                 text : 'apl'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var offset0 = getGlyphBillboardPixelOffset(label, 0);
             var offset1 = getGlyphBillboardPixelOffset(label, 1);
@@ -1298,7 +1299,7 @@ defineSuite([
                 y : 1,
                 z : 1
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0)).toEqual(offset0);
             expect(getGlyphBillboardPixelOffset(label, 1)).toEqual(offset1);
@@ -1309,7 +1310,7 @@ defineSuite([
             var label = labels.add({
                 text : 'apl'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var offset0 = getGlyphBillboardPixelOffset(label, 0);
             var offset1 = getGlyphBillboardPixelOffset(label, 1);
@@ -1320,7 +1321,7 @@ defineSuite([
                 y : 10.0,
                 z : -10.0
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             expect(getGlyphBillboardPixelOffset(label, 0)).toEqual(offset0);
             expect(getGlyphBillboardPixelOffset(label, 1)).toEqual(offset1);
@@ -1331,12 +1332,12 @@ defineSuite([
             var label = labels.add({
                 text : 'apl'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var originalDimensions = label._glyphs[0].dimensions;
 
             label.setScale(3);
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var dimensions = label._glyphs[0].dimensions;
             expect(dimensions.width).toEqual(originalDimensions.width);
@@ -1349,17 +1350,110 @@ defineSuite([
                 text : 'apl',
                 font : '30px sans-serif'
             });
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var originalDimensions = label._glyphs[0].dimensions;
 
             label.setFont('20px sans-serif');
-            labels.update(context, sceneState);
+            labels.update(context, frameState);
 
             var dimensions = label._glyphs[0].dimensions;
             expect(dimensions.width).toBeLessThan(originalDimensions.width);
             expect(dimensions.height).toBeLessThan(originalDimensions.height);
             expect(dimensions.descent).toEqual(originalDimensions.descent);
         });
+    });
+
+    it('computes bounding sphere in 3D', function() {
+        var projection = frameState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+
+        var one = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            text : 'one'
+        });
+        var two = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            text : 'two'
+        });
+
+        var actual = labels.update(context, frameState).boundingVolume;
+
+        var positions = [one.getPosition(), two.getPosition()];
+        var bs = BoundingSphere.fromPoints(positions);
+        expect(actual.center).toEqual(bs.center);
+        expect(actual.radius > bs.radius).toEqual(true);
+    });
+
+    it('computes bounding sphere in Columbus view', function() {
+        var projection = frameState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+
+        var one = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            text : 'one'
+        });
+        var two = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            text : 'two'
+        });
+
+        var mode = frameState.mode;
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        var actual = labels.update(context, frameState).boundingVolume;
+        frameState.mode = mode;
+
+        var projectedPositions = [
+            projection.project(ellipsoid.cartesianToCartographic(one.getPosition())),
+            projection.project(ellipsoid.cartesianToCartographic(two.getPosition()))
+        ];
+        var bs = BoundingSphere.fromPoints(projectedPositions);
+        bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
+        expect(actual.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
+        expect(actual.radius > bs.radius).toEqual(true);
+    });
+
+    it('computes bounding rectangle in 2D', function() {
+        var projection = frameState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+
+        var one = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            text : 'one'
+        });
+        var two = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            text : 'two'
+        });
+
+        var maxRadii = ellipsoid.getMaximumRadius();
+        var orthoFrustum = new OrthographicFrustum();
+        orthoFrustum.right = maxRadii * Math.PI;
+        orthoFrustum.left = -orthoFrustum.right;
+        orthoFrustum.top = orthoFrustum.right;
+        orthoFrustum.bottom = -orthoFrustum.top;
+        orthoFrustum.near = 0.01 * maxRadii;
+        orthoFrustum.far = 60.0 * maxRadii;
+
+        var mode = frameState.mode;
+        var camera = frameState.camera;
+        var frustum = camera.frustum;
+        frameState.mode = SceneMode.SCENE2D;
+        camera.frustum = orthoFrustum;
+
+        var actual = labels.update(context, frameState).boundingVolume;
+
+        camera.frustum = frustum;
+        frameState.mode = mode;
+
+        var projectedPositions = [
+            projection.project(ellipsoid.cartesianToCartographic(one.getPosition())),
+            projection.project(ellipsoid.cartesianToCartographic(two.getPosition()))
+        ];
+        var br = BoundingRectangle.fromPoints(projectedPositions);
+        expect(actual.x < br.x).toEqual(true);
+        expect(actual.y < br.y).toEqual(true);
+        expect(actual.width > br.width).toEqual(true);
+        expect(actual.height > br.height).toEqual(true);
     });
 });

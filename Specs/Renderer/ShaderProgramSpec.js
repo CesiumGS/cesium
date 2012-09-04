@@ -83,14 +83,14 @@ defineSuite([
 
     it('has an automatic uniform', function() {
         var vs = 'uniform vec4 u_vec4; void main() { gl_Position = u_vec4; }';
-        var fs = 'void main() { gl_FragColor = vec4((agi_viewport.x == 0) && (agi_viewport.y == 0) && (agi_viewport.z == 1) && (agi_viewport.w == 1)); }';
+        var fs = 'void main() { gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); }';
         sp = context.createShaderProgram(vs, fs);
 
         expect(sp.getAllUniforms().u_vec4.getName()).toEqual('u_vec4');
-        expect(sp.getAllUniforms().agi_viewport.getName()).toEqual('agi_viewport');
+        expect(sp.getAllUniforms().czm_viewport.getName()).toEqual('czm_viewport');
 
         expect(sp.getManualUniforms().u_vec4.getName()).toEqual('u_vec4');
-        expect(sp.getManualUniforms().agi_viewport).not.toBeDefined();
+        expect(sp.getManualUniforms().czm_viewport).not.toBeDefined();
     });
 
     it('has uniforms', function() {
@@ -411,17 +411,17 @@ defineSuite([
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'void main() { ' +
-            '  float f = ((agi_pi > 0.0) && \n' +
-            '    (agi_oneOverPi > 0.0) && \n' +
-            '    (agi_piOverTwo > 0.0) && \n' +
-            '    (agi_piOverThree > 0.0) && \n' +
-            '    (agi_piOverFour > 0.0) && \n' +
-            '    (agi_piOverSix > 0.0) && \n' +
-            '    (agi_threePiOver2 > 0.0) && \n' +
-            '    (agi_twoPi > 0.0) && \n' +
-            '    (agi_oneOverTwoPi > 0.0) && \n' +
-            '    (agi_radiansPerDegree > 0.0) && \n' +
-            '    (agi_degreesPerRadian > 0.0)) ? 1.0 : 0.0; \n' +
+            '  float f = ((czm_pi > 0.0) && \n' +
+            '    (czm_oneOverPi > 0.0) && \n' +
+            '    (czm_piOverTwo > 0.0) && \n' +
+            '    (czm_piOverThree > 0.0) && \n' +
+            '    (czm_piOverFour > 0.0) && \n' +
+            '    (czm_piOverSix > 0.0) && \n' +
+            '    (czm_threePiOver2 > 0.0) && \n' +
+            '    (czm_twoPi > 0.0) && \n' +
+            '    (czm_oneOverTwoPi > 0.0) && \n' +
+            '    (czm_radiansPerDegree > 0.0) && \n' +
+            '    (czm_degreesPerRadian > 0.0)) ? 1.0 : 0.0; \n' +
             '  gl_FragColor = vec4(f); \n' +
             '}';
         sp = context.createShaderProgram(vs, fs);

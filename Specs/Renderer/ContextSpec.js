@@ -22,6 +22,13 @@ defineSuite([
         destroyContext(context);
     });
 
+    it('has a unique ID', function() {
+        var c = createContext();
+        expect(c.getId()).toBeDefined();
+        expect(c.getId()).not.toEqual(context.getId());
+        destroyContext(c);
+    });
+
     it('getCanvas', function() {
         expect(context.getCanvas()).not.toBeNull();
     });
@@ -181,6 +188,10 @@ defineSuite([
         } else {
             expect(pixel).toEqual([255, 255, 255, 255]);
         }
+    });
+
+    it('gets the depth texture extension', function() {
+        expect(context.getDepthTexture()).toBeDefined();
     });
 
     it('gets texture filter anisotropic', function() {

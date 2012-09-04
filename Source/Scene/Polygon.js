@@ -7,7 +7,8 @@ define([
         '../Core/Cartesian2',
         '../Core/Math',
         '../Core/Ellipsoid',
-        '../Core/Rectangle',
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/ComponentDatatype',
@@ -37,7 +38,8 @@ define([
         Cartesian2,
         CesiumMath,
         Ellipsoid,
-        Rectangle,
+        BoundingRectangle,
+        BoundingSphere,
         Cartesian3,
         Cartographic,
         ComponentDatatype,
@@ -68,7 +70,7 @@ define([
     };
 
     function PositionVertices() {
-        this._va = null;
+        this._va = undefined;
     }
 
     PositionVertices.prototype.getVertexArrays = function() {
@@ -100,8 +102,8 @@ define([
 
     PositionVertices.prototype._destroyVA = function() {
         var va = this._va;
-        if (va) {
-            this._va = null;
+        if (typeof va !== 'undefined') {
+            this._va = undefined;
 
             var length = va.length;
             for ( var i = 0; i < length; ++i) {
@@ -147,7 +149,11 @@ define([
         this._rsPick = undefined;
 
         this._vertices = new PositionVertices();
-        this._pickId = null;
+        this._pickId = undefined;
+
+        this._boundingVolume = undefined;
+        this._boundingVolume2D = undefined;
+        this._boundingRectangle = undefined;
 
         /**
          * DOC_TBA
@@ -431,8 +437,10 @@ define([
         this._createVertexArray = true;
     };
 
+    var _appendTextureCoordinatesCartesian2 = new Cartesian2();
+    var _appendTextureCoordinatesCartesian3 = new Cartesian3();
     Polygon._appendTextureCoordinates = function(tangentPlane, positions2D, mesh) {
-        var boundingRectangle = new Rectangle.createAxisAlignedBoundingRectangle(positions2D);
+        var boundingRectangle = new BoundingRectangle.fromPoints(positions2D);
         var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
 
         var positions = mesh.attributes.position.values;
@@ -445,9 +453,12 @@ define([
         // save memory by computing them in the fragment shader.  However, projecting
         // the point onto the plane may have precision issues.
         for ( var i = 0; i < length; i += 3) {
-            var p = new Cartesian3(positions[i], positions[i + 1], positions[i + 2]);
-            var st = tangentPlane.projectPointOntoPlane(p);
-            st = st.subtract(origin);
+            var p = _appendTextureCoordinatesCartesian3;
+            p.x = positions[i];
+            p.y = positions[i + 1];
+            p.z = positions[i + 2];
+            var st = tangentPlane.projectPointOntoPlane(p, _appendTextureCoordinatesCartesian2);
+            st.subtract(origin, st);
 
             textureCoordinates[j++] = st.x / boundingRectangle.width;
             textureCoordinates[j++] = st.y / boundingRectangle.height;
@@ -462,10 +473,11 @@ define([
         return mesh;
     };
 
+    var _createMeshFromPositionsPositions = [];
     Polygon.prototype._createMeshFromPositions = function (positions, outerPositions2D) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
-        var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, this.ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, _createMeshFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
@@ -479,28 +491,43 @@ define([
         return mesh;
     };
 
+    var _createMeshesOuterPositions2D = [];
     Polygon.prototype._createMeshes = function() {
         // PERFORMANCE_IDEA:  Move this to a web-worker.
         var i;
         var meshes = [];
         if (typeof this._extent !== 'undefined') {
             meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true}));
+
+            this._boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid);
+            if (this._mode !== SceneMode.SCENE3D) {
+                this._boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection);
+                this._boundingVolume2D.center = new Cartesian3(0.0, this._boundingVolume2D.center.x, this._boundingVolume2D.center.y);
+                this._boundingRectangle = BoundingRectangle.fromExtent(this._extent, this._projection);
+            }
         } else if (typeof this._positions !== 'undefined') {
             meshes.push(this._createMeshFromPositions(this._positions));
+            this._boundingVolume = BoundingSphere.fromPoints(this._positions);
         } else if (typeof this._polygonHierarchy !== 'undefined') {
             var outerPositions =  this._polygonHierarchy[0];
-            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, outerPositions);
-            var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions);
+            var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, this.ellipsoid);
+            var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions, _createMeshesOuterPositions2D);
             for (i = 0; i < this._polygonHierarchy.length; i++) {
                  meshes.push(this._createMeshFromPositions(this._polygonHierarchy[i], outerPositions2D));
             }
+
+            // The bounding volume is just around the boundary points, so there could be cases for
+            // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
+            // volume doesn't cover the polygon.
+            this._boundingVolume = BoundingSphere.fromPoints(outerPositions);
         } else {
             return undefined;
         }
 
+        var mesh;
         var processedMeshes = [];
         for (i = 0; i < meshes.length; i++) {
-            var mesh = meshes[i];
+            mesh = meshes[i];
             mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
             mesh = MeshFilters.reorderForPostVertexCache(mesh);
             mesh = MeshFilters.reorderForPreVertexCache(mesh);
@@ -515,6 +542,20 @@ define([
                 mesh = MeshFilters.projectTo2D(mesh, this._projection);
             }
             processedMeshes = processedMeshes.concat(MeshFilters.fitToUnsignedShortIndices(mesh));
+        }
+
+        if (this._mode !== SceneMode.SCENE3D) {
+            mesh = meshes[0];
+            var projectedPositions = mesh.attributes.position2D.values;
+            var positions = [];
+
+            for (i = 0; i < projectedPositions.length; i += 2) {
+                positions.push(new Cartesian3(projectedPositions[i], projectedPositions[i + 1], 0.0));
+            }
+
+            this._boundingVolume2D = BoundingSphere.fromPoints(positions);
+            this._boundingVolume2D.center = new Cartesian3(0.0, this._boundingVolume2D.center.x, this._boundingVolume2D.center.y);
+            this._boundingRectangle = BoundingRectangle.fromPoints(positions);
         }
 
         return processedMeshes;
@@ -541,12 +582,12 @@ define([
      *
      * @see Polygon#render
      */
-    Polygon.prototype.update = function(context, sceneState) {
+    Polygon.prototype.update = function(context, frameState) {
         if (!this.ellipsoid) {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
 
-        var mode = sceneState.mode;
+        var mode = frameState.mode;
         var granularity = this._getGranularity(mode);
 
         if (granularity < 0.0) {
@@ -554,7 +595,7 @@ define([
         }
 
         if (!this.show) {
-            return;
+            return undefined;
         }
 
         if (this._ellipsoid !== this.ellipsoid) {
@@ -577,7 +618,7 @@ define([
             this._bufferUsage = this.bufferUsage;
         }
 
-        var projection = sceneState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
         if (this._projection !== projection) {
             this._createVertexArray = true;
             this._projection = projection;
@@ -597,6 +638,10 @@ define([
         if (this._createVertexArray) {
             this._createVertexArray = false;
             this._vertices.update(context, this._createMeshes(), this.bufferUsage);
+        }
+
+        if (typeof this._vertices.getVertexArrays() === 'undefined') {
+            return undefined;
         }
 
         if (!this._rs) {
@@ -633,44 +678,8 @@ define([
 
             this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
         }
-    };
 
-    /**
-     * Renders the polygon.  In order for changes to positions and properties to be realized,
-     * {@link Polygon#update} must be called before <code>render</code>.
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Polygon#update
-     * @see Polygon#setTextureAtlas
-     */
-    Polygon.prototype.render = function(context) {
-        if (this.show) {
-            var vas = this._vertices.getVertexArrays();
-            var length = vas.length;
-            for ( var j = 0; j < length; ++j) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._sp,
-                    uniformMap : this._drawUniforms,
-                    vertexArray : vas[j],
-                    renderState : this._rs
-                });
-            }
-        }
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    Polygon.prototype.updateForPick = function(context) {
-        if (this.show) {
+        if (frameState.passes.pick && typeof this._pickId === 'undefined') {
             this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
 
             this._rsPick = context.createRenderState({
@@ -695,9 +704,46 @@ define([
                     return that.height;
                 }
             };
+        }
 
-            this.updateForPick = function(context) {
-            };
+        var boundingVolume;
+        if (mode === SceneMode.SCENE3D) {
+            boundingVolume = this._boundingVolume;
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            boundingVolume = this._boundingVolume2D;
+        } else if (mode === SceneMode.SCENE2D) {
+            boundingVolume = this._boundingRectangle;
+        } else {
+            boundingVolume = this._boundingVolume.union(this._boundingVolume2D);
+        }
+
+        return {
+            boundingVolume : boundingVolume
+        };
+    };
+
+    /**
+     * Renders the polygon.  In order for changes to positions and properties to be realized,
+     * {@link Polygon#update} must be called before <code>render</code>.
+     *
+     * @memberof Polygon
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see Polygon#update
+     * @see Polygon#setTextureAtlas
+     */
+    Polygon.prototype.render = function(context) {
+        var vas = this._vertices.getVertexArrays();
+        var length = vas.length;
+        for ( var j = 0; j < length; ++j) {
+            context.draw({
+                primitiveType : PrimitiveType.TRIANGLES,
+                shaderProgram : this._sp,
+                uniformMap : this._drawUniforms,
+                vertexArray : vas[j],
+                renderState : this._rs
+            });
         }
     };
 
@@ -709,19 +755,17 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     Polygon.prototype.renderForPick = function(context, framebuffer) {
-        if (this.show) {
-            var vas = this._vertices.getVertexArrays();
-            var length = vas.length;
-            for ( var j = 0; j < length; ++j) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._spPick,
-                    uniformMap : this._pickUniforms,
-                    vertexArray : vas[j],
-                    renderState : this._rsPick,
-                    framebuffer : framebuffer
-                });
-            }
+        var vas = this._vertices.getVertexArrays();
+        var length = vas.length;
+        for ( var j = 0; j < length; ++j) {
+            context.draw({
+                primitiveType : PrimitiveType.TRIANGLES,
+                shaderProgram : this._spPick,
+                uniformMap : this._pickUniforms,
+                vertexArray : vas[j],
+                renderState : this._rsPick,
+                framebuffer : framebuffer
+            });
         }
     };
 

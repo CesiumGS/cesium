@@ -95,9 +95,11 @@ define([
         glyph.textureInfo = undefined;
         glyph.dimensions = undefined;
 
-        if (typeof glyph.billboard !== 'undefined') {
-            glyph.billboard.setShow(false);
-            labelCollection._spareBillboards.push(glyph.billboard);
+        var billboard = glyph.billboard;
+        if (typeof billboard !== 'undefined') {
+            billboard.setShow(false);
+            billboard.setImageIndex(-1);
+            labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }
     }
@@ -330,12 +332,12 @@ define([
          * When this is the identity matrix, the labels are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
          * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link agi_model} and derived uniforms.
+         * shaders via {@link czm_model} and derived uniforms.
          *
          * @type Matrix4
          *
          * @see Transforms.eastNorthUpToFixedFrame
-         * @see agi_model
+         * @see czm_model
          *
          * @example
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
@@ -358,6 +360,15 @@ define([
          * });
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
+
+        /**
+         * If true, aligns all text to a pixel in screen space,
+         * providing crisper text at the cost of jumpier motion.
+         * Defaults to true.
+         *
+         * @type Boolean
+         */
+        this.clampToPixel = true;
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -588,11 +599,12 @@ define([
     /**
      * @private
      */
-    LabelCollection.prototype.update = function(context, sceneState) {
+    LabelCollection.prototype.update = function(context, frameState) {
         var billboardCollection = this._billboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.morphTime = this.morphTime;
+        billboardCollection.clampToPixel = this.clampToPixel;
 
         var rebindAllGlyphsInAllLabels = false;
         if (++this._frameCount % 100 === 0) {
@@ -644,7 +656,7 @@ define([
         }
         labelsToUpdate.length = 0;
 
-        this._billboardCollection.update(context, sceneState);
+        return this._billboardCollection.update(context, frameState);
     };
 
     /**
@@ -662,13 +674,6 @@ define([
      */
     LabelCollection.prototype.render = function(context) {
         this._billboardCollection.render(context);
-    };
-
-    /**
-     * @private
-     */
-    LabelCollection.prototype.updateForPick = function(context) {
-        this._billboardCollection.updateForPick(context);
     };
 
     /**

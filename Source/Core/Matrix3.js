@@ -1,11 +1,14 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './defaultValue',
         './DeveloperError',
-        './Cartesian3'
-       ],
-    function(
+        './freezeObject'
+    ], function(
+        Cartesian3,
+        defaultValue,
         DeveloperError,
-        Cartesian3) {
+        freezeObject) {
     "use strict";
 
     /**
@@ -32,15 +35,15 @@ define([
     var Matrix3 = function(column0Row0, column1Row0, column2Row0,
                            column0Row1, column1Row1, column2Row1,
                            column0Row2, column1Row2, column2Row2) {
-        this[0] = typeof column0Row0 === 'undefined' ? 0.0 : column0Row0;
-        this[1] = typeof column0Row1 === 'undefined' ? 0.0 : column0Row1;
-        this[2] = typeof column0Row2 === 'undefined' ? 0.0 : column0Row2;
-        this[3] = typeof column1Row0 === 'undefined' ? 0.0 : column1Row0;
-        this[4] = typeof column1Row1 === 'undefined' ? 0.0 : column1Row1;
-        this[5] = typeof column1Row2 === 'undefined' ? 0.0 : column1Row2;
-        this[6] = typeof column2Row0 === 'undefined' ? 0.0 : column2Row0;
-        this[7] = typeof column2Row1 === 'undefined' ? 0.0 : column2Row1;
-        this[8] = typeof column2Row2 === 'undefined' ? 0.0 : column2Row2;
+        this[0] = defaultValue(column0Row0, 0.0);
+        this[1] = defaultValue(column0Row1, 0.0);
+        this[2] = defaultValue(column0Row2, 0.0);
+        this[3] = defaultValue(column1Row0, 0.0);
+        this[4] = defaultValue(column1Row1, 0.0);
+        this[5] = defaultValue(column1Row2, 0.0);
+        this[6] = defaultValue(column2Row0, 0.0);
+        this[7] = defaultValue(column2Row1, 0.0);
+        this[8] = defaultValue(column2Row2, 0.0);
     };
 
     /**
@@ -599,9 +602,9 @@ define([
      * An immutable Matrix3 instance initialized to the identity matrix.
      * @memberof Matrix3
      */
-    Matrix3.IDENTITY = Object.freeze(new Matrix3(1.0, 0.0, 0.0,
-                                                 0.0, 1.0, 0.0,
-                                                 0.0, 0.0, 1.0));
+    Matrix3.IDENTITY = freezeObject(new Matrix3(1.0, 0.0, 0.0,
+                                                0.0, 1.0, 0.0,
+                                                0.0, 0.0, 1.0));
 
     /**
      * The index into Matrix3 for column 0, row 0.

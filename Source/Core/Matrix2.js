@@ -1,11 +1,14 @@
 /*global define*/
 define([
+        './Cartesian2',
+        './defaultValue',
         './DeveloperError',
-        './Cartesian2'
-       ],
-    function(
+        './freezeObject'
+    ], function(
+        Cartesian2,
+        defaultValue,
         DeveloperError,
-        Cartesian2) {
+        freezeObject) {
     "use strict";
 
     /**
@@ -25,10 +28,10 @@ define([
      * @see Matrix4
      */
     var Matrix2 = function(column0Row0, column1Row0, column0Row1, column1Row1) {
-        this[0] = typeof column0Row0 === 'undefined' ? 0.0 : column0Row0;
-        this[1] = typeof column0Row1 === 'undefined' ? 0.0 : column0Row1;
-        this[2] = typeof column1Row0 === 'undefined' ? 0.0 : column1Row0;
-        this[3] = typeof column1Row1 === 'undefined' ? 0.0 : column1Row1;
+        this[0] = defaultValue(column0Row0, 0.0);
+        this[1] = defaultValue(column0Row1, 0.0);
+        this[2] = defaultValue(column1Row0, 0.0);
+        this[3] = defaultValue(column1Row1, 0.0);
     };
 
     /**
@@ -460,7 +463,8 @@ define([
      * An immutable Matrix2 instance initialized to the identity matrix.
      * @memberof Matrix2
      */
-    Matrix2.IDENTITY = Object.freeze(new Matrix2(1.0, 0.0, 0.0, 1.0));
+    Matrix2.IDENTITY = freezeObject(new Matrix2(1.0, 0.0,
+                                                0.0, 1.0));
 
     /**
      * The index into Matrix2 for column 0, row 0.

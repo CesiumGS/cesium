@@ -10,11 +10,14 @@ define([
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/VertexArrayFacade',
         './SceneMode',
         './Billboard',
+        './HorizontalOrigin',
         '../Shaders/BillboardCollectionVS',
         '../Shaders/BillboardCollectionFS'
     ], function(
@@ -28,11 +31,14 @@ define([
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
+        BoundingRectangle,
+        BoundingSphere,
         BlendingState,
         BufferUsage,
         VertexArrayFacade,
         SceneMode,
         Billboard,
+        HorizontalOrigin,
         BillboardCollectionVS,
         BillboardCollectionFS) {
     "use strict";
@@ -96,10 +102,12 @@ define([
      * var atlas = context.createTextureAtlas({images : images});
      * billboards.setTextureAtlas(atlas);
      * billboards.add({
-     *   position : { x : 1.0, y : 2.0, z : 3.0 }
+     *   position : { x : 1.0, y : 2.0, z : 3.0 },
+     *   imageIndex : 0
      * });
      * billboards.add({
-     *   position : { x : 4.0, y : 5.0, z : 6.0 }
+     *   position : { x : 4.0, y : 5.0, z : 6.0 },
+     *   imageIndex : 1
      * });
      */
     var BillboardCollection = function() {
@@ -119,25 +127,35 @@ define([
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
+        this._maxSize = 0.0;
+        this._maxEyeOffset = 0.0;
+        this._maxScale = 1.0;
+        this._maxPixelOffset = 0.0;
+        this._allHorizontalCenter = true;
+
+        this._baseVolume = new BoundingSphere();
+        this._baseVolume2D = new BoundingSphere();
+        this._baseRectangle = new BoundingRectangle();
+
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
          * When this is the identity matrix, the billboards are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
          * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link agi_model} and derived uniforms.
+         * shaders via {@link czm_model} and derived uniforms.
          *
          * @type Matrix4
          *
          * @see Transforms.eastNorthUpToFixedFrame
-         * @see agi_model
+         * @see czm_model
          *
          * @example
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * billboards.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
-         * billboards.add({ position : new Cartesian3(0.0, 0.0, 0.0) }); // center
-         * billboards.add({ position : new Cartesian3(1000000.0, 0.0, 0.0) }); // east
-         * billboards.add({ position : new Cartesian3(0.0, 1000000.0, 0.0) }); // north
-         * billboards.add({ position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 0.0, 0.0) }); // center
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(1000000.0, 0.0, 0.0) }); // east
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 1000000.0, 0.0) }); // north
+         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
@@ -145,6 +163,15 @@ define([
 
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
+
+        /**
+         * If true, aligns all billboards to a pixel in screen space,
+         * providing a crisper image at the cost of jumpier motion.
+         * Defaults to false.
+         *
+         * @type Boolean
+         */
+        this.clampToPixel = false;
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -174,6 +201,9 @@ define([
             },
             u_atlasSize : function() {
                 return that._textureAtlas.getTexture().getDimensions();
+            },
+            u_clampToPixel : function() {
+                return that.clampToPixel ? 1.0 : 0.0;
             }
         };
 
@@ -596,19 +626,17 @@ define([
      * @see BillboardCollection#setTextureAtlas
      */
     BillboardCollection.prototype.render = function(context) {
-        if (this._vaf && this._vaf.va && this._textureAtlas) {
-            var va = this._vaf.va;
-            var length = va.length;
-            for ( var i = 0; i < length; ++i) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    count : va[i].indicesCount,
-                    shaderProgram : this._sp,
-                    uniformMap : this._uniforms,
-                    vertexArray : va[i].va,
-                    renderState : this._rs
-                });
-            }
+        var va = this._vaf.va;
+        var length = va.length;
+        for ( var i = 0; i < length; ++i) {
+            context.draw({
+                primitiveType : PrimitiveType.TRIANGLES,
+                count : va[i].indicesCount,
+                shaderProgram : this._sp,
+                uniformMap : this._uniforms,
+                vertexArray : va[i].va,
+                renderState : this._rs
+            });
         }
     };
 
@@ -617,39 +645,19 @@ define([
      * @memberof BillboardCollection
      */
     BillboardCollection.prototype.renderForPick = function(context, framebuffer) {
-        if (this._vaf && this._vaf.va && this._textureAtlas) {
-            var va = this._vaf.va;
-            var length = va.length;
-            for ( var i = 0; i < length; ++i) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    count : va[i].indicesCount,
-                    shaderProgram : this._spPick,
-                    uniformMap : this._uniforms,
-                    vertexArray : va[i].va,
-                    renderState : this._rsPick,
-                    framebuffer : framebuffer
-                });
-            }
+        var va = this._vaf.va;
+        var length = va.length;
+        for ( var i = 0; i < length; ++i) {
+            context.draw({
+                primitiveType : PrimitiveType.TRIANGLES,
+                count : va[i].indicesCount,
+                shaderProgram : this._spPick,
+                uniformMap : this._uniforms,
+                vertexArray : va[i].va,
+                renderState : this._rsPick,
+                framebuffer : framebuffer
+            });
         }
-    };
-
-    /**
-     * @private
-     */
-    BillboardCollection.prototype.update = function(context, sceneState) {
-        // First update:  create render state and shader program
-        this._rs = context.createRenderState({
-            depthTest : {
-                enabled : true
-            },
-            blending : BlendingState.ALPHA_BLEND
-        });
-
-        this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
-
-        this._update(context, sceneState);
-        this.update = this._update;
     };
 
     BillboardCollection.prototype.computeNewBuffersUsage = function() {
@@ -729,6 +737,10 @@ define([
         var i = (billboard._index * 4);
         var position = billboard._getActualPosition();
 
+        if (this._mode === SceneMode.SCENE3D) {
+            this._baseVolume.expand(position, this._baseVolume);
+        }
+
         vafWriters[attributeIndices.position](i + 0, position.x, position.y, position.z);
         vafWriters[attributeIndices.position](i + 1, position.x, position.y, position.z);
         vafWriters[attributeIndices.position](i + 2, position.x, position.y, position.z);
@@ -738,6 +750,7 @@ define([
     BillboardCollection.prototype._writePixelOffset = function(context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = (billboard._index * 4);
         var pixelOffset = billboard.getPixelOffset();
+        this._maxPixelOffset = Math.max(this._maxPixelOffset, pixelOffset.x, pixelOffset.y);
 
         vafWriters[attributeIndices.pixelOffset](i + 0, pixelOffset.x, pixelOffset.y);
         vafWriters[attributeIndices.pixelOffset](i + 1, pixelOffset.x, pixelOffset.y);
@@ -749,6 +762,8 @@ define([
         var i = (billboard._index * 4);
         var eyeOffset = billboard.getEyeOffset();
         var scale = billboard.getScale();
+        this._maxEyeOffset = Math.max(this._maxEyeOffset, Math.abs(eyeOffset.x), Math.abs(eyeOffset.y), Math.abs(eyeOffset.z));
+        this._maxScale = Math.max(this._maxScale, scale);
 
         vafWriters[attributeIndices.eyeOffsetAndScale](i + 0, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
         vafWriters[attributeIndices.eyeOffsetAndScale](i + 1, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
@@ -782,6 +797,8 @@ define([
         var verticalOrigin = billboard.getVerticalOrigin().value;
         var show = billboard.getShow();
 
+        this._allHorizontalCenter = this._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER.value;
+
         vafWriters[attributeIndices.originAndShow](i + 0, horizontalOrigin, verticalOrigin, show);
         vafWriters[attributeIndices.originAndShow](i + 1, horizontalOrigin, verticalOrigin, show);
         vafWriters[attributeIndices.originAndShow](i + 2, horizontalOrigin, verticalOrigin, show);
@@ -790,15 +807,30 @@ define([
 
     BillboardCollection.prototype._writeTextureCoordinatesAndImageSize = function(context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = (billboard._index * 4);
-        var imageRectangle = textureAtlasCoordinates[billboard.getImageIndex()];
-        var bottomLeftX = imageRectangle.x;
-        var bottomLeftY = imageRectangle.y;
-        var topRightX = imageRectangle.x + imageRectangle.width;
-        var topRightY = imageRectangle.y + imageRectangle.height;
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, bottomLeftX * 65535, bottomLeftY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Lower Left
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, topRightX * 65535, bottomLeftY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Lower Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, topRightX * 65535, topRightY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Upper Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 3, bottomLeftX * 65535, topRightY * 65535, imageRectangle.width * 65535, imageRectangle.height * 65535); // Upper Left
+        var bottomLeftX = 0;
+        var bottomLeftY = 0;
+        var width = 0;
+        var height = 0;
+        var index = billboard.getImageIndex();
+        if (index !== -1) {
+            var imageRectangle = textureAtlasCoordinates[index];
+            if (typeof imageRectangle === 'undefined') {
+                throw new DeveloperError('Invalid billboard image index: ' + index);
+            }
+            bottomLeftX = imageRectangle.x;
+            bottomLeftY = imageRectangle.y;
+            width = imageRectangle.width;
+            height = imageRectangle.height;
+        }
+        var topRightX = bottomLeftX + width;
+        var topRightY = bottomLeftY + height;
+
+        this._maxSize = Math.max(this._maxSize, width, height);
+
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, bottomLeftX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Left
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, topRightX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Right
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, topRightX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Right
+        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 3, bottomLeftX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Left
     };
 
     BillboardCollection.prototype._writeBillboard = function(context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -811,18 +843,73 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    function recomputeActualPositions(billboards, sceneState, morphTime, modelMatrix) {
-        for ( var i = 0, length = billboards.length; i < length; ++i) {
+    function recomputeActualPositions3D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
+        var boundingVolume;
+        switch (frameState.mode) {
+        case SceneMode.SCENE3D:
+            boundingVolume = billboardCollection._baseVolume;
+            break;
+        case SceneMode.COLUMBUS_VIEW:
+        case SceneMode.MORPHING:
+            boundingVolume = billboardCollection._baseVolume2D;
+            break;
+        }
+
+        var length = billboards.length;
+        var positions = new Array(length);
+        for ( var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.getPosition();
-            var actualPosition = Billboard._computeActualPosition(position, sceneState, morphTime, modelMatrix);
+            var actualPosition = Billboard._computeActualPosition(position, frameState, morphTime, modelMatrix);
             billboard._setActualPosition(actualPosition);
+
+            if (recomputeBoundingVolume) {
+                positions[i] = actualPosition;
+            } else {
+                boundingVolume.expand(actualPosition, boundingVolume);
+            }
+        }
+
+        if (recomputeBoundingVolume) {
+            BoundingSphere.fromPoints(positions, boundingVolume);
         }
     }
 
-    BillboardCollection.prototype._updateMode = function(sceneState) {
-        var mode = sceneState.mode;
-        var projection = sceneState.scene2D.projection;
+    function recomputeActualPositions2D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
+        var boundingVolume = billboardCollection._baseRectangle;
+
+        var length = billboards.length;
+        var positions = new Array(length);
+        for ( var i = 0; i < length; ++i) {
+            var billboard = billboards[i];
+            var position = billboard.getPosition();
+            var actualPosition = Billboard._computeActualPosition(position, frameState, morphTime, modelMatrix);
+            billboard._setActualPosition(actualPosition);
+
+            position = new Cartesian3(actualPosition.y, actualPosition.z, 0.0);
+
+            if (recomputeBoundingVolume) {
+                positions[i] = position;
+            } else {
+                boundingVolume.expand(position, boundingVolume);
+            }
+        }
+
+        if (recomputeBoundingVolume) {
+            BoundingRectangle.fromPoints(positions, boundingVolume);
+        }
+    }
+    function recomputeActualPositions(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
+        if (frameState.mode === SceneMode.SCENE2D) {
+            recomputeActualPositions2D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume);
+        } else {
+            recomputeActualPositions3D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume);
+        }
+    }
+
+    BillboardCollection.prototype._updateMode = function(frameState) {
+        var mode = frameState.mode;
+        var projection = frameState.scene2D.projection;
 
         if (this._mode !== mode ||
             this._projection !== projection ||
@@ -834,33 +921,89 @@ define([
             this.modelMatrix.clone(this._modelMatrix);
 
             if (mode === SceneMode.SCENE3D || mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-                recomputeActualPositions(this._billboards, sceneState, this.morphTime, this._modelMatrix);
+                recomputeActualPositions(this, this._billboards, frameState, this.morphTime, this._modelMatrix, true);
             }
         } else if (mode === SceneMode.MORPHING) {
-            recomputeActualPositions(this._billboards, sceneState, this.morphTime, this._modelMatrix);
+            recomputeActualPositions(this, this._billboards, frameState, this.morphTime, this._modelMatrix, true);
         } else if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-            recomputeActualPositions(this._billboardsToUpdate, sceneState, this.morphTime, this._modelMatrix);
+            recomputeActualPositions(this, this._billboardsToUpdate, frameState, this.morphTime, this._modelMatrix, false);
         }
     };
 
-    BillboardCollection.prototype._update = function(context, sceneState) {
+    function updateBoundingVolumes(collection, context, frameState) {
+        var camera = frameState.camera;
+        var frustum = camera.frustum;
+        var mode = frameState.mode;
+
+        var textureDimensions = collection._textureAtlas.getTexture().getDimensions();
+        var textureSize = Math.max(textureDimensions.x, textureDimensions.y);
+
+        var boundingVolume;
+        var pixelScale;
+        var size;
+        var offset;
+
+        if (mode === SceneMode.SCENE2D) {
+            boundingVolume = new BoundingRectangle();
+
+            pixelScale = (frustum.right - frustum.left) / context.getViewport().width;
+            size = pixelScale * collection._maxScale * collection._maxSize * textureSize;
+            if (collection._allHorizontalCenter) {
+                size *= 0.5;
+            }
+
+            offset = size + pixelScale * collection._maxPixelOffset + collection._maxEyeOffset;
+
+            boundingVolume.x = collection._baseRectangle.x - offset;
+            boundingVolume.y = collection._baseRectangle.y - offset;
+            boundingVolume.width = collection._baseRectangle.width + 2.0 * offset;
+            boundingVolume.height = collection._baseRectangle.height + 2.0 * offset;
+            return boundingVolume;
+        } else if (mode === SceneMode.SCENE3D) {
+            boundingVolume = BoundingSphere.clone(collection._baseVolume);
+        } else if (typeof collection._baseVolume2D !== 'undefined') {
+            boundingVolume = BoundingSphere.clone(collection._baseVolume2D);
+        }
+
+        var toCenter = camera.getPositionWC().subtract(boundingVolume.center);
+        var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()));
+        var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
+        var tanPhi = Math.tan(frustum.fovy * 0.5);
+        var d1 = distance / tanPhi;
+        pixelScale = d1 / context.getViewport().width;
+
+        size = pixelScale * collection._maxScale * collection._maxSize * textureSize;
+        if (collection._allHorizontalCenter) {
+            size *= 0.5;
+        }
+
+        offset = pixelScale * collection._maxPixelOffset + collection._maxEyeOffset;
+        boundingVolume.radius += size + offset;
+
+        return boundingVolume;
+    }
+
+    /**
+     * @private
+     */
+    BillboardCollection.prototype.update = function(context, frameState) {
         var textureAtlas = this._textureAtlas;
         if (typeof textureAtlas === 'undefined') {
             // Can't write billboard vertices until we have texture coordinates
             // provided by a texture atlas
-            return;
+            return undefined;
         }
 
         var textureAtlasCoordinates = textureAtlas.getTextureCoordinates();
         if (textureAtlasCoordinates.length === 0) {
             // Can't write billboard vertices until we have texture coordinates
             // provided by a texture atlas
-            return;
+            return undefined;
         }
 
         this._removeBillboards();
 
-        this._updateMode(sceneState);
+        this._updateMode(frameState);
 
         var billboards = this._billboards;
         var length = billboards.length;
@@ -965,26 +1108,46 @@ define([
             properties[k] = 0;
         }
 
-        this._uniforms = (sceneState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;
-    };
+        if (typeof this._vaf === 'undefined' || typeof this._vaf.va === 'undefined') {
+            return undefined;
+        }
 
-    /**
-     * @private
-     */
-    BillboardCollection.prototype.updateForPick = function(context) {
-        // First update:  create render state and shader program
-        this._rsPick = context.createRenderState({
-            depthTest : {
-                enabled : true
-            }
-        });
+        if (typeof this._sp === 'undefined') {
+            this._rs = context.createRenderState({
+                depthTest : {
+                    enabled : true
+                },
+                blending : BlendingState.ALPHA_BLEND
+            });
 
-        this._spPick = context.getShaderCache().getShaderProgram(
-                BillboardCollectionVS,
-                '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
-                attributeIndices);
+            this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
+        }
 
-        this.updateForPick = function(context) {
+        if (frameState.passes.pick && typeof this._spPick === 'undefined') {
+            this._rsPick = context.createRenderState({
+                depthTest : {
+                    enabled : true
+                }
+            });
+
+            this._spPick = context.getShaderCache().getShaderProgram(
+                    BillboardCollectionVS,
+                    '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
+                    attributeIndices);
+        }
+
+        this._uniforms = (frameState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;
+
+        var boundingVolume = updateBoundingVolumes(this, context, frameState);
+        var modelMatrix = Matrix4.IDENTITY;
+
+        if (frameState.mode === SceneMode.SCENE3D) {
+            modelMatrix = this.modelMatrix;
+        }
+
+        return {
+            boundingVolume : boundingVolume,
+            modelMatrix : modelMatrix
         };
     };
 

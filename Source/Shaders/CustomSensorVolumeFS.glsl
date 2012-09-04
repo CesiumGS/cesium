@@ -20,29 +20,37 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
 {
     sensorErode(sensorRadius, pointEC);
     
-    agi_materialInput materialInput;
+    czm_materialInput materialInput;
     
-    vec3 pointMC = (agi_inverseModelView * vec4(pointEC, 1.0)).xyz;                                
+    vec3 pointMC = (czm_inverseModelView * vec4(pointEC, 1.0)).xyz;                                
     materialInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);   
     materialInput.str = pointMC / sensorRadius;
     materialInput.positionMC = pointMC;               
     
     vec3 positionToEyeEC = normalize(-v_positionEC);
-    materialInput.positionToEyeWC = positionToEyeEC;
+    materialInput.positionToEyeEC = positionToEyeEC;
     
     vec3 normalEC = normalize(v_normalEC);
     normalEC = mix(normalEC, -normalEC, step(normalEC.z, 0.0));  // Normal facing viewer
     materialInput.normalEC = normalEC;
     
-    agi_material material = agi_getMaterial(materialInput);
-    return agi_lightValuePhong(agi_sunDirectionEC, positionToEyeEC, material);
+    czm_material material = czm_getMaterial(materialInput);
+    
+    vec4 color; 
+    #ifdef AFFECTED_BY_LIGHTING    
+    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+    #else
+    color = vec4(material.diffuse, material.alpha);
+    #endif
+    
+    return color;        
 }
 
 #endif
 
-bool ellipsoidSensorIntersection(agi_raySegment ellipsoidInterval)
+bool ellipsoidSensorIntersection(czm_raySegment ellipsoidInterval)
 {
-	if (agi_isEmpty(ellipsoidInterval))
+	if (czm_isEmpty(ellipsoidInterval))
 	{
 	    return false;
 	}
@@ -68,10 +76,10 @@ bool ellipsoidSensorIntersection(agi_raySegment ellipsoidInterval)
     float width = 2.0;  // TODO: Expose as a uniform
     epsilon *= width;           
 
-    return agi_equalsEpsilon(t, length(v_positionEC), epsilon);
+    return czm_equalsEpsilon(t, length(v_positionEC), epsilon);
 }
 
-vec4 shade(agi_raySegment ellipsoidInterval)
+vec4 shade(czm_raySegment ellipsoidInterval)
 {
 #ifdef RENDER_FOR_PICK
     return u_pickColor;
@@ -84,7 +92,7 @@ vec4 shade(agi_raySegment ellipsoidInterval)
 #endif
 }
 
-bool agi_pointInEllipsoid(agi_ellipsoid ellipsoid, vec3 point)
+bool czm_pointInEllipsoid(czm_ellipsoid ellipsoid, vec3 point)
 {
     // TODO: Take into account ellipsoid's center; optimize with radii-squared; and move elsewhere
     return (((point.x * point.x) / (ellipsoid.radii.x * ellipsoid.radii.x)) +
@@ -94,14 +102,14 @@ bool agi_pointInEllipsoid(agi_ellipsoid ellipsoid, vec3 point)
 
 void main()
 {
-    agi_ellipsoid ellipsoid = agi_getWgs84EllipsoidEC();
+    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
 
     // Occluded by the ellipsoid?
 	if (!u_showThroughEllipsoid)
 	{
 	    // Discard if in the ellipsoid    
 	    // PERFORMANCE_IDEA: A coarse check for ellipsoid intersection could be done on the CPU first.
-	    if (agi_pointInEllipsoid(ellipsoid, v_positionWC))
+	    if (czm_pointInEllipsoid(ellipsoid, v_positionWC))
 	    {
 	        discard;
 	    }
@@ -120,8 +128,8 @@ void main()
         discard;
     }
 
-    agi_ray ray = agi_ray(vec3(0.0), normalize(v_positionEC));  // Ray from eye to fragment in eye coordinates
-    agi_raySegment ellipsoidInterval = agi_rayEllipsoidIntersectionInterval(ray, ellipsoid);
+    czm_ray ray = czm_ray(vec3(0.0), normalize(v_positionEC));  // Ray from eye to fragment in eye coordinates
+    czm_raySegment ellipsoidInterval = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
 
     gl_FragColor = shade(ellipsoidInterval);
 }

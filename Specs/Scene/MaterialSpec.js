@@ -4,9 +4,10 @@ defineSuite([
         'Scene/Polygon',
         '../Specs/createContext',
         '../Specs/destroyContext',
-        '../Specs/sceneState',
+        '../Specs/frameState',
         'Core/Cartesian3',
         'Core/Cartographic',
+        'Core/Color',
         'Core/Ellipsoid',
         'Core/Matrix4',
         'Core/Math'
@@ -15,37 +16,40 @@ defineSuite([
         Polygon,
         createContext,
         destroyContext,
-        sceneState,
+        frameState,
         Cartesian3,
         Cartographic,
+        Color,
         Ellipsoid,
         Matrix4,
         CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var polygon;
     var us;
 
-    it('initializem suite', function() {
+    beforeAll(function() {
         context = createContext();
+    });
 
-        polygon = new Polygon();
+    afterAll(function() {
+        destroyContext(context);
+    });
+
+    beforeEach(function() {
         var camera = {
             eye : new Cartesian3(1.02, 0.0, 0.0),
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         };
         us = context.getUniformState();
-        us.setView(Matrix4.fromCamera({
-            eye : camera.eye,
-            target : camera.target,
-            up : camera.up
-        }));
+        us.setView(Matrix4.fromCamera(camera));
         us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions([
@@ -56,13 +60,18 @@ defineSuite([
         ]);
     });
 
+    afterEach(function() {
+        polygon = polygon && polygon.destroy();
+        us = undefined;
+    });
+
     var renderMaterial = function(material) {
         polygon.material = material;
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        polygon.update(context, sceneState);
+        polygon.update(context, frameState);
         polygon.render(context, us);
         return context.readPixels();
     };
@@ -402,6 +411,50 @@ defineSuite([
         expect(pixel).not.toEqual([0, 0, 0, 0]);
     });
 
+    it('create multiple materials from the same type', function() {
+        var material1 = Material.fromType(context, 'Color');
+        material1.uniforms.color = new Color(0.0, 1.0, 0.0, 1.0);
+
+        var material2 = Material.fromType(context, 'Color');
+        material2.uniforms.color = new Color(0.0, 0.0, 1.0, 1.0);
+
+        expect(material1.shaderSource).toEqual(material2.shaderSource);
+
+        var pixel = renderMaterial(material2);
+        expect(pixel).toEqual([0, 0, 255, 255]);
+
+        pixel = renderMaterial(material1);
+        expect(pixel).toEqual([0, 255, 0, 255]);
+    });
+
+    it('create material with sub-materials of the same type', function() {
+        var material = new Material({
+            context : context,
+            fabric : {
+                materials : {
+                    color1 : {
+                        type : 'Color',
+                        uniforms : {
+                            color : new Color(0.0, 1.0, 0.0, 1.0)
+                        }
+                    },
+                    color2 : {
+                        type : 'Color',
+                        uniforms : {
+                            color : new Color(0.0, 0.0, 1.0, 1.0)
+                        }
+                    }
+                },
+                components : {
+                    diffuse : 'color1.diffuse + color2.diffuse'
+                }
+            }
+        });
+
+        var pixel = renderMaterial(material);
+        expect(pixel).toEqual([0, 255, 255, 255]);
+    });
+
     it('throws without context for material that uses images', function() {
         expect(function() {
             return new Material({
@@ -422,8 +475,8 @@ defineSuite([
                     components : {
                         diffuse : 'vec3(0.0, 0.0, 0.0)'
                     },
-                    source : 'agi_material agi_getMaterial(agi_materialInput materialInput)\n{\n' +
-                             'agi_material material = agi_getDefaultMaterial(materialInput);\n' +
+                    source : 'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n' +
+                             'czm_material material = czm_getDefaultMaterial(materialInput);\n' +
                              'return material;\n}\n'
                 }
             });
@@ -630,6 +683,7 @@ defineSuite([
             renderMaterial(material);
         }).toThrow();
     });
+
     it('throws with invalid type sent to fromType', function() {
         expect(function() {
             return Material.fromType(context, 'Nothing');
@@ -637,16 +691,11 @@ defineSuite([
     });
 
     it('destroys material with texture', function() {
-
         var material = Material.fromType(context, Material.DiffuseMapType);
         material.uniforms.image = './Data/Images/Green.png';
         var pixel = renderMaterial(material);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
         material = material && material.destroy();
         expect(material).toEqual(undefined);
-    });
-
-    it('destroy suite', function() {
-        destroyContext(context);
     });
 });

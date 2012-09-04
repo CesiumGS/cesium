@@ -1,4 +1,4 @@
-float _agi_addWithCancellationCheck(float left, float right, float tolerance)
+float _czm_addWithCancellationCheck(float left, float right, float tolerance)
 {
     float difference = left + right;
     if ((sign(left) != sign(right)) && abs(difference / max(abs(left), abs(right))) < tolerance)
@@ -14,10 +14,10 @@ float _agi_addWithCancellationCheck(float left, float right, float tolerance)
 /**
  * DOC_TBA
  *
- * @name agi_quadraticRoots
+ * @name czm_quadraticRoots
  * @glslStruct
  */
-struct agi_quadraticRoots
+struct czm_quadraticRoots
 {
     int numberOfRoots;
     float root0;
@@ -27,37 +27,37 @@ struct agi_quadraticRoots
 /**
  * Computes the real-valued roots of the 2nd order polynomial function of one variable with only real coefficients.
  *
- * @name agi_quadraticRealPolynomialRealRoots
+ * @name czm_quadraticRealPolynomialRealRoots
  * @glslFunction
  *
  * @param {float} a The coefficient of the 2nd order monomial.
  * @param {float} b The coefficient of the 1st order monomial.
  * @param {float} c The coefficient of the 0th order monomial.
  * 
- * @returns {agi_quadraticRoots} Zero, one, or two real-valued roots.
+ * @returns {czm_quadraticRoots} Zero, one, or two real-valued roots.
  * 
  * @example
- * agi_quadraticRoots r = agi_quadraticRealPolynomialRealRoots(2.0, -4.0, -6.0); // 2(x + 1)(x - 3)
+ * czm_quadraticRoots r = czm_quadraticRealPolynomialRealRoots(2.0, -4.0, -6.0); // 2(x + 1)(x - 3)
  * // The result is r.numberOfRoots = 2, r.root0 = -1.0, and r.root1 = 3.0.
  */
-agi_quadraticRoots agi_quadraticRealPolynomialRealRoots(float a, float b, float c)
+czm_quadraticRoots czm_quadraticRealPolynomialRealRoots(float a, float b, float c)
 {
     // This function's return statements have an ANGLE workaround:  http://code.google.com/p/angleproject/issues/detail?id=185
 
-    const float tolerance = agi_epsilon7;
+    const float tolerance = czm_epsilon7;
 
     if (a == 0.0)
     {
         if (b == 0.0)
         {
             // Constant function: c = 0.  No real polynomial roots possible.
-            agi_quadraticRoots r = agi_quadraticRoots(0, 0.0, 0.0);
+            czm_quadraticRoots r = czm_quadraticRoots(0, 0.0, 0.0);
             return r;
         }
         else
         {
             // Linear function: b * x + c = 0.
-            agi_quadraticRoots r = agi_quadraticRoots(1, -c / b, 0.0);
+            czm_quadraticRoots r = czm_quadraticRoots(1, -c / b, 0.0);
             return r;           
         }
     }
@@ -66,7 +66,7 @@ agi_quadraticRoots agi_quadraticRealPolynomialRealRoots(float a, float b, float 
         if (c == 0.0)
         {
             // 2nd order monomial: a * x^2 = 0.
-            agi_quadraticRoots r = agi_quadraticRoots(2, 0.0, 0.0);
+            czm_quadraticRoots r = czm_quadraticRoots(2, 0.0, 0.0);
             return r;
         }
         else
@@ -77,13 +77,13 @@ agi_quadraticRoots agi_quadraticRealPolynomialRealRoots(float a, float b, float 
             if ((cMagnitude < aMagnitude) && (cMagnitude / aMagnitude < tolerance)) // c ~= 0.0.
             {
                 // 2nd order monomial: a * x^2 = 0.
-                agi_quadraticRoots r = agi_quadraticRoots(2, 0.0, 0.0);
+                czm_quadraticRoots r = czm_quadraticRoots(2, 0.0, 0.0);
                 return r;
             }
             else if ((cMagnitude > aMagnitude) && (aMagnitude / cMagnitude < tolerance)) // a ~= 0.0.
             {
                 // Constant function: c = 0.
-                agi_quadraticRoots r = agi_quadraticRoots(0, 0.0, 0.0);
+                czm_quadraticRoots r = czm_quadraticRoots(0, 0.0, 0.0);
                 return r;
             }
             else
@@ -94,7 +94,7 @@ agi_quadraticRoots agi_quadraticRealPolynomialRealRoots(float a, float b, float 
                 if (ratio < 0.0)
                 {
                     // Both roots are complex.
-                    agi_quadraticRoots r = agi_quadraticRoots(0, 0.0, 0.0);
+                    czm_quadraticRoots r = czm_quadraticRoots(0, 0.0, 0.0);
                     return r;
                 }
                 else
@@ -103,7 +103,7 @@ agi_quadraticRoots agi_quadraticRealPolynomialRealRoots(float a, float b, float 
                     float root = sqrt(ratio);
     
                     // Return them in ascending order.
-                    agi_quadraticRoots r = agi_quadraticRoots(2, -root, root);
+                    czm_quadraticRoots r = czm_quadraticRoots(2, -root, root);
                     return r;
                 }
             }
@@ -117,12 +117,12 @@ agi_quadraticRoots agi_quadraticRealPolynomialRealRoots(float a, float b, float 
         // Return them in ascending order.
         if (ratio < 0.0)
         {
-            agi_quadraticRoots r = agi_quadraticRoots(2, ratio, 0.0);
+            czm_quadraticRoots r = czm_quadraticRoots(2, ratio, 0.0);
             return r;           
         }
         else
         {
-            agi_quadraticRoots r = agi_quadraticRoots(2, 0.0, ratio);
+            czm_quadraticRoots r = czm_quadraticRoots(2, 0.0, ratio);
             return r;
         }
     }
@@ -131,30 +131,30 @@ agi_quadraticRoots agi_quadraticRealPolynomialRealRoots(float a, float b, float 
         // a * x^2 + b * x + c = 0
         float b2 = b * b;
         float four_ac = 4.0 * a * c;
-        float radicand = _agi_addWithCancellationCheck(b2, -four_ac, tolerance);
+        float radicand = _czm_addWithCancellationCheck(b2, -four_ac, tolerance);
     
         if (radicand < 0.0)
         {
             // Both roots are complex.
-            agi_quadraticRoots r = agi_quadraticRoots(0, 0.0, 0.0);
+            czm_quadraticRoots r = czm_quadraticRoots(0, 0.0, 0.0);
             return r;
         }
         else
         {
             // Both roots are real.
-            float q = -0.5 * _agi_addWithCancellationCheck(b, sign(b) * sqrt(radicand), tolerance);
+            float q = -0.5 * _czm_addWithCancellationCheck(b, sign(b) * sqrt(radicand), tolerance);
     
             // Return them in ascending order.
             if (b > 0.0)
             {
                 // q < 0.0
-                agi_quadraticRoots r = agi_quadraticRoots(2, q / a, c / q);
+                czm_quadraticRoots r = czm_quadraticRoots(2, q / a, c / q);
                 return r;               
             }
             else
             {
                 // q > 0.0
-                agi_quadraticRoots r = agi_quadraticRoots(2, c / q, q / a);
+                czm_quadraticRoots r = czm_quadraticRoots(2, c / q, q / a);
                 return r;               
             }
         }
@@ -166,10 +166,10 @@ agi_quadraticRoots agi_quadraticRealPolynomialRealRoots(float a, float b, float 
 /**
  * DOC_TBA
  *
- * @name agi_sphere
+ * @name czm_sphere
  * @glslStruct
  */
-struct agi_sphere
+struct czm_sphere
 {
     vec3 center;
     float radius;
@@ -178,12 +178,12 @@ struct agi_sphere
 /**
  * DOC_TBA
  *
- * @name agi_raySphereIntersectionInterval
+ * @name czm_raySphereIntersectionInterval
  * @glslFunction
  *
- * @see agi_sphereNormal
+ * @see czm_sphereNormal
  */
-agi_raySegment agi_raySphereIntersectionInterval(agi_ray ray, agi_sphere sphere)
+czm_raySegment czm_raySphereIntersectionInterval(czm_ray ray, czm_sphere sphere)
 {
     // From Real-Time Rendering, Section 16.6.2, Optimized Ray/Sphere Intersection Solution, Page 741
     
@@ -200,7 +200,7 @@ agi_raySegment agi_raySphereIntersectionInterval(agi_ray ray, agi_sphere sphere)
     if ((s < 0.0) // Looking away from sphere.
     && (l2 > r2)) // Outside of sphere.
     {
-        return agi_emptyRaySegment;  // ray does not intersect (at least not along the indicated direction).
+        return czm_emptyRaySegment;  // ray does not intersect (at least not along the indicated direction).
     }
     
     float s2 = s * s;
@@ -208,47 +208,47 @@ agi_raySegment agi_raySphereIntersectionInterval(agi_ray ray, agi_sphere sphere)
     
     if (m2 > r2) // Discriminant is negative, yielding only imaginary roots.
     {
-        return agi_emptyRaySegment;  // ray does not intersect.
+        return czm_emptyRaySegment;  // ray does not intersect.
     }
     
     float q = sqrt(r2 - m2);
 
-    if (agi_equalsEpsilon(q, 0.0)) // Discriminant is zero, yielding a double root.
+    if (czm_equalsEpsilon(q, 0.0)) // Discriminant is zero, yielding a double root.
     {
-        return agi_raySegment(s, s);  // ray is tangent.
+        return czm_raySegment(s, s);  // ray is tangent.
     }
         
     if (l2 > r2) // Outside of sphere.
     {
-	    agi_raySegment i = agi_raySegment(s - q, s + q);
+	    czm_raySegment i = czm_raySegment(s - q, s + q);
 	    return i;
     }
     else if (l2 < r2) // Inside of sphere.
    	{
-        agi_raySegment i = agi_raySegment(0.0, s + q);
+        czm_raySegment i = czm_raySegment(0.0, s + q);
         return i;
     }
     else if (s > 0.0) // On sphere and looking inward.
     {
-        agi_raySegment i = agi_raySegment(0.0, s + q);
+        czm_raySegment i = czm_raySegment(0.0, s + q);
         return i;
     }
     else // On sphere and looking outward or tangent.
     {
-        return agi_emptyRaySegment;
+        return czm_emptyRaySegment;
    	}
 }
 
 /**
  * DOC_TBA
  *
- * @name agi_sphereNormal
+ * @name czm_sphereNormal
  * @glslFunction
  *
- * @see agi_raySphereIntersectionInterval 
- * @see agi_pointAlongRay
+ * @see czm_raySphereIntersectionInterval 
+ * @see czm_pointAlongRay
  */
-vec3 agi_sphereNormal(agi_sphere sphere, vec3 pointOnSphere)
+vec3 czm_sphereNormal(czm_sphere sphere, vec3 pointOnSphere)
 {
     return normalize(pointOnSphere - sphere.center);
 }
@@ -258,10 +258,10 @@ vec3 agi_sphereNormal(agi_sphere sphere, vec3 pointOnSphere)
 /**
  * DOC_TBA
  *
- * @name agi_cone
+ * @name czm_cone
  * @glslStruct
  */
-struct agi_cone
+struct czm_cone
 {
     vec3 vertex;
     vec3 axis;          // Unit-length direction vector
@@ -274,7 +274,7 @@ struct agi_cone
     mat3 intersectionMatrix;
 };
 
-agi_cone agi_coneNew(vec3 vertex, vec3 axis, float halfAperture)
+czm_cone czm_coneNew(vec3 vertex, vec3 axis, float halfAperture)
 {
 	float cosineOfHalfAperture = cos(halfAperture);
 	float cosineSquaredOfHalfAperture = cosineOfHalfAperture * cosineOfHalfAperture;
@@ -294,7 +294,7 @@ agi_cone agi_coneNew(vec3 vertex, vec3 axis, float halfAperture)
 		-xy,                              cosineSquaredOfHalfAperture - y2, -yz,
 		-zx,                              -yz,                              cosineSquaredOfHalfAperture - z2);            
 	
-    agi_cone temp = agi_cone(vertex, axis, halfAperture,
+    czm_cone temp = czm_cone(vertex, axis, halfAperture,
     	cosineOfHalfAperture, cosineSquaredOfHalfAperture,
     	sineOfHalfAperture, sineSquaredOfHalfAperture, intersectionMatrix);
     return temp;
@@ -303,28 +303,28 @@ agi_cone agi_coneNew(vec3 vertex, vec3 axis, float halfAperture)
 /**
  * Determines if a point is in, or on the boundary, of an infinite cone.
  *
- * @name agi_coneContainsPoint
+ * @name czm_coneContainsPoint
  * @glslFunction
  *
- * @param {agi_cone} cone The infinite cone.
+ * @param {czm_cone} cone The infinite cone.
  * @param {vec3} point The point to test for containment.
  *
  * @returns {bool} <code>true</code> if the point is in the infinite cone; otherwise, <code>false</code>.
  *
- * @see agi_rayConeIntersectionInterval
+ * @see czm_rayConeIntersectionInterval
  *
  * @example
- * agi_cone cone = agi_coneNew(vec3(0.0), vec3(0.0, 0.0, 1.0), radians(45.0)); // vertex, axis, halfAperture
+ * czm_cone cone = czm_coneNew(vec3(0.0), vec3(0.0, 0.0, 1.0), radians(45.0)); // vertex, axis, halfAperture
  * vec3 point = vec3(1.0, 0.0, 0.0);
- * bool b = agi_coneContainsPoint(cone, point)); // false
+ * bool b = czm_coneContainsPoint(cone, point)); // false
  */
-bool agi_coneContainsPoint(agi_cone cone, vec3 point)
+bool czm_coneContainsPoint(czm_cone cone, vec3 point)
 {
     vec3 n = normalize(point - cone.vertex);
     return (dot(n, cone.axis) >= cone.cosineOfHalfAperture);
 }
 
-bool _agi_rayIntersectsReflectedCone(agi_ray ray, agi_cone cone, float time, float cosine)
+bool _czm_rayIntersectsReflectedCone(czm_ray ray, czm_cone cone, float time, float cosine)
 {
     vec3 s = ray.origin + (time * ray.direction) - cone.vertex;  // The vector from the origin is at (vertex + s)
     vec3 sUnit = normalize(s);
@@ -336,13 +336,13 @@ bool _agi_rayIntersectsReflectedCone(agi_ray ray, agi_cone cone, float time, flo
 /**
  * DOC_TBA
  *
- * @name agi_rayConeIntersectionInterval
+ * @name czm_rayConeIntersectionInterval
  * @glslFunction
  *
- * @see agi_coneNormal
- * @see agi_coneContainsPoint
+ * @see czm_coneNormal
+ * @see czm_coneContainsPoint
  */
-agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone cone)
+czm_raySegmentCollection czm_rayConeIntersectionInterval(czm_ray ray, czm_cone cone)
 {
     vec3 temp = ray.origin - cone.vertex;
 
@@ -354,11 +354,11 @@ agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone c
     {
         if (cosineNu >= cone.cosineOfHalfAperture) // Looking inward or along surface.
         {
-            return agi_raySegmentCollectionNew(agi_fullRaySegment);
+            return czm_raySegmentCollectionNew(czm_fullRaySegment);
         }
         else // Looking outward.
         {
-            return agi_raySegmentCollectionNew();
+            return czm_raySegmentCollectionNew();
         }
     }
     else // Not at vertex
@@ -376,17 +376,17 @@ agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone c
             {
                 if (dot(temp, u) > 0.0) // Looking away from vertex.
                 {
-                    return agi_raySegmentCollectionNew(agi_fullRaySegment);
+                    return czm_raySegmentCollectionNew(czm_fullRaySegment);
                 }
                 else // Looking toward vertex.
                 {
-                    agi_raySegment i = agi_raySegment(0.0, length(temp));
-                    return agi_raySegmentCollectionNew(i);
+                    czm_raySegment i = czm_raySegment(0.0, length(temp));
+                    return czm_raySegmentCollectionNew(i);
                 }
             }
             else // Looking tangent at surface.
             {
-                return agi_raySegmentCollectionNew();
+                return czm_raySegmentCollectionNew();
             }
         }
         else // Not on surface
@@ -422,11 +422,11 @@ agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone c
             {
                 if (cone.cosineOfHalfAperture < 0.0) // Obtuse cone.
                 {
-                    return agi_raySegmentCollectionNew(agi_fullRaySegment);
+                    return czm_raySegmentCollectionNew(czm_fullRaySegment);
                 }
                 else // Acute cone.
                 {
-                    return agi_raySegmentCollectionNew();
+                    return czm_raySegmentCollectionNew();
                 }
             }
             else if (d > 0.0) // Distinct real roots.  Two intersections.
@@ -458,26 +458,26 @@ agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone c
                     if (firstTest && secondTest)
                     {
                         // Ray starts inside cone and exits; then enters and never exits.
-                        agi_raySegment one = agi_raySegment(0.0, m * first);
-                        agi_raySegment two = agi_raySegment(m * second, agi_infinity);
-                        return agi_raySegmentCollectionNew(one, two);
+                        czm_raySegment one = czm_raySegment(0.0, m * first);
+                        czm_raySegment two = czm_raySegment(m * second, czm_infinity);
+                        return czm_raySegmentCollectionNew(one, two);
                     }
                     else if (firstTest)
                     {
                         // Ray starts inside cone and exits.
-                        agi_raySegment i = agi_raySegment(0.0, m * first);
-                        return agi_raySegmentCollectionNew(i);
+                        czm_raySegment i = czm_raySegment(0.0, m * first);
+                        return czm_raySegmentCollectionNew(i);
                     }
                     else if (secondTest)
                     {
                         // Ray starts inside cone and exits.
-                        agi_raySegment i = agi_raySegment(0.0, m * second);
-                        return agi_raySegmentCollectionNew(i);
+                        czm_raySegment i = czm_raySegment(0.0, m * second);
+                        return czm_raySegmentCollectionNew(i);
                     }
                     else
                     {
                         // Ray starts inside cone and never exits.
-                        return agi_raySegmentCollectionNew(agi_fullRaySegment);
+                        return czm_raySegmentCollectionNew(czm_fullRaySegment);
                     }
                 }
                 else
@@ -485,25 +485,25 @@ agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone c
                     if (firstTest && secondTest)
                     {
                         // Ray enters and exits.
-                        agi_raySegment i = agi_raySegment(m * first, m * second);
-                        return agi_raySegmentCollectionNew(i);
+                        czm_raySegment i = czm_raySegment(m * first, m * second);
+                        return czm_raySegmentCollectionNew(i);
                     }
                     else if (firstTest)
                     {
                         // Ray enters and never exits.
-                        agi_raySegment i = agi_raySegment(m * first, agi_infinity);
-                        return agi_raySegmentCollectionNew(i);
+                        czm_raySegment i = czm_raySegment(m * first, czm_infinity);
+                        return czm_raySegmentCollectionNew(i);
                     }
                     else if (secondTest)
                     {
                         // Ray enters and never exits.
-                        agi_raySegment i = agi_raySegment(m * second, agi_infinity);
-                        return agi_raySegmentCollectionNew(i);
+                        czm_raySegment i = czm_raySegment(m * second, czm_infinity);
+                        return czm_raySegmentCollectionNew(i);
                     }
                     else
                     {
                         // Ray never enters.
-                        return agi_raySegmentCollectionNew();
+                        return czm_raySegmentCollectionNew();
                     }
                 }
             }
@@ -516,13 +516,13 @@ agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone c
                         if (cosineNu >= 0.0) // Looking inward or tangent.
                         {
                             // Ray starts inside cone and never exits.
-                            return agi_raySegmentCollectionNew(agi_fullRaySegment);
+                            return czm_raySegmentCollectionNew(czm_fullRaySegment);
                         }
                         else
                         {
                             // Ray starts inside cone and intersects.
-                            agi_raySegment i = agi_raySegment(0.0, -sqrt(t2) * cosineTau / cosineNu);
-                            return agi_raySegmentCollectionNew(i);
+                            czm_raySegment i = czm_raySegment(0.0, -sqrt(t2) * cosineTau / cosineNu);
+                            return czm_raySegmentCollectionNew(i);
                         }
                     }
                     else // Outside.
@@ -530,13 +530,13 @@ agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone c
                         if (cosineNu <= 0.0) // Looking outward or tangent.
                         {
                             // Ray starts outside cone and never enters.
-                            return agi_raySegmentCollectionNew();
+                            return czm_raySegmentCollectionNew();
                         }
                         else
                         {
                             // Ray starts outside cone and intersects.
-                            agi_raySegment i = agi_raySegment(-sqrt(t2) * cosineTau / cosineNu, agi_infinity);
-                            return agi_raySegmentCollectionNew(i);
+                            czm_raySegment i = czm_raySegment(-sqrt(t2) * cosineTau / cosineNu, czm_infinity);
+                            return czm_raySegmentCollectionNew(i);
                         }
                     }
                 }
@@ -546,7 +546,7 @@ agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone c
                     float c = cosineTau2 - cosineAlpha2;
                     float b = 2.0 * (stuff - cosineDelta * cosineAlpha2);
 
-                    float root = (a == 0.0) ? -sign(b) * agi_infinity : (-sign(b) / sign(a)) * sqrt(c / a);
+                    float root = (a == 0.0) ? -sign(b) * czm_infinity : (-sign(b) / sign(a)) * sqrt(c / a);
 
                     // Check roots to ensure that they are non-negative and intersect the desired nape of the cone.
                     bool rootTest = (root >= 0.0) && !(sign(dot(t + root * ray.direction, cone.axis)) == -sign(cone.cosineOfHalfAperture));
@@ -558,13 +558,13 @@ agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone c
                         if (rootTest)
                         {
                             // Ray starts inside cone and exits or becomes tangent.
-                            agi_raySegment i = agi_raySegment(0.0, m * root);
-                            return agi_raySegmentCollectionNew(i);
+                            czm_raySegment i = czm_raySegment(0.0, m * root);
+                            return czm_raySegmentCollectionNew(i);
                         }
                         else
                         {
                             // Ray starts inside cone and never exits.
-                            return agi_raySegmentCollectionNew(agi_fullRaySegment);
+                            return czm_raySegmentCollectionNew(czm_fullRaySegment);
                         }
                     }
                     else
@@ -575,21 +575,21 @@ agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone c
                             {
                                 // Ray starts outside cone and becomes tangent.
                                 float thing = m * root;
-                                agi_raySegment i = agi_raySegment(thing, thing);
-                                return agi_raySegmentCollectionNew(i);
+                                czm_raySegment i = czm_raySegment(thing, thing);
+                                return czm_raySegmentCollectionNew(i);
                             }
                             else
                             {
                                 // Ray starts outside cone and enters at vertex.
                                 float thing = m * root;
-                                agi_raySegment i = agi_raySegment(thing, agi_infinity);
-                                return agi_raySegmentCollectionNew(i);
+                                czm_raySegment i = czm_raySegment(thing, czm_infinity);
+                                return czm_raySegmentCollectionNew(i);
                             }
                         }
                         else
                         {
                             // Ray never enters.
-                            return agi_raySegmentCollectionNew();
+                            return czm_raySegmentCollectionNew();
                         }
                     }
                 }
@@ -601,22 +601,22 @@ agi_raySegmentCollection agi_rayConeIntersectionInterval(agi_ray ray, agi_cone c
 /**
  * DOC_TBA
  *
- * @name agi_rayConeIntersectNormal
+ * @name czm_rayConeIntersectNormal
  * @glslFunction 
  *
- * @see agi_rayConeIntersectionInterval
- * @see agi_pointAlongRay
+ * @see czm_rayConeIntersectionInterval
+ * @see czm_pointAlongRay
  *
  * @example
  * // Compute the outward-facing cone normal where a ray first intersects a cone
- * agi_ray ray = agi_ray(vec3(0.0), vec3(0.0, 0.0, 1.0)); // origin, direction
- * agi_cone cone = agi_coneNew(vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 1.0), radians(45.0)); // vertex, axis, halfAperture
- * agi_raySegment i = agi_rayConeIntersectionInterval(ray, cone);
- * vec3 normal = agi_coneNormal(cone, agi_pointAlongRay(ray, i.start));
+ * czm_ray ray = czm_ray(vec3(0.0), vec3(0.0, 0.0, 1.0)); // origin, direction
+ * czm_cone cone = czm_coneNew(vec3(0.0, 0.0, 1.0), vec3(0.0, 0.0, 1.0), radians(45.0)); // vertex, axis, halfAperture
+ * czm_raySegment i = czm_rayConeIntersectionInterval(ray, cone);
+ * vec3 normal = czm_coneNormal(cone, czm_pointAlongRay(ray, i.start));
  */
-vec3 agi_coneNormal(agi_cone cone, vec3 pointOnCone)
+vec3 czm_coneNormal(czm_cone cone, vec3 pointOnCone)
 {
-    // PERFORMANCE_IDEA: Remove duplicate computation with _agi_rayIntersectsReflectedCone
+    // PERFORMANCE_IDEA: Remove duplicate computation with _czm_rayIntersectsReflectedCone
     vec3 s = pointOnCone - cone.vertex;     // Vector from the origin is at (vertex + s)
     vec3 sUnit = normalize(s);
     return normalize((cone.cosineOfHalfAperture * sUnit - cone.axis) / cone.sineOfHalfAperture);
@@ -627,30 +627,30 @@ vec3 agi_coneNormal(agi_cone cone, vec3 pointOnCone)
 /**
  * DOC_TBA
  *
- * @name agi_ellipsoidSilhouetteCone
+ * @name czm_ellipsoidSilhouetteCone
  * @glslStruct
  */
-struct agi_ellipsoidSilhouetteCone
+struct czm_ellipsoidSilhouetteCone
 {
-    agi_ellipsoid ellipsoid;
+    czm_ellipsoid ellipsoid;
     vec3 pointOutsideEllipsoid;
-    agi_cone coneInScaledSpace;
+    czm_cone coneInScaledSpace;
 };
 
 /**
  * DOC_TBA
  *
- * @name agi_ellipsoidSilhouetteConeNormal
+ * @name czm_ellipsoidSilhouetteConeNormal
  * @glslFunction
  *
  */
-vec3 agi_ellipsoidSilhouetteConeNormal(agi_ellipsoidSilhouetteCone cone, vec3 pointOnCone)
+vec3 czm_ellipsoidSilhouetteConeNormal(czm_ellipsoidSilhouetteCone cone, vec3 pointOnCone)
 {
-    vec3 pointOnScaledCone = cone.ellipsoid.inverseRadii * (agi_inverseView * vec4(pointOnCone, 1.0)).xyz;
+    vec3 pointOnScaledCone = cone.ellipsoid.inverseRadii * (czm_inverseView * vec4(pointOnCone, 1.0)).xyz;
 
-    vec3 scaledNormal = agi_coneNormal(cone.coneInScaledSpace, pointOnScaledCone);
+    vec3 scaledNormal = czm_coneNormal(cone.coneInScaledSpace, pointOnScaledCone);
 
-    vec3 temp = -normalize((agi_view * vec4(cone.ellipsoid.radii * scaledNormal, 0.0)).xyz);
+    vec3 temp = -normalize(czm_viewRotation * (cone.ellipsoid.radii * scaledNormal));
     
     return temp;
 }
@@ -658,13 +658,13 @@ vec3 agi_ellipsoidSilhouetteConeNormal(agi_ellipsoidSilhouetteCone cone, vec3 po
 /**
  * DOC_TBA
  *
- * @name agi_ellipsoidSilhouetteConeNew
+ * @name czm_ellipsoidSilhouetteConeNew
  * @glslFunction
  *
  */
-agi_ellipsoidSilhouetteCone agi_ellipsoidSilhouetteConeNew(agi_ellipsoid ellipsoid, vec3 pointOutsideEllipsoid)
+czm_ellipsoidSilhouetteCone czm_ellipsoidSilhouetteConeNew(czm_ellipsoid ellipsoid, vec3 pointOutsideEllipsoid)
 {
-	vec3 q = ellipsoid.inverseRadii * (agi_inverseView * vec4(pointOutsideEllipsoid, 1.0)).xyz;
+	vec3 q = ellipsoid.inverseRadii * (czm_inverseView * vec4(pointOutsideEllipsoid, 1.0)).xyz;
 	vec3 axis = -normalize(q);
 	
 	float q2 = dot(q, q);
@@ -687,59 +687,59 @@ agi_ellipsoidSilhouetteCone agi_ellipsoidSilhouetteConeNew(agi_ellipsoid ellipso
 		-xy,                              cosineSquaredOfHalfAperture - y2, -yz,
 		-zx,                              -yz,                              cosineSquaredOfHalfAperture - z2);            
 	
-	agi_cone coneInScaledSpace = agi_cone(q, axis, halfAperture,
+	czm_cone coneInScaledSpace = czm_cone(q, axis, halfAperture,
 		cosineOfHalfAperture, cosineSquaredOfHalfAperture,
 		sineOfHalfAperture, sineSquaredOfHalfAperture, intersectionMatrix);
 
     // ANGLE workaround:  http://code.google.com/p/angleproject/issues/detail?id=185		
-	agi_ellipsoidSilhouetteCone temp = agi_ellipsoidSilhouetteCone(ellipsoid, pointOutsideEllipsoid, coneInScaledSpace);
+	czm_ellipsoidSilhouetteCone temp = czm_ellipsoidSilhouetteCone(ellipsoid, pointOutsideEllipsoid, coneInScaledSpace);
 	return temp;
 }
 
 /**
  * DOC_TBA
  *
- * @name agi_rayEllipsoidSilhouetteConeIntersectionInterval
+ * @name czm_rayEllipsoidSilhouetteConeIntersectionInterval
  * @glslFunction
  *
  */
-agi_raySegment agi_rayEllipsoidSilhouetteConeIntersectionInterval(agi_ray ray, agi_ellipsoidSilhouetteCone cone)
+czm_raySegment czm_rayEllipsoidSilhouetteConeIntersectionInterval(czm_ray ray, czm_ellipsoidSilhouetteCone cone)
 {
 	// Determine the ray in the scaled space.
-	vec3 origin = cone.ellipsoid.inverseRadii * (agi_inverseView * vec4(ray.origin, 1.0)).xyz;
-	vec3 direction = normalize(cone.ellipsoid.inverseRadii * (agi_inverseView * vec4(ray.direction, 0.0)).xyz);
-	agi_ray rayInScaledSpace = agi_ray(origin, direction);
+	vec3 origin = cone.ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.origin, 1.0)).xyz;
+	vec3 direction = normalize(cone.ellipsoid.inverseRadii * (czm_inverseViewRotation * ray.direction));
+	czm_ray rayInScaledSpace = czm_ray(origin, direction);
 	
 	// Perform the intersection in the scaled space.
-	agi_raySegmentCollection collection = agi_rayConeIntersectionInterval(rayInScaledSpace, cone.coneInScaledSpace);
+	czm_raySegmentCollection collection = czm_rayConeIntersectionInterval(rayInScaledSpace, cone.coneInScaledSpace);
 
 	if (collection.count == 0) // No intersection.
 	{
-		return agi_emptyRaySegment;
+		return czm_emptyRaySegment;
 	}
 	else // Intersection.
 	{
-        agi_raySegment interval = collection.intervals[0];
+        czm_raySegment interval = collection.intervals[0];
         
 		// Honor ray origin case (start == 0.0).
 		float start = interval.start;
 		if (start != 0.0)
 		{
 			// Determine start in unscaled space.
-			vec3 temp = (agi_view * vec4(cone.ellipsoid.radii * agi_pointAlongRay(rayInScaledSpace, start), 1.0)).xyz;
+			vec3 temp = (czm_view * vec4(cone.ellipsoid.radii * czm_pointAlongRay(rayInScaledSpace, start), 1.0)).xyz;
 			start = dot(temp, ray.direction);
 		}
 		
 		// Honor infinite ray (stop == infinity).
 		float stop = interval.stop;
-		if (stop != agi_infinity)
+		if (stop != czm_infinity)
 		{
 			// Determine stop in unscaled space.
-			vec3 temp = (agi_view * vec4(cone.ellipsoid.radii * agi_pointAlongRay(rayInScaledSpace, stop), 1.0)).xyz;
+			vec3 temp = (czm_view * vec4(cone.ellipsoid.radii * czm_pointAlongRay(rayInScaledSpace, stop), 1.0)).xyz;
 			stop = dot(temp, ray.direction);
 		}
 		
-		return agi_raySegment(start, stop);
+		return czm_raySegment(start, stop);
 	}
 }
 
@@ -748,10 +748,10 @@ agi_raySegment agi_rayEllipsoidSilhouetteConeIntersectionInterval(agi_ray ray, a
 /**
  * DOC_TBA
  *
- * @name agi_halfspace
+ * @name czm_halfspace
  * @glslStruct
  */
-struct agi_halfspace
+struct czm_halfspace
 {
 	vec3 center;
 	vec3 normal; // Unit vector.
@@ -760,11 +760,11 @@ struct agi_halfspace
 /**
  * DOC_TBA
  *
- * @name agi_rayHalfspaceIntersectionInterval
+ * @name czm_rayHalfspaceIntersectionInterval
  * @glslFunction
  *
  */
-agi_raySegment agi_rayHalfspaceIntersectionInterval(agi_ray ray, agi_halfspace halfspace)
+czm_raySegment czm_rayHalfspaceIntersectionInterval(czm_ray ray, czm_halfspace halfspace)
 {
 	float numerator = dot(halfspace.center - ray.origin, halfspace.normal);
 	float denominator = dot(ray.direction, halfspace.normal);
@@ -773,33 +773,33 @@ agi_raySegment agi_rayHalfspaceIntersectionInterval(agi_ray ray, agi_halfspace h
 	{
 		if (denominator > 0.0) // Looking outward.
 		{
-			return agi_raySegment(0.0, numerator / denominator);
+			return czm_raySegment(0.0, numerator / denominator);
 		}
 		else // Looking inward or parallel.
 		{
-			return agi_fullRaySegment;		
+			return czm_fullRaySegment;		
 		}
 	}
 	else if (numerator < 0.0) // Outside.
 	{
 		if (denominator < 0.0 ) // Looking inward.
 		{
-			return agi_raySegment(numerator / denominator, agi_infinity);		
+			return czm_raySegment(numerator / denominator, czm_infinity);		
 		}
 		else // Looking outward or parallel.
 		{
-			return agi_emptyRaySegment;
+			return czm_emptyRaySegment;
 		}
 	}
 	else // On surface.
 	{
 		if (denominator < 0.0 ) // Looking inward.
 		{
-			return agi_fullRaySegment;		
+			return czm_fullRaySegment;		
 		}
 		else // Looking outward or parallel.
 		{
-			return agi_emptyRaySegment;
+			return czm_emptyRaySegment;
 		}
 	}
 }
@@ -809,55 +809,55 @@ agi_raySegment agi_rayHalfspaceIntersectionInterval(agi_ray ray, agi_halfspace h
 /**
  * DOC_TBA
  *
- * @name agi_ellipsoidSilhouetteHalfspace
+ * @name czm_ellipsoidSilhouetteHalfspace
  * @glslStruct
  */
-struct agi_ellipsoidSilhouetteHalfspace
+struct czm_ellipsoidSilhouetteHalfspace
 {
-    agi_ellipsoid ellipsoid;
+    czm_ellipsoid ellipsoid;
     vec3 pointOutsideEllipsoid;
-    agi_halfspace halfspaceInScaledSpace;
+    czm_halfspace halfspaceInScaledSpace;
 };
 
 /**
  * DOC_TBA
  *
- * @name agi_ellipsoidSilhouetteHalfspaceNew
+ * @name czm_ellipsoidSilhouetteHalfspaceNew
  * @glslFunction
  *
  */
-agi_ellipsoidSilhouetteHalfspace agi_ellipsoidSilhouetteHalfspaceNew(agi_ellipsoid ellipsoid, vec3 pointOutsideEllipsoid)
+czm_ellipsoidSilhouetteHalfspace czm_ellipsoidSilhouetteHalfspaceNew(czm_ellipsoid ellipsoid, vec3 pointOutsideEllipsoid)
 {
-	vec3 q = ellipsoid.inverseRadii * (agi_inverseView * vec4(pointOutsideEllipsoid, 1.0)).xyz;
+	vec3 q = ellipsoid.inverseRadii * (czm_inverseView * vec4(pointOutsideEllipsoid, 1.0)).xyz;
 	float magnitude = 1.0 / length(q);
 	vec3 normal = normalize(q);
 	vec3 center = magnitude * normal;      
 	
-	agi_halfspace halfspaceInScaledSpace = agi_halfspace(center, normal);
+	czm_halfspace halfspaceInScaledSpace = czm_halfspace(center, normal);
 
     // ANGLE workaround:  http://code.google.com/p/angleproject/issues/detail?id=185		
-	agi_ellipsoidSilhouetteHalfspace temp = agi_ellipsoidSilhouetteHalfspace(ellipsoid, pointOutsideEllipsoid, halfspaceInScaledSpace);
+	czm_ellipsoidSilhouetteHalfspace temp = czm_ellipsoidSilhouetteHalfspace(ellipsoid, pointOutsideEllipsoid, halfspaceInScaledSpace);
 	return temp;
 }
 
 /**
  * DOC_TBA
  *
- * @name agi_rayEllipsoidSilhouetteHalfspaceIntersectionInterval
+ * @name czm_rayEllipsoidSilhouetteHalfspaceIntersectionInterval
  * @glslFunction
  *
  */
-agi_raySegment agi_rayEllipsoidSilhouetteHalfspaceIntersectionInterval(agi_ray ray, agi_ellipsoidSilhouetteHalfspace halfspace)
+czm_raySegment czm_rayEllipsoidSilhouetteHalfspaceIntersectionInterval(czm_ray ray, czm_ellipsoidSilhouetteHalfspace halfspace)
 {
 	// Determine the ray in the scaled space.
-	vec3 origin = halfspace.ellipsoid.inverseRadii * (agi_inverseView * vec4(ray.origin, 1.0)).xyz;
-	vec3 direction = halfspace.ellipsoid.inverseRadii * (agi_inverseView * vec4(ray.direction, 0.0)).xyz;
-	agi_ray rayInScaledSpace = agi_ray(origin, direction);
+	vec3 origin = halfspace.ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.origin, 1.0)).xyz;
+	vec3 direction = halfspace.ellipsoid.inverseRadii * (czm_inverseViewRotation * ray.direction);
+	czm_ray rayInScaledSpace = czm_ray(origin, direction);
 	
 	// Perform the intersection in the scaled space.
-	agi_raySegment interval = agi_rayHalfspaceIntersectionInterval(rayInScaledSpace, halfspace.halfspaceInScaledSpace);
+	czm_raySegment interval = czm_rayHalfspaceIntersectionInterval(rayInScaledSpace, halfspace.halfspaceInScaledSpace);
 
-	if (agi_isEmpty(interval)) // No intersection.
+	if (czm_isEmpty(interval)) // No intersection.
 	{
 		return interval;
 	}
@@ -868,19 +868,19 @@ agi_raySegment agi_rayEllipsoidSilhouetteHalfspaceIntersectionInterval(agi_ray r
 		if (start != 0.0)
 		{
 			// Determine start in unscaled space.
-			vec3 temp = (agi_view * vec4(halfspace.ellipsoid.radii * agi_pointAlongRay(rayInScaledSpace, start), 1.0)).xyz;
+			vec3 temp = (czm_view * vec4(halfspace.ellipsoid.radii * czm_pointAlongRay(rayInScaledSpace, start), 1.0)).xyz;
 			start = dot(temp, ray.direction);
 		}
 		
 		// Honor infinite ray (stop == infinity).
 		float stop = interval.stop;
-		if (stop != agi_infinity)
+		if (stop != czm_infinity)
 		{
 			// Determine stop in unscaled space.
-			vec3 temp = (agi_view * vec4(halfspace.ellipsoid.radii * agi_pointAlongRay(rayInScaledSpace, stop), 1.0)).xyz;
+			vec3 temp = (czm_view * vec4(halfspace.ellipsoid.radii * czm_pointAlongRay(rayInScaledSpace, stop), 1.0)).xyz;
 			stop = dot(temp, ray.direction);
 		}
 		
-		return agi_raySegment(start, stop);
+		return czm_raySegment(start, stop);
 	}
 }

@@ -9,8 +9,10 @@ define([
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
-        '../Core/PolylinePipeline',
         '../Core/Color',
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
+        '../Core/Intersect',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         './SceneMode',
@@ -29,8 +31,10 @@ define([
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
-        PolylinePipeline,
         Color,
+        BoundingRectangle,
+        BoundingSphere,
+        Intersect,
         BlendingState,
         BufferUsage,
         SceneMode,
@@ -106,16 +110,39 @@ define([
      * });
      */
     var PolylineCollection = function() {
+        /**
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
+         */
+        this.morphTime = 1.0;
+
+        /**
+         * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
+         * When this is the identity matrix, the polylines are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
+         * shaders via {@link czm_model} and derived uniforms.
+         *
+         * @type Matrix4
+         *
+         * @see Transforms.eastNorthUpToFixedFrame
+         * @see czm_model
+         */
+        this.modelMatrix = Matrix4.IDENTITY;
+        this._modelMatrix = Matrix4.IDENTITY;
+
+        this._boundingVolume = undefined;
+        this._boundingVolume2D = undefined;
+        this._boundingRectangle = undefined;
+
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
         this._createVertexArray = false;
-        this.morphTime = 1.0;
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
         this._polylines = [];
         this._polylineBuckets = {};
-
-        this.modelMatrix = Matrix4.IDENTITY;
-        this._modelMatrix = Matrix4.IDENTITY;
 
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
@@ -491,12 +518,12 @@ define([
      * @memberof PolylineCollection
      *
      */
-    PolylineCollection.prototype.update = function(context, sceneState) {
+    PolylineCollection.prototype.update = function(context, frameState) {
         if (!this._sp) {
             this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
         }
         this._removePolylines();
-        this._updateMode(sceneState);
+        this._updateMode(frameState);
         var bucket;
         var polyline;
         var properties = this._propertiesChanged;
@@ -512,13 +539,14 @@ define([
                     polyline = polylinesToUpdate[i];
                     var changedProperties = polyline._getChangedProperties();
                     if (changedProperties[POSITION_INDEX]) {
-                        bucket = polyline._bucket;
-                        var segments = bucket.getSegments(polyline);
-                        if(PolylineBucket.segmentsLengthChanged(segments, polyline)){
-                            createVertexArrays = true;
-                            break;
+                        if(intersectsIDL(polyline)){
+                            var newSegments = polyline._createSegments(this._projection._ellipsoid);
+                            if(polyline._segmentsLengthChanged(newSegments)){
+                                createVertexArrays = true;
+                                break;
+                            }
+                            polyline._setSegments(newSegments);
                         }
-                        polyline._segments = segments;
                     }
                 }
             }
@@ -562,26 +590,25 @@ define([
         for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
             properties[k] = 0;
         }
-    };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof PolylineCollection
-     */
-    PolylineCollection.prototype.updateForPick = function(context) {
-        var useDepthTest = (this.morphTime !== 0.0);
-        var polylineBuckets = this._polylineBuckets;
-        for ( var x in polylineBuckets) {
-            if (polylineBuckets.hasOwnProperty(x)) {
-                var obj = polylineBuckets[x];
-                var rs = obj.rsPick || context.createRenderState();
-                rs.depthTest.enabled = useDepthTest;
-                rs.lineWidth = obj.width + obj.outlineWidth;
-                rs.depthMask = !useDepthTest;
-                obj.rsPick = rs;
-            }
+        var boundingVolume;
+        var modelMatrix = Matrix4.IDENTITY;
+
+        if (frameState.mode === SceneMode.SCENE3D) {
+            boundingVolume = this._boundingVolume;
+            modelMatrix = this.modelMatrix;
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingVolume = this._boundingVolume2D;
+        } else if (frameState.mode === SceneMode.SCENE2D) {
+            boundingVolume = this._boundingRectangle;
+        } else {
+            boundingVolume = this._boundingVolume && this._boundingVolume2D && this._boundingVolume.union(this._boundingVolume2D);
         }
+
+        return {
+            boundingVolume : boundingVolume,
+            modelMatrix : modelMatrix
+        };
     };
 
     /**
@@ -872,9 +899,9 @@ define([
         }
     };
 
-    PolylineCollection.prototype._updateMode = function(sceneState) {
-        var mode = sceneState.mode;
-        var projection = sceneState.scene2D.projection;
+    PolylineCollection.prototype._updateMode = function(frameState) {
+        var mode = frameState.mode;
+        var projection = frameState.scene2D.projection;
         if (this._mode !== mode && typeof mode.morphTime !== 'undefined') {
             this.morphTime = mode.morphTime;
         }
@@ -1007,6 +1034,8 @@ define([
      * @private
      */
     PolylineBucket.prototype.updateRenderState = function(context, useDepthTest) {
+        var width = this._clampWidth(context, this.width);
+        var outlineWidth = this._clampWidth(context, this.outlineWidth);
         var rsOne = this.rsOne || context.createRenderState({
             colorMask : {
                 red : false,
@@ -1036,7 +1065,7 @@ define([
         });
         rsOne.depthMask = !useDepthTest;
         rsOne.depthTest.enabled = useDepthTest;
-        rsOne.lineWidth = this.width + this.outlineWidth;
+        rsOne.lineWidth = outlineWidth;
         this.rsOne = rsOne;
         var rsTwo = this.rsTwo || context.createRenderState({
             lineWidth : 1,
@@ -1061,7 +1090,7 @@ define([
             }
         });
         rsTwo.depthTest.enabled = useDepthTest;
-        rsTwo.lineWidth = this.width;
+        rsTwo.lineWidth = width;
         this.rsTwo = rsTwo;
         var rsThree = this.rsThree || context.createRenderState({
             lineWidth : 1,
@@ -1085,55 +1114,31 @@ define([
                 }
             }
         });
-        rsThree.lineWidth = this.width + this.outlineWidth;
+        rsThree.lineWidth = this.outlineWidth;
         rsThree.depthTest.enabled = useDepthTest;
         this.rsThree = rsThree;
+
+        var rsPick = this.rsPick || context.createRenderState();
+        rsPick.depthTest.enabled = useDepthTest;
+        rsPick.lineWidth = outlineWidth;
+        rsPick.depthMask = !useDepthTest;
+        this.rsPick = rsPick;
     };
 
-    /**
-     * @private
-     */
-    PolylineBucket.prototype.getSegments = function(polyline){
-        return PolylinePipeline.wrapLongitude(this.ellipsoid, polyline.getPositions());
-    };
-
-    /**
-     * @private
-     */
-    PolylineBucket.segmentsLengthChanged = function(segments, polyline) {
-        var pSegments = polyline._segments;
-        if (typeof pSegments !== 'undefined') {
-            var numberOfSegments = segments.length;
-            if (numberOfSegments !== pSegments.length) {
-                return true;
-            }
-            for ( var i = 0; i < numberOfSegments; ++i) {
-                if (segments[i].length !== pSegments[i].length) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return true;
-    };
+    function intersectsIDL(polyline) {
+        return Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) < 0 ||
+            polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) === Intersect.INTERSECTING;
+    }
 
     /**
      * @private
      */
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {
-        if (this.mode === SceneMode.SCENE3D) {
+        if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
             return polyline.getPositions().length;
         }
-        var segments = this.getSegments(polyline);
-        polyline._segments = segments;
-        var numberOfSegments = segments.length;
-        var length = 0;
-        for ( var i = 0; i < numberOfSegments; ++i) {
-            var segment = segments[i];
-            var segmentLength = segment.length;
-            length += segmentLength;
-        }
-        return length;
+        var segments = polyline._createSegments(this.ellipsoid);
+        return polyline._setSegments(segments);
     };
 
     /**
@@ -1183,19 +1188,42 @@ define([
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
             var positions = polyline.getPositions();
-            var segments = PolylinePipeline.wrapLongitude(this.ellipsoid, positions);
-            var numberOfSegments = segments.length;
-            for ( var j = 0; j < numberOfSegments; ++j) {
-                var segment = segments[j];
-                var segmentLength = segment.length;
-                for ( var n = 0; n < segmentLength; ++n) {
-                    positionArray[positionIndex] = positions[segment[n].index].x;
-                    positionArray[positionIndex + 1] = positions[segment[n].index].y;
-                    positionArray[positionIndex + 2] = positions[segment[n].index].z;
+
+            var numberOfSegments;
+            var j;
+            if (intersectsIDL(polyline)) {
+                var segments = polyline._getSegments();
+                numberOfSegments = segments.length;
+                for ( j = 0; j < numberOfSegments; ++j) {
+                    var segment = segments[j];
+                    var segmentLength = segment.length;
+                    for ( var n = 0; n < segmentLength; ++n) {
+                        positionArray[positionIndex] = positions[segment[n].index].x;
+                        positionArray[positionIndex + 1] = positions[segment[n].index].y;
+                        positionArray[positionIndex + 2] = positions[segment[n].index].z;
+                        positionIndex += 3;
+                    }
+                }
+            } else {
+                numberOfSegments = positions.length;
+                for ( j = 0; j < numberOfSegments; ++j) {
+                    positionArray[positionIndex] = positions[j].x;
+                    positionArray[positionIndex + 1] = positions[j].y;
+                    positionArray[positionIndex + 2] = positions[j].z;
                     positionIndex += 3;
                 }
             }
         }
+    };
+
+    /**
+     * @private
+     */
+    PolylineBucket.prototype._clampWidth = function(context, value) {
+        var min = context.getMinimumAliasedLineWidth();
+        var max = context.getMaximumAliasedLineWidth();
+
+        return Math.min(Math.max(value, min), max);
     };
 
     /**
@@ -1274,33 +1302,71 @@ define([
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
-            var segments = polyline._segments;
-            var numberOfSegments = segments.length;
-            if(numberOfSegments > 0){
-                for ( var k = 0; k < numberOfSegments; ++k) {
-                    var segment = segments[k];
-                    var segmentLength = segment.length;
-                    for ( var n = 0; n < segmentLength; ++n) {
-                        if (n !== segmentLength - 1) {
-                            if (indicesCount === SIXTYFOURK - 1) {
-                                vertexBufferOffset.push(1);
-                                indices = [];
-                                totalIndices.push(indices);
-                                indicesCount = 0;
-                                bucketLocator.count = count;
-                                count = 0;
-                                offset = 0;
-                                bucketLocator = new VertexArrayBucketLocator(0, 0, this);
-                                vertexArrayBuckets[++vaCount] = [bucketLocator];
+            if(intersectsIDL(polyline)){
+                var segments = polyline._segments;
+                var numberOfSegments = segments.length;
+                if(numberOfSegments > 0){
+                    for ( var k = 0; k < numberOfSegments; ++k) {
+                        var segment = segments[k];
+                        var segmentLength = segment.length;
+                        for ( var n = 0; n < segmentLength; ++n) {
+                            if (n !== segmentLength - 1) {
+                                if (indicesCount === SIXTYFOURK - 1) {
+                                    vertexBufferOffset.push(1);
+                                    indices = [];
+                                    totalIndices.push(indices);
+                                    indicesCount = 0;
+                                    bucketLocator.count = count;
+                                    count = 0;
+                                    offset = 0;
+                                    bucketLocator = new VertexArrayBucketLocator(0, 0, this);
+                                    vertexArrayBuckets[++vaCount] = [bucketLocator];
+                                }
+                                count += 2;
+                                offset += 2;
+                                indices.push(indicesCount++);
+                                indices.push(indicesCount);
                             }
-                            count += 2;
-                            offset += 2;
-                            indices.push(indicesCount++);
-                            indices.push(indicesCount);
+                        }
+                        if (k !== numberOfSegments - 1) {
+                            indicesCount++;
                         }
                     }
-                    if (k !== numberOfSegments - 1) {
+
+                    if (indicesCount < SIXTYFOURK - 1) {
                         indicesCount++;
+                    } else {
+                        vertexBufferOffset.push(0);
+                        indices = [];
+                        totalIndices.push(indices);
+                        indicesCount = 0;
+                        bucketLocator.count = count;
+                        offset = 0;
+                        count = 0;
+                        bucketLocator = new VertexArrayBucketLocator(0, 0, this);
+                        vertexArrayBuckets[++vaCount] = [bucketLocator];
+                    }
+                }
+            } else {
+                var positions = polyline.getPositions();
+                var positionsLength = positions.length;
+                for ( var j = 0; j < positionsLength; ++j) {
+                    if (j !== positionsLength - 1) {
+                        if (indicesCount === SIXTYFOURK - 1) {
+                            vertexBufferOffset.push(1);
+                            indices = [];
+                            totalIndices.push(indices);
+                            indicesCount = 0;
+                            bucketLocator.count = count;
+                            count = 0;
+                            offset = 0;
+                            bucketLocator = new VertexArrayBucketLocator(0, 0, this);
+                            vertexArrayBuckets[++vaCount] = [bucketLocator];
+                        }
+                        count += 2;
+                        offset += 2;
+                        indices.push(indicesCount++);
+                        indices.push(indicesCount);
                     }
                 }
 
@@ -1355,25 +1421,55 @@ define([
      * @private
      */
     PolylineBucket.prototype._getPositions = function(polyline) {
-        if (this.mode === SceneMode.SCENE3D) {
-            return polyline.getPositions();
+        var positions = polyline.getPositions();
+
+        if (positions.length > 0) {
+            if (typeof polyline._collection._boundingVolume === 'undefined') {
+                polyline._collection._boundingVolume = polyline._boundingVolume.clone();
+            } else {
+                polyline._collection._boundingVolume.union(polyline._boundingVolume, polyline._collection._boundingVolume);
+            }
         }
+
+
+        if (this.mode === SceneMode.SCENE3D) {
+            return positions;
+        }
+        if(intersectsIDL(polyline)){
+            positions = polyline._getPositions2D();
+        }
+
         var ellipsoid = this.ellipsoid;
         var projection = this.projection;
         var newPositions = [];
         var modelMatrix = this.modelMatrix;
-        var segments = polyline._segments;
-        var numberOfSegments = segments.length;
+        var length = positions.length;
+        var position;
+        var p;
 
-        for ( var i = 0; i < numberOfSegments; ++i) {
-            var segment = segments[i];
-            var segmentLength = segment.length;
-            for ( var n = 0; n < segmentLength; ++n) {
-                var position = segment[n].cartesian;
-                var p = modelMatrix.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
-                newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
+        for (var n = 0; n < length; ++n) {
+            position = positions[n];
+            p = modelMatrix.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+            newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
+        }
+
+        if (newPositions.length > 0) {
+            polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions);
+            polyline._boundingVolume2D.center = new Cartesian3(polyline._boundingVolume2D.center.z, polyline._boundingVolume2D.center.x, polyline._boundingVolume2D.center.y);
+            if (typeof polyline._collection._boundingVolume2D === 'undefined') {
+                polyline._collection._boundingVolume2D = polyline._boundingVolume2D.clone();
+            } else {
+                polyline._collection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._collection._boundingVolume2D);
+            }
+
+            polyline._boundingRectangle = BoundingRectangle.fromPoints(newPositions);
+            if (typeof polyline._collection._boundingRectangle === 'undefined') {
+                polyline._collection._boundingRectangle = polyline._boundingRectangle.clone();
+            } else {
+                polyline._collection._boundingRectangle.union(polyline._boundingRectangle, polyline._collection._boundingRectangle);
             }
         }
+
         return newPositions;
     };
 
