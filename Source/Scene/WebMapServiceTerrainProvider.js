@@ -213,7 +213,7 @@ define([
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
             isGeographic : true
-        });
+        }, [tile.geometry.buffer]);
 
         if (typeof verticesPromise === 'undefined') {
             //postponed

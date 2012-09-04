@@ -261,7 +261,7 @@ define([
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
             skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0)
-        });
+        }, [pixels.buffer]);
 
         if (typeof verticesPromise === 'undefined') {
             //postponed
