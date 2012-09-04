@@ -70,7 +70,7 @@ define([
         this._transform = this.transform.clone();
         this._invTransform = Matrix4.IDENTITY;
 
-        var maxRadii = Ellipsoid.WGS84.getRadii().getMaximumComponent();
+        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
         var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * maxRadii);
 
         /**
@@ -525,7 +525,7 @@ define([
         var yDir = this.getUpWC().multiplyByScalar(y * near * tanPhi);
         var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
 
-        return new Ray(position.clone(), direction);
+        return new Ray(position, direction);
     };
 
     Camera.prototype._getPickRayOrthographic = function(windowPosition) {

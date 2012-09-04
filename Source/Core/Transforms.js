@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Math',
         './Matrix3',
@@ -11,6 +12,7 @@ define([
         './Ellipsoid'
     ],
     function(
+        defaultValue,
         DeveloperError,
         CesiumMath,
         Matrix3,
@@ -30,30 +32,37 @@ define([
     var wgs84WRPrecessing = 7.2921158553E-5;
     var twoPiOverSecondsInDay = CesiumMath.TWO_PI / 86400.0;
 
+    var eastNorthUpToFixedFrameNormal = new Cartesian3();
+    var eastNorthUpToFixedFrameTangent = new Cartesian3();
+    var eastNorthUpToFixedFrameBitangent = new Cartesian3();
+
+    var northEastDownToFixedFrameNormal = new Cartesian3();
+    var northEastDownToFixedFrameTangent = new Cartesian3();
+    var northEastDownToFixedFrameBitangent = new Cartesian3();
+
+    var pointToWindowCoordinatesTemp = new Cartesian4();
+
     /**
+     * Contains functions for transforming positions to various reference frames.
      * @exports Transforms
-     *
-     * DOC_TBA
      */
     var Transforms = {
         /**
-         * Creates a 4x4 transformation matrix from a reference frame center at <code>position</code>
-         * with local east-north-up axes to the ellipsoid's fixed reference frame, e.g., WGS84 coordinates
-         * for Earth.  The local axes are defined as:
+         * Computes a 4x4 transformation matrix from a reference frame with an east-north-up axes
+         * centered at the provided origin to the provided ellipsoid's fixed reference frame.
+         * The local axes are defined as:
          * <ul>
          * <li>The <code>x</code> axis points in the local east direction.</li>
          * <li>The <code>y</code> axis points in the local north direction.</li>
          * <li>The <code>z</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
          * </ul>
          *
-         * DOC_TBA:  Add images
+         * @param {Cartesian3} origin The center point of the local reference frame.
+         * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+         * @param {Matrix4} [result] The object onto which to store the result.
+         * @return {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
          *
-         * @param {Cartesian3} position The center point of the local reference frame.
-         * @param {Ellipsoid} [ellipsoid] The ellipsoid whose fixed frame is used in the transform.
-         *
-         * @see Transforms.northEastDownToFixedFrame
-         *
-         * @exception {DeveloperError} position is required.
+         * @exception {DeveloperError} origin is required.
          *
          * @example
          * // Get the transform from local east-north-up at cartographic (0.0, 0.0) to Earth's fixed frame.
@@ -61,53 +70,97 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
          * var transform = Transforms.eastNorthUpToFixedFrame(center);
          */
-        eastNorthUpToFixedFrame : function(position, ellipsoid) {
-            if (!position) {
-                throw new DeveloperError('position is required.');
+        eastNorthUpToFixedFrame : function(origin, ellipsoid, result) {
+            if (typeof origin === 'undefined') {
+                throw new DeveloperError('origin is required.');
             }
 
-            ellipsoid = ellipsoid || Ellipsoid.WGS84;
+            // If x and y are zero, assume origin is at a pole, which is a special case.
+            if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) &&
+                CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
+                var sign = CesiumMath.sign(origin.z);
+                if (typeof result === 'undefined') {
+                    return new Matrix4(
+                            0.0, -sign,  0.0, origin.x,
+                            1.0,   0.0,  0.0, origin.y,
+                            0.0,   0.0, sign, origin.z,
+                            0.0,   0.0,  0.0, 1.0);
+                }
+                result[0] = 0.0;
+                result[1] = 1.0;
+                result[2] = 0.0;
+                result[3] = 0.0;
+                result[4] = -sign;
+                result[5] = 0.0;
+                result[6] = 0.0;
+                result[7] = 0.0;
+                result[8] = 0.0;
+                result[9] = 0.0;
+                result[10] = sign;
+                result[11] = 0.0;
+                result[12] = origin.x;
+                result[13] = origin.y;
+                result[14] = origin.z;
+                result[15] = 1.0;
+                return result;
+            }
 
-            if (CesiumMath.equalsEpsilon(position.x, 0.0, CesiumMath.EPSILON14) &&
-                    CesiumMath.equalsEpsilon(position.y, 0.0, CesiumMath.EPSILON14)) {
-                // The poles are special cases.  If x and y are zero, assume position is at a pole.
-                var sign = CesiumMath.sign(position.z);
+            var normal = eastNorthUpToFixedFrameNormal;
+            var tangent  = eastNorthUpToFixedFrameTangent;
+            var bitangent = eastNorthUpToFixedFrameBitangent;
+
+            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+            ellipsoid.geodeticSurfaceNormal(origin, normal);
+
+            tangent.x = -origin.y;
+            tangent.y = origin.x;
+            tangent.z = 0.0;
+            Cartesian3.normalize(tangent, tangent);
+
+            normal.cross(tangent, bitangent);
+
+            if (typeof result === 'undefined') {
                 return new Matrix4(
-                    0.0, sign * -1.0,        0.0, position.x,
-                    1.0,         0.0,        0.0, position.y,
-                    0.0,         0.0, sign * 1.0, position.z,
-                    0.0,         0.0,        0.0, 1.0);
+                        tangent.x, bitangent.x, normal.x, origin.x,
+                        tangent.y, bitangent.y, normal.y, origin.y,
+                        tangent.z, bitangent.z, normal.z, origin.z,
+                        0.0,       0.0,         0.0,      1.0);
             }
-
-            var normal = ellipsoid.geodeticSurfaceNormal(position);
-            var tangent = new Cartesian3(-position.y, position.x, 0.0).normalize();
-            var bitangent = normal.cross(tangent);
-
-            return new Matrix4(
-                tangent.x, bitangent.x, normal.x, position.x,
-                tangent.y, bitangent.y, normal.y, position.y,
-                tangent.z, bitangent.z, normal.z, position.z,
-                0.0,       0.0,         0.0,      1.0);
+            result[0] = tangent.x;
+            result[1] = tangent.y;
+            result[2] = tangent.z;
+            result[3] = 0.0;
+            result[4] = bitangent.x;
+            result[5] = bitangent.y;
+            result[6] = bitangent.z;
+            result[7] = 0.0;
+            result[8] = normal.x;
+            result[9] = normal.y;
+            result[10] = normal.z;
+            result[11] = 0.0;
+            result[12] = origin.x;
+            result[13] = origin.y;
+            result[14] = origin.z;
+            result[15] = 1.0;
+            return result;
         },
 
         /**
-         * Creates a 4x4 transformation matrix from a reference frame center at <code>position</code>
-         * with local north-east-down axes to the ellipsoid's fixed reference frame, e.g., WGS84 coordinates
-         * for Earth.  The local axes are defined as:
+         * Computes a 4x4 transformation matrix from a reference frame with an north-east-down axes
+         * centered at the provided origin to the provided ellipsoid's fixed reference frame.
+         * The local axes are defined as:
          * <ul>
          * <li>The <code>x</code> axis points in the local north direction.</li>
          * <li>The <code>y</code> axis points in the local east direction.</li>
          * <li>The <code>z</code> axis points in the opposite direction of the ellipsoid surface normal which passes through the position.</li>
          * </ul>
          *
-         * DOC_TBA:  Add images
+         * @param {Cartesian3} origin The center point of the local reference frame.
+         * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+         * @param {Matrix4} [result] The object onto which to store the result.
+         * @return {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
          *
-         * @param {Cartesian3} position The center point of the local reference frame.
-         * @param {Ellipsoid} [ellipsoid] The ellipsoid whose fixed frame is used in the transform.
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         *
-         * @exception {DeveloperError} position is required.
+         * @exception {DeveloperError} origin is required.
          *
          * @example
          * // Get the transform from local north-east-down at cartographic (0.0, 0.0) to Earth's fixed frame.
@@ -115,33 +168,79 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
          * var transform = Transforms.northEastDownToFixedFrame(center);
          */
-        northEastDownToFixedFrame : function(position, ellipsoid) {
-            if (!position) {
-                throw new DeveloperError('position is required.');
+        northEastDownToFixedFrame : function(origin, ellipsoid, result) {
+            if (typeof origin === 'undefined') {
+                throw new DeveloperError('origin is required.');
             }
 
-            ellipsoid = ellipsoid || Ellipsoid.WGS84;
+            if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) &&
+                CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
+                // The poles are special cases.  If x and y are zero, assume origin is at a pole.
+                var sign = CesiumMath.sign(origin.z);
+                if (typeof result === 'undefined') {
+                    return new Matrix4(
+                      -sign, 0.0,   0.0, origin.x,
+                        0.0, 1.0,   0.0, origin.y,
+                        0.0, 0.0, -sign, origin.z,
+                        0.0, 0.0,   0.0, 1.0);
+                }
+                result[0] = -sign;
+                result[1] = 0.0;
+                result[2] = 0.0;
+                result[3] = 0.0;
+                result[4] = 0.0;
+                result[5] = 1.0;
+                result[6] = 0.0;
+                result[7] = 0.0;
+                result[8] = 0.0;
+                result[9] = 0.0;
+                result[10] = -sign;
+                result[11] = 0.0;
+                result[12] = origin.x;
+                result[13] = origin.y;
+                result[14] = origin.z;
+                result[15] = 1.0;
+                return result;
+            }
 
-            if (CesiumMath.equalsEpsilon(position.x, 0.0, CesiumMath.EPSILON14) &&
-                    CesiumMath.equalsEpsilon(position.y, 0.0, CesiumMath.EPSILON14)) {
-                // The poles are special cases.  If x and y are zero, assume position is at a pole.
-                var sign = CesiumMath.sign(position.z);
+            var normal = northEastDownToFixedFrameNormal;
+            var tangent = northEastDownToFixedFrameTangent;
+            var bitangent = northEastDownToFixedFrameBitangent;
+
+            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+            ellipsoid.geodeticSurfaceNormal(origin, normal);
+
+            tangent.x = -origin.y;
+            tangent.y = origin.x;
+            tangent.z = 0.0;
+            Cartesian3.normalize(tangent, tangent);
+
+            normal.cross(tangent, bitangent);
+
+            if (typeof result === 'undefined') {
                 return new Matrix4(
-                    sign * -1.0, 0.0, 0.0, position.x,
-                    0.0, 1.0,         0.0, position.y,
-                    0.0, 0.0, sign * -1.0, position.z,
-                    0.0, 0.0,         0.0, 1.0);
+                        bitangent.x, tangent.x, -normal.x, origin.x,
+                        bitangent.y, tangent.y, -normal.y, origin.y,
+                        bitangent.z, tangent.z, -normal.z, origin.z,
+                        0.0,       0.0,         0.0,      1.0);
             }
-
-            var normal = ellipsoid.geodeticSurfaceNormal(position);
-            var tangent = new Cartesian3(-position.y, position.x, 0.0).normalize();
-            var bitangent = normal.cross(tangent);
-
-            return new Matrix4(
-                bitangent.x, tangent.x, -normal.x, position.x,
-                bitangent.y, tangent.y, -normal.y, position.y,
-                bitangent.z, tangent.z, -normal.z, position.z,
-                0.0,         0.0,        0.0,      1.0);
+            result[0] = bitangent.x;
+            result[1] = bitangent.y;
+            result[2] = bitangent.z;
+            result[3] = 0.0;
+            result[4] = tangent.x;
+            result[5] = tangent.y;
+            result[6] = tangent.z;
+            result[7] = 0.0;
+            result[8] = -normal.x;
+            result[9] = -normal.y;
+            result[10] = -normal.z;
+            result[11] = 0.0;
+            result[12] = origin.x;
+            result[13] = origin.y;
+            result[14] = origin.z;
+            result[15] = 1.0;
+            return result;
         },
 
         /**
@@ -149,19 +248,20 @@ define([
          * pseudo-fixed axes at a given time.  This method treats the UT1 time standard as equivalent to UTC.
          *
          * @param {JulianDate} date The time at which to compute the rotation matrix.
+         * @param {Matrix3} [result] The object onto which to store the result.
+         * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
          *
          * @exception {DeveloperError} date is required.
          *
-         * @return {Matrix3} A rotation matrix that transforms a vector in the TEME axes to the pseudo-fixed axes at the given {@code date}.
-         *
          * @example
+         * //Set the view to in the inertial frame.
          * scene.setAnimation(function() {
          *     var time = new Cesium.JulianDate();
          *     scene.setSunPosition(Cesium.SunPosition.compute(time).position);
-         *     scene.getCamera().transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(time), Cesium.Cartesian3.ZERO);
+         *     scene.getCamera().transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(time), Cesium.Cartesian3.ZERO)});;
          * });
          */
-        computeTemeToPseudoFixedMatrix : function (date) {
+        computeTemeToPseudoFixedMatrix : function (date, result) {
             if (typeof date === 'undefined') {
                 throw new DeveloperError('date is required.');
             }
@@ -171,10 +271,12 @@ define([
             // we explicitly do not want to fail when inside the leap second.
 
             var dateInUtc = date.addSeconds(-date.getTaiMinusUtc());
+            var utcDayNumber = dateInUtc.getJulianDayNumber();
+            var utcSecondsIntoDay = dateInUtc.getSecondsOfDay();
 
             var t;
-            var diffDays = dateInUtc.getJulianDayNumber() - 2451545;
-            if (dateInUtc.getSecondsOfDay() >= 43200.0) {
+            var diffDays = utcDayNumber - 2451545;
+            if (utcSecondsIntoDay >= 43200.0) {
                 t = (diffDays + 0.5) / TimeConstants.DAYS_PER_JULIAN_CENTURY;
             } else {
                 t = (diffDays - 0.5) / TimeConstants.DAYS_PER_JULIAN_CENTURY;
@@ -182,15 +284,27 @@ define([
 
             var gmst0 = gmstConstant0 + t * (gmstConstant1 + t * (gmstConstant2 + t * gmstConstant3));
             var angle = (gmst0 * twoPiOverSecondsInDay) % CesiumMath.TWO_PI;
-            var ratio = wgs84WRPrecessing + rateCoef * (dateInUtc.getJulianDayNumber() - 0.5 - 2451545);
-
-            var secondsSinceMidnight = (dateInUtc.getSecondsOfDay() + TimeConstants.SECONDS_PER_DAY / 2.0) % 86400.0;
-
+            var ratio = wgs84WRPrecessing + rateCoef * (utcDayNumber - 2451545.5);
+            var secondsSinceMidnight = (utcSecondsIntoDay + TimeConstants.SECONDS_PER_DAY * 0.5) % TimeConstants.SECONDS_PER_DAY;
             var gha = angle + (ratio * secondsSinceMidnight);
-
             var cosGha = Math.cos(gha);
             var sinGha = Math.sin(gha);
-            return new Matrix3(cosGha, sinGha, 0.0, -sinGha, cosGha, 0.0, 0.0, 0.0, 1.0);
+
+            if (typeof result === 'undefined') {
+                return new Matrix3(cosGha, sinGha, 0.0,
+                                  -sinGha, cosGha, 0.0,
+                                      0.0,    0.0, 1.0);
+            }
+            result[0] = cosGha;
+            result[1] = -sinGha;
+            result[2] = 0.0;
+            result[3] = sinGha;
+            result[4] = cosGha;
+            result[5] = 0.0;
+            result[6] = 0.0;
+            result[7] = 0.0;
+            result[8] = 1.0;
+            return result;
         },
 
         /**
@@ -199,19 +313,19 @@ define([
          * @param {Matrix4} modelViewProjectionMatrix The 4x4 model-view-projection matrix.
          * @param {Matrix4} viewportTransformation The 4x4 viewport transformation.
          * @param {Cartesian3} point The point to transform.
+         * @param {Cartesian2} [result] The object onto which to store the result.
+         * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
          *
-         * @returns {Cartesian2} The point in window coordinates.
+         * @exception {DeveloperError} modelViewProjectionMatrix is required.
+         * @exception {DeveloperError} viewportTransformation is required.
+         * @exception {DeveloperError} point is required.
          *
          * @see UniformState#getModelViewProjection
          * @see czm_modelViewProjection
          * @see UniformState#getViewportTransformation
          * @see czm_viewportTransformation
-         *
-         * @exception {DeveloperError} modelViewProjectionMatrix is required.
-         * @exception {DeveloperError} viewportTransformation is required.
-         * @exception {DeveloperError} point is required.
          */
-        pointToWindowCoordinates : function (modelViewProjectionMatrix, viewportTransformation, point) {
+        pointToWindowCoordinates : function (modelViewProjectionMatrix, viewportTransformation, point, result) {
             if (typeof modelViewProjectionMatrix === 'undefined') {
                 throw new DeveloperError('modelViewProjectionMatrix is required.');
             }
@@ -224,11 +338,16 @@ define([
                 throw new DeveloperError('point is required.');
             }
 
-            var pnt = new Cartesian4(point.x, point.y, point.z, 1.0);
-            pnt = modelViewProjectionMatrix.multiplyByVector(pnt);
-            pnt = pnt.multiplyByScalar(1.0 / pnt.w);
-            pnt = viewportTransformation.multiplyByVector(pnt);
-            return Cartesian2.fromCartesian4(pnt);
+            var tmp = pointToWindowCoordinatesTemp;
+            tmp.x = point.x;
+            tmp.y = point.y;
+            tmp.z = point.z;
+            tmp.w = 1.0;
+
+            Matrix4.multiplyByVector(modelViewProjectionMatrix, tmp, tmp);
+            Cartesian4.multiplyByScalar(tmp, 1.0 / tmp.w, tmp);
+            Matrix4.multiplyByVector(viewportTransformation, tmp, tmp);
+            return Cartesian2.fromCartesian4(tmp, result);
         }
     };
 

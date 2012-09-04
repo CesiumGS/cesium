@@ -1,67 +1,124 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Cartesian3',
         './Intersect'
     ], function(
+        defaultValue,
         DeveloperError,
         Cartesian3,
         Intersect) {
     "use strict";
 
     /**
-     * Creates an instance of an AxisAlignedBoundingBox from the minimum and maximum points along the x-, y-, and z-axes.
-     *
+     * Creates an instance of an AxisAlignedBoundingBox from the minimum and maximum points along the x, y, and z axes.
      * @alias AxisAlignedBoundingBox
-     *
      * @constructor
      *
-     * @param {Cartesian3} minimumPoint The minimum point along the x-, y-, and z-axes.
-     * @param {Cartesian3} maximumPoint The maximum point along the x-, y-, and z-axes.
-     *
-     * @exception {DeveloperError} minimumPoint is required.
-     * @exception {DeveloperError} maximumPoint is required.
+     * @param {Cartesian3} [minimum=Cartesian3.ZERO] The minimum point along the x, y, and z axes.
+     * @param {Cartesian3} [maximum=Cartesian3.ZERO] The maximum point along the x, y, and z axes.
+     * @param {Cartesian3} [center] The center of the box; automatically computed if not supplied.
      *
      * @see BoundingSphere
      */
-    var AxisAlignedBoundingBox = function(minimumPoint, maximumPoint) {
-        if (typeof minimumPoint === 'undefined') {
-            throw new DeveloperError('minimumPoint is required');
-        }
-
-        if (typeof maximumPoint === 'undefined') {
-            throw new DeveloperError('maximumPoint is required.');
-        }
-
+    var AxisAlignedBoundingBox = function(minimum, maximum, center) {
         /**
          * The minimum point defining the bounding box.
-         *
          * @type {Cartesian3}
          */
-        this.minimum = Cartesian3.clone(minimumPoint);
+        this.minimum = Cartesian3.clone(defaultValue(minimum, Cartesian3.ZERO));
 
         /**
          * The maximum point defining the bounding box.
-         *
          * @type {Cartesian3}
          */
-        this.maximum = Cartesian3.clone(maximumPoint);
+        this.maximum = Cartesian3.clone(defaultValue(maximum, Cartesian3.ZERO));
 
-        var center = this.minimum.add(this.maximum);
+        //If center was not defined, compute it.
+        if (typeof center === 'undefined') {
+            center = Cartesian3.add(this.minimum, this.maximum);
+            Cartesian3.multiplyByScalar(center, 0.5, center);
+        } else {
+            center = Cartesian3.clone(center);
+        }
 
         /**
          * The center point of the bounding box.
-         *
          * @type {Cartesian3}
          */
-        this.center = center.multiplyByScalar(0.5, center);
+        this.center = center;
+    };
+
+    /**
+     * Computes an instance of an AxisAlignedBoundingBox. The box is determined by
+     * finding the points spaced the farthest apart on the x, y, and z axes.
+     * @memberof AxisAlignedBoundingBox
+     *
+     * @param {Array} positions List of points that the bounding box will enclose.  Each point must have a <code>x</code>, <code>y</code>, and <code>z</code> properties.
+     * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
+     * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if none was provided.
+     *
+     * @example
+     * // Compute an axis aligned bounding box enclosing two points.
+     * var box = AxisAlignedBoundingBox.fromPoints([new Cartesian3(2, 0, 0), new Cartesian3(-2, 0, 0)]);
+     */
+    AxisAlignedBoundingBox.fromPoints = function(positions, result) {
+        if (typeof result === 'undefined') {
+            result = new AxisAlignedBoundingBox();
+        }
+
+        if (typeof positions === 'undefined' || positions.length === 0) {
+            result.minimum = Cartesian3.clone(Cartesian3.ZERO, result.minimum);
+            result.maximum = Cartesian3.clone(Cartesian3.ZERO, result.maximum);
+            result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
+            return result;
+        }
+
+        var minimumX = positions[0].x;
+        var minimumY = positions[0].y;
+        var minimumZ = positions[0].z;
+
+        var maximumX = positions[0].x;
+        var maximumY = positions[0].y;
+        var maximumZ = positions[0].z;
+
+        var length = positions.length;
+        for ( var i = 1; i < length; i++) {
+            var p = positions[i];
+            var x = p.x;
+            var y = p.y;
+            var z = p.z;
+
+            minimumX = Math.min(x, minimumX);
+            maximumX = Math.max(x, maximumX);
+            minimumY = Math.min(y, minimumY);
+            maximumY = Math.max(y, maximumY);
+            minimumZ = Math.min(z, minimumZ);
+            maximumZ = Math.max(z, maximumZ);
+        }
+
+        var minimum = result.minimum;
+        minimum.x = minimumX;
+        minimum.y = minimumY;
+        minimum.z = minimumZ;
+
+        var maximum = result.maximum;
+        maximum.x = maximumX;
+        maximum.y = maximumY;
+        maximum.z = maximumZ;
+
+        var center = Cartesian3.add(minimum, maximum, result.center);
+        Cartesian3.multiplyByScalar(center, 0.5, center);
+
+        return result;
     };
 
     /**
      * Duplicates a AxisAlignedBoundingBox instance.
      * @memberof AxisAlignedBoundingBox
      *
-     * @param {AxisAlignedBoundingBox} sphere The bounding box to duplicate.
+     * @param {AxisAlignedBoundingBox} box The bounding box to duplicate.
      * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
      * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if none was provided.
      *
@@ -100,80 +157,18 @@ define([
                 Cartesian3.equals(left.maximum, right.maximum));
     };
 
-    /**
-     * Creates an instance of an AxisAlignedBoundingBox. The box is determined by finding the points spaced the
-     * farthest apart on the x-, y-, and z-axes.
-     *
-     * @memberof AxisAlignedBoundingBox
-     *
-     * @param {Array} positions List of points that the bounding box will enclose.  Each point must have a <code>x</code>, <code>y</code>, and <code>z</code> properties.
-     *
-     * @exception {DeveloperError} <code>positions</code> is required.
-     * @exception {DeveloperError} At least one position is required.
-     * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
-     *
-     * @return {AxisAlignedBoundingBox} The axis-aligned bounding box constructed from {@link positions}.
-     *
-     * @example
-     * // Compute an axis aligned bounding box enclosing two points.
-     * var box = AxisAlignedBoundingBox.fromPoints([new Cartesian3(2, 0, 0), new Cartesian3(-2, 0, 0)]);
-     */
-    AxisAlignedBoundingBox.fromPoints = function(positions, result) {
-        if (typeof positions === 'undefined') {
-            throw new DeveloperError('positions is required.');
-        }
-
-        var length = positions.length;
-        if (length < 1) {
-            throw new DeveloperError('At least one position is required.');
-        }
-
-        if (typeof result === 'undefined') {
-            result = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.ZERO);
-        }
-
-        var minimumX = positions[0].x;
-        var minimumY = positions[0].y;
-        var minimumZ = positions[0].z;
-
-        var maximumX = positions[0].x;
-        var maximumY = positions[0].y;
-        var maximumZ = positions[0].z;
-
-        for ( var i = 1; i < length; i++) {
-            var p = positions[i];
-            var x = p.x;
-            var y = p.y;
-            var z = p.z;
-
-            minimumX = Math.min(x, minimumX);
-            maximumX = Math.max(x, maximumX);
-            minimumY = Math.min(y, minimumY);
-            maximumY = Math.max(y, maximumY);
-            minimumZ = Math.min(z, minimumZ);
-            maximumZ = Math.max(z, maximumZ);
-        }
-
-        result.minimum = new Cartesian3(minimumX, minimumY, minimumZ);
-        result.maximum = new Cartesian3(maximumX, maximumY, maximumZ);
-
-        var center = result.minimum.add(result.maximum);
-        result.center = center.multiplyByScalar(0.5, center);
-
-        return result;
-    };
-
     var intersectScratch = new Cartesian3();
-
     /**
      * Determines which side of a plane a box is located.
-     *
      * @memberof AxisAlignedBoundingBox
      *
      * @param {AxisAlignedBoundingBox} box The bounding box to test.
-     * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0 where the coefficients a, b, c, and d are the components x, y, z, and w of the {Cartesian4}, respectively.
-     *
-     * @return {Intersect} {Intersect.INSIDE} if the entire box is on the side of the plane the normal is pointing, {Intersect.OUTSIDE} if the entire box is on the opposite side, and {Intersect.INTERSETING} if the box intersects the plane.
+     * @param {Cartesian4} plane The coefficients of the plane in the form <code>ax + by + cz + d = 0</code>
+     *                           where the coefficients a, b, c, and d are the components x, y, z, and w
+     *                           of the {Cartesian4}, respectively.
+     * @return {Intersect} {Intersect.INSIDE} if the entire box is on the side of the plane the normal is pointing,
+     *                     {Intersect.OUTSIDE} if the entire box is on the opposite side, and {Intersect.INTERSETING}
+     *                     if the box intersects the plane.
      *
      * @exception {DeveloperError} box is required.
      * @exception {DeveloperError} plane is required.
@@ -187,19 +182,17 @@ define([
             throw new DeveloperError('plane is required.');
         }
 
-        var max = box.maximum;
-        var min = box.minimum;
-        var center = box.center;
-        intersectScratch = Cartesian3.subtract(max, min, intersectScratch);
+        intersectScratch = Cartesian3.subtract(box.maximum, box.minimum, intersectScratch);
         var h = Cartesian3.multiplyByScalar(intersectScratch, 0.5, intersectScratch); //The positive half diagonal
         var e = h.x * Math.abs(plane.x) + h.y * Math.abs(plane.y) + h.z * Math.abs(plane.z);
-        var s = Cartesian3.dot(center, plane) + plane.w; //signed distance from center
+        var s = Cartesian3.dot(box.center, plane) + plane.w; //signed distance from center
+
         if (s - e > 0) {
             return Intersect.INSIDE;
         }
 
         if (s + e < 0) {
-            //Not in front because normals point inwards
+            //Not in front because normals point inward
             return Intersect.OUTSIDE;
         }
 
@@ -218,21 +211,19 @@ define([
     };
 
     /**
-     * Determines which side of a plane the box is located.
-     *
+     * Determines which side of a plane this box is located.
      * @memberof AxisAlignedBoundingBox
      *
-     * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0 where the coefficients a, b, c, and d are the components x, y, z, and w of the {Cartesian4}, respectively.
-     *
-     * @return {Intersect} {Intersect.INSIDE} if the entire box is on the side of the plane the normal is pointing, {Intersect.OUTSIDE} if the entire box is on the opposite side, and {Intersect.INTERSETING} if the box intersects the plane.
+     * @param {Cartesian4} plane The coefficients of the plane in the form <code>ax + by + cz + d = 0</code>
+     *                           where the coefficients a, b, c, and d are the components x, y, z, and w
+     *                           of the {Cartesian4}, respectively.
+     * @return {Intersect} {Intersect.INSIDE} if the entire box is on the side of the plane the normal is pointing,
+     *                     {Intersect.OUTSIDE} if the entire box is on the opposite side, and {Intersect.INTERSETING}
+     *                     if the box intersects the plane.
      *
      * @exception {DeveloperError} plane is required.
      */
     AxisAlignedBoundingBox.prototype.intersect = function(plane) {
-        if (typeof plane === 'undefined') {
-            throw new DeveloperError('plane is required.');
-        }
-
         return AxisAlignedBoundingBox.intersect(this, plane);
     };
 

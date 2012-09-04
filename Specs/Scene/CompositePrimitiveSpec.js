@@ -106,9 +106,9 @@ defineSuite([
         return labels;
     }
 
-    function createPolygon(degree) {
+    function createPolygon(degree, ellipsoid) {
         degree = (typeof degree !== 'undefined') ? degree : 50.0;
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        ellipsoid = ellipsoid || Ellipsoid.UNIT_SPHERE;
         var polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
@@ -808,17 +808,17 @@ defineSuite([
     }
 
     it('frustum culls polygon in 3D', function() {
-        var polygon = createPolygon();
+        var polygon = createPolygon(10.0, Ellipsoid.WGS84);
         testCullIn3D(polygon);
     });
 
     it('frustum culls polygon in Columbus view', function() {
-        var polygon = createPolygon();
+        var polygon = createPolygon(10.0, Ellipsoid.WGS84);
         testCullInColumbusView(polygon);
     });
 
     it('frustum culls polygon in 2D', function() {
-        var polygon = createPolygon();
+        var polygon = createPolygon(10.0, Ellipsoid.WGS84);
         testCullIn2D(polygon);
     });
 
@@ -864,7 +864,7 @@ defineSuite([
         var savedCamera = frameState.camera;
         frameState.camera = camera;
 
-        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, Ellipsoid.WGS84.getMinimumRadius()), camera.position);
+        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, Ellipsoid.WGS84.minimumRadius), camera.position);
         frameState.occluder = occluder;
 
         var numRendered = verifyDraw();

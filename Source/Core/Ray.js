@@ -1,61 +1,63 @@
 /*global define*/
-define(['./Cartesian3', './DeveloperError'], function(Cartesian3, DeveloperError) {
+define([
+        './DeveloperError',
+        './defaultValue',
+        './Cartesian3'
+       ], function(
+         DeveloperError,
+         defaultValue,
+         Cartesian3) {
     "use strict";
 
     /**
-     * Represents a ray that has an origin and extends infinitely in a given direction.
-     *
+     * Represents a ray that extends infinitely from the provided origin in the provided direction.
      * @alias Ray
      * @constructor
      *
-     * @param {Cartesian3} origin The origin of the ray.
-     * @param {Cartesian3} direction The unit length direction of the ray.
-     *
-     * @exception {DeveloperError} origin is required.
-     * @exception {DeveloperError} direction is required.
+     * @param {Cartesian3} [origin=Cartesian3.ZERO] The origin of the ray.
+     * @param {Cartesian3} [direction=Cartesian3.ZERO] The direction of the ray.
      */
     var Ray = function(origin, direction) {
-        if (typeof origin === 'undefined') {
-            throw new DeveloperError('origin is required');
-        }
-
-        if (typeof direction === 'undefined') {
-            throw new DeveloperError('direction is required');
+        direction = Cartesian3.clone(defaultValue(direction, Cartesian3.ZERO));
+        if (!direction.equals(Cartesian3.ZERO)) {
+            Cartesian3.normalize(direction, direction);
         }
 
         /**
          * The origin of the ray.
-         *
          * @type {Cartesian3}
          */
-        this.origin = origin;
+        this.origin = Cartesian3.clone(defaultValue(origin, Cartesian3.ZERO));
 
         /**
          * The direction of the ray.
-         *
          * @type {Cartesian3}
          */
-        this.direction = direction.normalize();
+        this.direction = direction;
     };
 
     /**
-     * Returns a point along the ray given by r(t) = o + t*d, where o is the origin of the ray
-     * and d is the direction.
-     *
+     * Computes the point along the ray given by r(t) = o + t*d,
+     * where o is the origin of the ray and d is the direction.
      * @memberof Ray
      *
-     * @param {Number} [t=0.0] A scalar value.
+     * @param {Number} t A scalar value.
+     * @param {Cartesian3} [result] The object in which the result will be stored.
+     * @returns The modified result parameter, or a new instance if none was provided.
      *
-     * @returns {Cartesian3} The point along the ray.
+     * @exception {DeveloperError} t is a required number
      *
      * @example
      * //Get the first intersection point of a ray and an ellipsoid.
      * var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
      * var point = ray.getPoint(intersection.start);
      */
-    Ray.prototype.getPoint = function(t) {
-        t = (typeof t === 'undefined') ? 0.0 : t;
-        return this.origin.add(this.direction.multiplyByScalar(t));
+    Ray.prototype.getPoint = function(t, result) {
+        if (typeof t !== 'number') {
+            throw new DeveloperError('t is a required number');
+        }
+        result = Cartesian3.multiplyByScalar(this.direction, t, result);
+        return Cartesian3.add(this.origin, result, result);
     };
 
     return Ray;
