@@ -182,21 +182,18 @@ define([
         return this._animate;
     };
 
-    var scratchCullingPlanes;
-
     function clearPasses(passes) {
         passes.pick = false;
     }
 
     function updateFrameState(scene) {
         var camera = scene._camera;
-        var cullingPlanes = camera.frustum.getPlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC(), scratchCullingPlanes);
 
         var frameState = scene._frameState;
         frameState.mode = scene.mode;
         frameState.scene2D = scene.scene2D;
         frameState.camera = camera;
-        frameState.cullingPlanes = cullingPlanes;
+        frameState.cullingFrustum = camera.frustum;
         frameState.occluder = undefined;
 
         // TODO: The occluder is the top-level central body. When we add
@@ -248,7 +245,7 @@ define([
         this._primitives.render(this._context);
     };
 
-    function getPickOrthographicCullingPlanes(scene, windowPosition, width, height) {
+    function getPickOrthographicFrustum(scene, windowPosition, width, height) {
         var canvas = scene._canvas;
         var camera = scene._camera;
         var frustum = camera.frustum;
@@ -264,10 +261,14 @@ define([
         ortho.near = frustum.near;
         ortho.far = frustum.far;
 
-        return ortho.getPlanes(pickRay.origin, camera.direction, camera.up, scratchCullingPlanes);
+        ortho.position = pickRay.origin;
+        ortho.direction = camera.direction;
+        ortho.up = camera.up;
+
+        return ortho;
     }
 
-    function getPickPerspectiveCullingPlanes(scene, windowPosition, width, height) {
+    function getPickPerspectiveFrustum(scene, windowPosition, width, height) {
         var canvas = scene._canvas;
         var camera = scene._camera;
         var frustum = camera.frustum;
@@ -298,15 +299,19 @@ define([
         offCenter.near = frustum.near;
         offCenter.far = frustum.far;
 
-        return offCenter.getPlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC(), scratchCullingPlanes);
+        offCenter.position = camera.getPositionWC();
+        offCenter.direction = camera.getDirectionWC();
+        offCenter.up = camera.getUpWC();
+
+        return offCenter;
     }
 
-    function getPickCullingPlanes(scene, windowPosition, width, height) {
+    function getPickFrustum(scene, windowPosition, width, height) {
         if (scene.mode === SceneMode.SCENE2D) {
-            return getPickOrthographicCullingPlanes(scene, windowPosition, width, height);
+            return getPickOrthographicFrustum(scene, windowPosition, width, height);
         }
 
-        return getPickPerspectiveCullingPlanes(scene, windowPosition, width, height);
+        return getPickPerspectiveFrustum(scene, windowPosition, width, height);
     }
 
     // pick region width and height, assumed odd
@@ -327,7 +332,7 @@ define([
         var fb = this._pickFramebuffer.begin();
 
         updateFrameState(this);
-        frameState.cullingPlanes = getPickCullingPlanes(this, windowPosition, 1.0, 1.0); // TODO: sizes other than 1x1
+        frameState.cullingFrustum = getPickFrustum(this, windowPosition, 1.0, 1.0); // TODO: sizes other than 1x1
         frameState.passes.pick = true;
 
         primitives.update(context, frameState);
