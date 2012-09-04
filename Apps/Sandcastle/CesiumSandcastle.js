@@ -288,6 +288,15 @@ require({
             highlightRun(true);
         }
 
+        function scrollToLine(lineNumber) {
+            if (typeof lineNumber !== 'undefined') {
+                jsEditor.setCursor(lineNumber);
+                jsEditor.setSelection({line: lineNumber - 2, ch:0}, {line: lineNumber - 2, ch: 0});
+                jsEditor.focus();
+                jsEditor.setSelection({line: lineNumber - 1, ch: 0}, {line: lineNumber - 1, ch: 0});
+            }
+        }
+
         function highlightLine(lineNum) {
             var line;
             while (highlightLines.length > 0) {
@@ -299,12 +308,7 @@ require({
                 line = jsEditor.setMarker(lineNum - 1, makeLineLabel('highlighted by demo'), "highlightMarker");
                 jsEditor.setLineClass(line, "highlightLine");
                 highlightLines.push(line);
-
-                // Scroll to bring the highlighted line into view.
-                jsEditor.setCursor(lineNum);
-                jsEditor.setSelection({line: lineNum - 2, ch:0}, {line: lineNum - 2, ch: 0});
-                jsEditor.focus();
-                jsEditor.setSelection({line: lineNum, ch: 0}, {line: lineNum, ch: 0});
+                scrollToLine(lineNum);
             }
         }
 
@@ -417,6 +421,7 @@ require({
                     line = jsEditor.setMarker(e.data.lineNumber - 1, makeLineLabel(e.data.rawErrorMsg), "errorMarker");
                     jsEditor.setLineClass(line, "errorLine");
                     errorLines.push(line);
+                    scrollToLine(e.data.lineNumber);
                 }
             } else if (typeof e.data.highlight !== 'undefined') {
                 // Hovering objects in the embedded Cesium window.
