@@ -660,26 +660,6 @@ define([
         }
     };
 
-    /**
-     * @private
-     */
-    BillboardCollection.prototype.update = function(context, sceneState) {
-        // First update:  create render state and shader program
-        this._rs = context.createRenderState({
-            depthTest : {
-                enabled : true
-            },
-            blending : BlendingState.ALPHA_BLEND
-        });
-
-        this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
-
-        var state = this._update(context, sceneState);
-        this.update = this._update;
-
-        return state;
-    };
-
     BillboardCollection.prototype.computeNewBuffersUsage = function() {
         var buffersUsage = this._buffersUsage;
         var usageChanged = false;
@@ -863,9 +843,9 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    function recomputeActualPositions3D(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume) {
+    function recomputeActualPositions3D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
         var boundingVolume;
-        switch (sceneState.mode) {
+        switch (frameState.mode) {
         case SceneMode.SCENE3D:
             boundingVolume = billboardCollection._baseVolume;
             break;
@@ -880,7 +860,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.getPosition();
-            var actualPosition = Billboard._computeActualPosition(position, sceneState, morphTime, modelMatrix);
+            var actualPosition = Billboard._computeActualPosition(position, frameState, morphTime, modelMatrix);
             billboard._setActualPosition(actualPosition);
 
             if (recomputeBoundingVolume) {
@@ -895,7 +875,7 @@ define([
         }
     }
 
-    function recomputeActualPositions2D(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume) {
+    function recomputeActualPositions2D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
         var boundingVolume = billboardCollection._baseRectangle;
 
         var length = billboards.length;
@@ -903,7 +883,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.getPosition();
-            var actualPosition = Billboard._computeActualPosition(position, sceneState, morphTime, modelMatrix);
+            var actualPosition = Billboard._computeActualPosition(position, frameState, morphTime, modelMatrix);
             billboard._setActualPosition(actualPosition);
 
             position = new Cartesian3(actualPosition.y, actualPosition.z, 0.0);
@@ -919,17 +899,17 @@ define([
             BoundingRectangle.fromPoints(positions, boundingVolume);
         }
     }
-    function recomputeActualPositions(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume) {
-        if (sceneState.mode === SceneMode.SCENE2D) {
-            recomputeActualPositions2D(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume);
+    function recomputeActualPositions(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
+        if (frameState.mode === SceneMode.SCENE2D) {
+            recomputeActualPositions2D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume);
         } else {
-            recomputeActualPositions3D(billboardCollection, billboards, sceneState, morphTime, modelMatrix, recomputeBoundingVolume);
+            recomputeActualPositions3D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume);
         }
     }
 
-    BillboardCollection.prototype._updateMode = function(sceneState) {
-        var mode = sceneState.mode;
-        var projection = sceneState.scene2D.projection;
+    BillboardCollection.prototype._updateMode = function(frameState) {
+        var mode = frameState.mode;
+        var projection = frameState.scene2D.projection;
 
         if (this._mode !== mode ||
             this._projection !== projection ||
@@ -941,19 +921,19 @@ define([
             this.modelMatrix.clone(this._modelMatrix);
 
             if (mode === SceneMode.SCENE3D || mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-                recomputeActualPositions(this, this._billboards, sceneState, this.morphTime, this._modelMatrix, true);
+                recomputeActualPositions(this, this._billboards, frameState, this.morphTime, this._modelMatrix, true);
             }
         } else if (mode === SceneMode.MORPHING) {
-            recomputeActualPositions(this, this._billboards, sceneState, this.morphTime, this._modelMatrix, true);
+            recomputeActualPositions(this, this._billboards, frameState, this.morphTime, this._modelMatrix, true);
         } else if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-            recomputeActualPositions(this, this._billboardsToUpdate, sceneState, this.morphTime, this._modelMatrix, false);
+            recomputeActualPositions(this, this._billboardsToUpdate, frameState, this.morphTime, this._modelMatrix, false);
         }
     };
 
-    function updateBoundingVolumes(collection, context, sceneState) {
-        var camera = sceneState.camera;
+    function updateBoundingVolumes(collection, context, frameState) {
+        var camera = frameState.camera;
         var frustum = camera.frustum;
-        var mode = sceneState.mode;
+        var mode = frameState.mode;
 
         var textureDimensions = collection._textureAtlas.getTexture().getDimensions();
         var textureSize = Math.max(textureDimensions.x, textureDimensions.y);
@@ -1003,7 +983,10 @@ define([
         return boundingVolume;
     }
 
-    BillboardCollection.prototype._update = function(context, sceneState) {
+    /**
+     * @private
+     */
+    BillboardCollection.prototype.update = function(context, frameState) {
         var textureAtlas = this._textureAtlas;
         if (typeof textureAtlas === 'undefined') {
             // Can't write billboard vertices until we have texture coordinates
@@ -1020,7 +1003,7 @@ define([
 
         this._removeBillboards();
 
-        this._updateMode(sceneState);
+        this._updateMode(frameState);
 
         var billboards = this._billboards;
         var length = billboards.length;
@@ -1129,38 +1112,42 @@ define([
             return undefined;
         }
 
-        this._uniforms = (sceneState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;
+        if (typeof this._sp === 'undefined') {
+            this._rs = context.createRenderState({
+                depthTest : {
+                    enabled : true
+                },
+                blending : BlendingState.ALPHA_BLEND
+            });
 
-        var boundingVolume = updateBoundingVolumes(this, context, sceneState);
+            this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
+        }
+
+        if (frameState.passes.pick && typeof this._spPick === 'undefined') {
+            this._rsPick = context.createRenderState({
+                depthTest : {
+                    enabled : true
+                }
+            });
+
+            this._spPick = context.getShaderCache().getShaderProgram(
+                    BillboardCollectionVS,
+                    '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
+                    attributeIndices);
+        }
+
+        this._uniforms = (frameState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;
+
+        var boundingVolume = updateBoundingVolumes(this, context, frameState);
         var modelMatrix = Matrix4.IDENTITY;
 
-        if (sceneState.mode === SceneMode.SCENE3D) {
+        if (frameState.mode === SceneMode.SCENE3D) {
             modelMatrix = this.modelMatrix;
         }
 
         return {
             boundingVolume : boundingVolume,
             modelMatrix : modelMatrix
-        };
-    };
-
-    /**
-     * @private
-     */
-    BillboardCollection.prototype.updateForPick = function(context) {
-        // First update:  create render state and shader program
-        this._rsPick = context.createRenderState({
-            depthTest : {
-                enabled : true
-            }
-        });
-
-        this._spPick = context.getShaderCache().getShaderProgram(
-                BillboardCollectionVS,
-                '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
-                attributeIndices);
-
-        this.updateForPick = function(context) {
         };
     };
 

@@ -159,19 +159,19 @@ define([
     /**
      * @private
      */
-    SensorVolumeCollection.prototype.update = function(context, sceneState) {
-        var mode = sceneState.mode;
+    SensorVolumeCollection.prototype.update = function(context, frameState) {
+        var mode = frameState.mode;
         if (mode !== SceneMode.SCENE3D) {
             return undefined;
         }
 
         var sensors = this._sensors;
         var length = sensors.length;
-        var camera = sceneState.camera;
+        var camera = frameState.camera;
 
         for ( var i = 0; i < length; ++i) {
             var sensor = sensors[i];
-            var spatialState = sensor.update(context, sceneState);
+            var spatialState = sensor.update(context, frameState);
 
             if (typeof spatialState === 'undefined') {
                 continue;
@@ -189,7 +189,7 @@ define([
                     continue;
                 }
 
-                var occluder = sceneState.occluder;
+                var occluder = frameState.occluder;
                 if (typeof occluder !== 'undefined' &&
                         !occluder.isVisible(boundingVolume)) {
                     continue;
@@ -212,18 +212,6 @@ define([
             sensors[i].render(context);
         }
         this._renderList.length = 0;
-    };
-
-    /**
-     * @private
-     */
-    SensorVolumeCollection.prototype.updateForPick = function(context) {
-        // This assumes that updateForPick is called after update and before renderForPick
-        var sensors = this._renderList;
-        var length = sensors.length;
-        for ( var i = 0; i < length; ++i) {
-            sensors[i].updateForPick(context);
-        }
     };
 
     /**

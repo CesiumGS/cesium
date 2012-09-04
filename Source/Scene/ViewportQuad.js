@@ -225,7 +225,7 @@ define([
     /**
      * @private
      */
-    ViewportQuad.prototype.update = function(context, sceneState) {
+    ViewportQuad.prototype.update = function(context, frameState) {
         if (typeof this._texture === 'undefined') {
             return undefined;
         }
