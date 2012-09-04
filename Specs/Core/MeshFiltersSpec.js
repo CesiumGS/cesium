@@ -231,7 +231,7 @@ defineSuite([
     });
 
     it('can reorder indices for the post vertex cache', function() {
-        var mesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(new Cartesian3(10.0, 10.0, 10.0)), 100);
+        var mesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(10.0, 10.0, 10.0), 100);
         var indices = mesh.indexLists[0].values;
         var numIndices = indices.length;
         var maximumIndex = 0;
@@ -398,8 +398,8 @@ defineSuite([
     });
 
     it('projectTo2D', function() {
-        var p1 = new Cartesian3(1, 2, 3);
-        var p2 = new Cartesian3(4, 5, 6);
+        var p1 = new Cartesian3(100000, 200000, 300000);
+        var p2 = new Cartesian3(400000, 500000, 600000);
 
         var mesh = {};
         mesh.attributes = {};
