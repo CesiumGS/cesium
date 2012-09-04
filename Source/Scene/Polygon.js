@@ -491,6 +491,17 @@ define([
         return mesh;
     };
 
+    function transformBoundingVolumes(polygon) {
+        var center2D = polygon._boundingVolume2D.center;
+        center2D.z = 0.0;
+
+        var centerCV = polygon._boundingVolumeCV.center;
+        centerCV.x = 0.0;
+        centerCV.y = center2D.x;
+        centerCV.z = center2D.y;
+        polygon._boundingVolumeCV.radius = polygon._boundingVolume2D.radius;
+    }
+
     var _createMeshesOuterPositions2D = [];
     Polygon.prototype._createMeshes = function() {
         // PERFORMANCE_IDEA:  Move this to a web-worker.
@@ -502,15 +513,7 @@ define([
             this._boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid, this._boundingVolume);
             if (this._mode !== SceneMode.SCENE3D) {
                 this._boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection, this._boundingVolume2D);
-
-                var center2D = this._boundingVolume2D.center;
-                center2D.z = 0.0;
-
-                var centerCV = this._boundingVolumeCV.center;
-                centerCV.x = 0.0;
-                centerCV.y = center2D.x;
-                centerCV.z = center2D.y;
-                this._boundingVolumeCV.radius = this._boundingVolume2D.radius;
+                transformBoundingVolumes(this);
             }
         } else if (typeof this._positions !== 'undefined') {
             meshes.push(this._createMeshFromPositions(this._positions));
@@ -561,14 +564,7 @@ define([
             }
 
             this._boundingVolume2D = BoundingSphere.fromPoints(positions, this._boundingVolume2D);
-            var center2D = this._boundingVolume2D.center;
-            center2D.z = 0.0;
-
-            var centerCV = this._boundingVolumeCV.center;
-            centerCV.x = 0.0;
-            centerCV.y = center2D.x;
-            centerCV.z = center2D.y;
-            this._boundingVolumeCV.radius = this._boundingVolume2D.radius;
+            transformBoundingVolumes(this);
         }
 
         return processedMeshes;

@@ -167,7 +167,8 @@ define([
 
         var sensors = this._sensors;
         var length = sensors.length;
-        var camera = frameState.camera;
+        var frustum = frameState.cullingFrustum;
+        var occluder = frameState.occluder;
 
         for ( var i = 0; i < length; ++i) {
             var sensor = sensors[i];
@@ -185,13 +186,8 @@ define([
                 center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
                 boundingVolume = new BoundingSphere(center, boundingVolume.radius);
 
-                if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
-                    continue;
-                }
-
-                var occluder = frameState.occluder;
-                if (typeof occluder !== 'undefined' &&
-                        !occluder.isVisible(boundingVolume)) {
+                if (frustum.getVisibility(boundingVolume) === Intersect.OUTSIDE ||
+                        (typeof occluder !== 'undefined' && !occluder.isVisible(boundingVolume))) {
                     continue;
                 }
             }

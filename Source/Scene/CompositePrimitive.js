@@ -403,7 +403,7 @@ define([
     };
 
     function cull(context, frameState, primitives, renderList) {
-        var planes = frameState.cullingPlanes;
+        var frustum = frameState.cullingFrustum;
         var occluder;
 
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -426,16 +426,8 @@ define([
                 center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
                 boundingVolume = new BoundingSphere(center, boundingVolume.radius);
 
-                var cullPrimitive = false;
-                for ( var k = 0; k < planes.length; k++) {
-                    var result = boundingVolume.intersect(planes[k]);
-                    if (result === Intersect.OUTSIDE) {
-                        cullPrimitive = true;
-                        break;
-                    }
-                }
-
-                if (cullPrimitive || (typeof occluder !== 'undefined' && !occluder.isVisible(boundingVolume))) {
+                if (frustum.getVisibility(boundingVolume) === Intersect.OUTSIDE ||
+                        (typeof occluder !== 'undefined' && !occluder.isVisible(boundingVolume))) {
                     continue;
                 }
             }
