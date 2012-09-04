@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/createGuid',
-        '../Core/DeveloperError'
+        '../Core/DeveloperError',
+        './CzmlDefaults'
        ], function(
         createGuid,
-        DeveloperError) {
+        DeveloperError,
+        CzmlDefaults) {
     "use strict";
 
     function processCzmlPacket(packet, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri) {
@@ -15,7 +17,7 @@ define([
 
         var object = dynamicObjectCollection.getOrCreateObject(objectId);
         for ( var i = updaterFunctions.length - 1; i > -1; i--) {
-            if (updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri, updaterFunctions) && typeof updatedObjectsHash[objectId] === 'undefined') {
+            if (updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri) && typeof updatedObjectsHash[objectId] === 'undefined') {
                 updatedObjectsHash[objectId] = true;
                 updatedObjects.push(object);
             }
@@ -51,13 +53,10 @@ define([
         if (typeof dynamicObjectCollection === 'undefined') {
             throw new DeveloperError('dynamicObjectCollection is required.');
         }
-        if(typeof updaterFunctions === 'undefined'){
-            throw new DeveloperError('updaterFunctions is required.');
-        }
 
         var updatedObjects = [];
         var updatedObjectsHash = {};
-
+        updaterFunctions = typeof updaterFunctions !== 'undefined' ? updaterFunctions : CzmlDefaults.updaters;
         if (Array.isArray(czml)) {
             for ( var i = 0, len = czml.length; i < len; i++) {
                 processCzmlPacket(czml[i], dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri);

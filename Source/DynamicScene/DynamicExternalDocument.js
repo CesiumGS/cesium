@@ -1,29 +1,108 @@
 /*global define*/
 define([
-        './SystemClockBufferUpdater'
+        '../Core/defaultValue',
+        '../Core/TimeInterval',
+        './CzmlNumber',
+        './CzmlString',
+        './DynamicProperty'
     ], function(
-        BufferUpdater
+        defaultValue,
+        TimeInterval,
+        CzmlNumber,
+        CzmlString,
+        DynamicProperty
         ) {
     "use strict";
 
 
-    var DynamicExternalDocumentProperty = function() {
+    var DynamicExternalDocument = function() {
+        this.polling = undefined;
+        this.show = undefined;
     };
 
 
-    DynamicExternalDocumentProperty.prototype.processCzmlIntervals = function(object, packet, dynamicObjectCollection, sourceUri, updaterFunctions) {
-        if(object.polling){
-            var doc = dynamicObjectCollection;
-            if(doc.compositeCollection){
-                doc = doc.compositeCollection;
+    DynamicExternalDocument.processCzmlPacket = function(dynamicObject, packet) {
+        var externalData = packet.external;
+        if (typeof externalData === 'undefined') {
+            return false;
+        }
+
+        var externalUpdated = false;
+        var external = dynamicObject.external;
+        externalUpdated = typeof external === 'undefined';
+        if (externalUpdated) {
+            dynamicObject.external = external = new DynamicExternalDocument();
+        }
+
+        var interval = externalData.interval;
+        if (typeof interval !== 'undefined') {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        if(typeof externalData.scope !== 'undefined'){
+            if(typeof external.scope === 'undefined'){
+                external.scope = externalData.scope;
+                externalUpdated = true;
             }
-            var collections = doc.getCollections();
-            var newDoc = doc.createDynamicObjectCollection();
-            newDoc.updater = new BufferUpdater(newDoc, object.polling, object.refreshInterval * 1000, updaterFunctions);
-            collections.splice(collections.length, 0, newDoc);
-            doc.setCollections(collections);
+        }
+
+        if (typeof externalData.polling !== 'undefined') {
+            var polling = external.polling;
+            if (typeof polling === 'undefined') {
+                external.polling = polling = new DynamicProperty(CzmlString);
+                externalUpdated = true;
+            }
+            polling.processCzmlIntervals(externalData.polling, interval);
+
+            if(typeof externalData.refreshInterval !== 'undefined'){
+                var refreshInterval = external.refreshInterval;
+                if(typeof refreshInterval === 'undefined'){
+                    external.refreshInterval = refreshInterval = new DynamicProperty(CzmlNumber);
+                    refreshInterval.processCzmlIntervals(externalData.refreshInterval, interval);
+                    externalUpdated = true;
+                }
+            }
+        }
+
+        return externalUpdated;
+    };
+
+    /**
+     * Given two DynamicObjects, takes the external properties from the second
+     * and assigns them to the first, assuming such a property did not already exist.
+     * This method is not normally called directly, but is part of the array of CZML processing
+     * functions that is passed into the CompositeDynamicObjectCollection constructor.
+     *
+     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
+     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     *
+     * @see CzmlDefaults
+     */
+    DynamicExternalDocument.mergeProperties = function(targetObject, objectToMerge) {
+        var externalToMerge = objectToMerge.external;
+        if (typeof externalToMerge !== 'undefined') {
+
+            var targetExternal = targetObject.external;
+            if (typeof targetExternal === 'undefined') {
+                targetObject.external = targetExternal = new DynamicExternalDocument();
+            }
+
+            targetExternal.polling = defaultValue(targetExternal.polling, externalToMerge.polling);
         }
     };
 
-    return DynamicExternalDocumentProperty;
+    /**
+     * Given a DynamicObject, undefines the external associated with it.
+     * This method is not normally called directly, but is part of the array of CZML processing
+     * functions that is passed into the CompositeDynamicObjectCollection constructor.
+     *
+     * @param {DynamicObject} dynamicObject The DynamicObject to remove the external property from.
+     *
+     * @see CzmlDefaults
+     */
+    DynamicExternalDocument.undefineProperties = function(dynamicObject) {
+        dynamicObject.external = undefined;
+    };
+
+    return DynamicExternalDocument;
 });

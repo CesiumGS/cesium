@@ -6,9 +6,9 @@ define(['../Core/incrementalGet',
          processCzml) {
     "use strict";
 
-    function fillBufferIncrementally(buffer, url, updaterFunctions, doneCallback) {
+    function fillBufferIncrementally(buffer, url, processCallback, doneCallback) {
         return incrementalGet(url, function(item) {
-            processCzml(item, buffer, url, updaterFunctions);
+            processCallback(item, buffer, url);
         }, doneCallback);
     }
 

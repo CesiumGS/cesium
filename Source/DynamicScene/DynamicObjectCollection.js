@@ -36,6 +36,12 @@ define([
          * An {@link Event} that is fired whenever DynamicObjects are removed from the collection.
          */
         this.objectsRemoved = new Event();
+
+        /**
+         * Function that is called if an updater like TimeIntervalBufferUpdater is assigned.
+         */
+        this.updater = undefined;
+
     };
 
     /**
@@ -124,6 +130,12 @@ define([
         if (removedObjects.length > 0) {
             this.objectsRemoved.raiseEvent(this, removedObjects);
         }
+    };
+
+    DynamicObjectCollection.prototype.updateBuffer = function(currentTime){
+         if(typeof this.updater !== 'undefined'){
+             this.updater.update(currentTime, this);
+         }
     };
 
     return DynamicObjectCollection;

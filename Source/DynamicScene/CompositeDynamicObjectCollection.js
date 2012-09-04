@@ -61,6 +61,16 @@ define([
          */
         this.objectsRemoved = new Event();
 
+		/**
+        *  The document name.
+        */
+        this.documentName = undefined;
+
+        /**
+        * The parent document.
+        */
+        this.parent = undefined;
+
         this.setCollections(collections);
     };
 
@@ -248,14 +258,15 @@ define([
         }
     };
 
-    CompositeDynamicObjectCollection.prototype.updateBuffers = function(currentTime){
-        var thisCollections = this._collections;
-        var length = thisCollections.length;
+    CompositeDynamicObjectCollection.prototype.updateBuffer = function(currentTime){
+        CompositeDynamicObjectCollection._updateBuffers(currentTime, this._collections);
+    };
+
+    CompositeDynamicObjectCollection._updateBuffers = function(currentTime, collection){
+        var length = collection.length;
         for(var i = 0; i < length; ++i){
-            var buffer = thisCollections[i];
-            if(buffer.updater){
-                buffer.updater.update(currentTime);
-            }
+            var buffer = collection[i];
+            buffer.updateBuffer(currentTime);
         }
     };
 

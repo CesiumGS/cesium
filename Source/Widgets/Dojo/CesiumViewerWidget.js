@@ -41,11 +41,7 @@ define([
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileProvider',
         '../../Scene/PerformanceDisplay',
-        '../../DynamicScene/CzmlDefaults',
-        '../../DynamicScene/processCzml',
-        '../../DynamicScene/CompositeDynamicObjectCollection',
-        '../../DynamicScene/DynamicObjectCollection',
-        '../../DynamicScene/VisualizerCollection',
+        '../../DynamicScene/DocumentManager',
         'dojo/text!./CesiumViewerWidget.html'
     ], function (
         require,
@@ -89,11 +85,7 @@ define([
         SceneTransitioner,
         SingleTileProvider,
         PerformanceDisplay,
-        CzmlDefaults,
-        processCzml,
-        CompositeDynamicObjectCollection,
-        DynamicObjectCollection,
-        VisualizerCollection,
+        DocumentManager,
         template) {
     "use strict";
 
@@ -243,7 +235,7 @@ define([
             this.animPause.set('checked', true);
             this.animPlay.set('checked', false);
 
-            var availability = this.compositeDynamicObjectCollection.computeAvailability();
+            var availability = this.documentManager.computeAvailability();
             if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
                 clock.startTime = new JulianDate();
                 clock.stopTime = clock.startTime.addDays(1);
@@ -269,12 +261,7 @@ define([
             var reader = new FileReader();
             var widget = this;
             reader.onload = function(evt) {
-                //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
-                //cache data indefinitely and removeAll is the only way to get rid of it.
-                //while there are no visual differences, removeAll cleans the cache and improves performance
-                //widget.visualizers.removeAllPrimitives();
-                //widget.compositeDynamicObjectCollection.clear();
-                processCzml(JSON.parse(evt.target.result), widget.compositeDynamicObjectCollection, f.name, CzmlDefaults.updaters);
+                widget.documentManager.add(JSON.parse(evt.target.result), f.name);
                 widget.setTimeFromBuffer();
             };
             reader.readAsText(f);
@@ -379,15 +366,15 @@ define([
             }
 
             var animationController = this.animationController;
-            var baseDynamicObjectCollection = this.baseDynamicObjectCollection = new DynamicObjectCollection();
-            var compositeDynamicObjectCollection = this.compositeDynamicObjectCollection = new CompositeDynamicObjectCollection([baseDynamicObjectCollection]);
+            this.documentManager = new DocumentManager(scene);
+
             var clock = this.clock;
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
-            this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, compositeDynamicObjectCollection);
+
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 getJson(widget.endUserOptions.source).then(function(czmlData) {
-                    processCzml(czmlData, widget.compositeDynamicObjectCollection, widget.endUserOptions.source, CzmlDefaults.updaters);
+                    widget.documentManager.add(czmlData, widget.endUserOptions.source);
                     widget.setTimeFromBuffer();
                 },
                 function(error) {
@@ -671,8 +658,6 @@ define([
 
             this.timelineControl.updateFromClock();
             this.scene.setSunPosition(SunPosition.compute(currentTime).position);
-            this.compositeDynamicObjectCollection.updateBuffers(currentTime);
-            this.visualizers.update(currentTime);
 
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||
                     ((Date.now() - this._lastTimeLabelDate) > 200)) {
@@ -680,10 +665,10 @@ define([
                 this._lastTimeLabelClock = currentTime;
                 this._lastTimeLabelDate = Date.now();
             }
-
+            this.documentManager.update(currentTime);
             // Update the camera to stay centered on the selected object, if any.
             if (cameraCenteredObjectID) {
-                var dynamicObject = this.compositeDynamicObjectCollection.getObject(cameraCenteredObjectID);
+                var dynamicObject = this.documentManager.getObject(cameraCenteredObjectID);
                 if (dynamicObject && dynamicObject.position) {
                     cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
                     if (typeof cameraCenteredObjectIDPosition !== 'undefined') {

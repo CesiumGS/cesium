@@ -3,7 +3,15 @@ define(function() {
     "use strict";
     /*global EventSource console*/
 
-    return function(uri, itemCallback, doneCallback) {
+    /**
+     * Uses EventSource to retrieve the json data from the given uri.
+     *
+     * @exports incrementalGet
+     *
+     * @example
+     * incrementalGet("http://localhost/test", function(json){}, function(){});
+     */
+    var incrementalGet = function(uri, itemCallback, doneCallback) {
         var eventSource = new EventSource(uri);
 
         if (itemCallback) {
@@ -30,5 +38,6 @@ define(function() {
         return {
             abort : finish
         };
-    };
+    };
+    return incrementalGet;
 });

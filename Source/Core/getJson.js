@@ -21,8 +21,8 @@ define([
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
-
-        return xhrGet(url).then(function(value) {
+        var headers = {'Accept':'application/json','Cache-Control':'no-cache'};
+        return xhrGet(url, headers).then(function(value) {
             return JSON.parse(value);
         });
     }

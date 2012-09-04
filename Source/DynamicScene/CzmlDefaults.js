@@ -3,6 +3,7 @@ define([
         './DynamicObject',
         './DynamicBillboard',
         './DynamicCone',
+        './DynamicExternalDocument',
         './DynamicLabel',
         './DynamicPath',
         './DynamicPoint',
@@ -21,6 +22,7 @@ define([
         DynamicObject,
         DynamicBillboard,
         DynamicCone,
+        DynamicExternalDocument,
         DynamicLabel,
         DynamicPath,
         DynamicPoint,
@@ -65,11 +67,11 @@ define([
                     DynamicPolygon.processCzmlPacket,
                     DynamicPolyline.processCzmlPacket,
                     DynamicPyramid.processCzmlPacket,
+                    DynamicExternalDocument.processCzmlPacket,
                     DynamicObject.processCzmlPacketPosition,
                     DynamicObject.processCzmlPacketOrientation,
                     DynamicObject.processCzmlPacketVertexPositions,
-                    DynamicObject.processCzmlPacketAvailability,
-                    DynamicObject.processCzmlPacketExternal],
+                    DynamicObject.processCzmlPacketAvailability],
 
         /**
          * The standard set of mergers for processing CZML.  This array is the default
@@ -85,7 +87,8 @@ define([
                    DynamicPolygon.mergeProperties,
                    DynamicPolyline.mergeProperties,
                    DynamicPyramid.mergeProperties,
-                   DynamicObject.mergeProperties],
+                   DynamicObject.mergeProperties,
+                   DynamicExternalDocument.mergeProperties],
 
        /**
         * The standard set of cleaners for processing CZML.  This array is the default
@@ -96,11 +99,13 @@ define([
         cleaners : [DynamicBillboard.undefineProperties,
                     DynamicCone.undefineProperties,
                     DynamicLabel.undefineProperties,
+                    DynamicPath.undefineProperties,
                     DynamicPoint.undefineProperties,
                     DynamicPolygon.undefineProperties,
                     DynamicPolyline.undefineProperties,
                     DynamicPyramid.undefineProperties,
-                    DynamicObject.undefineProperties],
+                    DynamicObject.undefineProperties,
+                    DynamicExternalDocument.undefineProperties],
 
         /**
          * Creates an array containing the standard CZML visualizers,

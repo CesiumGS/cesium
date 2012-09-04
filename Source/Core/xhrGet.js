@@ -17,15 +17,18 @@ define([
      *     //Do something with the JSON object
      * });
      */
-    var xhrGet = function(url) {
+    var xhrGet = function(url, headers) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
         return when(url, function(url) {
             var xmlHttp = new XMLHttpRequest();
             xmlHttp.open("GET", url, true);
-            xmlHttp.setRequestHeader('Accept', 'application/json');
-            xmlHttp.setRequestHeader("Cache-Control", "no-cache");
+            for(var obj in headers){
+                if(headers.hasOwnProperty(obj)){
+                    xmlHttp.setRequestHeader(obj, headers[obj]);
+                }
+            }
             xmlHttp.responseType='text';
             var deferred = when.defer();
 
