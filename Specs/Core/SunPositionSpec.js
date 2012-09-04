@@ -64,225 +64,266 @@ defineSuite([
     var earthsRadius = 4.2634965 * CesiumMath.EPSILON5 * AU_TO_METERS;
 
     it('can correctly compute the distance from the earth to the sun (1)', function() {
-        var sunPos = SunPosition.compute(julianDate1);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate1);
         expect(sunPos.distance).toEqualEpsilon(147148431117.98, earthsRadius);
     });
 
     it('can correctly compute the distance from the earth to the sun (2)', function() {
-        var sunPos = SunPosition.compute(julianDate2);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate2);
         expect(sunPos.distance).toEqualEpsilon(147753960797.35, earthsRadius);
     });
 
     it('can correctly compute the distance from the earth to the sun (3)', function() {
-        var sunPos = SunPosition.compute(julianDate3);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate3);
         expect(sunPos.distance).toEqualEpsilon(148297002100.02, earthsRadius);
     });
 
     it('can correctly compute the distance from the earth to the sun (4)', function() {
-        var sunPos = SunPosition.compute(julianDate4);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate4);
         expect(sunPos.distance).toEqualEpsilon(150111025763.77, earthsRadius);
     });
 
     it('can correctly compute the distance from the earth to the sun (5)', function() {
-        var sunPos = SunPosition.compute(julianDate5);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate5);
         expect(sunPos.distance).toEqualEpsilon(151244858657.05, earthsRadius);
     });
 
     it('can correctly compute the distance from the earth to the sun (6)', function() {
-        var sunPos = SunPosition.compute(julianDate6);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate6);
         expect(sunPos.distance).toEqualEpsilon(152038567856.43, earthsRadius);
     });
 
     it('can correctly compute the distance from the earth to the sun (7)', function() {
-        var sunPos = SunPosition.compute(julianDate7);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate7);
         expect(sunPos.distance).toEqualEpsilon(152091959910.50, earthsRadius);
     });
 
     it('can correctly compute the distance from the earth to the sun (8)', function() {
-        var sunPos = SunPosition.compute(julianDate8);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate8);
         expect(sunPos.distance).toEqualEpsilon(151056458099.59, earthsRadius);
     });
 
     it('can correctly compute the distance from the earth to the sun (9)', function() {
-        var sunPos = SunPosition.compute(julianDate9);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate9);
         expect(sunPos.distance).toEqualEpsilon(150184436627.52, earthsRadius);
     });
 
     it('can correctly compute the distance from the earth to the sun (10)', function() {
-        var sunPos = SunPosition.compute(julianDate10);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate10);
         expect(sunPos.distance).toEqualEpsilon(149744103802.39, earthsRadius);
     });
 
     it('can correctly compute the distance from the earth to the sun (11)', function() {
-        var sunPos = SunPosition.compute(julianDate11);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate11);
         expect(sunPos.distance).toEqualEpsilon(147676653136.92, earthsRadius);
     });
 
     it('can correctly compute the distance from the earth to the sun (12)', function() {
-        var sunPos = SunPosition.compute(julianDate12);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate12);
         expect(sunPos.distance).toEqualEpsilon(147462128000.55, earthsRadius);
     });
 
     it('can correctly compute latitude (1)', function() {
-        var sunPos = SunPosition.compute(julianDate1);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-21.18), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate1);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-21.18), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute latitude (2)', function() {
-        var sunPos = SunPosition.compute(julianDate2);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-12.78), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate2);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-12.78), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute latitude (3)', function() {
-        var sunPos = SunPosition.compute(julianDate3);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-6.85), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate3);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-6.85), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute latitude (4)', function() {
-        var sunPos = SunPosition.compute(julianDate4);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(10.01), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate4);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(10.01), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute latitude (5)', function() {
-        var sunPos = SunPosition.compute(julianDate5);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(19.03), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate5);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(19.03), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute latitude (6)', function() {
-        var sunPos = SunPosition.compute(julianDate6);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(23.44), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate6);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(23.44), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute latitude (7)', function() {
-        var sunPos = SunPosition.compute(julianDate7);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(22.61), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate7);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(22.61), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute latitude (8)', function() {
-        var sunPos = SunPosition.compute(julianDate8);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(9.11), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate8);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(9.11), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute latitude (9)', function() {
-        var sunPos = SunPosition.compute(julianDate9);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(0.50), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate9);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(0.50), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute latitude (10)', function() {
-        var sunPos = SunPosition.compute(julianDate10);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-3.45), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate10);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-3.45), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute latitude (11)', function() {
-        var sunPos = SunPosition.compute(julianDate11);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-20.68), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate11);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-20.68), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute latitude (12)', function() {
-        var sunPos = SunPosition.compute(julianDate12);
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-22.14), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate12);
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(-22.14), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (1)', function() {
-        var sunPos = SunPosition.compute(julianDate1);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(2.30), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate1);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(2.30), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (2)', function() {
-        var sunPos = SunPosition.compute(julianDate2);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(3.53), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate2);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(3.53), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (3)', function() {
-        var sunPos = SunPosition.compute(julianDate3);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(3.0), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate3);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(3.0), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (4)', function() {
-        var sunPos = SunPosition.compute(julianDate4);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-0.02), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate4);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-0.02), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (5)', function() {
-        var sunPos = SunPosition.compute(julianDate5);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-0.92), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate5);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-0.92), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (6)', function() {
-        var sunPos = SunPosition.compute(julianDate6);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-59.51), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate6);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-59.51), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (7)', function() {
-        var sunPos = SunPosition.compute(julianDate7);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(1.21), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate7);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(1.21), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (8)', function() {
-        var sunPos = SunPosition.compute(julianDate8);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(0.20), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate8);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(0.20), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (9)', function() {
-        var sunPos = SunPosition.compute(julianDate9);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(148.24), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate9);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(148.24), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (10)', function() {
-        var sunPos = SunPosition.compute(julianDate10);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-2.62), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate10);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-2.62), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (11)', function() {
-        var sunPos = SunPosition.compute(julianDate11);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-3.29), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate11);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-3.29), CesiumMath.toRadians(1.0));
     });
 
     it('can correctly compute longitude (12)', function() {
-        var sunPos = SunPosition.compute(julianDate12);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-137.55), CesiumMath.toRadians(1.0));
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate12);
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-137.55), CesiumMath.toRadians(1.0));
     });
 
     it('can compute position during a leap year', function() {
         var julianDate = JulianDate.fromDate(new Date('April 1, 2012 16:00:00 UTC'));
-        var sunPos = SunPosition.compute(julianDate);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate);
         expect(sunPos.distance).toEqualEpsilon(149517419153.09, earthsRadius);
-        expect(sunPos.cartographicPosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-59.08), CesiumMath.toRadians(1.0));
-        expect(sunPos.cartographicPosition.latitude).toEqualEpsilon(CesiumMath.toRadians(4.87), CesiumMath.toRadians(1.0));
+        expect(sunPos.surfacePosition.longitude).toEqualEpsilon(CesiumMath.toRadians(-59.08), CesiumMath.toRadians(1.0));
+        expect(sunPos.surfacePosition.latitude).toEqualEpsilon(CesiumMath.toRadians(4.87), CesiumMath.toRadians(1.0));
     });
 
     it('has matching cartographic and cartesian positions (1)', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var sunPos = SunPosition.compute(julianDate6);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate6);
         var position = sunPos.position.normalize();
-        var cartographicPos = sunPos.cartographicPosition;
+        var cartographicPos = sunPos.surfacePosition;
         var cartesianPos = ellipsoid.cartographicToCartesian(cartographicPos).normalize();
         expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toEqual(true);
     });
 
     it('has matching cartographic and cartesian positions (2)', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var sunPos = SunPosition.compute(julianDate3);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate3);
         var position = sunPos.position.normalize();
-        var cartographicPos = sunPos.cartographicPosition;
+        var cartographicPos = sunPos.surfacePosition;
         var cartesianPos = ellipsoid.cartographicToCartesian(cartographicPos).normalize();
         expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toEqual(true);
     });
 
     it('has matching cartographic and cartesian positions (3)', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var sunPos = SunPosition.compute(julianDate3);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate3);
         var position = sunPos.position.normalize();
-        var cartographicPos = sunPos.cartographicPosition;
+        var cartographicPos = sunPos.surfacePosition;
         var cartesianPos = ellipsoid.cartographicToCartesian(cartographicPos).normalize();
         expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toEqual(true);
     });
 
     it('has matching cartographic and cartesian positions (4)', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var sunPos = SunPosition.compute(julianDate12);
+        var sunPos = new SunPosition();
+        sunPos.update(julianDate12);
         var position = sunPos.position.normalize();
-        var cartographicPos = sunPos.cartographicPosition;
+        var cartographicPos = sunPos.surfacePosition;
         var cartesianPos = ellipsoid.cartographicToCartesian(cartographicPos).normalize();
         expect((cartesianPos).equalsEpsilon(position, CesiumMath.EPSILON2)).toEqual(true);
     });
@@ -297,7 +338,8 @@ defineSuite([
         }
         var angles = [];
         for (i = 0; i < 24; i++) {
-            var sunPos = SunPosition.compute(timesOfDay[i]);
+            var sunPos = new SunPosition();
+            sunPos.update(timesOfDay[i]);
             var position = sunPos.position;
             angles.push(CesiumMath.convertLongitudeRange(Math.atan2(position.y, position.x)));
         }
@@ -305,5 +347,12 @@ defineSuite([
         for (i = 1; i < 24; i++) {
             expect(angles[i]).toBeLessThan(angles[i - 1]);
         }
+    });
+
+    it('update throws without a time', function() {
+        var sunPos = new SunPosition();
+        expect(function() {
+            sunPos.update(undefined);
+        }).toThrow();
     });
 });

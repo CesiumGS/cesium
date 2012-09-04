@@ -106,8 +106,9 @@ define([
         cloudsMapUrl : undefined,
         bumpMapUrl : undefined,
         endUserOptions : {},
-        enableDragDrop: false,
-        resizeWidgetOnWindowResize: true,
+        enableDragDrop : false,
+        resizeWidgetOnWindowResize : true,
+        sunPosition : new SunPosition(),
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -663,9 +664,11 @@ define([
         update : function(currentTime) {
             var cameraCenteredObjectID = this.cameraCenteredObjectID;
             var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
+            var sunPosition = this.sunPosition;
 
             this.timelineControl.updateFromClock();
-            this.scene.setSunPosition(SunPosition.compute(currentTime).position);
+            sunPosition.update(currentTime);
+            this.scene.setSunPosition(sunPosition.position);
             this.visualizers.update(currentTime);
 
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||

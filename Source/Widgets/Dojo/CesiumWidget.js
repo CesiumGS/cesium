@@ -61,6 +61,7 @@ define([
         specularMapUrl : undefined,
         cloudsMapUrl : undefined,
         bumpMapUrl : undefined,
+        sunPosition : new SunPosition(),
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -298,7 +299,9 @@ define([
 
         render : function(time) {
             var scene = this.scene;
-            scene.setSunPosition(SunPosition.compute(time).position);
+            var sunPosition = this.sunPosition;
+            sunPosition.update(time);
+            scene.setSunPosition(sunPosition.position);
             scene.render();
         },
 

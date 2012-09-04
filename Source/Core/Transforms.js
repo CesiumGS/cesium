@@ -257,7 +257,6 @@ define([
          * //Set the view to in the inertial frame.
          * scene.setAnimation(function() {
          *     var time = new Cesium.JulianDate();
-         *     scene.setSunPosition(Cesium.SunPosition.compute(time).position);
          *     scene.getCamera().transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(time), Cesium.Cartesian3.ZERO)});;
          * });
          */

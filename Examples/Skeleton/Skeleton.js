@@ -43,9 +43,11 @@ require({
 
     ///////////////////////////////////////////////////////////////////////////
 
+    var sunPosition = new Cesium.SunPosition();
     scene.setAnimation(function() {
         //scene.setSunPosition(scene.getCamera().position);
-        scene.setSunPosition(Cesium.SunPosition.compute().position);
+        sunPosition.update(new Cesium.JulianDate());
+        scene.setSunPosition(sunPosition.position);
 
         // Add code here to update primitives based on changes to animation time, camera parameters, etc.
     });
