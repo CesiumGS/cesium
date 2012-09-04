@@ -426,16 +426,16 @@ define([
                 center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
                 boundingVolume = new BoundingSphere(center, boundingVolume.radius);
 
-                var cull = false;
+                var cullPrimitive = false;
                 for ( var k = 0; k < planes.length; k++) {
                     var result = boundingVolume.intersect(planes[k]);
                     if (result === Intersect.OUTSIDE) {
-                        cull = true;
+                        cullPrimitive = true;
                         break;
                     }
                 }
 
-                if (cull || (typeof occluder !== 'undefined' && !occluder.isVisible(boundingVolume))) {
+                if (cullPrimitive || (typeof occluder !== 'undefined' && !occluder.isVisible(boundingVolume))) {
                     continue;
                 }
             }

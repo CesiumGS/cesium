@@ -180,13 +180,15 @@ define([
         return this._animate;
     };
 
+    var scratchCullingPlanes;
+
     function clearPasses(passes) {
         passes.pick = false;
     }
 
     function updateFrameState(scene) {
         var camera = scene._camera;
-        var cullingPlanes = camera.frustum.getPlanes(camera.position, camera.direction, camera.up);
+        var cullingPlanes = camera.frustum.getPlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC(), scratchCullingPlanes);
 
         var frameState = scene._frameState;
         frameState.mode = scene.mode;
@@ -260,7 +262,7 @@ define([
         ortho.near = frustum.near;
         ortho.far = frustum.far;
 
-        return ortho.getPlanes(pickRay.origin, camera.direction, camera.up);
+        return ortho.getPlanes(pickRay.origin, camera.direction, camera.up, scratchCullingPlanes);
     }
 
     function getPickPerspectiveCullingPlanes(scene, windowPosition, width, height) {
@@ -271,12 +273,12 @@ define([
 
         var pixelSize = frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
         var pickRay = camera._getPickRayPerspective(windowPosition);
-        var planeNormal = camera.direction;
-        var ptOnPlane = pickRay.origin.add(planeNormal.multiplyByScalar(near));
+        var planeNormal = camera.getDirectionWC();
+        var ptOnPlane = camera.getPositionWC().add(planeNormal.multiplyByScalar(near));
         var planeConstant = -planeNormal.dot(ptOnPlane);
         var pixelCenter = IntersectionTests.rayPlane(pickRay, planeNormal, planeConstant);
         if (typeof pixelCenter === 'undefined') {
-            return frustum.getPlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+            return frustum.getPlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC(), scratchCullingPlanes);
         }
 
         var pickWidth = pixelSize.x * width * 0.5;
@@ -306,7 +308,7 @@ define([
         offCenter.near = frustum.near;
         offCenter.far = frustum.far;
 
-        return offCenter.getPlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+        return offCenter.getPlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC(), scratchCullingPlanes);
     }
 
     function getPickCullingPlanes(scene, windowPosition, width, height) {
