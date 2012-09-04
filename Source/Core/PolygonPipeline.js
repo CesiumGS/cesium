@@ -4,7 +4,6 @@ define([
         './Math',
         './Cartesian2',
         './Cartesian3',
-        './Ellipsoid',
         './EllipsoidTangentPlane',
         './defaultValue',
         './pointInsideTriangle2D',
@@ -19,7 +18,6 @@ define([
         CesiumMath,
         Cartesian2,
         Cartesian3,
-        Ellipsoid,
         EllipsoidTangentPlane,
         defaultValue,
         pointInsideTriangle2D,
@@ -325,7 +323,7 @@ define([
         }
 
         // Project points onto a tangent plane to find the mutually visible vertex.
-        var tangentPlane = EllipsoidTangentPlane.create(Ellipsoid.WGS84, outerRing);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing);
         var tangentOuterRing = tangentPlane.projectPointsOntoPlane(outerRing);
         var tangentInnerRings = [];
         for (i = 0; i < innerRings.length; i++) {
@@ -373,6 +371,9 @@ define([
 
         return newPolygonVertices;
     }
+
+    var scaleToGeodeticHeightN = new Cartesian3();
+    var scaleToGeodeticHeightP = new Cartesian3();
 
     /**
      * DOC_TBA
@@ -800,6 +801,9 @@ define([
                 throw new DeveloperError('ellipsoid is required.');
             }
 
+            var n = scaleToGeodeticHeightN;
+            var p = scaleToGeodeticHeightP;
+
             height = height || 0.0;
 
             if (mesh && mesh.attributes && mesh.attributes.position) {
@@ -807,14 +811,14 @@ define([
                 var length = positions.length;
 
                 for ( var i = 0; i < length; i += 3) {
-                    var p = new Cartesian3(positions[i], positions[i + 1], positions[i + 2]);
-                    p = ellipsoid.scaleToGeodeticSurface(p);
+                    p.x = positions[i];
+                    p.y = positions[i + 1];
+                    p.z = positions[i + 2];
 
-                    var n = ellipsoid.geodeticSurfaceNormal(p);
-                    n = n.multiplyByScalar(height);
-
-                    // Translate from surface to height.
-                    p = p.add(n);
+                    ellipsoid.scaleToGeodeticSurface(p, p);
+                    ellipsoid.geodeticSurfaceNormal(p, n);
+                    Cartesian3.multiplyByScalar(n, height, n);
+                    Cartesian3.add(p, n, p);
 
                     positions[i] = p.x;
                     positions[i + 1] = p.y;

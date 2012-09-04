@@ -3,7 +3,7 @@ defineSuite([
          'Scene/Polygon',
          '../Specs/createContext',
          '../Specs/destroyContext',
-         '../Specs/sceneState',
+         '../Specs/frameState',
          '../Specs/pick',
          'Core/BoundingRectangle',
          'Core/BoundingSphere',
@@ -19,7 +19,7 @@ defineSuite([
          Polygon,
          createContext,
          destroyContext,
-         sceneState,
+         frameState,
          pick,
          BoundingRectangle,
          BoundingSphere,
@@ -228,7 +228,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        polygon.update(context, sceneState);
+        polygon.update(context, frameState);
         polygon.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -241,7 +241,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        polygon.update(context, sceneState);
+        polygon.update(context, frameState);
         polygon.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -254,7 +254,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        polygon.update(context, sceneState);
+        polygon.update(context, frameState);
         polygon.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -281,7 +281,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        polygon.update(context, sceneState);
+        polygon.update(context, frameState);
         polygon.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -296,22 +296,20 @@ defineSuite([
         };
         polygon.show = false;
 
-        expect(typeof polygon.update(context, sceneState) === 'undefined').toEqual(true);
+        expect(typeof polygon.update(context, frameState) === 'undefined').toEqual(true);
     });
 
     it('does not render without positions', function() {
         polygon = new Polygon();
         polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        expect(typeof polygon.update(context, sceneState) === 'undefined').toEqual(true);
+        expect(typeof polygon.update(context, frameState) === 'undefined').toEqual(true);
     });
 
     it('is picked', function() {
         polygon = createPolygon();
 
-        polygon.update(context, sceneState);
-
-        var pickedObject = pick(context, polygon, 0, 0);
+        var pickedObject = pick(context, frameState, polygon, 0, 0);
         expect(pickedObject).toEqual(polygon);
     });
 
@@ -319,17 +317,17 @@ defineSuite([
         polygon = createPolygon();
         polygon.show = false;
 
-        expect(typeof polygon.update(context, sceneState) === 'undefined').toEqual(true);
+        expect(typeof polygon.update(context, frameState) === 'undefined').toEqual(true);
     });
 
     it('test 3D bounding sphere from positions', function() {
         polygon = createPolygon();
-        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
+        var boundingVolume = polygon.update(context, frameState).boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon._positions));
     });
 
     it('test 2D bounding sphere from positions', function() {
-        var projection = sceneState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
         var ellipsoid = projection.getEllipsoid();
         var positions = [
             Cartographic.fromDegrees(-1.0, -1.0, 0.0),
@@ -343,10 +341,10 @@ defineSuite([
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray(positions));
 
-        var mode = sceneState.mode;
-        sceneState.mode = SceneMode.COLUMBUS_VIEW;
-        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
-        sceneState.mode = mode;
+        var mode = frameState.mode;
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        var boundingVolume = polygon.update(context, frameState).boundingVolume;
+        frameState.mode = mode;
 
         var projectedPositions = [];
         for (var i = 0; i < positions.length; ++i) {
@@ -360,7 +358,7 @@ defineSuite([
     });
 
     it('test 2D bounding rectangle from positions', function() {
-        var projection = sceneState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
         var ellipsoid = projection.getEllipsoid();
         var positions = [
             Cartographic.fromDegrees(-1.0, -1.0, 0.0),
@@ -374,10 +372,10 @@ defineSuite([
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray(positions));
 
-        var mode = sceneState.mode;
-        sceneState.mode = SceneMode.SCENE2D;
-        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
-        sceneState.mode = mode;
+        var mode = frameState.mode;
+        frameState.mode = SceneMode.SCENE2D;
+        var boundingVolume = polygon.update(context, frameState).boundingVolume;
+        frameState.mode = mode;
 
         var projectedPositions = [];
         for (var i = 0; i < positions.length; ++i) {
@@ -388,7 +386,7 @@ defineSuite([
         var rect = BoundingRectangle.fromPoints(projectedPositions);
         expect(boundingVolume.x).toEqualEpsilon(rect.x, CesiumMath.EPSILON10);
         expect(boundingVolume.y).toEqualEpsilon(rect.y, CesiumMath.EPSILON10);
-        expect(boundingVolume.width).toEqualEpsilon(rect.width, CesiumMath.EPSILON10);
+        expect(boundingVolume.width).toEqualEpsilon(rect.width, CesiumMath.EPSILON9);
         expect(boundingVolume.height).toEqualEpsilon(rect.height, CesiumMath.EPSILON10);
     });
 
@@ -404,12 +402,12 @@ defineSuite([
         polygon.ellipsoid = ellipsoid;
         polygon.configureExtent(extent);
 
-        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
+        var boundingVolume = polygon.update(context, frameState).boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent, ellipsoid));
     });
 
     it('test 2D bounding sphere from extent', function() {
-        var projection = sceneState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
         var ellipsoid = projection.getEllipsoid();
         var extent = new Extent(
                 0.0,
@@ -421,18 +419,18 @@ defineSuite([
         polygon.ellipsoid = ellipsoid;
         polygon.configureExtent(extent);
 
-        var mode = sceneState.mode;
-        sceneState.mode = SceneMode.COLUMBUS_VIEW;
-        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
-        sceneState.mode = mode;
+        var mode = frameState.mode;
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        var boundingVolume = polygon.update(context, frameState).boundingVolume;
+        frameState.mode = mode;
 
         var sphere = BoundingSphere.fromExtent2D(extent, projection);
         sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
-        expect(boundingVolume).toEqual(sphere);
+        expect(boundingVolume).toEqualEpsilon(sphere, CesiumMath.EPSILON9);
     });
 
     it('test 2D bounding rectangle from extent', function() {
-        var projection = sceneState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
         var ellipsoid = projection.getEllipsoid();
         var extent = new Extent(
                 0.0,
@@ -444,13 +442,13 @@ defineSuite([
         polygon.ellipsoid = ellipsoid;
         polygon.configureExtent(extent);
 
-        var mode = sceneState.mode;
-        sceneState.mode = SceneMode.SCENE2D;
-        var boundingVolume = polygon.update(context, sceneState).boundingVolume;
-        sceneState.mode = mode;
+        var mode = frameState.mode;
+        frameState.mode = SceneMode.SCENE2D;
+        var boundingVolume = polygon.update(context, frameState).boundingVolume;
+        frameState.mode = mode;
 
         var rect = BoundingRectangle.fromExtent(extent, projection);
-        expect(boundingVolume).toEqual(rect);
+        expect(boundingVolume).toEqualEpsilon(rect, CesiumMath.EPSILON9);
     });
 
     it('isDestroyed', function() {
@@ -465,7 +463,7 @@ defineSuite([
         polygon.ellipsoid = undefined;
 
         expect(function() {
-            polygon.update(context, sceneState);
+            polygon.update(context, frameState);
         }).toThrow();
     });
 
@@ -474,7 +472,7 @@ defineSuite([
         polygon.granularity = -1.0;
 
         expect(function() {
-            polygon.update(context, sceneState);
+            polygon.update(context, frameState);
         }).toThrow();
     });
 });

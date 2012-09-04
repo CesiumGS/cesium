@@ -402,8 +402,8 @@ define([
         return this._primitives.length;
     };
 
-    function update2D(context, sceneState, primitives, renderList) {
-        var camera = sceneState.camera;
+    function update2D(context, frameState, primitives, renderList) {
+        var camera = frameState.camera;
         var frustum = camera.frustum;
 
         var frustumRect;
@@ -432,7 +432,7 @@ define([
         var length = primitives.length;
         for ( var i = 0; i < length; ++i) {
             var primitive = primitives[i];
-            var spatialState = primitive.update(context, sceneState);
+            var spatialState = primitive.update(context, frameState);
 
             if (typeof spatialState === 'undefined') {
                 continue;
@@ -449,15 +449,15 @@ define([
         }
     }
 
-    function update3D(context, sceneState, primitives, renderList) {
-        var mode = sceneState.mode;
-        var camera = sceneState.camera;
-        var occluder = sceneState.occluder;
+    function update3D(context, frameState, primitives, renderList) {
+        var mode = frameState.mode;
+        var camera = frameState.camera;
+        var occluder = frameState.occluder;
 
         var length = primitives.length;
         for ( var i = 0; i < length; ++i) {
             var primitive = primitives[i];
-            var spatialState = primitive.update(context, sceneState);
+            var spatialState = primitive.update(context, frameState);
 
             if (typeof spatialState === 'undefined') {
                 continue;
@@ -488,20 +488,20 @@ define([
     /**
      * @private
      */
-    CompositePrimitive.prototype.update = function(context, sceneState) {
+    CompositePrimitive.prototype.update = function(context, frameState) {
         if (!this.show) {
             return undefined;
         }
 
         if (this._centralBody) {
-            this._centralBody.update(context, sceneState);
+            this._centralBody.update(context, frameState);
         }
 
-        var mode = sceneState.mode;
+        var mode = frameState.mode;
         if (mode === SceneMode.SCENE2D) {
-            update2D(context, sceneState, this._primitives, this._renderList);
+            update2D(context, frameState, this._primitives, this._renderList);
         } else {
-            update3D(context, sceneState, this._primitives, this._renderList);
+            update3D(context, frameState, this._primitives, this._renderList);
         }
 
         return {};
@@ -524,25 +524,6 @@ define([
             primitive.render(context);
         }
         this._renderList.length = 0;
-    };
-
-    /**
-     * @private
-     */
-    CompositePrimitive.prototype.updateForPick = function(context) {
-        if (this._centralBody && this._centralBody.updateForPick) {
-            this._centralBody.updateForPick(context);
-        }
-
-        // This assumes that updateForPick is called after update and before renderForPick
-        var primitives = this._renderList;
-        var length = primitives.length;
-        for ( var i = 0; i < length; ++i) {
-            var primitive = primitives[i];
-            if (primitive.updateForPick) {
-                primitives[i].updateForPick(context);
-            }
-        }
     };
 
     /**

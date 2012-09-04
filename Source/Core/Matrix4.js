@@ -1,19 +1,22 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './Cartesian4',
+        './defaultValue',
         './DeveloperError',
-        './RuntimeError',
+        './freezeObject',
         './Math',
         './Matrix3',
-        './Cartesian3',
-        './Cartesian4'
-       ],
-    function(
+        './RuntimeError'
+    ], function(
+        Cartesian3,
+        Cartesian4,
+        defaultValue,
         DeveloperError,
-        RuntimeError,
+        freezeObject,
         CesiumMath,
         Matrix3,
-        Cartesian3,
-        Cartesian4) {
+        RuntimeError) {
     "use strict";
 
     /**
@@ -56,22 +59,22 @@ define([
                            column0Row1, column1Row1, column2Row1, column3Row1,
                            column0Row2, column1Row2, column2Row2, column3Row2,
                            column0Row3, column1Row3, column2Row3, column3Row3) {
-        this[0] = typeof column0Row0 === 'undefined' ? 0.0 : column0Row0;
-        this[1] = typeof column0Row1 === 'undefined' ? 0.0 : column0Row1;
-        this[2] = typeof column0Row2 === 'undefined' ? 0.0 : column0Row2;
-        this[3] = typeof column0Row3 === 'undefined' ? 0.0 : column0Row3;
-        this[4] = typeof column1Row0 === 'undefined' ? 0.0 : column1Row0;
-        this[5] = typeof column1Row1 === 'undefined' ? 0.0 : column1Row1;
-        this[6] = typeof column1Row2 === 'undefined' ? 0.0 : column1Row2;
-        this[7] = typeof column1Row3 === 'undefined' ? 0.0 : column1Row3;
-        this[8] = typeof column2Row0 === 'undefined' ? 0.0 : column2Row0;
-        this[9] = typeof column2Row1 === 'undefined' ? 0.0 : column2Row1;
-        this[10] = typeof column2Row2 === 'undefined' ? 0.0 : column2Row2;
-        this[11] = typeof column2Row3 === 'undefined' ? 0.0 : column2Row3;
-        this[12] = typeof column3Row0 === 'undefined' ? 0.0 : column3Row0;
-        this[13] = typeof column3Row1 === 'undefined' ? 0.0 : column3Row1;
-        this[14] = typeof column3Row2 === 'undefined' ? 0.0 : column3Row2;
-        this[15] = typeof column3Row3 === 'undefined' ? 0.0 : column3Row3;
+        this[0] = defaultValue(column0Row0, 0.0);
+        this[1] = defaultValue(column0Row1, 0.0);
+        this[2] = defaultValue(column0Row2, 0.0);
+        this[3] = defaultValue(column0Row3, 0.0);
+        this[4] = defaultValue(column1Row0, 0.0);
+        this[5] = defaultValue(column1Row1, 0.0);
+        this[6] = defaultValue(column1Row2, 0.0);
+        this[7] = defaultValue(column1Row3, 0.0);
+        this[8] = defaultValue(column2Row0, 0.0);
+        this[9] = defaultValue(column2Row1, 0.0);
+        this[10] = defaultValue(column2Row2, 0.0);
+        this[11] = defaultValue(column2Row3, 0.0);
+        this[12] = defaultValue(column3Row0, 0.0);
+        this[13] = defaultValue(column3Row1, 0.0);
+        this[14] = defaultValue(column3Row2, 0.0);
+        this[15] = defaultValue(column3Row3, 0.0);
     };
 
     /**
@@ -325,70 +328,70 @@ define([
     };
 
      /**
-      * Computes a Matrix4 instance representing a perspective transformation matrix.
-      * @memberof Matrix4
-      *
-      * @param {Number} fovY The field of view along the Y axis in radians.
-      * @param {Number} aspectRatio The aspect ratio.
-      * @param {Number} near The distance to the near plane in meters.
-      * @param {Number} far The distance to the far plane in meters.
-      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-      * @returns The modified result parameter, or a new Matrix4 instance if none was provided.
-      *
-      * @exception {DeveloperError} fovY must be in [0, PI).
-      * @exception {DeveloperError} aspectRatio must be greater than zero.
-      * @exception {DeveloperError} near must be greater than zero.
-      * @exception {DeveloperError} far must be greater than zero.
-      */
-     Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, result) {
-         if (fovY <= 0.0 || fovY > Math.PI) {
-             throw new DeveloperError('fovY must be in [0, PI).');
+     * Computes a Matrix4 instance representing a perspective transformation matrix.
+     * @memberof Matrix4
+     *
+     * @param {Number} fovY The field of view along the Y axis in radians.
+     * @param {Number} aspectRatio The aspect ratio.
+     * @param {Number} near The distance to the near plane in meters.
+     * @param {Number} far The distance to the far plane in meters.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if none was provided.
+     *
+     * @exception {DeveloperError} fovY must be in [0, PI).
+     * @exception {DeveloperError} aspectRatio must be greater than zero.
+     * @exception {DeveloperError} near must be greater than zero.
+     * @exception {DeveloperError} far must be greater than zero.
+     */
+    Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, result) {
+        if (fovY <= 0.0 || fovY > Math.PI) {
+            throw new DeveloperError('fovY must be in [0, PI).');
+        }
+
+        if (aspectRatio <= 0.0) {
+            throw new DeveloperError('aspectRatio must be greater than zero.');
+        }
+
+        if (near <= 0.0) {
+            throw new DeveloperError('near must be greater than zero.');
+        }
+
+        if (far <= 0.0) {
+            throw new DeveloperError('far must be greater than zero.');
+        }
+
+        var bottom = Math.tan(fovY * 0.5);
+
+        var column1Row1 = 1.0 / bottom;
+        var column0Row0 = column1Row1 / aspectRatio;
+        var column2Row2 = (far + near) / (near - far);
+        var column3Row2 = (2.0 * far * near) / (near - far);
+
+        if (typeof result === 'undefined') {
+            return new Matrix4(column0Row0,         0.0,         0.0,         0.0,
+                                       0.0, column1Row1,         0.0,         0.0,
+                                       0.0,         0.0, column2Row2, column3Row2,
+                                       0.0,         0.0,        -1.0,         0.0);
          }
 
-         if (aspectRatio <= 0.0) {
-             throw new DeveloperError('aspectRatio must be greater than zero.');
-         }
-
-         if (near <= 0.0) {
-             throw new DeveloperError('near must be greater than zero.');
-         }
-
-         if (far <= 0.0) {
-             throw new DeveloperError('far must be greater than zero.');
-         }
-
-         var bottom = Math.tan(fovY * 0.5);
-
-         var column1Row1 = 1.0 / bottom;
-         var column0Row0 = column1Row1 / aspectRatio;
-         var column2Row2 = (far + near) / (near - far);
-         var column3Row2 = (2.0 * far * near) / (near - far);
-
-         if (typeof result === 'undefined') {
-             return new Matrix4(column0Row0, 0.0,         0.0,         0.0,
-                                0.0,         column1Row1, 0.0,         0.0,
-                                0.0,         0.0,         column2Row2, column3Row2,
-                                0.0,         0.0,        -1.0,         0.0);
-         }
-
-         result[0] = column0Row0;
-         result[1] = 0.0;
-         result[2] = 0.0;
-         result[3] = 0.0;
-         result[4] = 0.0;
-         result[5] = column1Row1;
-         result[6] = 0.0;
-         result[7] = 0.0;
-         result[8] = 0.0;
-         result[9] = 0.0;
-         result[10] = column2Row2;
-         result[11] = -1.0;
-         result[12] = 0.0;
-         result[13] = 0.0;
-         result[14] = column3Row2;
-         result[15] = 0.0;
-         return result;
-     };
+        result[0] = column0Row0;
+        result[1] = 0.0;
+        result[2] = 0.0;
+        result[3] = 0.0;
+        result[4] = 0.0;
+        result[5] = column1Row1;
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = 0.0;
+        result[9] = 0.0;
+        result[10] = column2Row2;
+        result[11] = -1.0;
+        result[12] = 0.0;
+        result[13] = 0.0;
+        result[14] = column3Row2;
+        result[15] = 0.0;
+        return result;
+    };
 
     /**
     * Computes a Matrix4 instance representing an orthographic transformation matrix.
@@ -611,6 +614,7 @@ define([
         return result;
     };
 
+    var EMPTY_OBJECT = {};
     /**
      * Computes a Matrix4 instance that transforms from normalized device coordinates to window coordinates.
      * @memberof Matrix4
@@ -637,23 +641,23 @@ define([
      * var m = Matrix4.computeViewportTransformation(context.getViewport());
      */
     Matrix4.computeViewportTransformation = function(viewport, nearDepthRange, farDepthRange, result) {
-        var v = viewport || {};
-        v.x = v.x || 0.0;
-        v.y = v.y || 0.0;
-        v.width = v.width || 0.0;
-        v.height = v.height || 0.0;
-        nearDepthRange = nearDepthRange || 0.0;
-        farDepthRange = (typeof farDepthRange === 'undefined') ? 1.0 : farDepthRange;
+        viewport = defaultValue(viewport, EMPTY_OBJECT);
+        var x = defaultValue(viewport.x, 0.0);
+        var y = defaultValue(viewport.y, 0.0);
+        var width = defaultValue(viewport.width, 0.0);
+        var height = defaultValue(viewport.height, 0.0);
+        nearDepthRange = defaultValue(nearDepthRange, 0.0);
+        farDepthRange = defaultValue(farDepthRange, 1.0);
 
-        var halfWidth = v.width * 0.5;
-        var halfHeight = v.height * 0.5;
+        var halfWidth = width * 0.5;
+        var halfHeight = height * 0.5;
         var halfDepth = (farDepthRange - nearDepthRange) * 0.5;
 
         var column0Row0 = halfWidth;
         var column1Row1 = halfHeight;
         var column2Row2 = halfDepth;
-        var column3Row0 = v.x + halfWidth;
-        var column3Row1 = v.y + halfHeight;
+        var column3Row0 = x + halfWidth;
+        var column3Row1 = y + halfHeight;
         var column3Row2 = nearDepthRange + halfDepth;
         var column3Row3 = 1.0;
 
@@ -1465,10 +1469,10 @@ define([
      * An immutable Matrix4 instance initialized to the identity matrix.
      * @memberof Matrix4
      */
-    Matrix4.IDENTITY = Object.freeze(new Matrix4(1.0, 0.0, 0.0, 0.0,
-                                                 0.0, 1.0, 0.0, 0.0,
-                                                 0.0, 0.0, 1.0, 0.0,
-                                                 0.0, 0.0, 0.0, 1.0));
+    Matrix4.IDENTITY = freezeObject(new Matrix4(1.0, 0.0, 0.0, 0.0,
+                                                0.0, 1.0, 0.0, 0.0,
+                                                0.0, 0.0, 1.0, 0.0,
+                                                0.0, 0.0, 0.0, 1.0));
 
     /**
      * The index into Matrix4 for column 0, row 0.

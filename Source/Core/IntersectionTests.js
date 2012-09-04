@@ -41,7 +41,7 @@ define([
          * @exception {DeveloperError} ray is required.
          * @exception {DeveloperError} plane is required.
          */
-        rayPlane : function(ray, plane) {
+        rayPlane : function(ray, plane, result) {
             if (typeof ray === 'undefined') {
                 throw new DeveloperError('ray is required.');
             }
@@ -50,24 +50,23 @@ define([
                 throw new DeveloperError('plane is required.');
             }
 
-            var origin = Cartesian3.clone(ray.origin);
-            var direction = Cartesian3.clone(ray.direction);
-            var normal = Cartesian3.clone(plane.normal);
-
-            var denominator = normal.dot(direction);
+            var origin = ray.origin;
+            var direction = ray.direction;
+            var denominator = Cartesian3.dot(plane.normal, direction);
 
             if (Math.abs(denominator) < CesiumMath.EPSILON15) {
                 // Ray is parallel to plane.  The ray may be in the polygon's plane.
                 return undefined;
             }
 
-            var t = (-plane.distance - normal.dot(origin)) / denominator;
+            var t = (-plane.distance - Cartesian3.dot(plane.normal, origin)) / denominator;
 
             if (t < 0) {
                 return undefined;
             }
 
-            return origin.add(direction.multiplyByScalar(t));
+            result = direction.multiplyByScalar(t, result);
+            return Cartesian3.add(origin, result);
         },
 
         /**
