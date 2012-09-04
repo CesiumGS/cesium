@@ -273,40 +273,28 @@ define([
         var frustum = camera.frustum;
         var near = frustum.near;
 
-        var pixelSize = frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
-        var pickRay = camera._getPickRayPerspective(windowPosition);
-        var planeNormal = camera.getDirectionWC();
-        var ptOnPlane = camera.getPositionWC().add(planeNormal.multiplyByScalar(near));
-        var planeConstant = -planeNormal.dot(ptOnPlane);
-        var pixelCenter = IntersectionTests.rayPlane(pickRay, planeNormal, planeConstant);
-        if (typeof pixelCenter === 'undefined') {
-            return frustum.getPlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC(), scratchCullingPlanes);
-        }
+        var canvasWidth = canvas.clientWidth;
+        var canvasHeight = canvas.clientHeight;
 
+        var tanPhi = Math.tan(frustum.fovy * 0.5);
+        var tanTheta = frustum.aspectRatio * tanPhi;
+
+        var x = (2.0 / canvasWidth) * windowPosition.x - 1.0;
+        var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
+
+        var xDir = x * near * tanTheta;
+        var yDir = y * near * tanPhi;
+
+        var pixelSize = frustum.getPixelSize(new Cartesian2(canvasWidth, canvasHeight));
         var pickWidth = pixelSize.x * width * 0.5;
         var pickHeight = pixelSize.y * height * 0.5;
 
-        var up = camera.getUpWC();
-        var right = camera.getRightWC();
-
         var offCenter = new PerspectiveOffCenterFrustum();
 
-        var scratch = up.multiplyByScalar(pickHeight);
-        Cartesian3.add(pixelCenter, scratch, scratch);
-        offCenter.top = Cartesian3.dot(scratch, up);
-
-        Cartesian3.multiplyByScalar(up, -pickHeight, scratch);
-        Cartesian3.add(pixelCenter, scratch, scratch);
-        offCenter.bottom = Cartesian3.dot(scratch, up);
-
-        Cartesian3.multiplyByScalar(right, pickWidth, scratch);
-        Cartesian3.add(pixelCenter, scratch, scratch);
-        offCenter.right = Cartesian3.dot(scratch, right);
-
-        Cartesian3.multiplyByScalar(right, -pickWidth, scratch);
-        Cartesian3.add(pixelCenter, scratch, scratch);
-        offCenter.left = Cartesian3.dot(scratch, right);
-
+        offCenter.top = yDir + pickHeight;
+        offCenter.bottom = yDir - pickHeight;
+        offCenter.right = xDir + pickWidth;
+        offCenter.left = xDir - pickWidth;
         offCenter.near = frustum.near;
         offCenter.far = frustum.far;
 
