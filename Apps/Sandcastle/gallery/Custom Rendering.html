@@ -127,7 +127,7 @@ require([
         };
     };
     
-    Box.prototype.update = function(context, sceneState) {
+    Box.prototype.update = function(context, frameState) {
         // Only supports 3D, not 2D or Columbus view.
         if (typeof this._va === 'undefined') {
             var vs = '';
