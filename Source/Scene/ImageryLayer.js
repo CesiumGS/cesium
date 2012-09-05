@@ -6,6 +6,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian4',
         '../Core/Color',
@@ -35,6 +36,7 @@ define([
         ComponentDatatype,
         DeveloperError,
         CesiumMath,
+        BoundingRectangle,
         Cartesian2,
         Cartesian4,
         Color,
@@ -428,6 +430,7 @@ define([
     };
 
     var float32ArrayScratch = new Float32Array(1);
+    var originalViewport = new BoundingRectangle();
 
     function reprojectToGeographic(imageryLayer, context, texture, extent) {
         if (typeof imageryLayer._fbReproject === 'undefined') {
@@ -514,7 +517,7 @@ define([
             color : new Color(0.0, 0.0, 0.0, 0.0)
         }));
 
-        var oldViewport = context.getViewport();
+        BoundingRectangle.clone(context.getViewport(), originalViewport);
         context.setViewport({
             x      : 0,
             y      : 0,
@@ -531,7 +534,7 @@ define([
             uniformMap : uniformMap
         });
 
-        context.setViewport(oldViewport);
+        context.setViewport(originalViewport);
 
         return outputTexture;
     }

@@ -24,91 +24,121 @@ defineSuite([
                      new Cartesian3(-3, 3, 3)
                  ];
 
-    it('throws an exception when constructed without a minimum', function() {
-        expect(function() {
-            return new AxisAlignedBoundingBox();
-        }).toThrow();
-    });
+    var positionsMinimum = new Cartesian3(-3, -3, -3);
+    var positionsMaximum = new Cartesian3(3, 3, 3);
+    var positionsCenter = new Cartesian3(0, 0, 0);
 
-    it('throws an exception when constructed without a maximum', function() {
-        expect(function() {
-            return new AxisAlignedBoundingBox(Cartesian3.ZERO);
-        }).toThrow();
-    });
-
-    it('constructor', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X);
+    it('constructor sets expected default values', function() {
+        var box = new AxisAlignedBoundingBox();
         expect(box.minimum).toEqual(Cartesian3.ZERO);
-        expect(box.maximum).toEqual(Cartesian3.UNIT_X);
-        expect(box.center).toEqual(new Cartesian3(0.5, 0.0, 0.0));
+        expect(box.maximum).toEqual(Cartesian3.ZERO);
+        expect(box.center).toEqual(Cartesian3.ZERO);
+    });
+
+    it('constructor sets expected parameter values', function() {
+        var minimum = new Cartesian3(1, 2, 3);
+        var maximum = new Cartesian3(4, 5, 6);
+        var center = new Cartesian3(2.5, 3.5, 4.5);
+        var box = new AxisAlignedBoundingBox(minimum, maximum, center);
+        expect(box.minimum).toEqual(minimum);
+        expect(box.maximum).toEqual(maximum);
+        expect(box.center).toEqual(center);
+    });
+
+    it('constructor computes center if not supplied', function() {
+        var minimum = new Cartesian3(1, 2, 3);
+        var maximum = new Cartesian3(4, 5, 6);
+        var expectedCenter = new Cartesian3(2.5, 3.5, 4.5);
+        var box = new AxisAlignedBoundingBox(minimum, maximum);
+        expect(box.minimum).toEqual(minimum);
+        expect(box.maximum).toEqual(maximum);
+        expect(box.center).toEqual(expectedCenter);
+    });
+
+    it('fromPoints constructs empty box with undefined positions', function() {
+        var box = AxisAlignedBoundingBox.fromPoints(undefined);
+        expect(box.minimum).toEqual(Cartesian3.ZERO);
+        expect(box.maximum).toEqual(Cartesian3.ZERO);
+        expect(box.center).toEqual(Cartesian3.ZERO);
+    });
+
+    it('fromPoints constructs empty box with empty positions', function() {
+        var box = AxisAlignedBoundingBox.fromPoints([]);
+        expect(box.minimum).toEqual(Cartesian3.ZERO);
+        expect(box.maximum).toEqual(Cartesian3.ZERO);
+        expect(box.center).toEqual(Cartesian3.ZERO);
+    });
+
+    it('fromPoints computes the correct values', function() {
+        var box = AxisAlignedBoundingBox.fromPoints(positions);
+        expect(box.minimum).toEqual(positionsMinimum);
+        expect(box.maximum).toEqual(positionsMaximum);
+        expect(box.center).toEqual(positionsCenter);
     });
 
     it('clone without a result parameter', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X);
+        var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_Y, Cartesian3.UNIT_X);
         var result = box.clone();
         expect(box).toNotBe(result);
         expect(box).toEqual(result);
     });
 
     it('clone with a result parameter', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X);
-        var result = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_Y);
+        var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_Y, Cartesian3.UNIT_X);
+        var result = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_Z);
         var returnedResult = box.clone(result);
-        expect(box).toNotBe(result);
         expect(result).toBe(returnedResult);
+        expect(box).toNotBe(result);
         expect(box).toEqual(result);
     });
 
     it('clone works with "this" result parameter', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X);
+        var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_Y, Cartesian3.UNIT_X);
         var returnedResult = box.clone(box);
         expect(box).toBe(returnedResult);
+        expect(box.minimum).toEqual(Cartesian3.UNIT_Y);
+        expect(box.maximum).toEqual(Cartesian3.UNIT_X);
     });
 
-    it('equals', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X);
-        expect(box.equals(box.clone())).toEqual(true);
-        expect(box.equals(new AxisAlignedBoundingBox(Cartesian3.UNIT_X, Cartesian3.UNIT_Y))).toEqual(false);
+    it('equals works in all cases', function() {
+        var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_X, Cartesian3.UNIT_Y, Cartesian3.UNIT_Z);
+        var bogie = new Cartesian3(2, 3, 4);
+        expect(box.equals(new AxisAlignedBoundingBox(Cartesian3.UNIT_X, Cartesian3.UNIT_Y, Cartesian3.UNIT_Z))).toEqual(true);
+        expect(box.equals(new AxisAlignedBoundingBox(bogie, Cartesian3.UNIT_Y, Cartesian3.UNIT_Y))).toEqual(false);
+        expect(box.equals(new AxisAlignedBoundingBox(Cartesian3.UNIT_X, bogie, Cartesian3.UNIT_Z))).toEqual(false);
+        expect(box.equals(new AxisAlignedBoundingBox(Cartesian3.UNIT_X, Cartesian3.UNIT_Y, bogie))).toEqual(false);
         expect(box.equals(undefined)).toEqual(false);
     });
 
-    it('throws an exception when constructed without any positions', function() {
-        expect(function() {
-            return AxisAlignedBoundingBox.fromPoints();
-        }).toThrow();
-    });
-
-    it('throws an exception when constructed without less than one position', function() {
-        expect(function() {
-            return AxisAlignedBoundingBox.fromPoints([]);
-        }).toThrow();
-    });
-
-    it('computes the minimum', function() {
-        var box = AxisAlignedBoundingBox.fromPoints(positions);
-        expect(box.minimum.equals(new Cartesian3(-3, -3, -3))).toEqual(true);
-    });
-
-    it('computes the maximum', function() {
-        var box = AxisAlignedBoundingBox.fromPoints(positions);
-        expect(box.maximum.equals(new Cartesian3(3, 3, 3))).toEqual(true);
-    });
-
-    it('computes a center', function() {
-        var box = AxisAlignedBoundingBox.fromPoints(positions);
-        expect(box.center.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)).toEqual(true);
-    });
-
     it('computes the bounding box for a single position', function() {
-        var box = AxisAlignedBoundingBox.fromPoints([{
-            x : 1,
-            y : 2,
-            z : 3
-        }]);
+        var box = AxisAlignedBoundingBox.fromPoints([positions[0]]);
+        expect(box.minimum).toEqual(positions[0]);
+        expect(box.maximum).toEqual(positions[0]);
+        expect(box.center).toEqual(positions[0]);
+    });
 
-        expect(box.minimum.equals(new Cartesian3(1, 2, 3))).toEqual(true);
-        expect(box.maximum.equals(new Cartesian3(1, 2, 3))).toEqual(true);
-        expect(box.center.equals(new Cartesian3(1, 2, 3))).toEqual(true);
+    it('intersect works with box on the positive side of a plane', function() {
+        var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_X.negate(), Cartesian3.ZERO);
+        var normal = Cartesian3.UNIT_X.negate();
+        var position = Cartesian3.UNIT_X;
+        var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
+        expect(box.intersect(plane)).toEqual(Intersect.INSIDE);
+    });
+
+    it('intersect works with box on the negative side of a plane', function() {
+        var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_X.negate(), Cartesian3.ZERO);
+        var normal = Cartesian3.UNIT_X;
+        var position = Cartesian3.UNIT_X;
+        var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
+        expect(box.intersect(plane)).toEqual(Intersect.OUTSIDE);
+    });
+
+    it('intersect works with box intersecting a plane', function() {
+        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X.multiplyByScalar(2.0));
+        var normal = Cartesian3.UNIT_X;
+        var position = Cartesian3.UNIT_X;
+        var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
+        expect(box.intersect(plane)).toEqual(Intersect.INTERSECTING);
     });
 
     it('static clone throws with no parameter', function() {
@@ -117,38 +147,17 @@ defineSuite([
         }).toThrow();
     });
 
-    it('intersect throws without a box', function() {
+    it('static intersect throws without a box', function() {
+        var plane = new Cartesian4();
         expect(function() {
-            AxisAlignedBoundingBox.intersect();
+            AxisAlignedBoundingBox.intersect(undefined, plane);
         }).toThrow();
     });
 
-    it('intersect throws without a plane', function() {
+    it('static intersect throws without a plane', function() {
+        var box = new AxisAlignedBoundingBox();
         expect(function() {
-            AxisAlignedBoundingBox.intersect(new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X));
+            AxisAlignedBoundingBox.intersect(box, undefined);
         }).toThrow();
-    });
-
-    it('box on the positive side of a plane', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_X.negate(), Cartesian3.ZERO);
-        var normal = Cartesian3.UNIT_X.negate();
-        var position = Cartesian3.UNIT_X;
-        var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
-        expect(box.intersect(plane)).toEqual(Intersect.INSIDE);    });
-
-    it('box on the negative side of a plane', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_X.negate(), Cartesian3.ZERO);
-        var normal = Cartesian3.UNIT_X;
-        var position = Cartesian3.UNIT_X;
-        var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
-        expect(box.intersect(plane)).toEqual(Intersect.OUTSIDE);
-    });
-
-    it('box intersecting a plane', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X.multiplyByScalar(2.0));
-        var normal = Cartesian3.UNIT_X;
-        var position = Cartesian3.UNIT_X;
-        var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
-        expect(box.intersect(plane)).toEqual(Intersect.INTERSECTING);
     });
 });

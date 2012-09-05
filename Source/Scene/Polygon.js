@@ -149,7 +149,7 @@ define([
         this._rsPick = undefined;
 
         this._vertices = new PositionVertices();
-        this._pickId = null;
+        this._pickId = undefined;
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
@@ -437,6 +437,8 @@ define([
         this._createVertexArray = true;
     };
 
+    var _appendTextureCoordinatesCartesian2 = new Cartesian2();
+    var _appendTextureCoordinatesCartesian3 = new Cartesian3();
     Polygon._appendTextureCoordinates = function(tangentPlane, positions2D, mesh) {
         var boundingRectangle = new BoundingRectangle.fromPoints(positions2D);
         var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
@@ -451,9 +453,12 @@ define([
         // save memory by computing them in the fragment shader.  However, projecting
         // the point onto the plane may have precision issues.
         for ( var i = 0; i < length; i += 3) {
-            var p = new Cartesian3(positions[i], positions[i + 1], positions[i + 2]);
-            var st = tangentPlane.projectPointOntoPlane(p);
-            st = st.subtract(origin);
+            var p = _appendTextureCoordinatesCartesian3;
+            p.x = positions[i];
+            p.y = positions[i + 1];
+            p.z = positions[i + 2];
+            var st = tangentPlane.projectPointOntoPlane(p, _appendTextureCoordinatesCartesian2);
+            st.subtract(origin, st);
 
             textureCoordinates[j++] = st.x / boundingRectangle.width;
             textureCoordinates[j++] = st.y / boundingRectangle.height;
@@ -468,10 +473,11 @@ define([
         return mesh;
     };
 
+    var _createMeshFromPositionsPositions = [];
     Polygon.prototype._createMeshFromPositions = function (positions, outerPositions2D) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
-        var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, this.ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, _createMeshFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
@@ -485,6 +491,7 @@ define([
         return mesh;
     };
 
+    var _createMeshesOuterPositions2D = [];
     Polygon.prototype._createMeshes = function() {
         // PERFORMANCE_IDEA:  Move this to a web-worker.
         var i;
@@ -503,8 +510,8 @@ define([
             this._boundingVolume = BoundingSphere.fromPoints(this._positions);
         } else if (typeof this._polygonHierarchy !== 'undefined') {
             var outerPositions =  this._polygonHierarchy[0];
-            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, outerPositions);
-            var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions);
+            var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, this.ellipsoid);
+            var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions, _createMeshesOuterPositions2D);
             for (i = 0; i < this._polygonHierarchy.length; i++) {
                  meshes.push(this._createMeshFromPositions(this._polygonHierarchy[i], outerPositions2D));
             }
@@ -575,12 +582,12 @@ define([
      *
      * @see Polygon#render
      */
-    Polygon.prototype.update = function(context, sceneState) {
+    Polygon.prototype.update = function(context, frameState) {
         if (!this.ellipsoid) {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
 
-        var mode = sceneState.mode;
+        var mode = frameState.mode;
         var granularity = this._getGranularity(mode);
 
         if (granularity < 0.0) {
@@ -611,7 +618,7 @@ define([
             this._bufferUsage = this.bufferUsage;
         }
 
-        var projection = sceneState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
         if (this._projection !== projection) {
             this._createVertexArray = true;
             this._projection = projection;
@@ -672,6 +679,33 @@ define([
             this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
         }
 
+        if (frameState.passes.pick && typeof this._pickId === 'undefined') {
+            this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
+
+            this._rsPick = context.createRenderState({
+                // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
+                cull : {
+                    enabled : true,
+                    face : CullFace.BACK
+                }
+            });
+
+            this._pickId = context.createPickId(this);
+
+            var that = this;
+            this._pickUniforms = {
+                u_pickColor : function() {
+                    return that._pickId.normalizedRgba;
+                },
+                u_morphTime : function() {
+                    return that.morphTime;
+                },
+                u_height : function() {
+                    return that.height;
+                }
+            };
+        }
+
         var boundingVolume;
         if (mode === SceneMode.SCENE3D) {
             boundingVolume = this._boundingVolume;
@@ -711,43 +745,6 @@ define([
                 renderState : this._rs
             });
         }
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    Polygon.prototype.updateForPick = function(context) {
-        this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
-
-        this._rsPick = context.createRenderState({
-            // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
-            cull : {
-                enabled : true,
-                face : CullFace.BACK
-            }
-        });
-
-        this._pickId = context.createPickId(this);
-
-        var that = this;
-        this._pickUniforms = {
-            u_pickColor : function() {
-                return that._pickId.normalizedRgba;
-            },
-            u_morphTime : function() {
-                return that.morphTime;
-            },
-            u_height : function() {
-                return that.height;
-            }
-        };
-
-        this.updateForPick = function(context) {
-        };
     };
 
     /**

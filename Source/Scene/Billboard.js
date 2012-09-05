@@ -62,12 +62,13 @@ define([
         this._horizontalOrigin = b.horizontalOrigin || HorizontalOrigin.CENTER;
         this._verticalOrigin = b.verticalOrigin || VerticalOrigin.CENTER;
         this._scale = (typeof b.scale === 'undefined') ? 1.0 : b.scale;
-        this._imageIndex = b.imageIndex || 0;
+        this._imageIndex = (typeof b.imageIndex !== 'undefined') ? b.imageIndex : -1;
         this._color = (typeof b.color !== 'undefined') ? Color.clone(b.color) : new Color(1.0, 1.0, 1.0, 1.0);
         this._pickId = undefined;
         this._pickIdThis = b._pickIdThis;
         this._collection = collection;
         this._dirty = false;
+        this._index = -1; //Used only by BillboardCollection
     };
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
@@ -450,7 +451,10 @@ define([
      * @see BillboardCollection#setTextureAtlas
      */
     Billboard.prototype.setImageIndex = function(value) {
-        if ((typeof value !== 'undefined') && (this._imageIndex !== value)) {
+        if (typeof value !== 'number') {
+            throw new DeveloperError('value is required and must be a number.');
+        }
+        if (this._imageIndex !== value) {
             this._imageIndex = value;
             this._makeDirty(IMAGE_INDEX_INDEX);
         }
@@ -522,15 +526,14 @@ define([
     };
 
     var tempCartesian4 = new Cartesian4();
-    var tempCartesian3 = new Cartesian3();
-    Billboard._computeActualPosition = function(position, sceneState, morphTime, modelMatrix) {
-        var mode = sceneState.mode;
+    Billboard._computeActualPosition = function(position, frameState, morphTime, modelMatrix) {
+        var mode = frameState.mode;
 
         if (mode === SceneMode.SCENE3D) {
             return position;
         }
 
-        var projection = sceneState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
         var cartographic, projectedPosition;
 
         if (mode === SceneMode.MORPHING) {
@@ -550,11 +553,7 @@ define([
 
         modelMatrix.multiplyByVector(tempCartesian4, tempCartesian4);
 
-        // TODO: eventually cartesianToCartographic should work with a Cartesian4 directly,
-        // ignoring the w value.  Until then, it needs an actual Cartesian3 instance.
-        tempCartesian4.clone(tempCartesian3);
-
-        cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian3);
+        cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian4);
         projectedPosition = projection.project(cartographic);
 
         if (mode === SceneMode.SCENE2D) {
@@ -564,7 +563,7 @@ define([
         }
     };
 
-    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, uniformState) {
+    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, clampToPixel, uniformState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
         // Model to eye coordinates
@@ -589,7 +588,11 @@ define([
         positionWC.x += po.x;
         positionWC.y += po.y;
 
-        return new Cartesian2(positionWC.x, Math.floor(positionWC.y));
+        if (clampToPixel) {
+            return new Cartesian2(Math.floor(positionWC.x), Math.floor(positionWC.y));
+        }
+
+        return new Cartesian2(positionWC.x, positionWC.y);
     };
 
     /**
@@ -622,7 +625,7 @@ define([
             throw new DeveloperError('uniformState is required.');
         }
 
-        return Billboard._computeScreenSpacePosition(this._collection.modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, uniformState);
+        return Billboard._computeScreenSpacePosition(this._collection.modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, this.clampToPixel, uniformState);
     };
 
     /**

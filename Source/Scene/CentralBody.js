@@ -523,7 +523,7 @@ define([
         var Km4PI = Km * 4.0 * Math.PI;
         var ESun = 15.0;
         var g = -0.95;
-        var innerRadius = ellipsoid.getRadii().getMaximumComponent();
+        var innerRadius = ellipsoid.getMaximumRadius();
         var rayleighScaleDepth = 0.25;
         var inverseWaveLength = {
             x : 1.0 / Math.pow(0.650, 4.0), // Red
@@ -690,7 +690,7 @@ define([
 
         var center = lowerLeft.add(diag1.normalize().multiplyByScalar(diag1Length * 0.5));
 
-        var camera = description.sceneState.camera;
+        var camera = description.frameState.camera;
         var nearCenter = camera.position.add(camera.direction.multiplyByScalar(camera.frustum.near));
 
         if (camera.direction.dot(center.subtract(nearCenter)) < 0) {
@@ -701,9 +701,9 @@ define([
         }
 
         lowerLeft = center.add(camera.up.multiplyByScalar(-halfHeight)).add(camera.right.multiplyByScalar(-halfWidth));
-        lowerLeft = Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft);
+        Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft, lowerLeft);
         upperRight = center.add(camera.up.multiplyByScalar(halfHeight)).add(camera.right.multiplyByScalar(halfWidth));
-        upperRight = Transforms.pointToWindowCoordinates(mvp, vt, upperRight);
+        Transforms.pointToWindowCoordinates(mvp, vt, upperRight, upperRight);
 
         lowerLeft.x = Math.max(0.0, Math.min(lowerLeft.x, description.width));
         lowerLeft.y = Math.max(0.0, Math.min(lowerLeft.y, description.height));
@@ -722,9 +722,9 @@ define([
         return undefined;
     };
 
-    CentralBody.prototype._computeDepthQuad = function(sceneState) {
+    CentralBody.prototype._computeDepthQuad = function(frameState) {
         var radii = this._ellipsoid.getRadii();
-        var p = sceneState.camera.getPositionWC();
+        var p = frameState.camera.getPositionWC();
 
         // Find the corresponding position in the scaled space of the ellipsoid.
         var q = this._ellipsoid.getOneOverRadii().multiplyComponents(p);
@@ -753,7 +753,7 @@ define([
         return [upperLeft.x, upperLeft.y, upperLeft.z, lowerLeft.x, lowerLeft.y, lowerLeft.z, upperRight.x, upperRight.y, upperRight.z, lowerRight.x, lowerRight.y, lowerRight.z];
     };
 
-    CentralBody.prototype._computePoleQuad = function(sceneState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
+    CentralBody.prototype._computePoleQuad = function(frameState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
         var pt1 = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
         var pt2 = this._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
         var radius = pt1.subtract(pt2).magnitude() * 0.5;
@@ -761,7 +761,7 @@ define([
         var center = this._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
 
         var right;
-        var dir = sceneState.camera.direction;
+        var dir = frameState.camera.direction;
         if (1.0 - Cartesian3.UNIT_Z.negate().dot(dir) < CesiumMath.EPSILON6) {
             right = Cartesian3.UNIT_X;
         } else {
@@ -771,9 +771,9 @@ define([
         var screenRight = center.add(right.multiplyByScalar(radius));
         var screenUp = center.add(Cartesian3.UNIT_Z.cross(right).normalize().multiplyByScalar(radius));
 
-        center = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center);
-        screenRight = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight);
-        screenUp = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp);
+        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center, center);
+        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);
+        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp, screenUp);
 
         var halfWidth = Math.floor(Math.max(screenUp.subtract(center).magnitude(), screenRight.subtract(center).magnitude()));
         var halfHeight = halfWidth;
@@ -789,9 +789,9 @@ define([
         return centralBody._imageryLayerCollection.get(0);
     }
 
-    CentralBody.prototype._fillPoles = function(context, sceneState) {
+    CentralBody.prototype._fillPoles = function(context, frameState) {
         var baseLayer = getBaseLayer(this);
-        if (typeof baseLayer === 'undefined' || sceneState.mode !== SceneMode.SCENE3D) {
+        if (typeof baseLayer === 'undefined' || frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
 
@@ -825,13 +825,13 @@ define([
                 CesiumMath.PI_OVER_TWO
             );
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
-            frustumCull = sceneState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            frustumCull = frameState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
             this._drawNorthPole = !frustumCull && !occluded;
             if (this._drawNorthPole) {
-                rect = this._computePoleQuad(sceneState, extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
+                rect = this._computePoleQuad(frameState, extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
                 positions = [
                     rect.x, rect.y,
                     rect.x + rect.width, rect.y,
@@ -872,13 +872,13 @@ define([
                 baseImageryProviderMaxExtent.south
             );
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
-            frustumCull = sceneState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            frustumCull = frameState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
             this._drawSouthPole = !frustumCull && !occluded;
             if (this._drawSouthPole) {
-                rect = this._computePoleQuad(sceneState, extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
+                rect = this._computePoleQuad(frameState, extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
                 positions = [
                      rect.x, rect.y,
                      rect.x + rect.width, rect.y,
@@ -944,7 +944,7 @@ define([
     /**
      * @private
      */
-    CentralBody.prototype.update = function(context, sceneState) {
+    CentralBody.prototype.update = function(context, frameState) {
         var width = context.getCanvas().clientWidth;
         var height = context.getCanvas().clientHeight;
 
@@ -959,7 +959,7 @@ define([
         if (this.showSkyAtmosphere && !this._vaSky) {
             // PERFORMANCE_IDEA:  Is 60 the right amount to tessellate?  I think scaling the original
             // geometry in a vertex is a bad idea; at least, because it introduces a draw call per tile.
-            var skyMesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
+            var skyMesh = CubeMapEllipsoidTessellator.compute(Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
             this._vaSky = context.createVertexArrayFromMesh({
                 mesh : skyMesh,
                 attributeIndices : MeshFilters.createAttributeIndices(skyMesh),
@@ -993,8 +993,8 @@ define([
             });
         }
 
-        var mode = sceneState.mode;
-        var projection = sceneState.scene2D.projection;
+        var mode = frameState.mode;
+        var projection = frameState.scene2D.projection;
 
         if (CentralBody._isModeTransition(this._mode, mode) || this._projection !== projection) {
             if (mode === SceneMode.SCENE3D) {
@@ -1044,7 +1044,7 @@ define([
         this._rsDepth.cull.enabled = cull;
 
         // update scisor/depth plane
-        var depthQuad = this._computeDepthQuad(sceneState);
+        var depthQuad = this._computeDepthQuad(frameState);
 
         // TODO: Re-enable scissor test.
         /*var scissorTest = { enabled : false };
@@ -1052,7 +1052,7 @@ define([
             var uniformState = context.getUniformState();
             var mvp = uniformState.getModelViewProjection();
             var rect = this._createScissorRectangle({
-                sceneState : sceneState,
+                frameState : frameState,
                 width : width,
                 height : height,
                 quad : depthQuad,
@@ -1211,9 +1211,9 @@ define([
 
             this._surfaceShaderSetWithoutAtmosphere.baseVertexShaderString =
                 '#line 0\n' +
-                GroundAtmosphere +
+                 GroundAtmosphere +
                 '#line 0\n' +
-                CentralBodyVS;
+                 CentralBodyVS;
             this._surfaceShaderSetWithoutAtmosphere.baseFragmentShaderString =
                 fsPrepend +
                 '#line 0\n' +
@@ -1267,7 +1267,7 @@ define([
             this._affectedByLighting = this.affectedByLighting;
         }
 
-        var cameraPosition = sceneState.camera.getPositionWC();
+        var cameraPosition = frameState.camera.getPositionWC();
 
         this._fCameraHeight2 = cameraPosition.magnitudeSquared();
         this._fCameraHeight = Math.sqrt(this._fCameraHeight2);
@@ -1297,9 +1297,9 @@ define([
 
         this._occluder.setCameraPosition(cameraPosition);
 
-        this._fillPoles(context, sceneState);
+        this._fillPoles(context, frameState);
 
-        this._surface.update(context, sceneState);
+        this._surface.update(context, frameState);
 
         this._mode = mode;
         this._projection = projection;

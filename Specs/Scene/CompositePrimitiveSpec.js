@@ -3,7 +3,7 @@ defineSuite([
          'Scene/CompositePrimitive',
          '../Specs/createContext',
          '../Specs/destroyContext',
-         '../Specs/sceneState',
+         '../Specs/frameState',
          '../Specs/pick',
          'Core/BoundingSphere',
          'Core/Cartesian2',
@@ -30,7 +30,7 @@ defineSuite([
          CompositePrimitive,
          createContext,
          destroyContext,
-         sceneState,
+         frameState,
          pick,
          BoundingSphere,
          Cartesian2,
@@ -96,19 +96,19 @@ defineSuite([
     function createLabels(position) {
         position = position || { x : -1.0, y : 0.0, z : 0.0 };
         var labels = new LabelCollection();
+        labels.clampToPixel = false;
         labels.add({
             position : position,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
-            verticalOrigin : VerticalOrigin.CENTER,
-            font : '1px sans-serif'
+            verticalOrigin : VerticalOrigin.CENTER
         });
         return labels;
     }
 
-    function createPolygon(degree) {
+    function createPolygon(degree, ellipsoid) {
         degree = (typeof degree !== 'undefined') ? degree : 50.0;
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        ellipsoid = ellipsoid || Ellipsoid.UNIT_SPHERE;
         var polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
@@ -273,7 +273,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         primitives.add(createLabels());
-        primitives.update(context, sceneState);
+        primitives.update(context, frameState);
         primitives.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -284,7 +284,7 @@ defineSuite([
 
         primitives.show = false;
         primitives.add(createLabels());
-        primitives.update(context, sceneState);
+        primitives.update(context, frameState);
         primitives.render(context, us);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
@@ -300,7 +300,7 @@ defineSuite([
         otherPrimitives.add(p);
         otherPrimitives.destroyPrimitives = false;
 
-        primitives.update(context, sceneState);
+        primitives.update(context, frameState);
         primitives.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -308,7 +308,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        otherPrimitives.update(context, sceneState);
+        otherPrimitives.update(context, frameState);
         otherPrimitives.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -323,7 +323,7 @@ defineSuite([
         children.add(createLabels());
         primitives.add(children);
 
-        primitives.update(context, sceneState);
+        primitives.update(context, frameState);
         primitives.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -333,9 +333,8 @@ defineSuite([
         var l = labels.get(0);
 
         primitives.add(labels);
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(l);
     });
 
@@ -344,9 +343,8 @@ defineSuite([
 
         primitives.show = false;
         primitives.add(labels);
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 
@@ -358,9 +356,7 @@ defineSuite([
         children.add(labels);
         primitives.add(children);
 
-        primitives.update(context, sceneState);
-
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(l);
     });
 
@@ -370,9 +366,8 @@ defineSuite([
 
         primitives.add(p0);
         primitives.add(p1);
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -382,9 +377,8 @@ defineSuite([
 
         primitives.add(p1);
         primitives.add(p0);
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -395,9 +389,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringForward(p1); // Already on top
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -408,9 +401,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringForward(p0); // Moved to top
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -421,9 +413,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringToFront(p1); // Already on top
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -434,9 +425,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringToFront(p0); // Moved to top
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -447,9 +437,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendBackward(p1); // Moved back
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -460,9 +449,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendBackward(p0); // Already on bottom
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -473,9 +461,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendToBack(p1); // Moved back
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -486,9 +473,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendToBack(p0); // Already on bottom
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -499,7 +485,7 @@ defineSuite([
         var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
         primitives.setCentralBody(cb);
 
-        primitives.update(context, sceneState);
+        primitives.update(context, frameState);
         primitives.render(context, us);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
@@ -667,7 +653,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        primitives.update(context, sceneState);
+        primitives.update(context, frameState);
         var numRendered = primitives._renderList.length;
         primitives.render(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -679,7 +665,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        primitives.update(context, sceneState);
+        primitives.update(context, frameState);
         var numRendered = primitives._renderList.length;
         primitives.render(context);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
@@ -690,11 +676,11 @@ defineSuite([
     function testCullIn3D(primitive) {
         primitives.add(primitive);
 
-        var savedCamera = sceneState.camera;
-        sceneState.camera = camera;
+        var savedCamera = frameState.camera;
+        frameState.camera = camera;
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
-        var state = primitive.update(context, sceneState);
+        var state = primitive.update(context, frameState);
         var bv = state.boundingVolume;
         camera.position = bv.center.clone();
         camera.position = camera.position.normalize().multiplyByScalar(camera.position.magnitude() + 1.0);
@@ -711,20 +697,20 @@ defineSuite([
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
 
-        sceneState.camera = savedCamera;
+        frameState.camera = savedCamera;
     }
 
     function testCullInColumbusView(primitive) {
         primitives.add(primitive);
 
-        var savedCamera = sceneState.camera;
-        sceneState.camera = camera;
+        var savedCamera = frameState.camera;
+        frameState.camera = camera;
 
-        var mode = sceneState.mode;
-        sceneState.mode = SceneMode.COLUMBUS_VIEW;
+        var mode = frameState.mode;
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
-        var state = primitive.update(context, sceneState);
+        var state = primitive.update(context, frameState);
         var bv = state.boundingVolume;
         camera.position = bv.center.clone();
         camera.position.z += 1.0;
@@ -741,15 +727,15 @@ defineSuite([
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
 
-        sceneState.mode = mode;
-        sceneState.camera = savedCamera;
+        frameState.mode = mode;
+        frameState.camera = savedCamera;
     }
 
     function testCullIn2D(primitive) {
         primitives.add(primitive);
 
-        var savedCamera = sceneState.camera;
-        sceneState.camera = camera;
+        var savedCamera = frameState.camera;
+        frameState.camera = camera;
 
         var orthoFrustum = new OrthographicFrustum();
         orthoFrustum.right = 1.0;
@@ -760,11 +746,11 @@ defineSuite([
         orthoFrustum.far = camera.frustum.far;
         camera.frustum = orthoFrustum;
 
-        var mode = sceneState.mode;
-        sceneState.mode = SceneMode.SCENE2D;
+        var mode = frameState.mode;
+        frameState.mode = SceneMode.SCENE2D;
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
-        var state = primitive.update(context, sceneState);
+        var state = primitive.update(context, frameState);
         var bv = state.boundingVolume;
         camera.position = new Cartesian3(bv.x + bv.width * 0.5, bv.y + bv.height * 0.5, 1.0);
         camera.direction = Cartesian3.UNIT_Z.negate();
@@ -780,18 +766,18 @@ defineSuite([
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
 
-        sceneState.mode = mode;
-        sceneState.camera = savedCamera;
+        frameState.mode = mode;
+        frameState.camera = savedCamera;
     }
 
     function testOcclusionCull(primitive) {
         primitives.add(primitive);
 
-        var savedCamera = sceneState.camera;
-        sceneState.camera = camera;
+        var savedCamera = frameState.camera;
+        frameState.camera = camera;
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
-        var state = primitive.update(context, sceneState);
+        var state = primitive.update(context, frameState);
         var bv = state.boundingVolume;
         camera.position = bv.center.clone();
         camera.position = camera.position.normalize().multiplyByScalar(camera.position.magnitude() + 1.0);
@@ -801,7 +787,7 @@ defineSuite([
 
 
         var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, bv.radius * 2.0), camera.position);
-        sceneState.occluder = occluder;
+        frameState.occluder = occluder;
 
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
@@ -817,22 +803,22 @@ defineSuite([
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
 
-        sceneState.camera = savedCamera;
-        sceneState.occluder = undefined;
+        frameState.camera = savedCamera;
+        frameState.occluder = undefined;
     }
 
     it('frustum culls polygon in 3D', function() {
-        var polygon = createPolygon();
+        var polygon = createPolygon(10.0, Ellipsoid.WGS84);
         testCullIn3D(polygon);
     });
 
     it('frustum culls polygon in Columbus view', function() {
-        var polygon = createPolygon();
+        var polygon = createPolygon(10.0, Ellipsoid.WGS84);
         testCullInColumbusView(polygon);
     });
 
     it('frustum culls polygon in 2D', function() {
-        var polygon = createPolygon();
+        var polygon = createPolygon(10.0, Ellipsoid.WGS84);
         testCullIn2D(polygon);
     });
 
@@ -863,6 +849,7 @@ defineSuite([
         // collection to a Cesium app and looking for when it is/is not occluded.
 
         var labels = new LabelCollection();
+        labels.clampToPixel = false;
         labels.add({
             position : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic.fromDegrees(-75.10, 39.57)),
             text : 'x',
@@ -874,11 +861,11 @@ defineSuite([
         camera.position = new Cartesian3(2414237.2401024024, -8854079.165742973, 7501568.895960614);
         camera.direction = camera.position.negate().normalize();
 
-        var savedCamera = sceneState.camera;
-        sceneState.camera = camera;
+        var savedCamera = frameState.camera;
+        frameState.camera = camera;
 
-        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, Ellipsoid.WGS84.getMinimumRadius()), camera.position);
-        sceneState.occluder = occluder;
+        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, Ellipsoid.WGS84.minimumRadius), camera.position);
+        frameState.occluder = occluder;
 
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
@@ -887,13 +874,13 @@ defineSuite([
         camera.direction = camera.direction.negate();
 
         occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, 536560539.60104907), camera.position);
-        sceneState.occluder = occluder;
+        frameState.occluder = occluder;
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
 
-        sceneState.camera = savedCamera;
-        sceneState.occluder = undefined;
+        frameState.camera = savedCamera;
+        frameState.occluder = undefined;
     });
 
     var greenImage;
