@@ -1,12 +1,14 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/OrthographicFrustum',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Matrix4',
          'Core/Math'
      ], function(
          OrthographicFrustum,
+         Cartesian2,
          Cartesian3,
          Cartesian4,
          Matrix4,
@@ -25,7 +27,10 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        planes = frustum.getPlanes(new Cartesian3(), Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y);
+        frustum.position = new Cartesian3();
+        frustum.direction =  Cartesian3.UNIT_Z.negate();
+        frustum.up = Cartesian3.UNIT_Y;
+        planes = frustum.getPlanes();
     });
 
     it('left greater than right causes an exception', function() {
@@ -62,20 +67,23 @@ defineSuite([
     });
 
     it('getPlanes with no position throws an exception', function() {
+        frustum.position = undefined;
         expect(function() {
             frustum.getPlanes();
         }).toThrow();
     });
 
     it('getPlanes with no direction throws an exception', function() {
+        frustum.direction = undefined;
         expect(function() {
-            frustum.getPlanes(new Cartesian3());
+            frustum.getPlanes();
         }).toThrow();
     });
 
     it('getPlanes with no up throws an exception', function() {
+        frustum.up = undefined;
         expect(function() {
-            frustum.getPlanes(new Cartesian3(), new Cartesian3());
+            frustum.getPlanes();
         }).toThrow();
     });
 
@@ -119,6 +127,18 @@ defineSuite([
         var projectionMatrix = frustum.getProjectionMatrix();
         var expected = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far);
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+    });
+
+    it('get pixel size throws without canvas dimensions', function() {
+        expect(function() {
+            return frustum.getPixelSize();
+        }).toThrow();
+    });
+
+    it('get pixel size', function() {
+        var pixelSize = frustum.getPixelSize(new Cartesian2(1.0, 1.0));
+        expect(pixelSize.x).toEqual(2.0);
+        expect(pixelSize.y).toEqual(2.0);
     });
 
     it('clone', function() {

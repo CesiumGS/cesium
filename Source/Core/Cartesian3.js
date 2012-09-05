@@ -46,8 +46,8 @@ define([
      * @memberof Cartesian3
      *
      * @param {Spherical} spherical The Spherical to be converted to Cartesian3.
-     * @param {Cartesian3} [cartesian3] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new instance if none was provided.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} spherical is required.
      */
@@ -788,10 +788,10 @@ define([
     };
 
     /**
-     * Creates a string representing this Cartesian in the format '(x, y)'.
+     * Creates a string representing this Cartesian in the format '(x, y, z)'.
      * @memberof Cartesian3
      *
-     * @return {String} A string representing the provided Cartesian in the format '(x, y)'.
+     * @return {String} A string representing this Cartesian in the format '(x, y, z)'.
      */
     Cartesian3.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';

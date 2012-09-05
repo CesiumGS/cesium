@@ -12,7 +12,6 @@ define([], function() {
     var FrameState = function() {
         /**
          * The current mode of the scene.
-         *
          * @type SceneMode
          */
         this.mode = undefined;
@@ -26,14 +25,18 @@ define([], function() {
 
         /**
          * The current camera.
-         *
          * @type Camera
          */
         this.camera = undefined;
 
         /**
+         * The frustum to use for culling.
+         * @type DOC_TBA
+         */
+        this.cullingFrustum = undefined;
+
+        /**
          * The current occluder.
-         *
          * @type Occluder
          */
         this.occluder = undefined;

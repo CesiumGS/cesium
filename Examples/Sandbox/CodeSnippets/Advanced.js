@@ -240,20 +240,18 @@
                             projectedPositionsFlat.push(p.z, p.x, p.y);
                         }
 
-                        if (mode === Cesium.SceneMode.SCENE2D){
-                            this._boundingVolume = Cesium.BoundingRectangle.fromPoints(projectedPositions);
-                        } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-                            this._boundingVolume = Cesium.BoundingSphere.fromPoints(projectedPositions);
+                        this._boundingVolume = Cesium.BoundingSphere.fromPoints(projectedPositions);
+
+                        if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
                             this._boundingVolume.center = new Cesium.Cartesian3(this._boundingVolume.center.z, this._boundingVolume.center.x, this._boundingVolume.center.y);
                         } else {
                             var bv3D = Cesium.BoundingSphere.fromPoints([
                                 new Cesium.Cartesian3(-x, -y, -z),
                                 new Cesium.Cartesian3(x, y, z)
                             ]);
-                            var bv2D = Cesium.BoundingSphere.fromPoints(projectedPositions);
-                            bv2D.center = new Cesium.Cartesian3(bv2D.center.z, bv2D.center.x, bv2D.center.y);
+                            this._boundingVolume.center = new Cesium.Cartesian3(this._boundingVolume.center.z, this._boundingVolume.center.x, this._boundingVolume.center.y);
 
-                            this._boundingVolume = bv3D.union(bv2D);
+                            this._boundingVolume = bv3D.union(this._boundingVolume);
                         }
 
                         mesh.attributes.position2D = {

@@ -32,11 +32,13 @@ define([
      * frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
+     * frustum.position = new Cartesian3();
+     * frustum.direction = Cartesian3.UNIT_Z.negate();
+     * frustum.up = Cartesian3.UNIT_Y;
      */
     var PerspectiveFrustum = function() {
         /**
          * The angle of the field of view, in radians.
-         *
          * @type {Number}
          */
         this.fovy = undefined;
@@ -44,27 +46,42 @@ define([
 
         /**
          * The aspect ratio of the frustum's width to it's height.
-         *
          * @type {Number}
          */
         this.aspectRatio = undefined;
         this._aspectRatio = undefined;
 
         /**
-         * The distance of the near plane from the camera's position.
-         *
+         * The distance of the near plane.
          * @type {Number}
          */
         this.near = undefined;
         this._near = undefined;
 
         /**
-         * The The distance of the far plane from the camera's position.
-         *
+         * The distance of the far plane.
          * @type {Number}
          */
         this.far = undefined;
         this._far = undefined;
+
+        /**
+         * The position of the frustum.
+         * @type {Cartesian3}
+         */
+        this.position = undefined;
+
+        /**
+         * The view direction of the frustum.
+         * @type {Cartesian3}
+         */
+        this.direction = undefined;
+
+        /**
+         * The up direction of the frustum.
+         * @type {Cartesian3}
+         */
+        this.up = undefined;
 
         this._offCenterFrustum = new PerspectiveOffCenterFrustum();
     };
@@ -103,6 +120,8 @@ define([
             throw new DeveloperError('fovy, aspectRatio, near, or far parameters are not set.');
         }
 
+        var f = frustum._offCenterFrustum;
+
         if (frustum.fovy !== frustum._fovy || frustum.aspectRatio !== frustum._aspectRatio ||
                 frustum.near !== frustum._near || frustum.far !== frustum._far) {
             if (frustum.fovy < 0 || frustum.fovy >= Math.PI) {
@@ -122,7 +141,6 @@ define([
             frustum._near = frustum.near;
             frustum._far = frustum.far;
 
-            var f = frustum._offCenterFrustum;
             f.top = frustum.near * Math.tan(0.5 * frustum.fovy);
             f.bottom = -f.top;
             f.right = frustum.aspectRatio * f.top;
@@ -130,6 +148,10 @@ define([
             f.near = frustum.near;
             f.far = frustum.far;
         }
+
+        f.position = frustum.position;
+        f.direction = frustum.direction;
+        f.up = frustum.up;
     }
 
     /**
@@ -137,20 +159,11 @@ define([
      *
      * @memberof PerspectiveFrustum
      *
-     * @param {Cartesian3} position The eye position.
-     * @param {Cartesian3} direction The view direction.
-     * @param {Cartesian3} up The up direction.
-     * @param {Array} [result] The Array in which to store the results. If left undefined, one will be created.
-     *
-     * @exception {DeveloperError} position is required.
-     * @exception {DeveloperError} direction is required.
-     * @exception {DeveloperError} up is required.
-     *
      * @return {Array} An array of 6 clipping planes.
      *
      * @example
      * // Check if a bounding volume intersects the frustum.
-     * var planes = frustum.getPlanes(cameraPosition, cameraDirection, cameraUp);
+     * var planes = frustum.getPlanes();
      * var intersecting = boundingVolume.intersect(planes[0]) !== Intersect.OUTSIDE;             // check for left intersection
      * intersecting = intersecting && boundingVolume.intersect(planes[1]) !== Intersect.OUTSIDE; // check for right intersection
      * intersecting = intersecting && boundingVolume.intersect(planes[2]) !== Intersect.OUTSIDE; // check for bottom intersection
@@ -158,23 +171,38 @@ define([
      * intersecting = intersecting && boundingVolume.intersect(planes[4]) !== Intersect.OUTSIDE; // check for near intersection
      * intersecting = intersecting && boundingVolume.intersect(planes[5]) !== Intersect.OUTSIDE; // check for far intersection
      */
-    PerspectiveFrustum.prototype.getPlanes = function(position, direction, up, result) {
+    PerspectiveFrustum.prototype.getPlanes = function() {
         update(this);
-        return this._offCenterFrustum.getPlanes(position, direction, up, result);
+        return this._offCenterFrustum.getPlanes();
     };
 
     /**
-     * Returns the pixels width and height in meters.
+     * Determines whether a bounding volume intersects with the frustum or not.
      *
      * @memberof PerspectiveFrustum
      *
-     * @param {Object} canvasDimensions An object with width and height properties of the canvas.
-     * @param {Number} [distance=near plane distance] The distance of the near plane from the camera.
+     * @param {Object} object The bounding volume whose intersection with the frustum is to be tested.
+     *
+     * @return {Enumeration}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
+     */
+    PerspectiveFrustum.prototype.getVisibility = function(object) {
+        update(this);
+        return this._offCenterFrustum.getVisibility(object);
+    };
+
+    /**
+     * Returns the pixel's width and height in meters.
+     *
+     * @memberof PerspectiveFrustum
+     *
+     * @param {Cartesian2} canvasDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
+     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      *
      * @exception {DeveloperError} canvasDimensions is required.
-     * @exceltion {DeveloperError} distance must be greater than zero.
+     * @exception {DeveloperError} canvasDimensions.x must be greater than zero.
+     * @exception {DeveloperError} canvasDimensione.y must be greater than zero.
      *
-     * @returns {Object} An object with width and height properties of a pixel.
+     * @returns {Cartesian2} A {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @example
      * // Example 1
@@ -215,6 +243,9 @@ define([
         frustum.aspectRatio = this.aspectRatio;
         frustum.near = this.near;
         frustum.far = this.far;
+        frustum.position = this.position && this.position.clone();
+        frustum.direction = this.direction && this.direction.clone();
+        frustum.up = this.up && this.up.clone();
         frustum._offCenterFrustum = this._offCenterFrustum.clone();
         return frustum;
     };

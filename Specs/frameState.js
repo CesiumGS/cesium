@@ -21,10 +21,12 @@ define([
         projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
     };
 
-    frameState.camera = new Camera({
+    var camera = new Camera({
         clientHeight : 1,
         clientWidth : 1
     });
+    frameState.camera = camera;
+    frameState.cullingFrustum = camera.frustum;
 
     frameState.passes.color = true;
     frameState.passes.pick = false;

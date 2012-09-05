@@ -1,12 +1,14 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/PerspectiveFrustum',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Matrix4',
          'Core/Math'
      ], function(
          PerspectiveFrustum,
+         Cartesian2,
          Cartesian3,
          Cartesian4,
          Matrix4,
@@ -23,7 +25,10 @@ defineSuite([
         frustum.fovy = (Math.PI) / 3;
         frustum.aspectRatio = 1.0;
 
-        planes = frustum.getPlanes(new Cartesian3(), Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y);
+        frustum.position = new Cartesian3();
+        frustum.direction =  Cartesian3.UNIT_Z.negate();
+        frustum.up = Cartesian3.UNIT_Y;
+        planes = frustum.getPlanes();
     });
 
     it('out of range fov causes an exception', function() {
@@ -60,20 +65,23 @@ defineSuite([
     });
 
     it('getPlanes with no position throws an exception', function() {
+        frustum.position = undefined;
         expect(function() {
             frustum.getPlanes();
         }).toThrow();
     });
 
     it('getPlanes with no direction throws an exception', function() {
+        frustum.direction = undefined;
         expect(function() {
-            frustum.getPlanes(new Cartesian3());
+            frustum.getPlanes();
         }).toThrow();
     });
 
     it('getPlanes with no up throws an exception', function() {
+        frustum.up = undefined;
         expect(function() {
-            frustum.getPlanes(new Cartesian3(), new Cartesian3());
+            frustum.getPlanes();
         }).toThrow();
     });
 
@@ -137,14 +145,11 @@ defineSuite([
     });
 
     it('get pixel size', function() {
-        var dimensions = {
-            width : 1.0,
-            height : 1.0
-        };
+        var dimensions = new Cartesian2(1.0, 1.0);
         var pixelSize = frustum.getPixelSize(dimensions);
         var expected = frustum._offCenterFrustum.getPixelSize(dimensions);
-        expect(pixelSize.width).toEqual(expected.width);
-        expect(pixelSize.height).toEqual(expected.height);
+        expect(pixelSize.x).toEqual(expected.x);
+        expect(pixelSize.y).toEqual(expected.y);
     });
 
     it('equals', function() {
@@ -153,6 +158,9 @@ defineSuite([
         frustum2.far = 2.0;
         frustum2.fovy = (Math.PI) / 3.0;
         frustum2.aspectRatio = 1.0;
+        frustum2.position = new Cartesian3();
+        frustum2.direction =  Cartesian3.UNIT_Z.negate();
+        frustum2.up = Cartesian3.UNIT_Y;
         expect(frustum.equals(frustum2)).toEqual(true);
     });
 

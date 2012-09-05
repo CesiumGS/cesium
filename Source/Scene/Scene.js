@@ -8,13 +8,16 @@ define([
         '../Core/Occluder',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/IntersectionTests',
         '../Renderer/Context',
         './Camera',
         './CompositePrimitive',
         './AnimationCollection',
         './SceneMode',
         './FrameState',
+        './OrthographicFrustum',
         './PerspectiveOffCenterFrustum'
     ], function(
         Color,
@@ -25,13 +28,16 @@ define([
         Occluder,
         BoundingRectangle,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
+        IntersectionTests,
         Context,
         Camera,
         CompositePrimitive,
         AnimationCollection,
         SceneMode,
         FrameState,
+        OrthographicFrustum,
         PerspectiveOffCenterFrustum) {
     "use strict";
 
@@ -188,6 +194,7 @@ define([
         frameState.mode = scene.mode;
         frameState.scene2D = scene.scene2D;
         frameState.camera = camera;
+        frameState.cullingFrustum = camera.frustum;
         frameState.occluder = undefined;
 
         // TODO: The occluder is the top-level central body. When we add
@@ -214,11 +221,11 @@ define([
 
         scene._animations.update();
         camera.update();
+        us.setView(camera.getViewMatrix());
         us.setProjection(camera.frustum.getProjectionMatrix());
         if (camera.frustum.getInfiniteProjectionMatrix) {
             us.setInfiniteProjection(camera.frustum.getInfiniteProjectionMatrix());
         }
-        us.setView(camera.getViewMatrix());
 
         if (scene._animate) {
             scene._animate();
@@ -244,49 +251,73 @@ define([
         }
     };
 
-    function getPickFrustum(scene, windowPosition, width, height) {
+    function getPickOrthographicFrustum(scene, windowPosition, width, height) {
         var canvas = scene._canvas;
         var camera = scene._camera;
+        var frustum = camera.frustum;
 
+        var pixelSize = frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
+        var pickRay = camera._getPickRayOrthographic(windowPosition);
+
+        var ortho = new OrthographicFrustum();
+        ortho.right = pixelSize.x * 0.5;
+        ortho.left = -ortho.right;
+        ortho.top = pixelSize.y * 0.5;
+        ortho.bottom = -ortho.top;
+        ortho.near = frustum.near;
+        ortho.far = frustum.far;
+
+        ortho.position = pickRay.origin;
+        ortho.direction = camera.direction;
+        ortho.up = camera.up;
+
+        return ortho;
+    }
+
+    function getPickPerspectiveFrustum(scene, windowPosition, width, height) {
+        var canvas = scene._canvas;
+        var camera = scene._camera;
         var frustum = camera.frustum;
         var near = frustum.near;
 
-        var pixelSize = frustum.getPixelSize({
-            width : canvas.clientWidth,
-            height : canvas.clientHeight
-        });
+        var canvasWidth = canvas.clientWidth;
+        var canvasHeight = canvas.clientHeight;
 
-        var pickRay = camera._getPickRayPerspective(windowPosition);
-        var pixelCenter = pickRay.getPoint(near);
+        var tanPhi = Math.tan(frustum.fovy * 0.5);
+        var tanTheta = frustum.aspectRatio * tanPhi;
 
-        var pickWidth = pixelSize.width * width * 0.5;
-        var pickHeight = pixelSize.height * height * 0.5;
+        var x = (2.0 / canvasWidth) * windowPosition.x - 1.0;
+        var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
 
-        var up = camera.getUpWC();
-        var right = camera.getRightWC();
+        var xDir = x * near * tanTheta;
+        var yDir = y * near * tanPhi;
+
+        var pixelSize = frustum.getPixelSize(new Cartesian2(canvasWidth, canvasHeight));
+        var pickWidth = pixelSize.x * width * 0.5;
+        var pickHeight = pixelSize.y * height * 0.5;
 
         var offCenter = new PerspectiveOffCenterFrustum();
 
-        var scratch = up.multiplyByScalar(pickHeight);
-        Cartesian3.add(pixelCenter, scratch, scratch);
-        offCenter.top = Cartesian3.dot(scratch, up);
-
-        Cartesian3.multiplyByScalar(up, -pickHeight, scratch);
-        Cartesian3.add(pixelCenter, scratch, scratch);
-        offCenter.bottom = Cartesian3.dot(scratch, up);
-
-        Cartesian3.multiplyByScalar(right, pickWidth, scratch);
-        Cartesian3.add(pixelCenter, scratch, scratch);
-        offCenter.right = Cartesian3.dot(scratch, right);
-
-        Cartesian3.multiplyByScalar(right, -pickWidth, scratch);
-        Cartesian3.add(pixelCenter, scratch, scratch);
-        offCenter.left = Cartesian3.dot(scratch, right);
-
+        offCenter.top = yDir + pickHeight;
+        offCenter.bottom = yDir - pickHeight;
+        offCenter.right = xDir + pickWidth;
+        offCenter.left = xDir - pickWidth;
         offCenter.near = frustum.near;
         offCenter.far = frustum.far;
 
+        offCenter.position = camera.getPositionWC();
+        offCenter.direction = camera.getDirectionWC();
+        offCenter.up = camera.getUpWC();
+
         return offCenter;
+    }
+
+    function getPickFrustum(scene, windowPosition, width, height) {
+        if (scene.mode === SceneMode.SCENE2D) {
+            return getPickOrthographicFrustum(scene, windowPosition, width, height);
+        }
+
+        return getPickPerspectiveFrustum(scene, windowPosition, width, height);
     }
 
     // pick region width and height, assumed odd
@@ -307,10 +338,9 @@ define([
         var fb = this._pickFramebuffer.begin();
 
         updateFrameState(this);
+        frameState.cullingFrustum = getPickFrustum(this, windowPosition, regionWidth, regionHeight);
         frameState.passes.pick = true;
 
-        var oldFrustum = frameState.camera.frustum;
-        frameState.camera.frustum = getPickFrustum(this, windowPosition, regionWidth, regionHeight);
 
         var commandList = primitives.update(context, frameState);
         var length = commandList.length;
@@ -319,8 +349,6 @@ define([
             command.framebuffer = fb;
             context.draw(command);
         }
-
-        frameState.camera.frustum = oldFrustum;
 
         scratchRegion.x = windowPosition.x - ((regionWidth - 1.0) * 0.5);
         scratchRegion.y = (this._canvas.clientHeight - windowPosition.y) - ((regionHeight - 1.0) * 0.5);
