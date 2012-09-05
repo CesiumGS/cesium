@@ -128,12 +128,7 @@ require([
         canvas.width = width;
         canvas.height = height;
 
-        scene.getContext().setViewport({
-            x: 0,
-            y: 0,
-            width: width,
-            height: height
-        });
+        scene.getContext().setViewport(new Cesium.BoundingRectangle(0, 0, width, height));
 
         scene.getCamera().frustum.aspectRatio = width / height;
     };
