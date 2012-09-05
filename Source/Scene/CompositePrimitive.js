@@ -425,13 +425,8 @@ define([
                     center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
                     boundingVolume = new BoundingSphere(center, boundingVolume.radius);
 
-                    if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
-                        continue;
-                    }
-
-                    if (mode === SceneMode.SCENE3D &&
-                            typeof occluder !== 'undefined' &&
-                            !occluder.isVisible(boundingVolume)) {
+                    if (frustum.getVisibility(boundingVolume) === Intersect.OUTSIDE ||
+                            (typeof occluder !== 'undefined' && !occluder.isVisible(boundingVolume))) {
                         continue;
                     }
                 }
