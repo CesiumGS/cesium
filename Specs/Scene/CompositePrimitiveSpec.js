@@ -837,6 +837,37 @@ defineSuite([
         frameState.occluder = undefined;
     }
 
+    // This function is used instead of the testOcclusionCull function for billboards/labels because the
+    // bounding volume is view-dependent. All of the "magic numbers" come from adding a billboard/label
+    // collection to a Cesium app and looking for when it is/is not occluded.
+    function testBillboardOcclusion(billboard) {
+        primitives.add(billboard);
+
+        camera.position = new Cartesian3(2414237.2401024024, -8854079.165742973, 7501568.895960614);
+        camera.direction = camera.position.negate().normalize();
+
+        var savedCamera = frameState.camera;
+        frameState.camera = camera;
+
+        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, Ellipsoid.WGS84.minimumRadius), camera.position);
+        frameState.occluder = occluder;
+
+        var numRendered = verifyDraw();
+        expect(numRendered).toEqual(1);
+
+        camera.position = camera.position.negate();
+        camera.direction = camera.direction.negate();
+
+        occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, 536560539.60104907), camera.position);
+        frameState.occluder = occluder;
+
+        numRendered = verifyNoDraw();
+        expect(numRendered).toEqual(0);
+
+        frameState.camera = savedCamera;
+        frameState.occluder = undefined;
+    }
+
     it('frustum culls polygon in 3D', function() {
         var polygon = createPolygon(10.0, Ellipsoid.WGS84);
         testCullIn3D(polygon);
@@ -873,11 +904,6 @@ defineSuite([
     });
 
     it('label occlusion', function() {
-        // This test doesn't use the testOcclusionCull function because the
-        // bounding volume is view-dependent and the text isn't 1x1 pixels in
-        // size. All of the "magic numbers" come from adding this label
-        // collection to a Cesium app and looking for when it is/is not occluded.
-
         var labels = new LabelCollection();
         labels.clampToPixel = false;
         labels.add({
@@ -886,31 +912,8 @@ defineSuite([
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
-        primitives.add(labels);
 
-        camera.position = new Cartesian3(2414237.2401024024, -8854079.165742973, 7501568.895960614);
-        camera.direction = camera.position.negate().normalize();
-
-        var savedCamera = frameState.camera;
-        frameState.camera = camera;
-
-        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, Ellipsoid.WGS84.minimumRadius), camera.position);
-        frameState.occluder = occluder;
-
-        var numRendered = verifyDraw();
-        expect(numRendered).toEqual(1);
-
-        camera.position = camera.position.negate();
-        camera.direction = camera.direction.negate();
-
-        occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, 536560539.60104907), camera.position);
-        frameState.occluder = occluder;
-
-        numRendered = verifyNoDraw();
-        expect(numRendered).toEqual(0);
-
-        frameState.camera = savedCamera;
-        frameState.occluder = undefined;
+        testBillboardOcclusion(labels);
     });
 
     var greenImage;
@@ -960,7 +963,7 @@ defineSuite([
 
     it('billboard occlusion', function() {
         var billboards = createBillboard();
-        testOcclusionCull(billboards);
+        testBillboardOcclusion(billboards);
     });
 
     function createPolylines() {
