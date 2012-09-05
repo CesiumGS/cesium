@@ -26,7 +26,7 @@ define([
         clientWidth : 1
     });
     frameState.camera = camera;
-    frameState.cullingPlanes = camera.frustum.getPlanes(camera.position, camera.direction, camera.up);
+    frameState.cullingFrustum = camera.frustum;
 
     return frameState;
 });

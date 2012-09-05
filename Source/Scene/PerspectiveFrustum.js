@@ -243,9 +243,9 @@ define([
         frustum.aspectRatio = this.aspectRatio;
         frustum.near = this.near;
         frustum.far = this.far;
-        frustum.position = this.position.clone();
-        frustum.direction = this.direction.clone();
-        frustum.up = this.up.clone();
+        frustum.position = this.position && this.position.clone();
+        frustum.direction = this.direction && this.direction.clone();
+        frustum.up = this.up && this.up.clone();
         frustum._offCenterFrustum = this._offCenterFrustum.clone();
         return frustum;
     };

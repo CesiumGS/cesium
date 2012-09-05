@@ -30,10 +30,10 @@ define([], function() {
         this.camera = undefined;
 
         /**
-         * An array of the current culling planes.
-         * @type Array
+         * The frustum to use for culling.
+         * @type DOC_TBA
          */
-        this.cullingPlanes = undefined;
+        this.cullingFrustum = undefined;
 
         /**
          * The current occluder.
