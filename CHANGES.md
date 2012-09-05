@@ -4,7 +4,7 @@ Change Log
 Beta Releases
 -------------
 
-### b8 - xx/xx/2012
+### b8 - 09/05/2012
 
 * Breaking changes:
     * Materials are now created through a centralized Material class using a JSON schema called [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric). For example, change:
