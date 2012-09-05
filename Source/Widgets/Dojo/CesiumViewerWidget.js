@@ -22,7 +22,7 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
         '../../Core/FullScreen',
-        '../../Core/SunPosition',
+        '../../Core/computeSunPosition',
         '../../Core/EventHandler',
         '../../Core/FeatureDetection',
         '../../Core/MouseEventType',
@@ -66,7 +66,7 @@ define([
         Ellipsoid,
         Iso8601,
         FullScreen,
-        SunPosition,
+        computeSunPosition,
         EventHandler,
         FeatureDetection,
         MouseEventType,
@@ -652,13 +652,14 @@ define([
 
         _cameraCenteredObjectIDPosition : new Cartesian3(),
 
+        _sunPosition : new Cartesian3(),
+
         update : function(currentTime) {
             var cameraCenteredObjectID = this.cameraCenteredObjectID;
             var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
 
             this.timelineControl.updateFromClock();
-            this.scene.setSunPosition(SunPosition.compute(currentTime).position);
-
+            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||
                     ((Date.now() - this._lastTimeLabelDate) > 200)) {
                 this.timeLabelElement.innerHTML = currentTime.toDate().toUTCString();
