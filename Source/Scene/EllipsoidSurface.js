@@ -17,6 +17,7 @@ define([
         '../Core/BoundingRectangle',
         '../Core/CubeMapEllipsoidTessellator',
         '../Core/MeshFilters',
+        '../Core/Queue',
         './GeographicTilingScheme',
         './ImageryLayerCollection',
         './ImageryState',
@@ -45,6 +46,7 @@ define([
         BoundingRectangle,
         CubeMapEllipsoidTessellator,
         MeshFilters,
+        Queue,
         GeographicTilingScheme,
         ImageryLayerCollection,
         ImageryState,
@@ -98,6 +100,7 @@ define([
         this._frozenLodCameraPosition = undefined;
         this._boundingSphereTile = undefined;
         this._boundingSphereVA = undefined;
+        this._tileTraversalQueue = new Queue();
 
         var that = this;
         when(this.terrainProvider.tilingScheme, function(tilingScheme) {
@@ -225,13 +228,11 @@ define([
     var tilesVisited;
     var tilesCulled;
     var tilesRendered;
-    var minimumTilesNeeded;
 
     var lastMaxDepth = -1;
     var lastTilesVisited = -1;
     var lastTilesCulled = -1;
     var lastTilesRendered = -1;
-    var lastMinimumTilesNeeded = -1;
 
     EllipsoidSurface.prototype.update = function(context, sceneState) {
         if (!this._doLodUpdate) {
@@ -262,11 +263,13 @@ define([
 
         updateLogos(this, context, sceneState);
 
+        var traversalQueue = this._tileTraversalQueue;
+        traversalQueue.clear();
+
         maxDepth = 0;
         tilesVisited = 0;
         tilesCulled = 0;
         tilesRendered = 0;
-        minimumTilesNeeded = 0;
 
         this._tileLoadQueue.markInsertionPoint();
         this._tileReplacementQueue.markStartOfRenderFrame();
@@ -283,27 +286,61 @@ define([
 
         this._occluder.setCameraPosition(cameraPosition);
 
+        var tile;
+
+        // Enqueue the root tiles.
         var levelZeroTiles = this._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
-            var tile = levelZeroTiles[i];
+            tile = levelZeroTiles[i];
             if (!tile.doneLoading) {
                 queueTileLoad(this, tile);
             }
-            if (tile.renderable) {
-                addBestAvailableTilesToRenderList(this, context, sceneState, cameraPosition, cameraPositionCartographic, tile);
+            if (tile.renderable && isTileVisible(this, sceneState, tile)) {
+                traversalQueue.enqueue(tile);
+            } else {
+                ++tilesCulled;
+            }
+        }
+
+        while (typeof (tile = traversalQueue.dequeue()) !== 'undefined') {
+            ++tilesVisited;
+
+            this._tileReplacementQueue.markTileRendered(tile);
+
+            if (tile.level > maxDepth) {
+                maxDepth = tile.level;
+            }
+
+            // Algorithm #1: Don't load children unless we refine to them.
+            if (screenSpaceError(this, context, sceneState, cameraPosition, cameraPositionCartographic, tile) < this.maxScreenSpaceError) {
+                // This tile meets SSE requirements, so render it.
+                addTileToRenderList(this, tile);
+            } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(this, sceneState, tile)) {
+                // SSE is not good enough and children are loaded, so refine.
+                var children = tile.children;
+                // PERFORMANCE_TODO: traverse children front-to-back
+                for (i = 0, len = children.length; i < len; ++i) {
+                    if (isTileVisible(this, sceneState, tile)) {
+                        traversalQueue.enqueue(children[i]);
+                    } else {
+                        ++tilesCulled;
+                    }
+                }
+            } else {
+                // SSE is not good enough but not all children are loaded, so render this tile anyway.
+                addTileToRenderList(this, tile);
             }
         }
 
         if (tilesVisited !== lastTilesVisited || tilesRendered !== lastTilesRendered ||
-            tilesCulled !== lastTilesCulled || minimumTilesNeeded !== lastMinimumTilesNeeded ||
+            tilesCulled !== lastTilesCulled ||
             maxDepth !== lastMaxDepth) {
 
-            console.log('Visited ' + tilesVisited + ' Rendered: ' + tilesRendered + ' Culled: ' + tilesCulled + ' Needed: ' + minimumTilesNeeded + ' Max Depth: ' + maxDepth);
+            console.log('Visited ' + tilesVisited + ' Rendered: ' + tilesRendered + ' Culled: ' + tilesCulled + ' Max Depth: ' + maxDepth);
 
             lastTilesVisited = tilesVisited;
             lastTilesRendered = tilesRendered;
             lastTilesCulled = tilesCulled;
-            lastMinimumTilesNeeded = minimumTilesNeeded;
             lastMaxDepth = maxDepth;
         }
 
@@ -665,42 +702,6 @@ define([
         tileSet.push(tile);
 
         ++tilesRendered;
-        ++minimumTilesNeeded;
-    }
-
-    function addBestAvailableTilesToRenderList(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) {
-        ++tilesVisited;
-
-        surface._tileReplacementQueue.markTileRendered(tile);
-
-        if (!isTileVisible(surface, sceneState, tile)) {
-            ++tilesCulled;
-            return;
-        }
-
-        if (tile.level > maxDepth) {
-            maxDepth = tile.level;
-        }
-
-        // Algorithm #1: Don't load children unless we refine to them.
-        if (screenSpaceError(surface, context, sceneState, cameraPosition, cameraPositionCartographic, tile) < surface.maxScreenSpaceError) {
-            // This tile meets SSE requirements, so render it.
-            addTileToRenderList(surface, tile);
-        } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, sceneState, tile)) {
-            // SSE is not good enough and children are loaded, so refine.
-            var children = tile.children;
-            // PERFORMANCE_TODO: traverse children front-to-back
-            var tilesRenderedBefore = tilesRendered;
-            for (var i = 0, len = children.length; i < len; ++i) {
-                addBestAvailableTilesToRenderList(surface, context, sceneState, cameraPosition, cameraPositionCartographic, children[i]);
-            }
-            if (tilesRendered !== tilesRenderedBefore) {
-                ++minimumTilesNeeded;
-            }
-        } else {
-            // SSE is not good enough but not all children are loaded, so render this tile anyway.
-            addTileToRenderList(surface, tile);
-        }
     }
 
     function isTileVisible(surface, sceneState, tile) {
