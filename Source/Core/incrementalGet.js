@@ -1,17 +1,22 @@
 /*global define*/
-define(function() {
+define(['./DeveloperError'],
+        function(
+                DeveloperError) {
     "use strict";
     /*global EventSource console*/
 
     /**
      * Uses EventSource to retrieve the json data from the given uri.
-     *
+     * @exception {DeveloperError} uri is required.
      * @exports incrementalGet
      *
      * @example
      * incrementalGet("http://localhost/test", function(json){}, function(){});
      */
     var incrementalGet = function(uri, itemCallback, doneCallback) {
+        if (typeof uri === 'undefined') {
+            throw new DeveloperError('uri is required.');
+        }
         var eventSource = new EventSource(uri);
 
         if (itemCallback) {
@@ -21,6 +26,7 @@ define(function() {
                         itemCallback(JSON.parse(event.data));
                     } catch (e) {
                         console.log(e);
+                        eventSource.onerror();
                     }
                 }
             };

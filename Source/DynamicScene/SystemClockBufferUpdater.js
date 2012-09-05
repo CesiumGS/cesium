@@ -7,7 +7,7 @@ define(['./fillBufferIncrementally'
     /**
      * DOC_TBA
      *
-     * @alias IterationDrivenBufferUpdater
+     * @alias SystemClockDrivenBufferUpdater
      * @constructor
      * @param {DocumentManager} The document manager.
      * @param {String} The url of the document.

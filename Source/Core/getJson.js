@@ -12,6 +12,7 @@ define([
      *
      * @returns A dojo.Deferred which fetches and parses the provided URL as JSON.
      *
+     * @exception {DeveloperError} url is required.
      * @example
      * getJson('http://someUrl.com/someJson.txt').then(function(jsonData){
      *     //Do something with the JSON object

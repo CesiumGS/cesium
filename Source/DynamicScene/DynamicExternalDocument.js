@@ -63,6 +63,22 @@ define([
                 }
             }
         }
+        else if(typeof externalData.eventsource !== 'undefined'){
+            var eventsource = external.eventsource;
+            if(typeof eventsource === 'undefined'){
+                external.eventsource = eventsource = new DynamicProperty(CzmlString);
+                externalUpdated = true;
+            }
+            eventsource.processCzmlIntervals(externalData.eventsource, interval);
+            if(typeof externalData.eventname !== 'undefined'){
+                var eventname = external.eventname;
+                if(typeof eventname === 'undefined'){
+                    external.eventname = eventname = new DynamicProperty(CzmlString);
+                    eventname.processCzmlIntervals(externalData.eventname, interval);
+                    externalUpdated = true;
+                }
+            }
+        }
 
         return externalUpdated;
     };

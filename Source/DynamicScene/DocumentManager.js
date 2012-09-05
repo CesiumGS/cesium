@@ -9,7 +9,7 @@ define([
         './IterationDrivenBufferUpdater',
         './processCzml',
         './SystemClockBufferUpdater',
-        './TimeIntervalBufferUpdater',
+        './EventSourceBufferUpdater',
         './VisualizerCollection'
     ], function(
             createGuid,
@@ -21,7 +21,7 @@ define([
             IterationDrivenBufferUpdater,
             processCzml,
             SystemClockDrivenBufferUpdater,
-            TimeIntervalBufferUpdater,
+            EventSourceBufferUpdater,
             VisualizerCollection
         ) {
     "use strict";
@@ -125,7 +125,7 @@ define([
                     }
                 }
                 else if(typeof external.eventsource !== 'undefined'){
-                    doc.updater = new TimeIntervalBufferUpdater(this, external.polling);
+                    doc.updater = new EventSourceBufferUpdater(this, external.eventsource, external.eventname);
                 }
                 var scope = external.scope;
                 if(scope && scope === "SHARED"){
