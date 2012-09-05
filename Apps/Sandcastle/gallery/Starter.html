@@ -68,6 +68,7 @@ body {
 #toolbar {
     margin: 5px;
     padding: 2px 5px;
+    position: absolute;
 }
 </style>
 
@@ -97,7 +98,7 @@ require([
     var canvas = document.createElement('canvas');
     canvas.className = 'fullSize';
     document.getElementById('cesiumContainer').appendChild(canvas);
-    var ellipsoid = Cesium.Ellipsoid.WGS84; // Used in many examples
+    var ellipsoid = Cesium.Ellipsoid.WGS84;
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
@@ -133,9 +134,9 @@ require([
     ///////////////////////////////////////////////////////////////////////////
 
     scene.setAnimation(function () {
-        scene.setSunPosition(Cesium.SunPosition.compute().position);
+        scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
 
-        // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
+        // Add code here to update primitives based on changes to animation time, camera parameters, etc.
     });
 
     (function tick() {
@@ -149,14 +150,8 @@ require([
     var handler = new Cesium.EventHandler(canvas);
 
     handler.setMouseAction(function (movement) {
-        // INSERT CODE HERE: Handler for left-click
-        // ...
-    }, Cesium.MouseEventType.LEFT_CLICK);
-
-    handler.setMouseAction(function (movement) {
-        // INSERT CODE HERE: Handler for mouse move
-        // Use movement.startX, movement.startY, movement.endX, movement.endY
-        // ...
+        /* ... */
+        // Use movement.startPosition, movement.endPosition
     }, Cesium.MouseEventType.MOVE);
 
     // To use this in Sandcastle, you must set focus manually,

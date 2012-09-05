@@ -64,11 +64,9 @@ body {
     z-index: -1;
 }
 #toolbar {
-    background: rgba(0, 0, 0, 0.5);
-    border: solid 1px rgba(0, 0, 0, 0.9);
     margin: 5px;
     padding: 2px 5px;
-    border-radius: 5px;
+    position: absolute;
 }
 </style>
 
@@ -86,6 +84,7 @@ require([
     "use strict";
 
     function bingMapsRoad(primitives) {
+        Sandcastle.declare(bingMapsRoad);
         var provider = new Cesium.BingMapsTileProvider({
             server: 'dev.virtualearth.net',
             mapStyle: Cesium.BingMapsStyle.ROAD,
@@ -98,6 +97,7 @@ require([
     }
 
     function arcGisWorldStreetMaps(primitives) {
+        Sandcastle.declare(arcGisWorldStreetMaps);
         var provider = new Cesium.ArcGISTileProvider({
             host: 'server.arcgisonline.com',
             root: 'ArcGIS/rest',
@@ -109,6 +109,7 @@ require([
     }
     
     function openStreetMaps(primitives) {
+        Sandcastle.declare(openStreetMaps);
         var provider = new Cesium.OpenStreetMapTileProvider({
             proxy: new Cesium.DefaultProxy('/proxy/')
         });
@@ -117,6 +118,7 @@ require([
     }
     
     function mapQuestOpenStreetMaps(primitives) {
+        Sandcastle.declare(mapQuestOpenStreetMaps);
         // Also try MapQuest Aerial OpenStreetMaps
         //   http://oatile1.mqcdn.com/naip/
         var provider = new Cesium.OpenStreetMapTileProvider({
@@ -128,6 +130,7 @@ require([
     }
     
     function stamenMaps(primitives) {
+        Sandcastle.declare(stamenMaps);
         // Stamen maps: http://maps.stamen.com
         // Other map urls:
         // * http://tile.stamen.com/toner/
@@ -143,6 +146,7 @@ require([
     }
     
     function singleImage(primitives) {
+        Sandcastle.declare(singleImage);
         var provider = new Cesium.SingleTileProvider('../../../Images/NE2_50M_SR_W_4096.jpg');
 
         primitives.getCentralBody().dayTileProvider = provider;        
@@ -150,33 +154,51 @@ require([
 
     function createButtons(primitives) {
         new ToggleButton({
-            label: 'Bing Maps Road',
-            onClick: function() { bingMapsRoad(primitives); }
+            label: "Bing Maps Road",
+            onClick: function() { 
+                bingMapsRoad(primitives);
+                Sandcastle.highlight(bingMapsRoad);
+            }
         }).placeAt('toolbar');
         
         new ToggleButton({
-            label: 'ArcGIS World Street Maps',
-            onClick: function() { arcGisWorldStreetMaps(primitives); }
+            label: "ArcGIS World Street Maps",
+            onClick: function() { 
+                arcGisWorldStreetMaps(primitives);
+                Sandcastle.highlight(arcGisWorldStreetMaps);
+            }
         }).placeAt('toolbar');
 
         new ToggleButton({
-            label: 'OpenStreetMaps',
-            onClick: function() { openStreetMaps(primitives); }
+            label: "OpenStreetMaps",
+            onClick: function() { 
+                openStreetMaps(primitives);
+                Sandcastle.highlight(openStreetMaps);
+            }
         }).placeAt('toolbar');
 
         new ToggleButton({
-            label: 'MapQuest OpenStreetMaps',
-            onClick: function() { mapQuestOpenStreetMaps(primitives); }
+            label: "MapQuest OpenStreetMaps",
+            onClick: function() { 
+                mapQuestOpenStreetMaps(primitives);
+                Sandcastle.highlight(mapQuestOpenStreetMaps);
+            }
         }).placeAt('toolbar');
 
         new ToggleButton({
-            label: 'Stamen Maps',
-            onClick: function() { stamenMaps(primitives); }
+            label: "Stamen Maps",
+            onClick: function() { 
+                stamenMaps(primitives);
+                Sandcastle.highlight(stamenMaps);
+            }
         }).placeAt('toolbar');
         
         new ToggleButton({
-            label: 'Single Image',
-            onClick: function() { singleImage(primitives); }
+            label: "Single Image",
+            onClick: function() { 
+                singleImage(primitives); 
+                Sandcastle.highlight(singleImage);
+            }
         }).placeAt('toolbar');
     }
     

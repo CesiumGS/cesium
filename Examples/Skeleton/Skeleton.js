@@ -3,7 +3,6 @@ require({
     baseUrl : '../../Source'
 }, ['Cesium'], function(Cesium) {
     "use strict";
-
     //A real application should require only the subset of modules that
     //are actually used, instead of requiring the Cesium module, which
     //includes everything.
@@ -45,9 +44,10 @@ require({
     ///////////////////////////////////////////////////////////////////////////
 
     scene.setAnimation(function() {
-        scene.setSunPosition(Cesium.SunPosition.compute().position);
+        //scene.setSunPosition(scene.getCamera().position);
+        scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
 
-        // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
+        // Add code here to update primitives based on changes to animation time, camera parameters, etc.
     });
 
     (function tick() {
@@ -61,14 +61,8 @@ require({
     var handler = new Cesium.EventHandler(canvas);
 
     handler.setMouseAction(function(movement) {
-        // INSERT CODE HERE: Handler for left-click
-        // ...
-    }, Cesium.MouseEventType.LEFT_CLICK);
-
-    handler.setMouseAction(function (movement) {
-        // INSERT CODE HERE: Handler for mouse move
+        /* ... */
         // Use movement.startPosition, movement.endPosition
-        // ...
     }, Cesium.MouseEventType.MOVE);
 
     function keydownHandler(e) {
@@ -94,7 +88,6 @@ require({
     }
     document.addEventListener('keydown', keydownHandler, false);
 
-    // Prevent right-click from opening a context menu.
     canvas.oncontextmenu = function() {
         return false;
     };
