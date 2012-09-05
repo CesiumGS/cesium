@@ -402,7 +402,20 @@ define([
         return this._primitives.length;
     };
 
-    function cull(context, frameState, primitives, renderList) {
+    /**
+     * @private
+     */
+    CompositePrimitive.prototype.update = function(context, frameState) {
+        if (!this.show) {
+            return undefined;
+        }
+
+        if (this._centralBody) {
+            this._centralBody.update(context, frameState);
+        }
+
+        var primitives = this._primitives;
+        var renderList = this._renderList;
         var frustum = frameState.cullingFrustum;
         var occluder;
 
@@ -422,33 +435,16 @@ define([
             var boundingVolume = spatialState.boundingVolume;
             if (typeof boundingVolume !== 'undefined') {
                 var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
-                var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
-                center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
-                boundingVolume = new BoundingSphere(center, boundingVolume.radius);
+                var transformedBV = boundingVolume.transform(modelMatrix);
 
-                if (frustum.getVisibility(boundingVolume) === Intersect.OUTSIDE ||
-                        (typeof occluder !== 'undefined' && !occluder.isVisible(boundingVolume))) {
+                if (frustum.getVisibility(transformedBV) === Intersect.OUTSIDE ||
+                        (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
                     continue;
                 }
             }
 
             renderList.push(primitive);
         }
-    }
-
-    /**
-     * @private
-     */
-    CompositePrimitive.prototype.update = function(context, frameState) {
-        if (!this.show) {
-            return undefined;
-        }
-
-        if (this._centralBody) {
-            this._centralBody.update(context, frameState);
-        }
-
-        cull(context, frameState, this._primitives, this._renderList);
 
         return {};
     };

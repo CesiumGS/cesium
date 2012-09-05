@@ -9,12 +9,13 @@ define([
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
         '../../Core/Ellipsoid',
-        '../../Core/SunPosition',
+        '../../Core/computeSunPosition',
         '../../Core/EventHandler',
         '../../Core/FeatureDetection',
         '../../Core/MouseEventType',
         '../../Core/Cartesian2',
         '../../Core/JulianDate',
+        '../../Core/Cartesian3',
         '../../Core/DefaultProxy',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
@@ -33,12 +34,13 @@ define([
         _WidgetBase,
         _TemplatedMixin,
         Ellipsoid,
-        SunPosition,
+        computeSunPosition,
         EventHandler,
         FeatureDetection,
         MouseEventType,
         Cartesian2,
         JulianDate,
+        Cartesian3,
         DefaultProxy,
         Scene,
         CentralBody,
@@ -296,9 +298,11 @@ define([
             }
         },
 
+        _sunPosition : new Cartesian3(),
+
         render : function(time) {
             var scene = this.scene;
-            scene.setSunPosition(SunPosition.compute(time).position);
+            scene.setSunPosition(computeSunPosition(time, this._sunPosition));
             scene.render();
         },
 

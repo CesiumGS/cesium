@@ -69,7 +69,7 @@ define([
         this._bottom = undefined;
 
         /**
-         * The distance of the near plane from the camera's position.
+         * The distance of the near plane.
          * @type {Number}
          */
         this.near = undefined;
@@ -83,27 +83,11 @@ define([
         this._far = undefined;
 
         /**
-         * The position of the frustum.
-         * @type {Cartesian3}
+         * Defines the six clipping planes of the frustum. The planes can be updated with the `computePlanes` function.
+         * @type {Array}
+         * @see PerspectiveOffCenterFrustum#computePlanes
          */
-        this.position = undefined;
-        this._position = undefined;
-
-        /**
-         * The view direction of the frustum.
-         * @type {Cartesian3}
-         */
-        this.direction = undefined;
-        this._direction = undefined;
-
-        /**
-         * The up direction of the frustum.
-         * @type {Cartesian3}
-         */
-        this.up = undefined;
-        this._up = undefined;
-
-        this._planes = [];
+        this.planes = new Array(6);
 
         this._perspectiveMatrix = undefined;
         this._infinitePerspective = undefined;
@@ -161,32 +145,6 @@ define([
 
             updateProjectionMatrices(frustum);
         }
-
-        var position = frustum.position;
-        var positionDefined = typeof position !== 'undefined';
-        var positionChanged = positionDefined && !position.equals(frustum._position);
-        if (positionChanged) {
-            position = frustum._position = frustum.position.clone();
-        }
-
-        var direction = frustum.direction;
-        var directionDefined = typeof direction !== 'undefined';
-        var directionChanged = directionDefined && !direction.equals(frustum._direction);
-        if (directionChanged) {
-            direction = frustum._direction = frustum.direction.clone();
-        }
-
-        var up = frustum.up;
-        var upDefined = typeof up !== 'undefined';
-        var upChanged = upDefined && !up.equals(frustum._up);
-        if (upChanged) {
-            up = frustum._up = frustum.up.clone();
-        }
-
-        if (positionDefined && upDefined && directionDefined &&
-                (positionChanged || directionChanged || upChanged)) {
-            frustum._planes = computePlanes(frustum, frustum._planes);
-        }
     }
 
     function updateProjectionMatrices(frustum) {
@@ -205,21 +163,52 @@ define([
     var getPlanesNearCenter = new Cartesian3();
     var getPlanesFarCenter = new Cartesian3();
     var getPlanesNormal = new Cartesian3();
-    function computePlanes(frustum, result) {
-        if (typeof result === 'undefined') {
-            result = new Array(6);
+    /**
+     * Creates an array of clipping planes for this frustum.
+     *
+     * @memberof PerspectiveOffCenterFrustum
+     *
+     * @param {Cartesian3} position The eye position.
+     * @param {Cartesian3} direction The view direction.
+     * @param {Cartesian3} up The up direction.
+     *
+     * @exception {DeveloperError} position is required.
+     * @exception {DeveloperError} direction is required.
+     * @exception {DeveloperError} up is required.
+     *
+     * @return {Array} An array of 6 clipping planes.
+     *
+     * @example
+     * // Check if a bounding volume intersects the frustum.
+     * var planes = frustum.computePlanes(cameraPosition, cameraDirection, cameraUp);
+     * var intersecting = boundingVolume.intersect(planes[0]) !== Intersect.OUTSIDE;             // check for left intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[1]) !== Intersect.OUTSIDE; // check for right intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[2]) !== Intersect.OUTSIDE; // check for bottom intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[3]) !== Intersect.OUTSIDE; // check for top intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[4]) !== Intersect.OUTSIDE; // check for near intersection
+     * intersecting = intersecting && boundingVolume.intersect(planes[5]) !== Intersect.OUTSIDE; // check for far intersection
+     */
+    PerspectiveOffCenterFrustum.prototype.computePlanes = function(position, direction, up) {
+        if (typeof position === 'undefined') {
+            throw new DeveloperError('position is required.');
         }
 
-        var position = frustum.position;
-        var direction = frustum.direction;
-        var up = frustum.up;
+        if (typeof direction === 'undefined') {
+            throw new DeveloperError('direction is required.');
+        }
 
-        var t = frustum.top;
-        var b = frustum.bottom;
-        var r = frustum.right;
-        var l = frustum.left;
-        var n = frustum.near;
-        var f = frustum.far;
+        if (typeof up === 'undefined') {
+            throw new DeveloperError('up is required.');
+        }
+
+        var planes = this.planes;
+
+        var t = this.top;
+        var b = this.bottom;
+        var r = this.right;
+        var l = this.left;
+        var n = this.near;
+        var f = this.far;
 
         var right = Cartesian3.cross(direction, up, getPlanesRight);
 
@@ -240,9 +229,9 @@ define([
         Cartesian3.normalize(normal, normal);
         Cartesian3.cross(normal, up, normal);
 
-        var plane = result[0];
+        var plane = planes[0];
         if (typeof plane === 'undefined') {
-            plane = result[0] = new Cartesian4();
+            plane = planes[0] = new Cartesian4();
         }
         plane.x = normal.x;
         plane.y = normal.y;
@@ -256,9 +245,9 @@ define([
         Cartesian3.normalize(normal, normal);
         Cartesian3.cross(up, normal, normal);
 
-        plane = result[1];
+        plane = planes[1];
         if (typeof plane === 'undefined') {
-            plane = result[1] = new Cartesian4();
+            plane = planes[1] = new Cartesian4();
         }
         plane.x = normal.x;
         plane.y = normal.y;
@@ -272,9 +261,9 @@ define([
         Cartesian3.normalize(normal, normal);
         Cartesian3.cross(right, normal, normal);
 
-        plane = result[2];
+        plane = planes[2];
         if (typeof plane === 'undefined') {
-            plane = result[2] = new Cartesian4();
+            plane = planes[2] = new Cartesian4();
         }
         plane.x = normal.x;
         plane.y = normal.y;
@@ -288,9 +277,9 @@ define([
         Cartesian3.normalize(normal, normal);
         Cartesian3.cross(normal, right, normal);
 
-        plane = result[3];
+        plane = planes[3];
         if (typeof plane === 'undefined') {
-            plane = result[3] = new Cartesian4();
+            plane = planes[3] = new Cartesian4();
         }
         plane.x = normal.x;
         plane.y = normal.y;
@@ -298,9 +287,9 @@ define([
         plane.w = -Cartesian3.dot(normal, position);
 
         //Near plane computation
-        plane = result[4];
+        plane = planes[4];
         if (typeof plane === 'undefined') {
-            plane = result[4] = new Cartesian4();
+            plane = planes[4] = new Cartesian4();
         }
         plane.x = direction.x;
         plane.y = direction.y;
@@ -310,51 +299,16 @@ define([
         //Far plane computation
         Cartesian3.negate(direction, normal);
 
-        plane = result[5];
+        plane = planes[5];
         if (typeof plane === 'undefined') {
-            plane = result[5] = new Cartesian4();
+            plane = planes[5] = new Cartesian4();
         }
         plane.x = normal.x;
         plane.y = normal.y;
         plane.z = normal.z;
         plane.w = -Cartesian3.dot(normal, farCenter);
 
-        return result;
-    }
-
-    /**
-     * Gets an array of clipping planes for this frustum.
-     *
-     * @memberof PerspectiveOffCenterFrustum
-     *
-     * @return {Array} An array of 6 clipping planes.
-     *
-     * @example
-     * // Check if a bounding volume intersects the frustum.
-     * var planes = frustum.getPlanes();
-     * var intersecting = boundingVolume.intersect(planes[0]) !== Intersect.OUTSIDE;             // check for left intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[1]) !== Intersect.OUTSIDE; // check for right intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[2]) !== Intersect.OUTSIDE; // check for bottom intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[3]) !== Intersect.OUTSIDE; // check for top intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[4]) !== Intersect.OUTSIDE; // check for near intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[5]) !== Intersect.OUTSIDE; // check for far intersection
-     */
-    PerspectiveOffCenterFrustum.prototype.getPlanes = function(object) {
-        update(this);
-
-        if (typeof this.position === 'undefined') {
-            throw new DeveloperError('position is required.');
-        }
-
-        if (typeof this.direction === 'undefined') {
-            throw new DeveloperError('direction is required.');
-        }
-
-        if (typeof this.up === 'undefined') {
-            throw new DeveloperError('up is required.');
-        }
-
-        return this._planes;
+        return planes;
     };
 
     /**
@@ -362,29 +316,16 @@ define([
      *
      * @memberof PerspectiveOffCenterFrustum
      *
-     * @param {Object} object The bounding volume whose intersection with the frustum is to be tested.
+     * @param {Object} boundingVolume The bounding volume whose intersection with the frustum is to be tested.
      *
      * @return {Enumeration}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
      */
-    PerspectiveOffCenterFrustum.prototype.getVisibility = function(object) {
+    PerspectiveOffCenterFrustum.prototype.getVisibility = function(boundingVolume) {
         update(this);
-
-        if (typeof this.position === 'undefined') {
-            throw new DeveloperError('position cannot be undefined.');
-        }
-
-        if (typeof this.direction === 'undefined') {
-            throw new DeveloperError('direction cannot be undefined.');
-        }
-
-        if (typeof this.up === 'undefined') {
-            throw new DeveloperError('up cannot be undefined.');
-        }
-
-        var planes = this._planes;
+        var planes = this.planes;
         var intersecting = false;
         for ( var k = 0; k < planes.length; k++) {
-            var result = object.intersect(planes[k]);
+            var result = boundingVolume.intersect(planes[k]);
             if (result === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
             } else if (result === Intersect.INTERSECTING) {
@@ -468,9 +409,6 @@ define([
         frustum.bottom = this.bottom;
         frustum.near = this.near;
         frustum.far = this.far;
-        frustum.position = this.position && this.position.clone();
-        frustum.direction = this.direction && this.direction.clone();
-        frustum.up = this.up && this.up.clone();
         return frustum;
     };
 
@@ -490,10 +428,7 @@ define([
                 this.top === other.top &&
                 this.bottom === other.bottom &&
                 this.near === other.near &&
-                this.far === other.far&&
-                Cartesian3.equals(this.position, other.position) &&
-                Cartesian3.equals(this.direction, other.direction) &&
-                Cartesian3.equals(this.up, other.up));
+                this.far === other.far);
     };
 
     return PerspectiveOffCenterFrustum;

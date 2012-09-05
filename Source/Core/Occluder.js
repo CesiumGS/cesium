@@ -320,6 +320,7 @@ define([
         return occluderPosition.add(occluderPlaneNormal.multiplyByScalar(distance));
     };
 
+    var computeOccludeePointFromExtentScratch = [];
     /**
      * Computes a point that can be used as the occludee position to the visibility functions from an extent.
      *
@@ -339,7 +340,7 @@ define([
         }
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var positions = extent.subsample(ellipsoid);
+        var positions = extent.subsample(ellipsoid, computeOccludeePointFromExtentScratch);
         var bs = BoundingSphere.fromPoints(positions);
 
         // TODO: get correct ellipsoid center
