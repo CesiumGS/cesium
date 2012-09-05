@@ -171,7 +171,7 @@ define([
         }
         result.longitude = this.west;
         result.latitude = this.south;
-        result.height = 0;
+        result.height = 0.0;
         return result;
     };
 
@@ -188,7 +188,7 @@ define([
         }
         result.longitude = this.west;
         result.latitude = this.north;
-        result.height = 0;
+        result.height = 0.0;
         return result;
     };
 
@@ -205,7 +205,7 @@ define([
         }
         result.longitude = this.east;
         result.latitude = this.north;
-        result.height = 0;
+        result.height = 0.0;
         return result;
     };
 
@@ -222,7 +222,7 @@ define([
         }
         result.longitude = this.east;
         result.latitude = this.south;
-        result.height = 0;
+        result.height = 0.0;
         return result;
     };
 
@@ -235,11 +235,11 @@ define([
      */
     Extent.prototype.getCenter = function(result) {
         if (typeof result === 'undefined') {
-            return new Cartographic((this.west + this.east) / 2.0, (this.south + this.north) / 2.0);
+            return new Cartographic((this.west + this.east) * 0.5, (this.south + this.north) * 0.5);
         }
-        result.longitude = (this.west + this.east) / 2.0;
-        result.latitude = (this.south + this.north) / 2.0;
-        result.height = 0;
+        result.longitude = (this.west + this.east) * 0.5;
+        result.latitude = (this.south + this.north) * 0.5;
+        result.height = 0.0;
         return result;
     };
 
