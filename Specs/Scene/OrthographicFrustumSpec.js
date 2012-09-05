@@ -27,7 +27,10 @@ defineSuite([
         frustum.top = 1.0;
         frustum.bottom = -1.0;
 
-        planes = frustum.getPlanes(new Cartesian3(), Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y);
+        frustum.position = new Cartesian3();
+        frustum.direction =  Cartesian3.UNIT_Z.negate();
+        frustum.up = Cartesian3.UNIT_Y;
+        planes = frustum.getPlanes();
     });
 
     it('left greater than right causes an exception', function() {
@@ -64,20 +67,23 @@ defineSuite([
     });
 
     it('getPlanes with no position throws an exception', function() {
+        frustum.position = undefined;
         expect(function() {
             frustum.getPlanes();
         }).toThrow();
     });
 
     it('getPlanes with no direction throws an exception', function() {
+        frustum.direction = undefined;
         expect(function() {
-            frustum.getPlanes(new Cartesian3());
+            frustum.getPlanes();
         }).toThrow();
     });
 
     it('getPlanes with no up throws an exception', function() {
+        frustum.up = undefined;
         expect(function() {
-            frustum.getPlanes(new Cartesian3(), new Cartesian3());
+            frustum.getPlanes();
         }).toThrow();
     });
 

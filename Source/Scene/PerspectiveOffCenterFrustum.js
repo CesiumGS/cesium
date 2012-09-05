@@ -206,8 +206,6 @@ define([
     var getPlanesFarCenter = new Cartesian3();
     var getPlanesNormal = new Cartesian3();
     function computePlanes(frustum, result) {
-        update(frustum);
-
         if (typeof result === 'undefined') {
             result = new Array(6);
         }
@@ -343,6 +341,19 @@ define([
      */
     PerspectiveOffCenterFrustum.prototype.getPlanes = function(object) {
         update(this);
+
+        if (typeof this.position === 'undefined') {
+            throw new DeveloperError('position is required.');
+        }
+
+        if (typeof this.direction === 'undefined') {
+            throw new DeveloperError('direction is required.');
+        }
+
+        if (typeof this.up === 'undefined') {
+            throw new DeveloperError('up is required.');
+        }
+
         return this._planes;
     };
 
@@ -457,9 +468,9 @@ define([
         frustum.bottom = this.bottom;
         frustum.near = this.near;
         frustum.far = this.far;
-        frustum.position = this.position.clone();
-        frustum.direction = this.direction.clone();
-        frustum.up = this.up.clone();
+        frustum.position = this.position && this.position.clone();
+        frustum.direction = this.direction && this.direction.clone();
+        frustum.up = this.up && this.up.clone();
         return frustum;
     };
 

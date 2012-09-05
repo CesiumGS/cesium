@@ -220,11 +220,11 @@ define([
 
         scene._animations.update();
         camera.update();
+        us.setView(camera.getViewMatrix());
         us.setProjection(camera.frustum.getProjectionMatrix());
         if (camera.frustum.getInfiniteProjectionMatrix) {
             us.setInfiniteProjection(camera.frustum.getInfiniteProjectionMatrix());
         }
-        us.setView(camera.getViewMatrix());
 
         if (scene._animate) {
             scene._animate();

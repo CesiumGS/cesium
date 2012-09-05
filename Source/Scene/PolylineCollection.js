@@ -131,9 +131,9 @@ define([
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
 
-        this._boundingVolume = new BoundingSphere();
-        this._boundingVolumeCV = new BoundingSphere();
-        this._boundingVolume2D = new BoundingSphere();
+        this._boundingVolume = undefined;
+        this._boundingVolumeCV = undefined;
+        this._boundingVolume2D = undefined;
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -1423,9 +1423,9 @@ define([
 
         if (positions.length > 0) {
             if (typeof polyline._collection._boundingVolume === 'undefined') {
-                BoundingSphere.clone(polyline._boundingVolume, polyline._collection._boundingVolume);
+                polyline._collection._boundingVolume = BoundingSphere.clone(polyline._boundingVolume);
             } else {
-                polyline._collection._boundingVolume.union(polyline._boundingVolume, polyline._collection._boundingVolume);
+                polyline._collection._boundingVolume = polyline._collection._boundingVolume.union(polyline._boundingVolume, polyline._collection._boundingVolume);
             }
         }
 
@@ -1454,9 +1454,9 @@ define([
         if (newPositions.length > 0) {
             polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions, polyline._boundingVolume2D);
             if (typeof polyline._collection._boundingVolume2D === 'undefined') {
-                BoundingSphere.clone(polyline._boundingVolume2D, polyline._collection._boundingVolume2D);
+                polyline._collection._boundingVolume2D = BoundingSphere.clone(polyline._boundingVolume2D);
             } else {
-                polyline._collection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._collection._boundingVolume2D);
+                polyline._collection._boundingVolume2D = polyline._collection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._collection._boundingVolume2D);
             }
 
             var center2D = polyline._boundingVolume2D.center;
@@ -1467,9 +1467,9 @@ define([
             polyline._boundingVolumeCV.radius = polyline._boundingVolume2D.radius;
 
             if (typeof polyline._collection._boundingVolumeCV === 'undefined') {
-                BoundingSphere.clone(polyline._boundingVolumeCV, polyline._collection._boundingVolumeCV);
+                polyline._collection._boundingVolumeCV = BoundingSphere.clone(polyline._boundingVolumeCV);
             } else {
-                polyline._collection._boundingVolume2D.union(polyline._boundingVolumeCV, polyline._collection._boundingVolumeCV);
+                polyline._collection._boundingVolumeCV = polyline._collection._boundingVolumeCV.union(polyline._boundingVolumeCV, polyline._collection._boundingVolumeCV);
             }
         }
 

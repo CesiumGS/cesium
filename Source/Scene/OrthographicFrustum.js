@@ -193,8 +193,6 @@ define([
     var getPlanesNearCenter = new Cartesian3();
     var getPlanesPoint = new Cartesian3();
     function computePlanes(frustum, result) {
-        update(frustum);
-
         if (typeof result === 'undefined') {
             result = new Array(6);
         }
@@ -313,8 +311,21 @@ define([
      * intersecting = intersecting && boundingVolume.intersect(planes[4]) !== Intersect.OUTSIDE; // check for near intersection
      * intersecting = intersecting && boundingVolume.intersect(planes[5]) !== Intersect.OUTSIDE; // check for far intersection
      */
-    OrthographicFrustum.prototype.getPlanes = function(object) {
+    OrthographicFrustum.prototype.getPlanes = function() {
         update(this);
+
+        if (typeof this.position === 'undefined') {
+            throw new DeveloperError('position is required.');
+        }
+
+        if (typeof this.direction === 'undefined') {
+            throw new DeveloperError('direction is required.');
+        }
+
+        if (typeof this.up === 'undefined') {
+            throw new DeveloperError('up is required.');
+        }
+
         return this._planes;
     };
 
@@ -415,9 +426,9 @@ define([
         frustum.bottom = this.bottom;
         frustum.near = this.near;
         frustum.far = this.far;
-        frustum.position = this.position.clone();
-        frustum.direction = this.direction.clone();
-        frustum.up = this.up.clone();
+        frustum.position = this.position && this.position.clone();
+        frustum.direction = this.direction && this.direction.clone();
+        frustum.up = this.up && this.up.clone();
         return frustum;
     };
 
