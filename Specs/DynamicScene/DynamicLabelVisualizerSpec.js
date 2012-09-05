@@ -34,18 +34,21 @@ defineSuite([
               VerticalOrigin,
               LabelStyle) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     var visualizer;
 
-    beforeEach(function() {
+    beforeAll(function() {
         scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -160,8 +163,8 @@ defineSuite([
         expect(l.getText()).toEqual(testObject.label.text.getValue(time));
         expect(l.getFont()).toEqual(testObject.label.font.getValue(time));
         expect(l.getStyle()).toEqual(testObject.label.style.getValue(time));
-        expect(l.getFillColor()).toEqualProperties(testObject.label.fillColor.getValue(time));
-        expect(l.getOutlineColor()).toEqualProperties(testObject.label.outlineColor.getValue(time));
+        expect(l.getFillColor()).toEqual(testObject.label.fillColor.getValue(time));
+        expect(l.getOutlineColor()).toEqual(testObject.label.outlineColor.getValue(time));
         expect(l.getHorizontalOrigin()).toEqual(testObject.label.horizontalOrigin.getValue(time));
         expect(l.getVerticalOrigin()).toEqual(testObject.label.verticalOrigin.getValue(time));
         expect(l.getEyeOffset()).toEqual(testObject.label.eyeOffset.getValue(time));
@@ -187,8 +190,8 @@ defineSuite([
         expect(l.getText()).toEqual(testObject.label.text.getValue(time));
         expect(l.getFont()).toEqual(testObject.label.font.getValue(time));
         expect(l.getStyle()).toEqual(testObject.label.style.getValue(time));
-        expect(l.getFillColor()).toEqualProperties(testObject.label.fillColor.getValue(time));
-        expect(l.getOutlineColor()).toEqualProperties(testObject.label.outlineColor.getValue(time));
+        expect(l.getFillColor()).toEqual(testObject.label.fillColor.getValue(time));
+        expect(l.getOutlineColor()).toEqual(testObject.label.outlineColor.getValue(time));
         expect(l.getHorizontalOrigin()).toEqual(testObject.label.horizontalOrigin.getValue(time));
         expect(l.getVerticalOrigin()).toEqual(testObject.label.verticalOrigin.getValue(time));
         expect(l.getEyeOffset()).toEqual(testObject.label.eyeOffset.getValue(time));

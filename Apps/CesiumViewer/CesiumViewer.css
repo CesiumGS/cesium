@@ -1,5 +1,5 @@
 @import	url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
-@import url('../../Source/DojoWidgets/TimelineWidget.css');
+@import url('../../Source/Widgets/Dojo/CesiumViewerWidget.css');
 
 html,body {
 	height: 100%;
@@ -8,71 +8,11 @@ html,body {
 	overflow: hidden;
 	padding: 0;
 	font-family: sans-serif;
-	-moz-user-select: none;
-	-webkit-user-select: none;
 }
 
 #cesiumContainer {
-	position: absolute;
-	top: 0;
-	left: 0;
 	width: 100%;
 	height: 100%;
-}
-
-.timelineContainer {
-	position: absolute;
-	bottom: 0;
-	width: 100%;
-	height: 25px;
-	padding: 0 2px 2px;
-}
-
-.animationIcon {
-	background-image: url('Images/animationBar.png');
-	background-repeat: no-repeat;
-	width: 24px;
-	height: 24px;
-}
-
-.bingIcon {
-    background-image: url('../../Images/Bing_Logo_51x19_White.png');
-    background-repeat: no-repeat;
-    background-position:center; 
-    width: 51px;
-    height: 24px;
-}
-
-.animReverse {
-	background-position: -24px 0;
-}
-
-.animPause {
-	background-position: -72px 0;
-}
-
-.animPlay {
-	background-position: -120px 0;
-}
-
-.animFast {
-	background-position: -144px 0;
-}
-
-.animSlow {
-	background-position: -168px 0;
-}
-
-.cesiumLogo {
-	display: block;
-	position: absolute;
-	bottom: 66px;
-	left: 5px;
-	text-decoration: none;
-}
-
-.cesiumLogo img {
-	border: none;
 }
 
 .agiLogo {
@@ -85,81 +25,4 @@ html,body {
 
 .agiLogo img {
     border: none;
-}
-
-.animButtons {
-	display: block;
-	position: absolute;
-	bottom: 31px;
-	left: 6px;
-}
-
-#speedIndicator {
-	opacity: 0;
-	background: rgba(42, 42, 42, 0.8);
-	color: #eee;
-	font-size: 12px;
-	z-index: 20;
-	padding: 5px 10px;
-	border-radius: 4px;
-	-moz-transition-property: opacity;
-	-moz-transition-duration: 0.2s;
-	-webkit-transition-property: opacity;
-	-webkit-transition-duration: 0.2s;
-	transition-property: opacity;
-	transition-duration: 0.2s;
-}
-
-.animButtons:hover #speedIndicator {
-	opacity: 1;
-}
-
-.timeLabel {
-	display: block;
-	position: absolute;
-	bottom: 31px;
-	right: 6px;
-}
-
-.viewIcon {
-	background-image: url('Images/viewControlBar.png');
-	background-repeat: no-repeat;
-	width: 24px;
-	height: 24px;
-}
-
-.view2D {
-	background-position: -24px 0;
-}
-
-.view3D {
-	background-position: -48px 0;
-}
-
-.viewColumbus {
-	background-position: -72px 0;
-}
-
-.toggleCbLighting {
-	background-position: -96px 0;
-}
-
-.viewFullScreen {
-	background-position: -120px 0;
-}
-
-.viewButtons {
-	display: block;
-	position: fixed;
-	top: 5px;
-	right: 5px;
-}
-
-.imagerySelector {
-	display: block;
-}
-
-.claro .dijitToggleButtonChecked .dijitButtonNode {
-    border: 1px solid #EA0;
-    box-shadow: 0 0 5px rgba(255, 170, 42, 1);
 }

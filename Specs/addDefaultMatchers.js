@@ -1,99 +1,88 @@
 /*global define*/
 define(function() {
     "use strict";
+    /*global Uint8ClampedArray,CanvasPixelArray*/
 
-    function isEqual(a, b) {
-        if (typeof a !== 'undefined' && typeof a.equals !== 'undefined') {
-            return a.equals(b);
-        }
+    var typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array];
 
-        return a === b;
+    if (typeof Uint8ClampedArray !== 'undefined') {
+        typedArrayTypes.push(Uint8ClampedArray);
     }
 
-    function isEqualEpsilon(a, b, epsilon) {
-        if (typeof a !== 'undefined' && typeof a.equalsEpsilon !== 'undefined') {
-            return a.equalsEpsilon(b, epsilon);
-        }
-
-        return Math.abs(a - b) <= epsilon;
+    if (typeof CanvasPixelArray !== 'undefined') {
+        typedArrayTypes.push(CanvasPixelArray);
     }
 
-    function isArrayEqual(a, b, f) {
-        if (a.length !== b.length) {
-            return false;
+    function isTypedArray(o) {
+        return typedArrayTypes.some(function(type) {
+            return o instanceof type;
+        });
+    }
+
+    function typedArrayToArray(array) {
+        if (array !== null && typeof array === 'object' && isTypedArray(array)) {
+            return Array.prototype.slice.call(array, 0);
         }
+        return array;
+    }
 
-        if (!f) {
-            f = isEqual;
-        }
+    function equals(env, a, b) {
+        a = typedArrayToArray(a);
+        b = typedArrayToArray(b);
+        return env.equals_(a, b);
+    }
 
-        var args = new Array(2).concat(Array.prototype.slice.call(arguments, 3));
+    var defaultMatchers = {
+        toBeGreaterThanOrEqualTo : function(value, epsilon) {
+            return this.actual >= value;
+        },
 
-        for ( var i = 0; i < a.length; i++) {
-            args[0] = a[i];
-            args[1] = b[i];
-            if (!f.apply(null, args)) {
-                return false;
+        toBeLessThanOrEqualTo : function(value, epsilon) {
+            return this.actual <= value;
+        },
+
+        toBeBetween : function(lower, upper) {
+            if (lower > upper) {
+                var tmp = upper;
+                upper = lower;
+                lower = tmp;
             }
-        }
+            return this.actual >= lower && this.actual <= upper;
+        },
 
-        return true;
-    }
+        toEqual : function(expected) {
+            return equals(this.env, this.actual, expected);
+        },
+
+        toEqualEpsilon : function(expected, epsilon) {
+            function equalityTester(a, b) {
+                if (a !== 'undefined' && typeof a.equalsEpsilon === 'function') {
+                    return a.equalsEpsilon(b, epsilon);
+                }
+
+                if (typeof b !== 'undefined' && typeof b.equalsEpsilon === 'function') {
+                    return b.equalsEpsilon(a, epsilon);
+                }
+
+                if (typeof a === 'number' || typeof b === 'number') {
+                    return Math.abs(a - b) <= epsilon;
+                }
+
+                return undefined;
+            }
+
+            var origTesters = this.env.equalityTesters_;
+            this.env.equalityTesters_ = [equalityTester];
+
+            var result = equals(this.env, this.actual, expected);
+
+            this.env.equalityTesters_ = origTesters;
+
+            return result;
+        }
+    };
 
     return function() {
-        this.addMatchers({
-            toEqualProperties : function(value) {
-                for ( var key in value) {
-                    if (value.hasOwnProperty(key)) {
-                        if (this.actual[key] !== value[key]) {
-                            return false;
-                        }
-                    }
-                }
-
-                return true;
-            },
-
-            toBeIn : function(values) {
-                var actual = this.actual;
-
-                for ( var i = 0; i < values.length; ++i) {
-                    if (actual === values[i]) {
-                        return true;
-                    }
-                }
-
-                return false;
-            },
-
-            toBeGreaterThanOrEqualTo : function(value, epsilon) {
-                return this.actual >= value;
-            },
-
-            toBeLessThanOrEqualTo : function(value, epsilon) {
-                return this.actual <= value;
-            },
-
-            toEqualArray : function(expected) {
-                return isArrayEqual(this.actual, expected);
-            },
-
-            toEqualEpsilon : function(expected, epsilon) {
-                return isEqualEpsilon(this.actual, expected, epsilon);
-            },
-
-            toEqualArrayEpsilon : function(expected, epsilon) {
-                return isArrayEqual(this.actual, expected, isEqualEpsilon, epsilon);
-            },
-
-            toBeBetween : function(lower, upper) {
-                if (lower > upper) {
-                    var tmp = upper;
-                    upper = lower;
-                    lower = tmp;
-                }
-                return this.actual >= lower && this.actual <= upper;
-            }
-        });
+        this.addMatchers(defaultMatchers);
     };
 });

@@ -8,7 +8,7 @@ defineSuite([
               Quaternion,
               CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var quaternion1 = new Quaternion(1, 2, 3, 4).normalize();
     var quaternion2 = new Quaternion(4, 5, 6, 7).normalize();
@@ -22,8 +22,8 @@ defineSuite([
     };
 
     it('unwrapInterval', function() {
-        expect(CzmlUnitQuaternion.unwrapInterval(constantQuaternionInterval)).toEqualArray(constantQuaternionInterval.unitQuaternion);
-        expect(CzmlUnitQuaternion.unwrapInterval(sampledQuaternionInterval)).toEqualArray(sampledQuaternionInterval.unitQuaternion);
+        expect(CzmlUnitQuaternion.unwrapInterval(constantQuaternionInterval)).toEqual(constantQuaternionInterval.unitQuaternion);
+        expect(CzmlUnitQuaternion.unwrapInterval(sampledQuaternionInterval)).toEqual(sampledQuaternionInterval.unitQuaternion);
     });
 
     it('isSampled', function() {

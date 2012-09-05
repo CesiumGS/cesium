@@ -4,7 +4,7 @@ defineSuite([
             ], function(
              HermitePolynomialApproximation) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     //The results of these specs were validated against STK Components
     //an aerospace SDK available from Analytical Graphics. www.agi.com/components/
@@ -49,7 +49,7 @@ defineSuite([
         var x = 100.0;
         var result = HermitePolynomialApproximation.interpolateOrderZero(x, xTable, yTableCombined, 2);
         var expectedResult = [13379311.51716268, 92.73903788149451];
-        expect(result).toEqualArrayEpsilon(expectedResult, 1e-15);
+        expect(result).toEqualEpsilon(expectedResult, 1e-15);
     });
 
     it('getRequiredDataPoints should be 1 more than degree, except for 0, which requires 2', function() {

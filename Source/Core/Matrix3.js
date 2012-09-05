@@ -1,11 +1,14 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './defaultValue',
         './DeveloperError',
-        './Cartesian3'
-       ],
-    function(
+        './freezeObject'
+    ], function(
+        Cartesian3,
+        defaultValue,
         DeveloperError,
-        Cartesian3) {
+        freezeObject) {
     "use strict";
 
     /**
@@ -15,13 +18,13 @@ define([
      * @constructor
      *
      * @param {Number} [column0Row0=0.0] The value for column 0, row 0.
-     * @param {Number} [column1Row0=0.0] The value for column 1, row 1.
-     * @param {Number} [column2Row0=0.0] The value for column 2, row 2.
-     * @param {Number} [column0Row1=0.0] The value for column 0, row 0.
+     * @param {Number} [column1Row0=0.0] The value for column 1, row 0.
+     * @param {Number} [column2Row0=0.0] The value for column 2, row 0.
+     * @param {Number} [column0Row1=0.0] The value for column 0, row 1.
      * @param {Number} [column1Row1=0.0] The value for column 1, row 1.
-     * @param {Number} [column2Row1=0.0] The value for column 2, row 2.
-     * @param {Number} [column0Row2=0.0] The value for column 0, row 0.
-     * @param {Number} [column1Row2=0.0] The value for column 1, row 1.
+     * @param {Number} [column2Row1=0.0] The value for column 2, row 1.
+     * @param {Number} [column0Row2=0.0] The value for column 0, row 2.
+     * @param {Number} [column1Row2=0.0] The value for column 1, row 2.
      * @param {Number} [column2Row2=0.0] The value for column 2, row 2.
      *
      * @see Matrix3.fromColumnMajor
@@ -32,15 +35,15 @@ define([
     var Matrix3 = function(column0Row0, column1Row0, column2Row0,
                            column0Row1, column1Row1, column2Row1,
                            column0Row2, column1Row2, column2Row2) {
-        this[0] = typeof column0Row0 === 'undefined' ? 0.0 : column0Row0;
-        this[1] = typeof column0Row1 === 'undefined' ? 0.0 : column0Row1;
-        this[2] = typeof column0Row2 === 'undefined' ? 0.0 : column0Row2;
-        this[3] = typeof column1Row0 === 'undefined' ? 0.0 : column1Row0;
-        this[4] = typeof column1Row1 === 'undefined' ? 0.0 : column1Row1;
-        this[5] = typeof column1Row2 === 'undefined' ? 0.0 : column1Row2;
-        this[6] = typeof column2Row0 === 'undefined' ? 0.0 : column2Row0;
-        this[7] = typeof column2Row1 === 'undefined' ? 0.0 : column2Row1;
-        this[8] = typeof column2Row2 === 'undefined' ? 0.0 : column2Row2;
+        this[0] = defaultValue(column0Row0, 0.0);
+        this[1] = defaultValue(column0Row1, 0.0);
+        this[2] = defaultValue(column0Row2, 0.0);
+        this[3] = defaultValue(column1Row0, 0.0);
+        this[4] = defaultValue(column1Row1, 0.0);
+        this[5] = defaultValue(column1Row2, 0.0);
+        this[6] = defaultValue(column2Row0, 0.0);
+        this[7] = defaultValue(column2Row1, 0.0);
+        this[8] = defaultValue(column2Row2, 0.0);
     };
 
     /**
@@ -211,7 +214,7 @@ define([
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -221,7 +224,7 @@ define([
         }
 
         if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index is required and must be 0 or 2.');
+            throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
 
         var startIndex = index * 3;
@@ -250,7 +253,7 @@ define([
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -262,7 +265,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index is required and must be 0 or 2.');
+            throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
         result = Matrix3.clone(matrix, result);
         var startIndex = index * 3;
@@ -282,7 +285,7 @@ define([
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -292,7 +295,7 @@ define([
         }
 
         if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index is required and must be 0 or 2.');
+            throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
 
         var x = matrix[index];
@@ -320,7 +323,7 @@ define([
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -332,7 +335,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index is required and must be 0 or 2.');
+            throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
 
         result = Matrix3.clone(matrix, result);
@@ -397,8 +400,8 @@ define([
      *
      * @param {Matrix3} matrix The matrix.
      * @param {Cartesian3} cartesian The column.
-     * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -599,9 +602,9 @@ define([
      * An immutable Matrix3 instance initialized to the identity matrix.
      * @memberof Matrix3
      */
-    Matrix3.IDENTITY = Object.freeze(new Matrix3(1.0, 0.0, 0.0,
-                                                 0.0, 1.0, 0.0,
-                                                 0.0, 0.0, 1.0));
+    Matrix3.IDENTITY = freezeObject(new Matrix3(1.0, 0.0, 0.0,
+                                                0.0, 1.0, 0.0,
+                                                0.0, 0.0, 1.0));
 
     /**
      * The index into Matrix3 for column 0, row 0.
@@ -687,7 +690,7 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -703,7 +706,7 @@ define([
      * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified column.
      *
      * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -719,7 +722,7 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -735,7 +738,7 @@ define([
      * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified row.
      *
      * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0 or 2.
+     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
      * @see Cartesian3
      */
@@ -762,8 +765,8 @@ define([
      * @memberof Matrix3
      *
      * @param {Cartesian3} cartesian The column.
-     * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -839,10 +842,10 @@ define([
 
     /**
      * Creates a string representing this Matrix with each row being
-     * on a separate line and in the format '(column1, column2)'.
+     * on a separate line and in the format '(column0, column1, column2)'.
      * @memberof Matrix3
      *
-     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column1, column2)'.
+     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1, column2)'.
      */
     Matrix3.prototype.toString = function() {
         return '(' + this[0] + ', ' + this[3] + ', ' + this[6] + ')\n' +

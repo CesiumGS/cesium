@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
+        '../Core/defaultValue',
         './CzmlBoolean',
         './DynamicProperty',
         './DynamicMaterialProperty'
     ], function(
          TimeInterval,
+         defaultValue,
          CzmlBoolean,
          DynamicProperty,
          DynamicMaterialProperty) {
@@ -29,10 +31,12 @@ define([
     var DynamicPolygon = function() {
         /**
          * A DynamicProperty of type CzmlBoolean which determines the polygon's visibility.
+         * @type DynamicProperty
          */
         this.show = undefined;
         /**
          * A DynamicMaterialProperty which determines the polygon's material.
+         * @type DynamicMaterialProperty
          */
         this.material = undefined;
     };
@@ -45,6 +49,8 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject which will contain the polygon data.
      * @param {Object} packet The CZML packet to process.
+     * @param {DynamicObjectCollection} [dynamicObjectCollection] The collection into which objects are being loaded.
+     * @param {String} [sourceUri] The originating url of the CZML being processed.
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject
@@ -52,7 +58,7 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicPolygon.processCzmlPacket = function(dynamicObject, packet) {
+    DynamicPolygon.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polygonData = packet.polygon;
         if (typeof polygonData === 'undefined') {
             return false;
@@ -85,7 +91,7 @@ define([
                 polygon.material = material = new DynamicMaterialProperty();
                 polygonUpdated = true;
             }
-            material.processCzmlIntervals(polygonData.material, interval);
+            material.processCzmlIntervals(polygonData.material, interval, sourceUri);
         }
         return polygonUpdated;
     };
@@ -110,8 +116,8 @@ define([
                 targetObject.polygon = targetPolygon = new DynamicPolygon();
             }
 
-            targetPolygon.show = targetPolygon.show || polygonToMerge.show;
-            targetPolygon.material = targetPolygon.material || polygonToMerge.material;
+            targetPolygon.show = defaultValue(targetPolygon.show, polygonToMerge.show);
+            targetPolygon.material = defaultValue(targetPolygon.material, polygonToMerge.material);
         }
     };
 

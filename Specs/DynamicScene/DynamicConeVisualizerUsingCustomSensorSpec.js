@@ -9,12 +9,13 @@ defineSuite([
              'DynamicScene/DynamicCone',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
-             'Scene/ColorMaterial',
+             'Scene/Material',
              'Core/JulianDate',
              'Core/Quaternion',
              'Core/Cartesian3',
              'Core/Color',
-             'Scene/Scene'
+             'Scene/Scene',
+             'Core/Math'
             ], function(
               DynamicConeVisualizerUsingCustomSensor,
               Matrix3,
@@ -25,25 +26,29 @@ defineSuite([
               DynamicCone,
               DynamicObjectCollection,
               DynamicObject,
-              ColorMaterial,
+              Material,
               JulianDate,
               Quaternion,
               Cartesian3,
               Color,
-              Scene) {
+              Scene,
+              CesiumMath) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     var visualizer;
 
-    beforeEach(function() {
+    beforeAll(function() {
         scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -135,10 +140,19 @@ defineSuite([
         cone.showIntersection = new MockProperty(true);
         cone.radius = new MockProperty(123.5);
         cone.show = new MockProperty(true);
-        cone.capMaterial = new MockProperty(new ColorMaterial(Color.RED));
-        cone.innerMaterial = new MockProperty(new ColorMaterial(Color.WHITE));
-        cone.outerMaterial = new MockProperty(new ColorMaterial(Color.BLUE));
-        cone.silhouetteMaterial = new MockProperty(new ColorMaterial(Color.YELLOW));
+
+        var redMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        redMaterial.uniforms.color = Color.RED;
+        var whiteMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        whiteMaterial.uniforms.color = Color.WHITE;
+        var blueMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        blueMaterial.uniforms.color = Color.BLUE;
+        var yellowMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        yellowMaterial.uniforms.color = Color.YELLOW;
+        cone.capMaterial = new MockProperty(redMaterial);
+        cone.innerMaterial = new MockProperty(whiteMaterial);
+        cone.outerMaterial = new MockProperty(blueMaterial);
+        cone.silhouetteMaterial = new MockProperty(yellowMaterial);
         visualizer.update(time);
 
         expect(scene.getPrimitives().getLength()).toEqual(1);
@@ -152,11 +166,33 @@ defineSuite([
         expect(c.radius).toEqual(testObject.cone.radius.getValue(time));
         expect(c.show).toEqual(testObject.cone.show.getValue(time));
         expect(c.material).toEqual(testObject.cone.outerMaterial.getValue(time));
-        expect(c.modelMatrix).toEqual(new Matrix4(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValueCartesian(time)));
+        expect(c.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValueCartesian(time)));
 
         cone.show.value = false;
         visualizer.update(time);
         expect(c.show).toEqual(testObject.cone.show.getValue(time));
+    });
+
+    it('An empty DynamicCone causes a ComplexConicSensor to be created with CZML defaults.', function() {
+        var time = new JulianDate();
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+
+        testObject.cone = new DynamicCone();
+        visualizer.update(time);
+
+        expect(scene.getPrimitives().getLength()).toEqual(1);
+        var c = scene.getPrimitives().get(0);
+        expect(c.minimumClockAngle).toEqual(0.0);
+        expect(c.maximumClockAngle).toEqual(CesiumMath.TWO_PI);
+        expect(c.innerHalfAngle).toEqual(0);
+        expect(c.outerHalfAngle).toEqual(Math.PI);
+        expect(isFinite(c.radius)).toEqual(false);
+        expect(c.show).toEqual(true);
     });
 
     it('clear hides cones.', function() {

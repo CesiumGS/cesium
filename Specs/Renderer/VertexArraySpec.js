@@ -12,15 +12,15 @@ defineSuite([
          PrimitiveType,
          BufferUsage) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
     });
 
-    afterEach(function() {
+    afterAll(function() {
         destroyContext(context);
     });
 
@@ -41,6 +41,7 @@ defineSuite([
 
         var va = context.createVertexArray(attributes);
         va._bind();
+        va._unBind();
         va = va.destroy();
     });
 
@@ -64,6 +65,7 @@ defineSuite([
         expect(va.getAttribute(0).strideInBytes).toEqual(0);
 
         va._bind();
+        va._unBind();
         va = va.destroy();
     });
 
@@ -87,6 +89,7 @@ defineSuite([
         var va = context.createVertexArray(attributes);
         expect(va.getNumberOfAttributes()).toEqual(2);
         va._bind();
+        va._unBind();
         va = va.destroy();
     });
 
@@ -112,6 +115,7 @@ defineSuite([
         var va = context.createVertexArray(attributes);
         expect(va.getNumberOfAttributes()).toEqual(2);
         va._bind();
+        va._unBind();
         va = va.destroy();
     });
 
@@ -152,6 +156,7 @@ defineSuite([
         expect(va.getAttribute(0).enabled).toEqual(false);
 
         va._bind();
+        va._unBind();
         va = va.destroy();
     });
 
@@ -240,7 +245,7 @@ defineSuite([
             count : 1
         });
 
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -280,7 +285,7 @@ defineSuite([
             count : 1
         });
 
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -320,7 +325,7 @@ defineSuite([
             count : 1
         });
 
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -360,7 +365,7 @@ defineSuite([
             count : 1
         });
 
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();
         va = va.destroy();

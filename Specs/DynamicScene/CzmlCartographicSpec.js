@@ -8,7 +8,7 @@ defineSuite([
               Cartographic,
               CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var cartographic1 = new Cartographic(123.456, 789.101112, 321.312);
     var cartographic2 = new Cartographic(789.101112, 123.456, 521.312);
@@ -31,10 +31,10 @@ defineSuite([
     };
 
     it('unwrapInterval', function() {
-        expect(CzmlCartographic.unwrapInterval(constantCartographicInterval)).toEqualArray(constantCartographicInterval.cartographicRadians);
-        expect(CzmlCartographic.unwrapInterval(constantCartographicDegreesInterval)).toEqualArray(constantCartographicInterval.cartographicRadians);
-        expect(CzmlCartographic.unwrapInterval(sampledCartographicInterval)).toEqualArray(sampledCartographicInterval.cartographicRadians);
-        expect(CzmlCartographic.unwrapInterval(sampledCartographicDegreesInterval)).toEqualArray(sampledCartographicInterval.cartographicRadians);
+        expect(CzmlCartographic.unwrapInterval(constantCartographicInterval)).toEqual(constantCartographicInterval.cartographicRadians);
+        expect(CzmlCartographic.unwrapInterval(constantCartographicDegreesInterval)).toEqual(constantCartographicInterval.cartographicRadians);
+        expect(CzmlCartographic.unwrapInterval(sampledCartographicInterval)).toEqual(sampledCartographicInterval.cartographicRadians);
+        expect(CzmlCartographic.unwrapInterval(sampledCartographicDegreesInterval)).toEqual(sampledCartographicInterval.cartographicRadians);
     });
 
     it('isSampled', function() {

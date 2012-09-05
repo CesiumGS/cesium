@@ -4,12 +4,14 @@ define([
         '../Core/Extent',
         '../Core/Math',
         '../Core/jsonp',
+        '../Core/writeTextToCanvas',
         './Projections'
     ], function(
         DeveloperError,
         Extent,
         CesiumMath,
         jsonp,
+        writeTextToCanvas,
         Projections) {
     "use strict";
 
@@ -144,26 +146,16 @@ define([
         this._logoLoaded = false;
 
         var that = this;
-        jsonp(this._url, function(data) {
-            var credit = data.copyrightText;
-
-            var canvas = document.createElement('canvas');
-            canvas.width = 800.0;
-            canvas.height = 20.0;
-
-            var context = canvas.getContext('2d');
-            context.fillStyle = '#fff';
-            context.font = '12px sans-serif';
-            context.textBaseline = 'top';
-            context.fillText(credit, 0, 0);
-
-            that._logo = canvas;
-            that._logoLoaded = true;
-        }, {
+        jsonp(this._url, {
             parameters : {
                 f : 'json'
             },
             proxy : this._proxy
+        }).then(function(data) {
+            that._logo = writeTextToCanvas(data.copyrightText, {
+                font : '12px sans-serif'
+            });
+            that._logoLoaded = true;
         });
     };
 

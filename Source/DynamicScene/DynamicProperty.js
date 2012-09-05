@@ -117,14 +117,15 @@ define([
      *
      * @param {Object} czmlIntervals The CZML data to process.
      * @param {TimeInterval} [constrainedInterval] Constrains the processing so that any times outside of this interval are ignored.
+     * @param {String} [sourceUri] The originating url of the CZML being processed.
      */
-    DynamicProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval) {
+    DynamicProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval, sourceUri) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this._addCzmlInterval(czmlIntervals[i], constrainedInterval);
+                this._addCzmlInterval(czmlIntervals[i], constrainedInterval, sourceUri);
             }
         } else {
-            this._addCzmlInterval(czmlIntervals, constrainedInterval);
+            this._addCzmlInterval(czmlIntervals, constrainedInterval, sourceUri);
         }
     };
 
@@ -280,7 +281,7 @@ define([
         }
     };
 
-    DynamicProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval) {
+    DynamicProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval, sourceUri) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL;
@@ -292,7 +293,7 @@ define([
             iso8601Interval = iso8601Interval.intersect(constrainedInterval);
         }
 
-        var unwrappedInterval = this.valueType.unwrapInterval(czmlInterval);
+        var unwrappedInterval = this.valueType.unwrapInterval(czmlInterval, sourceUri);
         if (typeof unwrappedInterval !== 'undefined') {
             this._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
         }

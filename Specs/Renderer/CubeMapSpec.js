@@ -4,6 +4,7 @@ defineSuite([
          '../Specs/destroyContext',
          'Core/Cartesian3',
          'Core/PrimitiveType',
+         'Core/Color',
          'Renderer/BufferUsage',
          'Renderer/PixelDatatype',
          'Renderer/PixelFormat',
@@ -15,6 +16,7 @@ defineSuite([
          destroyContext,
          Cartesian3,
          PrimitiveType,
+         Color,
          BufferUsage,
          PixelDatatype,
          PixelFormat,
@@ -22,7 +24,7 @@ defineSuite([
          TextureMinificationFilter,
          TextureMagnificationFilter) {
     "use strict";
-    /*global xit,it,expect,beforeEach,afterEach,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var sp;
@@ -34,27 +36,21 @@ defineSuite([
     var blueAlphaImage;
     var blueOverRedImage;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
     });
 
-    afterEach(function() {
-        if (sp) {
-            sp = sp.destroy();
-        }
-
-        if (va) {
-            va = va.destroy();
-        }
-
-        if (cubeMap) {
-            cubeMap = cubeMap.destroy();
-        }
-
+    afterAll(function() {
         destroyContext(context);
     });
 
-    it('initializem suite', function() {
+    afterEach(function() {
+        sp = sp && sp.destroy();
+        va = va && va.destroy();
+        cubeMap = cubeMap && cubeMap.destroy();
+    });
+
+    it('create images', function() {
         greenImage = new Image();
         greenImage.src = './Data/Images/Green.png';
 
@@ -72,18 +68,29 @@ defineSuite([
         }, 'Load .png file(s) for texture test.', 3000);
     });
 
-    it('creates with defaults', function() {
+    it('gets the pixel format', function() {
         cubeMap = context.createCubeMap({
             width : 16,
             height : 16
         });
 
         expect(cubeMap.getPixelFormat()).toEqual(PixelFormat.RGBA);
-        expect(cubeMap.getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
+        expect(cubeMap.getPositiveX().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getNegativeX().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getPositiveY().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getNegativeY().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getPositiveZ().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getNegativeZ().getPixelFormat()).toEqual(PixelFormat.RGBA);
     });
 
-    // TODO:  creates from the framebuffer
-    // TODO:  copies from the framebuffer
+    it('gets the pixel datatype', function() {
+        cubeMap = context.createCubeMap({
+            width : 16,
+            height : 16
+        });
+
+        expect(cubeMap.getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
+    });
 
     it('gets the default sampler', function() {
         cubeMap = context.createCubeMap({
@@ -166,32 +173,32 @@ defineSuite([
         // +X is blue
         sp.getAllUniforms().u_direction.value = new Cartesian3(1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // -X is green
         sp.getAllUniforms().u_direction.value = new Cartesian3(-1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         // +Y is blue
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // -Y is green
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, -1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         // +Z is blue
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, 1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // -Z is green
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, -1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
     it('draws with a cube map with premultiplied alpha', function() {
@@ -233,32 +240,80 @@ defineSuite([
         // +X is blue
         sp.getAllUniforms().u_direction.value = new Cartesian3(1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 127, 127]);
+        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
 
         // -X is green
         sp.getAllUniforms().u_direction.value = new Cartesian3(-1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 127, 127]);
+        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
 
         // +Y is blue
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 127, 127]);
+        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
 
         // -Y is green
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, -1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 127, 127]);
+        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
 
         // +Z is blue
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, 1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 127, 127]);
+        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
 
         // -Z is green
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, -1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 127, 127]);
+        expect(context.readPixels()).toEqual([0, 0, 127, 127]);
+    });
+
+    it('draws the context default cube map', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'uniform samplerCube u_texture;' +
+            'uniform mediump vec3 u_direction;' +
+            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+        sp = context.createShaderProgram(vs, fs, {
+            position : 0
+        });
+        sp.getAllUniforms().u_texture.value = context.getDefaultCubeMap();
+
+        va = context.createVertexArray();
+        va.addAttribute({
+            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 4
+        });
+
+        var da = {
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va
+        };
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(1, 0, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(-1, 0, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, 1, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, -1, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, 1);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, -1);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
     it('creates a cube map with typed arrays', function() {
@@ -321,27 +376,27 @@ defineSuite([
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 255]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(-1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 0]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 0]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, -1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 0]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, 1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, -1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 255, 0, 0]);
+        expect(context.readPixels()).toEqual([255, 255, 0, 0]);
     });
 
     it('creates a cube map with typed arrays and images', function() {
@@ -396,27 +451,27 @@ defineSuite([
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(-1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 0]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, -1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 0]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, 1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, -1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 255, 0, 0]);
+        expect(context.readPixels()).toEqual([255, 255, 0, 0]);
     });
 
     it('copies to a cube map', function() {
@@ -456,32 +511,32 @@ defineSuite([
         // +X is blue
         sp.getAllUniforms().u_direction.value = new Cartesian3(1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // -X is green
         sp.getAllUniforms().u_direction.value = new Cartesian3(-1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         // +Y is blue
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // -Y is green
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, -1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         // +Z is blue
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, 1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // -Z is green
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, -1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
     it('copies from a typed array', function() {
@@ -544,27 +599,74 @@ defineSuite([
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 255]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(-1, 0, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 0]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 0]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, -1, 0);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 0]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, 1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, -1);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 255, 0, 0]);
+        expect(context.readPixels()).toEqual([255, 255, 0, 0]);
+    });
+
+    it('copies from the framebuffer', function() {
+        cubeMap = context.createCubeMap({
+            width : 1,
+            height : 1
+        });
+        cubeMap.getPositiveX().copyFrom(blueImage);
+
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'uniform samplerCube u_cubeMap;' +
+            'void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }';
+        sp = context.createShaderProgram(vs, fs, {
+            position : 0
+        });
+        sp.getAllUniforms().u_cubeMap.value = cubeMap;
+
+        va = context.createVertexArray();
+        va.addAttribute({
+            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 4
+        });
+
+        var da = {
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va
+        };
+
+        // +X is blue
+        context.draw(da);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+
+        // Clear framebuffer to red and copy to +X face
+        context.clear(context.createClearState({
+            color : new Color (1.0, 0.0, 0.0, 1.0)
+        }));
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        cubeMap.getPositiveX().copyFromFramebuffer();
+
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        // +X is red now
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
     it('draws with a cube map and a texture', function() {
@@ -605,7 +707,7 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va
         });
-        expect(context.readPixels()).toEqualArray([0, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 255, 255]);
 
         texture = texture.destroy();
     });
@@ -648,7 +750,7 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va
         });
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
     it('destroys', function() {
@@ -715,6 +817,16 @@ defineSuite([
                 width : 16,
                 height : 16,
                 pixelFormat : 'invalid PixelFormat'
+            });
+        }).toThrow();
+    });
+
+    it('throws during creation if pixel format is depth or depth-stencil', function() {
+        expect(function() {
+            cubeMap = context.createCubeMap({
+                width : 16,
+                height : 16,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT
             });
         }).toThrow();
     });

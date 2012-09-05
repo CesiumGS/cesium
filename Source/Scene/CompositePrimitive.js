@@ -1,12 +1,28 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
+        '../Core/createGuid',
+        '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/createGuid'
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/DeveloperError',
+        '../Core/Intersect',
+        '../Core/Matrix4',
+        './SceneMode'
     ], function(
-        DeveloperError,
+        createGuid,
+        defaultValue,
         destroyObject,
-        createGuid) {
+        BoundingRectangle,
+        BoundingSphere,
+        Cartesian3,
+        Cartesian4,
+        DeveloperError,
+        Intersect,
+        Matrix4,
+        SceneMode) {
     "use strict";
 
     // PERFORMANCE_IDEA: Add hierarchical culling and state sorting.
@@ -38,6 +54,7 @@ define([
         this._centralBody = null;
         this._primitives = [];
         this._guid = createGuid();
+        this._renderList = [];
 
         /**
          * DOC_TBA
@@ -385,21 +402,109 @@ define([
         return this._primitives.length;
     };
 
+    function update2D(context, frameState, primitives, renderList) {
+        var camera = frameState.camera;
+        var frustum = camera.frustum;
+
+        var frustumRect;
+        if (typeof frustum.top !== 'undefined') {
+            var position = camera.position;
+            var up = camera.up;
+            var right = camera.right;
+
+            var width = frustum.right - frustum.left;
+            var height = frustum.top - frustum.bottom;
+
+            var lowerLeft = position.add(right.multiplyByScalar(frustum.left));
+            lowerLeft = lowerLeft.add(up.multiplyByScalar(frustum.bottom));
+            var upperLeft = lowerLeft.add(up.multiplyByScalar(height));
+            var upperRight = upperLeft.add(right.multiplyByScalar(width));
+            var lowerRight = upperRight.add(up.multiplyByScalar(-height));
+
+            var x = Math.min(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x);
+            var y = Math.min(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y);
+            var w = Math.max(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x) - x;
+            var h = Math.max(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y) - y;
+
+            frustumRect = new BoundingRectangle(x, y, w, h);
+        }
+
+        var length = primitives.length;
+        for ( var i = 0; i < length; ++i) {
+            var primitive = primitives[i];
+            var spatialState = primitive.update(context, frameState);
+
+            if (typeof spatialState === 'undefined') {
+                continue;
+            }
+
+            var boundingVolume = spatialState.boundingVolume;
+            if (typeof boundingVolume !== 'undefined' &&
+                    typeof frustumRect !== 'undefined' &&
+                    boundingVolume.intersect(frustumRect) === Intersect.OUTSIDE) {
+                continue;
+            }
+
+            renderList.push(primitive);
+        }
+    }
+
+    function update3D(context, frameState, primitives, renderList) {
+        var mode = frameState.mode;
+        var camera = frameState.camera;
+        var occluder = frameState.occluder;
+
+        var length = primitives.length;
+        for ( var i = 0; i < length; ++i) {
+            var primitive = primitives[i];
+            var spatialState = primitive.update(context, frameState);
+
+            if (typeof spatialState === 'undefined') {
+                continue;
+            }
+
+            var boundingVolume = spatialState.boundingVolume;
+            if (typeof boundingVolume !== 'undefined') {
+                var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
+                var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
+                center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
+                boundingVolume = new BoundingSphere(center, boundingVolume.radius);
+
+                if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+                    continue;
+                }
+
+                if (mode === SceneMode.SCENE3D &&
+                        typeof occluder !== 'undefined' &&
+                        !occluder.isVisible(boundingVolume)) {
+                    continue;
+                }
+            }
+
+            renderList.push(primitive);
+        }
+    }
+
     /**
      * @private
      */
-    CompositePrimitive.prototype.update = function(context, sceneState) {
-        if (this.show) {
-            if (this._centralBody) {
-                this._centralBody.update(context, sceneState);
-            }
-
-            var primitives = this._primitives;
-            var length = primitives.length;
-            for ( var i = 0; i < length; ++i) {
-                primitives[i].update(context, sceneState);
-            }
+    CompositePrimitive.prototype.update = function(context, frameState) {
+        if (!this.show) {
+            return undefined;
         }
+
+        if (this._centralBody) {
+            this._centralBody.update(context, frameState);
+        }
+
+        var mode = frameState.mode;
+        if (mode === SceneMode.SCENE2D) {
+            update2D(context, frameState, this._primitives, this._renderList);
+        } else {
+            update3D(context, frameState, this._primitives, this._renderList);
+        }
+
+        return {};
     };
 
     /**
@@ -407,39 +512,18 @@ define([
      * @memberof CompositePrimitive
      */
     CompositePrimitive.prototype.render = function(context) {
-        if (this.show) {
-            var cb = this._centralBody;
-            var primitives = this._primitives;
-            var primitivesLen = primitives.length;
+        var cb = this._centralBody;
+        var primitives = this._renderList;
+        var primitivesLen = primitives.length;
 
-            if (cb) {
-                cb.render(context);
-            }
-            for ( var i = 0; i < primitivesLen; ++i) {
-                var primitive = primitives[i];
-                primitive.render(context);
-            }
+        if (cb) {
+            cb.render(context);
         }
-    };
-
-    /**
-     * @private
-     */
-    CompositePrimitive.prototype.updateForPick = function(context) {
-        if (this.show) {
-            if (this._centralBody && this._centralBody.updateForPick) {
-                this._centralBody.updateForPick(context);
-            }
-
-            var primitives = this._primitives;
-            var length = primitives.length;
-            for ( var i = 0; i < length; ++i) {
-                var primitive = primitives[i];
-                if (primitive.updateForPick) {
-                    primitives[i].updateForPick(context);
-                }
-            }
+        for ( var i = 0; i < primitivesLen; ++i) {
+            var primitive = primitives[i];
+            primitive.render(context);
         }
+        this._renderList.length = 0;
     };
 
     /**
@@ -447,21 +531,21 @@ define([
      * @memberof CompositePrimitive
      */
     CompositePrimitive.prototype.renderForPick = function(context, framebuffer) {
-        if (this.show) {
-            var cb = this._centralBody;
-            var primitives = this._primitives;
-            var primitivesLen = primitives.length;
+        var cb = this._centralBody;
+        var primitives = this._renderList;
+        var primitivesLen = primitives.length;
 
-            if (cb) {
-                cb.renderForPick(context, framebuffer);
-            }
-            for ( var i = 0; i < primitivesLen; ++i) {
-                var primitive = primitives[i];
-                if (primitive.renderForPick) {
-                    primitive.renderForPick(context, framebuffer);
-                }
+        if (cb) {
+            cb.renderForPick(context, framebuffer);
+        }
+
+        for ( var i = 0; i < primitivesLen; ++i) {
+            var primitive = primitives[i];
+            if (primitive.renderForPick) {
+                primitive.renderForPick(context, framebuffer);
             }
         }
+        this._renderList.length = 0;
     };
 
     /**

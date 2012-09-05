@@ -7,9 +7,102 @@
  */
 var defineSuite;
 
+/**
+ * Registers a function that is called before running all tests.
+ *
+ * @param {Function} beforeAllFunction The function to run before all tests.
+ */
+var beforeAll;
+
+/**
+ * Registers a function that is called after running all tests.
+ *
+ * @param {Function} afterAllFunction The function to run after all tests.
+ */
+var afterAll;
+
 (function() {
     "use strict";
     /*global require,describe,specs,jasmine*/
+
+    // patch in beforeAll/afterAll functions
+    // based on existing beforeEach/afterEach
+
+    jasmine.Env.prototype.beforeAll = function(beforeAllFunction) {
+        if (this.currentSuite) {
+            this.currentSuite.beforeAll(beforeAllFunction);
+        } else {
+            throw 'Must call beforeAll while defining a suite.';
+        }
+    };
+
+    jasmine.Env.prototype.afterAll = function(afterAllFunction) {
+        if (this.currentSuite) {
+            this.currentSuite.afterAll(afterAllFunction);
+        } else {
+            throw 'Must call beforeAll while defining a suite.';
+        }
+    };
+
+    jasmine.Suite.prototype.beforeAll = function(beforeAllFunction) {
+        beforeAllFunction.typeName = 'beforeAll';
+        if (typeof this.beforeAll_ === 'undefined') {
+            this.beforeAll_ = [];
+        }
+        this.beforeAll_.unshift(beforeAllFunction);
+    };
+
+    jasmine.Suite.prototype.afterAll = function(afterAllFunction) {
+        afterAllFunction.typeName = 'afterAll';
+        if (typeof this.afterAll_ === 'undefined') {
+            this.afterAll_ = [];
+        }
+        this.afterAll_.unshift(afterAllFunction);
+    };
+
+    jasmine.Suite.prototype.execute = (function(originalExecute) {
+        return function(onComplete) {
+            var i, len;
+
+            var block, results;
+
+            var beforeAll = this.beforeAll_;
+            if (typeof beforeAll !== 'undefined') {
+                var beforeSpec = new jasmine.Spec(this.env, this, 'beforeAll');
+                results = function() {
+                    return beforeSpec.results();
+                };
+                for (i = 0, len = beforeAll.length; i < len; i++) {
+                    block = new jasmine.Block(this.env, beforeAll[i], beforeSpec);
+                    block.results = results;
+                    this.queue.addBefore(block);
+                }
+            }
+
+            var afterAll = this.afterAll_;
+            if (typeof afterAll !== 'undefined') {
+                var afterSpec = new jasmine.Spec(this.env, this, 'afterAll');
+                results = function() {
+                    return afterSpec.results();
+                };
+                for (i = 0, len = afterAll.length; i < len; i++) {
+                    block = new jasmine.Block(this.env, afterAll[i], afterSpec);
+                    block.results = results;
+                    this.queue.add(block);
+                }
+            }
+
+            originalExecute.call(this, onComplete);
+        };
+    })(jasmine.Suite.prototype.execute);
+
+    beforeAll = function(beforeAllFunction) {
+        jasmine.getEnv().beforeAll(beforeAllFunction);
+    };
+
+    afterAll = function(afterAllFunction) {
+        jasmine.getEnv().afterAll(afterAllFunction);
+    };
 
     var tests = [];
     var readyToCreateTests = false;
@@ -83,10 +176,16 @@ var defineSuite;
     }
 
     //specs is an array defined by SpecList.js
-    require(['Specs/addDefaultMatchers'].concat(specs), function(addDefaultMatchers) {
+    require([
+             'Specs/addDefaultMatchers',
+             'Specs/equalsMethodEqualityTester'
+         ].concat(specs), function(
+             addDefaultMatchers,
+             equalsMethodEqualityTester) {
         var env = jasmine.getEnv();
 
         env.beforeEach(addDefaultMatchers);
+        env.addEqualityTester(equalsMethodEqualityTester);
 
         createTests = function() {
             var isSuiteFocused = jasmine.TrivialReporter.isSuiteFocused;

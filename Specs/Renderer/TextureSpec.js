@@ -22,7 +22,7 @@ defineSuite([
          TextureMinificationFilter,
          TextureMagnificationFilter) {
     "use strict";
-    /*global xit,it,expect,beforeEach,afterEach,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var sp;
@@ -34,24 +34,18 @@ defineSuite([
     var blueAlphaImage;
     var blueOverRedImage;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
     });
 
-    afterEach(function() {
-        if (sp) {
-            sp = sp.destroy();
-        }
-
-        if (va) {
-            va = va.destroy();
-        }
-
-        if (texture) {
-            texture = texture.destroy();
-        }
-
+    afterAll(function() {
         destroyContext(context);
+    });
+
+    afterEach(function() {
+        sp = sp && sp.destroy();
+        va = va && va.destroy();
+        texture = texture && texture.destroy();
     });
 
     function renderFragment(context) {
@@ -79,7 +73,7 @@ defineSuite([
         return context.readPixels();
     }
 
-    it('initializem suite', function() {
+    it('create images', function() {
         greenImage = new Image();
         greenImage.src = './Data/Images/Green.png';
 
@@ -115,7 +109,7 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         texture = context.createTexture2DFromFramebuffer();
         expect(texture.getWidth()).toEqual(context.getCanvas().clientWidth);
@@ -129,9 +123,9 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        expect(renderFragment(context)).toEqualArray([255, 0, 0, 255]);
+        expect(renderFragment(context)).toEqual([255, 0, 0, 255]);
     });
 
     it('copies from the framebuffer', function() {
@@ -141,7 +135,7 @@ defineSuite([
         });
 
         // Render blue
-        expect(renderFragment(context)).toEqualArray([0, 0, 255, 255]);
+        expect(renderFragment(context)).toEqual([0, 0, 255, 255]);
 
         // Clear to red
         context.clear(context.createClearState({
@@ -152,7 +146,7 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         texture.copyFromFramebuffer();
 
@@ -165,10 +159,10 @@ defineSuite([
                 alpha : 1.0
             }
         }));
-        expect(context.readPixels()).toEqualArray([255, 255, 255, 255]);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         // Render red
-        expect(renderFragment(context)).toEqualArray([255, 0, 0, 255]);
+        expect(renderFragment(context)).toEqual([255, 0, 0, 255]);
     });
 
     it('draws a textured blue point', function() {
@@ -177,7 +171,7 @@ defineSuite([
             pixelFormat :PixelFormat.RGBA
         });
 
-        expect(renderFragment(context)).toEqualArray([0, 0, 255, 255]);
+        expect(renderFragment(context)).toEqual([0, 0, 255, 255]);
     });
 
     it('renders with premultiplied alpha', function() {
@@ -188,7 +182,7 @@ defineSuite([
         });
         expect(texture.getPreMultiplyAlpha()).toEqual(true);
 
-        expect(renderFragment(context)).toEqualArray([0, 0, 127, 127]);
+        expect(renderFragment(context)).toEqual([0, 0, 127, 127]);
     });
 
     it('draws textured blue and red points', function() {
@@ -222,12 +216,12 @@ defineSuite([
         // Blue on top
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // Red on bottom
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
     it('creates from a typed array', function() {
@@ -243,7 +237,7 @@ defineSuite([
             }
         });
 
-        expect(renderFragment(context)).toEqualArray([0, 255, 0, 255]);
+        expect(renderFragment(context)).toEqual([0, 255, 0, 255]);
     });
 
     it('copies from a typed array', function() {
@@ -261,7 +255,7 @@ defineSuite([
             height : 1
         });
 
-        expect(renderFragment(context)).toEqualArray([255, 0, 255, 0]);
+        expect(renderFragment(context)).toEqual([255, 0, 255, 0]);
     });
 
     it('copies over a subset of a texture', function() {
@@ -295,12 +289,12 @@ defineSuite([
         // Blue on top
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 0, 255, 255]);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // Red on bottom
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         // After copy...
         texture.copyFrom(greenImage, 0, 1);
@@ -308,12 +302,12 @@ defineSuite([
         // Now green on top
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([0, 255, 0, 255]);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         // Still red on bottom
         sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
-        expect(context.readPixels()).toEqualArray([255, 0, 0, 255]);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
     // Fails on firefox.  Should be fixed soon: https://bugzilla.mozilla.org/show_bug.cgi?id=685156
@@ -328,7 +322,7 @@ defineSuite([
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
         }));
 
-        expect(renderFragment(context)).toEqualArray([0, 0, 255, 255]);
+        expect(renderFragment(context)).toEqual([0, 0, 255, 255]);
     });
 
     it('gets the default sampler', function() {
@@ -449,7 +443,7 @@ defineSuite([
         expect(function() {
             texture = context.createTexture2D({
                 source : blueImage,
-                pixelFormat :'invalid PixelFormat'
+                pixelFormat : 'invalid PixelFormat'
             });
         }).toThrow();
     });
@@ -458,15 +452,62 @@ defineSuite([
         expect(function() {
             texture = context.createTexture2D({
                 source : blueImage,
-                pixelFormat :PixelFormat.RGBA,
+                pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : 'invalid pixelDatatype'
             });
         }).toThrow();
     });
 
+    it('throws when creating if pixelFormat is DEPTH_COMPONENT and pixelDatatype is not UNSIGNED_SHORT or UNSIGNED_INT', function() {
+        expect(function() {
+            texture = context.createTexture2D({
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+            });
+        }).toThrow();
+    });
+
+    it('throws when creating if pixelFormat is DEPTH_STENCIL and pixelDatatype is not UNSIGNED_INT_24_8_WEBGL', function() {
+        expect(function() {
+            texture = context.createTexture2D({
+                pixelFormat : PixelFormat.DEPTH_STENCIL,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+            });
+        }).toThrow();
+    });
+
+    it('throws when creating if pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, and source is provided', function() {
+        expect(function() {
+            texture = context.createTexture2D({
+                source : blueImage,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+        }).toThrow();
+    });
+
+    it('throws when creating if pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, and WEBGL_depth_texture is not supported', function() {
+        if (!context.getDepthTexture()) {
+            expect(function() {
+                texture = context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                });
+            }).toThrow();
+        }
+    });
+
     it('fails to create from the framebuffer (PixelFormat)', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer('invalid PixelFormat');
+        }).toThrow();
+    });
+
+    it('throws when creating from the framebuffer if PixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL', function() {
+        expect(function() {
+            texture = context.createTexture2DFromFramebuffer(PixelFormat.DEPTH_COMPONENT);
         }).toThrow();
     });
 
@@ -492,6 +533,21 @@ defineSuite([
         expect(function() {
             texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, 1, context.getCanvas().clientHeight + 1);
         }).toThrow();
+    });
+
+    it('throws when copying to a texture from a framebuffer with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
+        if (context.getDepthTexture()) {
+            texture = context.createTexture2D({
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+
+            expect(function() {
+                texture.copyFromFramebuffer();
+            }).toThrow();
+        }
     });
 
     it('fails to copy from the frame buffer (xOffset)', function() {
@@ -594,6 +650,25 @@ defineSuite([
         }).toThrow();
     });
 
+    it('throws when copying to a texture with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
+        if (context.getDepthTexture()) {
+            texture = context.createTexture2D({
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+
+            expect(function() {
+                texture.copyFrom({
+                    arrayBufferView : new Uint16Array([0]),
+                    width : 1,
+                    height : 1
+                });
+            }).toThrow();
+        }
+    });
+
     it('fails to copy from an image (source)', function() {
         texture = context.createTexture2D({
             source : blueImage
@@ -648,6 +723,21 @@ defineSuite([
         expect(function() {
             texture.copyFrom(image);
         }).toThrow();
+    });
+
+    it('throws when generating mipmaps with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
+        if (context.getDepthTexture()) {
+            texture = context.createTexture2D({
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+
+            expect(function() {
+                texture.generateMipmap();
+            }).toThrow();
+        }
     });
 
     it('fails to generate mipmaps (width)', function() {

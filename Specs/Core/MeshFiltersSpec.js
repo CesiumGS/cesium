@@ -18,7 +18,7 @@ defineSuite([
          Tipsify,
          EquidistantCylindricalProjection) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('converts triangles to wireframe in place', function() {
         var mesh = MeshFilters.toWireframeInPlace({
@@ -115,9 +115,10 @@ defineSuite([
 
         var indices = MeshFilters.createAttributeIndices(mesh);
 
-        expect(indices.position).toBeIn([0, 1, 2]);
-        expect(indices.normal).toBeIn([0, 1, 2]);
-        expect(indices.color).toBeIn([0, 1, 2]);
+        var validIndices = [0, 1, 2];
+        expect(validIndices).toContain(indices.position);
+        expect(validIndices).toContain(indices.normal);
+        expect(validIndices).toContain(indices.color);
         expect(indices.position).not.toEqual(indices.normal);
         expect(indices.position).not.toEqual(indices.color);
     });
@@ -230,7 +231,7 @@ defineSuite([
     });
 
     it('can reorder indices for the post vertex cache', function() {
-        var mesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(new Cartesian3(10.0, 10.0, 10.0)), 100);
+        var mesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(10.0, 10.0, 10.0), 100);
         var indices = mesh.indexLists[0].values;
         var numIndices = indices.length;
         var maximumIndex = 0;
@@ -303,10 +304,10 @@ defineSuite([
         expect(meshes.length).toEqual(1);
         expect(meshes[0].attributes.time.componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(meshes[0].attributes.time.componentsPerAttribute).toEqual(1);
-        expect(meshes[0].attributes.time.values).toEqualArray([0, sixtyFourK]);
+        expect(meshes[0].attributes.time.values).toEqual([0, sixtyFourK]);
 
         expect(meshes[0].indexLists[0].primitiveType).toEqual(PrimitiveType.TRIANGLES);
-        expect(meshes[0].indexLists[0].values).toEqualArray([0, 0, 0, 1, 1, 1, 0, 1, 0]);
+        expect(meshes[0].indexLists[0].values).toEqual([0, 0, 0, 1, 1, 1, 0, 1, 0]);
     });
 
     it('fitToUnsignedShortIndices creates two meshes', function() {
@@ -397,8 +398,8 @@ defineSuite([
     });
 
     it('projectTo2D', function() {
-        var p1 = new Cartesian3(1, 2, 3);
-        var p2 = new Cartesian3(4, 5, 6);
+        var p1 = new Cartesian3(100000, 200000, 300000);
+        var p2 = new Cartesian3(400000, 500000, 600000);
 
         var mesh = {};
         mesh.attributes = {};

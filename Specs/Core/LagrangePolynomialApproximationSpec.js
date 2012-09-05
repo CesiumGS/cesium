@@ -4,7 +4,7 @@ defineSuite([
             ], function(
              LagrangePolynomialApproximation) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     //The results of these specs were validated against STK Components
     //an aerospace SDK available from Analytical Graphics. www.agi.com/components/
@@ -25,7 +25,7 @@ defineSuite([
         var x = 100.0;
         var result = LagrangePolynomialApproximation.interpolateOrderZero(x, xTable, yTable, 3);
         var expectedResult = [13367002.870928623, 545695.7388100647, 0];
-        expect(result).toEqualArrayEpsilon(expectedResult, 1e-15);
+        expect(result).toEqualEpsilon(expectedResult, 1e-15);
     });
 
     it('getRequiredDataPoints should be 1 more than degree, except for 0, which requires 2', function() {

@@ -5,24 +5,30 @@ define([
         '../Core/EquidistantCylindricalProjection',
         '../Core/Ellipsoid',
         '../Core/DeveloperError',
+        '../Core/Occluder',
+        '../Core/BoundingSphere',
+        '../Core/Cartesian3',
         '../Renderer/Context',
         './Camera',
         './CompositePrimitive',
         './AnimationCollection',
         './SceneMode',
-        './SceneState'
+        './FrameState'
     ], function(
         Color,
         destroyObject,
         EquidistantCylindricalProjection,
         Ellipsoid,
         DeveloperError,
+        Occluder,
+        BoundingSphere,
+        Cartesian3,
         Context,
         Camera,
         CompositePrimitive,
         AnimationCollection,
         SceneMode,
-        SceneState) {
+        FrameState) {
     "use strict";
 
     /**
@@ -34,7 +40,7 @@ define([
     var Scene = function(canvas) {
         var context = new Context(canvas);
 
-        this._sceneState = new SceneState();
+        this._frameState = new FrameState();
         this._canvas = canvas;
         this._context = context;
         this._primitives = new CompositePrimitive();
@@ -118,6 +124,15 @@ define([
     };
 
     /**
+     * Gets state information about the current scene.
+     *
+     * @memberof Scene
+     */
+    Scene.prototype.getFrameState = function() {
+        return this._frameState;
+    };
+
+    /**
      * DOC_TBA
      * @memberof Scene
      */
@@ -157,6 +172,31 @@ define([
         return this._animate;
     };
 
+    function clearPasses(passes) {
+        passes.pick = false;
+    }
+
+    function updateFrameState(scene) {
+        var camera = scene._camera;
+
+        var frameState = scene._frameState;
+        frameState.mode = scene.mode;
+        frameState.scene2D = scene.scene2D;
+        frameState.camera = camera;
+        frameState.occluder = undefined;
+
+        // TODO: The occluder is the top-level central body. When we add
+        //       support for multiple central bodies, this should be the closest one.
+        var cb = scene._primitives.getCentralBody();
+        if (scene.mode === SceneMode.SCENE3D && typeof cb !== 'undefined') {
+            var ellipsoid = cb.getEllipsoid();
+            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
+            frameState.occluder = occluder;
+        }
+
+        clearPasses(frameState.passes);
+    }
+
     Scene.prototype._update = function() {
         var us = this.getUniformState();
         var camera = this._camera;
@@ -179,12 +219,8 @@ define([
             this._animate();
         }
 
-        var sceneState = this._sceneState;
-        sceneState.mode = this.mode;
-        sceneState.scene2D = this.scene2D;
-        sceneState.camera = camera;
-
-        this._primitives.update(this._context, sceneState);
+        updateFrameState(this);
+        this._primitives.update(this._context, this._frameState);
     };
 
     /**
@@ -205,12 +241,15 @@ define([
     Scene.prototype.pick = function(windowPosition) {
         var context = this._context;
         var primitives = this._primitives;
+        var frameState = this._frameState;
 
         this._pickFramebuffer = this._pickFramebuffer || context.createPickFramebuffer();
         var fb = this._pickFramebuffer.begin();
 
-        // TODO: Should we also do a regular update?
-        primitives.updateForPick(context);
+        updateFrameState(this);
+        frameState.passes.pick = true;
+
+        primitives.update(context, frameState);
         primitives.renderForPick(context, fb);
 
         return this._pickFramebuffer.end({
@@ -220,7 +259,7 @@ define([
     };
 
     /**
-     * Pick an ellipsoid or map in 3D mode.
+     * Pick an ellipsoid or map.
      *
      * @memberof Scene
      *
@@ -249,6 +288,32 @@ define([
         }
 
         return p;
+    };
+
+    /**
+     * View an extent on an ellipsoid or map.
+     *
+     * @memberof Scene
+     *
+     * @param {Extent} extent The extent to view.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
+     *
+     * @exception {DeveloperError} extent is required.
+     */
+    Scene.prototype.viewExtent = function(extent, ellipsoid) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+
+        if (this.mode === SceneMode.SCENE3D) {
+            this._camera.viewExtent(extent, ellipsoid);
+        } else if (this.mode === SceneMode.SCENE2D) {
+            this._camera.viewExtent2D(extent, this.scene2D.projection);
+        } else if (this.mode === SceneMode.COLUMBUS_VIEW) {
+            this._camera.viewExtentColumbusView(extent, this.scene2D.projection);
+        }
     };
 
     /**

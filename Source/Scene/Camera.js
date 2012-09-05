@@ -70,7 +70,7 @@ define([
         this._transform = this.transform.clone();
         this._invTransform = Matrix4.IDENTITY;
 
-        var maxRadii = Ellipsoid.WGS84.getRadii().getMaximumComponent();
+        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
         var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * maxRadii);
 
         /**
@@ -188,53 +188,156 @@ define([
     };
 
     /**
-     * Zooms to a cartographic extent on the centralBody. The camera will be looking straight down at the extent, with the up vector pointing toward local north.
+     * Zooms to a cartographic extent on the central body. The camera will be looking straight down at the extent,
+     * with the up vector pointing toward local north.
      *
      * @memberof Camera
      * @param {Ellipsoid} ellipsoid The ellipsoid to view.
-     * @param {double} west The west longitude of the extent.
-     * @param {double} south The south latitude of the extent.
-     * @param {double} east The east longitude of the extent.
-     * @param {double} north The north latitude of the extent.
+     * @param {Extent} extent The extent to view.
      *
+     * @exception {DeveloperError} extent is required.
      */
-    Camera.prototype.viewExtent = function(ellipsoid, west, south, east, north) {
-        //
-        // Ensure we go from -180 to 180
-        //
-        west = CesiumMath.negativePiToPi(west);
-        east = CesiumMath.negativePiToPi(east);
+    Camera.prototype.viewExtent = function(extent, ellipsoid) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        ellipsoid = (typeof ellipsoid === 'undefined') ? Ellipsoid.WGS84 : ellipsoid;
+
+        var north = extent.north;
+        var south = extent.south;
+        var east = extent.east;
+        var west = extent.west;
 
         // If we go across the International Date Line
         if (west > east) {
             east += CesiumMath.TWO_PI;
         }
 
-        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south), 0.0);
-        var northVector = ellipsoid.cartographicToCartesian(new Cartographic(lla.longitude, north, 0.0));
-        var eastVector = ellipsoid.cartographicToCartesian(new Cartographic(east, lla.latitude, 0.0));
-        var centerVector = ellipsoid.cartographicToCartesian(lla);
-        var invTanHalfPerspectiveAngle = 1.0 / Math.tan(0.5 * this.frustum.fovy);
-        var screenViewDistanceX;
-        var screenViewDistanceY;
-        var tempVec;
-        if (this._canvas.clientWidth >= this._canvas.clientHeight) {
-            tempVec = eastVector.subtract(centerVector);
-            screenViewDistanceX = Math.sqrt(tempVec.dot(tempVec) * invTanHalfPerspectiveAngle);
-            tempVec = northVector.subtract(centerVector);
-            screenViewDistanceY = Math.sqrt(tempVec.dot(tempVec) * invTanHalfPerspectiveAngle * this._canvas.clientWidth / this._canvas.clientHeight);
-        } else {
-            tempVec = eastVector.subtract(centerVector);
-            screenViewDistanceX = Math.sqrt(tempVec.dot(tempVec) * invTanHalfPerspectiveAngle * this._canvas.clientWidth / this._canvas.clientHeight);
-            tempVec = northVector.subtract(centerVector);
-            screenViewDistanceY = Math.sqrt(tempVec.dot(tempVec) * invTanHalfPerspectiveAngle);
-        }
-        lla.height += Math.max(screenViewDistanceX, screenViewDistanceY);
+        var northEast = ellipsoid.cartographicToCartesian(new Cartographic(east, north));
+        var southWest = ellipsoid.cartographicToCartesian(new Cartographic(west, south));
+        var diagonal = northEast.subtract(southWest);
+        var center = southWest.add(diagonal.normalize().multiplyByScalar(diagonal.magnitude() * 0.5));
 
-        this.position = ellipsoid.cartographicToCartesian(lla);
-        this.direction = Cartesian3.ZERO.subtract(centerVector).normalize();
+        var northWest = ellipsoid.cartographicToCartesian(new Cartographic(west, north)).subtract(center);
+        var southEast = ellipsoid.cartographicToCartesian(new Cartographic(east, south)).subtract(center);
+        northEast = northEast.subtract(center);
+        southWest = southWest.subtract(center);
+
+        this.direction = center.negate().normalize();
         this.right = this.direction.cross(Cartesian3.UNIT_Z).normalize();
         this.up = this.right.cross(this.direction);
+
+        var height = Math.max(Math.abs(this.up.dot(northWest)), Math.abs(this.up.dot(southEast)), Math.abs(this.up.dot(northEast)), Math.abs(this.up.dot(southWest)));
+        var width = Math.max(Math.abs(this.right.dot(northWest)), Math.abs(this.right.dot(southEast)), Math.abs(this.right.dot(northEast)), Math.abs(this.right.dot(southWest)));
+
+        var tanPhi = Math.tan(this.frustum.fovy * 0.5);
+        var tanTheta = this.frustum.aspectRatio * tanPhi;
+        var d = Math.max(width / tanTheta, height / tanPhi);
+
+        this.position = center.normalize().multiplyByScalar(center.magnitude() + d);
+    };
+
+    /**
+     * Zooms to a cartographic extent on the Columbus view map. The camera will be looking straight down at the extent,
+     * with the up vector pointing toward local north.
+     *
+     * @memberof Camera
+     * @param {Ellipsoid} ellipsoid The ellipsoid to view.
+     * @param {Extent} extent The extent to view.
+     *
+     * @exception {DeveloperError} extent is required.
+     * @exception {DeveloperError} projection is required.
+     */
+    Camera.prototype.viewExtentColumbusView = function(extent, projection) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        var north = extent.north;
+        var south = extent.south;
+        var east = extent.east;
+        var west = extent.west;
+
+        var transform = this.transform.setColumn(3, Cartesian4.UNIT_W);
+
+        var northEast = projection.project(new Cartographic(east, north));
+        northEast = transform.multiplyByVector(new Cartesian4(northEast.x, northEast.y, northEast.z, 1.0));
+        northEast = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(northEast));
+
+        var southWest = projection.project(new Cartographic(west, south));
+        southWest = transform.multiplyByVector(new Cartesian4(southWest.x, southWest.y, southWest.z, 1.0));
+        southWest = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(southWest));
+
+        var tanPhi = Math.tan(this.frustum.fovy * 0.5);
+        var tanTheta = this.frustum.aspectRatio * tanPhi;
+        var d = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
+
+        var position = projection.project(new Cartographic(0.5 * (west + east), 0.5 * (north + south), d));
+        position = transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+        this.position = Cartesian3.fromCartesian4(this.getInverseTransform().multiplyByVector(position));
+
+        // Not exactly -z direction because that would lock the camera in place with a constrained z axis.
+        this.direction = new Cartesian3(0.0, 0.0001, -0.999);
+        this.right = Cartesian3.UNIT_X;
+        this.up = this.right.cross(this.direction);
+    };
+
+    /**
+     * Zooms to a cartographic extent on the 2D map. The camera will be looking straight down at the extent,
+     * with the up vector pointing toward local north.
+     *
+     * @memberof Camera
+     * @param {Ellipsoid} ellipsoid The ellipsoid to view.
+     * @param {Extent} extent The extent to view.
+     *
+     * @exception {DeveloperError} extent is required.
+     * @exception {DeveloperError} projection is required.
+     */
+    Camera.prototype.viewExtent2D = function(extent, projection) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        var north = extent.north;
+        var south = extent.south;
+        var east = extent.east;
+        var west = extent.west;
+        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south));
+
+        var northEast = projection.project(new Cartographic(east, north));
+        var southWest = projection.project(new Cartographic(west, south));
+
+        var width = Math.abs(northEast.x - southWest.x) * 0.5;
+        var height = Math.abs(northEast.y - southWest.y) * 0.5;
+
+        var position = projection.project(lla);
+        this.position.x = position.x;
+        this.position.y = position.y;
+
+        var right, top;
+        var ratio = this.frustum.right / this.frustum.top;
+        var heightRatio = height * ratio;
+        if (width > heightRatio) {
+            right = width;
+            top = right / ratio;
+        } else {
+            top = height;
+            right = heightRatio;
+        }
+
+        this.frustum.right = right;
+        this.frustum.left = -right;
+        this.frustum.top = top;
+        this.frustum.bottom = -top;
     };
 
     Camera.prototype._updateViewMatrix = function() {
@@ -349,7 +452,7 @@ define([
      *
      * @see UniformState#getView
      * @see UniformState#setView
-     * @see agi_view
+     * @see czm_view
      */
     Camera.prototype.getViewMatrix = function() {
         this._update();
@@ -422,7 +525,7 @@ define([
         var yDir = this.getUpWC().multiplyByScalar(y * near * tanPhi);
         var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
 
-        return new Ray(position.clone(), direction);
+        return new Ray(position, direction);
     };
 
     Camera.prototype._getPickRayOrthographic = function(windowPosition) {
@@ -571,19 +674,17 @@ define([
      * @memberof Camera
      *
      * @param {Object} object The bounding volume whose intersection with the frustum is to be tested.
-     * @param {Function} planeIntersectTest The function that tests for intersections between a plane
-     * and the bounding volume type of object
      *
      * @return {Enumeration}  Intersect.OUTSIDE,
      *                                 Intersect.INTERSECTING, or
      *                                 Intersect.INSIDE.
      */
-    Camera.prototype.getVisibility = function(object, planeIntersectTest) {
+    Camera.prototype.getVisibility = function(object) {
         this._update();
         var planes = this._planes;
         var intersecting = false;
         for ( var k = 0; k < planes.length; k++) {
-            var result = planeIntersectTest(object, planes[k]);
+            var result = object.intersect(planes[k]);
             if (result === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
             } else if (result === Intersect.INTERSECTING) {

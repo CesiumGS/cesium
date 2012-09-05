@@ -32,18 +32,21 @@ defineSuite([
               HorizontalOrigin,
               VerticalOrigin) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor,runs*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     var visualizer;
 
-    beforeEach(function() {
+    beforeAll(function() {
         scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
     });
 
     afterEach(function() {
         visualizer = visualizer && visualizer.destroy();
-        destroyScene(scene);
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -155,7 +158,7 @@ defineSuite([
                 visualizer.update(time);
                 if (bb.getShow()) {
                     expect(bb.getPosition()).toEqual(testObject.position.getValueCartesian(time));
-                    expect(bb.getColor()).toEqualProperties(testObject.billboard.color.getValue(time));
+                    expect(bb.getColor()).toEqual(testObject.billboard.color.getValue(time));
                     expect(bb.getEyeOffset()).toEqual(testObject.billboard.eyeOffset.getValue(time));
                     expect(bb.getScale()).toEqual(testObject.billboard.scale.getValue(time));
                     expect(bb.getHorizontalOrigin()).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
@@ -182,7 +185,7 @@ defineSuite([
                 var imageReady = bb.getImageIndex() === 1; //true once the green image is loaded
                 if (imageReady) {
                     expect(bb.getPosition()).toEqual(testObject.position.getValueCartesian(time));
-                    expect(bb.getColor()).toEqualProperties(testObject.billboard.color.getValue(time));
+                    expect(bb.getColor()).toEqual(testObject.billboard.color.getValue(time));
                     expect(bb.getEyeOffset()).toEqual(testObject.billboard.eyeOffset.getValue(time));
                     expect(bb.getScale()).toEqual(testObject.billboard.scale.getValue(time));
                     expect(bb.getHorizontalOrigin()).toEqual(testObject.billboard.horizontalOrigin.getValue(time));

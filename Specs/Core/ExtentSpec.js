@@ -6,7 +6,7 @@ defineSuite([
          Extent,
          CesiumMath) {
     "use strict";
-    /*global it,expect,describe*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor checks for a valid extent.', function() {
         expect(function() {
@@ -47,6 +47,42 @@ defineSuite([
                               -CesiumMath.PI_OVER_TWO,
                               CesiumMath.PI,
                               CesiumMath.PI_OVER_TWO + 1);
+        }).toThrow();
+    });
+
+    it('constructor throws exception with invalid extent 5', function() {
+        expect(function() {
+            return new Extent(undefined,
+                              -CesiumMath.PI_OVER_TWO,
+                              CesiumMath.PI,
+                              CesiumMath.PI_OVER_TWO);
+        }).toThrow();
+    });
+
+    it('constructor throws exception with invalid extent 6', function() {
+        expect(function() {
+            return new Extent(-CesiumMath.PI,
+                              undefined,
+                              CesiumMath.PI,
+                              CesiumMath.PI_OVER_TWO);
+        }).toThrow();
+    });
+
+    it('constructor throws exception with invalid extent 7', function() {
+        expect(function() {
+            return new Extent(-CesiumMath.PI,
+                              -CesiumMath.PI_OVER_TWO,
+                              undefined,
+                              CesiumMath.PI_OVER_TWO);
+        }).toThrow();
+    });
+
+    it('constructor throws exception with invalid extent 8', function() {
+        expect(function() {
+            return new Extent(-CesiumMath.PI,
+                              -CesiumMath.PI_OVER_TWO,
+                              CesiumMath.PI,
+                              undefined);
         }).toThrow();
     });
 

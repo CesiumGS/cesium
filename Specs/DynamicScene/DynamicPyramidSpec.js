@@ -16,7 +16,7 @@ defineSuite([
               Iso8601,
               TimeInterval) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('processCzmlPacket adds data for infinite pyramid.', function() {
         var pyramidPacket = {
@@ -44,13 +44,13 @@ defineSuite([
         expect(DynamicPyramid.processCzmlPacket(dynamicObject, pyramidPacket)).toEqual(true);
 
         expect(dynamicObject.pyramid).toBeDefined();
-        expect(dynamicObject.pyramid.directions.getValueSpherical(Iso8601.MINIMUM_VALUE)).toEqualArray(
+        expect(dynamicObject.pyramid.directions.getValueSpherical(Iso8601.MINIMUM_VALUE)).toEqual(
                 [new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]),
                         new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
         expect(dynamicObject.pyramid.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.radius);
         expect(dynamicObject.pyramid.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.show);
         expect(dynamicObject.pyramid.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.showIntersection);
-        expect(dynamicObject.pyramid.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.pyramid.material.getValue(Iso8601.MINIMUM_VALUE).uniforms.color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.pyramid.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
     });
 
@@ -84,13 +84,13 @@ defineSuite([
         expect(DynamicPyramid.processCzmlPacket(dynamicObject, pyramidPacket)).toEqual(true);
 
         expect(dynamicObject.pyramid).toBeDefined();
-        expect(dynamicObject.pyramid.directions.getValueSpherical(validTime)).toEqualArray(
+        expect(dynamicObject.pyramid.directions.getValueSpherical(validTime)).toEqual(
                 [new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]),
                         new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
         expect(dynamicObject.pyramid.radius.getValue(validTime)).toEqual(pyramidPacket.pyramid.radius);
         expect(dynamicObject.pyramid.show.getValue(validTime)).toEqual(pyramidPacket.pyramid.show);
         expect(dynamicObject.pyramid.showIntersection.getValue(validTime)).toEqual(pyramidPacket.pyramid.showIntersection);
-        expect(dynamicObject.pyramid.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.pyramid.material.getValue(validTime).uniforms.color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.pyramid.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
 
         expect(dynamicObject.pyramid.directions.getValueSpherical(invalidTime)).toBeUndefined();

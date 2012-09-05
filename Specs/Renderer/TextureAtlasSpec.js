@@ -16,7 +16,7 @@ defineSuite([
          BufferUsage,
          PixelFormat) {
     "use strict";
-    /*global it,expect,beforeEach,afterEach,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
     var atlas;
@@ -27,13 +27,16 @@ defineSuite([
     var bigBlueImage;
     var bigGreenImage;
 
-    beforeEach(function() {
+    beforeAll(function() {
         context = createContext();
+    });
+
+    afterAll(function() {
+        destroyContext(context);
     });
 
     afterEach(function() {
         atlas = atlas && atlas.destroy();
-        destroyContext(context);
     });
 
     it('initialize suite', function() {
@@ -82,7 +85,7 @@ defineSuite([
         });
 
         context.clear();
-        expect(context.readPixels()).toEqualArray([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
@@ -125,7 +128,7 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (greenCoords.x + greenCoords.width / 2.0),
             y : (greenCoords.y + greenCoords.height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
     });
 
     it('creates a single image atlas with default values', function() {
@@ -157,7 +160,7 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (greenCoords.x + greenCoords.width / 2.0),
             y : (greenCoords.y + greenCoords.height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
     });
 
     it('creates a single image atlas with non-square initialSize', function() {
@@ -231,12 +234,12 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (greenCoords.x + greenCoords.width / 2.0),
             y : (greenCoords.y + greenCoords.height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (blueCoords.x + blueCoords.width / 2.0),
             y : (blueCoords.y + blueCoords.height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
     });
 
     it('renders a four image atlas', function() {
@@ -254,22 +257,22 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (c0.x + c0.width / 2.0),
             y : (c0.y + c0.height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (c1.x + c1.width / 2.0),
             y : (c1.y + c1.height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (c2.x + c2.width / 2.0),
             y : (c2.y + c2.height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (c3.x + c3.width / 2.0),
             y : (c3.y + c3.height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
     });
 
     it('creates a four image atlas with non-zero borderWidthInPixels', function() {
@@ -317,22 +320,22 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (coordinates[0].x + coordinates[0].width / 2.0),
             y : (coordinates[0].y + coordinates[0].height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (coordinates[1].x + coordinates[1].width / 2.0),
             y : (coordinates[1].y + coordinates[1].height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (coordinates[2].x + coordinates[2].width / 2.0),
             y : (coordinates[2].y + coordinates[2].height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (coordinates[3].x + coordinates[3].width / 2.0),
             y : (coordinates[3].y + coordinates[3].height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
     });
 
     it('creates an atlas with different image heights', function() {
@@ -371,7 +374,7 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (blueCoords.x + blueCoords.width / 2.0),
             y : (blueCoords.y + blueCoords.height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
 
         var pixels = draw.apply(this, [texture, {
             x : (greenCoords.x + greenCoords.width / 2.0),
@@ -443,22 +446,22 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (firstGreenCoords.x + firstGreenCoords.width / 2.0),
             y : (firstGreenCoords.y + firstGreenCoords.height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (firstBlueCoords.x + firstBlueCoords.width / 2.0),
             y : (firstBlueCoords.y + firstBlueCoords.height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (secondGreenCoords.x + secondGreenCoords.width / 2.0),
             y : (secondGreenCoords.y + secondGreenCoords.height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (secondBlueCoords.x + secondBlueCoords.width / 2.0),
             y : (secondBlueCoords.y + secondBlueCoords.height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
     });
 
     it('creates an atlas that dynamically resizes', function() {
@@ -514,7 +517,7 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (blueCoordinates.x + blueCoordinates.width / 2.0),
             y : (blueCoordinates.y + blueCoordinates.height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
 
         //Add the big green image
         atlas.addImage(bigGreenImage);
@@ -525,12 +528,12 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (blueCoordinates.x + blueCoordinates.width / 2.0),
             y : (blueCoordinates.y + blueCoordinates.height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (bigGreenCoordinates.x + bigGreenCoordinates.width / 2.0),
             y : (bigGreenCoordinates.y + bigGreenCoordinates.height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
     });
 
     it('creates an atlas with smaller initialSize than first image', function() {
@@ -560,7 +563,7 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (coordinates.x + coordinates.width / 2.0),
             y : (coordinates.y + coordinates.height / 2.0)
-        }])).toEqualArray([255, 0, 0, 255]);
+        }])).toEqual([255, 0, 0, 255]);
     });
 
     it('creates a two image atlas with non-zero borderWidthInPixels that resizes', function() {
@@ -598,12 +601,12 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (coordinates[0].x + coordinates[0].width / 2.0),
             y : (coordinates[0].y + coordinates[0].height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (coordinates[1].x + coordinates[1].width / 2.0),
             y : (coordinates[1].y + coordinates[1].height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
     });
 
     it('creates a two image atlas with non-square initialSize that resizes', function() {
@@ -820,17 +823,17 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (blueCoordinates.x + blueCoordinates.width / 2.0),
             y : (blueCoordinates.y + blueCoordinates.height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (bigGreenCoordinates.x + bigGreenCoordinates.width / 2.0),
             y : (bigGreenCoordinates.y + bigGreenCoordinates.height / 2.0)
-        }])).toEqualArray([0, 255, 0, 255]);
+        }])).toEqual([0, 255, 0, 255]);
 
         expect(draw.apply(this, [texture, {
             x : (bigRedCoordinates.x + bigRedCoordinates.width / 2.0),
             y : (bigRedCoordinates.y + bigRedCoordinates.height / 2.0)
-        }])).toEqualArray([255, 0, 0, 255]);
+        }])).toEqual([255, 0, 0, 255]);
     });
 
     it('gets index after calling addImage and addImages', function() {
@@ -858,7 +861,7 @@ defineSuite([
         expect(draw.apply(this, [texture, {
             x : (coordinates[2].x + coordinates[2].width / 2.0),
             y : (coordinates[2].y + coordinates[2].height / 2.0)
-        }])).toEqualArray([0, 0, 255, 255]);
+        }])).toEqual([0, 0, 255, 255]);
 
         var pixels = draw.apply(this, [texture, {
             x : (coordinates[3].x + coordinates[3].width / 2.0),
@@ -1012,6 +1015,7 @@ defineSuite([
             atlas = context.createTextureAtlas({initialSize : new Cartesian2(0, 0)});
         }).toThrow();
     });
+
     it('throws without context', function() {
         expect(function() {
             return new TextureAtlas();

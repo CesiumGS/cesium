@@ -19,36 +19,37 @@
         };
     };
 
-    Sandbox.SeveralBillboards = function (scene, ellipsoid, primitives) {
-        this.code = function () {
-            Cesium.Chain.run(
-                Cesium.Jobs.downloadImage('Images/Cesium_Logo_overlay.png'),
-                Cesium.Jobs.downloadImage('Images/facility.gif')).thenRun(
-            function () {
+    Sandbox.SeveralBillboards = function(scene, ellipsoid, primitives) {
+        this.code = function() {
+            Cesium.when.all([
+                             Cesium.loadImage('Images/Cesium_Logo_overlay.png'),
+                             Cesium.loadImage('Images/facility.gif')
+                            ])
+                       .then(function(images) {
                 // Once both images are downloaded, they are combined into one image,
                 // called a texture atlas, which is assigned to a billboard-collection.
                 // Several billboards can be added to the same collection; each billboard
                 // references an image in the texture atlas.
 
-                var billboards = new Cesium.BillboardCollection(undefined);
-                var images = [this.images['Images/Cesium_Logo_overlay.png'],
-                              this.images['Images/facility.gif']];
-                var textureAtlas = scene.getContext().createTextureAtlas({images : images});
+                var billboards = new Cesium.BillboardCollection();
+                var textureAtlas = scene.getContext().createTextureAtlas({
+                    images : images
+                });
                 billboards.setTextureAtlas(textureAtlas);
 
                 billboards.add({
                     position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
-                    imageIndex : 0  // Logo
+                    imageIndex : 0 // Logo
                 });
 
                 billboards.add({
                     position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.50, 35.14)),
-                    imageIndex : 1  // Facility
+                    imageIndex : 1 // Facility
                 });
 
                 billboards.add({
                     position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.12, 25.46)),
-                    imageIndex : 1  // Facility
+                    imageIndex : 1 // Facility
                 });
 
                 primitives.add(billboards);
@@ -80,18 +81,21 @@
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
                 color : { red : 1.0, blue : 0.0, green : 0.0, alpha : 1.0 },
-                scale : 0.5
+                scale : 0.5,
+                imageIndex : 0
             });
 
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.50, 35.14)),
-                color : { red : 0.0, blue : 1.0, green : 0.0, alpha : 1.0 }
+                color : { red : 0.0, blue : 1.0, green : 0.0, alpha : 1.0 },
+                imageIndex : 0
             });
 
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.12, 25.46)),
                 color : { red : 0.0, blue : 0.0, green : 1.0, alpha : 1.0 },
-                scale : 2
+                scale : 2,
+                imageIndex : 0
             });
 
             primitives.add(billboards);
@@ -253,10 +257,10 @@
 
                 var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
                 billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-                billboards.add({ position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
-                billboards.add({ position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
-                billboards.add({ position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
-                billboards.add({ position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
+                billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
+                billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
+                billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
+                billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
                 primitives.add(billboards);
             };
             image.src = 'Images/facility.gif';

@@ -6,7 +6,7 @@ defineSuite([
                     Cartesian3,
               CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('construct with default values', function() {
         var cartesian = new Cartesian3();
@@ -445,6 +445,13 @@ defineSuite([
         expect(returnedResult).toBe(left);
         expect(left).toEqual(expectedResult);
     });
+
+    it('fromSpherical throws with no spherical parameter', function() {
+        expect(function() {
+            Cartesian3.fromSpherical(undefined);
+        }).toThrow();
+    });
+
 
     it('static clone throws with no parameter', function() {
         expect(function() {

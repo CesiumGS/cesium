@@ -8,7 +8,7 @@ defineSuite([
               Cartesian3,
               CesiumMath) {
     "use strict";
-    /*global it,expect*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var cartesian1 = new Cartesian3(1, 2, 3).normalize();
     var cartesian2 = new Cartesian3(4, 5, 6).normalize();
@@ -22,8 +22,8 @@ defineSuite([
     };
 
     it('unwrapInterval', function() {
-        expect(CzmlUnitCartesian3.unwrapInterval(constantCartesianInterval)).toEqualArray(constantCartesianInterval.unitCartesian);
-        expect(CzmlUnitCartesian3.unwrapInterval(sampledCartesianInterval)).toEqualArray(sampledCartesianInterval.unitCartesian);
+        expect(CzmlUnitCartesian3.unwrapInterval(constantCartesianInterval)).toEqual(constantCartesianInterval.unitCartesian);
+        expect(CzmlUnitCartesian3.unwrapInterval(sampledCartesianInterval)).toEqual(sampledCartesianInterval.unitCartesian);
     });
 
     it('isSampled', function() {

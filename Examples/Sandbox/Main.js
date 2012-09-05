@@ -61,6 +61,7 @@
     var pl = tree.addNode('Polyline', '', null, 'Polyline');
     tree.addNode('Draw a line between two points', [new Sandbox.PolylineTwoPoints(scene, ellipsoid, primitives)], pl, 'Polyline');
     tree.addNode('Draw a line between several points', [new Sandbox.PolylineSeveralPoints(scene, ellipsoid, primitives)], pl, 'Polyline');
+    tree.addNode("Draw two lines between several points", [new Sandbox.MultiplePolylineSeveralPoints(scene, ellipsoid, primitives)], pl, "Polyline");
     tree.addNode('Set the interior and outline color', [new Sandbox.PolylineColor(scene, ellipsoid, primitives)], pl, 'Polyline');
     tree.addNode('Set the interior and outline translucency', [new Sandbox.PolylineTranslucency(scene, ellipsoid, primitives)], pl, 'Polyline');
     tree.addNode('Set the interior and outline width', [new Sandbox.PolylineWidth(scene, ellipsoid, primitives)], pl, 'Polyline');
@@ -69,12 +70,30 @@
     var pg = tree.addNode('Polygon', '', null, 'Polygon');
     tree.addNode('Draw a polygon', [new Sandbox.Polygon(scene, ellipsoid, primitives)], pg, 'Polygon');
     tree.addNode('Draw a polygon using an extent', [new Sandbox.PolygonWithExtent(scene, ellipsoid, primitives)], pg, 'Polygon');
+    tree.addNode('Draw nested polygons', [new Sandbox.NestedPolygon(scene, ellipsoid, primitives)], pg, 'Polygon');
     var mat = tree.addNode('Materials', '', pg, 'Material');
     tree.addNode('Modify the default material', [new Sandbox.PolygonColor(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a composite material', [new Sandbox.CompositeMaterial1(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a composite material', [new Sandbox.CompositeMaterial2(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a composite material', [new Sandbox.CompositeMaterial3(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply an image material', [new Sandbox.ImagePolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a diffuse map material', [new Sandbox.DiffuseMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply an alpha map material', [new Sandbox.AlphaMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a specular map material', [new Sandbox.SpecularMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply an emission map material', [new Sandbox.EmissionMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a bump map material', [new Sandbox.BumpMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a normal map material', [new Sandbox.NormalMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a reflection material', [new Sandbox.ReflectionPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a refraction material', [new Sandbox.RefractionPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a fresnel material', [new Sandbox.FresnelPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a brick material', [new Sandbox.BrickPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a wood material', [new Sandbox.WoodPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply an asphalt material', [new Sandbox.AsphaltPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a cement material', [new Sandbox.CementPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
+    tree.addNode('Apply a grass material', [new Sandbox.GrassPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a stripe material', [new Sandbox.StripePolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a checkerboard material', [new Sandbox.CheckerboardPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a dot material', [new Sandbox.DotPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
-    tree.addNode('Apply a diffuse map material', [new Sandbox.DiffuseMapPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a tie-dye material', [new Sandbox.TieDyePolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a facet material', [new Sandbox.FacetPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
     tree.addNode('Apply a blob material', [new Sandbox.BlobPolygonMaterial(scene, ellipsoid, primitives)], mat, 'Material');
@@ -142,6 +161,7 @@
     var pick = tree.addNode('Picking', '', null, 'Picking');
     tree.addNode('Show cartographic position on mouse-over', [new Sandbox.PickingCartographicMouseOver(scene, ellipsoid, primitives)], pick, 'Picking');
     tree.addNode('Highlight a billboard on mouse-over', [new Sandbox.PickingBillboardMouseOver(scene, ellipsoid, primitives)], pick, 'Picking');
+    tree.addNode('Highlight a polyline on mouse-over', [new Sandbox.PickingPolylineMouseOver(scene, ellipsoid, primitives)], pick, 'Picking');
     var ani = tree.addNode('Animations', '', pick, 'Animation');
     tree.addNode('Animate highlighting a billboard on mouse-over', [new Sandbox.PickingBillboardAnimationMouseOver(scene, ellipsoid, primitives)], ani, 'Animation');
     tree.addNode('Animate highlighting a polygon on mouse-over', [new Sandbox.PickingPolygonAnimationMouseOver(scene, ellipsoid, primitives)], ani, 'Animation');
@@ -168,6 +188,7 @@
 
     var adv = tree.addNode('Advanced', '', null, 'Advanced');
     tree.addNode('Draw a box using custom rendering', [new Sandbox.CustomRendering(scene, ellipsoid, primitives)], adv, 'Advanced');
+    tree.addNode('Draw a box across all scene modes using custom rendering', [new Sandbox.CustomRenderingAcrossModes(scene, ellipsoid, primitives)], adv, 'Advanced');
 
     tree.publish();
 

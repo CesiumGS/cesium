@@ -10,7 +10,7 @@ defineSuite([
               DynamicBillboard,
               JulianDate) {
     "use strict";
-    /*global it,expect,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var czml = {
         'id' : 'test',
@@ -34,7 +34,7 @@ defineSuite([
         }
     }];
 
-    var czmlNoID = {
+    var czmlNoId = {
         'billboard' : {
             'show' : true
         }
@@ -111,7 +111,7 @@ defineSuite([
 
     it('processCzml creates a new object for packets with no id.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        processCzml(czmlNoID, dynamicObjectCollection);
+        processCzml(czmlNoId, dynamicObjectCollection);
 
         var objects = dynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
