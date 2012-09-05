@@ -504,7 +504,7 @@ define([
         if (this._boundingSphereTile) {
             if (!this._boundingSphereVA) {
                 var radius = this._boundingSphereTile.boundingSphere3D.radius;
-                var sphere = CubeMapEllipsoidTessellator.compute(new Ellipsoid({x:radius, y:radius, z:radius}), 10);
+                var sphere = CubeMapEllipsoidTessellator.compute(new Ellipsoid(radius, radius, radius), 10);
                 MeshFilters.toWireframeInPlace(sphere);
                 this._boundingSphereVA = context.createVertexArrayFromMesh({
                     mesh : sphere,
@@ -517,12 +517,17 @@ define([
                 renderState : renderState
             });
 
-            var rtc2 = this._boundingSphereTile.boundingSphere3D.center;
+            var rtc2 = this._boundingSphereTile.center;
             uniformMap.center3D = rtc2;
 
             var centerEye2 = mv.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
             uniformMap.modifiedModelView = mv.setColumn(3, centerEye2, uniformMap.modifiedModelView);
             uniformMap.modifiedModelViewProjection = Matrix4.multiply(projection, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
+
+            uniformMap.dayTextures[0] = context.getDefaultTexture();
+            uniformMap.dayTextureTranslationAndScale[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+            uniformMap.dayTextureTexCoordsExtent[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+            uniformMap.dayTextureAlpha[0] = 1.0;
 
             context.continueDraw({
                 primitiveType : PrimitiveType.LINES,
@@ -584,23 +589,28 @@ define([
     EllipsoidSurface.prototype.showBoundingSphereOfTileAt = function(cartographicPick) {
         // Find the tile in the render list that overlaps this extent
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        var result;
         var tile;
-        for (var i = 0; i < tilesToRenderByTextureCount.length; ++i) {
+        for (var i = 0; i < tilesToRenderByTextureCount.length && typeof result === 'undefined'; ++i) {
             var tileSet = tilesToRenderByTextureCount[i];
+            if (typeof tileSet === 'undefined') {
+                continue;
+            }
             for (var j = 0; j < tileSet.length; ++j) {
                 tile = tileSet[j];
                 if (tile.extent.contains(cartographicPick)) {
+                    result = tile;
                     break;
                 }
             }
         }
 
-        if (typeof tile !== 'undefined') {
-            console.log('x: ' + tile.x + ' y: ' + tile.y + ' level: ' + tile.level);
+        if (typeof result !== 'undefined') {
+            console.log('x: ' + result.x + ' y: ' + result.y + ' level: ' + result.level);
         }
 
 
-        this._boundingSphereTile = tile;
+        this._boundingSphereTile = result;
         this._boundingSphereVA = undefined;
     };
 
