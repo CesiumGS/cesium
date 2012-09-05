@@ -43,10 +43,8 @@ require({
         ///////////////////////////////////////////////////////////////////////////
         // Add examples from the Sandbox here:
 
-        var sunPosition = new Cesium.SunPosition();
         scene.setAnimation(function() {
-            sunPosition.update(new Cesium.JulianDate());
-            scene.setSunPosition(sunPosition.position);
+            scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
         });
     }
 

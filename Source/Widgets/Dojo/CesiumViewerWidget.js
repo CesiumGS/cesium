@@ -22,7 +22,7 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
         '../../Core/FullScreen',
-        '../../Core/SunPosition',
+        '../../Core/computeSunPosition',
         '../../Core/EventHandler',
         '../../Core/FeatureDetection',
         '../../Core/MouseEventType',
@@ -68,7 +68,7 @@ define([
         Ellipsoid,
         Iso8601,
         FullScreen,
-        SunPosition,
+        computeSunPosition,
         EventHandler,
         FeatureDetection,
         MouseEventType,
@@ -108,7 +108,6 @@ define([
         endUserOptions : {},
         enableDragDrop : false,
         resizeWidgetOnWindowResize : true,
-        sunPosition : new SunPosition(),
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -661,14 +660,14 @@ define([
 
         _cameraCenteredObjectIDPosition : new Cartesian3(),
 
+        _sunPosition : new Cartesian3(),
+
         update : function(currentTime) {
             var cameraCenteredObjectID = this.cameraCenteredObjectID;
             var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
-            var sunPosition = this.sunPosition;
 
             this.timelineControl.updateFromClock();
-            sunPosition.update(currentTime);
-            this.scene.setSunPosition(sunPosition.position);
+            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
             this.visualizers.update(currentTime);
 
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||

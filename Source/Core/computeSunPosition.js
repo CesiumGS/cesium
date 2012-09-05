@@ -39,64 +39,28 @@ define([
 
     var AU_TO_METERS = 149597870700.0;
 
-    /**
-     * Utility class for computing the position to the sun in Earth's fixed frame.
-     * @alias SunPosition
-     * @constructor
-     *
-     * @example
-     * //Set scene's sun position to always match current real-world time.
-     * var sunPosition = new SunPosition();
-     * scene.setAnimation(function() {
-     *   var now = new JulianDate();
-     *   sunPosition.update(now);
-     *   scene.setSunPosition(sunPosition.position);
-     * });
-     */
-    var SunPosition = function() {
-        /**
-         * The approximate coordinates of the sun's position in the Earth's fixed frame.
-         * @type Cartesian3
-         */
-        this.position = new Cartesian3();
-
-        /**
-         * The sun's position projected onto the Earth's surface.  This is accurate to within less than a degree of the true position.
-         * @type Cartographic
-         */
-        this.surfacePosition = new Cartographic();
-
-        /**
-         * A unit vector pointing from the center of the earth to the sun in the Earth's fixed frame.
-         * @type Cartesian3
-         */
-        this.direction = new Cartesian3();
-
-        /**
-         * The approximate distance from the center of the Earth to the center of the Sun in meters.
-         * @type Number
-         */
-        this.distance = 0.0;
-    };
+    var direction = new Cartesian3();
 
     /**
-     * Updates all properties to reflect the provided time.
+     * Computes the position of the Sun in Earth's fixed frame.
+     * @exports computeSunPosition
      *
-     * @param {JulianDate} julianDate The time at which to compute the Sun's position.
+     * @param {JulianDate} [julianDate] The time at which to compute the Sun's position, if not provided the current system time is used.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} julianDate is required.
      *
      * @example
-     * // Update the sun position to current real-world time.
-     * var sunPosition = new SunPosition();
-     * var now = new JulianDate();
-     * sunPosition.update(now);
-     * var position = sunPosition.position;
-     * var distanceToEarth = sunPosition.distance;
+     * //Set scene's sun position to always match current real-world time.
+     * scene.setAnimation(function() {
+     *   var now = new JulianDate();
+     *   scene.setSunPosition(computeSunPosition(now));
+     * });
      */
-    SunPosition.prototype.update = function(julianDate) {
+    var computeSunPosition = function(julianDate, result) {
         if (typeof julianDate === 'undefined') {
-            throw new DeveloperError('julianDate is required.');
+            julianDate = new JulianDate();
         }
 
         var T = (julianDate.getTotalDays() - 2451545.0) / 36525;
@@ -104,7 +68,7 @@ define([
         var distanceToSunInAU = 1.000140612 - 0.016708617 * Math.cos(meanAnomaly) - 0.000139589 * Math.cos(2 * meanAnomaly);
 
         var date = julianDate.toDate();
-        var month =  date.getUTCMonth();
+        var month = date.getUTCMonth();
         var dayOfYear = date.getUTCDate() + offSets[month];
 
         if (isLeapYear(date.getUTCFullYear()) && month > 1) {
@@ -146,14 +110,11 @@ define([
         scratch.y = cosDeclinationAngle * Math.sin(hourAngle);
         scratch.z = Math.sin(declinationAngle);
 
-        var direction = Matrix3.multiplyByVector(transform, scratch, this.direction);
-        var distance = this.distance = distanceToSunInAU * AU_TO_METERS;
+        Matrix3.multiplyByVector(transform, scratch, direction);
+        var distance = distanceToSunInAU * AU_TO_METERS;
 
-        direction.multiplyByScalar(distance, this.position);
-        this.surfacePosition.longitude = hourAngle;
-        this.surfacePosition.latitude = declinationAngle;
-        //this.surfacePosition.height = 0.0; (Always 0.0, so there's no need to set it)
+        return direction.multiplyByScalar(distance, result);
     };
 
-    return SunPosition;
+    return computeSunPosition;
 });
