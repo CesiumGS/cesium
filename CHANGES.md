@@ -8,7 +8,7 @@ Beta Releases
 
 * Breaking changes:
     * ...
-* ...
+* `Extent` functions now take optional result parameters.  Also added `getCenter`, `intersectWith`, and `contains` functions.
 
 ### b8 - 09/05/2012
 
@@ -72,7 +72,6 @@ Beta Releases
 * Added `czm_viewRotation` and `czm_viewInverseRotation` automatic GLSL uniforms.
 * Added a `clampToPixel` property to `BillboardCollection` and `LabelCollection`.  When true, it aligns all billboards and text to a pixel in screen space, providing a crisper image at the cost of jumpier motion.
 * `Ellipsoid` functions now take optional result parameters.
-* `Extent` functions now take optional result parameters.  Also added `getCenter`, `intersectWith`, and `contains` functions.
 
 ### b7 - 08/01/2012
 
