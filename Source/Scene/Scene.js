@@ -332,7 +332,7 @@ define([
         var fb = this._pickFramebuffer.begin();
 
         updateFrameState(this);
-        frameState.cullingFrustum = getPickFrustum(this, windowPosition, 1.0, 1.0); // TODO: sizes other than 1x1
+        frameState.cullingFrustum = getPickFrustum(this, windowPosition, regionWidth, regionHeight);
         frameState.passes.pick = true;
 
         primitives.update(context, frameState);
