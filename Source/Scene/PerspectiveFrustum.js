@@ -32,11 +32,10 @@ define([
      * frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
-     * frustum.position = new Cartesian3();
-     * frustum.direction = Cartesian3.UNIT_Z.negate();
-     * frustum.up = Cartesian3.UNIT_Y;
      */
     var PerspectiveFrustum = function() {
+        this._offCenterFrustum = new PerspectiveOffCenterFrustum();
+
         /**
          * The angle of the field of view, in radians.
          * @type {Number}
@@ -66,24 +65,11 @@ define([
         this._far = undefined;
 
         /**
-         * The position of the frustum.
-         * @type {Cartesian3}
+         * Defines the six clipping planes of the frustum. The planes can be updated with the `computePlanes` function.
+         * @type {Array}
+         * @see PerspectiveOffCenterFrustum#computePlanes
          */
-        this.position = undefined;
-
-        /**
-         * The view direction of the frustum.
-         * @type {Cartesian3}
-         */
-        this.direction = undefined;
-
-        /**
-         * The up direction of the frustum.
-         * @type {Cartesian3}
-         */
-        this.up = undefined;
-
-        this._offCenterFrustum = new PerspectiveOffCenterFrustum();
+        this.planes = this._offCenterFrustum.planes;
     };
 
     /**
@@ -148,10 +134,6 @@ define([
             f.near = frustum.near;
             f.far = frustum.far;
         }
-
-        f.position = frustum.position;
-        f.direction = frustum.direction;
-        f.up = frustum.up;
     }
 
     /**
@@ -159,11 +141,19 @@ define([
      *
      * @memberof PerspectiveFrustum
      *
+     * @param {Cartesian3} position The eye position.
+     * @param {Cartesian3} direction The view direction.
+     * @param {Cartesian3} up The up direction.
+     *
+     * @exception {DeveloperError} position is required.
+     * @exception {DeveloperError} direction is required.
+     * @exception {DeveloperError} up is required.
+     *
      * @return {Array} An array of 6 clipping planes.
      *
      * @example
      * // Check if a bounding volume intersects the frustum.
-     * var planes = frustum.getPlanes();
+     * var planes = frustum.computePlanes(cameraPosition, cameraDirection, cameraUp);
      * var intersecting = boundingVolume.intersect(planes[0]) !== Intersect.OUTSIDE;             // check for left intersection
      * intersecting = intersecting && boundingVolume.intersect(planes[1]) !== Intersect.OUTSIDE; // check for right intersection
      * intersecting = intersecting && boundingVolume.intersect(planes[2]) !== Intersect.OUTSIDE; // check for bottom intersection
@@ -171,9 +161,9 @@ define([
      * intersecting = intersecting && boundingVolume.intersect(planes[4]) !== Intersect.OUTSIDE; // check for near intersection
      * intersecting = intersecting && boundingVolume.intersect(planes[5]) !== Intersect.OUTSIDE; // check for far intersection
      */
-    PerspectiveFrustum.prototype.getPlanes = function() {
+    PerspectiveFrustum.prototype.computePlanes = function(position, direction, up) {
         update(this);
-        return this._offCenterFrustum.getPlanes();
+        return this._offCenterFrustum.computePlanes(position, direction, up);
     };
 
     /**
@@ -243,9 +233,6 @@ define([
         frustum.aspectRatio = this.aspectRatio;
         frustum.near = this.near;
         frustum.far = this.far;
-        frustum.position = this.position && this.position.clone();
-        frustum.direction = this.direction && this.direction.clone();
-        frustum.up = this.up && this.up.clone();
         frustum._offCenterFrustum = this._offCenterFrustum.clone();
         return frustum;
     };

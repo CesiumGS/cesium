@@ -681,9 +681,7 @@ defineSuite([
 
         frameState.camera = camera;
         frameState.cullingFrustum = camera.frustum;
-        frameState.cullingFrustum.position = camera.position;
-        frameState.cullingFrustum.direction = camera.direction;
-        frameState.cullingFrustum.up = camera.up;
+        frameState.cullingFrustum.computePlanes(camera.position, camera.direction, camera.up);
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var state = primitive.update(context, frameState);
@@ -693,16 +691,14 @@ defineSuite([
         camera.direction = camera.position.negate().normalize();
         camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
         camera.up = camera.right.cross(camera.direction);
-        frameState.cullingFrustum.position = camera.position;
-        frameState.cullingFrustum.direction = camera.direction;
-        frameState.cullingFrustum.up = camera.up;
+        frameState.cullingFrustum.computePlanes(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
-        frameState.cullingFrustum.position = camera.position;
+        frameState.cullingFrustum.computePlanes(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
@@ -720,9 +716,7 @@ defineSuite([
 
         frameState.camera = camera;
         frameState.cullingFrustum = camera.frustum;
-        frameState.cullingFrustum.position = camera.position;
-        frameState.cullingFrustum.direction = camera.direction;
-        frameState.cullingFrustum.up = camera.up;
+        frameState.cullingFrustum.computePlanes(camera.position, camera.direction, camera.up);
         frameState.mode = SceneMode.COLUMBUS_VIEW;
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
@@ -733,16 +727,14 @@ defineSuite([
         camera.direction = Cartesian3.UNIT_Z.negate();
         camera.up = Cartesian3.UNIT_Y;
         camera.right = camera.direction.cross(camera.up);
-        frameState.cullingFrustum.position = camera.position;
-        frameState.cullingFrustum.direction = camera.direction;
-        frameState.cullingFrustum.up = camera.up;
+        frameState.cullingFrustum.computePlanes(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
-        frameState.cullingFrustum.position = camera.position;
+        frameState.cullingFrustum.computePlanes(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
@@ -769,9 +761,7 @@ defineSuite([
         orthoFrustum.bottom = -orthoFrustum.top;
         orthoFrustum.near = camera.frustum.near;
         orthoFrustum.far = camera.frustum.far;
-        orthoFrustum.position = camera.position;
-        orthoFrustum.direction = camera.direction;
-        orthoFrustum.up = camera.up;
+        orthoFrustum.computePlanes(camera.position, camera.direction, camera.up);
         frameState.cullingFrustum = orthoFrustum;
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
@@ -782,16 +772,14 @@ defineSuite([
         camera.direction = Cartesian3.UNIT_Z.negate();
         camera.up = Cartesian3.UNIT_Y;
         camera.right = camera.direction.cross(camera.up);
-        orthoFrustum.position = camera.position;
-        orthoFrustum.direction = camera.direction;
-        orthoFrustum.up = camera.up;
+        orthoFrustum.computePlanes(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
-        orthoFrustum.position = camera.position;
+        orthoFrustum.computePlanes(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);

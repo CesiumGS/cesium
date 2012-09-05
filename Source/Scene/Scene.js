@@ -269,10 +269,7 @@ define([
         ortho.bottom = -ortho.top;
         ortho.near = frustum.near;
         ortho.far = frustum.far;
-
-        ortho.position = position;
-        ortho.direction = camera.direction;
-        ortho.up = camera.up;
+        ortho.computePlanes(position, camera.direction, camera.up);
 
         return ortho;
     }
@@ -307,10 +304,7 @@ define([
         offCenter.left = xDir - pickWidth;
         offCenter.near = frustum.near;
         offCenter.far = frustum.far;
-
-        offCenter.position = camera.getPositionWC();
-        offCenter.direction = camera.getDirectionWC();
-        offCenter.up = camera.getUpWC();
+        offCenter.computePlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
 
         return offCenter;
     }

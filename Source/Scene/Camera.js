@@ -123,9 +123,7 @@ define([
         this.frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
         this.frustum.near = 0.01 * maxRadii;
         this.frustum.far = 20.0 * maxRadii;
-        this.frustum.position = this._positionWC;
-        this.frustum.direction = this._directionWC;
-        this.frustum.up = this._upWC;
+        this.frustum.computePlanes(this._positionWC, this._directionWC, this._upWC);
         this._frustum = this.frustum;
 
         this._viewMatrix = undefined;
@@ -406,9 +404,7 @@ define([
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged || camera._frustum !== camera.frustum) {
             camera._frustum = camera.frustum;
-            camera.frustum.position = camera._positionWC;
-            camera.frustum.direction = camera._directionWC;
-            camera.frustum.up = camera._upWC;
+            camera.frustum.computePlanes(camera._positionWC, camera._directionWC, camera._upWC);
         }
 
         if (directionChanged || upChanged || rightChanged) {
