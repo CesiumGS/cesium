@@ -45,7 +45,7 @@ Beta Releases
                 imageIndex : 0
             });
     * Renamed `SceneState` to `FrameState`.
-    * `SunPosition` has been changed from a static object to a single function `computeSunPosition`; which now returns a single Cartesian3 with the computed position.  It has also been optimized for performance and memory pressure.  For example, change:
+    * `SunPosition` was changed from a static object to a function `computeSunPosition`; which now returns a `Cartesian3` with the computed position.  It was also optimized for performance and memory pressure.  For example, change:
           
             var result = SunPosition.compute(date);
             var position = result.position;
