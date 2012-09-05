@@ -43,6 +43,7 @@ html, body {
     color: #DDD;
     font-style: italic;
     font-size: 24px;
+    z-index: -1;
 }
 
 #codeContainer {
@@ -50,9 +51,10 @@ html, body {
 }
 
 #galleryPanel {
-    width: 270px;
+    width: 264px;
     height: 100%;
     display: none;
+    padding: 2px;
 }
 
 #docPopup {

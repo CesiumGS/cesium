@@ -27,13 +27,14 @@ require({
         'dojo/_base/window',
         'dojo/_base/xhr',
         'dijit/registry',
+        'dijit/popup',
+        'dijit/TooltipDialog',
         'dijit/layout/ContentPane',
         'dijit/form/Button',
         'dijit/form/DropDownButton',
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/form/TextBox',
-        'dijit/TooltipDialog',
         'dijit/Menu',
         'dijit/MenuBar',
         'dijit/PopupMenuBarItem',
@@ -57,6 +58,8 @@ require({
             win,
             xhr,
             registry,
+            popup,
+            TooltipDialog,
             ContentPane
     ) {
         "use strict";
@@ -350,6 +353,7 @@ require({
             }
         });
 
+        // TODO: Since we already stored the code for each demo at launch, we don't need to issue another request.
         function loadFromGallery(link) {
             xhr.get({
                 url: 'gallery/' + link,
@@ -439,6 +443,20 @@ require({
             htmlEditor.refresh();
         });
 
+        registry.byId('search').on('change', function() {
+            var searchTerm = this.get('value');
+            var searchRegExp = new RegExp(searchTerm, 'i');
+            for ( var i = 0; i < gallery_demos.length; i++) {
+                var demo = gallery_demos[i];
+                var demoName = demo.name;
+                if (searchRegExp.test(demoName) || searchRegExp.test(demo.code)) {
+                    document.getElementById(demoName).style.display = 'inline-block';
+                } else {
+                    document.getElementById(demoName).style.display = 'none';
+                }
+            }
+        });
+
         // Clicking the 'Run' button simply reloads the iframe.
         registry.byId('buttonRun').on('click', function () {
             CodeMirror.commands.runCesium(jsEditor);
@@ -478,14 +496,47 @@ require({
         });
 
         registry.byId('buttonGallery').on('change', function (newValue) {
-            if (newValue) {
+            if (domStyle.get('galleryPanel', 'display') === 'none') {
                 domStyle.set('galleryPanel', 'display', 'block');
-                registry.byId('appLayout').resize();
             } else {
                 domStyle.set('galleryPanel', 'display', 'none');
-                registry.byId('appLayout').resize();
             }
+            registry.byId('appLayout').resize();
         });
+
+        // Store the code for each demo so it can be easily searched.
+        // Also extract any meta descriptions for use in tooltips.
+        // TODO: rename this to load gallery or setup gallery or something.
+        function storeDemoScript(index) {
+            xhr.get({
+                url: 'gallery/' + window.encodeURIComponent(gallery_demos[index].name) + '.html',
+                handleAs: 'text',
+                error: function(error) {
+                    appendConsole('consoleError', error);
+                }
+            }).then(function (value) {
+                var demo = gallery_demos[index];
+                demo.code = value;
+                var start = value.indexOf('<meta name="description" content="');
+                if (start !== -1) {
+                    var end = value.indexOf('">', start);
+                    var tooltip = new TooltipDialog({
+                        id: demo.name + 'TooltipDialog',
+                        style: 'width: 200px; font-size: 12px;',
+                        content: value.substring(start + 34, end)
+                    });
+                    on(dom.byId(demo.name), 'mouseover', function() {
+                        popup.open({
+                            popup: tooltip,
+                            around: dom.byId(demo.name)
+                        });
+                    });
+                    on(dom.byId(demo.name), 'mouseout', function() {
+                        popup.close(tooltip);
+                    });
+                }
+            });
+        }
 
         if (typeof gallery_demos === 'undefined') {
             dom.byId('demos').textContent = 'No demos found, please run the build script.';
@@ -507,26 +558,24 @@ require({
 
             for (i = 0; i < len; ++i) {
                 var demoName = gallery_demos[i].name;
-                var label = demoName;
                 var imgSrc = 'templates/Gallery_tile.jpg';
                 if (typeof gallery_demos[i].img !== 'undefined') {
                     imgSrc = 'gallery/' + window.encodeURIComponent(gallery_demos[i].img);
                 }
-                label += '<br /><img src="' + imgSrc +
-                    '" alt="" width="225" height="150" id="' + demoName + '" onDragStart="return false;" />' +
-                    '<span id="buttons_' + i + '" class="insetButtons"></span>';
+                var thumbnail = '<img src="' + imgSrc +
+                    '" class="demoTileThumbnail" alt="" width="225" height="150" id="' + demoName + 'Thumbnail" onDragStart="return false;" />';
 
-                var tile = document.createElement('span');
-                tile.className = "dijit dijitReset dijitInline demoTile dijitButton";
-                tile.tabIndex = i * 3 + 1;
+                var tile = document.createElement('div');
+                tile.className = 'demoTile';
+                tile.id = demoName;
+                tile.style.display = 'inline-block';
                 tile.innerHTML =
-                    '<span class="dijitReset dijitInline dijitButtonNode">' +
-                    '<span class="dijitReset dijitStretch dijitButtonContents">' +
-                    '<span class="dijitReset dijitInline dijitButtonText">' +
-                    label + '</span></span></span>';
+                        '<div class="demoTileTitle">' + demoName + '</div>' +
+                         thumbnail;
                 demos.appendChild(tile);
 
                 loadDemoOnClick(demoName);
+                storeDemoScript(i);
             }
         }
 
