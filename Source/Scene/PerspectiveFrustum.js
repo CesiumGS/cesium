@@ -181,13 +181,13 @@ define([
      *
      * @memberof PerspectiveFrustum
      *
-     * @param {Object} object The bounding volume whose intersection with the frustum is to be tested.
+     * @param {Object} boundingVolume The bounding volume whose intersection with the frustum is to be tested.
      *
      * @return {Enumeration}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
      */
-    PerspectiveFrustum.prototype.getVisibility = function(object) {
+    PerspectiveFrustum.prototype.getVisibility = function(boundingVolume) {
         update(this);
-        return this._offCenterFrustum.getVisibility(object);
+        return this._offCenterFrustum.getVisibility(boundingVolume);
     };
 
     /**

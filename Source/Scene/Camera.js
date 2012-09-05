@@ -511,41 +511,41 @@ define([
         return this._rightWC;
     };
 
-    Camera.prototype._getPickRayPerspective = function(windowPosition) {
-        var width = this._canvas.clientWidth;
-        var height = this._canvas.clientHeight;
+    function getPickRayPerspective(camera, windowPosition) {
+        var width = camera._canvas.clientWidth;
+        var height = camera._canvas.clientHeight;
 
-        var tanPhi = Math.tan(this.frustum.fovy * 0.5);
-        var tanTheta = this.frustum.aspectRatio * tanPhi;
-        var near = this.frustum.near;
+        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+        var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        var near = camera.frustum.near;
 
         var x = (2.0 / width) * windowPosition.x - 1.0;
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
 
-        var position = this.getPositionWC();
-        var nearCenter = position.add(this.getDirectionWC().multiplyByScalar(near));
-        var xDir = this.getRightWC().multiplyByScalar(x * near * tanTheta);
-        var yDir = this.getUpWC().multiplyByScalar(y * near * tanPhi);
+        var position = camera.getPositionWC();
+        var nearCenter = position.add(camera.getDirectionWC().multiplyByScalar(near));
+        var xDir = camera.getRightWC().multiplyByScalar(x * near * tanTheta);
+        var yDir = camera.getUpWC().multiplyByScalar(y * near * tanPhi);
         var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
 
         return new Ray(position, direction);
-    };
+    }
 
-    Camera.prototype._getPickRayOrthographic = function(windowPosition) {
-        var width = this._canvas.clientWidth;
-        var height = this._canvas.clientHeight;
+    function getPickRayOrthographic(camera, windowPosition) {
+        var width = camera._canvas.clientWidth;
+        var height = camera._canvas.clientHeight;
 
         var x = (2.0 / width) * windowPosition.x - 1.0;
-        x *= (this.frustum.right - this.frustum.left) * 0.5;
+        x *= (camera.frustum.right - camera.frustum.left) * 0.5;
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
-        y *= (this.frustum.top - this.frustum.bottom) * 0.5;
+        y *= (camera.frustum.top - camera.frustum.bottom) * 0.5;
 
-        var position = this.position.clone();
+        var position = camera.position.clone();
         position.x += x;
         position.y += y;
 
-        return new Ray(position, this.getDirectionWC());
-    };
+        return new Ray(position, camera.getDirectionWC());
+    }
 
     /**
      * Create a ray from the camera position through the pixel at <code>windowPosition</code>
@@ -566,10 +566,10 @@ define([
 
         var frustum = this.frustum;
         if (typeof frustum.aspectRatio !== 'undefined' && typeof frustum.fovy !== 'undefined' && typeof frustum.near !== 'undefined') {
-            return this._getPickRayPerspective(windowPosition);
+            return getPickRayPerspective(this, windowPosition);
         }
 
-        return this._getPickRayOrthographic(windowPosition);
+        return getPickRayOrthographic(this, windowPosition);
     };
 
     /**
@@ -591,7 +591,7 @@ define([
         }
 
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
-        var ray = this._getPickRayPerspective(windowPosition);
+        var ray = getPickRayPerspective(this, windowPosition);
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
         if (!intersection) {
             return undefined;
@@ -622,7 +622,7 @@ define([
             throw new DeveloperError('projection is required.');
         }
 
-        var ray = this._getPickRayOrthographic(windowPosition);
+        var ray = getPickRayOrthographic(this, windowPosition);
         var position = ray.origin;
         position.z = 0.0;
         var cart = projection.unproject(position);
@@ -656,7 +656,7 @@ define([
             throw new DeveloperError('projection is required.');
         }
 
-        var ray = this._getPickRayPerspective(windowPosition);
+        var ray = getPickRayPerspective(this, windowPosition);
         var scalar = -ray.origin.x / ray.direction.x;
         var position = ray.getPoint(scalar);
 
@@ -676,13 +676,13 @@ define([
      *
      * @memberof Camera
      *
-     * @param {Object} object The bounding volume whose intersection with the frustum is to be tested.
+     * @param {Object} boundingVolume The bounding volume whose intersection with the frustum is to be tested.
      *
      * @return {Enumeration}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
      */
-    Camera.prototype.getVisibility = function(object) {
+    Camera.prototype.getVisibility = function(boundingVolume) {
         update(this);
-        return this.frustum.getVisibility(object);
+        return this.frustum.getVisibility(boundingVolume);
     };
 
     /**

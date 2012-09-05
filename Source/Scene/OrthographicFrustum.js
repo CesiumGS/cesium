@@ -334,11 +334,11 @@ define([
      *
      * @memberof OrthographicFrustum
      *
-     * @param {Object} object The bounding volume whose intersection with the frustum is to be tested.
+     * @param {Object} boundingVolume The bounding volume whose intersection with the frustum is to be tested.
      *
      * @return {Enumeration}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
      */
-    OrthographicFrustum.prototype.getVisibility = function(object) {
+    OrthographicFrustum.prototype.getVisibility = function(boundingVolume) {
         update(this);
 
         if (typeof this.position === 'undefined') {
@@ -356,7 +356,7 @@ define([
         var planes = this._planes;
         var intersecting = false;
         for ( var k = 0; k < planes.length; k++) {
-            var result = object.intersect(planes[k]);
+            var result = boundingVolume.intersect(planes[k]);
             if (result === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
             } else if (result === Intersect.INTERSECTING) {

@@ -182,12 +182,10 @@ define([
             var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
 
             if (typeof boundingVolume !== 'undefined') {
-                var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
-                center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
-                boundingVolume = new BoundingSphere(center, boundingVolume.radius);
+                var transformedBV = boundingVolume.transform(modelMatrix);
 
-                if (frustum.getVisibility(boundingVolume) === Intersect.OUTSIDE ||
-                        (typeof occluder !== 'undefined' && !occluder.isVisible(boundingVolume))) {
+                if (frustum.getVisibility(transformedBV) === Intersect.OUTSIDE ||
+                        (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
                     continue;
                 }
             }
