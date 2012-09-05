@@ -22,7 +22,6 @@ require({
         'dojo/dom-class',
         'dojo/dom-construct',
         'dojo/dom-style',
-        'dojo/io-query',
         'dojo/_base/fx',
         'dojo/_base/window',
         'dojo/_base/xhr',
@@ -53,7 +52,6 @@ require({
             domClass,
             domConstruct,
             domStyle,
-            ioQuery,
             fx,
             win,
             xhr,
@@ -353,40 +351,26 @@ require({
             }
         });
 
-        // TODO: Since we already stored the code for each demo at launch, we don't need to issue another request.
-        function loadFromGallery(link) {
-            xhr.get({
-                url: 'gallery/' + link,
-                handleAs: 'text',
-                error: function(error) {
-                    appendConsole('consoleError', error);
+        function loadFromGallery(demo) {
+            var pos = demo.code.indexOf('<body');
+            pos = demo.code.indexOf('>', pos);
+            var body = demo.code.substring(pos + 2);
+            pos = body.indexOf('<script id="cesium_sandcastle_script">');
+            var pos2 = body.lastIndexOf('</script>');
+            if ((pos <= 0) || (pos2 <= pos)) {
+                var ele = document.createElement('span');
+                ele.className = 'consoleError';
+                ele.textContent = 'Error reading source file: ' + demoName + '\n';
+                appendConsole(ele);
+            } else {
+                var script = body.substring(pos + 38, pos2 - 1);
+                while (script.charAt(0) < 32) {
+                    script = script.substring(1);
                 }
-            }).then(function (value) {
-                var pos = value.indexOf('<body');
-                pos = value.indexOf('>', pos);
-                var body = value.substring(pos + 2);
-                pos = body.indexOf('<script id="cesium_sandcastle_script">');
-                var pos2 = body.lastIndexOf('</script>');
-                if ((pos <= 0) || (pos2 <= pos)) {
-                    var ele = document.createElement('span');
-                    ele.className = 'consoleError';
-                    ele.textContent = 'Error reading source file: ' + link + '\n';
-                    appendConsole(ele);
-                } else {
-                    var script = body.substring(pos + 38, pos2 - 1);
-                    while (script.charAt(0) < 32) {
-                        script = script.substring(1);
-                    }
-                    jsEditor.setValue(script);
-                    htmlEditor.setValue(body.substring(0, pos - 1));
-                    CodeMirror.commands.runCesium(jsEditor);
-                }
-            });
-        }
-
-        var queryObject = {};
-        if (window.location.search) {
-            queryObject = ioQuery.queryToObject(window.location.search.substring(1));
+                jsEditor.setValue(script);
+                htmlEditor.setValue(body.substring(0, pos - 1));
+                CodeMirror.commands.runCesium(jsEditor);
+            }
         }
 
         window.addEventListener('message', function (e) {
@@ -395,25 +379,18 @@ require({
             // This triggers the code to be injected into the iframe.
             if (e.data === 'reload') {
                 logOutput.innerHTML = "";
-                if (typeof queryObject.src !== 'undefined') {
-                    // This happens once on Sandcastle page load, the blank bucket.html triggers a load
-                    // of the selected demo code from the gallery, followed by a Run (F9) equivalent.
-                    loadFromGallery(queryObject.src);
-                    queryObject.src = undefined;
-                } else {
-                    // This happens after a Run (F9) reloads bucket.html, to inject the editor code
-                    // into the iframe, causing the demo to run there.
-                    var bucketDoc = bucketFrame.contentDocument;
-                    var bodyEle = bucketDoc.createElement('div');
-                    bodyEle.innerHTML = htmlEditor.getValue();
-                    bucketDoc.body.appendChild(bodyEle);
-                    var jsEle = bucketDoc.createElement('script');
-                    jsEle.type = 'text/javascript';
-                    jsEle.textContent = jsEditor.getValue();
-                    bucketDoc.body.appendChild(jsEle);
-                    if (local.docTypes.length === 0) {
-                        appendConsole('consoleError', "Documentation not available.  Please run the 'release' build script to generate Cesium documentation.");
-                    }
+                // This happens after a Run (F9) reloads bucket.html, to inject the editor code
+                // into the iframe, causing the demo to run there.
+                var bucketDoc = bucketFrame.contentDocument;
+                var bodyEle = bucketDoc.createElement('div');
+                bodyEle.innerHTML = htmlEditor.getValue();
+                bucketDoc.body.appendChild(bodyEle);
+                var jsEle = bucketDoc.createElement('script');
+                jsEle.type = 'text/javascript';
+                jsEle.textContent = jsEditor.getValue();
+                bucketDoc.body.appendChild(jsEle);
+                if (local.docTypes.length === 0) {
+                    appendConsole('consoleError', "Documentation not available.  Please run the 'release' build script to generate Cesium documentation.");
                 }
             } else if (typeof e.data.log !== 'undefined') {
                 // Console log messages from the iframe display in Sandcastle.
@@ -504,19 +481,25 @@ require({
             registry.byId('appLayout').resize();
         });
 
-        // Store the code for each demo so it can be easily searched.
-        // Also extract any meta descriptions for use in tooltips.
-        // TODO: rename this to load gallery or setup gallery or something.
-        function storeDemoScript(index) {
+        function loadDemoFromFile(index) {
+            var demo = gallery_demos[index];
+
             xhr.get({
-                url: 'gallery/' + window.encodeURIComponent(gallery_demos[index].name) + '.html',
+                url: 'gallery/' + window.encodeURIComponent(demo.name) + '.html',
                 handleAs: 'text',
                 error: function(error) {
                     appendConsole('consoleError', error);
                 }
             }).then(function (value) {
-                var demo = gallery_demos[index];
+                // Store the file contents for later searching.
                 demo.code = value;
+
+                // Select the demo to load upon opening Sandcastle
+                if (demo.name === 'Minimalist') {
+                    loadFromGallery(demo);
+                }
+
+                // Create a tooltip containing the demo's description.
                 var start = value.indexOf('<meta name="description" content="');
                 if (start !== -1) {
                     var end = value.indexOf('">', start);
@@ -525,12 +508,14 @@ require({
                         style: 'width: 200px; font-size: 12px;',
                         content: value.substring(start + 34, end)
                     });
+
                     on(dom.byId(demo.name), 'mouseover', function() {
                         popup.open({
                             popup: tooltip,
                             around: dom.byId(demo.name)
                         });
                     });
+
                     on(dom.byId(demo.name), 'mouseout', function() {
                         popup.close(tooltip);
                     });
@@ -550,34 +535,30 @@ require({
                 return b.date - a.date;
             });
 
-            var loadDemoOnClick = function(demoName) {
-                on(dom.byId(demoName), 'click', function() {
-                    loadFromGallery(window.encodeURIComponent(demoName) + '.html');
+            var addLoadOnClickCallback = function(divId, demo) {
+                on(dom.byId(divId), 'click', function() {
+                    loadFromGallery(demo);
                 });
             };
 
             for (i = 0; i < len; ++i) {
-                var demoName = gallery_demos[i].name;
+                var demo = gallery_demos[i];
                 var imgSrc = 'templates/Gallery_tile.jpg';
-                if (typeof gallery_demos[i].img !== 'undefined') {
-                    imgSrc = 'gallery/' + window.encodeURIComponent(gallery_demos[i].img);
+                if (typeof demo.img !== 'undefined') {
+                    imgSrc = 'gallery/' + window.encodeURIComponent(demo.img);
                 }
-                var thumbnail = '<img src="' + imgSrc +
-                    '" class="demoTileThumbnail" alt="" width="225" height="150" id="' + demoName + 'Thumbnail" onDragStart="return false;" />';
 
+                var demoName = demo.name;
                 var tile = document.createElement('div');
                 tile.className = 'demoTile';
                 tile.id = demoName;
                 tile.style.display = 'inline-block';
-                tile.innerHTML =
-                        '<div class="demoTileTitle">' + demoName + '</div>' +
-                         thumbnail;
+                tile.innerHTML = '<div class="demoTileTitle">' + demoName + '</div>' +
+                                 '<img src="' + imgSrc + '" class="demoTileThumbnail" alt="" width="225" height="150" onDragStart="return false;" />';
                 demos.appendChild(tile);
 
-                loadDemoOnClick(demoName);
-                storeDemoScript(i);
+                addLoadOnClickCallback(demoName, demo);
+                loadDemoFromFile(i);
             }
         }
-
-        loadFromGallery('Minimalist.html');
     });
