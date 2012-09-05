@@ -45,6 +45,14 @@ Beta Releases
                 imageIndex : 0
             });
     * Renamed `SceneState` to `FrameState`.
+    * `SunPosition` was changed from a static object to a function `computeSunPosition`; which now returns a `Cartesian3` with the computed position.  It was also optimized for performance and memory pressure.  For example, change:
+          
+            var result = SunPosition.compute(date);
+            var position = result.position;
+            
+          to:
+          
+            var position = computeSunPosition(date);    
 
 * All `Quaternion` operations now have static versions that work with any objects exposing `x`, `y`, `z` and `w` properties.
 * Added support for nested polygons with holes. See `Polygon.configureFromPolygonHierarchy`.
