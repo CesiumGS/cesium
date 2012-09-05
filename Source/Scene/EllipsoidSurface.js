@@ -97,7 +97,6 @@ define([
         this._tilingScheme = undefined;
         this._occluder = undefined;
         this._doLodUpdate = true;
-        this._frozenLodCameraPosition = undefined;
         this._boundingSphereTile = undefined;
         this._boundingSphereVA = undefined;
         this._tileTraversalQueue = new Queue();
@@ -254,6 +253,7 @@ define([
             return;
         }
 
+        // Verify that all imagery providers are ready.
         var imageryLayerCollection = this._imageryLayerCollection;
         for (i = 0, len = imageryLayerCollection.getLength(); i < len; i++) {
             if (!imageryLayerCollection.get(i).imageryProvider.isReady()) {
@@ -275,11 +275,6 @@ define([
         this._tileReplacementQueue.markStartOfRenderFrame();
 
         var cameraPosition = sceneState.camera.getPositionWC();
-        if (!this._doLodUpdate) {
-            cameraPosition = this._frozenLodCameraPosition;
-        } else {
-            this._frozenLodCameraPosition = cameraPosition;
-        }
 
         var ellipsoid = this.terrainProvider.tilingScheme.ellipsoid;
         var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition);
@@ -288,7 +283,7 @@ define([
 
         var tile;
 
-        // Enqueue the root tiles.
+        // Enqueue the root tiles that are renderable and visible.
         var levelZeroTiles = this._levelZeroTiles;
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
@@ -302,6 +297,10 @@ define([
             }
         }
 
+        // Traverse the tiles in breadth-first order.
+        // This ordering allows us to load bigger, lower-detail tiles before smaller, higher-detail ones.
+        // This maximizes the average detail across the scene and results in fewer sharp transitions
+        // between very different LODs.
         while (typeof (tile = traversalQueue.dequeue()) !== 'undefined') {
             ++tilesVisited;
 
@@ -318,7 +317,7 @@ define([
             } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(this, sceneState, tile)) {
                 // SSE is not good enough and children are loaded, so refine.
                 var children = tile.children;
-                // PERFORMANCE_TODO: traverse children front-to-back
+                // PERFORMANCE_TODO: traverse children front-to-back so we can avoid sorting by distance later.
                 for (i = 0, len = children.length; i < len; ++i) {
                     if (isTileVisible(this, sceneState, tile)) {
                         traversalQueue.enqueue(children[i]);
