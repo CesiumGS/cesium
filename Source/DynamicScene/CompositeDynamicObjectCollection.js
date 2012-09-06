@@ -160,7 +160,7 @@ define([
                 var objects = collection.getObjects();
                 for ( var iObjects = objects.length - 1; iObjects > -1; iObjects--) {
                     var object = objects[iObjects];
-                    var compositeObject = this.getOrCreateObject(object.id);
+                    var compositeObject = this._getOrCreateObject(object.id);
                     for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
                         var mergeFunc = thisMergeFunctions[iMergeFuncs];
                         mergeFunc(compositeObject, object);
@@ -204,7 +204,7 @@ define([
         this.setCollections([]);
     };
 
-    CompositeDynamicObjectCollection.prototype.getOrCreateObject = function(id) {
+    CompositeDynamicObjectCollection.prototype._getOrCreateObject = function(id) {
         var obj = this._hash[id];
         if (!obj) {
             obj = new DynamicObject(id);
@@ -238,7 +238,7 @@ define([
                     deleteFunc(compositeObject);
                 }
             } else {
-                compositeObject = this.getOrCreateObject(updatedObject.id);
+                compositeObject = this._getOrCreateObject(updatedObject.id);
             }
 
             compositeObjects.push(compositeObject);
@@ -259,10 +259,7 @@ define([
     };
 
     CompositeDynamicObjectCollection.prototype.updateBuffer = function(currentTime){
-        CompositeDynamicObjectCollection._updateBuffers(currentTime, this._collections);
-    };
-
-    CompositeDynamicObjectCollection._updateBuffers = function(currentTime, collection){
+        var collection = this._collections;
         var length = collection.length;
         for(var i = 0; i < length; ++i){
             var buffer = collection[i];

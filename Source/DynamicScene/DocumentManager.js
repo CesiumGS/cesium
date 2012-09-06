@@ -8,7 +8,7 @@ define([
         './DynamicObjectCollection',
         './IterationDrivenBufferUpdater',
         './processCzml',
-        './SystemClockBufferUpdater',
+        './SystemClockDrivenBufferUpdater',
         './EventSourceBufferUpdater',
         './VisualizerCollection'
     ], function(
@@ -49,7 +49,8 @@ define([
     /**
      * DOC_TBA
      *
-     * @param {Scene} The current scene.
+     * @param {json} The document's json.
+     * @param {String} The document's name.
      *
      */
     DocumentManager.prototype.add = function(json, documentName){
@@ -65,6 +66,22 @@ define([
         this.visualizers.push(VisualizerCollection.createCzmlStandardCollection(this.scene, cDoc));
         this.process(json, dynamicObjectCollection, documentName);
         return cDoc;
+    };
+
+    /**
+     * DOC_TBA
+     *
+     */
+    DocumentManager.prototype.getDocuments = function(){
+        return this.compositeCollections;
+    };
+
+    /**
+     * DOC_TBA
+     *
+     */
+    DocumentManager.prototype.getVisualizers = function(){
+        return this.visualizers;
     };
 
     /**
@@ -101,6 +118,8 @@ define([
             this.visualizers[i].removeAllPrimitives();
             this.compositeCollections[i].clear();
         }
+        this.visualizers.length = 0;
+        this.compositeCollections.length = 0;
     };
 
     /**
@@ -150,9 +169,13 @@ define([
      * @param {String} The id of the object to retrieve.
      * @param {String} The document's name to find the object.
      *
+     * @exception {DeveloperError} objectId is required.
      * @exception {DeveloperError} documentName is required.
      */
     DocumentManager.prototype.getObject = function(objectId, documentName){
+        if(typeof objectId === 'undefined'){
+            throw new DeveloperError('objectId is required.');
+        }
         if(typeof documentName === 'undefined'){
             throw new DeveloperError('documentName is required.');
         }
