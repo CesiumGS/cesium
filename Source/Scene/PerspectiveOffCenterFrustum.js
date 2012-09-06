@@ -7,7 +7,8 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Intersect',
-        '../Core/Matrix4'
+        '../Core/Matrix4',
+        '../Scene/CullingVolume'
     ], function(
         DeveloperError,
         defaultValue,
@@ -16,7 +17,8 @@ define([
         Cartesian3,
         Cartesian4,
         Intersect,
-        Matrix4) {
+        Matrix4,
+        CullingVolume) {
     "use strict";
 
     /**
@@ -82,13 +84,7 @@ define([
         this.far = undefined;
         this._far = undefined;
 
-        /**
-         * Defines the six clipping planes of the frustum. The planes can be updated with the `computePlanes` function.
-         * @type {Array}
-         * @see PerspectiveOffCenterFrustum#computePlanes
-         */
-        this.planes = new Array(6);
-
+        this._cullingVolume = new CullingVolume();
         this._perspectiveMatrix = undefined;
         this._infinitePerspective = undefined;
     };
@@ -128,26 +124,6 @@ define([
             throw new DeveloperError('right, left, top, bottom, near, or far parameters are not set.');
         }
 
-        if (frustum.top !== frustum._top || frustum.bottom !== frustum._bottom ||
-                frustum.left !== frustum._left || frustum.right !== frustum._right ||
-                frustum.near !== frustum._near || frustum.far !== frustum._far) {
-
-            if (frustum.near <= 0 || frustum.near > frustum.far) {
-                throw new DeveloperError('near must be greater than zero and less than far.');
-            }
-
-            frustum._left = frustum.left;
-            frustum._right = frustum.right;
-            frustum._top = frustum.top;
-            frustum._bottom = frustum.bottom;
-            frustum._near = frustum.near;
-            frustum._far = frustum.far;
-
-            updateProjectionMatrices(frustum);
-        }
-    }
-
-    function updateProjectionMatrices(frustum) {
         var t = frustum.top;
         var b = frustum.bottom;
         var r = frustum.right;
@@ -155,8 +131,23 @@ define([
         var n = frustum.near;
         var f = frustum.far;
 
-        frustum._perspectiveMatrix = Matrix4.computePerspectiveOffCenter(l, r, b, t, n, f);
-        frustum._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(l, r, b, t, n);
+        if (t !== frustum._top || b !== frustum._bottom ||
+            l !== frustum._left || r !== frustum._right ||
+            n !== frustum._near || f !== frustum._far) {
+
+            if (frustum.near <= 0 || frustum.near > frustum.far) {
+                throw new DeveloperError('near must be greater than zero and less than far.');
+            }
+
+            frustum._left = l;
+            frustum._right = r;
+            frustum._top = t;
+            frustum._bottom = b;
+            frustum._near = n;
+            frustum._far = f;
+            frustum._perspectiveMatrix = Matrix4.computePerspectiveOffCenter(l, r, b, t, n, f);
+            frustum._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(l, r, b, t, n);
+        }
     }
 
     var getPlanesRight = new Cartesian3();
@@ -164,7 +155,7 @@ define([
     var getPlanesFarCenter = new Cartesian3();
     var getPlanesNormal = new Cartesian3();
     /**
-     * Creates an array of clipping planes for this frustum.
+     * Creates a culling volume for this frustum.
      *
      * @memberof PerspectiveOffCenterFrustum
      *
@@ -176,19 +167,14 @@ define([
      * @exception {DeveloperError} direction is required.
      * @exception {DeveloperError} up is required.
      *
-     * @return {Array} An array of 6 clipping planes.
+     * @return {CullingVolume} A culling volume at the given position and orientation.
      *
      * @example
      * // Check if a bounding volume intersects the frustum.
-     * var planes = frustum.computePlanes(cameraPosition, cameraDirection, cameraUp);
-     * var intersecting = boundingVolume.intersect(planes[0]) !== Intersect.OUTSIDE;             // check for left intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[1]) !== Intersect.OUTSIDE; // check for right intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[2]) !== Intersect.OUTSIDE; // check for bottom intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[3]) !== Intersect.OUTSIDE; // check for top intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[4]) !== Intersect.OUTSIDE; // check for near intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[5]) !== Intersect.OUTSIDE; // check for far intersection
+     * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+     * var intersect = cullingVolume.intersect(boundingVolume);
      */
-    PerspectiveOffCenterFrustum.prototype.computePlanes = function(position, direction, up) {
+    PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function(position, direction, up) {
         if (typeof position === 'undefined') {
             throw new DeveloperError('position is required.');
         }
@@ -201,7 +187,7 @@ define([
             throw new DeveloperError('up is required.');
         }
 
-        var planes = this.planes;
+        var planes = this._cullingVolume.planes;
 
         var t = this.top;
         var b = this.bottom;
@@ -308,32 +294,7 @@ define([
         plane.z = normal.z;
         plane.w = -Cartesian3.dot(normal, farCenter);
 
-        return planes;
-    };
-
-    /**
-     * Determines whether a bounding volume intersects with the frustum or not.
-     *
-     * @memberof PerspectiveOffCenterFrustum
-     *
-     * @param {Object} boundingVolume The bounding volume whose intersection with the frustum is to be tested.
-     *
-     * @return {Enumeration}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
-     */
-    PerspectiveOffCenterFrustum.prototype.getVisibility = function(boundingVolume) {
-        update(this);
-        var planes = this.planes;
-        var intersecting = false;
-        for ( var k = 0; k < planes.length; k++) {
-            var result = boundingVolume.intersect(planes[k]);
-            if (result === Intersect.OUTSIDE) {
-                return Intersect.OUTSIDE;
-            } else if (result === Intersect.INTERSECTING) {
-                intersecting = true;
-            }
-        }
-
-        return intersecting ? Intersect.INTERSECTING : Intersect.INSIDE;
+        return this._cullingVolume;
     };
 
     /**

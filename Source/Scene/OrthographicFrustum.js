@@ -6,7 +6,8 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Intersect',
-        '../Core/Matrix4'
+        '../Core/Matrix4',
+        '../Scene/CullingVolume'
     ], function(
         DeveloperError,
         destroyObject,
@@ -14,7 +15,8 @@ define([
         Cartesian3,
         Cartesian4,
         Intersect,
-        Matrix4) {
+        Matrix4,
+        CullingVolume) {
     "use strict";
 
     /**
@@ -80,13 +82,7 @@ define([
         this.far = undefined;
         this._far = undefined;
 
-        /**
-         * Defines the six clipping planes of the frustum. The planes can be updated with the `computePlanes` function.
-         * @type {Array}
-         * @see OrthographicFrustum#computePlanes
-         */
-        this.planes = new Array(6);
-
+        this._cullingVolume = new CullingVolume();
         this._orthographicMatrix = undefined;
     };
 
@@ -131,27 +127,15 @@ define([
             frustum._bottom = frustum.bottom;
             frustum._near = frustum.near;
             frustum._far = frustum.far;
-
-            updateProjectionMatrices(frustum);
+            frustum._orthographicMatrix = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far);
         }
-    }
-
-    function updateProjectionMatrices(frustum) {
-        var t = frustum.top;
-        var b = frustum.bottom;
-        var r = frustum.right;
-        var l = frustum.left;
-        var n = frustum.near;
-        var f = frustum.far;
-
-        frustum._orthographicMatrix = Matrix4.computeOrthographicOffCenter(l, r, b, t, n, f);
     }
 
     var getPlanesRight = new Cartesian3();
     var getPlanesNearCenter = new Cartesian3();
     var getPlanesPoint = new Cartesian3();
     /**
-     * Creates an array of clipping planes for this frustum.
+     * Creates a culling volume for this frustum.
      *
      * @memberof OrthographicFrustum
      *
@@ -163,19 +147,14 @@ define([
      * @exception {DeveloperError} direction is required.
      * @exception {DeveloperError} up is required.
      *
-     * @return {Array} An array of 6 clipping planes.
+     * @return {CullingVolume} A culling volume at the given position and orientation.
      *
      * @example
      * // Check if a bounding volume intersects the frustum.
-     * var planes = frustum.computePlanes(cameraPosition, cameraDirection, cameraUp);
-     * var intersecting = boundingVolume.intersect(planes[0]) !== Intersect.OUTSIDE;             // check for left intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[1]) !== Intersect.OUTSIDE; // check for right intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[2]) !== Intersect.OUTSIDE; // check for bottom intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[3]) !== Intersect.OUTSIDE; // check for top intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[4]) !== Intersect.OUTSIDE; // check for near intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[5]) !== Intersect.OUTSIDE; // check for far intersection
+     * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+     * var intersect = cullingVolume.intersect(boundingVolume);
      */
-    OrthographicFrustum.prototype.computePlanes = function(position, direction, up) {
+    OrthographicFrustum.prototype.computeCullingVolume = function(position, direction, up) {
         if (typeof position === 'undefined') {
             throw new DeveloperError('position is required.');
         }
@@ -188,7 +167,7 @@ define([
             throw new DeveloperError('up is required.');
         }
 
-        var planes = this.planes;
+        var planes = this._cullingVolume.planes;
 
         var t = this.top;
         var b = this.bottom;
@@ -280,32 +259,7 @@ define([
         plane.z = -direction.z;
         plane.w = -Cartesian3.dot(direction.negate(), point);
 
-        return planes;
-    };
-
-    /**
-     * Determines whether a bounding volume intersects with the frustum or not.
-     *
-     * @memberof OrthographicFrustum
-     *
-     * @param {Object} boundingVolume The bounding volume whose intersection with the frustum is to be tested.
-     *
-     * @return {Enumeration}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
-     */
-    OrthographicFrustum.prototype.getVisibility = function(boundingVolume) {
-        update(this);
-        var planes = this.planes;
-        var intersecting = false;
-        for ( var k = 0; k < planes.length; k++) {
-            var result = boundingVolume.intersect(planes[k]);
-            if (result === Intersect.OUTSIDE) {
-                return Intersect.OUTSIDE;
-            } else if (result === Intersect.INTERSECTING) {
-                intersecting = true;
-            }
-        }
-
-        return intersecting ? Intersect.INTERSECTING : Intersect.INSIDE;
+        return this._cullingVolume;
     };
 
     /**

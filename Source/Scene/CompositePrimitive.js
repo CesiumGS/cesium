@@ -416,7 +416,7 @@ define([
 
         var primitives = this._primitives;
         var renderList = this._renderList;
-        var frustum = frameState.cullingFrustum;
+        var cullingVolume = frameState.cullingVolume;
         var occluder;
 
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -435,9 +435,10 @@ define([
             var boundingVolume = spatialState.boundingVolume;
             if (typeof boundingVolume !== 'undefined') {
                 var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
+                //TODO: Remove this allocation.
                 var transformedBV = boundingVolume.transform(modelMatrix);
 
-                if (frustum.getVisibility(transformedBV) === Intersect.OUTSIDE ||
+                if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
                         (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
                     continue;
                 }
