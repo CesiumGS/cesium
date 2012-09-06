@@ -128,26 +128,6 @@ define([
             throw new DeveloperError('right, left, top, bottom, near, or far parameters are not set.');
         }
 
-        if (frustum.top !== frustum._top || frustum.bottom !== frustum._bottom ||
-                frustum.left !== frustum._left || frustum.right !== frustum._right ||
-                frustum.near !== frustum._near || frustum.far !== frustum._far) {
-
-            if (frustum.near <= 0 || frustum.near > frustum.far) {
-                throw new DeveloperError('near must be greater than zero and less than far.');
-            }
-
-            frustum._left = frustum.left;
-            frustum._right = frustum.right;
-            frustum._top = frustum.top;
-            frustum._bottom = frustum.bottom;
-            frustum._near = frustum.near;
-            frustum._far = frustum.far;
-
-            updateProjectionMatrices(frustum);
-        }
-    }
-
-    function updateProjectionMatrices(frustum) {
         var t = frustum.top;
         var b = frustum.bottom;
         var r = frustum.right;
@@ -155,8 +135,23 @@ define([
         var n = frustum.near;
         var f = frustum.far;
 
-        frustum._perspectiveMatrix = Matrix4.computePerspectiveOffCenter(l, r, b, t, n, f);
-        frustum._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(l, r, b, t, n);
+        if (t !== frustum._top || b !== frustum._bottom ||
+            l !== frustum._left || r !== frustum._right ||
+            n !== frustum._near || f !== frustum._far) {
+
+            if (frustum.near <= 0 || frustum.near > frustum.far) {
+                throw new DeveloperError('near must be greater than zero and less than far.');
+            }
+
+            frustum._left = l;
+            frustum._right = r;
+            frustum._top = t;
+            frustum._bottom = b;
+            frustum._near = n;
+            frustum._far = f;
+            frustum._perspectiveMatrix = Matrix4.computePerspectiveOffCenter(l, r, b, t, n, f);
+            frustum._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(l, r, b, t, n);
+        }
     }
 
     var getPlanesRight = new Cartesian3();

@@ -131,20 +131,8 @@ define([
             frustum._bottom = frustum.bottom;
             frustum._near = frustum.near;
             frustum._far = frustum.far;
-
-            updateProjectionMatrices(frustum);
+            frustum._orthographicMatrix = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far);
         }
-    }
-
-    function updateProjectionMatrices(frustum) {
-        var t = frustum.top;
-        var b = frustum.bottom;
-        var r = frustum.right;
-        var l = frustum.left;
-        var n = frustum.near;
-        var f = frustum.far;
-
-        frustum._orthographicMatrix = Matrix4.computeOrthographicOffCenter(l, r, b, t, n, f);
     }
 
     var getPlanesRight = new Cartesian3();
