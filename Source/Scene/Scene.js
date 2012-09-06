@@ -318,10 +318,10 @@ define([
         return getPickPerspectiveCullingVolume(scene, windowPosition, width, height);
     }
 
-    // pick region width and height, assumed odd
-    var regionWidth = 3.0;
-    var regionHeight = 3.0;
-    var scratchRegion = new BoundingRectangle(0.0, 0.0, regionWidth, regionHeight);
+    // pick rectangle width and height, assumed odd
+    var rectangleWidth = 3.0;
+    var rectangleHeight = 3.0;
+    var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
 
     /**
      * DOC_TBA
@@ -336,15 +336,15 @@ define([
         var fb = this._pickFramebuffer.begin();
 
         updateFrameState(this);
-        frameState.cullingVolume = getPickCullingVolume(this, windowPosition, regionWidth, regionHeight);
+        frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
         primitives.update(context, frameState);
         primitives.renderForPick(context, fb);
 
-        scratchRegion.x = windowPosition.x - ((regionWidth - 1.0) * 0.5);
-        scratchRegion.y = (this._canvas.clientHeight - windowPosition.y) - ((regionHeight - 1.0) * 0.5);
-        return this._pickFramebuffer.end(scratchRegion);
+        scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
+        scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+        return this._pickFramebuffer.end(scratchRectangle);
     };
 
     /**
