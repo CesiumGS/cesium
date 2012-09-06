@@ -98,27 +98,31 @@
                 View as Thumbnail
             </div>
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
-            <div id="buttonGallery" data-dojo-type="dijit.form.ToggleButton" data-dojo-props="iconClass: 'dijitFolderOpened', showLabel: true">
-                Gallery
-            </div>
-            <span data-dojo-type="dijit.ToolbarSeparator"></span>
             <input data-dojo-type="dijit.form.TextBox" type="text" id="search" name="search" data-dojo-props="trim:true, placeHolder:'Search Gallery', intermediateChanges:true" />            
         </div>
         <div id="codeContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'leading', splitter: true, tabPosition: 'bottom'">
             <div id="jsContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'JavaScript code'">
             <textarea id="code" name="code">
-// Select a demo from the gallery to load.
-</textarea>
+			    // Select a demo from the gallery to load.
+			</textarea>
             </div>
             <div id="htmlContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'HTML body &amp; CSS'">
                 <textarea id="htmlBody" name="htmlBody">
-&lt;!--
-Select a demo from the gallery to load.
---&gt;
-</textarea>
+					&lt;!--
+					Select a demo from the gallery to load.
+					--&gt;
+				</textarea>
             </div>
         </div>
         <div id="cesiumContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'center', tabPosition: 'bottom'">
+	        <div id="galleryContainer">
+		        <div id="galleryTab">
+	                Gallery
+	            </div>
+	            <div id="demosContainer">
+	                <div id="demos"></div>
+	            </div>
+		    </div>
             <div id="bucketPane" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'Cesium'">
                 <iframe id="bucketFrame" src="templates/bucket.html" class="fullFrame"></iframe>
             </div>
@@ -127,10 +131,7 @@ Select a demo from the gallery to load.
             <div class="logContainer">
                 <div id="logOutput"></div>
             </div>
-        </div>
-        <div id="galleryPanel" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'right', splitter: true" tabindex="10">
-            <div id="demos"></div>
-        </div>
+        </div>      
     </div>
     <div class="dijitTooltip dijitTooltipBelow" id="docPopup">
         <div class="dijitTooltipContainer dijitTooltipContents" id="docPopupMessage"></div>

@@ -472,15 +472,6 @@ require({
             }
         });
 
-        registry.byId('buttonGallery').on('change', function (newValue) {
-            if (domStyle.get('galleryPanel', 'display') === 'none') {
-                domStyle.set('galleryPanel', 'display', 'block');
-            } else {
-                domStyle.set('galleryPanel', 'display', 'none');
-            }
-            registry.byId('appLayout').resize();
-        });
-
         function loadDemoFromFile(index) {
             var demo = gallery_demos[index];
 

@@ -50,11 +50,55 @@ html, body {
     width: 40%;
 }
 
-#galleryPanel {
-    width: 264px;
+#galleryContainer {
+	position: relative;
+}
+
+#galleryTab {
+	border: 2px solid #FFF;
+    padding: 5px;
+    color: #FFF;
+    position: absolute;
+    top: 40%;
+    left: -10px;
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+
+#galleryContainer {
+    float: right;
+    z-index: 10;
+    width: 280px;
     height: 100%;
-    display: none;
-    padding: 2px;
+    position: absolute;
+    right: -280px;
+    -webkit-transition: all 0.5s ease-in-out;
+    -moz-transition: all 0.5s ease-in-out;
+    -o-transition: all 0.5s ease-in-out;
+    -ms-transition: all 0.5s ease-in-out;
+    transition: all 0.5s ease-in-out; 
+    padding-left: 40px;
+}
+
+#galleryContainer:hover, #galleryTab:hover + #galleryContainer {
+    -webkit-transform: translate(-280px,0);    
+    -moz-transform: translate(-280px,0);    
+    -o-transform: translate(-280px,0);    
+    -ms-transform: translate(-280px,0);    
+    transform: translate(-280px,0);    
+}
+
+#demosContainer {
+	overflow: auto;
+    height: 100%;
+    border-left: 2px solid #FFF;
+}
+
+#demos {
+    padding: 5px;
 }
 
 #docPopup {
