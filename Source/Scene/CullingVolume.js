@@ -32,7 +32,7 @@ define([
      * @memberof CullingVolume
      *
      * @param {Object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
-     * @return {Enumeration}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
+     * @return {Intersect}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
      *
      * @exception {DeveloperError} boundingVolume is required.
      */
