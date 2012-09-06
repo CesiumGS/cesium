@@ -87,7 +87,7 @@ require([
     var worldPolygon;
 
     function applyAlphaMapMaterial(primitive, scene) {
-        Sandcastle.declare(applyAlphaMapMaterial);
+        Sandcastle.declare(applyAlphaMapMaterial);  // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
             fabric : {
@@ -109,22 +109,22 @@ require([
     }
     
     function applyAsphaltMaterial(primitive, scene) {
-        Sandcastle.declare(applyAsphaltMaterial);
+        Sandcastle.declare(applyAsphaltMaterial);   // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Asphalt');
     }
     
     function applyBlobMaterial(primitive, scene) {
-        Sandcastle.declare(applyBlobMaterial);
+        Sandcastle.declare(applyBlobMaterial);  // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Blob');
     }
     
     function applyBrickMaterial(primitive, scene) {
-        Sandcastle.declare(applyBrickMaterial);
+        Sandcastle.declare(applyBrickMaterial); // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Brick');
     }
     
     function applyBumpMapMaterial(primitive, scene) {
-        Sandcastle.declare(applyBumpMapMaterial);
+        Sandcastle.declare(applyBumpMapMaterial);   // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
             fabric : {
@@ -153,22 +153,22 @@ require([
     }
     
     function applyCementMaterial(primitive, scene) {
-        Sandcastle.declare(applyCementMaterial);
+        Sandcastle.declare(applyCementMaterial);    // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Cement');
     }
 
     function applyCheckerboardMaterial(primitive, scene) {
-        Sandcastle.declare(applyCheckerboardMaterial);
+        Sandcastle.declare(applyCheckerboardMaterial);  // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
     }
     
     function applyColorMaterial(primitive, scene) {
-        Sandcastle.declare(applyColorMaterial);
+        Sandcastle.declare(applyColorMaterial); // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Color');
     }
     
     function applyCompositeMaterial1(primitive, scene) {
-        Sandcastle.declare(applyCompositeMaterial1);
+        Sandcastle.declare(applyCompositeMaterial1);    // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
             context: scene.getContext(),
             fabric: {
@@ -201,7 +201,7 @@ require([
     }
     
     function applyCompositeMaterial2(primitive, scene) {
-        Sandcastle.declare(applyCompositeMaterial2);
+        Sandcastle.declare(applyCompositeMaterial2);    // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
                 context: scene.getContext(),
                 fabric: {
@@ -232,12 +232,12 @@ require([
     }
     
     function applyDotMaterial(primitive, scene) {
-        Sandcastle.declare(applyDotMaterial);
+        Sandcastle.declare(applyDotMaterial);   // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Dot');
     }
     
     function applyDiffuseMaterial(primitive, scene) {
-        Sandcastle.declare(applyDiffuseMaterial);
+        Sandcastle.declare(applyDiffuseMaterial);   // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
             fabric : {
@@ -250,7 +250,7 @@ require([
     }
     
     function applyEmissionMapMaterial(primitive, scene) {
-        Sandcastle.declare(applyEmissionMapMaterial);
+        Sandcastle.declare(applyEmissionMapMaterial);   // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
             fabric : {
@@ -281,12 +281,12 @@ require([
     }
         
     function applyFacetMaterial(primitive, scene) {
-        Sandcastle.declare(applyFacetMaterial);
+        Sandcastle.declare(applyFacetMaterial); // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Facet');
     }
     
     function applyFresnelMaterial(primitive, scene) {
-        Sandcastle.declare(applyFresnelMaterial);
+        Sandcastle.declare(applyFresnelMaterial);   // For highlighting in Sandcastle.
         
         var imagePath = '../../../Images/checkerboard.png';
         primitive.material = new Cesium.Material({
@@ -335,12 +335,12 @@ require([
     }
     
     function applyGrassMaterial(primitive, scene) {
-        Sandcastle.declare(applyGrassMaterial);
+        Sandcastle.declare(applyGrassMaterial); // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Grass');
     }
     
     function applyImageMaterial(primitive, scene) {
-        Sandcastle.declare(applyImageMaterial);
+        Sandcastle.declare(applyImageMaterial); // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
             fabric : {
@@ -353,7 +353,7 @@ require([
     }
     
     function applyNormalMapMaterial(primitive, scene) {
-        Sandcastle.declare(applyNormalMapMaterial);
+        Sandcastle.declare(applyNormalMapMaterial); // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
             fabric : {
@@ -382,7 +382,7 @@ require([
     }
     
     function applyReflectionMaterial(primitive, scene) {
-        Sandcastle.declare(applyReflectionMaterial);
+        Sandcastle.declare(applyReflectionMaterial);    // For highlighting in Sandcastle.
         var imagePath = '../../../Images/checkerboard.png';
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
@@ -414,7 +414,7 @@ require([
     }
     
     function applyRefractionMaterial(primitive, scene) {
-        Sandcastle.declare(applyRefractionMaterial);
+        Sandcastle.declare(applyRefractionMaterial);    // For highlighting in Sandcastle.
         var imagePath = '../../../Images/checkerboard.png';
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
@@ -447,7 +447,7 @@ require([
     }
     
     function applySpecularMapMaterial(primitive, scene) {
-        Sandcastle.declare(applySpecularMapMaterial);
+        Sandcastle.declare(applySpecularMapMaterial);   // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
             fabric : {
@@ -461,17 +461,17 @@ require([
     }
     
     function applyStripeMaterial(primitive, scene) {
-        Sandcastle.declare(applyStripeMaterial);
+        Sandcastle.declare(applyStripeMaterial);    // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Stripe');
     }
     
     function applyTieDyeMaterial(primitive, scene) {
-        Sandcastle.declare(applyTieDyeMaterial);
+        Sandcastle.declare(applyTieDyeMaterial);    // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'TieDye');
     }
         
     function applyWoodMaterial(primitive, scene) {
-        Sandcastle.declare(applyWoodMaterial);
+        Sandcastle.declare(applyWoodMaterial);  // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Wood');
     }
     

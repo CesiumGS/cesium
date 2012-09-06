@@ -90,7 +90,7 @@ require([
 
         // Fill circle
         var circle = new Cesium.Polygon();
-        Sandcastle.declare(circle);
+        Sandcastle.declare(circle); // For highlighting on mouseover in Sandcastle.
         circle.setPositions(Cesium.Shapes.computeCircleBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
                 new Cesium.Cartographic.fromDegrees(-75.0, 40.0)), 300000.0));
@@ -98,7 +98,7 @@ require([
 
         // Outline circle
         var outline = polylines.add();
-        Sandcastle.declare(outline);
+        Sandcastle.declare(outline);    // For highlighting on mouseover in Sandcastle.
         outline.setPositions(Cesium.Shapes.computeCircleBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
                 new Cesium.Cartographic.fromDegrees(-82.0, 37.0)), 300000.0));
@@ -106,7 +106,7 @@ require([
 
         // Apply a material to a filled circle
         var circle2 = new Cesium.Polygon();
-        Sandcastle.declare(circle2);
+        Sandcastle.declare(circle2);    // For highlighting on mouseover in Sandcastle.
         circle2.setPositions(Cesium.Shapes.computeCircleBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
                 new Cesium.Cartographic.fromDegrees(-90.0, 35.0)), 400000.0));
@@ -116,7 +116,7 @@ require([
 
         // Fill an ellipse
         var ellipse = new Cesium.Polygon();
-        Sandcastle.declare(ellipse);
+        Sandcastle.declare(ellipse);    // For highlighting on mouseover in Sandcastle.
         ellipse.setPositions(Cesium.Shapes.computeEllipseBoundary(
             ellipsoid, ellipsoid.cartographicToCartesian(
                 new Cesium.Cartographic.fromDegrees(-78.0, 32.5)), 500000.0,

@@ -82,7 +82,7 @@ require([
     "use strict";
 
     function addRectangularSensor(sensors, ellipsoid, scene) {
-        Sandcastle.declare(addRectangularSensor);
+        Sandcastle.declare(addRectangularSensor);   // For highlighting in Sandcastle.
         
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
         modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
@@ -103,7 +103,7 @@ require([
     }
     
     function addCustomSensor(sensors, ellipsoid, scene) {
-        Sandcastle.declare(addCustomSensor);
+        Sandcastle.declare(addCustomSensor);    // For highlighting in Sandcastle.
 
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
         modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
@@ -122,7 +122,7 @@ require([
     }
     
     function addComplexConicSensor(sensors, ellipsoid, scene) {
-        Sandcastle.declare(addComplexConicSensor);
+        Sandcastle.declare(addComplexConicSensor);  // For highlighting in Sandcastle.
 
         // Complex conic sensor - Works with ANGLE turned off.
         var complexConicSensor = sensors.addComplexConic();
@@ -170,7 +170,7 @@ require([
     }
     
     function addComplexConicWithClockAngles(sensors, ellipsoid, scene) {
-        Sandcastle.declare(addComplexConicWithClockAngles);
+        Sandcastle.declare(addComplexConicWithClockAngles); // For highlighting in Sandcastle.
         
         // Draw a complex conic sensor with clock angles
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
