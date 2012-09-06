@@ -123,8 +123,6 @@ define([
         this.frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
         this.frustum.near = 0.01 * maxRadii;
         this.frustum.far = 20.0 * maxRadii;
-        this.frustum.computePlanes(this._positionWC, this._directionWC, this._upWC);
-        this._frustum = this.frustum;
 
         this._viewMatrix = undefined;
         this._invViewMatrix = undefined;
@@ -402,11 +400,6 @@ define([
             camera._rightWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         }
 
-        if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged || camera._frustum !== camera.frustum) {
-            camera._frustum = camera.frustum;
-            camera.frustum.computePlanes(camera._positionWC, camera._directionWC, camera._upWC);
-        }
-
         if (directionChanged || upChanged || rightChanged) {
             var det = direction.dot(up.cross(right));
             if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
@@ -665,20 +658,6 @@ define([
 
         position = projection.getEllipsoid().cartographicToCartesian(cart);
         return position;
-    };
-
-    /**
-     * Determines whether a bounding volume intersects with the frustum or not.
-     *
-     * @memberof Camera
-     *
-     * @param {Object} boundingVolume The bounding volume whose intersection with the frustum is to be tested.
-     *
-     * @return {Enumeration}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
-     */
-    Camera.prototype.getVisibility = function(boundingVolume) {
-        update(this);
-        return this.frustum.getVisibility(boundingVolume);
     };
 
     /**

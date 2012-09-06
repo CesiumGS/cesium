@@ -191,7 +191,7 @@ define([
         frameState.mode = scene.mode;
         frameState.scene2D = scene.scene2D;
         frameState.camera = camera;
-        frameState.cullingFrustum = camera.frustum;
+        frameState.cullingVolume = camera.frustum.getCullingVolume(camera.position, camera.direction, camera.up);
         frameState.occluder = undefined;
 
         // TODO: The occluder is the top-level central body. When we add
@@ -243,7 +243,8 @@ define([
         this._primitives.render(this._context);
     };
 
-    function getPickOrthographicFrustum(scene, windowPosition, width, height) {
+    var orthoPickingFrustum = new OrthographicFrustum();
+    function getPickOrthographicCullingVolume(scene, windowPosition, width, height) {
         var canvas = scene._canvas;
         var camera = scene._camera;
         var frustum = camera.frustum;
@@ -262,19 +263,19 @@ define([
 
         var pixelSize = frustum.getPixelSize(new Cartesian2(canvasWidth, canvasHeight));
 
-        var ortho = new OrthographicFrustum();
+        var ortho = orthoPickingFrustum;
         ortho.right = pixelSize.x * 0.5;
         ortho.left = -ortho.right;
         ortho.top = pixelSize.y * 0.5;
         ortho.bottom = -ortho.top;
         ortho.near = frustum.near;
         ortho.far = frustum.far;
-        ortho.computePlanes(position, camera.direction, camera.up);
 
-        return ortho;
+        return ortho.computeCullingVolume(position, camera.direction, camera.up);
     }
 
-    function getPickPerspectiveFrustum(scene, windowPosition, width, height) {
+    var perspPickingFrustum = new PerspectiveOffCenterFrustum();
+    function getPickPerspectiveCullingVolume(scene, windowPosition, width, height) {
         var canvas = scene._canvas;
         var camera = scene._camera;
         var frustum = camera.frustum;
@@ -296,25 +297,23 @@ define([
         var pickWidth = pixelSize.x * width * 0.5;
         var pickHeight = pixelSize.y * height * 0.5;
 
-        var offCenter = new PerspectiveOffCenterFrustum();
-
+        var offCenter = perspPickingFrustum;
         offCenter.top = yDir + pickHeight;
         offCenter.bottom = yDir - pickHeight;
         offCenter.right = xDir + pickWidth;
         offCenter.left = xDir - pickWidth;
         offCenter.near = frustum.near;
         offCenter.far = frustum.far;
-        offCenter.computePlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
 
-        return offCenter;
+        return offCenter.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
     }
 
-    function getPickFrustum(scene, windowPosition, width, height) {
+    function getPickCullingVolume(scene, windowPosition, width, height) {
         if (scene.mode === SceneMode.SCENE2D) {
-            return getPickOrthographicFrustum(scene, windowPosition, width, height);
+            return getPickOrthographicCullingVolume(scene, windowPosition, width, height);
         }
 
-        return getPickPerspectiveFrustum(scene, windowPosition, width, height);
+        return getPickPerspectiveCullingVolume(scene, windowPosition, width, height);
     }
 
     /**
@@ -330,7 +329,7 @@ define([
         var fb = this._pickFramebuffer.begin();
 
         updateFrameState(this);
-        frameState.cullingFrustum = getPickFrustum(this, windowPosition, 1.0, 1.0); // TODO: sizes other than 1x1
+        frameState.cullingVolume = getPickCullingVolume(this, windowPosition, 1.0, 1.0); // TODO: sizes other than 1x1
         frameState.passes.pick = true;
 
         primitives.update(context, frameState);

@@ -63,13 +63,6 @@ define([
          */
         this.far = undefined;
         this._far = undefined;
-
-        /**
-         * Defines the six clipping planes of the frustum. The planes can be updated with the `computePlanes` function.
-         * @type {Array}
-         * @see PerspectiveOffCenterFrustum#computePlanes
-         */
-        this.planes = this._offCenterFrustum.planes;
     };
 
     /**
@@ -137,7 +130,7 @@ define([
     }
 
     /**
-     * Creates an array of clipping planes for this frustum.
+     * Creates a culling volume for this frustum.
      *
      * @memberof PerspectiveFrustum
      *
@@ -149,35 +142,16 @@ define([
      * @exception {DeveloperError} direction is required.
      * @exception {DeveloperError} up is required.
      *
-     * @return {Array} An array of 6 clipping planes.
+     * @return {CullingVolume} A culling volume at the given position and orientation.
      *
      * @example
      * // Check if a bounding volume intersects the frustum.
-     * var planes = frustum.computePlanes(cameraPosition, cameraDirection, cameraUp);
-     * var intersecting = boundingVolume.intersect(planes[0]) !== Intersect.OUTSIDE;             // check for left intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[1]) !== Intersect.OUTSIDE; // check for right intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[2]) !== Intersect.OUTSIDE; // check for bottom intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[3]) !== Intersect.OUTSIDE; // check for top intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[4]) !== Intersect.OUTSIDE; // check for near intersection
-     * intersecting = intersecting && boundingVolume.intersect(planes[5]) !== Intersect.OUTSIDE; // check for far intersection
+     * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+     * var intersect = cullingVolume.intersect(boundingVolume);
      */
-    PerspectiveFrustum.prototype.computePlanes = function(position, direction, up) {
+    PerspectiveFrustum.prototype.computeCullingVolume = function(position, direction, up) {
         update(this);
-        return this._offCenterFrustum.computePlanes(position, direction, up);
-    };
-
-    /**
-     * Determines whether a bounding volume intersects with the frustum or not.
-     *
-     * @memberof PerspectiveFrustum
-     *
-     * @param {Object} boundingVolume The bounding volume whose intersection with the frustum is to be tested.
-     *
-     * @return {Enumeration}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
-     */
-    PerspectiveFrustum.prototype.getVisibility = function(boundingVolume) {
-        update(this);
-        return this._offCenterFrustum.getVisibility(boundingVolume);
+        return this._offCenterFrustum.computeCullingVolume(position, direction, up);
     };
 
     /**

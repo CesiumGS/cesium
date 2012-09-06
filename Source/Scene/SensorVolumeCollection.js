@@ -167,7 +167,7 @@ define([
 
         var sensors = this._sensors;
         var length = sensors.length;
-        var frustum = frameState.cullingFrustum;
+        var cullingVolume = frameState.cullingVolume;
         var occluder = frameState.occluder;
 
         for ( var i = 0; i < length; ++i) {
@@ -182,9 +182,10 @@ define([
             var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
 
             if (typeof boundingVolume !== 'undefined') {
+                //TODO: Remove this allocation.
                 var transformedBV = boundingVolume.transform(modelMatrix);
 
-                if (frustum.getVisibility(transformedBV) === Intersect.OUTSIDE ||
+                if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
                         (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
                     continue;
                 }

@@ -895,6 +895,7 @@ define([
 
     CentralBody.prototype._cull = function(tile, frameState) {
         var camera = frameState.camera;
+        var cullingVolume = frameState.cullingVolume;
 
         if (frameState.mode === SceneMode.SCENE2D) {
             var bRect = tile.get2DBoundingRectangle(frameState.scene2D.projection);
@@ -924,7 +925,7 @@ define([
         }
 
         var boundingVolume = this._getTileBoundingSphere(tile, frameState);
-        if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+        if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
             return true;
         }
 
