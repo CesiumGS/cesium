@@ -6,6 +6,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/DeveloperError',
         '../Core/Occluder',
+        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -25,6 +26,7 @@ define([
         Ellipsoid,
         DeveloperError,
         Occluder,
+        BoundingRectangle,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -316,6 +318,11 @@ define([
         return getPickPerspectiveCullingVolume(scene, windowPosition, width, height);
     }
 
+    // pick rectangle width and height, assumed odd
+    var rectangleWidth = 3.0;
+    var rectangleHeight = 3.0;
+    var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
+
     /**
      * DOC_TBA
      * @memberof Scene
@@ -329,16 +336,15 @@ define([
         var fb = this._pickFramebuffer.begin();
 
         updateFrameState(this);
-        frameState.cullingVolume = getPickCullingVolume(this, windowPosition, 1.0, 1.0); // TODO: sizes other than 1x1
+        frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
         primitives.update(context, frameState);
         primitives.renderForPick(context, fb);
 
-        return this._pickFramebuffer.end({
-            x : windowPosition.x,
-            y : (this._canvas.clientHeight - windowPosition.y)
-        });
+        scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
+        scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+        return this._pickFramebuffer.end(scratchRectangle);
     };
 
     /**
