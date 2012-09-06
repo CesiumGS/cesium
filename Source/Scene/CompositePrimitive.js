@@ -421,6 +421,7 @@ define([
             occluder = frameState.occluder;
         }
 
+        var primitives = this._primitives;
         var length = primitives.length;
         var commandList = [];
         for (var i = 0; i < length; ++i) {
@@ -432,7 +433,7 @@ define([
                 var command = primitiveCommandList[j];
                 var boundingVolume = command.boundingVolume;
                 if (typeof boundingVolume !== 'undefined') {
-                    var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
+                    var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     //TODO: Remove this allocation.
                     var transformedBV = boundingVolume.transform(modelMatrix);
 
@@ -446,7 +447,7 @@ define([
         }
 
         return commandList;
-    }
+    };
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
