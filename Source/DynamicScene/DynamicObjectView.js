@@ -5,14 +5,16 @@ define([
         '../Core/Cartesian3',
         '../Core/Ellipsoid',
         '../Core/Transforms',
-        '../Scene/SceneMode'
+        '../Scene/SceneMode',
+        '../Core/Cartesian4'
        ], function(
          defaultValue,
          DeveloperError,
          Cartesian3,
          Ellipsoid,
          Transforms,
-         SceneMode) {
+         SceneMode,
+         Cartesian4) {
     "use strict";
 
     function update2D(that, camera, objectChanged, offset, positionProperty, scene, time) {
@@ -90,14 +92,56 @@ define([
         }
     }
 
-    function updateColumbus(that, camera) {
+    var cartesian4Scratch = new Cartesian4(0.0, 0.0, 0.0, 1.0);
+    function updateColumbus(that, camera, ellipsoid, objectChanged, offset, positionProperty, time, scene) {
+        var viewDistance;
         var controller = that._controllerColumbusView;
         var controllerChanged = typeof controller === 'undefined' || controller.isDestroyed() || controller !== that._lastController;
 
         if (controllerChanged) {
             var controllers = camera.getControllers();
             controllers.removeAll();
-            that._lastController = that._controllerColumbusView = controller = controllers.addColumbusView();
+            that._lastController = that._controllerColumbusView = controller = controllers.addSpindle();
+            controller.constrainedAxis = Cartesian3.UNIT_Z;
+        }
+
+        var cartographic = that._lastCartographic = positionProperty.getValueCartographic(time, that._lastCartographic);
+        if (typeof cartographic !== 'undefined') {
+            if (objectChanged) {
+                //If looking straight down, move the camera slightly south the avoid gimbal lock.
+                if (Cartesian3.equals(offset.normalize(), Cartesian3.UNIT_Z)) {
+                    offset.y -= 0.01;
+                }
+                camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
+
+                //TODO There are all kinds of near plane issues in our code base right now,
+                //hack around it until the multi-frustum code is in place.
+                viewDistance = offset.magnitude();
+                camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * that.ellipsoid.getRadii().getMaximumComponent());
+            } else if (controllerChanged) {
+                if (typeof that._lastOffset !== 'undefined') {
+                    that._lastOffset.normalize(offset).multiplyByScalar(that._lastDistance, offset);
+                }
+                camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
+
+                //TODO There are all kinds of near plane issues in our code base right now,
+                //hack around it until the multi-frustum code is in place.
+                viewDistance = offset.magnitude();
+                camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * that.ellipsoid.getRadii().getMaximumComponent());
+            }
+
+            //The swizzling here is intention because ColumbusView uses a different coordinate system.
+            var projectedPosition = scene.scene2D.projection.project(cartographic);
+            cartesian4Scratch.x = projectedPosition.z;
+            cartesian4Scratch.y = projectedPosition.x;
+            cartesian4Scratch.z = projectedPosition.y;
+
+            var tranform = camera.transform;
+            tranform.setColumn(3, cartesian4Scratch, tranform);
+            controller.setReferenceFrame(tranform, Ellipsoid.UNIT_SPHERE);
+
+            that._lastOffset = camera.position;
+            that._lastDistance = camera.position.magnitude();
         }
     }
 
@@ -203,7 +247,7 @@ define([
         } else if (scene.mode === SceneMode.SCENE3D) {
             update3D(this, this.scene.getCamera(), ellipsoid, objectChanged, offset, positionProperty, time);
         } else if (scene.mode === SceneMode.COLUMBUS_VIEW) {
-            updateColumbus(this, this.scene.getCamera());
+            updateColumbus(this, this.scene.getCamera(), ellipsoid, objectChanged, offset, positionProperty, time, scene);
         }
     };
 

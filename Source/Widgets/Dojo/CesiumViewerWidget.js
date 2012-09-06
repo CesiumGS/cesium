@@ -512,6 +512,7 @@ define([
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
                 transitioner.morphTo3D();
+                widget.viewFromTo = undefined;
                 widget.viewHome();
                 widget.showSkyAtmosphere(true);
                 widget.showGroundAtmosphere(true);
