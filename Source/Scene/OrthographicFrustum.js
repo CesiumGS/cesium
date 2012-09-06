@@ -5,7 +5,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Intersect',
         '../Core/Matrix4',
         '../Scene/CullingVolume'
     ], function(
@@ -14,7 +13,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        Intersect,
         Matrix4,
         CullingVolume) {
     "use strict";
@@ -152,7 +150,7 @@ define([
      * @example
      * // Check if a bounding volume intersects the frustum.
      * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
-     * var intersect = cullingVolume.intersect(boundingVolume);
+     * var intersect = cullingVolume.getVisibility(boundingVolume);
      */
     OrthographicFrustum.prototype.computeCullingVolume = function(position, direction, up) {
         if (typeof position === 'undefined') {

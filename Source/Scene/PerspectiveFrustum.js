@@ -147,7 +147,7 @@ define([
      * @example
      * // Check if a bounding volume intersects the frustum.
      * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
-     * var intersect = cullingVolume.intersect(boundingVolume);
+     * var intersect = cullingVolume.getVisibility(boundingVolume);
      */
     PerspectiveFrustum.prototype.computeCullingVolume = function(position, direction, up) {
         update(this);
