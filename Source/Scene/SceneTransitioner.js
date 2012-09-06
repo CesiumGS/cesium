@@ -235,6 +235,7 @@ define([
                 camera.position = this._cameraCV.position.clone();
                 camera.direction = this._cameraCV.direction.clone();
                 camera.up = this._cameraCV.up.clone();
+                camera.right = camera.direction.cross(camera.up);
             }
         }
     };
