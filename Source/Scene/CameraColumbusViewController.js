@@ -42,7 +42,6 @@ define([
         this._canvas = canvas;
         this._camera = camera;
         this._ellipsoid = ellipsoid || Ellipsoid.WGS84;
-        this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
         /**
          * A parameter in the range <code>[0, 1]</code> used to determine how long
@@ -53,8 +52,20 @@ define([
          */
         this.inertiaTranslate = 0.9;
 
-        this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
+        /**
+         * A parameter in the range <code>[0, 1)</code> used to determine how long
+         * the camera will continue to zoom because of inertia.
+         * With value of zero, the camera will have no inertia.
+         *
+         * @type Number
+         */
+        this.inertiaZoom = 0.8;
 
+        this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
+        this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
+        this._zoomHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
+
+        // TODO: Separate mouse behaviour from mouse handling.
         this._spindleController = new CameraSpindleController(canvas, camera, Ellipsoid.UNIT_SPHERE);
         this._spindleController.constrainedAxis = Cartesian3.UNIT_Z;
 
@@ -79,6 +90,8 @@ define([
         var translating = translate.isMoving() && translate.getMovement();
         var rotate = this._rotateHandler;
         var rotating = rotate.isMoving() && rotate.getMovement();
+        var zoom = this._zoomHandler;
+        var zoomimg = zoom && zoom.isMoving();
 
         if (rotating) {
             this._rotate(rotate.getMovement());
@@ -96,6 +109,14 @@ define([
 
         if (!translating && this.inertiaTranslate < 1.0) {
             maintainInertia(translate, this.inertiaTranslate, this._translate, this, '_lastInertiaTranslateMovement');
+        }
+
+        if (zoomimg) {
+            this._spindleController._zoom(zoom.getMovement());
+        }
+
+        if (zoom && !zoomimg && this.inertiaZoom < 1.0) {
+            maintainInertia(zoom, this.inertiaZoom, this._spindleController._zoom, this._spindleController, '_lastInertiaZoomMovement');
         }
 
         this._freeLookController.update();
@@ -293,6 +314,7 @@ define([
     CameraColumbusViewController.prototype.destroy = function() {
         this._rotateHandler = this._rotateHandler && this._rotateHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
+        this._zoomHandler = this._zoomHandle && this._zoomHandler.destroy();
         this._spindleController = this._spindleController && this._spindleController.destroy();
         this._freeLookController = this._freeLookController && this._freeLookController.destroy();
         return destroyObject(this);
