@@ -475,6 +475,7 @@ require([
         postSetup : function(widget) {
             createButtons(widget);
             widget.startRenderLoop();
+            renderBox(widget.scene);
         }
     }).placeAt(dom.byId('cesiumContainer'));
 

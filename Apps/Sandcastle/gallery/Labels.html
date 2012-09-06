@@ -189,6 +189,7 @@ require([
         postSetup : function(widget) {
             createButtons(widget);
             widget.startRenderLoop();
+            addLabel(widget.scene, widget.ellipsoid);
         }
     }).placeAt(dom.byId("cesiumContainer"));
     

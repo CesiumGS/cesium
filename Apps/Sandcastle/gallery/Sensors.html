@@ -185,11 +185,10 @@ require([
         complexConicSensor2.radius = 20000000.0;
     }
     
-    function createButtons(widget) {
+    function createButtons(widget, sensors) {
         var ellipsoid = widget.ellipsoid;
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
-        var sensors = new Cesium.SensorVolumeCollection();
         primitives.add(sensors);
         
         var sensorMenu = new DropDownMenu({ style: 'display: none;'});
@@ -242,8 +241,10 @@ require([
             Sandcastle.highlight(mousedOverObject);
         },
         postSetup : function(widget) {
-            createButtons(widget);
+            var sensors = new Cesium.SensorVolumeCollection();
+            createButtons(widget, sensors);
             widget.startRenderLoop();
+            addRectangularSensor(sensors, widget.ellipsoid, widget.scene);
         }
     }).placeAt(dom.byId('cesiumContainer'));
     
