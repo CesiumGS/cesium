@@ -77,9 +77,11 @@ define([
         this.show = (typeof t.show === 'undefined') ? true : t.show;
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.  The default is <code>true</code>.
          *
          * @type Boolean
+         *
+         * @see CustomSensorVolume#intersectionColor
          */
         this.showIntersection = (typeof t.showIntersection === 'undefined') ? true : t.showIntersection;
 
@@ -160,9 +162,13 @@ define([
         this._material = undefined;
 
         /**
-         * DOC_TBA
+         * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
+         *
+         * @type Color
+         *
+         * @see CustomSensorVolume#showIntersection
          */
-        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : new Color(1.0, 1.0, 0.0, 1.0);
+        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : Color.clone(Color.WHITE);
 
         /**
          * DOC_TBA
@@ -192,8 +198,8 @@ define([
                 return that.erosion;
             }
         };
-        this._drawUniforms = null;
-        this._pickUniforms = null;
+        this._drawUniforms = undefined;
+        this._pickUniforms = undefined;
 
         this._mode = SceneMode.SCENE3D;
     };

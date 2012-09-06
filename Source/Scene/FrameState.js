@@ -30,10 +30,10 @@ define([], function() {
         this.camera = undefined;
 
         /**
-         * The frustum to use for culling.
-         * @type DOC_TBA
+         * The culling volume.
+         * @type CullingVolume
          */
-        this.cullingFrustum = undefined;
+        this.cullingVolume = undefined;
 
         /**
          * The current occluder.

@@ -26,7 +26,7 @@ define([
         clientWidth : 1
     });
     frameState.camera = camera;
-    frameState.cullingFrustum = camera.frustum;
+    frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
     frameState.passes.color = true;
     frameState.passes.pick = false;

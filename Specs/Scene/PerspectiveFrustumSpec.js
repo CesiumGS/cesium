@@ -24,7 +24,7 @@ defineSuite([
         frustum.far = 2.0;
         frustum.fovy = (Math.PI) / 3;
         frustum.aspectRatio = 1.0;
-        planes = frustum.computePlanes(new Cartesian3(), Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y);
+        planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y).planes;
     });
 
     it('out of range fov causes an exception', function() {
@@ -60,21 +60,21 @@ defineSuite([
         }).toThrow();
     });
 
-    it('getPlanes with no position throws an exception', function() {
+    it('computeCullingVolume with no position throws an exception', function() {
         expect(function() {
-            frustum.computePlanes();
+            frustum.computeCullingVolume();
         }).toThrow();
     });
 
-    it('getPlanes with no direction throws an exception', function() {
+    it('computeCullingVolume with no direction throws an exception', function() {
         expect(function() {
-            frustum.computePlanes(new Cartesian3());
+            frustum.computeCullingVolume(new Cartesian3());
         }).toThrow();
     });
 
-    it('getPlanes with no up throws an exception', function() {
+    it('computeCullingVolume with no up throws an exception', function() {
         expect(function() {
-            frustum.computePlanes(new Cartesian3(), new Cartesian3());
+            frustum.computeCullingVolume(new Cartesian3(), new Cartesian3());
         }).toThrow();
     });
 

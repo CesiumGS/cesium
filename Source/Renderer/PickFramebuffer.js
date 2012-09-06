@@ -69,17 +69,17 @@ define([
      * DOC_TBA
      * @memberof PickFramebuffer
      */
-    PickFramebuffer.prototype.end = function(screenSpaceRegion) {
-        if (typeof screenSpaceRegion === 'undefined') {
-            throw new DeveloperError('screenSpaceRegion is required.');
+    PickFramebuffer.prototype.end = function(screenSpaceRectangle) {
+        if (typeof screenSpaceRectangle === 'undefined') {
+            throw new DeveloperError('screenSpaceRectangle is required.');
         }
 
-        var width = defaultValue(screenSpaceRegion.width, 1.0);
-        var height = defaultValue(screenSpaceRegion.height, 1.0);
+        var width = defaultValue(screenSpaceRectangle.width, 1.0);
+        var height = defaultValue(screenSpaceRectangle.height, 1.0);
 
         var pixels = this._context.readPixels({
-            x : screenSpaceRegion.x,
-            y : screenSpaceRegion.y,
+            x : screenSpaceRectangle.x,
+            y : screenSpaceRectangle.y,
             width : width,
             height : height,
             framebuffer : this._fb

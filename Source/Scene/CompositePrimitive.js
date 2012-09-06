@@ -414,7 +414,7 @@ define([
         //    this._centralBody.update(context, frameState);
         //}
 
-        var frustum = frameState.cullingFrustum;
+        var cullingVolume = frameState.cullingVolume;
         var occluder;
 
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -432,13 +432,12 @@ define([
                 var command = primitiveCommandList[j];
                 var boundingVolume = command.boundingVolume;
                 if (typeof boundingVolume !== 'undefined') {
-                    var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
-                    var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
-                    center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
-                    boundingVolume = new BoundingSphere(center, boundingVolume.radius);
+                    var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
+                    //TODO: Remove this allocation.
+                    var transformedBV = boundingVolume.transform(modelMatrix);
 
-                    if (frustum.getVisibility(boundingVolume) === Intersect.OUTSIDE ||
-                            (typeof occluder !== 'undefined' && !occluder.isVisible(boundingVolume))) {
+                    if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
+                            (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
                         continue;
                     }
                 }
