@@ -2,6 +2,7 @@
 define([
         '../Core/destroyObject',
         '../Core/Ellipsoid',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Math',
@@ -16,6 +17,7 @@ define([
     ], function(
         destroyObject,
         Ellipsoid,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumMath,
@@ -40,6 +42,7 @@ define([
         this._canvas = canvas;
         this._camera = camera;
         this._ellipsoid = ellipsoid || Ellipsoid.WGS84;
+        this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
         /**
          * A parameter in the range <code>[0, 1]</code> used to determine how long
@@ -53,11 +56,6 @@ define([
         this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
 
         this._spindleController = new CameraSpindleController(canvas, camera, Ellipsoid.UNIT_SPHERE);
-
-        // TODO: Shouldn't change private variables like this, need to be able to change event modifiers
-        //       on controllers.
-        this._spindleController._spinHandler = this._spindleController._spinHandler && this._spindleController._spinHandler.destroy();
-        this._spindleController._spinHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
         this._spindleController.constrainedAxis = Cartesian3.UNIT_Z;
 
         this._freeLookController = new CameraFreeLookController(canvas, camera);
@@ -79,9 +77,16 @@ define([
     CameraColumbusViewController.prototype.update = function() {
         var translate = this._translateHandler;
         var translating = translate.isMoving() && translate.getMovement();
+        var rotate = this._rotateHandler;
+        var rotating = rotate.isMoving() && rotate.getMovement();
 
-        if (translate.isButtonDown() || this._spindleController._zoomHandler.isButtonDown() ||
-                this._spindleController._spinHandler.isButtonDown() || this._freeLookController._handler.isButtonDown()) {
+        if (rotating) {
+            this._rotate(rotate.getMovement());
+        }
+
+        var buttonDown = translate.isButtonDown() || rotate.isButtonDown() ||
+            rotate.isButtonDown() || this._freeLookController._handler.isButtonDown();
+        if (buttonDown) {
             this._animationCollection.removeAll();
         }
 
@@ -93,10 +98,12 @@ define([
             maintainInertia(translate, this.inertiaTranslate, this._translate, this, '_lastInertiaTranslateMovement');
         }
 
-        this._spindleController.update();
         this._freeLookController.update();
 
-        this._correctPosition();
+        if (!buttonDown) {
+            this._correctPosition();
+        }
+
         this._animationCollection.update();
 
         return true;
@@ -143,18 +150,20 @@ define([
         var startRay = camera.getPickRay(movement.startPosition);
         var endRay = camera.getPickRay(movement.endPosition);
 
+        var normal = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(Cartesian4.UNIT_X));
+
         var position = new Cartesian4(startRay.origin.x, startRay.origin.y, startRay.origin.z, 1.0);
         position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(position));
         var direction = new Cartesian4(startRay.direction.x, startRay.direction.y, startRay.direction.z, 0.0);
         direction = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(direction));
-        var scalar = sign * position.z / direction.z;
+        var scalar = sign * normal.dot(position) / normal.dot(direction);
         var startPlanePos = position.add(direction.multiplyByScalar(scalar));
 
         position = new Cartesian4(endRay.origin.x, endRay.origin.y, endRay.origin.z, 1.0);
         position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(position));
         direction = new Cartesian4(endRay.direction.x, endRay.direction.y, endRay.direction.z, 0.0);
         direction = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(direction));
-        scalar = sign * position.z / direction.z;
+        scalar = sign * normal.dot(position) / normal.dot(direction);
         var endPlanePos = position.add(direction.multiplyByScalar(scalar));
 
         var diff = startPlanePos.subtract(endPlanePos);
@@ -166,30 +175,16 @@ define([
         var camera = this._camera;
         var position = camera.position;
         var direction = camera.direction;
-        var cameraPosition;
 
-        var centerWC;
-        var positionWC;
+        var normal = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(Cartesian4.UNIT_X));
+        var scalar = -normal.dot(position) / normal.dot(direction);
+        var center = position.add(direction.multiplyByScalar(scalar));
+        center = new Cartesian4(center.x, center.y, center.z, 1.0);
+        var centerWC = camera.transform.multiplyByVector(center);
+        this._transform.setColumn(3, centerWC, this._transform);
 
-        if (direction.dot(Cartesian3.UNIT_Z) >= 0) {
-            centerWC = Cartesian4.UNIT_W;
-            this._transform.setColumn(3, centerWC, this._transform);
-
-            cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-            positionWC = camera.transform.multiplyByVector(cameraPosition);
-
-            camera.transform = this._transform.clone();
-        } else {
-            var scalar = -position.z / direction.z;
-            var center = position.add(direction.multiplyByScalar(scalar));
-            center = new Cartesian4(center.x, center.y, center.z, 1.0);
-            centerWC = camera.transform.multiplyByVector(center);
-            this._transform.setColumn(3, centerWC, this._transform);
-
-            cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-            positionWC = camera.transform.multiplyByVector(cameraPosition);
-            camera.transform = this._transform.clone();
-        }
+        var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
+        var positionWC = camera.transform.multiplyByVector(cameraPosition);
 
         var tanPhi = Math.tan(this._camera.frustum.fovy * 0.5);
         var tanTheta = this._camera.frustum.aspectRatio * tanPhi;
@@ -228,6 +223,39 @@ define([
         camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(positionWC));
     };
 
+    CameraColumbusViewController.prototype._rotate = function(movement) {
+        var camera = this._camera;
+
+        var position = camera.getPositionWC();
+        var up = camera.getUpWC();
+        var right = camera.getRightWC();
+        var direction = camera.getDirectionWC();
+
+        var oldTransform = camera.transform;
+        camera.transform = this._transform;
+
+        var invTransform = camera.getInverseTransform();
+        camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+        camera.up = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+        camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+        camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+
+        this._spindleController._rotate(movement);
+
+        position = camera.getPositionWC();
+        up = camera.getUpWC();
+        right = camera.getRightWC();
+        direction = camera.getDirectionWC();
+
+        camera.transform = oldTransform;
+        var transform = camera.getInverseTransform();
+
+        camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+        camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+        camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+        camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+    };
+
     /**
       * Returns true if this object was destroyed; otherwise, false.
       * <br /><br />
@@ -263,6 +291,7 @@ define([
      * controller = controller && controller.destroy();
      */
     CameraColumbusViewController.prototype.destroy = function() {
+        this._rotateHandler = this._rotateHandler && this._rotateHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._spindleController = this._spindleController && this._spindleController.destroy();
         this._freeLookController = this._freeLookController && this._freeLookController.destroy();
