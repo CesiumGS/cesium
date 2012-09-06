@@ -171,7 +171,7 @@ define([
     ExtentTessellator.compute = function(description) {
         var desc = description || {};
 
-        Extent.validate(desc.extent);
+        desc.extent.validate();
 
         desc.ellipsoid = desc.ellipsoid || Ellipsoid.WGS84;
         desc.granularity = (desc.granularity && desc.granularity > 0.0) ? desc.granularity : 0.1;
@@ -317,7 +317,7 @@ define([
     ExtentTessellator.computeBuffers = function(description) {
         var desc = description || {};
 
-        Extent.validate(desc.extent);
+        desc.extent.validate();
 
         desc.ellipsoid = desc.ellipsoid || Ellipsoid.WGS84;
         desc.granularity = (typeof desc.granularity !== 'undefined' && desc.granularity > 0.0) ? desc.granularity : 0.1;

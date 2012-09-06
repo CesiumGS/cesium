@@ -256,8 +256,19 @@ define([
         var camera = scene._camera;
         var frustum = camera.frustum;
 
-        var pixelSize = frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
-        var pickRay = camera._getPickRayOrthographic(windowPosition);
+        var canvasWidth = canvas.clientWidth;
+        var canvasHeight = canvas.clientHeight;
+
+        var x = (2.0 / canvasWidth) * windowPosition.x - 1.0;
+        x *= (frustum.right - frustum.left) * 0.5;
+        var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
+        y *= (frustum.top - frustum.bottom) * 0.5;
+
+        var position = camera.position.clone();
+        position.x += x;
+        position.y += y;
+
+        var pixelSize = frustum.getPixelSize(new Cartesian2(canvasWidth, canvasHeight));
 
         var ortho = new OrthographicFrustum();
         ortho.right = pixelSize.x * 0.5;
@@ -266,10 +277,7 @@ define([
         ortho.bottom = -ortho.top;
         ortho.near = frustum.near;
         ortho.far = frustum.far;
-
-        ortho.position = pickRay.origin;
-        ortho.direction = camera.direction;
-        ortho.up = camera.up;
+        ortho.computePlanes(position, camera.direction, camera.up);
 
         return ortho;
     }
@@ -304,10 +312,7 @@ define([
         offCenter.left = xDir - pickWidth;
         offCenter.near = frustum.near;
         offCenter.far = frustum.far;
-
-        offCenter.position = camera.getPositionWC();
-        offCenter.direction = camera.getDirectionWC();
-        offCenter.up = camera.getUpWC();
+        offCenter.computePlanes(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
 
         return offCenter;
     }

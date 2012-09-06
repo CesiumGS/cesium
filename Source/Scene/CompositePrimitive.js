@@ -401,7 +401,19 @@ define([
         return this._primitives.length;
     };
 
-    function cull(context, frameState, primitives, renderList) {
+    /**
+     * @private
+     */
+    CompositePrimitive.prototype.update = function(context, frameState) {
+        if (!this.show) {
+            return [];
+        }
+
+        //TODO:
+        //if (this._centralBody) {
+        //    this._centralBody.update(context, frameState);
+        //}
+
         var frustum = frameState.cullingFrustum;
         var occluder;
 
@@ -436,22 +448,6 @@ define([
 
         return commandList;
     }
-
-    /**
-     * @private
-     */
-    CompositePrimitive.prototype.update = function(context, frameState) {
-        if (!this.show) {
-            return [];
-        }
-
-        //TODO:
-        //if (this._centralBody) {
-        //    this._centralBody.update(context, frameState);
-        //}
-
-        return cull(context, frameState, this._primitives, this._renderList);
-    };
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
