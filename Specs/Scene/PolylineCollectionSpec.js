@@ -1700,8 +1700,8 @@ defineSuite([
         }
         var bs = BoundingSphere.fromPoints(projectedPositions);
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
-        expect(one._boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
-        expect(one._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
+        expect(one._boundingVolumeCV.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
+        expect(one._boundingVolumeCV.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
         positions = two.getPositions();
         projectedPositions = [];
@@ -1710,10 +1710,10 @@ defineSuite([
         }
         bs = BoundingSphere.fromPoints(projectedPositions);
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
-        expect(two._boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
-        expect(two._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
+        expect(two._boundingVolumeCV.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
+        expect(two._boundingVolumeCV.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
-        expect(boundingVolume).toEqual(one._boundingVolume2D.union(two._boundingVolume2D));
+        expect(boundingVolume).toEqual(one._boundingVolumeCV.union(two._boundingVolumeCV));
     });
 
     it('computes bounding rectangle in 2D', function() {
@@ -1744,24 +1744,20 @@ defineSuite([
         for (i = 0; i < positions.length; ++i) {
             projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
         }
-        var br = BoundingRectangle.fromPoints(projectedPositions);
-        expect(one._boundingRectangle.x).toEqual(br.x);
-        expect(one._boundingRectangle.y).toEqual(br.y);
-        expect(one._boundingRectangle.width).toEqual(br.width);
-        expect(one._boundingRectangle.height).toEqual(br.height);
+        var bs = BoundingSphere.fromPoints(projectedPositions);
+        expect(one._boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
+        expect(one._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
         positions = two.getPositions();
         projectedPositions = [];
         for (i = 0; i < positions.length; ++i) {
             projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
         }
-        br = BoundingRectangle.fromPoints(projectedPositions);
-        expect(two._boundingRectangle.x).toEqual(br.x);
-        expect(two._boundingRectangle.y).toEqual(br.y);
-        expect(two._boundingRectangle.width).toEqual(br.width);
-        expect(two._boundingRectangle.height).toEqual(br.height);
+        bs = BoundingSphere.fromPoints(projectedPositions);
+        expect(two._boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
+        expect(two._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
-        expect(boundingVolume).toEqual(one._boundingRectangle.union(two._boundingRectangle));
+        expect(boundingVolume).toEqual(one._boundingVolume2D.union(two._boundingVolume2D));
     });
 
     it('isDestroyed', function() {

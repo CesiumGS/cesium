@@ -8,6 +8,7 @@ Beta Releases
 
 * Breaking changes:
     * ...
+* Improved picking performance.
 * `Extent` functions now take optional result parameters.  Also added `getCenter`, `intersectWith`, and `contains` functions.
 
 ### b8 - 09/05/2012

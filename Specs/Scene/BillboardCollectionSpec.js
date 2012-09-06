@@ -5,7 +5,6 @@ defineSuite([
          '../Specs/destroyContext',
          '../Specs/frameState',
          '../Specs/pick',
-         'Core/BoundingRectangle',
          'Core/BoundingSphere',
          'Core/Cartesian2',
          'Core/Cartesian3',
@@ -26,7 +25,6 @@ defineSuite([
          destroyContext,
          frameState,
          pick,
-         BoundingRectangle,
          BoundingSphere,
          Cartesian2,
          Cartesian3,
@@ -1139,7 +1137,7 @@ defineSuite([
         expect(actual.radius > bs.radius).toEqual(true);
     });
 
-    it('computes bounding rectangle in 2D', function() {
+    it('computes bounding sphere in 2D', function() {
         var atlas = createTextureAtlas([greenImage]);
         billboards.setTextureAtlas(atlas);
 
@@ -1179,10 +1177,8 @@ defineSuite([
             projection.project(ellipsoid.cartesianToCartographic(one.getPosition())),
             projection.project(ellipsoid.cartesianToCartographic(two.getPosition()))
         ];
-        var br = BoundingRectangle.fromPoints(projectedPositions);
-        expect(actual.x < br.x).toEqual(true);
-        expect(actual.y < br.y).toEqual(true);
-        expect(actual.width > br.width).toEqual(true);
-        expect(actual.height > br.height).toEqual(true);
+        var bs = BoundingSphere.fromPoints(projectedPositions);
+        expect(actual.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
+        expect(actual.radius > bs.radius).toEqual(true);
     });
 });
