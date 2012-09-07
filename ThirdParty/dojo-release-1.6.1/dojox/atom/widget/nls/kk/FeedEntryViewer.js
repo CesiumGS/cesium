@@ -1,1 +1,0 @@
-({"close":"[жабу]","title":"Тақырып","authors":"Авторлар","summary":"Жиынтық","content":"Мазмұн","contributors":"Таратушылар","updated":"Жаңартылған","displayOptions":"[көрсету параметрлері]","id":"ID коды"})
