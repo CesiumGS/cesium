@@ -559,13 +559,13 @@ define([
             on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
             on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
 
+            //////////////////////////////////////////////////////////////////////////////////////////////////
+
             if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
                     widget.resize();
                 });
             }
-
-            //////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);

@@ -183,10 +183,6 @@ require([
         }
     }).placeAt(dom.byId("cesiumContainer"));
     
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
-    
     dom.byId("toolbar").innerHTML = '';
 });
 

@@ -247,11 +247,7 @@ require([
             addRectangularSensor(sensors, widget.ellipsoid, widget.scene);
         }
     }).placeAt(dom.byId('cesiumContainer'));
-    
-    on(window, 'resize', function() {
-        cesiumViewerWidget.resize();
-    });
-    
+
     dom.byId('toolbar').innerHTML = '';
 });
 </script>

@@ -192,11 +192,7 @@ require([
             addLabel(widget.scene, widget.ellipsoid);
         }
     }).placeAt(dom.byId("cesiumContainer"));
-    
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
-    
+
     dom.byId("toolbar").innerHTML = '';
 });
 
