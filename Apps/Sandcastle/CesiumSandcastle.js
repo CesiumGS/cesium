@@ -313,6 +313,22 @@ require({
             }
         }
 
+        function showGallery() {
+            document.getElementById('galleryContainer').setAttribute('style', 'right: 0px;');
+        }
+
+        function hideGallery() {
+            document.getElementById('galleryContainer').setAttribute('style', 'right: -280px;');
+        }
+
+        on(dom.byId('galleryContainer'), 'mouseout', function() {
+            hideGallery();
+        });
+
+        on(dom.byId('galleryContainer'), 'mouseover', function() {
+            showGallery();
+        });
+
         CodeMirror.commands.runCesium = function(cm) {
             clearAllErrors();
             highlightRun(false);
@@ -431,6 +447,12 @@ require({
                 } else {
                     document.getElementById(demoName).style.display = 'none';
                 }
+            }
+
+            if (searchTerm === '') {
+                hideGallery();
+            } else {
+                showGallery();
             }
         });
 
