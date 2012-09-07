@@ -9,7 +9,6 @@ define(['./DeveloperError'],
      * Uses EventSource to retrieve the json data from the given uri.
      * @exception {DeveloperError} uri is required.
      * @exports incrementalGet
-     *
      * @example
      * incrementalGet("http://localhost/test", function(json){}, function(){});
      */

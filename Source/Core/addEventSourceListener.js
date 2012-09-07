@@ -4,14 +4,14 @@ define(['./DeveloperError'],
     "use strict";
 
     /**
-     * DOC_TBA.
+     * Adds an event listener to an existing EventSource.
      *
      * @exports addEventSourceListener
      *
      * @exception {DeveloperError} eventSource is required.
      * @exception {DeveloperError} eventName is required.
      * @example
-     * addEventSourceListener('http://localhost/test', 'access', function(){});
+     * addEventSourceListener(new EventSource('http://localhost/test'), 'access', function(){});
      */
     var addEventSourceListener = function(eventSource, eventName, updatedFunction) {
         if (typeof eventSource === 'undefined') {

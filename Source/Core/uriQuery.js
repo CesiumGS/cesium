@@ -8,7 +8,16 @@ define(['./DeveloperError'],function(DeveloperError) {
      * @exports uriQuery
      */
     var uriQuery = {
-
+            /**
+             * Breaks a JSON object into query parameters.
+             *
+             * @param {JSON} A JSON object to break down into query parameters.
+             * @param {String} An optional parameter that prepends text onto the query parameter.
+             * @returns A query parameter.
+             * @exception {DeveloperError} obj is required.
+             * @example
+             * var queryString = uriQuery.objectToQuery({foo: "access", bar: { what: 123, no: [1, 2, 3] }});
+             */
             objectToQuery:function(obj, prefix){
                 if (typeof obj === 'undefined') {
                     throw new DeveloperError('obj is required.');
@@ -29,10 +38,17 @@ define(['./DeveloperError'],function(DeveloperError) {
                 }
                 return str.join("&");
             },
-
-            queryToObject : function(baseUrl){
-                if (typeof baseUrl === 'undefined') {
-                    throw new DeveloperError('baseUrl is required.');
+            /**
+             * Breaks query parameters into an JSON object.
+             * @param {String} Query parameters
+             * @returns A JSON object.
+             * @exception {DeveloperError} queryParameters is required.
+             * @example
+             * var obj = uriQuery.queryToObject('http://localhost?name=Bruce&value=kicks');
+             */
+            queryToObject : function(queryParameters){
+                if (typeof queryParameters === 'undefined') {
+                    throw new DeveloperError('queryParameters is required.');
                 }
                 baseUrl.match(/\?(.+)$/);
                 var params = RegExp.$1;
