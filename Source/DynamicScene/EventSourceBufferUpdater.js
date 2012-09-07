@@ -1,11 +1,11 @@
 /*global define*/
 define(['../Core/DeveloperError',
         './fillBufferIncrementally',
-        './updateBufferOnEvent'
+        '../Core/addEventSourceListener'
     ], function(
          DeveloperError,
          fillBufferIncrementally,
-         updateBufferOnEvent) {
+         addEventSourceListener) {
     "use strict";
     /*global EventSource*/
 
@@ -51,7 +51,7 @@ define(['../Core/DeveloperError',
             this._currentBaseUrl = baseUrl;
             this._currentEventName = eventName;
             this._eventSource = new EventSource(baseUrl);
-            updateBufferOnEvent(this._eventSource, eventName, dynamicObjectCollection, function(item){
+            addEventSourceListener(this._eventSource, eventName, function(item){
                 self._documentManager.process(item, dynamicObjectCollection, baseUrl);
             });
         }
@@ -61,7 +61,9 @@ define(['../Core/DeveloperError',
      * Aborts the buffer fill function.
      */
     EventSourceBufferUpdater.prototype.abort = function() {
-        this._eventSource.close();
+        if(typeof this._eventSource !== 'undefined'){
+            this._eventSource.close();
+        }
     };
 
     return EventSourceBufferUpdater;

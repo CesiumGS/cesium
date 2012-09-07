@@ -106,10 +106,6 @@ define([
         return new TimeInterval(Iso8601.MINIMUM_VALUE, Iso8601.MAXIMUM_VALUE, true, true);
     };
 
-    CompositeDynamicObjectCollection.prototype.createDynamicObjectCollection = function(){
-      return new DynamicObjectCollection();
-    };
-
     /**
      * Returns a copy of the current array of collections being composited.  Changes to this
      * array will have no affect, to change which collections are being used, call setCollections.

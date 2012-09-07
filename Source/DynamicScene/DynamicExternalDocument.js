@@ -17,7 +17,9 @@ define([
 
     var DynamicExternalDocument = function() {
         this.polling = undefined;
-        this.show = undefined;
+        this.refreshInterval = undefined;
+        this.eventsource = undefined;
+        this.eventname = undefined;
     };
 
 

@@ -1,6 +1,10 @@
 /*global define*/
-define(['./fillBufferIncrementally'
+define(['../Core/DeveloperError',
+        '../Core/defaultValue',
+        './fillBufferIncrementally'
     ], function(
+         DeveloperError,
+         defaultValue,
          fillBufferIncrementally) {
     "use strict";
 
@@ -13,15 +17,23 @@ define(['./fillBufferIncrementally'
      * @param {String} The url of the document.
      * @param {Number} [numOfIterations=0] The number of iterations.
      * @param {function} [bufferFillFunction=fillBufferIncrementally] The function used to fill the buffer.
-     *
+     * @exception {DeveloperError} documentManager is required.
+     * @exception {DeveloperError} baseUrl is required.
      */
     function SystemClockDrivenBufferUpdater(documentManager, baseUrl, refreshRate, bufferFillFunction) {
+        if (typeof documentManager === 'undefined') {
+            throw new DeveloperError('documentManager is required.');
+        }
+        if (typeof baseUrl === 'undefined') {
+            throw new DeveloperError('baseUrl is required.');
+        }
+
         if (typeof bufferFillFunction === 'undefined') {
             bufferFillFunction = fillBufferIncrementally;
         }
 
         this._documentManager = documentManager;
-        this._refreshRate = refreshRate;
+        this._refreshRate = defaultValue(refreshRate, 60);//default to 60 seconds
         this._bufferFillFunction = bufferFillFunction;
         this._baseUrl = baseUrl;
         this._lastUpdateTime = new Date();

@@ -1,6 +1,11 @@
 /*global define*/
-define(['./fillBufferIncrementally'
+define([
+        '../Core/DeveloperError',
+        '../Core/defaultValue',
+        './fillBufferIncrementally'
     ], function(
+         DeveloperError,
+         defaultValue,
          fillBufferIncrementally) {
     "use strict";
 
@@ -13,14 +18,22 @@ define(['./fillBufferIncrementally'
      * @param {String} The url of the document.
      * @param {Number} [numOfIterations=0] The number of iterations.
      * @param {function} [bufferFillFunction=fillBufferIncrementally] The function used to fill the buffer.
+     * @exception {DeveloperError} documentManager is required.
+     * @exception {DeveloperError} baseUrl is required.
      *
      */
     function IterationDrivenBufferUpdater(documentManager, baseUrl, numOfIterations, bufferFillFunction) {
+        if (typeof documentManager === 'undefined') {
+            throw new DeveloperError('documentManager is required.');
+        }
+        if (typeof baseUrl === 'undefined') {
+            throw new DeveloperError('baseUrl is required.');
+        }
         if (typeof bufferFillFunction === 'undefined') {
             bufferFillFunction = fillBufferIncrementally;
         }
         this._documentManager = documentManager;
-        this._numOfIterations = numOfIterations;
+        this._numOfIterations = defaultValue(numOfIterations, 1);
         this._currentIteration = 0;
         this._bufferFillFunction = bufferFillFunction;
         this._baseUrl = baseUrl;
