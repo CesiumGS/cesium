@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,console*/
 define([
         'require',
         'dojo/_base/declare',
@@ -15,6 +15,7 @@ define([
         'dijit/TooltipDialog',
         './getJson',
         './TimelineWidget',
+        '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
@@ -61,6 +62,7 @@ define([
         TooltipDialog,
         getJson,
         TimelineWidget,
+        BoundingRectangle,
         Clock,
         ClockStep,
         ClockRange,
@@ -95,8 +97,6 @@ define([
 
     return declare('Cesium.CesiumViewerWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
         templateString : template,
-        preRender : undefined,
-        postSetup : undefined,
         useStreamingImagery : true,
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
@@ -117,6 +117,12 @@ define([
             ready(this, '_setupCesium');
         },
 
+        postSetup : undefined,
+
+        onSetupError : function(widget, error) {
+            console.error(error);
+        },
+
         resize : function() {
             var width = this.canvas.clientWidth, height = this.canvas.clientHeight;
 
@@ -127,12 +133,7 @@ define([
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.scene.getContext().setViewport({
-                x : 0,
-                y : 0,
-                width : width,
-                height : height
-            });
+            this.scene.getContext().setViewport(new BoundingRectangle(0, 0, width, height));
 
             this.scene.getCamera().frustum.aspectRatio = width / height;
         },
@@ -224,7 +225,7 @@ define([
             }
         },
 
-        updateSpeedIndicator : function() {
+        _updateSpeedIndicator : function() {
             if (this.animationController.isAnimating()) {
                 this.speedIndicator.innerHTML = this.clock.multiplier + 'x realtime';
             } else {
@@ -253,7 +254,6 @@ define([
             clock.multiplier = 60;
             clock.currentTime = clock.startTime;
             this.timelineControl.zoomTo(clock.startTime, clock.stopTime);
-            this.updateSpeedIndicator();
         },
 
         handleDrop : function(e) {
@@ -403,8 +403,6 @@ define([
             this.timeLabelElement = this.timeLabel.containerNode;
             this.timeLabelElement.innerHTML = clock.currentTime.toDate().toUTCString();
 
-            this.updateSpeedIndicator();
-
             var animReverse = this.animReverse;
             var animPause = this.animPause;
             var animPlay = this.animPlay;
@@ -414,7 +412,6 @@ define([
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
-                widget.updateSpeedIndicator();
             });
 
             function onAnimPause() {
@@ -422,7 +419,6 @@ define([
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
-                widget.updateSpeedIndicator();
             }
 
             on(animPause, 'Click', onAnimPause);
@@ -432,7 +428,6 @@ define([
                 animReverse.set('checked', true);
                 animPause.set('checked', false);
                 animPlay.set('checked', false);
-                widget.updateSpeedIndicator();
             });
 
             on(animPlay, 'Click', function() {
@@ -440,17 +435,14 @@ define([
                 animReverse.set('checked', false);
                 animPause.set('checked', false);
                 animPlay.set('checked', true);
-                widget.updateSpeedIndicator();
             });
 
             on(widget.animSlow, 'Click', function() {
                 animationController.slower();
-                widget.updateSpeedIndicator();
             });
 
             on(widget.animFast, 'Click', function() {
                 animationController.faster();
-                widget.updateSpeedIndicator();
             });
 
             function onTimelineScrub(e) {
@@ -558,13 +550,13 @@ define([
             on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
             on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
 
+            //////////////////////////////////////////////////////////////////////////////////////////////////
+
             if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
                     widget.resize();
                 });
             }
-
-            //////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);
@@ -641,8 +633,10 @@ define([
                 if (typeof this.highlightedObject !== 'undefined') {
                     if (typeof this.highlightedObject.material !== 'undefined') {
                         this.highlightedObject.material = this._originalMaterial;
+                    } else if (typeof this.highlightedObject.outerMaterial !== 'undefined') {
+                        this.highlightedObject.outerMaterial = this._originalMaterial;
                     } else {
-                        this.highlightedObject.color = this._originalColor;
+                        this.highlightedObject.setColor(this._originalColor);
                     }
                 }
                 this.highlightedObject = selectedObject;
@@ -650,9 +644,12 @@ define([
                     if (typeof selectedObject.material !== 'undefined') {
                         this._originalMaterial = selectedObject.material;
                         selectedObject.material = this.highlightMaterial;
+                    } else if (typeof selectedObject.outerMaterial !== 'undefined') {
+                        this._originalMaterial = selectedObject.outerMaterial;
+                        selectedObject.outerMaterial = this.highlightMaterial;
                     } else {
-                        this._originalColor = selectedObject.color;
-                        selectedObject.color = this.highlightColor;
+                        this._originalColor = selectedObject.getColor();
+                        selectedObject.setColor(this.highlightColor);
                     }
                 }
             }
@@ -666,6 +663,7 @@ define([
             var cameraCenteredObjectID = this.cameraCenteredObjectID;
             var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
 
+            this._updateSpeedIndicator();
             this.timelineControl.updateFromClock();
             this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
             this.visualizers.update(currentTime);

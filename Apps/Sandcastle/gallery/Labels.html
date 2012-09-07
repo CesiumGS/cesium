@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Cesium Demo</title>
+    <script>
+    var Sandcastle = {};
+    Sandcastle.declare = function () {};
+    Sandcastle.highlight = function () {};
+    Sandcastle.registered = [];
+    if (window.location.protocol === 'file:') {
+        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
+            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
+        }
+    }
+    </script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript">
+    require({
+        baseUrl : '../../..',
+        packages: [
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Source', location: 'Source' },
+            { name: 'Core', location: 'Source/Core' },
+            { name: 'DynamicScene', location: 'Source/DynamicScene' },
+            { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Scene', location: 'Source/Scene' },
+            { name: 'Shaders', location: 'Source/Shaders' },
+            { name: 'ThirdParty', location: 'Source/ThirdParty' },
+            { name: 'Widgets', location: 'Source/Widgets' }
+        ]
+    });
+    </script>
+    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
+</head>
+<body class="claro">
+<style>
+body {
+    background: #000;
+    color: #eee;
+    font-family: sans-serif;
+    font-size: 9pt;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.fullSize {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: none;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+#toolbar {
+    margin: 5px;
+    padding: 2px 5px;
+    position: absolute;
+}
+</style>
+
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="toolbar">Loading...</div>
+
+<script id="cesium_sandcastle_script">
+require([
+    'Source/Cesium', 'Widgets/Dojo/CesiumWidget',
+    'dojo/on', 'dojo/dom', 'dijit/form/Button'
+], function(
+    Cesium, CesiumWidget,
+    on, dom, Button)
+{
+    "use strict";
+        
+    function addLabel(scene, ellipsoid) {
+        Sandcastle.declare(addLabel);   // For highlighting in Sandcastle.
+        var labels = new Cesium.LabelCollection();
+        labels.add({
+            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
+            text     : 'Philadelphia'
+        });
+        scene.getPrimitives().add(labels);
+    }
+    
+    function setLabelFont(scene, ellipsoid) {
+        Sandcastle.declare(setLabelFont);   // For highlighting in Sandcastle.
+        var labels = new Cesium.LabelCollection();
+        labels.add({
+            position  : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
+            text      : 'Philadelphia',
+            // CSS font-family
+            font      : '36px Helvetica',
+            fillColor : { red : 0.0, blue : 1.0, green : 1.0, alpha : 1.0 },
+            outlineColor : { red : 0.0, blue : 0.0, green : 0.0, alpha : 1.0 },
+            style : Cesium.LabelStyle.FILL_AND_OUTLINE
+        });
+        scene.getPrimitives().add(labels);
+    }
+    
+    function setLabelProperties(scene, ellipsoid) {
+        Sandcastle.declare(setLabelProperties); // For highlighting in Sandcastle.
+        var labels = new Cesium.LabelCollection();
+        var l = labels.add({
+            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
+            text     : 'Philadelphia'
+        });
+
+        l.setPosition(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57, 300000.0)));
+        l.setScale(2.0);
+        scene.getPrimitives().add(labels);
+    }
+    
+    function addLabelsInReferenceFrame(scene, ellipsoid) {
+        Sandcastle.declare(addLabelsInReferenceFrame);  // For highlighting in Sandcastle.
+        var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+        var labels = new Cesium.LabelCollection(undefined);
+        labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+        labels.add({
+            position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
+            text     : 'Center'
+        });
+        labels.add({
+            position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
+            text     : 'East'
+        });
+        labels.add({
+            position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
+            text     : 'North'
+        });
+        labels.add({
+            position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
+            text     : 'Up'
+        });
+        scene.getPrimitives().add(labels);
+    }
+    
+    function createButtons(widget) {
+        var ellipsoid = widget.ellipsoid;
+        var scene = widget.scene;
+        var primitives = scene.getPrimitives();
+        
+        new Button({
+            label: "Add label",
+            onClick: function() {
+                primitives.removeAll();
+                addLabel(scene, ellipsoid); 
+                Sandcastle.highlight(addLabel);
+            }
+        }).placeAt("toolbar");    
+        
+        new Button({
+            label: "Set font",
+            onClick: function() {
+                primitives.removeAll();
+                setLabelFont(scene, ellipsoid); 
+                Sandcastle.highlight(setLabelFont);
+            }
+        }).placeAt("toolbar");   
+        
+        new Button({
+            label: "Set properties",
+            onClick: function() {
+                primitives.removeAll();
+                setLabelProperties(scene, ellipsoid); 
+                Sandcastle.highlight(setLabelProperties);
+            }
+        }).placeAt("toolbar");
+        
+        new Button({
+            label: "Add labels in reference frame",
+            onClick: function() {
+                primitives.removeAll();
+                addLabelsInReferenceFrame(scene, ellipsoid); 
+                Sandcastle.highlight(addLabelsInReferenceFrame);
+            }
+        }).placeAt("toolbar");
+    }
+
+    var cesiumWidget = new CesiumWidget({
+        postSetup : function(widget) {
+            createButtons(widget);
+            widget.startRenderLoop();
+            addLabel(widget.scene, widget.ellipsoid);
+        }
+    }).placeAt(dom.byId("cesiumContainer"));
+
+    dom.byId("toolbar").innerHTML = '';
+});
+
+</script>
+</body>
+</html>
