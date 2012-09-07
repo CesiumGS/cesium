@@ -178,6 +178,38 @@ define([
         transitioner._currentAnimations.push(animation);
     }
 
+    function updateFrustums(transitioner) {
+        var scene = transitioner._scene;
+
+        var canvas = scene.getCanvas();
+        var ratio = canvas.clientHeight / canvas.clientWidth;
+
+        var frustum = transitioner._camera2D.frustum;
+        frustum.top = frustum.right * ratio;
+        frustum.bottom = -frustum.top;
+
+        ratio = 1.0 / ratio;
+
+        frustum = transitioner._cameraCV.frustum;
+        frustum.aspectRatio = ratio;
+
+        frustum = transitioner._camera3D.frustum;
+        frustum.aspectRatio = ratio;
+
+        var camera = scene.getCamera();
+        switch (scene.mode) {
+        case SceneMode.SCENE3D:
+            camera.frustum = transitioner._camera3D.frustum.clone();
+            break;
+        case SceneMode.COLUMBUS_VIEW:
+            camera.frustum = transitioner._cameraCV.frustum.clone();
+            break;
+        case SceneMode.SCENE2D:
+            camera.frustum = transitioner._camera2D.frustum.clone();
+            break;
+        }
+    }
+
     /**
      * DOC_TBA
      * @memberof SceneTransitioner
@@ -191,12 +223,8 @@ define([
 
             this._destroyMorphHandler();
 
-            var canvas = scene.getCanvas();
+            updateFrustums(this);
             var camera = scene.getCamera();
-            var frustum = this._camera2D.frustum.clone();
-            frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
-            frustum.bottom = -frustum.top;
-            camera.frustum = frustum;
             camera.transform = this._camera2D.transform.clone();
 
             var controllers = camera.getControllers();
@@ -224,11 +252,8 @@ define([
 
             this._destroyMorphHandler();
 
-            var canvas = scene.getCanvas();
+            updateFrustums(this);
             var camera = scene.getCamera();
-            var frustum = this._cameraCV.frustum.clone();
-            frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
-            camera.frustum = frustum;
             camera.transform = this._cameraCV.transform.clone();
 
             var controllers = camera.getControllers();
@@ -265,10 +290,7 @@ define([
             controllers.removeAll();
             controllers.addCentralBody();
 
-            var canvas = scene.getCanvas();
-            var frustum = this._camera3D.frustum.clone();
-            frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
-            camera.frustum = frustum;
+            updateFrustums(this);
             camera.transform = Matrix4.IDENTITY;
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
@@ -650,6 +672,7 @@ define([
             return;
         }
 
+        updateFrustums(this);
         this._scene.mode = SceneMode.MORPHING;
         this._createMorphHandler(this.to2D);
 
@@ -671,6 +694,7 @@ define([
             return;
         }
 
+        updateFrustums(this);
         this._scene.mode = SceneMode.MORPHING;
         this._createMorphHandler(this.toColumbusView);
 
@@ -693,6 +717,7 @@ define([
             return;
         }
 
+        updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
         this._createMorphHandler(this.to3D);
 
