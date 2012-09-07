@@ -3,7 +3,7 @@ define(['./DeveloperError'],function(DeveloperError) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Helper functions to turn a JSON object to query parameters and query parameters to a JSON object.
      *
      * @exports uriQuery
      */
@@ -11,8 +11,8 @@ define(['./DeveloperError'],function(DeveloperError) {
             /**
              * Breaks a JSON object into query parameters.
              *
-             * @param {JSON} A JSON object to break down into query parameters.
-             * @param {String} An optional parameter that prepends text onto the query parameter.
+             * @param {Object} obj A JSON object to break down into query parameters.
+             * @param {String} prefix An optional parameter that prepends text onto the query parameter.
              * @returns A query parameter.
              * @exception {DeveloperError} obj is required.
              * @example
@@ -50,7 +50,7 @@ define(['./DeveloperError'],function(DeveloperError) {
                 if (typeof queryParameters === 'undefined') {
                     throw new DeveloperError('queryParameters is required.');
                 }
-                baseUrl.match(/\?(.+)$/);
+                queryParameters.match(/\?(.+)$/);
                 var params = RegExp.$1;
                 if(params === ''){
                     return undefined;

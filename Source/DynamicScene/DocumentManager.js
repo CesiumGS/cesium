@@ -27,14 +27,14 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A class to maintain multiple documents. Use this class to add, remove and update distinct czml documents
+     * from various sources.
      *
      * @alias DocumentManager
      * @constructor
      * @param {Scene} The current scene.
-     *
      * @exception {DeveloperError} scene is required.
-     *
+     * @see Scene
      * @exports DocumentManager
      */
     var DocumentManager = function(scene){
@@ -47,10 +47,14 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Adds the JSON object as a document. If the document contains external czml, it creates new documents according
+     * to the scope of the external property. If the scope property is not specified or specified as PRIVATE. A new
+     * CompositeDynamicObjectCollection is created and populated with the external CZML data. If the scope property
+     * is specified as SHARED, then a new DynamicObjectCollection is created, populated with the external czml and
+     * added to the existing CompositeDynamicObjectCollection. Any properties in a SHARED scope are then merged.
      *
-     * @param {json} The document's json.
-     * @param {String} The document's name.
+     * @param {Object} json A JSON object with valid czml.
+     * @param {String} The document's name to associate with the JSON object.
      *
      */
     DocumentManager.prototype.add = function(json, documentName){
@@ -69,7 +73,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns all documents.
      *
      */
     DocumentManager.prototype.getDocuments = function(){
@@ -77,7 +81,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns all visualizers.
      *
      */
     DocumentManager.prototype.getVisualizers = function(){
@@ -85,10 +89,8 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
+     * Removes a document from the document collection.
      * @param {String} The document's name to remove from the current composite collection.
-     *
      * @exception {DeveloperError} documentName is required.
      */
     DocumentManager.prototype.remove = function(documentName){
@@ -109,8 +111,7 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
+     * Removes all documents from the document collection.
      */
     DocumentManager.prototype.removeAll = function(){
         var length = this.visualizers.length;
@@ -123,8 +124,12 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
+     * Processes the JSON object and calls czml. It then looks for any external czml properties and if the document
+     * contains external czml, it creates new documents according to the scope of the external property. If the
+     * scope property is not specified or specified as PRIVATE. A new CompositeDynamicObjectCollection is created
+     * and populated with the external CZML data. If the scope property is specified as SHARED, then a new
+     * DynamicObjectCollection is created, populated with the external czml and added to the existing
+     * CompositeDynamicObjectCollection. Any properties in a SHARED scope are then merged.
      */
     DocumentManager.prototype.process = function(json, dynamicObjectCollection, documentName){
         var compositeDynamicObjectCollection = dynamicObjectCollection.compositeCollection;
@@ -164,13 +169,13 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Gets an object with the specified id in the specified document.
      *
      * @param {String} The id of the object to retrieve.
      * @param {String} The document's name to find the object.
-     *
      * @exception {DeveloperError} objectId is required.
      * @exception {DeveloperError} documentName is required.
+     * @returns The DynamicObject with the provided id or undefined if not found.
      */
     DocumentManager.prototype.getObject = function(objectId, documentName){
         if(typeof objectId === 'undefined'){
@@ -226,8 +231,7 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
+     * Calls all document updaters and visualizers with the current time.
      * @param {JulianDate} The current time.
      */
     DocumentManager.prototype.update = function(currentTime){
