@@ -41,8 +41,6 @@ define([
      *
      * @param {DynamicObject} dynamicObject The DynamicObject which will contain the external data.
      * @param {Object} packet The CZML packet to process.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The collection into which objects are being loaded.
-     * @param {String} [sourceUri] The originating url of the CZML being processed.
      * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
      *
      * @see DynamicObject

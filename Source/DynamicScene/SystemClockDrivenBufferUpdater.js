@@ -9,7 +9,7 @@ define(['../Core/DeveloperError',
     "use strict";
 
     /**
-     * DOC_TBA
+     * A buffer updater that updates based on the system clock.
      *
      * @alias SystemClockDrivenBufferUpdater
      * @constructor

@@ -10,7 +10,7 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A buffer updater that updates a certain number of iterations.
      *
      * @alias IterationDrivenBufferUpdater
      * @constructor
