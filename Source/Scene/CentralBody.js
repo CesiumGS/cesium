@@ -895,6 +895,7 @@ define([
 
     CentralBody.prototype._cull = function(tile, frameState) {
         var camera = frameState.camera;
+        var cullingVolume = frameState.cullingVolume;
 
         if (frameState.mode === SceneMode.SCENE2D) {
             var bRect = tile.get2DBoundingRectangle(frameState.scene2D.projection);
@@ -924,7 +925,7 @@ define([
         }
 
         var boundingVolume = this._getTileBoundingSphere(tile, frameState);
-        if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+        if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
             return true;
         }
 
@@ -1462,7 +1463,7 @@ define([
                 CesiumMath.PI_OVER_TWO
             );
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
-            frustumCull = frameState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
@@ -1509,7 +1510,7 @@ define([
                 this._dayTileProvider.maxExtent.south
             );
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
-            frustumCull = frameState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 

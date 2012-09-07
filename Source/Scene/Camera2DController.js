@@ -222,8 +222,8 @@ define([
         var moveRate = rate || this._zoomRate;
         var frustum = this._camera.frustum;
 
-        if (frustum.left === null || frustum.right === null ||
-            frustum.top === null || frustum.bottom === null) {
+        if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' ||
+            typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
                 throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
         }
 

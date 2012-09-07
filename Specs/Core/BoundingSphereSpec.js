@@ -7,7 +7,8 @@ defineSuite([
          'Core/EquidistantCylindricalProjection',
          'Core/Extent',
          'Core/Intersect',
-         'Core/Math'
+         'Core/Math',
+         'Core/Matrix4'
      ], function(
          BoundingSphere,
          Cartesian3,
@@ -16,7 +17,8 @@ defineSuite([
          EquidistantCylindricalProjection,
          Extent,
          Intersect,
-         CesiumMath) {
+         CesiumMath,
+         Matrix4) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -209,6 +211,13 @@ defineSuite([
         expect(bs.expand(point)).toEqual(expected);
     });
 
+    it('applies transform', function() {
+        var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
+        var transform = Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
+        var expected = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 1.0);
+        expect(bs.transform(transform)).toEqual(expected);
+    });
+
     it('static clone throws with no parameter', function() {
         expect(function() {
             BoundingSphere.clone();
@@ -254,6 +263,19 @@ defineSuite([
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.intersect(sphere, undefined);
+        }).toThrow();
+    });
+
+    it('static transform throws without a sphere', function() {
+        expect(function() {
+            BoundingSphere.transform();
+        }).toThrow();
+    });
+
+    it('static transform throws without a transform', function() {
+        var sphere = new BoundingSphere();
+        expect(function() {
+            BoundingSphere.transform(sphere);
         }).toThrow();
     });
 });

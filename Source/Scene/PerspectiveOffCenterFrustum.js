@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -9,6 +10,7 @@ define([
         '../Scene/CullingVolume'
     ], function(
         DeveloperError,
+        defaultValue,
         destroyObject,
         Cartesian2,
         Cartesian3,
@@ -23,44 +25,44 @@ define([
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
-     * @alias OrthographicFrustum
+     * @alias PerspectiveOffCenterFrustum
      * @constructor
      *
-     * @example
-     * var maxRadii = ellipsoid.getMaximumRadius();
+     * @see PerspectiveFrustum
      *
-     * var frustum = new OrthographicFrustum();
-     * frustum.right = maxRadii * CesiumMath.PI;
-     * frustum.left = -c.frustum.right;
-     * frustum.top = c.frustum.right * (canvas.clientHeight / canvas.clientWidth);
-     * frustum.bottom = -c.frustum.top;
-     * frustum.near = 0.01 * maxRadii;
-     * frustum.far = 50.0 * maxRadii;
+     * @example
+     * var frustum = new PerspectiveOffCenterFrustum();
+     * frustum.right = 1.0;
+     * frustum.left = -1.0;
+     * frustum.top = 1.0;
+     * frustum.bottom = -1.0;
+     * frustum.near = 1.0;
+     * frustum.far = 2.0;
      */
-    var OrthographicFrustum = function() {
+    var PerspectiveOffCenterFrustum = function() {
         /**
-         * The left clipping plane.
+         * Defines the left clipping plane.
          * @type {Number}
          */
         this.left = undefined;
         this._left = undefined;
 
         /**
-         * The right clipping plane.
+         * Defines the right clipping plane.
          * @type {Number}
          */
         this.right = undefined;
         this._right = undefined;
 
         /**
-         * The top clipping plane.
+         * Defines the top clipping plane.
          * @type {Number}
          */
         this.top = undefined;
         this._top = undefined;
 
         /**
-         * The bottom clipping plane.
+         * Defines the bottom clipping plane.
          * @type {Number}
          */
         this.bottom = undefined;
@@ -81,19 +83,36 @@ define([
         this._far = undefined;
 
         this._cullingVolume = new CullingVolume();
-        this._orthographicMatrix = undefined;
+        this._perspectiveMatrix = undefined;
+        this._infinitePerspective = undefined;
     };
 
     /**
-     * Returns the orthographic projection matrix computed from the view frustum.
+     * Returns the perspective projection matrix computed from the view frustum.
      *
-     * @memberof OrthographicFrustum
+     * @memberof PerspectiveOffCenterFrustum
      *
-     * @return {Matrix4} The orthographic projection matrix.
+     * @return {Matrix4} The perspective projection matrix.
+     *
+     * @see PerspectiveOffCenterFrustum#getInfiniteProjectionMatrix
      */
-    OrthographicFrustum.prototype.getProjectionMatrix = function() {
+    PerspectiveOffCenterFrustum.prototype.getProjectionMatrix = function() {
         update(this);
-        return this._orthographicMatrix;
+        return this._perspectiveMatrix;
+    };
+
+    /**
+     * Returns the perspective projection matrix computed from the view frustum with an infinite far plane.
+     *
+     * @memberof PerspectiveOffCenterFrustum
+     *
+     * @return {Matrix4} The infinite perspective projection matrix.
+     *
+     * @see PerspectiveOffCenterFrustum#getProjectionMatrix
+     */
+    PerspectiveOffCenterFrustum.prototype.getInfiniteProjectionMatrix = function() {
+        update(this);
+        return this._infinitePerspective;
     };
 
     function update(frustum) {
@@ -103,39 +122,40 @@ define([
             throw new DeveloperError('right, left, top, bottom, near, or far parameters are not set.');
         }
 
-        if (frustum.top !== frustum._top || frustum.bottom !== frustum._bottom ||
-                frustum.left !== frustum._left || frustum.right !== frustum._right ||
-                frustum.near !== frustum._near || frustum.far !== frustum._far) {
+        var t = frustum.top;
+        var b = frustum.bottom;
+        var r = frustum.right;
+        var l = frustum.left;
+        var n = frustum.near;
+        var f = frustum.far;
 
-            if (frustum.left > frustum.right) {
-                throw new DeveloperError('right must be greater than left.');
-            }
-
-            if (frustum.bottom > frustum.top) {
-                throw new DeveloperError('top must be greater than bottom.');
-            }
+        if (t !== frustum._top || b !== frustum._bottom ||
+            l !== frustum._left || r !== frustum._right ||
+            n !== frustum._near || f !== frustum._far) {
 
             if (frustum.near <= 0 || frustum.near > frustum.far) {
                 throw new DeveloperError('near must be greater than zero and less than far.');
             }
 
-            frustum._left = frustum.left;
-            frustum._right = frustum.right;
-            frustum._top = frustum.top;
-            frustum._bottom = frustum.bottom;
-            frustum._near = frustum.near;
-            frustum._far = frustum.far;
-            frustum._orthographicMatrix = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far);
+            frustum._left = l;
+            frustum._right = r;
+            frustum._top = t;
+            frustum._bottom = b;
+            frustum._near = n;
+            frustum._far = f;
+            frustum._perspectiveMatrix = Matrix4.computePerspectiveOffCenter(l, r, b, t, n, f);
+            frustum._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(l, r, b, t, n);
         }
     }
 
     var getPlanesRight = new Cartesian3();
     var getPlanesNearCenter = new Cartesian3();
-    var getPlanesPoint = new Cartesian3();
+    var getPlanesFarCenter = new Cartesian3();
+    var getPlanesNormal = new Cartesian3();
     /**
      * Creates a culling volume for this frustum.
      *
-     * @memberof OrthographicFrustum
+     * @memberof PerspectiveOffCenterFrustum
      *
      * @param {Cartesian3} position The eye position.
      * @param {Cartesian3} direction The view direction.
@@ -152,7 +172,7 @@ define([
      * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
      * var intersect = cullingVolume.getVisibility(boundingVolume);
      */
-    OrthographicFrustum.prototype.computeCullingVolume = function(position, direction, up) {
+    PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function(position, direction, up) {
         if (typeof position === 'undefined') {
             throw new DeveloperError('position is required.');
         }
@@ -180,61 +200,77 @@ define([
         Cartesian3.multiplyByScalar(direction, n, nearCenter);
         Cartesian3.add(position, nearCenter, nearCenter);
 
-        var point = getPlanesPoint;
+        var farCenter = getPlanesFarCenter;
+        Cartesian3.multiplyByScalar(direction, f, farCenter);
+        Cartesian3.add(position, farCenter, farCenter);
 
-        // Left plane
-        Cartesian3.multiplyByScalar(right, l, point);
-        Cartesian3.add(nearCenter, point, point);
+        var normal = getPlanesNormal;
+
+        //Left plane computation
+        Cartesian3.multiplyByScalar(right, l, normal);
+        Cartesian3.add(nearCenter, normal, normal);
+        Cartesian3.subtract(normal, position, normal);
+        Cartesian3.normalize(normal, normal);
+        Cartesian3.cross(normal, up, normal);
 
         var plane = planes[0];
         if (typeof plane === 'undefined') {
             plane = planes[0] = new Cartesian4();
         }
-        plane.x = right.x;
-        plane.y = right.y;
-        plane.z = right.z;
-        plane.w = -Cartesian3.dot(right, point);
+        plane.x = normal.x;
+        plane.y = normal.y;
+        plane.z = normal.z;
+        plane.w = -Cartesian3.dot(normal, position);
 
-        // Right plane
-        Cartesian3.multiplyByScalar(right, r, point);
-        Cartesian3.add(nearCenter, point, point);
+        //Right plane computation
+        Cartesian3.multiplyByScalar(right, r, normal);
+        Cartesian3.add(nearCenter, normal, normal);
+        Cartesian3.subtract(normal, position, normal);
+        Cartesian3.normalize(normal, normal);
+        Cartesian3.cross(up, normal, normal);
 
         plane = planes[1];
         if (typeof plane === 'undefined') {
             plane = planes[1] = new Cartesian4();
         }
-        plane.x = -right.x;
-        plane.y = -right.y;
-        plane.z = -right.z;
-        plane.w = -Cartesian3.dot(right.negate(), point);
+        plane.x = normal.x;
+        plane.y = normal.y;
+        plane.z = normal.z;
+        plane.w = -Cartesian3.dot(normal, position);
 
-        // Bottom plane
-        Cartesian3.multiplyByScalar(up, b, point);
-        Cartesian3.add(nearCenter, point, point);
+        //Bottom plane computation
+        Cartesian3.multiplyByScalar(up, b, normal);
+        Cartesian3.add(nearCenter, normal, normal);
+        Cartesian3.subtract(normal, position, normal);
+        Cartesian3.normalize(normal, normal);
+        Cartesian3.cross(right, normal, normal);
 
         plane = planes[2];
         if (typeof plane === 'undefined') {
             plane = planes[2] = new Cartesian4();
         }
-        plane.x = up.x;
-        plane.y = up.y;
-        plane.z = up.z;
-        plane.w = -Cartesian3.dot(up, point);
+        plane.x = normal.x;
+        plane.y = normal.y;
+        plane.z = normal.z;
+        plane.w = -Cartesian3.dot(normal, position);
 
-        // Top plane
-        Cartesian3.multiplyByScalar(up, t, point);
-        Cartesian3.add(nearCenter, point, point);
+        //Top plane computation
+        Cartesian3.multiplyByScalar(up, t, normal);
+        Cartesian3.add(nearCenter, normal, normal);
+        Cartesian3.subtract(normal, position, normal);
+        Cartesian3.normalize(normal, normal);
+        Cartesian3.cross(normal, right, normal);
 
         plane = planes[3];
         if (typeof plane === 'undefined') {
             plane = planes[3] = new Cartesian4();
         }
-        plane.x = -up.x;
-        plane.y = -up.y;
-        plane.z = -up.z;
-        plane.w = -Cartesian3.dot(up.negate(), point);
+        plane.x = normal.x;
+        plane.y = normal.y;
+        plane.z = normal.z;
+        plane.w = -Cartesian3.dot(normal, position);
 
-        // Near plane
+        //Near plane computation
         plane = planes[4];
         if (typeof plane === 'undefined') {
             plane = planes[4] = new Cartesian4();
@@ -244,18 +280,17 @@ define([
         plane.z = direction.z;
         plane.w = -Cartesian3.dot(direction, nearCenter);
 
-        // Far plane
-        Cartesian3.multiplyByScalar(direction, f, point);
-        Cartesian3.add(position, point, point);
+        //Far plane computation
+        Cartesian3.negate(direction, normal);
 
         plane = planes[5];
         if (typeof plane === 'undefined') {
             plane = planes[5] = new Cartesian4();
         }
-        plane.x = -direction.x;
-        plane.y = -direction.y;
-        plane.z = -direction.z;
-        plane.w = -Cartesian3.dot(direction.negate(), point);
+        plane.x = normal.x;
+        plane.y = normal.y;
+        plane.z = normal.z;
+        plane.w = -Cartesian3.dot(normal, farCenter);
 
         return this._cullingVolume;
     };
@@ -263,9 +298,10 @@ define([
     /**
      * Returns the pixel's width and height in meters.
      *
-     * @memberof OrthographicFrustum
+     * @memberof PerspectiveOffCenterFrustum
      *
      * @param {Cartesian2} canvasDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
+     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      *
      * @exception {DeveloperError} canvasDimensions is required.
      * @exception {DeveloperError} canvasDimensions.x must be greater than zero.
@@ -277,8 +313,18 @@ define([
      * // Example 1
      * // Get the width and height of a pixel.
      * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
+     *
+     * // Example 2
+     * // Get the width and height of a pixel if the near plane was set to 'distance'.
+     * // For example, get the size of a pixel of an image on a billboard.
+     * var position = camera.position;
+     * var direction = camera.direction;
+     * var toCenter = primitive.boundingVolume.center.subtract(position);      // vector from camera to a primitive
+     * var toCenterProj = direction.multiplyByScalar(direction.dot(toCenter)); // project vector onto camera direction vector
+     * var distance = toCenterProj.magnitude();
+     * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight), distance);
      */
-    OrthographicFrustum.prototype.getPixelSize = function(canvasDimensions) {
+    PerspectiveOffCenterFrustum.prototype.getPixelSize = function(canvasDimensions, distance) {
         update(this);
 
         if (typeof canvasDimensions === 'undefined') {
@@ -296,25 +342,28 @@ define([
             throw new DeveloperError('canvasDimensions.y must be grater than zero.');
         }
 
-        var frustumWidth = this.right - this.left;
-        var frustumHeight = this.top - this.bottom;
-        var pixelWidth = frustumWidth / width;
-        var pixelHeight = frustumHeight / height;
+        distance = defaultValue(distance, this.near);
+
+        var inverseNear = 1.0 / this.near;
+        var tanTheta = this.top * inverseNear;
+        var pixelHeight = 2.0 * distance * tanTheta / height;
+        tanTheta = this.right * inverseNear;
+        var pixelWidth = 2.0 * distance * tanTheta / width;
 
         return new Cartesian2(pixelWidth, pixelHeight);
     };
 
     /**
-     * Returns a duplicate of a OrthographicFrustum instance.
+     * Returns a duplicate of a PerspectiveOffCenterFrustum instance.
      *
-     * @memberof OrthographicFrustum
+     * @memberof PerspectiveOffCenterFrustum
      *
-     * @return {OrthographicFrustum} A new copy of the OrthographicFrustum instance.
+     * @return {PerspectiveOffCenterFrustum} A new copy of the PerspectiveOffCenterFrustum instance.
      */
-    OrthographicFrustum.prototype.clone = function() {
-        var frustum = new OrthographicFrustum();
-        frustum.left = this.left;
+    PerspectiveOffCenterFrustum.prototype.clone = function() {
+        var frustum = new PerspectiveOffCenterFrustum();
         frustum.right = this.right;
+        frustum.left = this.left;
         frustum.top = this.top;
         frustum.bottom = this.bottom;
         frustum.near = this.near;
@@ -323,15 +372,15 @@ define([
     };
 
     /**
-     * Compares the provided OrthographicFrustum componentwise and returns
+     * Compares the provided PerspectiveOffCenterFrustum componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      *
-     * @memberof OrthographicFrustum
+     * @memberof PerspectiveOffCenterFrustum
      *
-     * @param {OrthographicFrustum} [other] The right hand side OrthographicFrustum.
+     * @param {PerspectiveOffCenterFrustum} [other] The right hand side PerspectiveOffCenterFrustum.
      * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
-    OrthographicFrustum.prototype.equals = function(other) {
+    PerspectiveOffCenterFrustum.prototype.equals = function(other) {
         return (typeof other !== 'undefined' &&
                 this.right === other.right &&
                 this.left === other.left &&
@@ -341,5 +390,5 @@ define([
                 this.far === other.far);
     };
 
-    return OrthographicFrustum;
+    return PerspectiveOffCenterFrustum;
 });

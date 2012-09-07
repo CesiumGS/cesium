@@ -17,7 +17,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
         DEPTH_COMPONENT : new Enumeration(0x1902, 'DEPTH_COMPONENT'),
 
         /**
-         * A pixel format containing a depth and stencil value, most often used with {@see PixelDatatype.UNSIGNED_INT_24_8_WEBGL}.
+         * A pixel format containing a depth and stencil value, most often used with {@link PixelDatatype.UNSIGNED_INT_24_8_WEBGL}.
          *
          * @constant
          * @type {Enumeration}
