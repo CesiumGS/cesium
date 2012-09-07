@@ -12,7 +12,7 @@ require({
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
-    //Cesium.TerrainProvider.wireframe = true;
+//    Cesium.TerrainProvider.wireframe = true;
 
     var terrainProvider;
 
@@ -20,7 +20,7 @@ require({
 
 //    terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
 //        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-//        token : 'v5zBff8tWCy6KdeCLU4z7C6ZNgsZEs-Q-IE_ZXzz7jjW8LjFPCuzWAqJZGeED4SdfZUhNzWsN1PMLl_wNfazSQ..',
+//        token : 'VQRIkbOSbunrjHKzh2yDRplDTC2PO4HxWnmUZPbETOdEF_E2Gfq4TQ50igXCfCUdrqSOVIiPNLQSauqV45yrjA..',
 //        proxy : new Cesium.DefaultProxy('/terrain/')
 //    });
 
@@ -80,14 +80,14 @@ require({
 
 //    var solidColorLayer = imageryLayerCollection.addImageryProvider(new Cesium.SolidColorImageryProvider());
 
-    var testLayer = imageryLayerCollection.addImageryProvider(
-            new Cesium.SingleTileImageryProvider({
-                url : '../../Images/TestLayer.png',
-                extent : new Cesium.Extent(Cesium.Math.toRadians(-120),
-                        Cesium.Math.toRadians(37),
-                        Cesium.Math.toRadians(-119),
-                        Cesium.Math.toRadians(38))
-            }));
+//    var testLayer = imageryLayerCollection.addImageryProvider(
+//            new Cesium.SingleTileImageryProvider({
+//                url : '../../Images/TestLayer.png',
+//                extent : new Cesium.Extent(Cesium.Math.toRadians(-120),
+//                        Cesium.Math.toRadians(37),
+//                        Cesium.Math.toRadians(-119),
+//                        Cesium.Math.toRadians(38))
+//            }));
 
     cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../Images/earthspec1k.jpg';
@@ -101,9 +101,10 @@ require({
     cb.affectedByLighting = false;
     primitives.setCentralBody(cb);
 
-    scene.getCamera().frustum.near = 10.0;
-    scene.getCamera().frustum.far = 20000000.0;
-    scene.getCamera().getControllers().addCentralBody();
+    var camera = scene.getCamera();
+    camera.frustum.near = 10.0;
+    camera.frustum.far = 20000000.0;
+    var centralBodyController = camera.getControllers().addCentralBody();
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
@@ -112,11 +113,20 @@ require({
 
     ///////////////////////////////////////////////////////////////////////////
 
+    var rotate = false;
+    var rotateAngle = 0;
+    var lastRotateAngle = 0;
     scene.setAnimation(function() {
         //scene.setSunPosition(scene.getCamera().position);
         scene.setSunPosition(Cesium.SunPosition.compute().position);
 
         // Add code here to update primitives based on changes to animation time, camera parameters, etc.
+
+        var angleDifference = rotateAngle - lastRotateAngle;
+        if (rotate && angleDifference !== 0) {
+            centralBodyController.spindleController.rotate(Cesium.Cartesian3.UNIT_Z, angleDifference);
+            lastRotateAngle = rotateAngle;
+        }
     });
 
     (function tick() {
@@ -241,7 +251,6 @@ require({
             cb._surface.toggleLodUpdate();
             break;
         case 'B'.charCodeAt(0):
-            var camera = scene.getCamera();
             var pickRay = camera._getPickRayPerspective(mousePosition);
             var intersectionDistance = ellipsoidIntersections(ellipsoid, pickRay)[0];
             var intersectionPoint = pickRay.getPoint(intersectionDistance);
@@ -249,15 +258,57 @@ require({
             cb._surface.showBoundingSphereOfTileAt(cartographicPick);
             break;
         case 'V'.charCodeAt(0):
-            var camera = scene.getCamera();
             console.log('position: ' + camera.getPositionWC() + ' direction: ' + camera.getDirectionWC() + ' up: ' + camera.getUpWC());
             break;
         case 'L'.charCodeAt(0):
             var position = new Cesium.Cartesian3(-2444822.7410362503, -4495391.442027786, 3800016.0770029235);
             var direction = new Cesium.Cartesian3(0.2306406390807245, 0.8212545213405562, 0.5218677100397503);
             var up = new Cesium.Cartesian3(-0.31881470184216937, -0.44294118336776583, 0.8379500545772692);
-            var camera = scene.getCamera();
             camera.lookAt(position, position.add(direction), up);
+            break;
+        case 'T'.charCodeAt(0):
+            var extent = new Cesium.Extent(Cesium.Math.toRadians(-118.6),
+                                           Cesium.Math.toRadians(36.6),
+                                           Cesium.Math.toRadians(-118.5),
+                                           Cesium.Math.toRadians(36.7));
+            camera.viewExtent(extent, ellipsoid);
+            break;
+        case 'Y'.charCodeAt(0):
+            var extent = new Cesium.Extent(Cesium.Math.toRadians(-118.6),
+                                           Cesium.Math.toRadians(36.6),
+                                           Cesium.Math.toRadians(-118.5),
+                                           Cesium.Math.toRadians(36.7));
+            camera.viewExtent(extent, ellipsoid);
+            camera.update();
+            centralBodyController.freeLookController.lookUp(Cesium.Math.PI_OVER_TWO);
+            break;
+        case 'U'.charCodeAt(0):
+            var extent = new Cesium.Extent(Cesium.Math.toRadians(-118.6),
+                    Cesium.Math.toRadians(36.6),
+                    Cesium.Math.toRadians(-118.5),
+                    Cesium.Math.toRadians(36.7));
+            camera.viewExtent(extent, ellipsoid);
+            camera.update();
+            centralBodyController.freeLookController.lookUp(Cesium.Math.PI_OVER_TWO);
+            rotate = true;
+            rotateAngle = 0;
+            lastRotateAngle = 0;
+
+            scene.getAnimations().add({
+                onUpdate : function(value) {
+                    rotateAngle = value.angle;
+                },
+                onComplete : function() {
+                    rotate = false;
+                },
+                startValue : {
+                    angle : 0
+                },
+                stopValue : {
+                    angle : Cesium.Math.toRadians(2)
+                },
+                duration : 45000
+            });
             break;
         }
     }
