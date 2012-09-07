@@ -51,7 +51,7 @@ define([
      * parent.add(labels);      // Add regular primitive
      */
     var CompositePrimitive = function() {
-        this._centralBody = null;
+        this._centralBody = undefined;
         this._primitives = [];
         this._guid = createGuid();
         this._renderList = [];
