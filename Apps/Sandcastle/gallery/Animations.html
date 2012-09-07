@@ -62,11 +62,9 @@ body {
     z-index: -1;
 }
 #toolbar {
-    background: rgba(0, 0, 0, 0.5);
-    border: solid 1px rgba(0, 0, 0, 0.9);
     margin: 5px;
     padding: 2px 5px;
-    border-radius: 5px;
+    position: absolute;
 }
 </style>
 
@@ -87,13 +85,13 @@ require([
     var rectangularSensor;
     
     function alphaAnimation(primitive, scene) {
-        Sandcastle.declare(alphaAnimation);
+        Sandcastle.declare(alphaAnimation);     // For highlighting in Sandcastle.
         scene.getAnimations().removeAll();
         scene.getAnimations().addAlpha(primitive.material, 0.0, 0.7);
     }
     
     function erosionAnimation(primitive, scene) {
-        Sandcastle.declare(erosionAnimation);
+        Sandcastle.declare(erosionAnimation);   // For highlighting in Sandcastle.
         scene.getAnimations().removeAll();
         scene.getAnimations().addProperty(primitive, 'erosion', 0.0, 1.0, { 
             duration: 1000 
@@ -101,7 +99,7 @@ require([
     } 
     
     function heightAnimation(primitive, scene) {
-        Sandcastle.declare(heightAnimation);
+        Sandcastle.declare(heightAnimation);    // For highlighting in Sandcastle.
         scene.getAnimations().removeAll();
         scene.getAnimations().addProperty(primitive, 'height', 5000000.0, 0.0, { 
             duration: 1000 
@@ -109,7 +107,7 @@ require([
     }
     
     function stripeAnimation(primitive, scene) {
-        Sandcastle.declare(stripeAnimation);
+        Sandcastle.declare(stripeAnimation);    // For highlighting in Sandcastle.
         scene.getAnimations().removeAll();
         scene.getAnimations().addOffsetIncrement(primitive.material);
     }
@@ -184,10 +182,6 @@ require([
             widget.startRenderLoop();
         }
     }).placeAt(dom.byId("cesiumContainer"));
-    
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
     
     dom.byId("toolbar").innerHTML = '';
 });

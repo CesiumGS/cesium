@@ -15,6 +15,7 @@ require({
             location: '../Apps/Sandcastle'
         }]
     }, [
+        'Widgets/Dojo/CesiumWidget',
         'Widgets/Dojo/CesiumViewerWidget',
         'dojo/parser',
         'dojo/dom',
@@ -43,6 +44,7 @@ require({
         'Sandcastle/LinkButton',
         'dojo/domReady!'],
     function (
+            CesiumWidget,
             CesiumViewerWidget,
             parser,
             dom,
@@ -57,6 +59,7 @@ require({
     ) {
         "use strict";
         parser.parse();
+        window.CesiumWidget = CesiumWidget; // for autocomplete.
         window.CesiumViewerWidget = CesiumViewerWidget; // for autocomplete.
         fx.fadeOut({ node: 'loading', onEnd: function () {
             domConstruct.destroy('loading');
@@ -165,20 +168,20 @@ require({
             local.headers = value.substring(0, pos + 1) + '\n';
         });
 
-        function highlightRun(light) {
-            if (light) {
-                domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
-            } else {
-                domClass.remove(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
-            }
+        function highlightRun() {
+            domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
         }
 
-        function highlightSaveAs(light) {
-            if (light) {
-                domClass.add(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
-            } else {
-                domClass.remove(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
-            }
+        function clearRun() {
+            domClass.remove(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
+        }
+
+        function highlightSaveAs() {
+            domClass.add(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
+        }
+
+        function clearSaveAs() {
+            domClass.remove(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
         }
 
         function openDocTab(title, link) {
@@ -281,7 +284,16 @@ require({
                 window.clearTimeout(hintTimer);
             }
             hintTimer = setTimeout(clearAllErrors, 550);
-            highlightRun(true);
+            highlightRun();
+        }
+
+        function scrollToLine(lineNumber) {
+            if (typeof lineNumber !== 'undefined') {
+                jsEditor.setCursor(lineNumber);
+                jsEditor.setSelection({line: lineNumber - 2, ch:0}, {line: lineNumber - 2, ch: 0});
+                jsEditor.focus();
+                jsEditor.setSelection({line: lineNumber - 1, ch: 0}, {line: lineNumber - 1, ch: 0});
+            }
         }
 
         function highlightLine(lineNum) {
@@ -295,18 +307,13 @@ require({
                 line = jsEditor.setMarker(lineNum - 1, makeLineLabel('highlighted by demo'), "highlightMarker");
                 jsEditor.setLineClass(line, "highlightLine");
                 highlightLines.push(line);
-
-                // Scroll to bring the highlighted line into view.
-                jsEditor.setCursor(lineNum);
-                jsEditor.setSelection({line: lineNum - 2, ch:0}, {line: lineNum - 2, ch: 0});
-                jsEditor.focus();
-                jsEditor.setSelection({line: lineNum, ch: 0}, {line: lineNum, ch: 0});
+                scrollToLine(lineNum);
             }
         }
 
         CodeMirror.commands.runCesium = function(cm) {
             clearAllErrors();
-            highlightRun(false);
+            clearRun();
             cesiumContainer.selectChild(bucketPane);
             bucketFrame.contentWindow.location.reload();
         };
@@ -324,7 +331,7 @@ require({
             onChange: scheduleHint,
             extraKeys: {
                 "Ctrl-Space": "autocomplete",
-                "F9": "runCesium",
+                "F8": "runCesium",
                 "Tab": "indentMore",
                 "Shift-Tab": "indentLess"
             }
@@ -336,7 +343,7 @@ require({
             matchBrackets: true,
             indentUnit: 4,
             extraKeys: {
-                "F9": "runCesium",
+                "F8": "runCesium",
                 "Tab": "indentMore",
                 "Shift-Tab": "indentLess"
             }
@@ -385,11 +392,11 @@ require({
                 logOutput.innerHTML = "";
                 if (typeof queryObject.src !== 'undefined') {
                     // This happens once on Sandcastle page load, the blank bucket.html triggers a load
-                    // of the selected demo code from the gallery, followed by a Run (F9) equivalent.
+                    // of the selected demo code from the gallery, followed by a Run (F8) equivalent.
                     loadFromGallery(queryObject.src);
                     queryObject.src = undefined;
                 } else {
-                    // This happens after a Run (F9) reloads bucket.html, to inject the editor code
+                    // This happens after a Run (F8) reloads bucket.html, to inject the editor code
                     // into the iframe, causing the demo to run there.
                     var bucketDoc = bucketFrame.contentDocument;
                     var bodyEle = bucketDoc.createElement('div');
@@ -413,6 +420,7 @@ require({
                     line = jsEditor.setMarker(e.data.lineNumber - 1, makeLineLabel(e.data.rawErrorMsg), "errorMarker");
                     jsEditor.setLineClass(line, "errorLine");
                     errorLines.push(line);
+                    scrollToLine(e.data.lineNumber);
                 }
             } else if (typeof e.data.highlight !== 'undefined') {
                 // Hovering objects in the embedded Cesium window.

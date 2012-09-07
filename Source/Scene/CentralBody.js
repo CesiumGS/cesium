@@ -692,7 +692,7 @@ define([
         var Km4PI = Km * 4.0 * Math.PI;
         var ESun = 15.0;
         var g = -0.95;
-        var innerRadius = ellipsoid.getRadii().getMaximumComponent();
+        var innerRadius = ellipsoid.getMaximumRadius();
         var rayleighScaleDepth = 0.25;
         var inverseWaveLength = {
             x : 1.0 / Math.pow(0.650, 4.0), // Red
@@ -895,6 +895,7 @@ define([
 
     CentralBody.prototype._cull = function(tile, frameState) {
         var camera = frameState.camera;
+        var cullingVolume = frameState.cullingVolume;
 
         if (frameState.mode === SceneMode.SCENE2D) {
             var bRect = tile.get2DBoundingRectangle(frameState.scene2D.projection);
@@ -924,7 +925,7 @@ define([
         }
 
         var boundingVolume = this._getTileBoundingSphere(tile, frameState);
-        if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+        if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
             return true;
         }
 
@@ -1179,7 +1180,7 @@ define([
                     return rtc;
                 },
                 u_center2D : function() {
-                    return (projectedRTC) ? Cartesian2.fromCartesian3(projectedRTC) : Cartesian2.ZERO;
+                    return typeof projectedRTC !== 'undefined' ? projectedRTC : Cartesian2.ZERO;
                 },
                 u_modifiedModelView : function() {
                     return tile.modelView;
@@ -1349,9 +1350,9 @@ define([
         }
 
         lowerLeft = center.add(camera.up.multiplyByScalar(-halfHeight)).add(camera.right.multiplyByScalar(-halfWidth));
-        lowerLeft = Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft);
+        Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft, lowerLeft);
         upperRight = center.add(camera.up.multiplyByScalar(halfHeight)).add(camera.right.multiplyByScalar(halfWidth));
-        upperRight = Transforms.pointToWindowCoordinates(mvp, vt, upperRight);
+        Transforms.pointToWindowCoordinates(mvp, vt, upperRight, upperRight);
 
         lowerLeft.x = Math.max(0.0, Math.min(lowerLeft.x, description.width));
         lowerLeft.y = Math.max(0.0, Math.min(lowerLeft.y, description.height));
@@ -1419,9 +1420,9 @@ define([
         var screenRight = center.add(right.multiplyByScalar(radius));
         var screenUp = center.add(Cartesian3.UNIT_Z.cross(right).normalize().multiplyByScalar(radius));
 
-        center = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center);
-        screenRight = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight);
-        screenUp = Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp);
+        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center, center);
+        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);
+        Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp, screenUp);
 
         var halfWidth = Math.floor(Math.max(screenUp.subtract(center).magnitude(), screenRight.subtract(center).magnitude()));
         var halfHeight = halfWidth;
@@ -1462,7 +1463,7 @@ define([
                 CesiumMath.PI_OVER_TWO
             );
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
-            frustumCull = frameState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
@@ -1509,7 +1510,7 @@ define([
                 this._dayTileProvider.maxExtent.south
             );
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
-            frustumCull = frameState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
@@ -1713,7 +1714,7 @@ define([
         if (this.showSkyAtmosphere && !this._vaSky) {
             // PERFORMANCE_IDEA:  Is 60 the right amount to tessellate?  I think scaling the original
             // geometry in a vertex is a bad idea; at least, because it introduces a draw call per tile.
-            var skyMesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
+            var skyMesh = CubeMapEllipsoidTessellator.compute(Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
             this._vaSky = context.createVertexArrayFromMesh({
                 mesh : skyMesh,
                 attributeIndices : MeshFilters.createAttributeIndices(skyMesh),

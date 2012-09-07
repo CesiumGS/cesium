@@ -63,11 +63,9 @@ body {
     z-index: -1;
 }
 #toolbar {
-    background: rgba(0, 0, 0, 0.5);
-    border: solid 1px rgba(0, 0, 0, 0.9);
     margin: 5px;
     padding: 2px 5px;
-    border-radius: 5px;
+    position: absolute;
 }
 </style>
 
@@ -85,7 +83,7 @@ require([
     "use strict";
     
     function renderBox(scene) {
-        Sandcastle.declare(renderBox);
+        Sandcastle.declare(renderBox);  // For highlighting in Sandcastle.
         var primitives = scene.getPrimitives();
         primitives.add(new Box(Cesium.Ellipsoid.WGS84.cartographicToCartesian(
             Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000.0))));
@@ -127,7 +125,7 @@ require([
         };
     };
     
-    Box.prototype.update = function(context, sceneState) {
+    Box.prototype.update = function(context, frameState) {
         // Only supports 3D, not 2D or Columbus view.
         if (typeof this._va === 'undefined') {
             var vs = '';
@@ -217,7 +215,7 @@ require([
     };
     
     function renderBoxAcrossModes(scene) {
-        Sandcastle.declare(renderBoxAcrossModes);
+        Sandcastle.declare(renderBoxAcrossModes);   // For highlighting in Sandcastle.
         var primitives = scene.getPrimitives();
         primitives.add(new Box2(Cesium.Ellipsoid.WGS84.cartographicToCartesian(
             Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000.0))));
@@ -477,13 +475,10 @@ require([
         postSetup : function(widget) {
             createButtons(widget);
             widget.startRenderLoop();
+            renderBox(widget.scene);
         }
     }).placeAt(dom.byId('cesiumContainer'));
 
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
-    
     dom.byId("toolbar").innerHTML = '';
 });
 

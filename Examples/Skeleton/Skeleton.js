@@ -9,7 +9,7 @@ require({
     //includes everything.
 
     var canvas = document.getElementById('glCanvas');
-    var ellipsoid = Cesium.Ellipsoid.WGS84; // Used in many Sandbox examples
+    var ellipsoid = Cesium.Ellipsoid.WGS84;
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
@@ -40,12 +40,12 @@ require({
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
     ///////////////////////////////////////////////////////////////////////////
-    // Add examples from the Sandbox here:
+    // Add your code here:
 
     ///////////////////////////////////////////////////////////////////////////
 
     scene.setAnimation(function() {
-        scene.setSunPosition(Cesium.SunPosition.compute().position);
+        scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
 
         // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
     });
@@ -113,12 +113,7 @@ require({
         canvas.width = width;
         canvas.height = height;
 
-        scene.getContext().setViewport({
-            x : 0,
-            y : 0,
-            width : width,
-            height : height
-        });
+        scene.getContext().setViewport(new Cesium.BoundingRectangle(0, 0, width, height));
 
         scene.getCamera().frustum.aspectRatio = width / height;
     };

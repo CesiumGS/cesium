@@ -15,6 +15,7 @@ define([
         'dijit/TooltipDialog',
         './getJson',
         './TimelineWidget',
+        '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
@@ -22,7 +23,7 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
         '../../Core/FullScreen',
-        '../../Core/SunPosition',
+        '../../Core/computeSunPosition',
         '../../Core/EventHandler',
         '../../Core/FeatureDetection',
         '../../Core/MouseEventType',
@@ -61,6 +62,7 @@ define([
         TooltipDialog,
         getJson,
         TimelineWidget,
+        BoundingRectangle,
         Clock,
         ClockStep,
         ClockRange,
@@ -68,7 +70,7 @@ define([
         Ellipsoid,
         Iso8601,
         FullScreen,
-        SunPosition,
+        computeSunPosition,
         EventHandler,
         FeatureDetection,
         MouseEventType,
@@ -104,8 +106,8 @@ define([
         cloudsMapUrl : undefined,
         bumpMapUrl : undefined,
         endUserOptions : {},
-        enableDragDrop: false,
-        resizeWidgetOnWindowResize: true,
+        enableDragDrop : false,
+        resizeWidgetOnWindowResize : true,
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -131,12 +133,7 @@ define([
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.scene.getContext().setViewport({
-                x : 0,
-                y : 0,
-                width : width,
-                height : height
-            });
+            this.scene.getContext().setViewport(new BoundingRectangle(0, 0, width, height));
 
             this.scene.getCamera().frustum.aspectRatio = width / height;
         },
@@ -321,7 +318,7 @@ define([
 
             scene.getPrimitives().setCentralBody(centralBody);
 
-            var camera = scene.getCamera(), maxRadii = ellipsoid.getRadii().getMaximumComponent();
+            var camera = scene.getCamera(), maxRadii = ellipsoid.getMaximumRadius();
 
             camera.position = camera.position.multiplyByScalar(1.5);
             camera.frustum.near = 0.0002 * maxRadii;
@@ -562,13 +559,13 @@ define([
             on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
             on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
 
+            //////////////////////////////////////////////////////////////////////////////////////////////////
+
             if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
                     widget.resize();
                 });
             }
-
-            //////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);
@@ -645,8 +642,10 @@ define([
                 if (typeof this.highlightedObject !== 'undefined') {
                     if (typeof this.highlightedObject.material !== 'undefined') {
                         this.highlightedObject.material = this._originalMaterial;
+                    } else if (typeof this.highlightedObject.outerMaterial !== 'undefined') {
+                        this.highlightedObject.outerMaterial = this._originalMaterial;
                     } else {
-                        this.highlightedObject.color = this._originalColor;
+                        this.highlightedObject.setColor(this._originalColor);
                     }
                 }
                 this.highlightedObject = selectedObject;
@@ -654,9 +653,12 @@ define([
                     if (typeof selectedObject.material !== 'undefined') {
                         this._originalMaterial = selectedObject.material;
                         selectedObject.material = this.highlightMaterial;
+                    } else if (typeof selectedObject.outerMaterial !== 'undefined') {
+                        this._originalMaterial = selectedObject.outerMaterial;
+                        selectedObject.outerMaterial = this.highlightMaterial;
                     } else {
-                        this._originalColor = selectedObject.color;
-                        selectedObject.color = this.highlightColor;
+                        this._originalColor = selectedObject.getColor();
+                        selectedObject.setColor(this.highlightColor);
                     }
                 }
             }
@@ -664,12 +666,14 @@ define([
 
         _cameraCenteredObjectIDPosition : new Cartesian3(),
 
+        _sunPosition : new Cartesian3(),
+
         update : function(currentTime) {
             var cameraCenteredObjectID = this.cameraCenteredObjectID;
             var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
 
             this.timelineControl.updateFromClock();
-            this.scene.setSunPosition(SunPosition.compute(currentTime).position);
+            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
             this.visualizers.update(currentTime);
 
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||

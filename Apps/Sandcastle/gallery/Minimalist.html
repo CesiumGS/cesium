@@ -39,9 +39,6 @@
     <link rel="Stylesheet" href="../../../Source/Widgets/DojoWidgets/CesiumWidget.css" type="text/css">
 </head>
 <body class="claro">
-
-
-
 <style>
 body {
     background: #000;
@@ -64,9 +61,15 @@ body {
     height: 100%;
     z-index: -1;
 }
+#toolbar {
+    margin: 5px;
+    padding: 2px 5px;
+    position: absolute;
+}
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
+<div id="toolbar">Loading...</div>
 
 <script id="cesium_sandcastle_script">
 require([
@@ -89,13 +92,13 @@ require([
     cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../../Images/earthspec1k.jpg';
     cb.showSkyAtmosphere = true;
-    cb.showGroundAtmosphere = true;
+    cb.showGroundAtmosphere = false;
     primitives.setCentralBody(cb);
 
     scene.getCamera().getControllers().addCentralBody();
 
     scene.setAnimation(function () {
-        scene.setSunPosition(Cesium.SunPosition.compute().position);
+        scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
     });
 
     (function tick() {
@@ -122,17 +125,14 @@ require([
         canvas.width = width;
         canvas.height = height;
 
-        scene.getContext().setViewport({
-            x: 0,
-            y: 0,
-            width: width,
-            height: height
-        });
+        scene.getContext().setViewport(new Cesium.BoundingRectangle(0, 0, width, height));
 
         scene.getCamera().frustum.aspectRatio = width / height;
     };
     window.addEventListener('resize', onResize, false);
     onResize();
+    
+    document.getElementById('toolbar').innerHTML = '';
 });
 
 </script>
