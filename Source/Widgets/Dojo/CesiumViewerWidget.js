@@ -104,7 +104,9 @@ define([
     return declare('Cesium.CesiumViewerWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin],
     /** @lends CesiumViewerWidget */
     {
+        // for Dojo use only
         templateString : template,
+
         /**
          * Enable streaming Imagery.  This is read-only after construction.
          *
@@ -121,12 +123,61 @@ define([
          * @see CesiumViewerWidget.setStreamingImageryMapStyle
          */
         mapStyle : BingMapsStyle.AERIAL,
+        /**
+         * The default camera, which looks at the "home" view.
+         *
+         * @type {Camera}
+         */
         defaultCamera : undefined,
+        /**
+         * The URL for a daytime image on the globe.
+         *
+         * @type {String}
+         */
         dayImageUrl : undefined,
+        /**
+         * The URL for a nighttime image on the globe.
+         *
+         * @type {String}
+         */
         nightImageUrl : undefined,
+        /**
+         * The URL for a specular map on the globe, typically with white for oceans and black for landmass.
+         *
+         * @type {String}
+         */
         specularMapUrl : undefined,
+        /**
+         * The URL for the clouds image on the globe.
+         *
+         * @type {String}
+         */
         cloudsMapUrl : undefined,
+        /**
+         * The URL for a bump map on the globe, showing mountain ranges.
+         *
+         * @type {String}
+         */
         bumpMapUrl : undefined,
+        /**
+         * An object containing settings supplied by the end user, typically from the query string
+         * of the URL of the page with the widget.
+         *
+         * @type {Object}
+         * @example
+         * var ioQuery = require('dojo/io-query');
+         * var endUserOptions = {};
+         * if (window.location.search) {
+         *     endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
+         * }
+         *
+         * @example
+         * var endUserOptions = {
+         *     'source' : 'file.czml', // The relative URL of the CZML file to load at startup.
+         *     'lookAt' : '123abc',    // The CZML ID of the object to track at startup.
+         *     'stats'  : 1,           // Non-zero to enable the FPS performance display.
+         * };
+         */
         endUserOptions : {},
         /**
          * Allow the user to drag-and-drop CZML files into this widget.
@@ -155,17 +206,20 @@ define([
          */
         resizeWidgetOnWindowResize: true,
 
+        // for Dojo use only
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
         },
 
+        // for Dojo use only
         postCreate : function() {
             ready(this, '_setupCesium');
         },
 
         /**
          * If supplied, this function will be called at the end of widget setup.
-         * @type {Function}
+         *
+         * @function
          * @see CesiumViewerWidget.startRenderLoop
          */
         postSetup : undefined,
@@ -173,7 +227,8 @@ define([
         /**
          * This function will get a callback in the event of setup failure, likely indicating
          * a problem with WebGL support or the availability of a GL context.
-         * @type {Function}
+         *
+         * @function
          * @param {Object} widget - A reference to this widget
          * @param {Object} error - The exception that was thrown during setup
          */
@@ -185,6 +240,7 @@ define([
          * This function must be called when the widget changes size.  It updates the canvas
          * size, camera aspect ratio, and viewport size.
          *
+         * @function
          * @see CesiumViewerWidget.resizeWidgetOnWindowResize
          */
         resize : function() {
@@ -202,6 +258,12 @@ define([
             this.scene.getCamera().frustum.aspectRatio = width / height;
         },
 
+        /**
+         * Have the camera track a particular object.
+         *
+         * @function
+         * @param {Object} selectedObject - The object to track, or <code>undefined</code> to stop tracking.
+         */
         centerCameraOnObject : function(selectedObject) {
             if (selectedObject && selectedObject.dynamicObject) {
                 this.cameraCenteredObjectID = selectedObject.dynamicObject.id;
@@ -210,15 +272,66 @@ define([
             }
         },
 
+        /**
+         * Override this function to be notified when an object is selected (left-click).
+         *
+         * @function
+         * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
+         */
         onObjectSelected : undefined,
+        /**
+         * Override this function to be notified when an object is right-clicked.
+         *
+         * @function
+         * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
+         */
         onObjectRightClickSelected : undefined,
+        /**
+         * Override this function to be notified when an object hovered by the mouse.
+         *
+         * @function
+         * @param {Object} selectedObject - The object that was hovered, or <code>undefined</code> if the mouse moved off.
+         */
         onObjectMousedOver : undefined,
+        /**
+         * Override this function to be notified when the left mouse button is pressed down on an object.
+         *
+         * @function
+         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         */
         onLeftMouseDown : undefined,
+        /**
+         * Override this function to be notified when the left mouse button is released from an object.
+         *
+         * @function
+         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         */
         onLeftMouseUp : undefined,
+        /**
+         * Override this function to be notified when the right mouse button is pressed down on an object.
+         *
+         * @function
+         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         */
         onRightMouseDown : undefined,
+        /**
+         * Override this function to be notified when the right mouse button is released from an object.
+         *
+         * @function
+         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         */
         onRightMouseUp : undefined,
+        /**
+         * DOC_TBA
+         */
         onLeftDrag : undefined,
+        /**
+         * DOC_TBA
+         */
         onZoom : undefined,
+        /**
+         * DOC_TBA
+         */
         onCameraToggled : undefined,
 
         _handleLeftClick : function(e) {
@@ -297,6 +410,10 @@ define([
             }
         },
 
+        /**
+         * Apply the animation settings from a CZML buffer.
+         * @function
+         */
         setTimeFromBuffer : function() {
             var clock = this.clock;
 
@@ -320,6 +437,12 @@ define([
             this.timelineControl.zoomTo(clock.startTime, clock.stopTime);
         },
 
+        /**
+         * This function is called when files are dropped on the widget, if drag-and-drop is enabled.
+         *
+         * @function
+         * @param {Object} e - The drag-and-drop event containing the dropped file(s).
+         */
         handleDrop : function(e) {
             e.stopPropagation(); // Stops some browsers from redirecting.
             e.preventDefault();
@@ -629,6 +752,10 @@ define([
             this.defaultCamera = camera.clone();
         },
 
+        /**
+         * Reset the camera to the home (default) view.
+         * @function
+         */
         viewHome : function() {
             var camera = this.scene.getCamera();
             camera.position = this.defaultCamera.position;
@@ -642,10 +769,22 @@ define([
             this.centralBodyCameraController = controllers.addCentralBody();
         },
 
+        /**
+         * Test if the clouds are configured and available for display.
+         *
+         * @function
+         * @returns Boolean <code>true</code> if the <code>cloudsMapSource</code> is defined.
+         */
         areCloudsAvailable : function() {
             return typeof this.centralBody.cloudsMapSource !== 'undefined';
         },
 
+        /**
+         * Enable or disable the display of clouds.
+         *
+         * @function
+         * @param {Boolean} useClouds - <code>true</code> to enable clouds, if configured.
+         */
         enableClouds : function(useClouds) {
             if (this.areCloudsAvailable()) {
                 this.centralBody.showClouds = useClouds;
@@ -653,6 +792,12 @@ define([
             }
         },
 
+        /**
+         * Enable or disable the FPS (Frames Per Second) perfomance display.
+         *
+         * @function
+         * @param {Boolean} showStatistics - <code>true</code> to enable it.
+         */
         enableStatistics : function(showStatistics) {
             if (typeof this._performanceDisplay === 'undefined' && showStatistics) {
                 this._performanceDisplay = new PerformanceDisplay();
@@ -663,10 +808,24 @@ define([
             }
         },
 
+        /**
+         * Enable or disable the "sky atmosphere" effect, which displays the limb
+         * of the Earth (seen from space) or blue sky (seen from inside the atmosphere).
+         *
+         * @function
+         * @param {Boolean} show - <code>true</code> to enable the effect.
+         */
         showSkyAtmosphere : function(show) {
             this.centralBody.showSkyAtmosphere = show;
         },
 
+        /**
+         * Enable or disable the "ground atmosphere" effect, which makes the surface of
+         * the globe look pale at a distance.
+         *
+         * @function
+         * @param {Boolean} show - <code>true</code> to enable the effect.
+         */
         showGroundAtmosphere : function(show) {
             this.centralBody.showGroundAtmosphere = show;
         },
@@ -674,7 +833,8 @@ define([
         /**
          * Enable or disable streaming imagery, and update the globe.
          *
-         * @param {Boolean}
+         * @function
+         * @param {Boolean} value - <code>true</code> to enable streaming imagery.
          * @see CesiumViewerWidget.useStreamingImagery
          */
         enableStreamingImagery : function(value) {
@@ -685,7 +845,8 @@ define([
         /**
          * Change the streaming imagery type, and update the globe.
          *
-         * @param {BingMapsStyle}
+         * @function
+         * @param {BingMapsStyle} value - the new map style to use.
          * @see CesiumViewerWidget.mapStyle
          */
         setStreamingImageryMapStyle : function(value) {
@@ -697,6 +858,13 @@ define([
             }
         },
 
+        /**
+         * Set the positional offset of the logo of the streaming imagery provider.
+         *
+         * @function
+         * @param {Integer} logoOffsetX - The horizontal offset in screen space
+         * @param {Integer} logoOffsetY - The vertical offset in screen space
+         */
         setLogoOffset : function(logoOffsetX, logoOffsetY) {
             var logoOffset = this.centralBody.logoOffset;
             if ((logoOffsetX !== logoOffset.x) || (logoOffsetY !== logoOffset.y)) {
@@ -704,6 +872,12 @@ define([
             }
         },
 
+        /**
+         * Highlight an object in the scene, usually in response to a click or hover.
+         *
+         * @function
+         * @param {Object} selectedObject - The object to highlight, or <code>undefined</code> to un-highlight.
+         */
         highlightObject : function(selectedObject) {
             if (this.highlightedObject !== selectedObject) {
                 if (typeof this.highlightedObject !== 'undefined') {
@@ -735,6 +909,13 @@ define([
 
         _sunPosition : new Cartesian3(),
 
+        /**
+         * Call this function prior to rendering each animation frame, to prepare
+         * all CZML objects and other settings for the next frame.
+         *
+         * @function
+         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
+         */
         update : function(currentTime) {
             var cameraCenteredObjectID = this.cameraCenteredObjectID;
             var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
@@ -778,6 +959,10 @@ define([
             this._lastCameraCenteredObjectID = cameraCenteredObjectID;
         },
 
+        /**
+         * Render the widget's scene.
+         * @function
+         */
         render : function() {
             this.scene.render();
         },
