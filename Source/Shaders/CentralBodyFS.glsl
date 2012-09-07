@@ -1,4 +1,5 @@
 //#define SHOW_TILE_BOUNDARIES
+//#define SHOW_TEXTURE_BOUNDARIES
 
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
@@ -38,6 +39,15 @@ vec3 sampleAndBlend(
     vec2 scale = textureCoordinateTranslationAndScale.zw;
     vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
     vec4 color = texture2D(texture, textureCoordinates);
+
+#ifdef SHOW_TEXTURE_BOUNDARIES
+    if (textureCoordinates.x < (1.0/256.0) || textureCoordinates.x > (255.0/256.0) ||
+        textureCoordinates.y < (1.0/256.0) || textureCoordinates.y > (255.0/256.0))
+    {
+        color = vec4(0.0, 1.0, 0.0, 1.0);
+    }
+#endif
+
     return mix(previousColor, color.rgb, color.a * textureAlpha);
 }
 

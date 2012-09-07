@@ -227,11 +227,13 @@ define([
     var tilesVisited;
     var tilesCulled;
     var tilesRendered;
+    var texturesRendered;
 
     var lastMaxDepth = -1;
     var lastTilesVisited = -1;
     var lastTilesCulled = -1;
     var lastTilesRendered = -1;
+    var lastTexturesRendered = -1;
 
     EllipsoidSurface.prototype.update = function(context, frameState) {
         if (!this._doLodUpdate) {
@@ -270,6 +272,7 @@ define([
         tilesVisited = 0;
         tilesCulled = 0;
         tilesRendered = 0;
+        texturesRendered = 0;
 
         this._tileLoadQueue.markInsertionPoint();
         this._tileReplacementQueue.markStartOfRenderFrame();
@@ -319,7 +322,7 @@ define([
                 var children = tile.children;
                 // PERFORMANCE_TODO: traverse children front-to-back so we can avoid sorting by distance later.
                 for (i = 0, len = children.length; i < len; ++i) {
-                    if (isTileVisible(this, frameState, tile)) {
+                    if (isTileVisible(this, frameState, children[i])) {
                         traversalQueue.enqueue(children[i]);
                     } else {
                         ++tilesCulled;
@@ -331,14 +334,17 @@ define([
             }
         }
 
-        if (tilesVisited !== lastTilesVisited || tilesRendered !== lastTilesRendered ||
+        if (tilesVisited !== lastTilesVisited ||
+            tilesRendered !== lastTilesRendered ||
+            texturesRendered !== lastTexturesRendered ||
             tilesCulled !== lastTilesCulled ||
             maxDepth !== lastMaxDepth) {
 
-            console.log('Visited ' + tilesVisited + ' Rendered: ' + tilesRendered + ' Culled: ' + tilesCulled + ' Max Depth: ' + maxDepth);
+            console.log('Visited ' + tilesVisited + ', Rendered: ' + tilesRendered + ', Textures: ' + texturesRendered + ', Culled: ' + tilesCulled + ', Max Depth: ' + maxDepth);
 
             lastTilesVisited = tilesVisited;
             lastTilesRendered = tilesRendered;
+            lastTexturesRendered = texturesRendered;
             lastTilesCulled = tilesCulled;
             lastMaxDepth = maxDepth;
         }
@@ -711,6 +717,7 @@ define([
         tileSet.push(tile);
 
         ++tilesRendered;
+        texturesRendered += readyTextureCount;
     }
 
     function isTileVisible(surface, frameState, tile) {
