@@ -1,11 +1,15 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/Color',
+        '../Core/DeveloperError',
         './RenderbufferFormat'
     ], function(
+        defaultValue,
         destroyObject,
         Color,
+        DeveloperError,
         RenderbufferFormat) {
     "use strict";
 
@@ -59,22 +63,68 @@ define([
         return this._fb;
     };
 
+    var colorScratch = new Color();
+
     /**
      * DOC_TBA
      * @memberof PickFramebuffer
      */
-    PickFramebuffer.prototype.end = function(screenSpacePosition) {
-        if (screenSpacePosition) {
-            // TODO:  function with custom width/height
-            var pixels = this._context.readPixels({
-                x : screenSpacePosition.x,
-                y : screenSpacePosition.y,
-                width : 1,
-                height : 1,
-                framebuffer : this._fb
-            });
+    PickFramebuffer.prototype.end = function(screenSpaceRectangle) {
+        if (typeof screenSpaceRectangle === 'undefined') {
+            throw new DeveloperError('screenSpaceRectangle is required.');
+        }
 
-            return this._context.getObjectByPickId(new Color(pixels[0], pixels[1], pixels[2], pixels[3]));
+        var width = defaultValue(screenSpaceRectangle.width, 1.0);
+        var height = defaultValue(screenSpaceRectangle.height, 1.0);
+
+        var pixels = this._context.readPixels({
+            x : screenSpaceRectangle.x,
+            y : screenSpaceRectangle.y,
+            width : width,
+            height : height,
+            framebuffer : this._fb
+        });
+
+        var max = Math.max(width, height);
+        var length = max * max;
+        var halfWidth = Math.floor(width * 0.5);
+        var halfHeight = Math.floor(height * 0.5);
+
+        var x = 0;
+        var y = 0;
+        var dx = 0;
+        var dy = -1;
+
+        // Spiral around the center pixel, this is a workaround until
+        // we can access the depth buffer on all browsers.
+
+        // The region does not have to square and the dimensions do not have to be odd, but
+        // loop iterations would be wasted. Prefer square regions where the size is odd.
+        for (var i = 0; i < length; ++i) {
+            if (-halfWidth <= x && x <= halfWidth && -halfHeight <= y && y <= halfHeight) {
+                var index = 4 * ((halfHeight - y) * width + x + halfWidth);
+
+                colorScratch.red = pixels[index];
+                colorScratch.green = pixels[index + 1];
+                colorScratch.blue = pixels[index + 2];
+                colorScratch.alpha = pixels[index + 3];
+
+                var object = this._context.getObjectByPickId(colorScratch);
+                if (typeof object !== 'undefined') {
+                    return object;
+                }
+            }
+
+            // if (top right || bottom left corners) || (top left corner) || (bottom right corner + (1, 0)
+            // change spiral direction
+            if (x === y || (x < 0 && -x === y) || (x > 0 && x === 1 - y)) {
+                var temp = dx;
+                dx = -dy;
+                dy = temp;
+            }
+
+            x += dx;
+            y += dy;
         }
 
         return undefined;

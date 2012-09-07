@@ -38,6 +38,8 @@ define([
         this._segments = undefined;
         this._actualLength = this._positions.length;
         this._boundingVolume = BoundingSphere.fromPoints(this._positions);
+        this._boundingVolumeCV = new BoundingSphere();  // modified in PolylineCollection
+        this._boundingVolume2D = new BoundingSphere();  // modified in PolylineCollection
     };
 
     var SHOW_INDEX = Polyline.SHOW_INDEX = 0;
@@ -119,7 +121,7 @@ define([
             this._makeDirty(POSITION_SIZE_INDEX);
         }
         this._positions = positions;
-        this._boundingVolume = BoundingSphere.fromPoints(this._positions);
+        this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
         this._makeDirty(POSITION_INDEX);
     };
 
