@@ -2104,7 +2104,7 @@ define([
             }
 
             var uniformState = context.getUniformState();
-            var mv = uniformState.getModelView();
+            var mv = uniformState.getView();
 
             context.beginDraw({
                 framebuffer : this._fb,
