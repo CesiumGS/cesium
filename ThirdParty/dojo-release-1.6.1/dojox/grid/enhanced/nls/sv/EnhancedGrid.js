@@ -1,1 +1,0 @@
-({"singleSort":"Enkel sortering","indirectSelectionRadio":"Rad ${0}, ett enda val, alternativruta","ascending":"Stigande","indirectSelectionCheckBox":"Rad ${0}, flera val, kryssruta","selectAll":"Markera alla ","descending":"Fallande","nestedSort":"Nästlad sortering","unsorted":"Sortera inte den här kolumnen","sortingState":"${0} - ${1}"})

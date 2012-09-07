@@ -1,1 +1,0 @@
-({"setButtonText":"تحديد","cancelButtonText":"الغاء"})
