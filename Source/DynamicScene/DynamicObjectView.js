@@ -26,7 +26,7 @@ define([
             var controllers = camera.getControllers();
             controllers.removeAll();
             that._lastController = that._controller2d = controller = controllers.add2D(scene.scene2D.projection);
-            controller.zoomOnly = true;
+            controller.enableTranslate = false;
             viewDistance = typeof that._lastOffset === 'undefined' ? offset.magnitude() : that._lastOffset.magnitude();
         } else if (objectChanged) {
             viewDistance = offset.magnitude();
@@ -130,7 +130,7 @@ define([
                 camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * that.ellipsoid.getRadii().getMaximumComponent());
             }
 
-            //The swizzling here is intention because ColumbusView uses a different coordinate system.
+            //The swizzling here is intentional because ColumbusView uses a different coordinate system.
             var projectedPosition = scene.scene2D.projection.project(cartographic);
             cartesian4Scratch.x = projectedPosition.z;
             cartesian4Scratch.y = projectedPosition.x;
