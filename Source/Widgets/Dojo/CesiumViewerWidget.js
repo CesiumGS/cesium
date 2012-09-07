@@ -111,6 +111,7 @@ define([
          * Enable streaming Imagery.  This is read-only after construction.
          *
          * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
          * @default true
          * @see CesiumViewerWidget.enableStreamingImagery
          */
@@ -119,6 +120,7 @@ define([
          * The map style for streaming imagery.  This is read-only after construction.
          *
          * @type {BingMapsStyle}
+         * @memberof CesiumViewerWidget.prototype
          * @default {@link BingMapsStyle.AERIAL}
          * @see CesiumViewerWidget.setStreamingImageryMapStyle
          */
@@ -127,36 +129,42 @@ define([
          * The default camera, which looks at the "home" view.
          *
          * @type {Camera}
+         * @memberof CesiumViewerWidget.prototype
          */
         defaultCamera : undefined,
         /**
          * The URL for a daytime image on the globe.
          *
          * @type {String}
+         * @memberof CesiumViewerWidget.prototype
          */
         dayImageUrl : undefined,
         /**
          * The URL for a nighttime image on the globe.
          *
          * @type {String}
+         * @memberof CesiumViewerWidget.prototype
          */
         nightImageUrl : undefined,
         /**
          * The URL for a specular map on the globe, typically with white for oceans and black for landmass.
          *
          * @type {String}
+         * @memberof CesiumViewerWidget.prototype
          */
         specularMapUrl : undefined,
         /**
          * The URL for the clouds image on the globe.
          *
          * @type {String}
+         * @memberof CesiumViewerWidget.prototype
          */
         cloudsMapUrl : undefined,
         /**
          * The URL for a bump map on the globe, showing mountain ranges.
          *
          * @type {String}
+         * @memberof CesiumViewerWidget.prototype
          */
         bumpMapUrl : undefined,
         /**
@@ -164,6 +172,7 @@ define([
          * of the URL of the page with the widget.
          *
          * @type {Object}
+         * @memberof CesiumViewerWidget.prototype
          * @example
          * var ioQuery = require('dojo/io-query');
          * var endUserOptions = {};
@@ -184,6 +193,7 @@ define([
          * This is read-only after construction.
          *
          * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
          * @default false
          */
         enableDragDrop: false,
@@ -201,6 +211,7 @@ define([
          * globe to stretch, change this to true.
          *
          * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
          * @default true
          * @see CesiumViewerWidget.resize
          */
@@ -220,6 +231,7 @@ define([
          * If supplied, this function will be called at the end of widget setup.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @see CesiumViewerWidget.startRenderLoop
          */
         postSetup : undefined,
@@ -229,6 +241,7 @@ define([
          * a problem with WebGL support or the availability of a GL context.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Object} widget - A reference to this widget
          * @param {Object} error - The exception that was thrown during setup
          */
@@ -241,6 +254,7 @@ define([
          * size, camera aspect ratio, and viewport size.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @see CesiumViewerWidget.resizeWidgetOnWindowResize
          */
         resize : function() {
@@ -262,6 +276,7 @@ define([
          * Have the camera track a particular object.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Object} selectedObject - The object to track, or <code>undefined</code> to stop tracking.
          */
         centerCameraOnObject : function(selectedObject) {
@@ -276,6 +291,7 @@ define([
          * Override this function to be notified when an object is selected (left-click).
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
          */
         onObjectSelected : undefined,
@@ -283,6 +299,7 @@ define([
          * Override this function to be notified when an object is right-clicked.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
          */
         onObjectRightClickSelected : undefined,
@@ -290,6 +307,7 @@ define([
          * Override this function to be notified when an object hovered by the mouse.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Object} selectedObject - The object that was hovered, or <code>undefined</code> if the mouse moved off.
          */
         onObjectMousedOver : undefined,
@@ -297,6 +315,7 @@ define([
          * Override this function to be notified when the left mouse button is pressed down on an object.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
          */
         onLeftMouseDown : undefined,
@@ -304,6 +323,7 @@ define([
          * Override this function to be notified when the left mouse button is released from an object.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
          */
         onLeftMouseUp : undefined,
@@ -311,6 +331,7 @@ define([
          * Override this function to be notified when the right mouse button is pressed down on an object.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
          */
         onRightMouseDown : undefined,
@@ -318,19 +339,29 @@ define([
          * Override this function to be notified when the right mouse button is released from an object.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
          */
         onRightMouseUp : undefined,
         /**
          * DOC_TBA
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
          */
         onLeftDrag : undefined,
         /**
          * DOC_TBA
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
          */
         onZoom : undefined,
         /**
          * DOC_TBA
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
          */
         onCameraToggled : undefined,
 
@@ -413,6 +444,7 @@ define([
         /**
          * Apply the animation settings from a CZML buffer.
          * @function
+         * @memberof CesiumViewerWidget.prototype
          */
         setTimeFromBuffer : function() {
             var clock = this.clock;
@@ -441,6 +473,7 @@ define([
          * This function is called when files are dropped on the widget, if drag-and-drop is enabled.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Object} e - The drag-and-drop event containing the dropped file(s).
          */
         handleDrop : function(e) {
@@ -755,6 +788,7 @@ define([
         /**
          * Reset the camera to the home (default) view.
          * @function
+         * @memberof CesiumViewerWidget.prototype
          */
         viewHome : function() {
             var camera = this.scene.getCamera();
@@ -773,6 +807,7 @@ define([
          * Test if the clouds are configured and available for display.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @returns Boolean <code>true</code> if the <code>cloudsMapSource</code> is defined.
          */
         areCloudsAvailable : function() {
@@ -783,6 +818,7 @@ define([
          * Enable or disable the display of clouds.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Boolean} useClouds - <code>true</code> to enable clouds, if configured.
          */
         enableClouds : function(useClouds) {
@@ -796,6 +832,7 @@ define([
          * Enable or disable the FPS (Frames Per Second) perfomance display.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Boolean} showStatistics - <code>true</code> to enable it.
          */
         enableStatistics : function(showStatistics) {
@@ -813,6 +850,7 @@ define([
          * of the Earth (seen from space) or blue sky (seen from inside the atmosphere).
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Boolean} show - <code>true</code> to enable the effect.
          */
         showSkyAtmosphere : function(show) {
@@ -824,6 +862,7 @@ define([
          * the globe look pale at a distance.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Boolean} show - <code>true</code> to enable the effect.
          */
         showGroundAtmosphere : function(show) {
@@ -834,6 +873,7 @@ define([
          * Enable or disable streaming imagery, and update the globe.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Boolean} value - <code>true</code> to enable streaming imagery.
          * @see CesiumViewerWidget.useStreamingImagery
          */
@@ -846,6 +886,7 @@ define([
          * Change the streaming imagery type, and update the globe.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {BingMapsStyle} value - the new map style to use.
          * @see CesiumViewerWidget.mapStyle
          */
@@ -862,6 +903,7 @@ define([
          * Set the positional offset of the logo of the streaming imagery provider.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Integer} logoOffsetX - The horizontal offset in screen space
          * @param {Integer} logoOffsetY - The vertical offset in screen space
          */
@@ -876,6 +918,7 @@ define([
          * Highlight an object in the scene, usually in response to a click or hover.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {Object} selectedObject - The object to highlight, or <code>undefined</code> to un-highlight.
          */
         highlightObject : function(selectedObject) {
@@ -914,6 +957,7 @@ define([
          * all CZML objects and other settings for the next frame.
          *
          * @function
+         * @memberof CesiumViewerWidget.prototype
          * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
         update : function(currentTime) {
@@ -962,6 +1006,7 @@ define([
         /**
          * Render the widget's scene.
          * @function
+         * @memberof CesiumViewerWidget.prototype
          */
         render : function() {
             this.scene.render();
@@ -992,6 +1037,8 @@ define([
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
          * on your page.  Typically it is started from {@link CesiumViewerWidget.postSetup}.  If you wish to
          * customize your render loop, avoid this function and instead use code similar to the following example.
+         * @function
+         * @memberof CesiumViewerWidget.prototype
          * @see requestAnimationFrame
          * @example
          * // This takes the place of startRenderLoop for a single widget.
