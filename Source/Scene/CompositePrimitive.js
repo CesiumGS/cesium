@@ -409,10 +409,11 @@ define([
             return [];
         }
 
-        //TODO:
-        //if (this._centralBody) {
-        //    this._centralBody.update(context, frameState);
-        //}
+        var commandList = [];
+
+        if (this._centralBody) {
+            commandList = commandList.concat(this._centralBody.update(context, frameState));
+        }
 
         var cullingVolume = frameState.cullingVolume;
         var occluder;
@@ -423,7 +424,6 @@ define([
 
         var primitives = this._primitives;
         var length = primitives.length;
-        var commandList = [];
         for (var i = 0; i < length; ++i) {
             var primitive = primitives[i];
             var primitiveCommandList = primitive.update(context, frameState);

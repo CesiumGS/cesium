@@ -1577,15 +1577,24 @@ define([
         }
     };
 
+    var clearState = {
+        framebuffer : undefined,
+        color : new Color(0.0, 0.0, 0.0, 0.0)
+    };
+
     /**
      * @private
      */
     CentralBody.prototype.update = function(context, frameState) {
+        if (!this.show) {
+            return [];
+        }
+
         var width = context.getCanvas().clientWidth;
         var height = context.getCanvas().clientHeight;
 
         if (width === 0 || height === 0) {
-            return;
+            return [];
         }
 
         var mode = frameState.mode;
@@ -1700,13 +1709,6 @@ define([
 
         if ((mode !== SceneMode.SCENE2D && mode !== SceneMode.MORPHING) && typeof this._minTileDistance === 'undefined') {
             this._minTileDistance = this._createTileDistanceFunction(frameState, width, height);
-        }
-
-        this._quadV.update(context, frameState);
-        this._quadH.update(context, frameState);
-
-        if (this._quadLogo && !this._quadLogo.isDestroyed()) {
-            this._quadLogo.update(context, frameState);
         }
 
         var vs, fs;
@@ -2041,6 +2043,9 @@ define([
         this._throttleReprojection(frameState);
         this._throttleTextures(context, frameState);
 
+        clearState.framebuffer = this._fb;
+        context.clear(context.createClearState(clearState));
+
         var stack = [this._rootTile];
         while (stack.length !== 0) {
             var tile = stack.pop();
@@ -2071,25 +2076,12 @@ define([
 
         this._mode = mode;
         this._projection = projection;
-    };
 
-    var clearState = {
-        framebuffer : undefined,
-        color : new Color(0.0, 0.0, 0.0, 0.0)
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof CentralBody
-     */
-    CentralBody.prototype.render = function(context) {
-        if (this.show) {
-            // clear FBO
-            clearState.framebuffer = this._fb;
-            context.clear(context.createClearState(clearState));
-
+        var pass = frameState.passes;
+        var commandList = [];
+        if (pass.color) {
             if (this.showSkyAtmosphere) {
-                context.draw({
+                commandList.push({
                     framebuffer : this._fb,
                     primitiveType : PrimitiveType.TRIANGLES,
                     shaderProgram : this._spSky,
@@ -2099,114 +2091,95 @@ define([
                 });
             }
 
-            if (this._renderQueue.length === 0) {
-                return;
-            }
+            if (this._renderQueue.length !== 0) {
+                var uniformState = context.getUniformState();
+                var mv = uniformState.getModelView();
 
-            var uniformState = context.getUniformState();
-            var mv = uniformState.getModelView();
-
-            context.beginDraw({
-                framebuffer : this._fb,
-                shaderProgram : this._sp,
-                renderState : this._rsColor
-            });
-
-            // TODO: remove once multi-frustum/depth testing is implemented
-            this._renderQueue.sort(function(a, b) {
-                return a.zoom - b.zoom;
-            });
-
-            // render tiles to FBO
-            while (this._renderQueue.length > 0) {
-                var tile = this._renderQueue.dequeue();
-
-                var rtc;
-                if (this.morphTime === 1.0) {
-                    rtc = tile._drawUniforms.u_center3D();
-                    tile.mode = 0;
-                } else if (this.morphTime === 0.0) {
-                    var center = tile._drawUniforms.u_center2D();
-                    rtc = new Cartesian3(0.0, center.x, center.y);
-                    tile.mode = 1;
-                } else {
-                    rtc = Cartesian3.ZERO;
-                    tile.mode = 2;
-                }
-                var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
-                tile.modelView = mv.setColumn(3, centerEye, tile.modelView);
-
-                context.continueDraw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    vertexArray : tile._extentVA,
-                    uniformMap : tile._drawUniforms
+                // TODO: remove once multi-frustum/depth testing is implemented
+                this._renderQueue.sort(function(a, b) {
+                    return a.zoom - b.zoom;
                 });
-            }
 
-            context.endDraw();
+                // render tiles to FBO
+                while (this._renderQueue.length > 0) {
+                    var curTile = this._renderQueue.dequeue();
 
-            // render quad with vertical gaussian blur with second-pass texture attached to FBO
-            this._quadV.render(context);
+                    var rtc;
+                    if (this.morphTime === 1.0) {
+                        rtc = curTile._drawUniforms.u_center3D();
+                        curTile.mode = 0;
+                    } else if (this.morphTime === 0.0) {
+                        var center = curTile._drawUniforms.u_center2D();
+                        rtc = new Cartesian3(0.0, center.x, center.y);
+                        curTile.mode = 1;
+                    } else {
+                        rtc = Cartesian3.ZERO;
+                        curTile.mode = 2;
+                    }
+                    var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
+                    curTile.modelView = mv.setColumn(3, centerEye, curTile.modelView);
 
-            // render quad with horizontal gaussian blur
-            this._quadH.render(context);
-
-            // render quads to fill the poles
-            if (this._mode === SceneMode.SCENE3D) {
-                if (this._drawNorthPole) {
-                    context.draw({
-                        primitiveType : PrimitiveType.TRIANGLE_FAN,
-                        shaderProgram : this._spPoles,
-                        uniformMap : this._northPoleUniforms,
-                        vertexArray : this._vaNorthPole,
-                        renderState : this._rsColor
+                    commandList.push({
+                        framebuffer : this._fb,
+                        shaderProgram : this._sp,
+                        renderState : this._rsColor,
+                        primitiveType : PrimitiveType.TRIANGLES,
+                        vertexArray : curTile._extentVA,
+                        uniformMap : curTile._drawUniforms
                     });
                 }
-                if (this._drawSouthPole) {
-                    context.draw({
-                        primitiveType : PrimitiveType.TRIANGLE_FAN,
-                        shaderProgram : this._spPoles,
-                        uniformMap : this._southPoleUniforms,
-                        vertexArray : this._vaSouthPole,
-                        renderState : this._rsColor
+
+                // render quad with vertical and horizontal gaussian blur
+                commandList = commandList.concat(this._quadV.update(context, frameState), this._quadH.update(context, frameState));
+
+                // render quads to fill the poles
+                if (this._mode === SceneMode.SCENE3D) {
+                    if (this._drawNorthPole) {
+                        commandList.push({
+                            primitiveType : PrimitiveType.TRIANGLE_FAN,
+                            shaderProgram : this._spPoles,
+                            uniformMap : this._northPoleUniforms,
+                            vertexArray : this._vaNorthPole,
+                            renderState : this._rsColor
+                        });
+                    }
+                    if (this._drawSouthPole) {
+                        commandList.push({
+                            primitiveType : PrimitiveType.TRIANGLE_FAN,
+                            shaderProgram : this._spPoles,
+                            uniformMap : this._southPoleUniforms,
+                            vertexArray : this._vaSouthPole,
+                            renderState : this._rsColor
+                        });
+                    }
+                }
+
+                // render depth plane
+                if (this._mode === SceneMode.SCENE3D) {
+                    commandList.push({
+                        primitiveType : PrimitiveType.TRIANGLES,
+                        shaderProgram : this._spDepth,
+                        vertexArray : this._vaDepth,
+                        renderState : this._rsDepth
                     });
                 }
-            }
 
-            // render depth plane
-            if (this._mode === SceneMode.SCENE3D) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._spDepth,
-                    vertexArray : this._vaDepth,
-                    renderState : this._rsDepth
-                });
+                if (typeof this._quadLogo !== 'undefined' && !this._quadLogo.isDestroyed()) {
+                    commandList = commandList.concat(this._quadLogo.update(context, frameState));
+                }
             }
-
-            if (typeof this._quadLogo !== 'undefined' && !this._quadLogo.isDestroyed()) {
-                this._quadLogo.render(context);
-            }
+        } else if (pass.pick) {
+            // Not actually pickable, but render depth-only so primitives on the backface
+            // of the globe are not picked.
+            commandList.push({
+                primitiveType : PrimitiveType.TRIANGLES,
+                shaderProgram : this._spDepth,
+                vertexArray : this._vaDepth,
+                renderState : this._rsDepth
+            });
         }
-    };
 
-    /**
-     * DOC_TBA
-     * @memberof CentralBody
-     */
-    CentralBody.prototype.renderForPick = function(context, framebuffer) {
-        if (this.show) {
-            if (this._mode === SceneMode.SCENE3D) {
-                // Not actually pickable, but render depth-only so primitives on the backface
-                // of the globe are not picked.
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._spDepth,
-                    vertexArray : this._vaDepth,
-                    renderState : this._rsDepth,
-                    framebuffer : framebuffer
-                });
-            }
-        }
+        return commandList;
     };
 
     CentralBody.prototype._destroyTileTree = function() {

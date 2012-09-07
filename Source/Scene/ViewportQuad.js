@@ -42,7 +42,6 @@ define([
 
         this._sp = undefined;
         this._va = undefined;
-        this._commandTree = {};
 
         this._vertexShaderSource = defaultValue(vertexShaderSource, ViewportQuadVS);
         this._fragmentShaderSource = defaultValue(fragmentShaderSource, ViewportQuadFS);
@@ -52,6 +51,9 @@ define([
 
         this._framebuffer = undefined;
         this._destroyFramebuffer = false;
+
+        this._beforeDraw = undefined;
+        this._afterDraw = undefined;
 
         this._rectangle = BoundingRectangle.clone(rectangle);
 
@@ -222,12 +224,13 @@ define([
         return cachedVA;
     }
 
+    var originalViewport = new BoundingRectangle();
     /**
      * @private
      */
     ViewportQuad.prototype.update = function(context, frameState) {
         if (typeof this._texture === 'undefined') {
-            return undefined;
+            return [];
         }
 
         if (typeof this._sp === 'undefined') {
@@ -248,29 +251,30 @@ define([
 
         this.renderState.blending.enabled = this.enableBlending;
 
-        return this._commandTree;
-    };
+        if (typeof this._beforeDraw === 'undefined') {
+            var that = this;
+            this._beforeDraw = function(context) {
+                BoundingRectangle.clone(context.getViewport(), originalViewport);
+                context.setViewport(that._rectangle);
+            };
+        }
 
-    var originalViewport = new BoundingRectangle();
+        if (typeof this._afterDraw === 'undefined') {
+            this._afterDraw = function(context) {
+                context.setViewport(originalViewport);
+            };
+        }
 
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.render = function(context) {
-        BoundingRectangle.clone(context.getViewport(), originalViewport);
-        context.setViewport(this._rectangle);
-
-        context.draw({
+        return [{
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : this._sp,
             uniformMap : this.uniforms,
             vertexArray : this._va.vertexArray,
             renderState : this.renderState,
-            framebuffer : this._framebuffer
-        });
-
-        context.setViewport(originalViewport);
+            framebuffer : this._framebuffer,
+            beforeDraw : this._beforeDraw,
+            afterDraw : this._afterDraw
+        }];
     };
 
     /**

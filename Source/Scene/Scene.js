@@ -243,11 +243,22 @@ define([
      */
     Scene.prototype.render = function() {
         var commandList = update(this);
-        this._context.clear(this._clearState);
+        var context = this._context;
+        context.clear(this._clearState);
 
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
-            this._context.draw(commandList[i]);
+            var command = commandList[i];
+
+            if (typeof command.beforeDraw !== 'undefined') {
+                command.beforeDraw(context);
+            }
+
+            context.draw(command);
+
+            if (typeof command.afterDraw !== 'undefined') {
+                command.afterDraw(context);
+            }
         }
     };
 
