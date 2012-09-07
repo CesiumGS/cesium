@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        './defaultValue'
+        './defaultValue',
+        './freezeObject'
     ], function(
-        defaultValue) {
+        defaultValue,
+        freezeObject) {
     "use strict";
 
     /**
@@ -183,49 +185,49 @@ define([
      * An immutable Color instance initialized to white, RGBA (1.0, 1.0, 1.0, 1.0).
      * @memberof Color
      */
-    Color.WHITE = Object.freeze(new Color(1.0, 1.0, 1.0, 1.0));
+    Color.WHITE = freezeObject(new Color(1.0, 1.0, 1.0, 1.0));
 
     /**
      * An immutable Color instance initialized to black, RGBA (0.0, 0.0, 0.0, 1.0).
      * @memberof Color
      */
-    Color.BLACK = Object.freeze(new Color(0.0, 0.0, 0.0, 1.0));
+    Color.BLACK = freezeObject(new Color(0.0, 0.0, 0.0, 1.0));
 
     /**
      * An immutable Color instance initialized to red, RGBA (1.0, 0.0, 0.0, 1.0).
      * @memberof Color
      */
-    Color.RED = Object.freeze(new Color(1.0, 0.0, 0.0, 1.0));
+    Color.RED = freezeObject(new Color(1.0, 0.0, 0.0, 1.0));
 
     /**
      * An immutable Color instance initialized to green, RGBA (0.0, 1.0, 0.0, 1.0).
      * @memberof Color
      */
-    Color.GREEN = Object.freeze(new Color(0.0, 1.0, 0.0, 1.0));
+    Color.GREEN = freezeObject(new Color(0.0, 1.0, 0.0, 1.0));
 
     /**
      * An immutable Color instance initialized to blue, RGBA (0.0, 0.0, 1.0, 1.0).
      * @memberof Color
      */
-    Color.BLUE = Object.freeze(new Color(0.0, 0.0, 1.0, 1.0));
+    Color.BLUE = freezeObject(new Color(0.0, 0.0, 1.0, 1.0));
 
     /**
      * An immutable Color instance initialized to yellow, RGBA (1.0, 1.0, 0.0, 1.0).
      * @memberof Color
      */
-    Color.YELLOW = Object.freeze(new Color(1.0, 1.0, 0.0, 1.0));
+    Color.YELLOW = freezeObject(new Color(1.0, 1.0, 0.0, 1.0));
 
     /**
      * An immutable Color instance initialized to magenta, RGBA (1.0, 0.0, 1.0, 1.0).
      * @memberof Color
      */
-    Color.MAGENTA = Object.freeze(new Color(1.0, 0.0, 1.0, 1.0));
+    Color.MAGENTA = freezeObject(new Color(1.0, 0.0, 1.0, 1.0));
 
     /**
      * An immutable Color instance initialized to cyan, RGBA (0.0, 1.0, 1.0, 1.0).
      * @memberof Color
      */
-    Color.CYAN = Object.freeze(new Color(0.0, 1.0, 1.0, 1.0));
+    Color.CYAN = freezeObject(new Color(0.0, 1.0, 1.0, 1.0));
 
     return Color;
 });

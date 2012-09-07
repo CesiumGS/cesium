@@ -5,7 +5,6 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
-         'Core/EllipsoidTangentPlane',
          'Core/WindingOrder'
      ], function(
          PolygonPipeline,
@@ -13,7 +12,6 @@ defineSuite([
          Cartesian3,
          Cartographic,
          Ellipsoid,
-         EllipsoidTangentPlane,
          WindingOrder) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -59,45 +57,6 @@ defineSuite([
             PolygonPipeline.cleanUp([Cartesian3.ZERO, Cartesian3.ZERO]);
         }).toThrow();
     });
-
-    ///////////////////////////////////////////////////////////////////////
-
-    it('EllipsoidTangentPlane projects a point', function() {
-        var ellipsoid = Ellipsoid.WGS84;
-        var p = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
-
-        var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
-        var projectedP = tangentPlane.projectPointsOntoPlane([p]);
-
-        expect(projectedP.length).toEqual(1);
-        expect(projectedP[0].equals(Cartesian2.ZERO)).toEqual(true);
-    });
-
-    it('EllipsoidTangentPlane throws without ellipsoid', function() {
-        expect(function() {
-            return EllipsoidTangentPlane.create();
-        }).toThrow();
-    });
-
-    it('EllipsoidTangentPlane throws without positions', function() {
-        var ellipsoid = Ellipsoid.WGS84;
-
-        expect(function() {
-            return EllipsoidTangentPlane.create(ellipsoid);
-        }).toThrow();
-    });
-
-    it('projectPointsOntoPlane throws without positions', function() {
-        var ellipsoid = Ellipsoid.WGS84;
-        var p = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
-        var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
-
-        expect(function() {
-            return tangentPlane.projectPointsOntoPlane();
-        }).toThrow();
-    });
-
-    ///////////////////////////////////////////////////////////////////////
 
     it('computeArea2D computes a positive area', function() {
         var area = PolygonPipeline.computeArea2D([

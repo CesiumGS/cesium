@@ -1,1 +1,0 @@
-({"selectContents":"Izberi vsebine ","deleteElement":"Izbriši element ","moveEnd":"Pomakni kazalko na konec ","deleteContents":"Izbriši vsebine ","nodeActions":"Dejanja ${nodeName} ","selectElement":"Izberi element ","moveStart":"Pomakni kazalko na začetek "})

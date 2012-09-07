@@ -357,7 +357,7 @@ defineSuite([
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON9);
     });
 
-    it('test 2D bounding rectangle from positions', function() {
+    it('test 2D bounding sphere from positions', function() {
         var projection = frameState.scene2D.projection;
         var ellipsoid = projection.getEllipsoid();
         var positions = [
@@ -383,11 +383,9 @@ defineSuite([
             projectedPositions.push(projection.project(position));
         }
 
-        var rect = BoundingRectangle.fromPoints(projectedPositions);
-        expect(boundingVolume.x).toEqualEpsilon(rect.x, CesiumMath.EPSILON10);
-        expect(boundingVolume.y).toEqualEpsilon(rect.y, CesiumMath.EPSILON10);
-        expect(boundingVolume.width).toEqualEpsilon(rect.width, CesiumMath.EPSILON10);
-        expect(boundingVolume.height).toEqualEpsilon(rect.height, CesiumMath.EPSILON10);
+        var sphere = BoundingSphere.fromPoints(projectedPositions);
+        expect(boundingVolume.center.equalsEpsilon(sphere.center, CesiumMath.EPSILON9)).toEqual(true);
+        expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON9);
     });
 
     it('test 3D bounding sphere from extent', function() {
@@ -426,10 +424,10 @@ defineSuite([
 
         var sphere = BoundingSphere.fromExtent2D(extent, projection);
         sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
-        expect(boundingVolume).toEqual(sphere);
+        expect(boundingVolume).toEqualEpsilon(sphere, CesiumMath.EPSILON9);
     });
 
-    it('test 2D bounding rectangle from extent', function() {
+    it('test 2D bounding sphere from extent', function() {
         var projection = frameState.scene2D.projection;
         var ellipsoid = projection.getEllipsoid();
         var extent = new Extent(
@@ -447,8 +445,8 @@ defineSuite([
         var boundingVolume = polygon.update(context, frameState).boundingVolume;
         frameState.mode = mode;
 
-        var rect = BoundingRectangle.fromExtent(extent, projection);
-        expect(boundingVolume).toEqual(rect);
+        var sphere = BoundingSphere.fromExtent2D(extent, projection);
+        expect(boundingVolume).toEqualEpsilon(sphere, CesiumMath.EPSILON9);
     });
 
     it('isDestroyed', function() {

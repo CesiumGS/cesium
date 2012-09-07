@@ -62,17 +62,14 @@ body {
     z-index: -1;
 }
 #toolbar {
-    background: rgba(0, 0, 0, 0.5);
-    border: solid 1px rgba(0, 0, 0, 0.9);
+    margin: 5px;
     padding: 2px 5px;
-    border-radius: 5px;
     position: absolute;
-    top: 5px;
-    left: 5px;
 }
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
+<div id="toolbar">Loading...</div>
 
 <script id="cesium_sandcastle_script">
 require([
@@ -90,9 +87,7 @@ require([
         }
     }).placeAt(dom.byId("cesiumContainer"));
 
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
+    dom.byId('toolbar').innerHTML = '';
 });
 
 </script>

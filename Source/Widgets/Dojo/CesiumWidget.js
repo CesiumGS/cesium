@@ -8,12 +8,14 @@ define([
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
+        '../../Core/BoundingRectangle',
         '../../Core/Ellipsoid',
-        '../../Core/SunPosition',
+        '../../Core/computeSunPosition',
         '../../Core/EventHandler',
         '../../Core/FeatureDetection',
         '../../Core/MouseEventType',
         '../../Core/Cartesian2',
+        '../../Core/Cartesian3',
         '../../Core/JulianDate',
         '../../Core/DefaultProxy',
         '../../Core/requestAnimationFrame',
@@ -33,12 +35,14 @@ define([
         on,
         _WidgetBase,
         _TemplatedMixin,
+        BoundingRectangle,
         Ellipsoid,
-        SunPosition,
+        computeSunPosition,
         EventHandler,
         FeatureDetection,
         MouseEventType,
         Cartesian2,
+        Cartesian3,
         JulianDate,
         DefaultProxy,
         requestAnimationFrame,
@@ -61,6 +65,7 @@ define([
         specularMapUrl : undefined,
         cloudsMapUrl : undefined,
         bumpMapUrl : undefined,
+        resizeWidgetOnWindowResize : true,
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -86,12 +91,7 @@ define([
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.scene.getContext().setViewport({
-                x : 0,
-                y : 0,
-                width : width,
-                height : height
-            });
+            this.scene.getContext().setViewport(new BoundingRectangle(0, 0, width, height));
 
             this.scene.getCamera().frustum.aspectRatio = width / height;
         },
@@ -176,7 +176,7 @@ define([
         },
 
         _setupCesium : function() {
-            var canvas = this.canvas, ellipsoid = this.ellipsoid, scene;
+            var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
                 scene = this.scene = new Scene(canvas);
@@ -209,12 +209,13 @@ define([
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
             centralBody.showSkyAtmosphere = true;
             centralBody.showGroundAtmosphere = true;
+            centralBody.logoOffset = new Cartesian2(125, 0);
 
             this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
 
-            var camera = scene.getCamera(), maxRadii = ellipsoid.getRadii().getMaximumComponent();
+            var camera = scene.getCamera(), maxRadii = ellipsoid.getMaximumRadius();
 
             camera.position = camera.position.multiplyByScalar(1.5);
             camera.frustum.near = 0.0002 * maxRadii;
@@ -231,6 +232,12 @@ define([
             handler.setMouseAction(lang.hitch(this, '_handleWheel'), MouseEventType.WHEEL);
             handler.setMouseAction(lang.hitch(this, '_handleRightDown'), MouseEventType.RIGHT_DOWN);
             handler.setMouseAction(lang.hitch(this, '_handleRightUp'), MouseEventType.RIGHT_UP);
+
+            if (widget.resizeWidgetOnWindowResize) {
+                on(window, 'resize', function() {
+                    widget.resize();
+                });
+            }
 
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);
@@ -302,8 +309,10 @@ define([
             }
         },
 
+        _sunPosition : new Cartesian3(),
+
         update : function(currentTime) {
-            this.scene.setSunPosition(SunPosition.compute(currentTime).position);
+            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
         },
 
         render : function() {

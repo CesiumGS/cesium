@@ -62,11 +62,9 @@ body {
     z-index: -1;
 }
 #toolbar {
-    background: rgba(0, 0, 0, 0.5);
-    border: solid 1px rgba(0, 0, 0, 0.9);
     margin: 5px;
     padding: 2px 5px;
-    border-radius: 5px;
+    position: absolute;
 }
 </style>
 
@@ -84,7 +82,7 @@ require([
     "use strict";
         
     function addBillboard(scene, ellipsoid) {
-        Sandcastle.declare(addBillboard);
+        Sandcastle.declare(addBillboard);   // For highlighting in Sandcastle.
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
@@ -100,7 +98,7 @@ require([
     }
     
     function setBillboardPropertiesAtCreation(scene, ellipsoid) {
-        Sandcastle.declare(setBillboardPropertiesAtCreation);
+        Sandcastle.declare(setBillboardPropertiesAtCreation);   // For highlighting in Sandcastle.
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
@@ -123,7 +121,7 @@ require([
     }
     
     function setBillboardProperties(scene, ellipsoid) {
-        Sandcastle.declare(setBillboardProperties);
+        Sandcastle.declare(setBillboardProperties);     // For highlighting in Sandcastle.
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection(undefined);
@@ -146,7 +144,7 @@ require([
     }
     
     function addMultipleBillboards(scene, ellipsoid) {
-        Sandcastle.declare(addMultipleBillboards);
+        Sandcastle.declare(addMultipleBillboards);  // For highlighting in Sandcastle.
         Cesium.when.all([
                          Cesium.loadImage('../../../Images/Cesium_Logo_overlay.png'),
                          Cesium.loadImage('../../../Images/facility.gif')
@@ -183,7 +181,7 @@ require([
     }
     
     function addPointBillboards(scene, ellipsoid) {
-        Sandcastle.declare(addPointBillboards);
+        Sandcastle.declare(addPointBillboards); // For highlighting in Sandcastle.
         // A white circle is drawn into a 2D canvas.  The canvas is used as
         // a texture for billboards, each of which applies a different color
         // and scale to change the point's appearance.
@@ -206,25 +204,28 @@ require([
         billboards.add({
             position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
             color : { red : 1.0, blue : 0.0, green : 0.0, alpha : 1.0 },
-            scale : 0.5
+            scale : 0.5,
+            imageIndex : 0
         });
 
         billboards.add({
             position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.50, 35.14)),
-            color : { red : 0.0, blue : 1.0, green : 0.0, alpha : 1.0 }
+            color : { red : 0.0, blue : 1.0, green : 0.0, alpha : 1.0 },
+            imageIndex : 0
         });
 
         billboards.add({
             position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.12, 25.46)),
             color : { red : 0.0, blue : 0.0, green : 1.0, alpha : 1.0 },
-            scale : 2
+            scale : 2,
+            imageIndex : 0
         });
 
         scene.getPrimitives().add(billboards);
     }
     
     function addMarkerBillboards(scene, ellipsoid) {
-        Sandcastle.declare(addMarkerBillboards);
+        Sandcastle.declare(addMarkerBillboards);    // For highlighting in Sandcastle.
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection(undefined);
@@ -319,19 +320,20 @@ require([
     }
     
     function addBillboardsInReferenceframe(scene, ellipsoid) {
-        Sandcastle.declare(addBillboardsInReferenceframe);
+        Sandcastle.declare(addBillboardsInReferenceframe);  // For highlighting in Sandcastle.
         var image = new Image();
         image.onload = function() {
-            var billboards = new Cesium.BillboardCollection(undefined);
+
+            var billboards = new Cesium.BillboardCollection();
             var textureAtlas = scene.getContext().createTextureAtlas({image : image});
             billboards.setTextureAtlas(textureAtlas);
 
             var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
             billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-            billboards.add({ position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
-            billboards.add({ position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
-            billboards.add({ position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
-            billboards.add({ position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
+            billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
+            billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
+            billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
+            billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
             scene.getPrimitives().add(billboards);
         };
         image.src = '../../../Images/facility.gif';
@@ -410,12 +412,9 @@ require([
         postSetup : function(widget) {
             createButtons(widget);
             widget.startRenderLoop();
+            addBillboard(widget.scene, widget.ellipsoid);
         }
     }).placeAt(dom.byId("cesiumContainer"));
-    
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
     
     dom.byId("toolbar").innerHTML = '';
 });

@@ -64,13 +64,9 @@ body {
     z-index: -1;
 }
 #toolbar {
-    background: rgba(0, 0, 0, 0.5);
-    border: solid 1px rgba(0, 0, 0, 0.9);
+    margin: 5px;
     padding: 2px 5px;
-    border-radius: 5px;
     position: absolute;
-    top: 5px;
-    left: 5px;
 }
 </style>
 
@@ -140,24 +136,13 @@ require([
         primitives.add(polylines);        
     }
     
-    function createButtons(scene) {
-        new ToggleButton({
-            label: "View in an East-North-Up Frame",
-            onClick: function() { eastNorthUp(scene); }
-        }).placeAt("toolbar");
-    }
-    
     var cesiumWidget = new CesiumWidget({
         postSetup : function(widget) {
-            createButtons(widget.scene);
             widget.startRenderLoop();
+            eastNorthUp(widget.scene);
         }
     }).placeAt(dom.byId("cesiumContainer"));
 
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
-    
     dom.byId("toolbar").innerHTML = '';
 });
 

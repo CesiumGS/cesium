@@ -1,1 +1,0 @@
-({"selectContents":"Sélection de contenus","deleteElement":"Suppression d'un élément","moveEnd":"Déplacer le curseur vers la fin","deleteContents":"Suppression de contenus","nodeActions":"Actions ${nodeName}","selectElement":"Sélection d'un élément","moveStart":"Déplacer le curseur vers le début"})

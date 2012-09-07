@@ -62,11 +62,9 @@ body {
     z-index: -1;
 }
 #toolbar {
-    background: rgba(0, 0, 0, 0.5);
-    border: solid 1px rgba(0, 0, 0, 0.9);
     margin: 5px;
     padding: 2px 5px;
-    border-radius: 5px;
+    position: absolute;
 }
 </style>
 
@@ -109,7 +107,7 @@ require([
     }
     
     function pickCartographicPosition(scene, ellipsoid) {
-        Sandcastle.declare(pickCartographicPosition);
+        Sandcastle.declare(pickCartographicPosition);   // For highlighting in Sandcastle.
 
         var labels = new Cesium.LabelCollection(undefined);
         label = labels.add();
@@ -131,7 +129,7 @@ require([
     }
 
     function pickBillboard(scene, ellipsoid) {
-        Sandcastle.declare(pickBillboard);
+        Sandcastle.declare(pickBillboard);  // For highlighting in Sandcastle.
         addBillboard(scene, ellipsoid);
 
         // If the mouse is over the billboard, change its scale and color
@@ -153,7 +151,7 @@ require([
     }
     
     function animateBillboardOnPick(scene, ellipsoid) {
-        Sandcastle.declare(animateBillboardOnPick);
+        Sandcastle.declare(animateBillboardOnPick); // For highlighting in Sandcastle.
         addBillboard(scene, ellipsoid);
         
         var animation;
@@ -225,7 +223,7 @@ require([
     }
     
     function erodeSensorOnClick(scene, ellipsoid) {
-        Sandcastle.declare(erodeSensorOnClick);
+        Sandcastle.declare(erodeSensorOnClick); // For highlighting in Sandcastle.
         
         // Setup - Add the sensor.
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
@@ -261,7 +259,7 @@ require([
     }
     
     function layerCompositePrimitive(scene, ellipsoid) {
-        Sandcastle.declare(layerCompositePrimitive);
+        Sandcastle.declare(layerCompositePrimitive);    // For highlighting in Sandcastle.
         var primitives = scene.getPrimitives();
         // Move the primitive that the mouse is over to the top.
         handler = new Cesium.EventHandler(scene.getCanvas());
@@ -382,13 +380,10 @@ require([
         postSetup : function(widget) {
             createButtons(widget);
             widget.startRenderLoop();
+            pickCartographicPosition(widget.scene, widget.ellipsoid); 
         }
     }).placeAt(dom.byId("cesiumContainer"));
-    
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
-    
+
     dom.byId("toolbar").innerHTML = '';
 });
 
