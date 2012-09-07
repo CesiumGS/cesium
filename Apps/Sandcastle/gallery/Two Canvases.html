@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="The simplest example for getting started with Cesium (uses static imagery).">
     <title>Cesium Demo</title>
     <script>
     var Sandcastle = {};
@@ -37,7 +36,7 @@
     });
     </script>
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="Stylesheet" href="../../../Source/Widgets/DojoWidgets/CesiumWidget.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro">
 <style>
@@ -52,25 +51,48 @@ body {
     height: 100%;
     overflow: hidden;
 }
-.fullSize {
+.top {
     display: block;
     position: absolute;
     top: 0;
     left: 0;
     border: none;
+    border-bottom: solid 2px #888;
     width: 100%;
-    height: 100%;
+    height: 50%;
     z-index: -1;
 }
-#toolbar {
+.bottom {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    border: none;
+    border-top: solid 2px #888;
+    width: 100%;
+    height: 50%;
+    z-index: -1;
+}
+#topbar {
     margin: 5px;
     padding: 2px 5px;
     position: absolute;
+    top: 0;
+    left: 0;
+}
+#bottombar {
+    margin: 5px;
+    padding: 2px 5px;
+    position: absolute;
+    top: 50%;
+    left: 0;
 }
 </style>
 
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="toolbar">Loading...</div>
+<div id="cesiumContainerTop"></div>
+<div id="cesiumContainerBottom"></div>
+<div id="topbar">Loading...</div>
+<div id="bottombar"></div>
 
 <script id="cesium_sandcastle_script">
 require([
@@ -80,42 +102,57 @@ require([
 ) {
     "use strict";
 
-    var canvas = document.createElement('canvas');
-    canvas.className = "fullSize";
-    document.getElementById('cesiumContainer').appendChild(canvas);
+    var canvas3D = document.createElement('canvas');
+    canvas3D.className = "top";
+    document.getElementById('cesiumContainerTop').appendChild(canvas3D);
+
+    var canvas2D = document.createElement('canvas');
+    canvas2D.className = "bottom";
+    document.getElementById('cesiumContainerBottom').appendChild(canvas2D);
+
     var ellipsoid = Cesium.Ellipsoid.WGS84;
-    var scene = new Cesium.Scene(canvas);
-    var primitives = scene.getPrimitives();
-    var imagery = new Cesium.SingleTileProvider('../../../Images/NE2_50M_SR_W_2048.jpg');
 
-    var cb = new Cesium.CentralBody(ellipsoid);
-    cb.dayTileProvider = imagery;
-    cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
-    cb.specularMapSource = '../../../Images/earthspec1k.jpg';
-    cb.showSkyAtmosphere = true;
-    cb.showGroundAtmosphere = false;
-    primitives.setCentralBody(cb);
+    function createScene(canvas) {
+        var scene = new Cesium.Scene(canvas);
+        var primitives = scene.getPrimitives();
+        var imagery = new Cesium.SingleTileProvider('../../../Images/NE2_50M_SR_W_2048.jpg');
 
-    scene.getCamera().getControllers().addCentralBody();
+        var cb = new Cesium.CentralBody(ellipsoid);
+        cb.dayTileProvider = imagery;
+        cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
+        cb.specularMapSource = '../../../Images/earthspec1k.jpg';
+        cb.showSkyAtmosphere = true;
+        cb.showGroundAtmosphere = false;
+        primitives.setCentralBody(cb);
 
-    scene.setAnimation(function () {
-        scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
-    });
+        scene.getCamera().getControllers().addCentralBody();
+
+        scene.setAnimation(function () {
+            scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
+        });
+
+        // Prevent right-click from opening a context menu.
+        canvas.oncontextmenu = function () {
+            return false;
+        };
+
+        return scene;
+    }
+
+    var scene3D = createScene(canvas3D);
+    var scene2D = createScene(canvas2D);
+
+    var transitioner = new Cesium.SceneTransitioner(scene2D);
+    transitioner.to2D();
 
     (function tick() {
-        scene.render();
+        scene3D.render();
+        scene2D.render();
         Cesium.requestAnimationFrame(tick);
     }());
 
-    // Prevent right-click from opening a context menu.
-    canvas.oncontextmenu = function () {
-        return false;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Example resize handler
-
-    var onResize = function () {
+    // Resize handler
+    var onResizeScene = function (canvas, scene) {
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
 
@@ -130,10 +167,15 @@ require([
 
         scene.getCamera().frustum.aspectRatio = width / height;
     };
+    var onResize = function () {
+        onResizeScene(canvas3D, scene3D);
+        onResizeScene(canvas2D, scene2D);
+    };
     window.addEventListener('resize', onResize, false);
     onResize();
-    
-    document.getElementById('toolbar').innerHTML = '';
+
+    document.getElementById('topbar').innerHTML = '3D';
+    document.getElementById('bottombar').innerHTML = '2D';
 });
 
 </script>

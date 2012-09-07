@@ -84,7 +84,7 @@ require([
     "use strict";
 
     function bingMapsRoad(primitives) {
-        Sandcastle.declare(bingMapsRoad);
+        Sandcastle.declare(bingMapsRoad);   // For highlighting in Sandcastle.
         var provider = new Cesium.BingMapsTileProvider({
             server: 'dev.virtualearth.net',
             mapStyle: Cesium.BingMapsStyle.ROAD,
@@ -97,7 +97,7 @@ require([
     }
 
     function arcGisWorldStreetMaps(primitives) {
-        Sandcastle.declare(arcGisWorldStreetMaps);
+        Sandcastle.declare(arcGisWorldStreetMaps);  // For highlighting in Sandcastle.
         var provider = new Cesium.ArcGISTileProvider({
             host: 'server.arcgisonline.com',
             root: 'ArcGIS/rest',
@@ -109,7 +109,7 @@ require([
     }
     
     function openStreetMaps(primitives) {
-        Sandcastle.declare(openStreetMaps);
+        Sandcastle.declare(openStreetMaps); // For highlighting in Sandcastle.
         var provider = new Cesium.OpenStreetMapTileProvider({
             proxy: new Cesium.DefaultProxy('/proxy/')
         });
@@ -118,7 +118,7 @@ require([
     }
     
     function mapQuestOpenStreetMaps(primitives) {
-        Sandcastle.declare(mapQuestOpenStreetMaps);
+        Sandcastle.declare(mapQuestOpenStreetMaps); // For highlighting in Sandcastle.
         // Also try MapQuest Aerial OpenStreetMaps
         //   http://oatile1.mqcdn.com/naip/
         var provider = new Cesium.OpenStreetMapTileProvider({
@@ -130,7 +130,7 @@ require([
     }
     
     function stamenMaps(primitives) {
-        Sandcastle.declare(stamenMaps);
+        Sandcastle.declare(stamenMaps); // For highlighting in Sandcastle.
         // Stamen maps: http://maps.stamen.com
         // Other map urls:
         // * http://tile.stamen.com/toner/
@@ -146,7 +146,7 @@ require([
     }
     
     function singleImage(primitives) {
-        Sandcastle.declare(singleImage);
+        Sandcastle.declare(singleImage);    // For highlighting in Sandcastle.
         var provider = new Cesium.SingleTileProvider('../../../Images/NE2_50M_SR_W_4096.jpg');
 
         primitives.getCentralBody().dayTileProvider = provider;        

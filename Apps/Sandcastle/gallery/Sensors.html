@@ -83,7 +83,7 @@ require([
     "use strict";
 
     function addRectangularSensor(sensors, ellipsoid, scene) {
-        Sandcastle.declare(addRectangularSensor);
+        Sandcastle.declare(addRectangularSensor);   // For highlighting in Sandcastle.
         
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
         modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
@@ -104,7 +104,7 @@ require([
     }
     
     function addCustomSensor(sensors, ellipsoid, scene) {
-        Sandcastle.declare(addCustomSensor);
+        Sandcastle.declare(addCustomSensor);    // For highlighting in Sandcastle.
 
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
         modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
@@ -123,7 +123,7 @@ require([
     }
     
     function addComplexConicSensor(sensors, ellipsoid, scene) {
-        Sandcastle.declare(addComplexConicSensor);
+        Sandcastle.declare(addComplexConicSensor);  // For highlighting in Sandcastle.
 
         // Complex conic sensor - Works with ANGLE turned off.
         var complexConicSensor = sensors.addComplexConic();
@@ -171,7 +171,7 @@ require([
     }
     
     function addComplexConicWithClockAngles(sensors, ellipsoid, scene) {
-        Sandcastle.declare(addComplexConicWithClockAngles);
+        Sandcastle.declare(addComplexConicWithClockAngles); // For highlighting in Sandcastle.
         
         // Draw a complex conic sensor with clock angles
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
@@ -186,11 +186,10 @@ require([
         complexConicSensor2.radius = 20000000.0;
     }
     
-    function createButtons(widget) {
+    function createButtons(widget, sensors) {
         var ellipsoid = widget.ellipsoid;
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
-        var sensors = new Cesium.SensorVolumeCollection();
         primitives.add(sensors);
         
         var sensorMenu = new DropDownMenu({ style: 'display: none;'});
@@ -243,15 +242,13 @@ require([
             Sandcastle.highlight(mousedOverObject);
         },
         postSetup : function(widget) {
-            createButtons(widget);
+            var sensors = new Cesium.SensorVolumeCollection();
+            createButtons(widget, sensors);
             widget.startRenderLoop();
+            addRectangularSensor(sensors, widget.ellipsoid, widget.scene);
         }
     }).placeAt(dom.byId('cesiumContainer'));
-    
-    on(window, 'resize', function() {
-        cesiumViewerWidget.resize();
-    });
-    
+
     dom.byId('toolbar').innerHTML = '';
 });
 </script>

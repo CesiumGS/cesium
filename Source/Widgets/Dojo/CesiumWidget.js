@@ -65,6 +65,7 @@ define([
         specularMapUrl : undefined,
         cloudsMapUrl : undefined,
         bumpMapUrl : undefined,
+        resizeWidgetOnWindowResize : true,
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -175,7 +176,7 @@ define([
         },
 
         _setupCesium : function() {
-            var canvas = this.canvas, ellipsoid = this.ellipsoid, scene;
+            var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
                 scene = this.scene = new Scene(canvas);
@@ -231,6 +232,12 @@ define([
             handler.setMouseAction(lang.hitch(this, '_handleWheel'), MouseEventType.WHEEL);
             handler.setMouseAction(lang.hitch(this, '_handleRightDown'), MouseEventType.RIGHT_DOWN);
             handler.setMouseAction(lang.hitch(this, '_handleRightUp'), MouseEventType.RIGHT_UP);
+
+            if (widget.resizeWidgetOnWindowResize) {
+                on(window, 'resize', function() {
+                    widget.resize();
+                });
+            }
 
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);

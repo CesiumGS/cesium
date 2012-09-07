@@ -89,7 +89,7 @@ require([
 
         // Create a simple polygon
         var polygon = new Cesium.Polygon();
-        Sandcastle.declare(polygon);
+        Sandcastle.declare(polygon);    // For highlighting on mouseover in Sandcastle.
         polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
             Cesium.Cartographic.fromDegrees(-72.0, 40.0),
             Cesium.Cartographic.fromDegrees(-70.0, 35.0),
@@ -101,7 +101,7 @@ require([
         
         // Create a nested polygon with holes 
         var polygonHierarchy = new Cesium.Polygon();
-        Sandcastle.declare(polygonHierarchy);
+        Sandcastle.declare(polygonHierarchy);   // For highlighting on mouseover in Sandcastle.
         var hierarchy = {
                 positions: ellipsoid.cartographicArrayToCartesianArray([
                 new Cesium.Cartographic.fromDegrees(-109.0, 30.0, 0.0), new Cesium.Cartographic.fromDegrees(-95.0, 30.0, 0.0), new Cesium.Cartographic.fromDegrees(-95.0, 40.0, 0.0), new Cesium.Cartographic.fromDegrees(-109.0, 40.0, 0.0)]),
@@ -125,14 +125,14 @@ require([
         
         // Create a polygon from an extent
         var polygonExtent = new Cesium.Polygon();
-        Sandcastle.declare(polygonExtent);
+        Sandcastle.declare(polygonExtent);  // For highlighting on mouseover in Sandcastle.
         polygonExtent.configureExtent(new Cesium.Extent(
         Cesium.Math.toRadians(-180.0), Cesium.Math.toRadians(50.0), Cesium.Math.toRadians(180.0), Cesium.Math.toRadians(90.0)));
         primitives.add(polygonExtent);        
         
         // Apply a material to a polygon
         var checkeredPolygon = new Cesium.Polygon();
-        Sandcastle.declare(checkeredPolygon);
+        Sandcastle.declare(checkeredPolygon);   // For highlighting on mouseover in Sandcastle.
         checkeredPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
             Cesium.Cartographic.fromDegrees(-90.0, 30.0),
             Cesium.Cartographic.fromDegrees(-80.0, 30.0),

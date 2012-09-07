@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Use the Cesium Widget to start building a new application or easily embed Cesium.">
     <title>Cesium Demo</title>
     <script>
     var Sandcastle = {};
@@ -40,6 +39,7 @@
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro">
+
 <style>
 body {
     background: #000;
@@ -52,45 +52,104 @@ body {
     height: 100%;
     overflow: hidden;
 }
-.fullSize {
+.top {
     display: block;
     position: absolute;
     top: 0;
     left: 0;
     border: none;
+    border-bottom: solid 2px #888;
     width: 100%;
-    height: 100%;
+    height: 50%;
     z-index: -1;
 }
-#toolbar {
+.bottom {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    border: none;
+    border-top: solid 2px #888;
+    width: 100%;
+    height: 50%;
+    z-index: -1;
+}
+#topbar {
     margin: 5px;
     padding: 2px 5px;
     position: absolute;
+    top: 0;
+    left: 0;
+}
+#bottombar {
+    margin: 5px;
+    padding: 2px 5px;
+    position: absolute;
+    top: 50%;
+    left: 0;
 }
 </style>
 
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="toolbar">Loading...</div>
+<div id="cesiumContainerTop" class="top"></div>
+<div id="cesiumContainerBottom" class="bottom"></div>
+<div id="topbar">Loading...</div>
+<div id="bottombar"></div>
 
 <script id="cesium_sandcastle_script">
 require([
-    'Source/Cesium', 'Widgets/Dojo/CesiumWidget',
-    'dojo/on', 'dojo/dom'
+    'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
+    'dojo/on', 'dojo/dom', 'Core/requestAnimationFrame'
 ], function(
-    Cesium, CesiumWidget,
-    on, dom)
+    Cesium, CesiumViewerWidget,
+    on, dom, requestAnimationFrame)
 {
     "use strict";
 
-    var cesiumWidget = new CesiumWidget({
+    // This example shows two widgets that share a single
+    // animationController.  It is also possible to use
+    // separate animationControllers to show a scene at
+    // different times.
+
+    var widget1, widget2, animationController;
+
+    function updateAndRender() {
+        // Get the time from the shared controller, then
+        // update and render both widgets.
+        var currentTime = animationController.update();
+        widget1.update(currentTime);
+        widget2.update(currentTime);
+        widget1.render();
+        widget2.render();
+        requestAnimationFrame(updateAndRender);
+    }
+
+    function createWidget2() {
+        // Save off a copy of widget1's animationController
+        animationController = widget1.animationController;
+
+        // Now create widget2, passing in the
+        // existing animationController to be shared.
+        widget2 = new CesiumViewerWidget({
+            animationController : animationController,
+            postSetup : function(widget) {
+                // Switch to columbus view
+                widget2.viewColumbus.onClick();
+
+                // Once 2nd widget created, start loop.
+                updateAndRender();
+            }
+        }).placeAt(dom.byId("cesiumContainerBottom"));
+    }
+
+    // First thing: Create widget1 (the top widget).
+    widget1 = new CesiumViewerWidget({
         postSetup : function(widget) {
-            widget.startRenderLoop();
+            createWidget2();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId("cesiumContainerTop"));
 
-    dom.byId('toolbar').innerHTML = '';
+    dom.byId('topbar').innerHTML = '';
 });
-
 </script>
 </body>
 </html>

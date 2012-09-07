@@ -86,13 +86,13 @@ require([
     var rectangularSensor;
     
     function alphaAnimation(primitive, scene) {
-        Sandcastle.declare(alphaAnimation);
+        Sandcastle.declare(alphaAnimation);     // For highlighting in Sandcastle.
         scene.getAnimations().removeAll();
         scene.getAnimations().addAlpha(primitive.material, 0.0, 0.7);
     }
     
     function erosionAnimation(primitive, scene) {
-        Sandcastle.declare(erosionAnimation);
+        Sandcastle.declare(erosionAnimation);   // For highlighting in Sandcastle.
         scene.getAnimations().removeAll();
         scene.getAnimations().addProperty(primitive, 'erosion', 0.0, 1.0, { 
             duration: 1000 
@@ -100,7 +100,7 @@ require([
     } 
     
     function heightAnimation(primitive, scene) {
-        Sandcastle.declare(heightAnimation);
+        Sandcastle.declare(heightAnimation);    // For highlighting in Sandcastle.
         scene.getAnimations().removeAll();
         scene.getAnimations().addProperty(primitive, 'height', 5000000.0, 0.0, { 
             duration: 1000 
@@ -108,7 +108,7 @@ require([
     }
     
     function stripeAnimation(primitive, scene) {
-        Sandcastle.declare(stripeAnimation);
+        Sandcastle.declare(stripeAnimation);    // For highlighting in Sandcastle.
         scene.getAnimations().removeAll();
         scene.getAnimations().addOffsetIncrement(primitive.material);
     }

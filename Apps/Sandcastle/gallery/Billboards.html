@@ -83,7 +83,7 @@ require([
     "use strict";
         
     function addBillboard(scene, ellipsoid) {
-        Sandcastle.declare(addBillboard);
+        Sandcastle.declare(addBillboard);   // For highlighting in Sandcastle.
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
@@ -99,7 +99,7 @@ require([
     }
     
     function setBillboardPropertiesAtCreation(scene, ellipsoid) {
-        Sandcastle.declare(setBillboardPropertiesAtCreation);
+        Sandcastle.declare(setBillboardPropertiesAtCreation);   // For highlighting in Sandcastle.
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
@@ -122,7 +122,7 @@ require([
     }
     
     function setBillboardProperties(scene, ellipsoid) {
-        Sandcastle.declare(setBillboardProperties);
+        Sandcastle.declare(setBillboardProperties);     // For highlighting in Sandcastle.
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection(undefined);
@@ -145,7 +145,7 @@ require([
     }
     
     function addMultipleBillboards(scene, ellipsoid) {
-        Sandcastle.declare(addMultipleBillboards);
+        Sandcastle.declare(addMultipleBillboards);  // For highlighting in Sandcastle.
         Cesium.when.all([
                          Cesium.loadImage('../../../Images/Cesium_Logo_overlay.png'),
                          Cesium.loadImage('../../../Images/facility.gif')
@@ -182,7 +182,7 @@ require([
     }
     
     function addPointBillboards(scene, ellipsoid) {
-        Sandcastle.declare(addPointBillboards);
+        Sandcastle.declare(addPointBillboards); // For highlighting in Sandcastle.
         // A white circle is drawn into a 2D canvas.  The canvas is used as
         // a texture for billboards, each of which applies a different color
         // and scale to change the point's appearance.
@@ -226,7 +226,7 @@ require([
     }
     
     function addMarkerBillboards(scene, ellipsoid) {
-        Sandcastle.declare(addMarkerBillboards);
+        Sandcastle.declare(addMarkerBillboards);    // For highlighting in Sandcastle.
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection(undefined);
@@ -321,7 +321,7 @@ require([
     }
     
     function addBillboardsInReferenceframe(scene, ellipsoid) {
-        Sandcastle.declare(addBillboardsInReferenceframe);
+        Sandcastle.declare(addBillboardsInReferenceframe);  // For highlighting in Sandcastle.
         var image = new Image();
         image.onload = function() {
 
@@ -413,6 +413,7 @@ require([
         postSetup : function(widget) {
             createButtons(widget);
             widget.startRenderLoop();
+            addBillboard(widget.scene, widget.ellipsoid);
         }
     }).placeAt(dom.byId('cesiumContainer'));
     

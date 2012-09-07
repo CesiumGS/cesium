@@ -84,7 +84,7 @@ require([
     "use strict";
     
     function renderBox(scene) {
-        Sandcastle.declare(renderBox);
+        Sandcastle.declare(renderBox);  // For highlighting in Sandcastle.
         var primitives = scene.getPrimitives();
         primitives.add(new Box(Cesium.Ellipsoid.WGS84.cartographicToCartesian(
             Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000.0))));
@@ -216,7 +216,7 @@ require([
     };
     
     function renderBoxAcrossModes(scene) {
-        Sandcastle.declare(renderBoxAcrossModes);
+        Sandcastle.declare(renderBoxAcrossModes);   // For highlighting in Sandcastle.
         var primitives = scene.getPrimitives();
         primitives.add(new Box2(Cesium.Ellipsoid.WGS84.cartographicToCartesian(
             Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 500000.0))));
@@ -476,6 +476,7 @@ require([
         postSetup : function(widget) {
             createButtons(widget);
             widget.startRenderLoop();
+            renderBox(widget.scene);
         }
     }).placeAt(dom.byId('cesiumContainer'));
 
