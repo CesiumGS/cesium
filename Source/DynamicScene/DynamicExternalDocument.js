@@ -14,7 +14,17 @@ define([
         ) {
     "use strict";
 
-
+    /**
+     * Represents a time-dynamic external document. Typically used to combine multiple documents from various locations.
+     *
+     * @alias DynamicExternalDocument
+     * @constructor
+     *
+     * @see DynamicObject
+     * @see DynamicProperty
+     * @see DynamicObjectCollection
+     * @see CzmlDefaults
+     */
     var DynamicExternalDocument = function() {
         this.polling = undefined;
         this.refreshInterval = undefined;
@@ -22,7 +32,24 @@ define([
         this.eventname = undefined;
     };
 
-
+    /**
+     * Processes a single CZML packet and merges its data into the provided DynamicObject's external property.
+     * If the DynamicObject does not have a external property, one is created.  This method is not
+     * normally called directly, but is part of the array of CZML processing functions that is
+     * passed into the DynamicObjectCollection constructor.
+     * @memberof DynamicExternalDocument
+     *
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the external data.
+     * @param {Object} packet The CZML packet to process.
+     * @param {DynamicObjectCollection} [dynamicObjectCollection] The collection into which objects are being loaded.
+     * @param {String} [sourceUri] The originating url of the CZML being processed.
+     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
+     *
+     * @see DynamicObject
+     * @see DynamicProperty
+     * @see DynamicObjectCollection
+     * @see CzmlDefaults#updaters
+     */
     DynamicExternalDocument.processCzmlPacket = function(dynamicObject, packet) {
         var externalData = packet.external;
         if (typeof externalData === 'undefined') {

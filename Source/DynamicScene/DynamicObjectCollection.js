@@ -38,7 +38,7 @@ define([
         this.objectsRemoved = new Event();
 
         /**
-         * Function that is called if an updater like TimeIntervalBufferUpdater is assigned.
+         * Function that is called if an updater like {@link EventSourceBufferUpdater} is assigned.
          */
         this.updater = undefined;
 
@@ -132,6 +132,10 @@ define([
         }
     };
 
+    /**
+     * Updates the DynamicObjectCollection if it has an updater like {@link EventSourceBufferUpdater} assigned to it.
+     * @param {JulainDate} currentTime the current update time.
+     */
     DynamicObjectCollection.prototype.updateBuffer = function(currentTime){
          if(typeof this.updater !== 'undefined'){
              this.updater.update(currentTime, this);

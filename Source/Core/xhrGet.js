@@ -9,11 +9,13 @@ define([
 
     /**
      * Creates a deferred which fetches and parses the provided URL as JSON.
-     *
+     * @param {String} a url to retrieve using XMLHttpRequest.
+     * @param {Array} An associative array of value pairs to add to the XMLHttpRequest header.
      * @returns A deferred object which fetches and parses the provided URL as JSON.
-     *
+     * @exception {DeveloperError} url is required.
      * @example
-     * xhrGet('http://someUrl.com/someJson.txt').then(function(jsonData){
+     * var headers = {'Accept':'application/json'};
+     * xhrGet('http://someUrl.com/someJson.txt', headers).then(function(jsonData){
      *     //Do something with the JSON object
      * });
      */
