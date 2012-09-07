@@ -6,6 +6,7 @@ defineSuite([
          '../Specs/frameState',
          '../Specs/pick',
          '../Specs/render',
+         'Core/defaultValue',
          'Core/BoundingSphere',
          'Core/Cartesian2',
          'Core/Cartesian3',
@@ -34,6 +35,7 @@ defineSuite([
          frameState,
          pick,
          render,
+         defaultValue,
          BoundingSphere,
          Cartesian2,
          Cartesian3,
@@ -669,7 +671,9 @@ defineSuite([
         return numRendered;
     }
 
-    function testCullIn3D(primitive) {
+    function testCullIn3D(primitive, verifyNumRendered) {
+        verifyNumRendered = defaultValue(verifyNumRendered, 1);
+
         primitives.add(primitive);
 
         var savedVolume = frameState.cullingVolume;
@@ -689,7 +693,7 @@ defineSuite([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
-        expect(numRendered).toEqual(1);
+        expect(numRendered).toEqual(verifyNumRendered);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
@@ -702,7 +706,9 @@ defineSuite([
         frameState.cullingVolume = savedVolume;
     }
 
-    function testCullInColumbusView(primitive) {
+    function testCullInColumbusView(primitive, verifyNumRendered) {
+        verifyNumRendered = defaultValue(verifyNumRendered, 1);
+
         primitives.add(primitive);
 
         var savedVolume = frameState.cullingVolume;
@@ -724,7 +730,7 @@ defineSuite([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
-        expect(numRendered).toEqual(1);
+        expect(numRendered).toEqual(verifyNumRendered);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
@@ -738,7 +744,9 @@ defineSuite([
         frameState.cullingVolume = savedVolume;
     }
 
-    function testCullIn2D(primitive) {
+    function testCullIn2D(primitive, verifyNumRendered) {
+        verifyNumRendered = defaultValue(verifyNumRendered, 1);
+
         primitives.add(primitive);
 
         var mode = frameState.mode;
@@ -768,7 +776,7 @@ defineSuite([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
-        expect(numRendered).toEqual(1);
+        expect(numRendered).toEqual(verifyNumRendered);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
@@ -782,7 +790,9 @@ defineSuite([
         frameState.cullingVolume = savedVolume;
     }
 
-    function testOcclusionCull(primitive) {
+    function testOcclusionCull(primitive, verifyNumRendered) {
+        verifyNumRendered = defaultValue(verifyNumRendered, 1);
+
         primitives.add(primitive);
 
         var savedCamera = frameState.camera;
@@ -801,7 +811,7 @@ defineSuite([
         frameState.occluder = occluder;
 
         var numRendered = verifyDraw();
-        expect(numRendered).toEqual(1);
+        expect(numRendered).toEqual(verifyNumRendered);
 
         // reposition camera so bounding volume on the other side of the ellipsoid.
         camera.position = camera.position.negate();
@@ -958,21 +968,21 @@ defineSuite([
 
     it('frustum culls polylines in 3D', function() {
         var polylines = createPolylines();
-        testCullIn3D(polylines);
+        testCullIn3D(polylines, 3);
     });
 
     it('frustum culls polylines in Columbus view', function() {
         var polylines = createPolylines();
-        testCullInColumbusView(polylines);
+        testCullInColumbusView(polylines, 3);
     });
 
     it('frustum culls polylines in 2D', function() {
         var polylines = createPolylines();
-        testCullIn2D(polylines);
+        testCullIn2D(polylines, 3);
     });
 
     it('polyline occlusion', function() {
         var polylines = createPolylines();
-        testOcclusionCull(polylines);
+        testOcclusionCull(polylines, 3);
     });
 });

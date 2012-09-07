@@ -2092,8 +2092,7 @@ define([
             }
 
             if (this._renderQueue.length !== 0) {
-                var uniformState = context.getUniformState();
-                var mv = uniformState.getModelView();
+                var mv = frameState.camera.getViewMatrix();
 
                 // TODO: remove once multi-frustum/depth testing is implemented
                 this._renderQueue.sort(function(a, b) {
