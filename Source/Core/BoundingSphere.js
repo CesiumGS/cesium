@@ -3,20 +3,24 @@ define([
         './defaultValue',
         './DeveloperError',
         './Cartesian3',
+        './Cartesian4',
         './Cartographic',
         './Ellipsoid',
         './EquidistantCylindricalProjection',
         './Extent',
-        './Intersect'
+        './Intersect',
+        './Matrix4'
     ], function(
         defaultValue,
         DeveloperError,
         Cartesian3,
+        Cartesian4,
         Cartographic,
         Ellipsoid,
         EquidistantCylindricalProjection,
         Extent,
-        Intersect) {
+        Intersect,
+        Matrix4) {
     "use strict";
 
     /**
@@ -390,6 +394,43 @@ define([
         return Intersect.INSIDE;
     };
 
+    var transformCart4 = Cartesian4.UNIT_W.clone();
+    /**
+     * Applies a 4x4 affine transformation matrix to a bounding sphere.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.
+     * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} sphere is required.
+     * @exception {DeveloperError} transform is required.
+     */
+    BoundingSphere.transform = function(sphere, transform, result) {
+        if (typeof sphere === 'undefined') {
+            throw new DeveloperError('sphere is required.');
+        }
+
+        if (typeof transform === 'undefined') {
+            throw new DeveloperError('transform is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new BoundingSphere();
+        }
+
+        var center = sphere.center;
+        transformCart4.x = center.x;
+        transformCart4.y = center.y;
+        transformCart4.z = center.z;
+        Matrix4.multiplyByVector(transform, transformCart4, transformCart4);
+
+        Cartesian3.clone(transformCart4, result.center);
+        result.radius = sphere.radius;
+        return result;
+    };
+
     /**
      * Compares the provided BoundingSphere componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -460,6 +501,20 @@ define([
      */
     BoundingSphere.prototype.intersect = function(plane) {
         return BoundingSphere.intersect(this, plane);
+    };
+
+    /**
+     * Applies a 4x4 affine transformation matrix to this bounding sphere.
+     * @memberof BoundingSphere
+     *
+     * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} transform is required.
+     */
+    BoundingSphere.prototype.transform = function(transform, result) {
+        return BoundingSphere.transform(this, transform, result);
     };
 
     /**

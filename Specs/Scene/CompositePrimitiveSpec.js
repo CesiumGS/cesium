@@ -676,8 +676,11 @@ defineSuite([
     function testCullIn3D(primitive) {
         primitives.add(primitive);
 
+        var savedVolume = frameState.cullingVolume;
         var savedCamera = frameState.camera;
+
         frameState.camera = camera;
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var state = primitive.update(context, frameState);
@@ -687,26 +690,31 @@ defineSuite([
         camera.direction = camera.position.negate().normalize();
         camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
         camera.up = camera.right.cross(camera.direction);
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
 
         frameState.camera = savedCamera;
+        frameState.cullingVolume = savedVolume;
     }
 
     function testCullInColumbusView(primitive) {
         primitives.add(primitive);
 
+        var savedVolume = frameState.cullingVolume;
         var savedCamera = frameState.camera;
-        frameState.camera = camera;
+        var savedMode = frameState.mode;
 
-        var mode = frameState.mode;
+        frameState.camera = camera;
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
         frameState.mode = SceneMode.COLUMBUS_VIEW;
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
@@ -717,26 +725,33 @@ defineSuite([
         camera.direction = Cartesian3.UNIT_Z.negate();
         camera.up = Cartesian3.UNIT_Y;
         camera.right = camera.direction.cross(camera.up);
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
 
-        frameState.mode = mode;
+        frameState.mode = savedMode;
         frameState.camera = savedCamera;
+        frameState.cullingVolume = savedVolume;
     }
 
     function testCullIn2D(primitive) {
         primitives.add(primitive);
 
+        var mode = frameState.mode;
+        frameState.mode = SceneMode.SCENE2D;
+
         var savedCamera = frameState.camera;
         frameState.camera = camera;
 
+        var savedVolume = frameState.cullingVolume;
         var orthoFrustum = new OrthographicFrustum();
         orthoFrustum.right = 1.0;
         orthoFrustum.left = -orthoFrustum.right;
@@ -744,30 +759,31 @@ defineSuite([
         orthoFrustum.bottom = -orthoFrustum.top;
         orthoFrustum.near = camera.frustum.near;
         orthoFrustum.far = camera.frustum.far;
-        camera.frustum = orthoFrustum;
-
-        var mode = frameState.mode;
-        frameState.mode = SceneMode.SCENE2D;
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var state = primitive.update(context, frameState);
         var bv = state.boundingVolume;
-        camera.position = new Cartesian3(bv.x + bv.width * 0.5, bv.y + bv.height * 0.5, 1.0);
+        camera.position = bv.center.clone();
+        camera.position.z += 1.0;
         camera.direction = Cartesian3.UNIT_Z.negate();
         camera.up = Cartesian3.UNIT_Y;
         camera.right = camera.direction.cross(camera.up);
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
 
         frameState.mode = mode;
         frameState.camera = savedCamera;
+        frameState.cullingVolume = savedVolume;
     }
 
     function testOcclusionCull(primitive) {
@@ -785,7 +801,6 @@ defineSuite([
         camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
         camera.up = camera.right.cross(camera.direction);
 
-
         var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, bv.radius * 2.0), camera.position);
         frameState.occluder = occluder;
 
@@ -799,6 +814,37 @@ defineSuite([
         camera.up = camera.right.cross(camera.direction);
 
         occluder.setCameraPosition(camera.position);
+
+        numRendered = verifyNoDraw();
+        expect(numRendered).toEqual(0);
+
+        frameState.camera = savedCamera;
+        frameState.occluder = undefined;
+    }
+
+    // This function is used instead of the testOcclusionCull function for billboards/labels because the
+    // bounding volume is view-dependent. All of the "magic numbers" come from adding a billboard/label
+    // collection to a Cesium app and looking for when it is/is not occluded.
+    function testBillboardOcclusion(billboard) {
+        primitives.add(billboard);
+
+        camera.position = new Cartesian3(2414237.2401024024, -8854079.165742973, 7501568.895960614);
+        camera.direction = camera.position.negate().normalize();
+
+        var savedCamera = frameState.camera;
+        frameState.camera = camera;
+
+        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, Ellipsoid.WGS84.minimumRadius), camera.position);
+        frameState.occluder = occluder;
+
+        var numRendered = verifyDraw();
+        expect(numRendered).toEqual(1);
+
+        camera.position = camera.position.negate();
+        camera.direction = camera.direction.negate();
+
+        occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, 536560539.60104907), camera.position);
+        frameState.occluder = occluder;
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
@@ -843,11 +889,6 @@ defineSuite([
     });
 
     it('label occlusion', function() {
-        // This test doesn't use the testOcclusionCull function because the
-        // bounding volume is view-dependent and the text isn't 1x1 pixels in
-        // size. All of the "magic numbers" come from adding this label
-        // collection to a Cesium app and looking for when it is/is not occluded.
-
         var labels = new LabelCollection();
         labels.clampToPixel = false;
         labels.add({
@@ -856,31 +897,8 @@ defineSuite([
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
-        primitives.add(labels);
 
-        camera.position = new Cartesian3(2414237.2401024024, -8854079.165742973, 7501568.895960614);
-        camera.direction = camera.position.negate().normalize();
-
-        var savedCamera = frameState.camera;
-        frameState.camera = camera;
-
-        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, Ellipsoid.WGS84.minimumRadius), camera.position);
-        frameState.occluder = occluder;
-
-        var numRendered = verifyDraw();
-        expect(numRendered).toEqual(1);
-
-        camera.position = camera.position.negate();
-        camera.direction = camera.direction.negate();
-
-        occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, 536560539.60104907), camera.position);
-        frameState.occluder = occluder;
-
-        numRendered = verifyNoDraw();
-        expect(numRendered).toEqual(0);
-
-        frameState.camera = savedCamera;
-        frameState.occluder = undefined;
+        testBillboardOcclusion(labels);
     });
 
     var greenImage;
@@ -928,9 +946,9 @@ defineSuite([
         testCullIn2D(billboards);
     });
 
-    it('billboards occlusion', function() {
+    it('billboard occlusion', function() {
         var billboards = createBillboard();
-        testOcclusionCull(billboards);
+        testBillboardOcclusion(billboards);
     });
 
     function createPolylines() {
