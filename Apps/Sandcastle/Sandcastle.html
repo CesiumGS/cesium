@@ -74,11 +74,6 @@
                         <code>Apps/Sandcastle/gallery/*.html</code></p>
                     <p>Some browsers require you to manually rename
                         the saved file to a <code>*.html</code> file.</p>
-                    <a id="saveAsNewWindow" class="linkButton" href="#" target="_blank">
-                        <span data-dojo-type="Sandcastle.LinkButton">
-                            Open in new window
-                        </span>
-                    </a>
                     <a id="saveAsFile" class="linkButton" href="#" download="cesiumDemo.html">
                         <span data-dojo-type="Sandcastle.LinkButton">
                             Save *.html file
@@ -92,6 +87,10 @@
                 Upload to Gallery...
             </div>
              -->
+            <span data-dojo-type="dijit.ToolbarSeparator"></span>
+            <div id="buttonNewWindow" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconApplication', showLabel: true">
+                Open in New Window
+            </div>
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
             <div id="buttonThumbnail" data-dojo-type="dijit.form.ToggleButton" data-dojo-props="iconClass: 'dijitEditorIcon dijitEditorIconInsertImage', showLabel: true">
                 View as Thumbnail

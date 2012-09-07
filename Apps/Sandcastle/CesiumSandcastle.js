@@ -478,15 +478,22 @@ require({
             var octetBlob = octetBB.getBlob("application/octet-stream");
             var octetBlobURL = getURL.createObjectURL(octetBlob);
             dom.byId('saveAsFile').href = octetBlobURL;
+        });
 
-            var baseHref = window.location.href, pos = baseHref.lastIndexOf('/');
+        registry.byId('buttonNewWindow').on('click', function () {
+            var html = local.headers + htmlEditor.getValue() +
+                '\n<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
+                '\n</script>\n</body>\n</html>\n';
+            var baseHref = window.location.href;
+            var pos = baseHref.lastIndexOf('/');
             baseHref = baseHref.substring(0, pos) + '/gallery/';
             html = html.replace('<head>', '<head>\n    <base href="' + baseHref + '">');
             var htmlBB = new BlobBuilder();
             htmlBB.append(html);
             var htmlBlob = htmlBB.getBlob("text/html;charset=utf-8");
             var htmlBlobURL = getURL.createObjectURL(htmlBlob);
-            dom.byId('saveAsNewWindow').href = htmlBlobURL;
+            window.open(htmlBlobURL, '_blank');
+            window.focus();
         });
 
         registry.byId('buttonThumbnail').on('change', function (newValue) {
