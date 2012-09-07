@@ -1,1 +1,0 @@
-({"pageBreak":"Întrerupere pagină"})

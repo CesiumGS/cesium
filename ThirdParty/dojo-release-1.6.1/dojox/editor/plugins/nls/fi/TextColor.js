@@ -1,1 +1,0 @@
-({"setButtonText":"Aseta","cancelButtonText":"Peruuta"})

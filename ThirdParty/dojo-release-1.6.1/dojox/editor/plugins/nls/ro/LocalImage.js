@@ -1,1 +1,0 @@
-({"set":"Inserare","text":"Descriere","insertImageTitle":"Inserare imagine","invalidMessage":"Tip de fişier imagine nevalid","prePopuTextBrowse":"sau răsfoiţi la un fişier local.","browse":"Răsfoire...","prePopuTextUrl":"Introduceţi un URL de imagine","url":"Imagine"})

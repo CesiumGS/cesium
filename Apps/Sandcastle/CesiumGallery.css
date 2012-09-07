@@ -1,0 +1,88 @@
+@import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
+
+html, body {
+    margin: 0.4em;
+    padding: 0;
+    font-family: sans-serif;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+
+#loading {
+    display: table;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5000;
+    background: #eee;
+    border: none;
+    text-align: center;
+    color: #777;
+}
+#loading span {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+h1 {
+    margin: 0 0 1em;
+    text-align: center;
+    font-size: 18pt;
+}
+
+h1 img {
+    display: block;
+    border: none;
+    margin: 0 auto;
+    border-radius: 10px;
+}
+
+h1 img:hover {
+    box-shadow: 0 0 25px #aaa;
+}
+
+a.linkButton, a.linkButton:visited {
+    display: inline-block;
+    margin: 0.2em;
+}
+
+a.linkButton:focus, a.linkButton:hover {
+    text-decoration: none;
+}
+
+.demoTile {
+    margin: 4px;
+    position: relative;
+    top: 0;
+    left: 0;
+}
+
+.insetButtons {
+    display: block;
+    position: absolute;
+    top: 110px;
+    left: 34px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 7px;
+    padding: 5px;
+    opacity: 0;
+    -moz-transition: opacity 0.2s;
+    -webkit-transition: opacity 0.2s;
+    transition: opacity 0.2s;
+}
+
+.demoTile:hover .insetButtons, .demoTile:focus .insetButtons {
+    opacity: 1;
+}
+
+.demoTile .dijitButtonNode, .demoTile .dijitButtonNode * {
+    cursor: default;
+}
+
+.insetButtons .dijitButtonNode,
+.insetButtons .dijitButtonNode *,
+.demoTile .dijitButtonNode img {
+    cursor: pointer;
+}
