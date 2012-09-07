@@ -1,1 +1,0 @@
-({"singleSort":"Enkelvoudig sorteren","indirectSelectionRadio":"Rij ${0}, enkele selectie, keuzerondje","ascending":"Oplopend","indirectSelectionCheckBox":"Rij ${0}, meerdere selecties, selectievakje","selectAll":"Alles selecteren","descending":"Aflopend","nestedSort":"Genest sorteren","unsorted":"Deze kolom niet sorteren","sortingState":"${0} - ${1}"})

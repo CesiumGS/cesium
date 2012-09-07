@@ -1,1 +1,0 @@
-({"selectContents":"בחירת תוכן ","deleteElement":"מחיקת מרכיב ","moveEnd":"העברת הסמן לסוף ","deleteContents":"מחיקת תוכן ","nodeActions":"פעולות ${nodeName} ","selectElement":"בחירת מרכיב ","moveStart":"העברת הסמן להתחלה "})
