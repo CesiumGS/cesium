@@ -71,10 +71,10 @@ html, body {
 #galleryContainer {
     float: right;
     z-index: 10;
-    width: 280px;
+    width: 275px;
     height: 100%;
     position: absolute;
-    right: -280px;
+    right: -275px;
     -webkit-transition: all 0.5s ease-in-out;
     -moz-transition: all 0.5s ease-in-out;
     -o-transition: all 0.5s ease-in-out;
