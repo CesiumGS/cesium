@@ -191,8 +191,12 @@ define([
 
             this._destroyMorphHandler();
 
+            var canvas = scene.getCanvas();
             var camera = scene.getCamera();
-            camera.frustum = this._camera2D.frustum.clone();
+            var frustum = this._camera2D.frustum.clone();
+            frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
+            frustum.bottom = -frustum.top;
+            camera.frustum = frustum;
             camera.transform = this._camera2D.transform.clone();
 
             var controllers = camera.getControllers();
@@ -220,8 +224,11 @@ define([
 
             this._destroyMorphHandler();
 
+            var canvas = scene.getCanvas();
             var camera = scene.getCamera();
-            camera.frustum = this._cameraCV.frustum.clone();
+            var frustum = this._cameraCV.frustum.clone();
+            frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+            camera.frustum = frustum;
             camera.transform = this._cameraCV.transform.clone();
 
             var controllers = camera.getControllers();
@@ -258,7 +265,10 @@ define([
             controllers.removeAll();
             controllers.addCentralBody();
 
-            camera.frustum = this._camera3D.frustum.clone();
+            var canvas = scene.getCanvas();
+            var frustum = this._camera3D.frustum.clone();
+            frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+            camera.frustum = frustum;
             camera.transform = Matrix4.IDENTITY;
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
