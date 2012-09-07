@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,console*/
 define([
         'require',
         'dojo/_base/declare',
@@ -8,15 +8,17 @@ define([
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
+        '../../Core/BoundingRectangle',
         '../../Core/Ellipsoid',
         '../../Core/computeSunPosition',
         '../../Core/EventHandler',
         '../../Core/FeatureDetection',
         '../../Core/MouseEventType',
         '../../Core/Cartesian2',
-        '../../Core/JulianDate',
         '../../Core/Cartesian3',
+        '../../Core/JulianDate',
         '../../Core/DefaultProxy',
+        '../../Core/requestAnimationFrame',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
         '../../Scene/BingMapsTileProvider',
@@ -33,15 +35,17 @@ define([
         on,
         _WidgetBase,
         _TemplatedMixin,
+        BoundingRectangle,
         Ellipsoid,
         computeSunPosition,
         EventHandler,
         FeatureDetection,
         MouseEventType,
         Cartesian2,
-        JulianDate,
         Cartesian3,
+        JulianDate,
         DefaultProxy,
+        requestAnimationFrame,
         Scene,
         CentralBody,
         BingMapsTileProvider,
@@ -53,8 +57,6 @@ define([
 
     return declare('Cesium.CesiumWidget', [_WidgetBase, _TemplatedMixin], {
         templateString : template,
-        preRender : undefined,
-        postSetup : undefined,
         useStreamingImagery : true,
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
@@ -63,6 +65,7 @@ define([
         specularMapUrl : undefined,
         cloudsMapUrl : undefined,
         bumpMapUrl : undefined,
+        resizeWidgetOnWindowResize : true,
 
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
@@ -70,6 +73,12 @@ define([
 
         postCreate : function() {
             ready(this, '_setupCesium');
+        },
+
+        postSetup : undefined,
+
+        onSetupError : function(widget, error) {
+            console.error(error);
         },
 
         resize : function() {
@@ -82,12 +91,7 @@ define([
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.scene.getContext().setViewport({
-                x : 0,
-                y : 0,
-                width : width,
-                height : height
-            });
+            this.scene.getContext().setViewport(new BoundingRectangle(0, 0, width, height));
 
             this.scene.getCamera().frustum.aspectRatio = width / height;
         },
@@ -172,7 +176,7 @@ define([
         },
 
         _setupCesium : function() {
-            var canvas = this.canvas, ellipsoid = this.ellipsoid, scene;
+            var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
                 scene = this.scene = new Scene(canvas);
@@ -205,6 +209,7 @@ define([
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
             centralBody.showSkyAtmosphere = true;
             centralBody.showGroundAtmosphere = true;
+            centralBody.logoOffset = new Cartesian2(125, 0);
 
             this._configureCentralBodyImagery();
 
@@ -227,6 +232,12 @@ define([
             handler.setMouseAction(lang.hitch(this, '_handleWheel'), MouseEventType.WHEEL);
             handler.setMouseAction(lang.hitch(this, '_handleRightDown'), MouseEventType.RIGHT_DOWN);
             handler.setMouseAction(lang.hitch(this, '_handleRightUp'), MouseEventType.RIGHT_UP);
+
+            if (widget.resizeWidgetOnWindowResize) {
+                on(window, 'resize', function() {
+                    widget.resize();
+                });
+            }
 
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);
@@ -300,10 +311,12 @@ define([
 
         _sunPosition : new Cartesian3(),
 
-        render : function(time) {
-            var scene = this.scene;
-            scene.setSunPosition(computeSunPosition(time, this._sunPosition));
-            scene.render();
+        update : function(currentTime) {
+            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
+        },
+
+        render : function() {
+            this.scene.render();
         },
 
         _configureCentralBodyImagery : function() {
@@ -325,6 +338,21 @@ define([
             centralBody.specularMapSource = this.specularMapUrl;
             centralBody.cloudsMapSource = this.cloudsMapUrl;
             centralBody.bumpMapSource = this.bumpMapUrl;
+        },
+
+        startRenderLoop : function() {
+            var widget = this;
+
+            // Note that clients are permitted to use their own custom render loop.
+            // At a minimum it should include lines similar to the following:
+
+            function updateAndRender() {
+                var currentTime = new JulianDate();
+                widget.update(currentTime);
+                widget.render();
+                requestAnimationFrame(updateAndRender);
+            }
+            updateAndRender();
         }
     });
 });

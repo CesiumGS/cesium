@@ -1,1 +1,0 @@
-({"singleSort":"Jedan sort","indirectSelectionRadio":"Red ${0}, jedan izbor, radio kućica","ascending":"Uzlazno","indirectSelectionCheckBox":"Red ${0}, više izbora, kontrolna kućica","selectAll":"Izaberi sve","descending":"Silazno","nestedSort":"Ugniježđeni sort","unsorted":"Ne sortiraj ovaj stupac","sortingState":"${0} - ${1}"})
