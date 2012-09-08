@@ -40,8 +40,6 @@
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro">
-
-
 <style>
 body {
     background: #000;
@@ -84,11 +82,11 @@ require([
 {
     "use strict";
 
-    function flyToLosAngeles(scene) {
-        Sandcastle.declare(flyToLosAngeles);    // For highlighting in Sandcastle.
+    function flyToSanDiego(scene) {
+        Sandcastle.declare(flyToSanDiego);    // For highlighting in Sandcastle.
         scene.getCamera().getControllers().addFlight({
             destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-                Cesium.Cartographic.fromDegrees(-118.26, 34.19, 100000.0)),
+                Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0)),
             duration: 3.0
         });        
     }
@@ -131,10 +129,10 @@ require([
     
     function createButtons(scene) {
         new ToggleButton({
-            label: "Fly to Los Angeles",
+            label: "Fly to San Diego",
             onClick: function() { 
-                flyToLosAngeles(scene);
-                Sandcastle.highlight(flyToLosAngeles);
+                flyToSanDiego(scene);
+                Sandcastle.highlight(flyToSanDiego);
             }
         }).placeAt('toolbar');
         
