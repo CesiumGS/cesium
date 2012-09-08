@@ -317,11 +317,12 @@ require({
         }
 
         function showGallery() {
-            document.getElementById('galleryContainer').setAttribute('style', 'right: 0px;');
+            document.getElementById('galleryContainer').setAttribute('style', 'bottom: 2px;');
         }
 
         function hideGallery() {
-            document.getElementById('galleryContainer').setAttribute('style', 'right: -275px;');
+            var height = document.getElementById('demosContainer').getBoundingClientRect().height;
+            document.getElementById('galleryContainer').setAttribute('style', 'bottom: -' + height + 'px;');
         }
 
         on(dom.byId('galleryContainer'), 'mouseout', function() {

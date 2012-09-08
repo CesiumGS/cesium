@@ -55,46 +55,42 @@ html, body {
 }
 
 #galleryContainer {
-	position: relative;
-}
-
-#galleryTab {
-	border: 2px solid #FFF;
-    padding: 5px;
-    color: #FFF;
-    position: absolute;
-    top: 40%;
-    left: -6px;
-    -webkit-transform: rotate(90deg);
-    -moz-transform: rotate(90deg);
-    -o-transform: rotate(90deg);
-    -ms-transform: rotate(90deg);
-    transform: rotate(90deg);
-}
-
-#galleryContainer {
-    float: right;
     z-index: 10;
-    width: 275px;
-    height: 100%;
+    width: 100%;
     position: absolute;
-    right: -275px;
+    bottom: -224px;
+    left: 0;
     -webkit-transition: all 0.5s ease-in-out;
     -moz-transition: all 0.5s ease-in-out;
     -o-transition: all 0.5s ease-in-out;
     -ms-transition: all 0.5s ease-in-out;
     transition: all 0.5s ease-in-out; 
-    padding-left: 40px;
+}
+
+#galleryTab {
+    border-left: 2px solid #aaa;
+    border-right: 2px solid #aaa;
+    border-top: 2px solid #aaa;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 5px 15px;
+    color: #FFF;
+    position: absolute;
+    top: -1.8em;
+    left: 48%;
 }
 
 #demosContainer {
 	overflow: auto;
-    height: 100%;
-    border-left: 2px solid #FFF;
+    width: 100%;
+    border-top: 2px solid #aaa;
+    background: rgba(0, 0, 0, 0.8);
 }
 
 #demos {
     padding: 5px;
+    white-space: nowrap;
 }
 
 .demoTile {
@@ -104,6 +100,7 @@ html, body {
     border-radius: 7px;
     display: inline-block;
     vertical-align: top;
+    border: 1px solid transparent;
     background: rgb(235,241,246); /* Old browsers */
     background: -moz-linear-gradient(top,  rgba(235,241,246,1) 0%, rgba(171,211,238,1) 50%, rgba(137,195,235,1) 51%, rgba(213,235,251,1) 100%); /* FF3.6+ */
     background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(235,241,246,1)), color-stop(50%,rgba(171,211,238,1)), color-stop(51%,rgba(137,195,235,1)), color-stop(100%,rgba(213,235,251,1))); /* Chrome,Safari4+ */
@@ -111,14 +108,13 @@ html, body {
     background: -o-linear-gradient(top,  rgba(235,241,246,1) 0%,rgba(171,211,238,1) 50%,rgba(137,195,235,1) 51%,rgba(213,235,251,1) 100%); /* Opera 11.10+ */
     background: -ms-linear-gradient(top,  rgba(235,241,246,1) 0%,rgba(171,211,238,1) 50%,rgba(137,195,235,1) 51%,rgba(213,235,251,1) 100%); /* IE10+ */
     background: linear-gradient(to bottom,  rgba(235,241,246,1) 0%,rgba(171,211,238,1) 50%,rgba(137,195,235,1) 51%,rgba(213,235,251,1) 100%); /* W3C */
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ebf1f6', endColorstr='#d5ebfb',GradientType=0 ); /* IE6-9 */
 }
 
 .demoTile:hover {
-    border: solid 1px #CCC;
-    -moz-box-shadow: 0 8px 6px -4px #999;
-    -webkit-box-shadow: 0 8px 6px -4px #999;
-    box-shadow: 0 8px 6px -4px #999;
+    border: solid 1px #F92;
+    -moz-box-shadow: 0 0 5px #F92;
+    -webkit-box-shadow: 0 0 5px #F92;
+    box-shadow: 0 0 5px #F92;
     cursor: pointer;
 }
 
