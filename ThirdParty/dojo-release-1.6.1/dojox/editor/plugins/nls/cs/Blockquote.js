@@ -1,1 +1,0 @@
-({"blockquote":"Citace v bloku"})
