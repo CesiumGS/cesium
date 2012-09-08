@@ -570,6 +570,7 @@ require({
 
             var addLoadOnClickCallback = function(divId, demo) {
                 on(dom.byId(divId), 'click', function() {
+                    hideGallery();
                     loadFromGallery(demo);
                     var demoSrc = demo.name + '.html';
                     if (demoSrc !== window.location.search.substring(1)) {
