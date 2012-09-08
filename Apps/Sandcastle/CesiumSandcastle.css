@@ -1,17 +1,11 @@
 @import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
 
-/* @import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/darker/darker.css');
-
-@import url('../../ThirdParty/dojo-release-1.7.2-src/dojox/mobile/themes/darker/Slider.css'); */
-
 html, body {
     height: 100%;
     margin: 0;
     overflow: hidden;
     padding: 0;
     font-family: sans-serif;
-    -moz-user-select: none;
-    -webkit-user-select: none;
 }
 
 #loading {
@@ -34,6 +28,16 @@ html, body {
     width: 100%;
     height: 100%;
 }
+
+#toolbar {
+    -moz-user-select: -moz-none;  /* allows for re-enabling on sub-elements like the search box */
+    -webkit-user-select: none;
+}
+
+#search {
+    -moz-user-select: text;
+    -webkit-user-select: text;
+ }
 
 .cesiumTitle {
     display: block;
@@ -145,7 +149,6 @@ html, body {
 	height: 100%;
 	overflow-x: hidden;
 	overflow-y: scroll;
-	-webkit-user-select: text;
 }
 
 #logOutput {
