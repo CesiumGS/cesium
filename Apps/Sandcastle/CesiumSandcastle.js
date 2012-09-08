@@ -174,20 +174,20 @@ require({
         });
 
         function highlightRun() {
-                domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
+            domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
         }
 
         function clearRun() {
-                domClass.remove(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
-            }
+            domClass.remove(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
+        }
 
         function highlightSaveAs() {
             domClass.add(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
         }
 
         function clearSaveAs() {
-                domClass.remove(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
-            }
+            domClass.remove(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
+        }
 
         function openDocTab(title, link) {
             if (typeof docTabs[title] === 'undefined') {
@@ -262,11 +262,16 @@ require({
             return abbrDiv.innerHTML;
         }
 
-        function clearAllErrors() {
+        function clearErrorsAddHints() {
             var line, hint, hints, i, len;
             hintTimer = undefined;
             while (errorLines.length > 0) {
                 line = errorLines.pop();
+                jsEditor.setLineClass(line, null);
+                jsEditor.clearMarker(line);
+            }
+            while (highlightLines.length > 0) {
+                line = highlightLines.pop();
                 jsEditor.setLineClass(line, null);
                 jsEditor.clearMarker(line);
             }
@@ -288,7 +293,7 @@ require({
             if (typeof hintTimer !== 'undefined') {
                 window.clearTimeout(hintTimer);
             }
-            hintTimer = setTimeout(clearAllErrors, 550);
+            hintTimer = setTimeout(clearErrorsAddHints, 550);
             highlightRun();
         }
 
@@ -334,7 +339,7 @@ require({
         });
 
         CodeMirror.commands.runCesium = function(cm) {
-            clearAllErrors();
+            clearErrorsAddHints();
             clearRun();
             cesiumContainer.selectChild(bucketPane);
             bucketFrame.contentWindow.location.reload();
