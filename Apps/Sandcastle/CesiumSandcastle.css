@@ -60,11 +60,11 @@ html, body {
     position: absolute;
     bottom: -224px;
     left: 0;
-    -webkit-transition: all 0.5s ease-in-out;
-    -moz-transition: all 0.5s ease-in-out;
-    -o-transition: all 0.5s ease-in-out;
-    -ms-transition: all 0.5s ease-in-out;
-    transition: all 0.5s ease-in-out; 
+    -webkit-transition: all 0.2s ease-in-out;
+    -moz-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
+    -ms-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
 }
 
 #galleryTab {
@@ -74,11 +74,11 @@ html, body {
     border-top-left-radius: 7px;
     border-top-right-radius: 7px;
     background: rgba(0, 0, 0, 0.8);
-    padding: 5px 15px;
+    padding: 5px 50px;
     color: #FFF;
     position: absolute;
     top: -1.8em;
-    left: 48%;
+    left: 47%;
 }
 
 #demosContainer {

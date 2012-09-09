@@ -92,10 +92,13 @@ require({
         var suggestButton = registry.byId('buttonSuggest');
         var docTimer;
         var docTabs = {};
+        var galleryTooltipTimer;
+        var activeGalleryTooltipDemo;
         var cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dom.byId('docPopup');
         var docMessage = dom.byId('docPopupMessage');
         var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
+        var demoTooltips = {};
         var errorLines = [];
         var highlightLines = [];
         var hintGlobals = [
@@ -224,6 +227,7 @@ require({
                 return false;
             };
 
+            docTimer = undefined;
             if (selectedText && selectedText in local.docTypes && typeof local.docTypes[selectedText].push === 'function') {
                 var member, ele, i, len = local.docTypes[selectedText].length;
                 docMessage.innerHTML = '';
@@ -262,9 +266,37 @@ require({
             return abbrDiv.innerHTML;
         }
 
+        function closeGalleryTooltip() {
+            if (typeof activeGalleryTooltipDemo !== 'undefined') {
+                popup.close(demoTooltips[activeGalleryTooltipDemo.name]);
+                activeGalleryTooltipDemo = undefined;
+            }
+        }
+
+        function openGalleryTooltip() {
+            galleryTooltipTimer = undefined;
+            if (typeof activeGalleryTooltipDemo !== 'undefined') {
+                popup.open({
+                    popup: demoTooltips[activeGalleryTooltipDemo.name],
+                    around: dom.byId(activeGalleryTooltipDemo.name)
+                });
+            }
+        }
+
+        function scheduleGalleryTooltip(demo) {
+            if (demo !== activeGalleryTooltipDemo) {
+                activeGalleryTooltipDemo = demo;
+                if (typeof galleryTooltipTimer !== 'undefined') {
+                    window.clearTimeout(galleryTooltipTimer);
+                }
+                galleryTooltipTimer = window.setTimeout(openGalleryTooltip, 220);
+            }
+        }
+
         function clearErrorsAddHints() {
             var line, hint, hints, i, len;
             hintTimer = undefined;
+            closeGalleryTooltip();
             while (errorLines.length > 0) {
                 line = errorLines.pop();
                 jsEditor.setLineClass(line, null);
@@ -326,6 +358,7 @@ require({
         }
 
         function hideGallery() {
+            closeGalleryTooltip();
             var height = document.getElementById('demosContainer').getBoundingClientRect().height;
             document.getElementById('galleryContainer').setAttribute('style', 'bottom: -' + height + 'px;');
         }
@@ -522,6 +555,7 @@ require({
             queryObject = ioQuery.queryToObject(window.location.search.substring(1));
         } else {
             queryObject.src = 'Minimalist.html';
+            queryObject.showGallery = 1;
         }
 
         function loadDemoFromFile(index) {
@@ -544,6 +578,9 @@ require({
                         window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html');
                         document.title = demo.name + ' - Cesium Sandcastle';
                         queryObject.src = undefined;
+                        if (queryObject.showGallery) {
+                            showGallery();
+                        }
                     }
                 }
 
@@ -551,21 +588,18 @@ require({
                 var start = value.indexOf('<meta name="description" content="');
                 if (start !== -1) {
                     var end = value.indexOf('">', start);
-                    var tooltip = new TooltipDialog({
+                    demoTooltips[demo.name] = new TooltipDialog({
                         id: demo.name + 'TooltipDialog',
                         style: 'width: 200px; font-size: 12px;',
                         content: value.substring(start + 34, end)
                     });
 
                     on(dom.byId(demo.name), 'mouseover', function() {
-                        popup.open({
-                            popup: tooltip,
-                            around: dom.byId(demo.name)
-                        });
+                        scheduleGalleryTooltip(demo);
                     });
 
                     on(dom.byId(demo.name), 'mouseout', function() {
-                        popup.close(tooltip);
+                        closeGalleryTooltip();
                     });
                 }
             });
