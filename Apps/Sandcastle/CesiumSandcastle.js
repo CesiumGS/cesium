@@ -398,6 +398,13 @@ require({
             }
         }
 
+        window.addEventListener('popstate', function (e) {
+            if (e.state && e.state.name && e.state.code) {
+                loadFromGallery(e.state);
+                document.title = e.state.name + ' - Cesium Sandcastle';
+            }
+        }, false);
+
         window.addEventListener('message', function (e) {
             var line;
             // The iframe (bucket.html) sends this message on load.
@@ -534,6 +541,8 @@ require({
                 if (typeof queryObject.src !== 'undefined') {
                     if (demo.name === window.decodeURIComponent(queryObject.src.replace('.html', ''))) {
                         loadFromGallery(demo);
+                        window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html');
+                        document.title = demo.name + ' - Cesium Sandcastle';
                         queryObject.src = undefined;
                     }
                 }
@@ -580,8 +589,9 @@ require({
                     loadFromGallery(demo);
                     var demoSrc = demo.name + '.html';
                     if (demoSrc !== window.location.search.substring(1)) {
-                        window.history.pushState('demoSrc', demo.name, '?src=' + demoSrc);
+                        window.history.pushState(demo, demo.name, '?src=' + demoSrc);
                     }
+                    document.title = demo.name + ' - Cesium Sandcastle';
                 });
             };
 
