@@ -58,8 +58,9 @@ html, body {
     z-index: 10;
     width: 100%;
     position: absolute;
-    bottom: -224px;
+    bottom: -280px;
     left: 0;
+    background: rgba(0, 0, 0, 0.8);
     -webkit-transition: all 0.2s ease-in-out;
     -moz-transition: all 0.2s ease-in-out;
     -o-transition: all 0.2s ease-in-out;
@@ -81,15 +82,19 @@ html, body {
     left: 47%;
 }
 
-#demosContainer {
-	overflow: auto;
+#galleryBody {
+    padding: 5px;
     width: 100%;
     border-top: 2px solid #aaa;
-    background: rgba(0, 0, 0, 0.8);
+    box-sizing: border-box;
+}
+
+#demosContainer {
+	overflow: auto;
 }
 
 #demos {
-    padding: 5px;
+    padding: 0 5px 5px;
     white-space: nowrap;
 }
 
@@ -204,6 +209,7 @@ a.linkButton:focus, a.linkButton:hover {
 
 .claro .bottomPanel {
     padding: 0;
+    margin-bottom: 7px;
     overflow: hidden;
 }
 

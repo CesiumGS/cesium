@@ -94,6 +94,7 @@ require({
         var docTabs = {};
         var galleryTooltipTimer;
         var activeGalleryTooltipDemo;
+        var galleryHeight = -280;
         var cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dom.byId('docPopup');
         var docMessage = dom.byId('docPopupMessage');
@@ -353,17 +354,26 @@ require({
             }
         }
 
+        var galleryContainerElement = document.getElementById('galleryContainer');
+        var galleryBodyElement = document.getElementById('galleryBody');
+
         function showGallery() {
-            document.getElementById('galleryContainer').setAttribute('style', 'bottom: 2px;');
+            if (galleryHeight < 0) {
+                galleryHeight = 0;
+                galleryContainerElement.setAttribute('style', 'bottom: 0;');
+            }
         }
 
         function hideGallery() {
             closeGalleryTooltip();
-            var height = document.getElementById('demosContainer').getBoundingClientRect().height;
-            document.getElementById('galleryContainer').setAttribute('style', 'bottom: -' + height + 'px;');
+            var height = Math.min(0, 10 - (galleryBodyElement.getBoundingClientRect().height));
+            if (galleryHeight !== height) {
+                galleryHeight = height;
+                galleryContainerElement.setAttribute('style', 'bottom: ' + galleryHeight + 'px;');
+            }
         }
 
-        on(dom.byId('galleryContainer'), 'mouseout', function() {
+        on(dom.byId('appLayout'), 'mouseover', function() {
             hideGallery();
         });
 
@@ -580,6 +590,8 @@ require({
                         queryObject.src = undefined;
                         if (queryObject.showGallery) {
                             showGallery();
+                        } else {
+                            hideGallery();
                         }
                     }
                 }
