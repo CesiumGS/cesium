@@ -2104,7 +2104,7 @@ define([
             }
 
             var uniformState = context.getUniformState();
-            var mv = uniformState.getModelView();
+            var viewMatrix = uniformState.getView();
 
             context.beginDraw({
                 framebuffer : this._fb,
@@ -2133,8 +2133,8 @@ define([
                     rtc = Cartesian3.ZERO;
                     tile.mode = 2;
                 }
-                var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
-                tile.modelView = mv.setColumn(3, centerEye, tile.modelView);
+                var centerEye = viewMatrix.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
+                tile.modelView = viewMatrix.setColumn(3, centerEye, tile.modelView);
 
                 context.continueDraw({
                     primitiveType : PrimitiveType.TRIANGLES,

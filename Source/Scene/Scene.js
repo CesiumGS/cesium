@@ -193,7 +193,7 @@ define([
         frameState.mode = scene.mode;
         frameState.scene2D = scene.scene2D;
         frameState.camera = camera;
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
         frameState.occluder = undefined;
 
         // TODO: The occluder is the top-level central body. When we add
