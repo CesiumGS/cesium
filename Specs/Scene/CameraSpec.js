@@ -58,16 +58,38 @@ defineSuite([
         expect(controllers).toEqual(new CameraControllerCollection(camera, document));
     });
 
-    it('lookAt works', function() {
-        var target = Cartesian3.ZERO;
-        var newPosition = new Cartesian3(1.0, 1.0, 1.0);
-        var newDirection = target.subtract(newPosition).normalize();
-        var newUp = camera.right.cross(newDirection).normalize();
+    it('lookAt object', function() {
+        var target = new Cartesian3(-1.0, -1.0, 0.0);
+        var position = Cartesian3.UNIT_X;
+        var up = Cartesian3.UNIT_Z;
+
         var tempCamera = camera.clone();
-        tempCamera.lookAt(newPosition, target, newUp);
-        expect(tempCamera.position.equals(newPosition)).toEqual(true);
-        expect(tempCamera.direction.equals(newDirection)).toEqual(true);
-        expect(tempCamera.up.equals(newUp)).toEqual(true);
+        tempCamera.lookAt(position, up, target);
+        expect(tempCamera.position.equals(position)).toEqual(true);
+        expect(tempCamera.direction.equals(target.subtract(position).normalize())).toEqual(true);
+        expect(tempCamera.up.equals(up)).toEqual(true);
+        expect(tempCamera.right.equals(tempCamera.direction.cross(up).normalize())).toEqual(true);
+
+        expect(1.0 - tempCamera.direction.magnitude() < CesiumMath.EPSILON14).toEqual(true);
+        expect(1.0 - tempCamera.up.magnitude() < CesiumMath.EPSILON14).toEqual(true);
+        expect(1.0 - tempCamera.right.magnitude() < CesiumMath.EPSILON14).toEqual(true);
+    });
+
+    it('lookAt array', function() {
+        var target = new Cartesian3(-1.0, -1.0, 0.0);
+        var position = Cartesian3.UNIT_X;
+        var up = Cartesian3.UNIT_Z;
+
+        var tempCamera = camera.clone();
+        tempCamera.lookAt(position, target, up);
+        expect(tempCamera.position.equals(position)).toEqual(true);
+        expect(tempCamera.direction.equals(target.subtract(position).normalize())).toEqual(true);
+        expect(tempCamera.up.equals(up)).toEqual(true);
+        expect(tempCamera.right.equals(tempCamera.direction.cross(up).normalize())).toEqual(true);
+
+        expect(1.0 - tempCamera.direction.magnitude() < CesiumMath.EPSILON14).toEqual(true);
+        expect(1.0 - tempCamera.up.magnitude() < CesiumMath.EPSILON14).toEqual(true);
+        expect(1.0 - tempCamera.right.magnitude() < CesiumMath.EPSILON14).toEqual(true);
     });
 
     it('get view matrix', function() {

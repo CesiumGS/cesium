@@ -171,8 +171,8 @@ define([
 
         this.position = Cartesian3.clone(eye, this.position);
         this.direction = Cartesian3.subtract(target, eye, this.direction).normalize(this.direction);
-        this.up = Cartesian3.normalize(up, this.up);
-        this.right = Cartesian3.cross(this.direction, this.up, this.right);
+        this.right = Cartesian3.cross(this.direction, up, this.right).normalize(this.right);
+        this.up = Cartesian3.cross(this.right, this.direction, this.up);
     };
 
     /**
