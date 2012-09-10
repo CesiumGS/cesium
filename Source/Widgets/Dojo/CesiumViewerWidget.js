@@ -282,8 +282,6 @@ define([
             }
         },
 
-        viewFromTo : undefined,
-
         /**
          * Have the camera track a particular object based on the result of a pick.
          *
@@ -295,6 +293,8 @@ define([
             this.centerCameraOnObject(typeof selectedObject !== 'undefined' ? selectedObject.dynamicObject : undefined);
         },
 
+        _viewFromTo : undefined,
+
         /**
          * Have the camera track a particular object.
          *
@@ -304,14 +304,14 @@ define([
          */
         centerCameraOnObject : function(selectedObject) {
             if (typeof selectedObject !== 'undefined' && typeof selectedObject.position !== 'undefined') {
-                var viewFromTo = this.viewFromTo;
+                var viewFromTo = this._viewFromTo;
                 if (typeof viewFromTo === 'undefined') {
-                    this.viewFromTo = viewFromTo = new DynamicObjectView(selectedObject, this.scene, this.ellipsoid);
+                    this._viewFromTo = viewFromTo = new DynamicObjectView(selectedObject, this.scene, this.ellipsoid);
                 } else {
                     viewFromTo.dynamicObject = selectedObject;
                 }
             } else {
-                this.viewFromTo = undefined;
+                this._viewFromTo = undefined;
 
                 var scene = this.scene;
                 var mode = scene.mode;
@@ -745,7 +745,7 @@ define([
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
                 transitioner.morphTo3D();
-                widget.viewFromTo = undefined;
+                widget._viewFromTo = undefined;
                 widget.viewHome();
                 widget.showSkyAtmosphere(true);
                 widget.showGroundAtmosphere(true);
@@ -1018,7 +1018,7 @@ define([
             }
 
             // Update the camera to stay centered on the selected object, if any.
-            var viewFromTo = this.viewFromTo;
+            var viewFromTo = this._viewFromTo;
             if (typeof viewFromTo !== 'undefined') {
                 viewFromTo.update(currentTime);
             }
