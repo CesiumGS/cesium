@@ -44,7 +44,7 @@ vec3 sampleAndBlend(
     if (textureCoordinates.x < (1.0/256.0) || textureCoordinates.x > (255.0/256.0) ||
         textureCoordinates.y < (1.0/256.0) || textureCoordinates.y > (255.0/256.0))
     {
-        color = vec4(0.0, 1.0, 0.0, 1.0);
+        color = vec4(1.0, 1.0, 0.0, 1.0);
     }
 #endif
 
