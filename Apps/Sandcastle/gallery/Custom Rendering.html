@@ -97,7 +97,7 @@ require([
         this._rs = undefined;
         this._pickId = undefined;
         
-        this._boundingVolume = undefined;
+        this._boundingSphere = undefined;
     
         this.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
     
@@ -127,6 +127,10 @@ require([
     
     Box.prototype.update = function(context, frameState) {
         // Only supports 3D, not 2D or Columbus view.
+        if (frameState.mode !== Cesium.SceneMode.SCENE3D) {
+            return undefined;
+        }
+        
         if (typeof this._va === 'undefined') {
             var vs = '';
             vs += 'attribute vec4 position;';
@@ -144,7 +148,7 @@ require([
             var dimensions = new Cesium.Cartesian3(500000.0, 500000.0, 500000.0);
             var maximumCorner = dimensions.multiplyByScalar(0.5);
             var minimumCorner = maximumCorner.negate();
-            this._boundingVolume = Cesium.BoundingSphere.fromPoints([
+            this._boundingSphere = Cesium.BoundingSphere.fromPoints([
                 minimumCorner, maximumCorner
             ]);
         
@@ -172,7 +176,7 @@ require([
         }
         
         return {
-            boundingVolume : this._boundingVolume,
+            boundingVolume : this._boundingSphere,
             modelMatrix : this.modelMatrix
         };
     };
@@ -230,7 +234,7 @@ require([
         this._rs = undefined;
         this._pickId = undefined;
 
-        this._boundingVolume = undefined;
+        this._boundingSphere = undefined;
 
         this._mode = undefined;
         this._projection = undefined;
@@ -311,7 +315,7 @@ require([
                     value : [0.0, 0.0]
                 };
 
-                this._boundingVolume = Cesium.BoundingSphere.fromPoints([
+                this._boundingSphere = Cesium.BoundingSphere.fromPoints([
                     new Cesium.Cartesian3(-x, -y, -z),
                     new Cesium.Cartesian3(x, y, z)
                 ]);
@@ -334,10 +338,10 @@ require([
                 }
 
                 if (mode === Cesium.SceneMode.SCENE2D){
-                    this._boundingVolume = Cesium.BoundingRectangle.fromPoints(projectedPositions);
+                    this._boundingSphere = Cesium.BoundingSphere.fromPoints(projectedPositions);
                 } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-                    this._boundingVolume = Cesium.BoundingSphere.fromPoints(projectedPositions);
-                    this._boundingVolume.center = new Cesium.Cartesian3(this._boundingVolume.center.z, this._boundingVolume.center.x, this._boundingVolume.center.y);
+                    this._boundingSphere = Cesium.BoundingSphere.fromPoints(projectedPositions);
+                    this._boundingSphere.center = new Cesium.Cartesian3(this._boundingSphere.center.z, this._boundingSphere.center.x, this._boundingSphere.center.y);
                 } else {
                     var bv3D = Cesium.BoundingSphere.fromPoints([
                         minimumCorner,
@@ -346,7 +350,7 @@ require([
                     var bv2D = Cesium.BoundingSphere.fromPoints(projectedPositions);
                     bv2D.center = new Cesium.Cartesian3(bv2D.center.z, bv2D.center.x, bv2D.center.y);
 
-                    this._boundingVolume = bv3D.union(bv2D);
+                    this._boundingSphere = bv3D.union(bv2D);
                 }
 
                 mesh.attributes.position2D = {
@@ -400,7 +404,7 @@ require([
         }
 
         return {
-            boundingVolume : this._boundingVolume,
+            boundingVolume : this._boundingSphere,
             modelMatrix : modelMatrix
         };
     };
