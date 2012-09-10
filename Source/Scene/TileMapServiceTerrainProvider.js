@@ -166,7 +166,7 @@ define([
 
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
-        var extent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
+        var extent = tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
 
         tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
