@@ -13,19 +13,23 @@ define(['../Core/DeveloperError',
      *
      * @alias SystemClockDrivenBufferUpdater
      * @constructor
-     * @param {DocumentManager} The document manager.
-     * @param {String} The url of the document.
-     * @param {Number} [numOfIterations=0] The number of iterations.
-     * @param {function} [bufferFillFunction=fillBufferIncrementally] The function used to fill the buffer.
+     *
+     * @param {DocumentManager} documentManager The document manager.
+     * @param {String} url The url of the document.
+     * @param {Number} refreshRate The time in seconds to refresh the buffer.
+     * @param {function} [bufferFillFunction={@link fillBufferIncrementally}] The function used to fill the buffer.
+     *
      * @exception {DeveloperError} documentManager is required.
-     * @exception {DeveloperError} baseUrl is required.
+     * @exception {DeveloperError} url is required.
+     *
+     * @see fillBufferIncrementally
      */
-    function SystemClockDrivenBufferUpdater(documentManager, baseUrl, refreshRate, bufferFillFunction) {
+    var SystemClockDrivenBufferUpdater = function SystemClockDrivenBufferUpdater(documentManager, url, refreshRate, bufferFillFunction) {
         if (typeof documentManager === 'undefined') {
             throw new DeveloperError('documentManager is required.');
         }
-        if (typeof baseUrl === 'undefined') {
-            throw new DeveloperError('baseUrl is required.');
+        if (typeof url === 'undefined') {
+            throw new DeveloperError('url is required.');
         }
 
         if (typeof bufferFillFunction === 'undefined') {
@@ -35,14 +39,16 @@ define(['../Core/DeveloperError',
         this._documentManager = documentManager;
         this._refreshRate = defaultValue(refreshRate, 60);//default to 60 seconds
         this._bufferFillFunction = bufferFillFunction;
-        this._baseUrl = baseUrl;
+        this._url = url;
         this._lastUpdateTime = new Date();
-    }
+    };
 
     /**
      * Called during the Cesium update loop.
-     * @param {JulianDate} The current time of the animation.
-     * @param {DynamicObjectCollection} The buffer to update.
+     * @memberof SystemClockDrivenBufferUpdater
+     *
+     * @param {JulianDate} currentTime The current time of the animation.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The buffer to update.
      */
     SystemClockDrivenBufferUpdater.prototype.update = function(currentTime, dynamicObjectCollection) {
         var now = new Date();
@@ -51,7 +57,7 @@ define(['../Core/DeveloperError',
             if (typeof this._handle === 'undefined') {
                 var self = this;
                 var storeHandle = true;
-                var handle = this._bufferFillFunction(dynamicObjectCollection, this._baseUrl.getValue(currentTime),
+                var handle = this._bufferFillFunction(dynamicObjectCollection, this._url.getValue(currentTime),
                         function(item, buffer, url){
                             self._documentManager.process(item, buffer, url);
                         },
@@ -69,6 +75,7 @@ define(['../Core/DeveloperError',
 
     /**
      * Aborts the buffer fill function.
+     * @memberof SystemClockDrivenBufferUpdater
      */
     SystemClockDrivenBufferUpdater.prototype.abort = function() {
         if (typeof this._handle !== 'undefined') {

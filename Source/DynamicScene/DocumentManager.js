@@ -32,10 +32,12 @@ define([
      *
      * @alias DocumentManager
      * @constructor
-     * @param {Scene} The current scene.
+     *
+     * @param {Scene} scene The current scene.
+     *
      * @exception {DeveloperError} scene is required.
+     *
      * @see Scene
-     * @exports DocumentManager
      */
     var DocumentManager = function(scene){
         if (typeof scene === 'undefined') {
@@ -47,14 +49,17 @@ define([
     };
 
     /**
-     * Adds the JSON object as a document. If the document contains external czml, it creates new documents according
+     * Processes the JSON object to a new {@link CompositeDynamicObjectCollection} and adds it to the {@link CompositeDynamicObjectCollection} container.
+     * If the document contains external czml, it creates new documents according
      * to the scope of the external property. If the scope property is not specified or specified as PRIVATE. A new
      * CompositeDynamicObjectCollection is created and populated with the external CZML data. If the scope property
      * is specified as SHARED, then a new DynamicObjectCollection is created, populated with the external czml and
      * added to the existing CompositeDynamicObjectCollection. Any properties in a SHARED scope are then merged.
+     * @memberof DocumentManager
      *
      * @param {Object} json A JSON object with valid czml.
-     * @param {String} The document's name to associate with the JSON object.
+     * @param {String} documentName The document's name to associate with the JSON object.
+     * @returns {CompositeDynamicObjectCollection} The newly created {@link CompositeDynamicObjectCollection}.
      *
      */
     DocumentManager.prototype.add = function(json, documentName){
@@ -74,7 +79,11 @@ define([
 
     /**
      * Returns all documents.
+     * @memberof DocumentManager
      *
+     * @returns {Array} The list of {@link CompositeDynamicObjectCollection} contained in the {@link DocumentManager}
+     *
+     * @see CompositeDynamicObjectCollection
      */
     DocumentManager.prototype.getDocuments = function(){
         return this.compositeCollections;
@@ -82,7 +91,11 @@ define([
 
     /**
      * Returns all visualizers.
+     * @memberof DocumentManager
      *
+     * @returns {Array} The list of {@link VisualizerCollection} contained in the {@link DocumentManager}
+     *
+     * @see VisualizerCollection
      */
     DocumentManager.prototype.getVisualizers = function(){
         return this.visualizers;
@@ -90,7 +103,10 @@ define([
 
     /**
      * Removes a document from the document collection.
-     * @param {String} The document's name to remove from the current composite collection.
+     * @memberof DocumentManager
+     *
+     * @param {String} documentName The document's name to remove from the current composite collection.
+     *
      * @exception {DeveloperError} documentName is required.
      */
     DocumentManager.prototype.remove = function(documentName){
@@ -112,6 +128,7 @@ define([
 
     /**
      * Removes all documents from the document collection.
+     * @memberof DocumentManager
      */
     DocumentManager.prototype.removeAll = function(){
         var length = this.visualizers.length;
@@ -124,12 +141,17 @@ define([
     };
 
     /**
-     * Processes the JSON object and calls czml. It then looks for any external czml properties and if the document
-     * contains external czml, it creates new documents according to the scope of the external property. If the
+     * Processes the JSON object and updates the {@link DynamicObjectCollection}. It then looks for any external CZML properties and if the document
+     * contains external CZML, it creates new documents according to the scope of the external property. If the
      * scope property is not specified or specified as PRIVATE. A new CompositeDynamicObjectCollection is created
      * and populated with the external CZML data. If the scope property is specified as SHARED, then a new
-     * DynamicObjectCollection is created, populated with the external czml and added to the existing
+     * DynamicObjectCollection is created, populated with the external CZML and added to the existing
      * CompositeDynamicObjectCollection. Any properties in a SHARED scope are then merged.
+     * @memberof DocumentManager
+     *
+     * @param {Object} json The JSON object to process.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The {@link DynamicObjectCollection} to update with the processed CZML.
+     * @param {String} documentName The name of the document.
      */
     DocumentManager.prototype.process = function(json, dynamicObjectCollection, documentName){
         var compositeDynamicObjectCollection = dynamicObjectCollection.compositeCollection;
@@ -170,12 +192,16 @@ define([
 
     /**
      * Gets an object with the specified id in the specified document.
+     * @memberof DocumentManager
      *
-     * @param {String} The id of the object to retrieve.
-     * @param {String} The document's name to find the object.
+     * @param {String} objectId The id of the object to retrieve.
+     * @param {String} documentName The document's name to find the object.
+     * @returns {DynamicObject} The {@link DynamicObject} with the provided id or undefined if not found.
+     *
      * @exception {DeveloperError} objectId is required.
-     * @exception {DeveloperError} documentName is required.
-     * @returns The DynamicObject with the provided id or undefined if not found.
+     * @exception {DeveloperError} documentName is required
+     *
+     * @see {DynamicObject}
      */
     DocumentManager.prototype.getObject = function(objectId, documentName){
         if(typeof objectId === 'undefined'){
@@ -199,7 +225,7 @@ define([
      * If the collection contains a mix of infinitely available data and non-infinite data,
      * It will return the interval pertaining to the non-infinite data only.  If all
      * data is infinite, an infinite interval will be returned.
-     * @memberof CompositeDynamicObjectCollection
+     * @memberof DocumentManager
      *
      * @returns {TimeInterval} The availability of DynamicObjects in the collection.
      */
@@ -232,7 +258,9 @@ define([
 
     /**
      * Calls all document updaters and visualizers with the current time.
-     * @param {JulianDate} The current time.
+     * @memberof DocumentManager
+     *
+     * @param {JulianDate} currentTime The current time.
      */
     DocumentManager.prototype.update = function(currentTime){
         var length = this.visualizers.length;

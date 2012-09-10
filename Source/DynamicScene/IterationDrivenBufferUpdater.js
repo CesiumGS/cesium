@@ -10,24 +10,26 @@ define([
     "use strict";
 
     /**
-     * A buffer updater that updates a certain number of iterations.
+     * A buffer updater that updates for a certain number of iterations.
      *
      * @alias IterationDrivenBufferUpdater
      * @constructor
-     * @param {DocumentManager} The document manager.
-     * @param {String} The url of the document.
+     *
+     * @param {DocumentManager} documentManager The document manager.
+     * @param {String} url The url of the document.
      * @param {Number} [numOfIterations=0] The number of iterations.
-     * @param {function} [bufferFillFunction=fillBufferIncrementally] The function used to fill the buffer.
+     * @param {function} [bufferFillFunction={@link fillBufferIncrementally}] The function used to fill the buffer.
+     *
      * @exception {DeveloperError} documentManager is required.
-     * @exception {DeveloperError} baseUrl is required.
+     * @exception {DeveloperError} url is required.
      *
      */
-    function IterationDrivenBufferUpdater(documentManager, baseUrl, numOfIterations, bufferFillFunction) {
+    var IterationDrivenBufferUpdater = function IterationDrivenBufferUpdater(documentManager, url, numOfIterations, bufferFillFunction) {
         if (typeof documentManager === 'undefined') {
             throw new DeveloperError('documentManager is required.');
         }
-        if (typeof baseUrl === 'undefined') {
-            throw new DeveloperError('baseUrl is required.');
+        if (typeof url === 'undefined') {
+            throw new DeveloperError('url is required.');
         }
         if (typeof bufferFillFunction === 'undefined') {
             bufferFillFunction = fillBufferIncrementally;
@@ -36,20 +38,22 @@ define([
         this._numOfIterations = defaultValue(numOfIterations, 1);
         this._currentIteration = 0;
         this._bufferFillFunction = bufferFillFunction;
-        this._baseUrl = baseUrl;
-    }
+        this._url = url;
+    };
 
     /**
      * Called during the Cesium update loop.
-     * @param {JulianDate} The current time of the animation.
-     * @param {DynamicObjectCollection} The buffer to update.
+     * @memberof IterationDrivenBufferUpdater
+     *
+     * @param {JulianDate} currentTime The current time of the animation.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The buffer to update.
      */
     IterationDrivenBufferUpdater.prototype.update = function(time, dynamicObjectCollection) {
         if(this._currentIteration < this._numOfIterations){
             if (typeof this._handle === 'undefined') {
                 var self = this;
                 var storeHandle = true;
-                var handle = this._bufferFillFunction(dynamicObjectCollection, this._baseUrl.getValue(time),
+                var handle = this._bufferFillFunction(dynamicObjectCollection, this._url.getValue(time),
                         function(item, buffer, url){
                             self._documentManager.process(item, buffer, url);
                         },
@@ -68,6 +72,7 @@ define([
 
     /**
      * Aborts the buffer fill function.
+     * @memberof IterationDrivenBufferUpdater
      */
     IterationDrivenBufferUpdater.prototype.abort = function() {
         if (typeof this._handle !== 'undefined') {

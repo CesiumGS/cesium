@@ -13,16 +13,32 @@ define(['../Core/incrementalGet'
      * @param {String} url The url to retrieve the data.
      * @param {function} processCallback The callback function to process the data.
      * @param {function} doneCallback Called when {@link incrementalGet} is finished.
+     * @returns A handle to the <a href="http://www.w3.org/TR/eventsource/">EventSource</a>.
+     *
      * @example
-     * var buffer = {...};
-     * fillBufferIncrementally(buffer, 'http://localhost/test', function(item, buffer, url){});
+     * var buffer = {
+     *   update:function(item){
+     *      //add item to buffer
+     *   },
+     *   cleanup:function(){
+     *    //cleanup
+     *   }
+     * };
+     * var handle = fillBufferIncrementally(buffer, 'http://localhost/test', function(item, buffer, url){
+     *     buffer.update(item);
+     * },
+     * function(){
+     *   buffer.cleanup();
+     * });
+     *  //to close use handle.abort();
+     *
      * @see incrementalGet
      */
-    function fillBufferIncrementally(buffer, url, processCallback, doneCallback) {
+    var fillBufferIncrementally = function fillBufferIncrementally(buffer, url, processCallback, doneCallback) {
         return incrementalGet(url, function(item) {
             processCallback(item, buffer, url);
         }, doneCallback);
-    }
+    };
 
     return fillBufferIncrementally;
 });
