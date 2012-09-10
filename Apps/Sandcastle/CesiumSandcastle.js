@@ -43,6 +43,7 @@ require({
         'dijit/layout/TabContainer',
         'dijit/Toolbar',
         'dijit/ToolbarSeparator',
+        'dojox/mobile/ScrollableView',
         'Sandcastle/LinkButton',
         'dojo/domReady!'],
     function (
