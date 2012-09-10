@@ -91,8 +91,6 @@ defineSuite([
         var sphere = BoundingSphere.fromPoints();
         expect(sphere.center).toEqual(Cartesian3.ZERO);
         expect(sphere.radius).toEqual(0.0);
-        expect(sphere.center).toEqual(Cartesian3.ZERO);
-        expect(sphere.radius).toEqual(0.0);
     });
 
     it('fromPoints works with one point', function() {

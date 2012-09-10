@@ -84,14 +84,6 @@ defineSuite([
         expect(rectangle.height).toEqual(6);
     });
 
-    it('fromPoints creates an empty rectangle with no positions', function() {
-        var rectangle = BoundingRectangle.fromPoints();
-        expect(rectangle.x).toEqual(0.0);
-        expect(rectangle.y).toEqual(0.0);
-        expect(rectangle.width).toEqual(0.0);
-        expect(rectangle.height).toEqual(0.0);
-    });
-
     it('fromPoints works with a result parameter', function() {
         var result = new BoundingRectangle();
         var rectangle = BoundingRectangle.fromPoints(positions, result);
