@@ -1,9 +1,9 @@
 /*global define*/
 define([
-        './xhrGet',
+        './loadText',
         './DeveloperError'
     ], function(
-        xhrGet,
+        loadText,
         DeveloperError) {
     "use strict";
 
@@ -26,14 +26,14 @@ define([
      *     //Do something with the JSON object
      * });
      *
-     * @see xhrGet
+     * @see loadText
      * @see when
      */
     var getJson = function getJson(url) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
-        return xhrGet(url, headers).then(function(value) {
+        return loadText(url, headers).then(function(value) {
             return JSON.parse(value);
         });
     };

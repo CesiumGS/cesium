@@ -31,7 +31,6 @@ defineSuite([
         getJson("test").then(function(data){
             expect(data).toEqual({name:"value"});
         });
-        expect(xhr.responseType).toEqual('text');
         expect(xhr.headers.length).toEqual(1);
         expect(xhr.values.length).toEqual(1);
         expect(xhr.values[0]).toEqual('application/json');

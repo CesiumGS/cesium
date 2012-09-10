@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/xhrGet'
+         'Core/loadText'
      ], function(
-             xhrGet) {
+             loadText) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -28,28 +28,26 @@ defineSuite([
         xhr = undefined;
     });
 
-    it('xhrGet throws with empty argument.', function() {
+    it('loadText throws with empty argument.', function() {
         expect(function() {
-            xhrGet();
+            loadText();
         }).toThrow();
     });
 
-    it('xhrGet default values', function() {
+    it('loadText default values', function() {
         spyOn(window, 'XMLHttpRequest').andReturn(xhr);
-        xhrGet("testuri");
-        expect(xhr.responseType).toEqual('text');
+        loadText("testuri");
         expect(xhr.headers.length).toEqual(0);
         expect(xhr.values.length).toEqual(0);
     });
 
-    it('xhrGet with header values', function() {
+    it('loadText with header values', function() {
         spyOn(window, 'XMLHttpRequest').andReturn(xhr);
         var headers = {'Accept':'application/json','Cache-Control':'no-cache'};
-        xhrGet("testuri", headers).then(function(value) {
+        loadText("testuri", headers).then(function(value) {
             var result = JSON.parse(value);
             expect(result).toEqual({name:"value"});
         });
-        expect(xhr.responseType).toEqual('text');
         expect(xhr.headers.length).toEqual(2);
         expect(xhr.values.length).toEqual(2);
         expect(xhr.values[0]).toEqual('application/json');
@@ -58,7 +56,7 @@ defineSuite([
         expect(xhr.headers[1]).toEqual('Cache-Control');
     });
 
-    it('xhrGet with header values throws error', function() {
+    it('loadText with header values throws error', function() {
         var xhr2 = {
                 headers:[],
                 values:[],
@@ -74,12 +72,11 @@ defineSuite([
         };
         spyOn(window, 'XMLHttpRequest').andReturn(xhr2);
         var headers = {'Accept':'application/json','Cache-Control':'no-cache'};
-        xhrGet("testuri", headers).then(function(){
+        loadText("testuri", headers).then(function(){
             expect(false).toBeTruthy();
         }, function(failureMessage){
             expect(failureMessage).toEqual("failed");
         });
-        expect(xhr2.responseType).toEqual('text');
         expect(xhr2.headers.length).toEqual(2);
         expect(xhr2.values.length).toEqual(2);
         expect(xhr2.values[0]).toEqual('application/json');
