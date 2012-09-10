@@ -61,6 +61,7 @@ html, body {
     bottom: -280px;
     left: 0;
     background: rgba(0, 0, 0, 0.8);
+    color: #FFF;
     -webkit-transition: all 0.2s ease-in-out;
     -moz-transition: all 0.2s ease-in-out;
     -o-transition: all 0.2s ease-in-out;
@@ -76,7 +77,6 @@ html, body {
     border-top-right-radius: 7px;
     background: rgba(0, 0, 0, 0.8);
     padding: 5px 50px;
-    color: #FFF;
     position: absolute;
     top: -1.8em;
     left: 47%;
@@ -105,6 +105,7 @@ html, body {
     border-radius: 7px;
     display: inline-block;
     vertical-align: top;
+    color: #000;
     border: 1px solid transparent;
     background: rgb(235,241,246); /* Old browsers */
     background: -moz-linear-gradient(top,  rgba(235,241,246,1) 0%, rgba(171,211,238,1) 50%, rgba(137,195,235,1) 51%, rgba(213,235,251,1) 100%); /* FF3.6+ */
