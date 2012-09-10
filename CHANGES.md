@@ -7,7 +7,8 @@ Beta Releases
 ### b9 - xx/xx/2012
 
 * Breaking changes:
-    * ...
+   * ...
+* The new Sandcastle live editor and demo gallery replace the Sandbox and Skeleton examples.
 * Improved picking performance and accuracy.
 * `Extent` functions now take optional result parameters.  Also added `getCenter`, `intersectWith`, and `contains` functions.
 
