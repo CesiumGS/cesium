@@ -137,7 +137,13 @@ define([
 
             this.scene.getContext().setViewport(new BoundingRectangle(0, 0, width, height));
 
-            this.scene.getCamera().frustum.aspectRatio = width / height;
+            var frustum = this.scene.getCamera().frustum;
+            if (typeof frustum.aspectRatio !== 'undefined') {
+                frustum.aspectRatio = width / height;
+            } else {
+                frustum.top = frustum.right * (height / width);
+                frustum.bottom = -frustum.top;
+            }
         },
 
         viewFromTo : undefined,
