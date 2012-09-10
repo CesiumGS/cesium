@@ -7,26 +7,37 @@ define([
         DeveloperError) {
     "use strict";
 
+    var headers = {
+            'Accept' : 'application/json',
+            'Cache-Control' : 'no-cache'
+        };
+
     /**
-     * Creates a dojo.Deferred which fetches and parses the provided URL as JSON.
+     * Creates a promise which fetches and parses the provided URL as JSON.
      *
-     * @returns A dojo.Deferred which fetches and parses the provided URL as JSON.
+     * @exports getJson
+     *
+     * @param {String} url The url to retrieve the JSON data.
+     * @returns {promise} A promise which fetches and parses the provided URL as JSON.
      *
      * @exception {DeveloperError} url is required.
+     *
      * @example
      * getJson('http://someUrl.com/someJson.txt').then(function(jsonData){
      *     //Do something with the JSON object
      * });
+     *
+     * @see xhrGet
+     * @see when
      */
-    function getJson(url) {
+    var getJson = function getJson(url) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
-        var headers = {'Accept':'application/json','Cache-Control':'no-cache'};
         return xhrGet(url, headers).then(function(value) {
             return JSON.parse(value);
         });
-    }
+    };
 
     return getJson;
 });

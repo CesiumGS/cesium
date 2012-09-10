@@ -8,16 +8,24 @@ define([
     "use strict";
 
     /**
-     * Creates a deferred which fetches and parses the provided URL as JSON.
-     * @param {String} a url to retrieve using XMLHttpRequest.
-     * @param {Array} An associative array of value pairs to add to the XMLHttpRequest header.
+     * Uses <a href="http://en.wikipedia.org/wiki/XMLHttpRequest">XMLHttpRequest</a> and creates a deferred which fetches and parses the provided URL as JSON.
+     *
+     * @exports xhrGet
+     *
+     * @param {String} url A url to retrieve using XMLHttpRequest.
+     * @param {Array} headers An associative array of value pairs to add to the XMLHttpRequest header.
      * @returns A deferred object which fetches and parses the provided URL as JSON.
+     *
      * @exception {DeveloperError} url is required.
+     *
      * @example
      * var headers = {'Accept':'application/json'};
      * xhrGet('http://someUrl.com/someJson.txt', headers).then(function(jsonData){
      *     //Do something with the JSON object
      * });
+     *
+     * @see when
+     * @see <a href="http://en.wikipedia.org/wiki/XMLHttpRequest">XMLHttpRequest</a>
      */
     var xhrGet = function(url, headers) {
         if (typeof url === 'undefined') {
