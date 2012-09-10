@@ -8,8 +8,7 @@ define([
     "use strict";
 
     var headers = {
-            'Accept' : 'application/json',
-            'Cache-Control' : 'no-cache'
+            'Accept' : 'application/json'
         };
 
     /**
