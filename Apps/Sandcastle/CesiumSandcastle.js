@@ -429,7 +429,7 @@ require({
             if ((pos <= 0) || (pos2 <= pos)) {
                 var ele = document.createElement('span');
                 ele.className = 'consoleError';
-            ele.textContent = 'Error reading source file: ' + demoName + '\n';
+            ele.textContent = 'Error reading source file: ' + demo.name + '\n';
                 appendConsole(ele);
             } else {
                 var script = body.substring(pos + 38, pos2 - 1);
@@ -618,6 +618,26 @@ require({
             });
         }
 
+        function addFileToGallery(index) {
+            var demo = gallery_demos[i];
+            var imgSrc = 'templates/Gallery_tile.jpg';
+            if (typeof demo.img !== 'undefined') {
+                imgSrc = 'gallery/' + window.encodeURIComponent(demo.img);
+            }
+
+            var demoName = demo.name;
+            var tile = document.createElement('div');
+            tile.className = 'demoTile';
+            tile.id = demoName;
+            tile.style.display = 'inline-block';
+            tile.innerHTML = '<div class="demoTileTitle">' + demoName + '</div>' +
+                             '<img src="' + imgSrc + '" class="demoTileThumbnail" alt="" width="225" height="150" onDragStart="return false;" />';
+            demos.appendChild(tile);
+
+            addLoadOnClickCallback(demoName, demo);
+            loadDemoFromFile(i);
+        }
+
         if (typeof gallery_demos === 'undefined') {
             dom.byId('demos').textContent = 'No demos found, please run the build script.';
         } else {
@@ -642,24 +662,20 @@ require({
                 });
             };
 
+            var queryInGalleryIndex = false;
+            var queryName =  window.decodeURIComponent(queryObject.src.replace('.html', ''));
             for (i = 0; i < len; ++i) {
-                var demo = gallery_demos[i];
-                var imgSrc = 'templates/Gallery_tile.jpg';
-                if (typeof demo.img !== 'undefined') {
-                    imgSrc = 'gallery/' + window.encodeURIComponent(demo.img);
+                addFileToGallery(i);
+                if (gallery_demos[i].name === queryName) {
+                    queryInGalleryIndex = true;
                 }
+            }
 
-                var demoName = demo.name;
-                var tile = document.createElement('div');
-                tile.className = 'demoTile';
-                tile.id = demoName;
-                tile.style.display = 'inline-block';
-                tile.innerHTML = '<div class="demoTileTitle">' + demoName + '</div>' +
-                                 '<img src="' + imgSrc + '" class="demoTileThumbnail" alt="" width="225" height="150" onDragStart="return false;" />';
-                demos.appendChild(tile);
-
-                addLoadOnClickCallback(demoName, demo);
-                loadDemoFromFile(i);
+            if (!queryInGalleryIndex) {
+                gallery_demos.push({
+                    name: queryName
+                });
+                addFileToGallery(gallery_demos.length - 1);
             }
         }
     });
