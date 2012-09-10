@@ -92,10 +92,14 @@ require({
         var suggestButton = registry.byId('buttonSuggest');
         var docTimer;
         var docTabs = {};
+        var galleryTooltipTimer;
+        var activeGalleryTooltipDemo;
+        var galleryHeight = -280;
         var cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dom.byId('docPopup');
         var docMessage = dom.byId('docPopupMessage');
         var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
+        var demoTooltips = {};
         var errorLines = [];
         var highlightLines = [];
         var hintGlobals = [
@@ -174,20 +178,20 @@ require({
         });
 
         function highlightRun() {
-                domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
+            domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
         }
 
         function clearRun() {
-                domClass.remove(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
-            }
+            domClass.remove(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
+        }
 
         function highlightSaveAs() {
             domClass.add(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
         }
 
         function clearSaveAs() {
-                domClass.remove(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
-            }
+            domClass.remove(registry.byId('buttonSaveAs').domNode, 'highlightToolbarButton');
+        }
 
         function openDocTab(title, link) {
             if (typeof docTabs[title] === 'undefined') {
@@ -224,6 +228,7 @@ require({
                 return false;
             };
 
+            docTimer = undefined;
             if (selectedText && selectedText in local.docTypes && typeof local.docTypes[selectedText].push === 'function') {
                 var member, ele, i, len = local.docTypes[selectedText].length;
                 docMessage.innerHTML = '';
@@ -262,11 +267,44 @@ require({
             return abbrDiv.innerHTML;
         }
 
-        function clearAllErrors() {
+        function closeGalleryTooltip() {
+            if (typeof activeGalleryTooltipDemo !== 'undefined') {
+                popup.close(demoTooltips[activeGalleryTooltipDemo.name]);
+                activeGalleryTooltipDemo = undefined;
+            }
+        }
+
+        function openGalleryTooltip() {
+            galleryTooltipTimer = undefined;
+            if (typeof activeGalleryTooltipDemo !== 'undefined') {
+                popup.open({
+                    popup: demoTooltips[activeGalleryTooltipDemo.name],
+                    around: dom.byId(activeGalleryTooltipDemo.name)
+                });
+            }
+        }
+
+        function scheduleGalleryTooltip(demo) {
+            if (demo !== activeGalleryTooltipDemo) {
+                activeGalleryTooltipDemo = demo;
+                if (typeof galleryTooltipTimer !== 'undefined') {
+                    window.clearTimeout(galleryTooltipTimer);
+                }
+                galleryTooltipTimer = window.setTimeout(openGalleryTooltip, 220);
+            }
+        }
+
+        function clearErrorsAddHints() {
             var line, hint, hints, i, len;
             hintTimer = undefined;
+            closeGalleryTooltip();
             while (errorLines.length > 0) {
                 line = errorLines.pop();
+                jsEditor.setLineClass(line, null);
+                jsEditor.clearMarker(line);
+            }
+            while (highlightLines.length > 0) {
+                line = highlightLines.pop();
                 jsEditor.setLineClass(line, null);
                 jsEditor.clearMarker(line);
             }
@@ -288,7 +326,7 @@ require({
             if (typeof hintTimer !== 'undefined') {
                 window.clearTimeout(hintTimer);
             }
-            hintTimer = setTimeout(clearAllErrors, 550);
+            hintTimer = setTimeout(clearErrorsAddHints, 550);
             highlightRun();
         }
 
@@ -316,15 +354,26 @@ require({
             }
         }
 
+        var galleryContainerElement = document.getElementById('galleryContainer');
+        var galleryBodyElement = document.getElementById('galleryBody');
+
         function showGallery() {
-            document.getElementById('galleryContainer').setAttribute('style', 'right: 0px;');
+            if (galleryHeight < 0) {
+                galleryHeight = 0;
+                galleryContainerElement.setAttribute('style', 'bottom: 0;');
+            }
         }
 
         function hideGallery() {
-            document.getElementById('galleryContainer').setAttribute('style', 'right: -275px;');
+            closeGalleryTooltip();
+            var height = Math.min(0, 10 - (galleryBodyElement.getBoundingClientRect().height));
+            if (galleryHeight !== height) {
+                galleryHeight = height;
+                galleryContainerElement.setAttribute('style', 'bottom: ' + galleryHeight + 'px;');
+            }
         }
 
-        on(dom.byId('galleryContainer'), 'mouseout', function() {
+        on(dom.byId('appLayout'), 'mouseover', function() {
             hideGallery();
         });
 
@@ -333,7 +382,7 @@ require({
         });
 
         CodeMirror.commands.runCesium = function(cm) {
-            clearAllErrors();
+            clearErrorsAddHints();
             clearRun();
             cesiumContainer.selectChild(bucketPane);
             bucketFrame.contentWindow.location.reload();
@@ -391,6 +440,13 @@ require({
                 CodeMirror.commands.runCesium(jsEditor);
             }
         }
+
+        window.addEventListener('popstate', function (e) {
+            if (e.state && e.state.name && e.state.code) {
+                loadFromGallery(e.state);
+                document.title = e.state.name + ' - Cesium Sandcastle';
+            }
+        }, false);
 
         window.addEventListener('message', function (e) {
             var line;
@@ -509,6 +565,7 @@ require({
             queryObject = ioQuery.queryToObject(window.location.search.substring(1));
         } else {
             queryObject.src = 'Minimalist.html';
+            queryObject.showGallery = 1;
         }
 
         function loadDemoFromFile(index) {
@@ -528,7 +585,14 @@ require({
                 if (typeof queryObject.src !== 'undefined') {
                     if (demo.name === window.decodeURIComponent(queryObject.src.replace('.html', ''))) {
                         loadFromGallery(demo);
+                        window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html');
+                        document.title = demo.name + ' - Cesium Sandcastle';
                         queryObject.src = undefined;
+                        if (queryObject.showGallery) {
+                            showGallery();
+                        } else {
+                            hideGallery();
+                        }
                     }
                 }
 
@@ -536,21 +600,18 @@ require({
                 var start = value.indexOf('<meta name="description" content="');
                 if (start !== -1) {
                     var end = value.indexOf('">', start);
-                    var tooltip = new TooltipDialog({
+                    demoTooltips[demo.name] = new TooltipDialog({
                         id: demo.name + 'TooltipDialog',
                         style: 'width: 200px; font-size: 12px;',
                         content: value.substring(start + 34, end)
                     });
 
                     on(dom.byId(demo.name), 'mouseover', function() {
-                        popup.open({
-                            popup: tooltip,
-                            around: dom.byId(demo.name)
-                        });
+                        scheduleGalleryTooltip(demo);
                     });
 
                     on(dom.byId(demo.name), 'mouseout', function() {
-                        popup.close(tooltip);
+                        closeGalleryTooltip();
                     });
                 }
             });
@@ -574,8 +635,9 @@ require({
                     loadFromGallery(demo);
                     var demoSrc = demo.name + '.html';
                     if (demoSrc !== window.location.search.substring(1)) {
-                        window.history.pushState('demoSrc', demo.name, '?src=' + demoSrc);
+                        window.history.pushState(demo, demo.name, '?src=' + demoSrc);
                     }
+                    document.title = demo.name + ' - Cesium Sandcastle';
                 });
             };
 

@@ -1,17 +1,11 @@
 @import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
 
-/* @import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/darker/darker.css');
-
-@import url('../../ThirdParty/dojo-release-1.7.2-src/dojox/mobile/themes/darker/Slider.css'); */
-
 html, body {
     height: 100%;
     margin: 0;
     overflow: hidden;
     padding: 0;
     font-family: sans-serif;
-    -moz-user-select: none;
-    -webkit-user-select: none;
 }
 
 #loading {
@@ -35,6 +29,16 @@ html, body {
     height: 100%;
 }
 
+#toolbar {
+    -moz-user-select: -moz-none;  /* allows for re-enabling on sub-elements like the search box */
+    -webkit-user-select: none;
+}
+
+#search {
+    -moz-user-select: text;
+    -webkit-user-select: text;
+ }
+
 .cesiumTitle {
     display: block;
     position: absolute;
@@ -51,46 +55,47 @@ html, body {
 }
 
 #galleryContainer {
-	position: relative;
+    z-index: 10;
+    width: 100%;
+    position: absolute;
+    bottom: -280px;
+    left: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: #FFF;
+    -webkit-transition: all 0.2s ease-in-out;
+    -moz-transition: all 0.2s ease-in-out;
+    -o-transition: all 0.2s ease-in-out;
+    -ms-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
 }
 
 #galleryTab {
-	border: 2px solid #FFF;
-    padding: 5px;
-    color: #FFF;
+    border-left: 2px solid #aaa;
+    border-right: 2px solid #aaa;
+    border-top: 2px solid #aaa;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 5px 50px;
     position: absolute;
-    top: 40%;
-    left: -6px;
-    -webkit-transform: rotate(90deg);
-    -moz-transform: rotate(90deg);
-    -o-transform: rotate(90deg);
-    -ms-transform: rotate(90deg);
-    transform: rotate(90deg);
+    top: -1.8em;
+    left: 47%;
 }
 
-#galleryContainer {
-    float: right;
-    z-index: 10;
-    width: 275px;
-    height: 100%;
-    position: absolute;
-    right: -275px;
-    -webkit-transition: all 0.5s ease-in-out;
-    -moz-transition: all 0.5s ease-in-out;
-    -o-transition: all 0.5s ease-in-out;
-    -ms-transition: all 0.5s ease-in-out;
-    transition: all 0.5s ease-in-out; 
-    padding-left: 40px;
+#galleryBody {
+    padding: 5px;
+    width: 100%;
+    border-top: 2px solid #aaa;
+    box-sizing: border-box;
 }
 
 #demosContainer {
 	overflow: auto;
-    height: 100%;
-    border-left: 2px solid #FFF;
 }
 
 #demos {
-    padding: 5px;
+    padding: 0 5px 5px;
+    white-space: nowrap;
 }
 
 .demoTile {
@@ -100,6 +105,8 @@ html, body {
     border-radius: 7px;
     display: inline-block;
     vertical-align: top;
+    color: #000;
+    border: 1px solid transparent;
     background: rgb(235,241,246); /* Old browsers */
     background: -moz-linear-gradient(top,  rgba(235,241,246,1) 0%, rgba(171,211,238,1) 50%, rgba(137,195,235,1) 51%, rgba(213,235,251,1) 100%); /* FF3.6+ */
     background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(235,241,246,1)), color-stop(50%,rgba(171,211,238,1)), color-stop(51%,rgba(137,195,235,1)), color-stop(100%,rgba(213,235,251,1))); /* Chrome,Safari4+ */
@@ -107,14 +114,13 @@ html, body {
     background: -o-linear-gradient(top,  rgba(235,241,246,1) 0%,rgba(171,211,238,1) 50%,rgba(137,195,235,1) 51%,rgba(213,235,251,1) 100%); /* Opera 11.10+ */
     background: -ms-linear-gradient(top,  rgba(235,241,246,1) 0%,rgba(171,211,238,1) 50%,rgba(137,195,235,1) 51%,rgba(213,235,251,1) 100%); /* IE10+ */
     background: linear-gradient(to bottom,  rgba(235,241,246,1) 0%,rgba(171,211,238,1) 50%,rgba(137,195,235,1) 51%,rgba(213,235,251,1) 100%); /* W3C */
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ebf1f6', endColorstr='#d5ebfb',GradientType=0 ); /* IE6-9 */
 }
 
 .demoTile:hover {
-    border: solid 1px #CCC;
-    -moz-box-shadow: 0 8px 6px -4px #999;
-    -webkit-box-shadow: 0 8px 6px -4px #999;
-    box-shadow: 0 8px 6px -4px #999;
+    border: solid 1px #F92;
+    -moz-box-shadow: 0 0 5px #F92;
+    -webkit-box-shadow: 0 0 5px #F92;
+    box-shadow: 0 0 5px #F92;
     cursor: pointer;
 }
 
@@ -145,7 +151,6 @@ html, body {
 	height: 100%;
 	overflow-x: hidden;
 	overflow-y: scroll;
-	-webkit-user-select: text;
 }
 
 #logOutput {
@@ -205,6 +210,7 @@ a.linkButton:focus, a.linkButton:hover {
 
 .claro .bottomPanel {
     padding: 0;
+    margin-bottom: 7px;
     overflow: hidden;
 }
 
