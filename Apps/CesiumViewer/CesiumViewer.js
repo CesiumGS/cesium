@@ -27,10 +27,6 @@ define([
 
             postSetup : function(widget) {
                 widget.startRenderLoop();
-            },
-
-            onSetupError : function(widget, error) {
-                console.log(error);
             }
         }).placeAt(dom.byId('cesiumContainer'));
     });

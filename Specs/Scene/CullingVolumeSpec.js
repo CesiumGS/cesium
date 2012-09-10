@@ -1,4 +1,4 @@
-/*global definedSuite*/
+/*global defineSuite*/
 defineSuite([
              'Scene/CullingVolume',
              'Core/AxisAlignedBoundingBox',

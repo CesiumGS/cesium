@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,console*/
 define([
         'require',
         'dojo/_base/declare',
@@ -15,6 +15,7 @@ define([
         'dijit/TooltipDialog',
         './getJson',
         './TimelineWidget',
+        '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
@@ -59,6 +60,7 @@ define([
         TooltipDialog,
         getJson,
         TimelineWidget,
+        BoundingRectangle,
         Clock,
         ClockStep,
         ClockRange,
@@ -89,30 +91,168 @@ define([
         template) {
     "use strict";
 
-    return declare('Cesium.CesiumViewerWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
+    /**
+     * This Dojo widget wraps the full functionality of Cesium Viewer.
+     *
+     * @class CesiumViewerWidget
+     * @param {Object} options - A list of options to pre-configure the widget.  Names matching member fields/functions will override the default values.
+     */
+    return declare('Cesium.CesiumViewerWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin],
+    /** @lends CesiumViewerWidget */
+    {
+        // for Dojo use only
         templateString : template,
-        preRender : undefined,
-        postSetup : undefined,
-        useStreamingImagery : true,
-        mapStyle : BingMapsStyle.AERIAL,
-        defaultCamera : undefined,
-        dayImageUrl : undefined,
-        nightImageUrl : undefined,
-        specularMapUrl : undefined,
-        cloudsMapUrl : undefined,
-        bumpMapUrl : undefined,
-        endUserOptions : {},
-        enableDragDrop: false,
-        resizeWidgetOnWindowResize: true,
 
+        /**
+         * Enable streaming Imagery.  This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see CesiumViewerWidget#enableStreamingImagery
+         */
+        useStreamingImagery : true,
+        /**
+         * The map style for streaming imagery.  This is read-only after construction.
+         *
+         * @type {BingMapsStyle}
+         * @memberof CesiumViewerWidget.prototype
+         * @default {@link BingMapsStyle.AERIAL}
+         * @see CesiumViewerWidget#setStreamingImageryMapStyle
+         */
+        mapStyle : BingMapsStyle.AERIAL,
+        /**
+         * The default camera, which looks at the "home" view.
+         *
+         * @type {Camera}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        defaultCamera : undefined,
+        /**
+         * The URL for a daytime image on the globe.
+         *
+         * @type {String}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        dayImageUrl : undefined,
+        /**
+         * The URL for a nighttime image on the globe.
+         *
+         * @type {String}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        nightImageUrl : undefined,
+        /**
+         * The URL for a specular map on the globe, typically with white for oceans and black for landmass.
+         *
+         * @type {String}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        specularMapUrl : undefined,
+        /**
+         * The URL for the clouds image on the globe.
+         *
+         * @type {String}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        cloudsMapUrl : undefined,
+        /**
+         * The URL for a bump map on the globe, showing mountain ranges.
+         *
+         * @type {String}
+         * @memberof CesiumViewerWidget.prototype
+         */
+        bumpMapUrl : undefined,
+        /**
+         * An object containing settings supplied by the end user, typically from the query string
+         * of the URL of the page with the widget.
+         *
+         * @type {Object}
+         * @memberof CesiumViewerWidget.prototype
+         * @example
+         * var ioQuery = require('dojo/io-query');
+         * var endUserOptions = {};
+         * if (window.location.search) {
+         *     endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
+         * }
+         *
+         * @example
+         * var endUserOptions = {
+         *     'source' : 'file.czml', // The relative URL of the CZML file to load at startup.
+         *     'lookAt' : '123abc',    // The CZML ID of the object to track at startup.
+         *     'stats'  : 1,           // Non-zero to enable the FPS performance display.
+         * };
+         */
+        endUserOptions : {},
+        /**
+         * Allow the user to drag-and-drop CZML files into this widget.
+         * This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default false
+         */
+        enableDragDrop : false,
+        /**
+         * Register this widget's resize handler to get called every time the browser window
+         * resize event fires.  This is read-only after construction.  Generally this should
+         * be true for full-screen widgets, and true for
+         * fluid layouts where the widget is likely to change size at the same time as the
+         * window.  The exception is, if you use a Dojo layout where this widget exists inside
+         * a Dojo ContentPane or similar, you should set this to false, because Dojo will perform
+         * its own layout calculations and call this widget's resize handler automatically.
+         * This can also be false for a fixed-size widget.
+         *
+         * If unsure, test the widget with this set to false, and if window resizes cause the
+         * globe to stretch, change this to true.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see CesiumViewerWidget#resize
+         */
+        resizeWidgetOnWindowResize : true,
+
+        // for Dojo use only
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
         },
 
+        // for Dojo use only
         postCreate : function() {
             ready(this, '_setupCesium');
         },
 
+        /**
+         * If supplied, this function will be called at the end of widget setup.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @see CesiumViewerWidget#startRenderLoop
+         */
+        postSetup : undefined,
+
+        /**
+         * This function will get a callback in the event of setup failure, likely indicating
+         * a problem with WebGL support or the availability of a GL context.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} widget - A reference to this widget
+         * @param {Object} error - The exception that was thrown during setup
+         */
+        onSetupError : function(widget, error) {
+            console.error(error);
+        },
+
+        /**
+         * This function must be called when the widget changes size.  It updates the canvas
+         * size, camera aspect ratio, and viewport size.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @see CesiumViewerWidget#resizeWidgetOnWindowResize
+         */
         resize : function() {
             var width = this.canvas.clientWidth, height = this.canvas.clientHeight;
 
@@ -123,16 +263,24 @@ define([
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.scene.getContext().setViewport({
-                x : 0,
-                y : 0,
-                width : width,
-                height : height
-            });
+            this.scene.getContext().setViewport(new BoundingRectangle(0, 0, width, height));
 
-            this.scene.getCamera().frustum.aspectRatio = width / height;
+            var frustum = this.scene.getCamera().frustum;
+            if (typeof frustum.aspectRatio !== 'undefined') {
+                frustum.aspectRatio = width / height;
+            } else {
+                frustum.top = frustum.right * (height / width);
+                frustum.bottom = -frustum.top;
+            }
         },
 
+        /**
+         * Have the camera track a particular object.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object to track, or <code>undefined</code> to stop tracking.
+         */
         centerCameraOnObject : function(selectedObject) {
             if (selectedObject && selectedObject.dynamicObject) {
                 this.cameraCenteredObjectID = selectedObject.dynamicObject.id;
@@ -141,15 +289,82 @@ define([
             }
         },
 
+        /**
+         * Override this function to be notified when an object is selected (left-click).
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
+         */
         onObjectSelected : undefined,
+        /**
+         * Override this function to be notified when an object is right-clicked.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
+         */
         onObjectRightClickSelected : undefined,
+        /**
+         * Override this function to be notified when an object hovered by the mouse.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object that was hovered, or <code>undefined</code> if the mouse moved off.
+         */
         onObjectMousedOver : undefined,
+        /**
+         * Override this function to be notified when the left mouse button is pressed down on an object.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         */
         onLeftMouseDown : undefined,
+        /**
+         * Override this function to be notified when the left mouse button is released from an object.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         */
         onLeftMouseUp : undefined,
+        /**
+         * Override this function to be notified when the right mouse button is pressed down on an object.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         */
         onRightMouseDown : undefined,
+        /**
+         * Override this function to be notified when the right mouse button is released from an object.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         */
         onRightMouseUp : undefined,
+        /**
+         * DOC_TBA
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
         onLeftDrag : undefined,
+        /**
+         * DOC_TBA
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
         onZoom : undefined,
+        /**
+         * DOC_TBA
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
         onCameraToggled : undefined,
 
         _handleLeftClick : function(e) {
@@ -220,7 +435,7 @@ define([
             }
         },
 
-        updateSpeedIndicator : function() {
+        _updateSpeedIndicator : function() {
             if (this.animationController.isAnimating()) {
                 this.speedIndicator.innerHTML = this.clock.multiplier + 'x realtime';
             } else {
@@ -228,6 +443,11 @@ define([
             }
         },
 
+        /**
+         * Apply the animation settings from a CZML buffer.
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
         setTimeFromBuffer : function() {
             var clock = this.clock;
 
@@ -249,14 +469,20 @@ define([
             clock.multiplier = 60;
             clock.currentTime = clock.startTime;
             this.timelineControl.zoomTo(clock.startTime, clock.stopTime);
-            this.updateSpeedIndicator();
         },
 
-        handleDrop : function(e) {
-            e.stopPropagation(); // Stops some browsers from redirecting.
-            e.preventDefault();
+        /**
+         * This function is called when files are dropped on the widget, if drag-and-drop is enabled.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} event - The drag-and-drop event containing the dropped file(s).
+         */
+        handleDrop : function(event) {
+            event.stopPropagation(); // Stops some browsers from redirecting.
+            event.preventDefault();
 
-            var files = e.dataTransfer.files;
+            var files = event.dataTransfer.files;
             var f = files[0];
             var reader = new FileReader();
             var widget = this;
@@ -395,8 +621,6 @@ define([
             this.timeLabelElement = this.timeLabel.containerNode;
             this.timeLabelElement.innerHTML = clock.currentTime.toDate().toUTCString();
 
-            this.updateSpeedIndicator();
-
             var animReverse = this.animReverse;
             var animPause = this.animPause;
             var animPlay = this.animPlay;
@@ -406,7 +630,6 @@ define([
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
-                widget.updateSpeedIndicator();
             });
 
             function onAnimPause() {
@@ -414,7 +637,6 @@ define([
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
-                widget.updateSpeedIndicator();
             }
 
             on(animPause, 'Click', onAnimPause);
@@ -424,7 +646,6 @@ define([
                 animReverse.set('checked', true);
                 animPause.set('checked', false);
                 animPlay.set('checked', false);
-                widget.updateSpeedIndicator();
             });
 
             on(animPlay, 'Click', function() {
@@ -432,17 +653,14 @@ define([
                 animReverse.set('checked', false);
                 animPause.set('checked', false);
                 animPlay.set('checked', true);
-                widget.updateSpeedIndicator();
             });
 
             on(widget.animSlow, 'Click', function() {
                 animationController.slower();
-                widget.updateSpeedIndicator();
             });
 
             on(widget.animFast, 'Click', function() {
                 animationController.faster();
-                widget.updateSpeedIndicator();
             });
 
             function onTimelineScrub(e) {
@@ -550,13 +768,13 @@ define([
             on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
             on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
 
+            //////////////////////////////////////////////////////////////////////////////////////////////////
+
             if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
                     widget.resize();
                 });
             }
-
-            //////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);
@@ -565,6 +783,11 @@ define([
             this.defaultCamera = camera.clone();
         },
 
+        /**
+         * Reset the camera to the home (default) view.
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
         viewHome : function() {
             var camera = this.scene.getCamera();
             camera.position = this.defaultCamera.position;
@@ -578,10 +801,24 @@ define([
             this.centralBodyCameraController = controllers.addCentralBody();
         },
 
+        /**
+         * Test if the clouds are configured and available for display.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @returns {Boolean} <code>true</code> if the <code>cloudsMapSource</code> is defined.
+         */
         areCloudsAvailable : function() {
             return typeof this.centralBody.cloudsMapSource !== 'undefined';
         },
 
+        /**
+         * Enable or disable the display of clouds.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Boolean} useClouds - <code>true</code> to enable clouds, if configured.
+         */
         enableClouds : function(useClouds) {
             if (this.areCloudsAvailable()) {
                 this.centralBody.showClouds = useClouds;
@@ -589,6 +826,13 @@ define([
             }
         },
 
+        /**
+         * Enable or disable the FPS (Frames Per Second) perfomance display.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Boolean} showStatistics - <code>true</code> to enable it.
+         */
         enableStatistics : function(showStatistics) {
             if (typeof this._performanceDisplay === 'undefined' && showStatistics) {
                 this._performanceDisplay = new PerformanceDisplay();
@@ -599,19 +843,51 @@ define([
             }
         },
 
+        /**
+         * Enable or disable the "sky atmosphere" effect, which displays the limb
+         * of the Earth (seen from space) or blue sky (seen from inside the atmosphere).
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Boolean} show - <code>true</code> to enable the effect.
+         */
         showSkyAtmosphere : function(show) {
             this.centralBody.showSkyAtmosphere = show;
         },
 
+        /**
+         * Enable or disable the "ground atmosphere" effect, which makes the surface of
+         * the globe look pale at a distance.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Boolean} show - <code>true</code> to enable the effect.
+         */
         showGroundAtmosphere : function(show) {
             this.centralBody.showGroundAtmosphere = show;
         },
 
+        /**
+         * Enable or disable streaming imagery, and update the globe.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Boolean} value - <code>true</code> to enable streaming imagery.
+         * @see CesiumViewerWidget#useStreamingImagery
+         */
         enableStreamingImagery : function(value) {
             this.useStreamingImagery = value;
             this._configureCentralBodyImagery();
         },
 
+        /**
+         * Change the streaming imagery type, and update the globe.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {BingMapsStyle} value - the new map style to use.
+         * @see CesiumViewerWidget#mapStyle
+         */
         setStreamingImageryMapStyle : function(value) {
             this.useStreamingImagery = true;
 
@@ -621,6 +897,14 @@ define([
             }
         },
 
+        /**
+         * Set the positional offset of the logo of the streaming imagery provider.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Integer} logoOffsetX - The horizontal offset in screen space
+         * @param {Integer} logoOffsetY - The vertical offset in screen space
+         */
         setLogoOffset : function(logoOffsetX, logoOffsetY) {
             var logoOffset = this.centralBody.logoOffset;
             if ((logoOffsetX !== logoOffset.x) || (logoOffsetY !== logoOffset.y)) {
@@ -628,13 +912,22 @@ define([
             }
         },
 
+        /**
+         * Highlight an object in the scene, usually in response to a click or hover.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object to highlight, or <code>undefined</code> to un-highlight.
+         */
         highlightObject : function(selectedObject) {
             if (this.highlightedObject !== selectedObject) {
                 if (typeof this.highlightedObject !== 'undefined') {
                     if (typeof this.highlightedObject.material !== 'undefined') {
                         this.highlightedObject.material = this._originalMaterial;
+                    } else if (typeof this.highlightedObject.outerMaterial !== 'undefined') {
+                        this.highlightedObject.outerMaterial = this._originalMaterial;
                     } else {
-                        this.highlightedObject.color = this._originalColor;
+                        this.highlightedObject.setColor(this._originalColor);
                     }
                 }
                 this.highlightedObject = selectedObject;
@@ -642,9 +935,12 @@ define([
                     if (typeof selectedObject.material !== 'undefined') {
                         this._originalMaterial = selectedObject.material;
                         selectedObject.material = this.highlightMaterial;
+                    } else if (typeof selectedObject.outerMaterial !== 'undefined') {
+                        this._originalMaterial = selectedObject.outerMaterial;
+                        selectedObject.outerMaterial = this.highlightMaterial;
                     } else {
-                        this._originalColor = selectedObject.color;
-                        selectedObject.color = this.highlightColor;
+                        this._originalColor = selectedObject.getColor();
+                        selectedObject.setColor(this.highlightColor);
                     }
                 }
             }
@@ -654,10 +950,19 @@ define([
 
         _sunPosition : new Cartesian3(),
 
+        /**
+         * Call this function prior to rendering each animation frame, to prepare
+         * all CZML objects and other settings for the next frame.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
+         */
         update : function(currentTime) {
             var cameraCenteredObjectID = this.cameraCenteredObjectID;
             var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
 
+            this._updateSpeedIndicator();
             this.timelineControl.updateFromClock();
             this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||
@@ -694,6 +999,11 @@ define([
             this._lastCameraCenteredObjectID = cameraCenteredObjectID;
         },
 
+        /**
+         * Render the widget's scene.
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
         render : function() {
             this.scene.render();
         },
@@ -719,12 +1029,56 @@ define([
             centralBody.bumpMapSource = this.bumpMapUrl;
         },
 
+        /**
+         * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
+         * on your page.  Typically it is started from {@link CesiumViewerWidget.postSetup}.  If you wish to
+         * customize your render loop, avoid this function and instead use code similar to the following example.
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @see requestAnimationFrame
+         * @example
+         * // This takes the place of startRenderLoop for a single widget.
+         *
+         * var animationController = widget.animationController;
+         * function updateAndRender() {
+         *     var currentTime = animationController.update();
+         *     widget.update(currentTime);
+         *     widget.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
+         * @example
+         * // This example requires widget1 and widget2 to share an animationController
+         * // (for example, widget2's constructor was called with a copy of widget1's
+         * // animationController).
+         *
+         * function updateAndRender() {
+         *     var currentTime = animationController.update();
+         *     widget1.update(currentTime);
+         *     widget2.update(currentTime);
+         *     widget1.render();
+         *     widget2.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
+         * @example
+         * // This example uses separate animationControllers for widget1 and widget2.
+         * // These widgets can animate at different rates and pause individually.
+         *
+         * function updateAndRender() {
+         *     var currentTime = widget1.animationController.update();
+         *     widget1.update(currentTime);
+         *     widget1.render();
+         *     currentTime = widget2.animationController.update();
+         *     widget2.update(currentTime);
+         *     widget2.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
+         */
         startRenderLoop : function() {
             var widget = this;
             var animationController = widget.animationController;
-
-            // Note that clients are permitted to use their own custom render loop.
-            // At a minimum it should include lines similar to the following:
 
             function updateAndRender() {
                 var currentTime = animationController.update();
