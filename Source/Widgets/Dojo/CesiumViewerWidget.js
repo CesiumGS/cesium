@@ -113,7 +113,7 @@ define([
          * @type {Boolean}
          * @memberof CesiumViewerWidget.prototype
          * @default true
-         * @see CesiumViewerWidget.enableStreamingImagery
+         * @see CesiumViewerWidget#enableStreamingImagery
          */
         useStreamingImagery : true,
         /**
@@ -122,7 +122,7 @@ define([
          * @type {BingMapsStyle}
          * @memberof CesiumViewerWidget.prototype
          * @default {@link BingMapsStyle.AERIAL}
-         * @see CesiumViewerWidget.setStreamingImageryMapStyle
+         * @see CesiumViewerWidget#setStreamingImageryMapStyle
          */
         mapStyle : BingMapsStyle.AERIAL,
         /**
@@ -213,7 +213,7 @@ define([
          * @type {Boolean}
          * @memberof CesiumViewerWidget.prototype
          * @default true
-         * @see CesiumViewerWidget.resize
+         * @see CesiumViewerWidget#resize
          */
         resizeWidgetOnWindowResize: true,
 
@@ -232,7 +232,7 @@ define([
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @see CesiumViewerWidget.startRenderLoop
+         * @see CesiumViewerWidget#startRenderLoop
          */
         postSetup : undefined,
 
@@ -255,7 +255,7 @@ define([
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @see CesiumViewerWidget.resizeWidgetOnWindowResize
+         * @see CesiumViewerWidget#resizeWidgetOnWindowResize
          */
         resize : function() {
             var width = this.canvas.clientWidth, height = this.canvas.clientHeight;
@@ -474,13 +474,13 @@ define([
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {Object} e - The drag-and-drop event containing the dropped file(s).
+         * @param {Object} event - The drag-and-drop event containing the dropped file(s).
          */
-        handleDrop : function(e) {
-            e.stopPropagation(); // Stops some browsers from redirecting.
-            e.preventDefault();
+        handleDrop : function(event) {
+            event.stopPropagation(); // Stops some browsers from redirecting.
+            event.preventDefault();
 
-            var files = e.dataTransfer.files;
+            var files = event.dataTransfer.files;
             var f = files[0];
             var reader = new FileReader();
             var widget = this;
@@ -808,7 +808,7 @@ define([
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @returns Boolean <code>true</code> if the <code>cloudsMapSource</code> is defined.
+         * @returns {Boolean} <code>true</code> if the <code>cloudsMapSource</code> is defined.
          */
         areCloudsAvailable : function() {
             return typeof this.centralBody.cloudsMapSource !== 'undefined';
@@ -875,7 +875,7 @@ define([
          * @function
          * @memberof CesiumViewerWidget.prototype
          * @param {Boolean} value - <code>true</code> to enable streaming imagery.
-         * @see CesiumViewerWidget.useStreamingImagery
+         * @see CesiumViewerWidget#useStreamingImagery
          */
         enableStreamingImagery : function(value) {
             this.useStreamingImagery = value;
@@ -888,7 +888,7 @@ define([
          * @function
          * @memberof CesiumViewerWidget.prototype
          * @param {BingMapsStyle} value - the new map style to use.
-         * @see CesiumViewerWidget.mapStyle
+         * @see CesiumViewerWidget#mapStyle
          */
         setStreamingImageryMapStyle : function(value) {
             this.useStreamingImagery = true;
