@@ -260,7 +260,7 @@ define([
         }
     };
 
-    Camera2DController.prototype.setCameraPosition = function(cartographic) {
+    Camera2DController.prototype.setPositionCartographic = function(cartographic) {
         var newLeft = -cartographic.height * 0.5;
         var newRight = -newLeft;
 

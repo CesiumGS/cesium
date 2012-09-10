@@ -42,6 +42,7 @@ define([
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileProvider',
         '../../Scene/PerformanceDisplay',
+        '../../Scene/SceneMode',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
@@ -90,6 +91,7 @@ define([
         SceneTransitioner,
         SingleTileProvider,
         PerformanceDisplay,
+        SceneMode,
         processCzml,
         DynamicObjectView,
         DynamicObjectCollection,
@@ -149,16 +151,7 @@ define([
         viewFromTo : undefined,
 
         centerCameraOnPick : function(selectedObject) {
-            if (typeof selectedObject !== 'undefined' && typeof selectedObject.dynamicObject !== 'undefined' && typeof selectedObject.dynamicObject.position !== 'undefined') {
-                var viewFromTo = this.viewFromTo;
-                if (typeof viewFromTo === 'undefined') {
-                    this.viewFromTo = viewFromTo = new DynamicObjectView(selectedObject.dynamicObject, this.scene, this.ellipsoid);
-                } else {
-                    viewFromTo.dynamicObject = selectedObject.dynamicObject;
-                }
-            } else {
-                this.viewFromTo = undefined;
-            }
+            this.centerCameraOnObject(typeof selectedObject !== 'undefined' ? selectedObject.dynamicObject : undefined);
         },
 
         centerCameraOnObject : function(selectedObject) {
@@ -171,6 +164,21 @@ define([
                 }
             } else {
                 this.viewFromTo = undefined;
+
+                var scene = this.scene;
+                var mode = scene.mode;
+                var camera = scene.getCamera();
+                var controllers = camera.getControllers();
+                if (mode === SceneMode.SCENE2D) {
+                    controllers.removeAll();
+                    controllers.add2D(scene.scene2D.projection);
+                } else if (mode === SceneMode.SCENE3D) {
+                    //For now just rename at the last location
+                    //camera will stay in spindle/rotate mode.
+                } else if (mode === SceneMode.COLUMBUS_VIEW) {
+                    controllers.removeAll();
+                    controllers.addColumbusView();
+                }
             }
         },
 
