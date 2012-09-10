@@ -153,10 +153,13 @@ define([
      *
      * @memberof Camera
      *
-     * @param {Array} arguments If one parameter is passed to this function, it must have three
-     * properties with the names eye, target, and up; otherwise three arguments are expected which
-     * the same as the properties of one object and given in the order given above.
+     * @param {Cartesian3} eye The position of the camera.
+     * @param {Cartesian3} target The position to look at.
+     * @param {Cartesian3} up The up vector.
      *
+     * @exception {DeveloperError} eye is required.
+     * @exception {DeveloperError} target is required.
+     * @exception {DeveloperError} up is required.
      */
     Camera.prototype.lookAt = function(eye, target, up) {
         if (typeof eye === 'undefined') {

@@ -64,19 +64,19 @@ define([
         }
 
         /**
-         * If true, allows the user to pan around the map.  If false, the camera stays locked .
+         * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
          * @type Boolean
          */
         this.enableTranslate = true;
 
         /**
-         * If true, allows the user to zoom in and out.  If false, the camera is locked to the distances from the ellipsoid.
+         * If true, allows the user to zoom in and out.  If false, the camera is locked to the current distance from the ellipsoid.
          * @type Boolean
          */
         this.enableZoom = true;
 
         /**
-         * If true, allows the user to rotate the amp.  If false, the camera is locked to the current heading.
+         * If true, allows the user to rotate the camera.  If false, the camera is locked to the current heading.
          * @type Boolean
          */
         this.enableRotate = true;
@@ -238,7 +238,8 @@ define([
         var moveRate = rate || this._zoomRate;
         var frustum = this._camera.frustum;
 
-        if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' || typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
+        if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' ||
+            typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
             throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
         }
 
@@ -260,7 +261,19 @@ define([
         }
     };
 
+    /**
+     * Moves the camera to the provided cartographic position.
+     * @memberof Camera2DController
+     *
+     * @param {Cartographic} cartographic The new camera position.
+     *
+     * @exception {DeveloperError} cartographic is required.
+     */
     Camera2DController.prototype.setPositionCartographic = function(cartographic) {
+        if (typeof cartographic === 'undefined') {
+            throw new DeveloperError('cartographic is required.');
+        }
+
         var newLeft = -cartographic.height * 0.5;
         var newRight = -newLeft;
 
@@ -399,14 +412,16 @@ define([
         }
 
         if (!translate.isButtonDown() && !rightZoom.isButtonDown()) {
-            if (this._camera.frustum.right > this._frustum.right && !this._lastInertiaZoomMovement && !this._animationCollection.contains(this._zoomAnimation)) {
+            if (this._camera.frustum.right > this._frustum.right &&
+                !this._lastInertiaZoomMovement && !this._animationCollection.contains(this._zoomAnimation)) {
                 this._addCorrectZoomAnimation();
             }
 
             var position = this._camera.position;
             var translateX = position.x < -this._maxCoord.x || position.x > this._maxCoord.x;
             var translateY = position.y < -this._maxCoord.y || position.y > this._maxCoord.y;
-            if ((translateX || translateY) && !this._lastInertiaTranslateMovement && !this._animationCollection.contains(this._translateAnimation)) {
+            if ((translateX || translateY) && !this._lastInertiaTranslateMovement &&
+                 !this._animationCollection.contains(this._translateAnimation)) {
                 this._addCorrectTranslateAnimation();
             }
         }
@@ -419,7 +434,8 @@ define([
     Camera2DController.prototype._translate = function(movement) {
         var frustum = this._camera.frustum;
 
-        if (frustum.left === null || frustum.right === null || frustum.top === null || frustum.bottom === null) {
+       if (frustum.left === null || frustum.right === null ||
+           frustum.top === null || frustum.bottom === null) {
             throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
         }
 

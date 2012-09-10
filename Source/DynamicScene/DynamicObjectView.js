@@ -32,6 +32,7 @@ define([
         var controller = that._controller2d;
         var controllerChanged = typeof controller === 'undefined' || controller !== that._lastController || controller.isDestroyed();
 
+        //Handle case where controller was modified without our knowledge.
         if (controllerChanged) {
             var controllers = camera.getControllers();
             controllers.removeAll();
@@ -45,6 +46,7 @@ define([
         }
 
         var cartographic = positionProperty.getValueCartographic(time, that._lastCartographic);
+        //We are assigning the position of the camera, not of the object, so modify the height appropriately.
         cartographic.height = viewDistance;
         if (objectChanged || controllerChanged) {
             //TODO This is a hack around near plane issues until multi-frustum is in place.
@@ -64,11 +66,14 @@ define([
             camera.right.z = 0;
             Cartesian3.normalize(camera.right, camera.right);
 
+            //Remember what up was when we started, so we
+            //can detect rotation when we are finished.
             Cartesian2.clone(camera.right, that._first2dUp);
         } else {
             camera.position = projection.project(cartographic);
         }
 
+        //Store last view distance and up vector.
         that._lastDistance = camera.frustum.right - camera.frustum.left;
         Cartesian2.clone(camera.right, that._last2dUp);
     }

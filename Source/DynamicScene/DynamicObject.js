@@ -133,6 +133,11 @@ define([
          */
         this.vertexPositions = undefined;
 
+        /**
+         * Gets or sets the suggested initial offset for viewing this object
+         * with the camera.  The offset is defined in the east-north-up reference frame.
+         * @type Cartesian3
+         */
         this.viewFrom = undefined;
     };
 
@@ -184,6 +189,19 @@ define([
         return propertyCreated;
     };
 
+    /**
+     * Processes a single CZML packet and merges its data into the provided DynamicObject's viewFrom
+     * property. This method is not normally called directly, but is part of the array of CZML processing
+     * functions that is passed into the DynamicObjectCollection constructor.
+     *
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the viewFrom data.
+     * @param {Object} packet The CZML packet to process.
+     * @returns {Boolean} true if the property was newly created while processing the packet, false otherwise.
+     *
+     * @see DynamicProperty
+     * @see DynamicObjectCollection
+     * @see CzmlDefaults#updaters
+     */
     DynamicObject.processCzmlPacketViewFrom = function(dynamicObject, packet) {
         var viewFromData = packet.viewFrom;
         if (typeof viewFromData === 'undefined') {
