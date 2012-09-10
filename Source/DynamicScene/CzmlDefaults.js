@@ -96,6 +96,7 @@ define([
         cleaners : [DynamicBillboard.undefineProperties,
                     DynamicCone.undefineProperties,
                     DynamicLabel.undefineProperties,
+                    DynamicPath.undefineProperties,
                     DynamicPoint.undefineProperties,
                     DynamicPolygon.undefineProperties,
                     DynamicPolyline.undefineProperties,

@@ -6,7 +6,11 @@ define([
         '../Core/Ellipsoid',
         '../Core/Transforms',
         '../Scene/SceneMode',
-        '../Core/Cartesian4'
+        '../Core/Cartesian4',
+        '../Core/Quaternion',
+        '../Core/Matrix3',
+        '../Core/Matrix4',
+        '../Core/Math'
        ], function(
          defaultValue,
          DeveloperError,
@@ -14,8 +18,31 @@ define([
          Ellipsoid,
          Transforms,
          SceneMode,
-         Cartesian4) {
+         Cartesian4,
+         Quaternion,
+         Matrix3,
+         Matrix4,
+         CesiumMath) {
     "use strict";
+
+    function rotateFrom2D(that, offset) {
+        if (typeof that._last2dUp !== 'undefined') {
+            var startTheta = Math.acos(that._first2dUp.x);
+            if (that._first2dUp.y < 0) {
+                startTheta = CesiumMath.TWO_PI - startTheta;
+            }
+            var endTheta = Math.acos(that._last2dUp.x);
+            if (that._last2dUp.y < 0) {
+                endTheta = CesiumMath.TWO_PI - endTheta;
+            }
+            var theta = endTheta - startTheta;
+            var normal = Cartesian3.UNIT_Z;
+            var rotation = Quaternion.fromAxisAngle(normal, theta);
+            that._last2dUp = undefined;
+            that._first2dUp = undefined;
+            return Matrix3.fromQuaternion(rotation).multiplyByVector(offset, offset);
+        }
+    }
 
     function update2D(that, camera, objectChanged, offset, positionProperty, scene, time) {
         var viewDistance;
@@ -27,7 +54,7 @@ define([
             controllers.removeAll();
             that._lastController = that._controller2d = controller = controllers.add2D(scene.scene2D.projection);
             controller.enableTranslate = false;
-            viewDistance = typeof that._lastOffset === 'undefined' ? offset.magnitude() : that._lastOffset.magnitude();
+            viewDistance = offset.magnitude();
         } else if (objectChanged) {
             viewDistance = offset.magnitude();
         } else {
@@ -39,12 +66,33 @@ define([
             cartographic.height = viewDistance;
             if (objectChanged || controllerChanged) {
                 camera.frustum.near = viewDistance;
+
+                camera.up = offset.normalize().negate();
+                camera.right = camera.direction.cross(camera.up);
+
                 controller.setCameraPosition(cartographic);
+                offset.normalize(camera.up).negate(camera.up);
+                camera.direction.cross(camera.up, camera.right);
+
+                camera.right.z = 0;
+                camera.right = camera.right.normalize();
+
+                that._first2dUp = {
+                    x : camera.right.x,
+                    y : camera.right.y
+                };
             } else {
                 camera.position = scene.scene2D.projection.project(cartographic);
             }
         }
         that._lastDistance = camera.frustum.right - camera.frustum.left;
+
+        camera.right.z = 0;
+        camera.right = camera.right.normalize();
+        that._last2dUp = {
+            x : camera.right.x,
+            y : camera.right.y
+        };
     }
 
     var update3DTransform;
@@ -74,9 +122,7 @@ define([
                 viewDistance = offset.magnitude();
                 camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * that.ellipsoid.getRadii().getMaximumComponent());
             } else if (controllerChanged) {
-                if (typeof that._lastOffset !== 'undefined') {
-                    that._lastOffset.normalize(offset).multiplyByScalar(that._lastDistance, offset);
-                }
+                rotateFrom2D(that, offset.normalize(offset).multiplyByScalar(that._lastDistance, offset), offset);
                 camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
 
                 //TODO There are all kinds of near plane issues in our code base right now,
@@ -119,9 +165,7 @@ define([
                 viewDistance = offset.magnitude();
                 camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * that.ellipsoid.getRadii().getMaximumComponent());
             } else if (controllerChanged) {
-                if (typeof that._lastOffset !== 'undefined') {
-                    that._lastOffset.normalize(offset).multiplyByScalar(that._lastDistance, offset);
-                }
+                rotateFrom2D(that, offset.normalize(offset).multiplyByScalar(that._lastDistance, offset), offset);
                 camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
 
                 //TODO There are all kinds of near plane issues in our code base right now,
@@ -185,6 +229,8 @@ define([
         this._lastCartographic = undefined;
         this._lastDistance = undefined;
         this._lastOffset = undefined;
+        this._first2dUp = undefined;
+        this._last2dUp = undefined;
     };
 
     /**
@@ -233,6 +279,7 @@ define([
                 viewFromProperty.getValue(time, offset);
             }
         }
+        offset = typeof this._lastOffset === 'undefined' ? offset : this._lastOffset;
 
         var sceneChanged = scene !== this._lastScene;
         if (sceneChanged) {
