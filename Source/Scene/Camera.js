@@ -153,34 +153,29 @@ define([
      *
      * @memberof Camera
      *
-     * @param {Array} arguments If one parameter is passed to this function, it must have three
-     * properties with the names eye, target, and up; otherwise three arguments are expected which
-     * the same as the properties of one object and given in the order given above.
+     * @param {Cartesian3} eye The position of the camera.
+     * @param {Cartesian3} target The position to look at.
+     * @param {Cartesian3} up The up vector.
      *
+     * @exception {DeveloperError} eye is required.
+     * @exception {DeveloperError} target is required.
+     * @exception {DeveloperError} up is required.
      */
-    Camera.prototype.lookAt = function() {
-        var eye, target, up;
-        if (arguments.length === 1) {
-            var param = arguments[0];
-            if (param.eye && param.target && param.up) {
-                eye = param.eye;
-                target = param.target;
-                up = param.up;
-            } else {
-                return;
-            }
-        } else if (arguments.length === 3) {
-            eye = arguments[0];
-            target = arguments[1];
-            up = arguments[2];
-        } else {
-            return;
+    Camera.prototype.lookAt = function(eye, target, up) {
+        if (typeof eye === 'undefined') {
+            throw new DeveloperError('eye is required');
+        }
+        if (typeof target === 'undefined') {
+            throw new DeveloperError('target is required');
+        }
+        if (typeof up === 'undefined') {
+            throw new DeveloperError('up is required');
         }
 
-        this.position = eye;
-        this.direction = target.subtract(eye).normalize();
-        this.up = up.normalize();
-        this.right = this.direction.cross(this.up);
+        this.position = Cartesian3.clone(eye, this.position);
+        this.direction = Cartesian3.subtract(target, eye, this.direction).normalize(this.direction);
+        this.right = Cartesian3.cross(this.direction, up, this.right).normalize(this.right);
+        this.up = Cartesian3.cross(this.right, this.direction, this.up);
     };
 
     /**

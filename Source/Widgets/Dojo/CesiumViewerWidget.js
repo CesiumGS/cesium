@@ -42,7 +42,9 @@ define([
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileProvider',
         '../../Scene/PerformanceDisplay',
+        '../../Scene/SceneMode',
         '../../DynamicScene/processCzml',
+        '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
         '../../DynamicScene/VisualizerCollection',
         'dojo/text!./CesiumViewerWidget.html'
@@ -89,7 +91,9 @@ define([
         SceneTransitioner,
         SingleTileProvider,
         PerformanceDisplay,
+        SceneMode,
         processCzml,
+        DynamicObjectView,
         DynamicObjectCollection,
         VisualizerCollection,
         template) {
@@ -279,6 +283,19 @@ define([
         },
 
         /**
+         * Have the camera track a particular object based on the result of a pick.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object to track, or <code>undefined</code> to stop tracking.
+         */
+        centerCameraOnPick : function(selectedObject) {
+            this.centerCameraOnObject(typeof selectedObject !== 'undefined' ? selectedObject.dynamicObject : undefined);
+        },
+
+        _viewFromTo : undefined,
+
+        /**
          * Have the camera track a particular object.
          *
          * @function
@@ -286,10 +303,30 @@ define([
          * @param {Object} selectedObject - The object to track, or <code>undefined</code> to stop tracking.
          */
         centerCameraOnObject : function(selectedObject) {
-            if (selectedObject && selectedObject.dynamicObject) {
-                this.cameraCenteredObjectID = selectedObject.dynamicObject.id;
+            if (typeof selectedObject !== 'undefined' && typeof selectedObject.position !== 'undefined') {
+                var viewFromTo = this._viewFromTo;
+                if (typeof viewFromTo === 'undefined') {
+                    this._viewFromTo = viewFromTo = new DynamicObjectView(selectedObject, this.scene, this.ellipsoid);
+                } else {
+                    viewFromTo.dynamicObject = selectedObject;
+                }
             } else {
-                this.cameraCenteredObjectID = undefined;
+                this._viewFromTo = undefined;
+
+                var scene = this.scene;
+                var mode = scene.mode;
+                var camera = scene.getCamera();
+                var controllers = camera.getControllers();
+                if (mode === SceneMode.SCENE2D) {
+                    controllers.removeAll();
+                    controllers.add2D(scene.scene2D.projection);
+                } else if (mode === SceneMode.SCENE3D) {
+                    //For now just rename at the last location
+                    //camera will stay in spindle/rotate mode.
+                } else if (mode === SceneMode.COLUMBUS_VIEW) {
+                    controllers.removeAll();
+                    controllers.addColumbusView();
+                }
             }
         },
 
@@ -534,11 +571,12 @@ define([
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
-            centralBody.showSkyAtmosphere = true;
-            centralBody.showGroundAtmosphere = true;
+
             // This logo is replicated by the imagery selector button, so it's hidden here.
             centralBody.logoOffset = new Cartesian2(-100, -100);
 
+            this.showSkyAtmosphere(true);
+            this.showGroundAtmosphere(true);
             this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
@@ -573,7 +611,7 @@ define([
             }
 
             if (typeof this.onObjectRightClickSelected === 'undefined') {
-                this.onObjectRightClickSelected = this.centerCameraOnObject;
+                this.onObjectRightClickSelected = this.centerCameraOnPick;
             }
 
             if (this.enableDragDrop) {
@@ -610,14 +648,13 @@ define([
                 getJson(widget.endUserOptions.source).then(function(czmlData) {
                     processCzml(czmlData, widget.dynamicObjectCollection, widget.endUserOptions.source);
                     widget.setTimeFromBuffer();
+                    if (typeof widget.endUserOptions.lookAt !== 'undefined') {
+                        widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(widget.endUserOptions.lookAt));
+                    }
                 },
                 function(error) {
                     window.alert(error);
                 });
-            }
-
-            if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                widget.cameraCenteredObjectID = widget.endUserOptions.lookAt;
             }
 
             if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
@@ -708,12 +745,12 @@ define([
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
                 transitioner.morphTo3D();
+                widget._viewFromTo = undefined;
                 widget.viewHome();
                 widget.showSkyAtmosphere(true);
                 widget.showGroundAtmosphere(true);
             });
             on(view2D, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', true);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', false);
@@ -722,7 +759,6 @@ define([
                 transitioner.morphTo2D();
             });
             on(view3D, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
@@ -731,7 +767,6 @@ define([
                 widget.showGroundAtmosphere(true);
             });
             on(viewColumbus, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', true);
@@ -743,6 +778,8 @@ define([
             var cbLighting = widget.cbLighting;
             on(cbLighting, 'Change', function(value) {
                 widget.centralBody.affectedByLighting = !value;
+                widget.centralBody.showSkyAtmosphere = widget._showSkyAtmosphere && !value;
+                widget.centralBody.showGroundAtmosphere = widget._showGroundAtmosphere && !value;
             });
 
             var imagery = widget.imagery;
@@ -860,7 +897,8 @@ define([
          * @param {Boolean} show - <code>true</code> to enable the effect.
          */
         showSkyAtmosphere : function(show) {
-            this.centralBody.showSkyAtmosphere = show;
+            this._showSkyAtmosphere = show;
+            this.centralBody.showSkyAtmosphere = show && this.centralBody.affectedByLighting;
         },
 
         /**
@@ -872,7 +910,8 @@ define([
          * @param {Boolean} show - <code>true</code> to enable the effect.
          */
         showGroundAtmosphere : function(show) {
-            this.centralBody.showGroundAtmosphere = show;
+            this._showGroundAtmosphere = show;
+            this.centralBody.showGroundAtmosphere = show && this.centralBody.affectedByLighting;
         },
 
         /**
@@ -954,8 +993,6 @@ define([
             }
         },
 
-        _cameraCenteredObjectIDPosition : new Cartesian3(),
-
         _sunPosition : new Cartesian3(),
 
         /**
@@ -967,8 +1004,6 @@ define([
          * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
         update : function(currentTime) {
-            var cameraCenteredObjectID = this.cameraCenteredObjectID;
-            var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
 
             this._updateSpeedIndicator();
             this.timelineControl.updateFromClock();
@@ -983,30 +1018,10 @@ define([
             }
 
             // Update the camera to stay centered on the selected object, if any.
-            if (cameraCenteredObjectID) {
-                var dynamicObject = this.dynamicObjectCollection.getObject(cameraCenteredObjectID);
-                if (dynamicObject && dynamicObject.position) {
-                    cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
-                    if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
-                        // If we're centering on an object for the first time, zoom to within 2km of it.
-                        if (this._lastCameraCenteredObjectID !== cameraCenteredObjectID) {
-                            var camera = this.scene.getCamera();
-                            camera.position = camera.position.normalize().multiplyByScalar(5000.0);
-
-                            var controllers = camera.getControllers();
-                            controllers.removeAll();
-                            this.objectSpindleController = controllers.addSpindle();
-                            this.objectSpindleController.constrainedAxis = Cartesian3.UNIT_Z;
-                        }
-
-                        if (typeof spindleController !== 'undefined' && !this.objectSpindleController.isDestroyed()) {
-                            var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, this.ellipsoid);
-                            this.objectSpindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
-                        }
-                    }
-                }
+            var viewFromTo = this._viewFromTo;
+            if (typeof viewFromTo !== 'undefined') {
+                viewFromTo.update(currentTime);
             }
-            this._lastCameraCenteredObjectID = cameraCenteredObjectID;
         },
 
         /**

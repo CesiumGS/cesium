@@ -63,6 +63,24 @@ define([
             throw new DeveloperError('projection is required.');
         }
 
+        /**
+         * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
+         * @type Boolean
+         */
+        this.enableTranslate = true;
+
+        /**
+         * If true, allows the user to zoom in and out.  If false, the camera is locked to the current distance from the ellipsoid.
+         * @type Boolean
+         */
+        this.enableZoom = true;
+
+        /**
+         * If true, allows the user to rotate the camera.  If false, the camera is locked to the current heading.
+         * @type Boolean
+         */
+        this.enableRotate = true;
+
         this._canvas = canvas;
         this._camera = camera;
         this._projection = projection;
@@ -222,7 +240,7 @@ define([
 
         if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' ||
             typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
-                throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
+            throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
         }
 
         var newRight = frustum.right - moveRate;
@@ -241,6 +259,34 @@ define([
             frustum.top = frustum.right * ratio;
             frustum.bottom = -frustum.top;
         }
+    };
+
+    /**
+     * Moves the camera to the provided cartographic position.
+     * @memberof Camera2DController
+     *
+     * @param {Cartographic} cartographic The new camera position.
+     *
+     * @exception {DeveloperError} cartographic is required.
+     */
+    Camera2DController.prototype.setPositionCartographic = function(cartographic) {
+        if (typeof cartographic === 'undefined') {
+            throw new DeveloperError('cartographic is required.');
+        }
+
+        var newLeft = -cartographic.height * 0.5;
+        var newRight = -newLeft;
+
+        var frustum = this._camera.frustum;
+        if (newRight > newLeft) {
+            var ratio = frustum.top / frustum.right;
+            frustum.right = newRight;
+            frustum.left = newLeft;
+            frustum.top = frustum.right * ratio;
+            frustum.bottom = -frustum.top;
+        }
+
+        this._camera.position = this._projection.project(cartographic);
     };
 
     /**
@@ -333,30 +379,36 @@ define([
             this._animationCollection.removeAll();
         }
 
-        if (translating) {
-            this._translate(translate.getMovement());
+        if (this.enableTranslate) {
+            if (translating) {
+                this._translate(translate.getMovement());
+            }
+
+            if (!translating && this.inertiaTranslate < 1.0) {
+                maintainInertia(translate, this.inertiaTranslate, this._translate, this, '_lastInertiaTranslateMovement');
+            }
         }
 
-        if (!translating && this.inertiaTranslate < 1.0) {
-            maintainInertia(translate, this.inertiaTranslate, this._translate, this, '_lastInertiaTranslateMovement');
+        if (this.enableZoom) {
+            if (rightZooming) {
+                this._zoom(rightZoom.getMovement());
+            } else if (wheelZooming) {
+                this._zoom(wheelZoom.getMovement());
+            }
+
+            if (!rightZooming && this.inertiaZoom < 1.0) {
+                maintainInertia(rightZoom, this.inertiaZoom, this._zoom, this, '_lastInertiaZoomMovement');
+            }
+
+            if (!wheelZooming && this.inertiaZoom < 1.0) {
+                maintainInertia(wheelZoom, this.inertiaZoom, this._zoom, this, '_lastInertiaWheelZoomMovement');
+            }
         }
 
-        if (rightZooming) {
-            this._zoom(rightZoom.getMovement());
-        } else if (wheelZooming) {
-            this._zoom(wheelZoom.getMovement());
-        }
-
-        if (!rightZooming && this.inertiaZoom < 1.0) {
-            maintainInertia(rightZoom, this.inertiaZoom, this._zoom, this, '_lastInertiaZoomMovement');
-        }
-
-        if (!wheelZooming && this.inertiaZoom < 1.0) {
-            maintainInertia(wheelZoom, this.inertiaZoom, this._zoom, this, '_lastInertiaWheelZoomMovement');
-        }
-
-        if (this._twistHandler.isMoving()) {
-            this._twist(this._twistHandler.getMovement());
+        if (this.enableRotate) {
+            if (this._twistHandler.isMoving()) {
+                this._twist(this._twistHandler.getMovement());
+            }
         }
 
         if (!translate.isButtonDown() && !rightZoom.isButtonDown()) {
@@ -369,7 +421,7 @@ define([
             var translateX = position.x < -this._maxCoord.x || position.x > this._maxCoord.x;
             var translateY = position.y < -this._maxCoord.y || position.y > this._maxCoord.y;
             if ((translateX || translateY) && !this._lastInertiaTranslateMovement &&
-                    !this._animationCollection.contains(this._translateAnimation)) {
+                 !this._animationCollection.contains(this._translateAnimation)) {
                 this._addCorrectTranslateAnimation();
             }
         }
@@ -380,109 +432,109 @@ define([
     };
 
     Camera2DController.prototype._translate = function(movement) {
-       var frustum = this._camera.frustum;
+        var frustum = this._camera.frustum;
 
        if (frustum.left === null || frustum.right === null ||
            frustum.top === null || frustum.bottom === null) {
-               throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
-       }
+            throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
+        }
 
-       var width = this._canvas.clientWidth;
-       var height = this._canvas.clientHeight;
+        var width = this._canvas.clientWidth;
+        var height = this._canvas.clientHeight;
 
-       var start = new Cartesian2();
-       start.x = (movement.startPosition.x / width) * (frustum.right - frustum.left) + frustum.left;
-       start.y = ((height - movement.startPosition.y) / height) * (frustum.top - frustum.bottom) + frustum.bottom;
+        var start = new Cartesian2();
+        start.x = (movement.startPosition.x / width) * (frustum.right - frustum.left) + frustum.left;
+        start.y = ((height - movement.startPosition.y) / height) * (frustum.top - frustum.bottom) + frustum.bottom;
 
-       var end = new Cartesian2();
-       end.x = (movement.endPosition.x / width) * (frustum.right - frustum.left) + frustum.left;
-       end.y = ((height - movement.endPosition.y) / height) * (frustum.top - frustum.bottom) + frustum.bottom;
+        var end = new Cartesian2();
+        end.x = (movement.endPosition.x / width) * (frustum.right - frustum.left) + frustum.left;
+        end.y = ((height - movement.endPosition.y) / height) * (frustum.top - frustum.bottom) + frustum.bottom;
 
-       var camera = this._camera;
-       var right = camera.right;
-       var up = camera.up;
-       var position;
-       var newPosition;
+        var camera = this._camera;
+        var right = camera.right;
+        var up = camera.up;
+        var position;
+        var newPosition;
 
-       var distance = start.subtract(end);
-       if (distance.x !== 0) {
-           position = camera.position;
-           newPosition = position.add(right.multiplyByScalar(distance.x));
+        var distance = start.subtract(end);
+        if (distance.x !== 0) {
+            position = camera.position;
+            newPosition = position.add(right.multiplyByScalar(distance.x));
 
-           var maxX = this._maxCoord.x * this._maxTranslateFactor;
-           if (newPosition.x > maxX) {
-               newPosition.x = maxX;
-           }
-           if (newPosition.x < -maxX) {
-               newPosition.x = -maxX;
-           }
+            var maxX = this._maxCoord.x * this._maxTranslateFactor;
+            if (newPosition.x > maxX) {
+                newPosition.x = maxX;
+            }
+            if (newPosition.x < -maxX) {
+                newPosition.x = -maxX;
+            }
 
-           camera.position = newPosition;
-       }
-       if (distance.y !== 0) {
-           position = camera.position;
-           newPosition = position.add(up.multiplyByScalar(distance.y));
+            camera.position = newPosition;
+        }
+        if (distance.y !== 0) {
+            position = camera.position;
+            newPosition = position.add(up.multiplyByScalar(distance.y));
 
-           var maxY = this._maxCoord.y * this._maxTranslateFactor;
-           if (newPosition.y > maxY) {
-               newPosition.y = maxY;
-           }
-           if (newPosition.y < -maxY) {
-               newPosition.y = -maxY;
-           }
+            var maxY = this._maxCoord.y * this._maxTranslateFactor;
+            if (newPosition.y > maxY) {
+                newPosition.y = maxY;
+            }
+            if (newPosition.y < -maxY) {
+                newPosition.y = -maxY;
+            }
 
-           camera.position = newPosition;
-       }
-   };
+            camera.position = newPosition;
+        }
+    };
 
-   Camera2DController.prototype._zoom = function(movement) {
-       var camera = this._camera;
-       var mag = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
-       handleZoom(this, movement, mag);
-   };
+    Camera2DController.prototype._zoom = function(movement) {
+        var camera = this._camera;
+        var mag = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
+        handleZoom(this, movement, mag);
+    };
 
-   Camera2DController.prototype._twist = function(movement) {
-       var width = this._canvas.clientWidth;
-       var height = this._canvas.clientHeight;
+    Camera2DController.prototype._twist = function(movement) {
+        var width = this._canvas.clientWidth;
+        var height = this._canvas.clientHeight;
 
-       var start = new Cartesian2();
-       start.x = (2.0 / width) * movement.startPosition.x - 1.0;
-       start.y = (2.0 / height) * (height - movement.startPosition.y) - 1.0;
-       start = start.normalize();
+        var start = new Cartesian2();
+        start.x = (2.0 / width) * movement.startPosition.x - 1.0;
+        start.y = (2.0 / height) * (height - movement.startPosition.y) - 1.0;
+        start = start.normalize();
 
-       var end = new Cartesian2();
-       end.x = (2.0 / width) * movement.endPosition.x - 1.0;
-       end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
-       end = end.normalize();
+        var end = new Cartesian2();
+        end.x = (2.0 / width) * movement.endPosition.x - 1.0;
+        end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
+        end = end.normalize();
 
-       var startTheta = Math.acos(start.x);
-       if (start.y < 0) {
-           startTheta = CesiumMath.TWO_PI - startTheta;
-       }
-       var endTheta = Math.acos(end.x);
-       if (end.y < 0) {
-           endTheta = CesiumMath.TWO_PI - endTheta;
-       }
-       var theta = endTheta - startTheta;
+        var startTheta = Math.acos(start.x);
+        if (start.y < 0) {
+            startTheta = CesiumMath.TWO_PI - startTheta;
+        }
+        var endTheta = Math.acos(end.x);
+        if (end.y < 0) {
+            endTheta = CesiumMath.TWO_PI - endTheta;
+        }
+        var theta = endTheta - startTheta;
 
-       var camera = this._camera;
-       var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(camera.direction, theta));
-       camera.up = rotation.multiplyByVector(camera.up);
-       camera.right = camera.direction.cross(camera.up);
-   };
+        var camera = this._camera;
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(camera.direction, theta));
+        camera.up = rotation.multiplyByVector(camera.up);
+        camera.right = camera.direction.cross(camera.up);
+    };
 
-   /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Camera2DController
-     *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see Camera2DController#destroy
-     */
+    /**
+      * Returns true if this object was destroyed; otherwise, false.
+      * <br /><br />
+      * If this object was destroyed, it should not be used; calling any function other than
+      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+      *
+      * @memberof Camera2DController
+      *
+      * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+      *
+      * @see Camera2DController#destroy
+      */
     Camera2DController.prototype.isDestroyed = function() {
         return false;
     };
