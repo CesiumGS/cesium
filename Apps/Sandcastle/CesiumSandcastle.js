@@ -559,7 +559,6 @@ require({
             queryObject = ioQuery.queryToObject(window.location.search.substring(1));
         } else {
             queryObject.src = 'Minimalist.html';
-            queryObject.showGallery = 1;
         }
 
         function loadDemoFromFile(index) {
@@ -582,11 +581,6 @@ require({
                         window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html');
                         document.title = demo.name + ' - Cesium Sandcastle';
                         queryObject.src = undefined;
-                        if (queryObject.showGallery) {
-                            showGallery();
-                        } else {
-                            hideGallery();
-                        }
                     }
                 }
 
