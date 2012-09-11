@@ -211,18 +211,6 @@ define([
         Array.prototype.splice.apply(tileImageryCollection, tileImageryObjects);
     }
 
-    function countTileStats(tile, counters) {
-        ++counters.tiles;
-        if (tile.renderable) {
-            ++counters.renderable;
-        }
-        if (typeof tile.children !== 'undefined') {
-            for (var i = 0; i < tile.children.length; ++i) {
-                countTileStats(tile.children[i], counters);
-            }
-        }
-    }
-
     var maxDepth;
     var tilesVisited;
     var tilesCulled;
@@ -381,30 +369,6 @@ define([
         u_dayTextureAlpha : function() {
             return this.dayTextureAlpha;
         },
-        u_dayTextureIsGeographic : function() {
-            return this.dayTextureIsGeographic;
-        },
-        u_cameraInsideBoundingSphere : function() {
-            return this.cameraInsideBoundingSphere;
-        },
-        u_level : function() {
-            return this.level;
-        },
-        u_northLatitude : function() {
-            return this.northLatitude;
-        },
-        u_southLatitude : function() {
-            return this.southLatitude;
-        },
-        u_southMercatorYLow : function() {
-            return this.southMercatorYLow;
-        },
-        u_southMercatorYHigh : function() {
-            return this.southMercatorYHigh;
-        },
-        u_oneOverMercatorHeight : function() {
-            return this.oneOverMercatorHeight;
-        },
 
         center3D : undefined,
         modifiedModelView : undefined,
@@ -413,15 +377,7 @@ define([
         dayTextures : [],
         dayTextureTranslationAndScale : [],
         dayTextureTexCoordsExtent : [],
-        dayTextureAlpha : [],
-        dayTextureIsGeographic : [],
-        cameraInsideBoundingSphere : false,
-        level : 0,
-        northLatitude : 0,
-        southLatitude : 0,
-        southMercatorYHigh : 0,
-        southMercatorYLow : 0,
-        oneOverMercatorHeight : 0
+        dayTextureAlpha : []
     };
 
     var tileDistanceSortFunction = function(a, b) {
@@ -775,34 +731,10 @@ define([
         var latitudeFactor = Math.cos(latitudeClosestToEquator);
         var maxGeometricError = latitudeFactor * surface.terrainProvider.getLevelMaximumGeometricError(tile.level);
 
-        //var boundingVolume = tile.boundingSphere3D;
         var camera = frameState.camera;
-
-        //var toCenter = boundingVolume.center.subtract(cameraPosition);
-        //var distanceToBoundingSphere = toCenter.magnitude() - boundingVolume.radius;
-
-        //var heightAboveEllipsoid = cameraPositionCartographic.height;
-        //var distanceToTerrainHeight = heightAboveEllipsoid - tile.maxHeight;
-
-        /*var distance;
-        if (typeof distanceToBoundingSphere !== 'undefined' && distanceToBoundingSphere > 0.0 && typeof distanceToTerrainHeight !== 'undefined' && distanceToTerrainHeight > 0.0) {
-            distance = Math.max(distanceToBoundingSphere, distanceToTerrainHeight);
-        } else if (typeof distanceToBoundingSphere !== 'undefined' && distanceToBoundingSphere > 0.0) {
-            distance = distanceToBoundingSphere;
-        } else if (typeof distanceToTerrainHeight !== 'undefined' && distanceToTerrainHeight > 0.0) {
-            distance = distanceToTerrainHeight;
-        } else {
-            // The camera is inside the bounding sphere and below the maximum terrain height,
-            // so the screen-space error could be enormous, but we don't really have any way
-            // to calculate it.  So return positive infinity, which will force a refine.
-            tile.cameraInsideBoundingSphere = true;
-            return 1.0/0.0;
-        }*/
 
         var distance = Math.sqrt(distanceSquaredToTile(cameraPosition, cameraPositionCartographic, tile));
         tile.distance = distance;
-
-//        tile.cameraInsideBoundingSphere = distance === 0.0;
 
         var viewportHeight = context.getViewport().height;
 
