@@ -42,12 +42,6 @@ require({
 //    });
 //    var singleLayer = imageryLayerCollection.addImageryProvider(single);
 
-//    var wmsImagery = new Cesium.WebMapServiceImageryProvider({
-//        url : 'http://localhost:8081/geoserver/wms',
-//        layerName : 'demo'
-//    });
-//    var wmsLayer = imageryLayerCollection.addImageryProvider(wmsImagery);
-
 //    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
 //        url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
 //        proxy : new Cesium.DefaultProxy('/proxy/')
@@ -68,6 +62,18 @@ require({
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
     var bingAerialLayer = imageryLayerCollection.addImageryProvider(bingAerialImageryProvider);
+
+//    var wmsImagery = new Cesium.WebMapServiceImageryProvider({
+//        url : 'http://localhost:8081/geoserver/nurc/wms',
+//        layerName : 'nurc:Img_Sample',
+//        extent : new Cesium.Extent(
+//                Cesium.Math.toRadians(-130.85168),
+//                Cesium.Math.toRadians(20.7052),
+//                Cesium.Math.toRadians(-62.0054),
+//                Cesium.Math.toRadians(54.1141))
+//        //layerName : 'nurc:mosaic'
+//    });
+//    var wmsLayer = imageryLayerCollection.addImageryProvider(wmsImagery);
 
 //    var bingRoadImageryProvider = new Cesium.BingMapsImageryProvider({
 //        server : 'dev.virtualearth.net',

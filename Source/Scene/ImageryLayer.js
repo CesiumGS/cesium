@@ -143,7 +143,7 @@ define([
             var ellipsoid = tilingScheme.ellipsoid;
             var latitudeFactor = Math.cos(latitudeClosestToEquator);
             //var latitudeFactor = 1.0;
-            levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * 2 * Math.PI * latitudeFactor / (imageryProvider.getTileWidth() * tilingScheme.numberOfLevelZeroTilesX);
+            levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * (tilingScheme.extent.east - tilingScheme.extent.west) * latitudeFactor / (imageryProvider.getTileWidth() * tilingScheme.numberOfLevelZeroTilesX);
             this._levelZeroMaximumTexelSpacing = levelZeroMaximumTexelSpacing;
         //}
 
@@ -248,6 +248,8 @@ define([
             minV = Math.max(0.0, (imageryExtent.north - tile.extent.south) / (tile.extent.north - tile.extent.south));
         }
 
+        var initialMinV = minV;
+
         for (var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
             minU = maxU;
 
@@ -261,6 +263,8 @@ define([
             if (i === southeastTileCoordinates.x && i < imageryMaxX - 1) {
                 maxU = 1.0;
             }
+
+            minV = initialMinV;
 
             for (var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
 

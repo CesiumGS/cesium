@@ -442,7 +442,7 @@ define([
 
         var maxTextures = context.getMaximumTextureImageUnits();
 
-        for (var tileSetIndex = 0, tileSetLength = tilesToRenderByTextureCount.length; tileSetIndex < tileSetLength; ++tileSetIndex) {
+        for (var tileSetIndex = 1, tileSetLength = tilesToRenderByTextureCount.length; tileSetIndex < tileSetLength; ++tileSetIndex) {
             var tileSet = tilesToRenderByTextureCount[tileSetIndex];
             if (typeof tileSet === 'undefined' || tileSet.length === 0) {
                 continue;
