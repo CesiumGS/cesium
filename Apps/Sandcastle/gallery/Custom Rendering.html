@@ -337,9 +337,7 @@ require([
                     projectedPositionsFlat.push(p.z, p.x, p.y);
                 }
 
-                if (mode === Cesium.SceneMode.SCENE2D){
-                    this._boundingSphere = Cesium.BoundingSphere.fromPoints(projectedPositions);
-                } else if (mode === Cesium.SceneMode.COLUMBUS_VIEW) {
+                if (mode === Cesium.SceneMode.SCENE2D || mode === Cesium.SceneMode.COLUMBUS_VIEW) {
                     this._boundingSphere = Cesium.BoundingSphere.fromPoints(projectedPositions);
                     this._boundingSphere.center = new Cesium.Cartesian3(this._boundingSphere.center.z, this._boundingSphere.center.x, this._boundingSphere.center.y);
                 } else {

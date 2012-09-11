@@ -152,7 +152,6 @@ define([
         this._pickId = undefined;
 
         this._boundingVolume = new BoundingSphere();
-        this._boundingVolumeCV = new BoundingSphere();
         this._boundingVolume2D = new BoundingSphere();
 
         /**
@@ -491,17 +490,6 @@ define([
         return mesh;
     };
 
-    function transformBoundingVolumes(polygon) {
-        var center2D = polygon._boundingVolume2D.center;
-        center2D.z = 0.0;
-
-        var centerCV = polygon._boundingVolumeCV.center;
-        centerCV.x = 0.0;
-        centerCV.y = center2D.x;
-        centerCV.z = center2D.y;
-        polygon._boundingVolumeCV.radius = polygon._boundingVolume2D.radius;
-    }
-
     var _createMeshesOuterPositions2D = [];
     Polygon.prototype._createMeshes = function() {
         // PERFORMANCE_IDEA:  Move this to a web-worker.
@@ -513,7 +501,8 @@ define([
             this._boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid, this._boundingVolume);
             if (this._mode !== SceneMode.SCENE3D) {
                 this._boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection, this._boundingVolume2D);
-                transformBoundingVolumes(this);
+                var center2D = this._boundingVolume2D.center;
+                this._boundingVolume2D.center = new Cartesian3(0.0, center2D.x, center2D.y);
             }
         } else if (typeof this._positions !== 'undefined') {
             meshes.push(this._createMeshFromPositions(this._positions));
@@ -564,7 +553,8 @@ define([
             }
 
             this._boundingVolume2D = BoundingSphere.fromPoints(positions, this._boundingVolume2D);
-            transformBoundingVolumes(this);
+            var center2DPositions = this._boundingVolume2D.center;
+            this._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
         }
 
         return processedMeshes;
@@ -718,9 +708,7 @@ define([
         var boundingVolume;
         if (mode === SceneMode.SCENE3D) {
             boundingVolume = this._boundingVolume;
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            boundingVolume = this._boundingVolumeCV;
-        } else if (mode === SceneMode.SCENE2D) {
+        } else if (mode === SceneMode.COLUMBUS_VIEW || mode === SceneMode.SCENE2D) {
             boundingVolume = this._boundingVolume2D;
         } else {
             boundingVolume = this._boundingVolume.union(this._boundingVolume2D);
