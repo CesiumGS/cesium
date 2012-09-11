@@ -59,15 +59,20 @@ defineSuite([
     });
 
     it('lookAt', function() {
-        var target = Cartesian3.ZERO;
-        var newPosition = new Cartesian3(1.0, 1.0, 1.0);
-        var newDirection = target.subtract(newPosition).normalize();
-        var newUp = camera.right.cross(newDirection).normalize();
+        var target = new Cartesian3(-1.0, -1.0, 0.0);
+        var position = Cartesian3.UNIT_X;
+        var up = Cartesian3.UNIT_Z;
+
         var tempCamera = camera.clone();
-        tempCamera.lookAt(newPosition, target, newUp);
-        expect(tempCamera.position).toEqual(newPosition);
-        expect(tempCamera.direction).toEqual(newDirection);
-        expect(tempCamera.up).toEqual(newUp);
+        tempCamera.lookAt(position, target, up);
+        expect(tempCamera.position.equals(position)).toEqual(true);
+        expect(tempCamera.direction.equals(target.subtract(position).normalize())).toEqual(true);
+        expect(tempCamera.up.equals(up)).toEqual(true);
+        expect(tempCamera.right.equals(tempCamera.direction.cross(up).normalize())).toEqual(true);
+
+        expect(1.0 - tempCamera.direction.magnitude() < CesiumMath.EPSILON14).toEqual(true);
+        expect(1.0 - tempCamera.up.magnitude() < CesiumMath.EPSILON14).toEqual(true);
+        expect(1.0 - tempCamera.right.magnitude() < CesiumMath.EPSILON14).toEqual(true);
     });
 
     it('lookAt throws with no eye parameter', function() {
