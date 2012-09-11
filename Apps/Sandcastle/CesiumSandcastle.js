@@ -440,7 +440,7 @@ require({
             // This triggers the code to be injected into the iframe.
             if (e.data === 'reload') {
                 logOutput.innerHTML = "";
-                // This happens after a Run (F9) reloads bucket.html, to inject the editor code
+                // This happens after a Run (F8) reloads bucket.html, to inject the editor code
                 // into the iframe, causing the demo to run there.
                 var bucketDoc = bucketFrame.contentDocument;
                 var bodyEle = bucketDoc.createElement('div');
@@ -451,7 +451,7 @@ require({
                 jsEle.textContent = jsEditor.getValue();
                 bucketDoc.body.appendChild(jsEle);
                 if (local.docTypes.length === 0) {
-                    appendConsole('consoleError', "Documentation not available.  Please run the 'release' build script to generate Cesium documentation.");
+                    appendConsole('consoleError', "Documentation not available.  Please run the 'Documentation' build script to generate Cesium documentation.");
                 }
             } else if (typeof e.data.log !== 'undefined') {
                 // Console log messages from the iframe display in Sandcastle.
