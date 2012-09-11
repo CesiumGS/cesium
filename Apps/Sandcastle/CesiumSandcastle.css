@@ -29,7 +29,7 @@ html, body {
     height: 100%;
 }
 
-#toolbar {
+#toolbar, #galleryContainer {
     -moz-user-select: -moz-none;  /* allows for re-enabling on sub-elements like the search box */
     -webkit-user-select: none;
 }

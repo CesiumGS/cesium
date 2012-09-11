@@ -78,6 +78,7 @@ require({
             ele.textContent = message + "\n";
             logOutput.appendChild(ele);
             logOutput.parentNode.scrollTop = logOutput.clientHeight + 8 - logOutput.parentNode.clientHeight;
+            hideGallery();
         }
 
         // NOTE: BlobBuilder will eventually be deprecated and replaced with a direct constructor on Blob itself.
@@ -492,9 +493,15 @@ require({
                 }
             }
 
+            var galleryTab = registry.byId('galleryContainer');
+            if (searchTerm !== '') {
+                galleryTab.set('title', 'Gallery Search Results');
+            } else {
+                galleryTab.set('title', 'Gallery');
+            }
+
             registry.byId('demosContainer').scrollTo({x:0, y:0});
             showGallery();
-
         });
 
         // Clicking the 'Run' button simply reloads the iframe.
@@ -633,7 +640,6 @@ require({
 
             var addLoadOnClickCallback = function(divId, demo) {
                 on(dom.byId(divId), 'click', function() {
-                    hideGallery();
                     loadFromGallery(demo);
                     var demoSrc = demo.name + '.html';
                     if (demoSrc !== window.location.search.substring(1)) {
