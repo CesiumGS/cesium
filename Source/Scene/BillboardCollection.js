@@ -336,24 +336,24 @@ define([
         this._createVertexArray = true;
     };
 
-    BillboardCollection.prototype._removeBillboards = function() {
-        if (this._billboardsRemoved) {
-            this._billboardsRemoved = false;
+    function removeBillboards(billboardCollection) {
+        if (billboardCollection._billboardsRemoved) {
+            billboardCollection._billboardsRemoved = false;
 
-            var billboards = [];
-
-            var length = this._billboards.length;
+            var newBillboards = [];
+            var billboards = billboardCollection._billboards;
+            var length = billboards.length;
             for ( var i = 0, j = 0; i < length; ++i) {
-                var billboard = this._billboards[i];
+                var billboard = billboards[i];
                 if (billboard) {
                     billboard._index = j++;
-                    billboards.push(billboard);
+                    newBillboards.push(billboard);
                 }
             }
 
-            this._billboards = billboards;
+            billboardCollection._billboards = newBillboards;
         }
-    };
+    }
 
     BillboardCollection.prototype._updateBillboard = function(billboard, propertyChanged) {
         if (!billboard._isDirty()) {
@@ -411,7 +411,7 @@ define([
             throw new DeveloperError('index is required.');
         }
 
-        this._removeBillboards();
+        removeBillboards(this);
         return this._billboards[index];
     };
 
@@ -441,7 +441,7 @@ define([
      * }
      */
     BillboardCollection.prototype.getLength = function() {
-        this._removeBillboards();
+        removeBillboards(this);
         return this._billboards.length;
     };
 
@@ -539,7 +539,7 @@ define([
         this._destroyTextureAtlas = value;
     };
 
-    BillboardCollection._getDirectionsVertexBuffer = function(context) {
+    function getDirectionsVertexBuffer(context) {
         var sixteenK = 16 * 1024;
 
         // Per-context cache for billboard collections
@@ -574,9 +574,9 @@ define([
         c.directionsVertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
         c.directionsVertexBuffer.setVertexArrayDestroyable(false);
         return c.directionsVertexBuffer;
-    };
+    }
 
-    BillboardCollection._getIndexBuffer = function(context) {
+    function getIndexBuffer(context) {
         var sixteenK = 16 * 1024;
 
         // Per-context cache for billboard collections
@@ -606,7 +606,7 @@ define([
         c.indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
         c.indexBuffer.setVertexArrayDestroyable(false);
         return c.indexBuffer;
-    };
+    }
 
     /**
      * Renders the billboards.  In order for changes to properties to be realized,
@@ -674,9 +674,9 @@ define([
         return usageChanged;
     };
 
-    BillboardCollection._createVAF = function(context, numberOfBillboards, buffersUsage) {
+    function createVAF(context, numberOfBillboards, buffersUsage) {
         // Different billboard collections share the same vertex buffer for directions.
-        var directionVertexBuffer = BillboardCollection._getDirectionsVertexBuffer(context);
+        var directionVertexBuffer = getDirectionsVertexBuffer(context);
 
         return new VertexArrayFacade(context, [{
             index : attributeIndices.position,
@@ -723,7 +723,7 @@ define([
             normalize : true,
             componentDatatype : ComponentDatatype.UNSIGNED_BYTE
         }], 4 * numberOfBillboards); // 4 vertices per billboard
-    };
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -958,8 +958,7 @@ define([
             return undefined;
         }
 
-        this._removeBillboards();
-
+        removeBillboards(this);
         updateMode(this, frameState);
 
         var billboards = this._billboards;
@@ -980,7 +979,7 @@ define([
 
             if (length > 0) {
                 // PERFORMANCE_IDEA:  Instead of creating a new one, resize like std::vector.
-                this._vaf = BillboardCollection._createVAF(context, billboards.length, this._buffersUsage);
+                this._vaf = createVAF(context, billboards.length, this._buffersUsage);
                 vafWriters = this._vaf.writers;
 
                 // Rewrite entire buffer if billboards were added or removed.
@@ -991,7 +990,7 @@ define([
                 }
 
                 // Different billboard collections share the same index buffer.
-                this._vaf.commit(BillboardCollection._getIndexBuffer(context));
+                this._vaf.commit(getIndexBuffer(context));
             }
 
             this._billboardsToUpdate = [];
@@ -1043,7 +1042,7 @@ define([
                             writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
                         }
                     }
-                    this._vaf.commit(BillboardCollection._getIndexBuffer(context));
+                    this._vaf.commit(getIndexBuffer(context));
                 } else {
                     for ( var h = 0; h < updateLength; ++h) {
                         var bb = billboardsToUpdate[h];
