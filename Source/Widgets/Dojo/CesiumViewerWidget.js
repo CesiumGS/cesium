@@ -352,7 +352,7 @@ define([
          */
         onLeftDrag : undefined,
         /**
-         * Override this function to be notified when the right mouse button is dragged.
+         * Override this function to be notified when the right mouse button is dragged or mouse wheel is zoomed.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
