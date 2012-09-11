@@ -253,7 +253,7 @@ define([
         if (typeof this.vertexArray !== 'undefined') {
             var indexBuffer = this.vertexArray.getIndexBuffer();
 
-            this.vertexArray = this.vertexArray && this.vertexArray.destroy();
+            this.vertexArray.destroy();
             this.vertexArray = undefined;
 
             if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
@@ -274,16 +274,16 @@ define([
         }
         this.transformedGeometry = undefined;
 
+        var i, len;
+
         var imageryList = this.imagery;
-        Object.keys(imageryList).forEach(function(key) {
-            var tileImagery = imageryList[key];
-            var imagery = tileImagery.imagery;
-            imagery.releaseReference();
-        });
-        this.imagery = [];
+        for (i = 0, len = imageryList.length; i < len; ++i) {
+            imageryList[i].freeResources();
+        }
+        this.imagery.length = 0;
 
         if (typeof this.children !== 'undefined') {
-            for (var i = 0; i < this.children.length; ++i) {
+            for (i = 0, len = this.children.length; i < len; ++i) {
                 this.children[i].freeResources();
             }
         }

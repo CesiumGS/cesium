@@ -145,13 +145,13 @@ define([
             var startIndex = -1;
             var numDestroyed = 0;
             for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-                var tileImagery = tileImageryCollection[i];
-                if (tileImagery.imagery.imageryLayer === layer) {
+                var imagery = tileImageryCollection[i].imagery;
+                if (imagery.imageryLayer === layer) {
                     if (startIndex === -1) {
                         startIndex = i;
                     }
 
-                    tileImagery.imagery.releaseReference();
+                    imagery.releaseReference();
                     ++numDestroyed;
                 } else if (startIndex !== -1) {
                     // iterated past the section of TileImagerys belonging to this layer, no need to continue.
@@ -457,8 +457,8 @@ define([
 
                     context.continueDraw({
                         primitiveType : TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES,
-                                vertexArray : tile.vertexArray,
-                                uniformMap : uniformMap
+                        vertexArray : tile.vertexArray,
+                        uniformMap : uniformMap
                     });
                 }
             }
@@ -660,9 +660,9 @@ define([
 
     function addTileToRenderList(surface, tile) {
         var readyTextureCount = 0;
-        var imageryList = tile.imagery;
-        for (var i = 0, len = imageryList.length; i < len; ++i) {
-            if (imageryList[i].imagery.state === ImageryState.READY) {
+        var tileImageryCollection = tile.imagery;
+        for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+            if (tileImageryCollection[i].imagery.state === ImageryState.READY) {
                 ++readyTextureCount;
             }
         }
@@ -848,12 +848,29 @@ define([
                     imageryLayer.reprojectTexture(context, imagery);
                 }
 
-                var tileImageryDoneLoading =
-                    imagery.state === ImageryState.READY ||
-                    imagery.state === ImageryState.FAILED ||
-                    imagery.state === ImageryState.INVALID;
+                if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
+                    // re-associate TileImagery with a parent Imagery that is not failed or invalid.
+                    var parent = imagery.parent;
+                    while (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID) {
+                        parent = parent.parent;
+                    }
 
-                doneLoading = doneLoading && tileImageryDoneLoading;
+                    // use that parent imagery instead, storing the original imagery
+                    // in originalImagery to keep it alive
+                    tileImagery.originalImagery = imagery;
+
+                    parent.addReference();
+                    tileImagery.imagery = parent;
+                    imagery = parent;
+                }
+
+                var imageryDoneLoading = imagery.state === ImageryState.READY;
+
+                if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
+                    tileImagery.textureTranslationAndScale = imageryLayer.calculateTextureTranslationAndScale(tile, tileImagery);
+                }
+
+                doneLoading = doneLoading && imageryDoneLoading;
             }
 
             // The tile becomes renderable when the terrain and all imagery data are loaded.

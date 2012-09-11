@@ -1,28 +1,20 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Cartesian2',
-        '../Core/Ellipsoid',
-        '../Core/Extent',
-        './TileState'
-    ], function(
-        defaultValue,
-        destroyObject,
-        DeveloperError,
-        CesiumMath,
-        Cartesian2,
-        Ellipsoid,
-        Extent,
-        TileState) {
+define(function() {
     "use strict";
 
-    var TileImagery = function(imagery, textureTranslationAndScale, textureCoordinateExtent) {
+    var TileImagery = function(imagery, textureCoordinateExtent) {
         this.imagery = imagery;
-        this.textureTranslationAndScale = textureTranslationAndScale;
         this.textureCoordinateExtent = textureCoordinateExtent;
+        this.originalImagery = undefined;
+        this.textureTranslationAndScale = undefined;
+    };
+
+    TileImagery.prototype.freeResources = function() {
+        this.imagery.releaseReference();
+
+        if (typeof this.originalImagery !== 'undefined') {
+            this.originalImagery.releaseReference();
+        }
     };
 
     return TileImagery;

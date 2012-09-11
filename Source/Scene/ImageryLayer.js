@@ -73,9 +73,9 @@ define([
      * @param {Number} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
      */
     function ImageryLayer(imageryProvider, description) {
-        this.imageryProvider = imageryProvider;
-
         description = defaultValue(description, {});
+
+        this.imageryProvider = imageryProvider;
 
         this.extent = defaultValue(description.extent, Extent.MAX_VALUE);
 
@@ -161,9 +161,7 @@ define([
     };
 
     ImageryLayer.prototype.createTileImagerySkeletons = function(tile, terrainProvider) {
-        var imageryCache = this._imageryCache;
         var imageryProvider = this.imageryProvider;
-        var imageryTilingScheme = imageryProvider.getTilingScheme();
 
         // Compute the extent of the imagery from this imageryProvider that overlaps
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
@@ -172,8 +170,7 @@ define([
         var extent = tile.extent.intersectWith(imageryProvider.getExtent());
         extent = extent.intersectWith(this.extent);
 
-        if (extent.east <= extent.west ||
-            extent.north <= extent.south) {
+        if (extent.east <= extent.west || extent.north <= extent.south) {
             // There is no overlap between this terrain tile and this imagery
             // provider, so no skeletons need to be created.
             return false;
@@ -193,6 +190,7 @@ define([
         var imageryLevel = this._getLevelWithMaximumTexelSpacing(targetGeometricError, latitudeClosestToEquator);
         imageryLevel = Math.max(0, Math.min(imageryProvider.getMaximumLevel(), imageryLevel));
 
+        var imageryTilingScheme = imageryProvider.getTilingScheme();
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
         var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getSoutheast(), imageryLevel);
 
@@ -225,10 +223,8 @@ define([
 
         // Create TileImagery instances for each imagery tile overlapping this terrain tile.
         // We need to do all texture coordinate computations in the imagery tile's tiling scheme.
-        var terrainExtent = tile.extent;
-        var terrainWidth = terrainExtent.east - terrainExtent.west;
-        var terrainHeight = terrainExtent.north - terrainExtent.south;
 
+        var terrainExtent = tile.extent;
         var imageryExtent = imageryTilingScheme.tileXYToExtent(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
 
         var minU;
@@ -241,20 +237,20 @@ define([
         // it may not start at the northern or western edge of the terrain tile.
         // Calculate where it does start.
         if (northwestTileCoordinates.x === 0) {
-            maxU = Math.min(1.0, (imageryExtent.west - tile.extent.west) / (tile.extent.east - tile.extent.west));
+            maxU = Math.min(1.0, (imageryExtent.west - terrainExtent.west) / (terrainExtent.east - terrainExtent.west));
         }
 
         if (northwestTileCoordinates.y === 0) {
-            minV = Math.max(0.0, (imageryExtent.north - tile.extent.south) / (tile.extent.north - tile.extent.south));
+            minV = Math.max(0.0, (imageryExtent.north - terrainExtent.south) / (terrainExtent.north - terrainExtent.south));
         }
 
         var initialMinV = minV;
 
-        for (var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
+        for ( var i = northwestTileCoordinates.x; i <= southeastTileCoordinates.x; i++) {
             minU = maxU;
 
             imageryExtent = imageryTilingScheme.tileXYToExtent(i, northwestTileCoordinates.y, imageryLevel);
-            maxU = Math.min(1.0, (imageryExtent.east - tile.extent.west) / (tile.extent.east - tile.extent.west));
+            maxU = Math.min(1.0, (imageryExtent.east - terrainExtent.west) / (terrainExtent.east - terrainExtent.west));
 
             // If this is the eastern-most imagery tile mapped to this terrain tile,
             // and there are more imagery tiles to the east of this one, the maxU
@@ -266,22 +262,11 @@ define([
 
             minV = initialMinV;
 
-            for (var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
-
-                var cacheKey = getImageryCacheKey(i, j, imageryLevel);
-                var imagery = imageryCache[cacheKey];
-
-                if (typeof imagery === 'undefined') {
-                    imagery = new Imagery(this, i, j, imageryLevel);
-                    imageryCache[cacheKey] = imagery;
-                }
-
-                imagery.addReference();
-
+            for ( var j = northwestTileCoordinates.y; j <= southeastTileCoordinates.y; j++) {
                 maxV = minV;
 
                 imageryExtent = imageryTilingScheme.tileXYToExtent(i, j, imageryLevel);
-                minV = Math.max(0.0, (imageryExtent.south - tile.extent.south) / (tile.extent.north - tile.extent.south));
+                minV = Math.max(0.0, (imageryExtent.south - terrainExtent.south) / (terrainExtent.north - terrainExtent.south));
 
                 // If this is the southern-most imagery tile mapped to this terrain tile,
                 // and there are more imagery tiles to the south of this one, the minV
@@ -291,19 +276,28 @@ define([
                     minV = 0.0;
                 }
 
-                var scaleX = terrainWidth / (imageryExtent.east - imageryExtent.west);
-                var scaleY = terrainHeight / (imageryExtent.north - imageryExtent.south);
-                var textureTranslationAndScale = new Cartesian4(
-                        scaleX * (terrainExtent.west - imageryExtent.west) / terrainWidth,
-                        scaleY * (terrainExtent.south - imageryExtent.south) / terrainHeight,
-                        scaleX,
-                        scaleY);
                 var texCoordsExtent = new Cartesian4(minU, minV, maxU, maxV);
-                tile.imagery.push(new TileImagery(imagery, textureTranslationAndScale, texCoordsExtent));
+                var imagery = this.getImageryFromCache(i, j, imageryLevel, imageryExtent);
+                tile.imagery.push(new TileImagery(imagery, texCoordsExtent));
             }
         }
 
         return true;
+    };
+
+    ImageryLayer.prototype.calculateTextureTranslationAndScale = function(tile, tileImagery) {
+        var imageryExtent = tileImagery.imagery.extent;
+        var terrainExtent = tile.extent;
+        var terrainWidth = terrainExtent.east - terrainExtent.west;
+        var terrainHeight = terrainExtent.north - terrainExtent.south;
+
+        var scaleX = terrainWidth / (imageryExtent.east - imageryExtent.west);
+        var scaleY = terrainHeight / (imageryExtent.north - imageryExtent.south);
+        return new Cartesian4(
+                scaleX * (terrainExtent.west - imageryExtent.west) / terrainWidth,
+                scaleY * (terrainExtent.south - imageryExtent.south) / terrainHeight,
+                scaleX,
+                scaleY);
     };
 
     var activeTileImageRequests = {};
@@ -542,6 +536,19 @@ define([
 
         return outputTexture;
     }
+
+    ImageryLayer.prototype.getImageryFromCache = function(x, y, level, imageryExtent) {
+        var cacheKey = getImageryCacheKey(x, y, level);
+        var imagery = this._imageryCache[cacheKey];
+
+        if (typeof imagery === 'undefined') {
+            imagery = new Imagery(this, x, y, level, imageryExtent);
+            this._imageryCache[cacheKey] = imagery;
+        }
+
+        imagery.addReference();
+        return imagery;
+    };
 
     ImageryLayer.prototype.removeImageryFromCache = function(imagery) {
         var cacheKey = getImageryCacheKey(imagery.x, imagery.y, imagery.level);
