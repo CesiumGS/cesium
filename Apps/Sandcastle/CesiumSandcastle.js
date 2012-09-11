@@ -280,7 +280,8 @@ require({
             if (typeof activeGalleryTooltipDemo !== 'undefined') {
                 popup.open({
                     popup: demoTooltips[activeGalleryTooltipDemo.name],
-                    around: dom.byId(activeGalleryTooltipDemo.name)
+                    around: dom.byId(activeGalleryTooltipDemo.name),
+                    orient : ['above', 'below']
                 });
             }
         }
@@ -517,6 +518,10 @@ require({
             var html = local.headers + htmlEditor.getValue() +
                 '\n<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
                 '\n</script>\n</body>\n</html>\n';
+
+            var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
+            currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
+            html = html.replace('<head>', '<head>\n\t<meta name="description" content="' + demoTooltips[currentDemoName].get('content') + '">');
 
             var octetBB = new BlobBuilder();
             octetBB.append(html);
