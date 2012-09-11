@@ -151,9 +151,8 @@ define([
         this._vertices = new PositionVertices();
         this._pickId = undefined;
 
-        this._boundingVolume = undefined;
-        this._boundingVolume2D = undefined;
-        this._boundingRectangle = undefined;
+        this._boundingVolume = new BoundingSphere();
+        this._boundingVolume2D = new BoundingSphere();
 
         /**
          * DOC_TBA
@@ -499,15 +498,15 @@ define([
         if (typeof this._extent !== 'undefined') {
             meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true}));
 
-            this._boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid);
+            this._boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid, this._boundingVolume);
             if (this._mode !== SceneMode.SCENE3D) {
-                this._boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection);
-                this._boundingVolume2D.center = new Cartesian3(0.0, this._boundingVolume2D.center.x, this._boundingVolume2D.center.y);
-                this._boundingRectangle = BoundingRectangle.fromExtent(this._extent, this._projection);
+                this._boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection, this._boundingVolume2D);
+                var center2D = this._boundingVolume2D.center;
+                this._boundingVolume2D.center = new Cartesian3(0.0, center2D.x, center2D.y);
             }
         } else if (typeof this._positions !== 'undefined') {
             meshes.push(this._createMeshFromPositions(this._positions));
-            this._boundingVolume = BoundingSphere.fromPoints(this._positions);
+            this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
         } else if (typeof this._polygonHierarchy !== 'undefined') {
             var outerPositions =  this._polygonHierarchy[0];
             var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, this.ellipsoid);
@@ -519,7 +518,7 @@ define([
             // The bounding volume is just around the boundary points, so there could be cases for
             // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
             // volume doesn't cover the polygon.
-            this._boundingVolume = BoundingSphere.fromPoints(outerPositions);
+            this._boundingVolume = BoundingSphere.fromPoints(outerPositions, this._boundingVolume);
         } else {
             return undefined;
         }
@@ -553,9 +552,9 @@ define([
                 positions.push(new Cartesian3(projectedPositions[i], projectedPositions[i + 1], 0.0));
             }
 
-            this._boundingVolume2D = BoundingSphere.fromPoints(positions);
-            this._boundingVolume2D.center = new Cartesian3(0.0, this._boundingVolume2D.center.x, this._boundingVolume2D.center.y);
-            this._boundingRectangle = BoundingRectangle.fromPoints(positions);
+            this._boundingVolume2D = BoundingSphere.fromPoints(positions, this._boundingVolume2D);
+            var center2DPositions = this._boundingVolume2D.center;
+            this._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
         }
 
         return processedMeshes;
@@ -709,10 +708,8 @@ define([
         var boundingVolume;
         if (mode === SceneMode.SCENE3D) {
             boundingVolume = this._boundingVolume;
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+        } else if (mode === SceneMode.COLUMBUS_VIEW || mode === SceneMode.SCENE2D) {
             boundingVolume = this._boundingVolume2D;
-        } else if (mode === SceneMode.SCENE2D) {
-            boundingVolume = this._boundingRectangle;
         } else {
             boundingVolume = this._boundingVolume.union(this._boundingVolume2D);
         }

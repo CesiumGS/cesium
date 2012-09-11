@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Cesium Demo</title>
+    <script>
+    var Sandcastle = {};
+    Sandcastle.declare = function () {};
+    Sandcastle.highlight = function () {};
+    Sandcastle.registered = [];
+    if (window.location.protocol === 'file:') {
+        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
+            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
+        }
+    }
+    </script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript">
+    require({
+        baseUrl : '../../..',
+        packages: [
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Source', location: 'Source' },
+            { name: 'Core', location: 'Source/Core' },
+            { name: 'DynamicScene', location: 'Source/DynamicScene' },
+            { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Scene', location: 'Source/Scene' },
+            { name: 'Shaders', location: 'Source/Shaders' },
+            { name: 'ThirdParty', location: 'Source/ThirdParty' },
+            { name: 'Widgets', location: 'Source/Widgets' },
+            { name: 'Workers', location: 'Source/Workers' }
+        ]
+    });
+    </script>
+    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
+</head>
+<body class="claro">
+<style>
+body {
+    background: #000;
+    color: #eee;
+    font-family: sans-serif;
+    font-size: 9pt;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+.fullSize {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: none;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+#toolbar {
+    margin: 5px;
+    padding: 2px 5px;
+    position: absolute;
+}
+</style>
+
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="toolbar">Loading...</div>
+
+<script id="cesium_sandcastle_script">
+require([
+    'Source/Cesium', 'Widgets/Dojo/CesiumWidget',
+    'dojo/on', 'dojo/dom', 'dijit/form/Button'
+], function(
+    Cesium, CesiumWidget,
+    on, dom, Button)
+{
+    "use strict";
+        
+    function addBillboard(scene, ellipsoid) {
+        Sandcastle.declare(addBillboard);   // For highlighting in Sandcastle.
+        var image = new Image();
+        image.onload = function() {
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = scene.getContext().createTextureAtlas({image : image});
+            billboards.setTextureAtlas(textureAtlas);
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                imageIndex : 0
+            });
+            scene.getPrimitives().add(billboards);
+        };
+        image.src = '../../../Images/Cesium_Logo_overlay.png';
+    }
+    
+    function setBillboardPropertiesAtCreation(scene, ellipsoid) {
+        Sandcastle.declare(setBillboardPropertiesAtCreation);   // For highlighting in Sandcastle.
+        var image = new Image();
+        image.onload = function() {
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = scene.getContext().createTextureAtlas({image : image});
+            billboards.setTextureAtlas(textureAtlas);
+            billboards.add({
+                show : true,    // default
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                pixelOffset : new Cesium.Cartesian2(0, 50),         // default: (0, 0)
+                eyeOffset : new Cesium.Cartesian3(0.0, 0.0, 0.0),   // default
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,  // default
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,      // default: CENTER
+                scale : 2.0,    // default : 1.0
+                imageIndex : 0, // default
+                color : { red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 } // default: all 255
+            });
+            scene.getPrimitives().add(billboards);
+        };
+        image.src = '../../../Images/Cesium_Logo_overlay.png';
+    }
+    
+    function setBillboardProperties(scene, ellipsoid) {
+        Sandcastle.declare(setBillboardProperties);     // For highlighting in Sandcastle.
+        var image = new Image();
+        image.onload = function() {
+            var billboards = new Cesium.BillboardCollection(undefined);
+            var textureAtlas = scene.getContext().createTextureAtlas({image : image});
+            billboards.setTextureAtlas(textureAtlas);
+            // add() returns a Billboard object containing functions to change
+            // the billboard's position and appearance.
+            var b = billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                imageIndex : 0
+            });
+
+            b.setPosition(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 300000.0)));
+            b.setScale(3.0);
+            b.setColor({ red : 1.0, green : 1.0, blue : 1.0, alpha : 0.25 });
+
+            scene.getPrimitives().add(billboards);
+        };
+        image.src = '../../../Images/Cesium_Logo_overlay.png';
+    }
+    
+    function addMultipleBillboards(scene, ellipsoid) {
+        Sandcastle.declare(addMultipleBillboards);  // For highlighting in Sandcastle.
+        Cesium.when.all([
+                         Cesium.loadImage('../../../Images/Cesium_Logo_overlay.png'),
+                         Cesium.loadImage('../../../Images/facility.gif')
+                        ])
+                   .then(function(images) {
+            // Once both images are downloaded, they are combined into one image,
+            // called a texture atlas, which is assigned to a billboard-collection.
+            // Several billboards can be added to the same collection; each billboard
+            // references an image in the texture atlas.
+
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = scene.getContext().createTextureAtlas({
+                images : images
+            });
+            billboards.setTextureAtlas(textureAtlas);
+
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                imageIndex : 0 // Logo
+            });
+
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.50, 35.14)),
+                imageIndex : 1 // Facility
+            });
+
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.12, 25.46)),
+                imageIndex : 1 // Facility
+            });
+
+            scene.getPrimitives().add(billboards);
+        });
+    }
+    
+    function addPointBillboards(scene, ellipsoid) {
+        Sandcastle.declare(addPointBillboards); // For highlighting in Sandcastle.
+        // A white circle is drawn into a 2D canvas.  The canvas is used as
+        // a texture for billboards, each of which applies a different color
+        // and scale to change the point's appearance.
+        //
+        // The 2D canvas can draw much more than circles.  See:
+        // https://developer.mozilla.org/en/Canvas_tutorial
+        var canvas = document.createElement('canvas');
+        canvas.width = 16;
+        canvas.height = 16;
+        var context2D = canvas.getContext('2d');
+        context2D.beginPath();
+        context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
+        context2D.closePath();
+        context2D.fillStyle='rgb(255, 255, 255)';
+        context2D.fill();
+
+        var billboards = new Cesium.BillboardCollection();
+        var textureAtlas = scene.getContext().createTextureAtlas({image : canvas});
+        billboards.setTextureAtlas(textureAtlas);
+        billboards.add({
+            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+            color : { red : 1.0, blue : 0.0, green : 0.0, alpha : 1.0 },
+            scale : 0.5,
+            imageIndex : 0
+        });
+
+        billboards.add({
+            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.50, 35.14)),
+            color : { red : 0.0, blue : 1.0, green : 0.0, alpha : 1.0 },
+            imageIndex : 0
+        });
+
+        billboards.add({
+            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.12, 25.46)),
+            color : { red : 0.0, blue : 0.0, green : 1.0, alpha : 1.0 },
+            scale : 2,
+            imageIndex : 0
+        });
+
+        scene.getPrimitives().add(billboards);
+    }
+    
+    function addMarkerBillboards(scene, ellipsoid) {
+        Sandcastle.declare(addMarkerBillboards);    // For highlighting in Sandcastle.
+        var image = new Image();
+        image.onload = function() {
+            var billboards = new Cesium.BillboardCollection(undefined);
+            var textureAtlas = scene.getContext().createTextureAtlas({borderWidthInPixels : 0});
+            // Break one image full of markers into many subregions.
+            textureAtlas.addSubRegions(image, [
+                // Dots, small to large, imageIndex 1 to 6
+                { x:91, y:11, width:6, height:6 },
+                { x:81, y:9, width:10, height:10 },
+                { x:67, y:7, width:14, height:14 },
+                { x:49, y:5, width:18, height:18 },
+                { x:27, y:3, width:22, height:22 },
+                { x:1, y:1, width:26, height:26 },
+                // Up-Triangles, small to large, imageIndex 7 to 12
+                { x:91, y:49, width:6, height:6 },
+                { x:81, y:47, width:10, height:10 },
+                { x:67, y:45, width:14, height:14 },
+                { x:49, y:43, width:18, height:18 },
+                { x:27, y:41, width:22, height:22 },
+                { x:1, y:39, width:26, height:26 },
+                // Down-Triangles, small to large, imageIndex 13 to 18
+                { x:31, y:29, width:6, height:6 },
+                { x:37, y:27, width:10, height:10 },
+                { x:47, y:25, width:14, height:14 },
+                { x:61, y:23, width:18, height:18 },
+                { x:79, y:21, width:22, height:22 },
+                { x:101, y:19, width:26, height:26 },
+                // Up-Arrows, small to large, imageIndex 19 to 24
+                { x:91, y:84, width:6, height:6 },
+                { x:81, y:82, width:10, height:10 },
+                { x:67, y:80, width:14, height:14 },
+                { x:49, y:78, width:18, height:18 },
+                { x:27, y:76, width:22, height:22 },
+                { x:1, y:74, width:26, height:26 },
+                // Down-Arrows, small to large, imageIndex 25 to 30
+                { x:31, y:66, width:6, height:6 },
+                { x:37, y:64, width:10, height:10 },
+                { x:47, y:62, width:14, height:14 },
+                { x:61, y:60, width:18, height:18 },
+                { x:79, y:58, width:22, height:22 },
+                { x:101, y:56, width:26, height:26 },
+                // X's, small to large, imageIndex 31 to 36
+                { x:91, y:111, width:6, height:6 },
+                { x:81, y:109, width:10, height:10 },
+                { x:67, y:107, width:14, height:14 },
+                { x:49, y:105, width:18, height:18 },
+                { x:27, y:103, width:22, height:22 },
+                { x:1, y:101, width:26, height:26 },
+                // Plus's, small to large, imageIndex 37 to 42
+                { x:92, y:120, width:5, height:5 },
+                { x:109, y:109, width:10, height:10 },
+                { x:107, y:107, width:14, height:14 },
+                { x:105, y:105, width:18, height:18 },
+                { x:103, y:103, width:22, height:22 },
+                { x:101, y:101, width:26, height:26 }
+            ]);
+            billboards.setTextureAtlas(textureAtlas);
+            // Add several billboards based on the above marker definitions.
+            billboards.add({
+                position: ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                imageIndex: 10,
+                scale: 1,
+                color: { red: 0, green: 1, blue: 0, alpha: 1 }
+            });
+            billboards.add({
+                position: ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-84.0, 39.0)),
+                imageIndex: 16,
+                scale: 1,
+                color: { red: 0, green: 0.5, blue: 1, alpha: 1 }
+            });
+            billboards.add({
+                position: ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-70.0, 41.0)),
+                imageIndex: 21,
+                scale: 1,
+                color: { red: 0.5, green: 0.9, blue: 1, alpha: 1 }
+            });
+            billboards.add({
+                position: ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-73.0, 37.0)),
+                imageIndex: 35,
+                scale: 1,
+                color: { red: 1, green: 0, blue: 0, alpha: 1 }
+            });
+            billboards.add({
+                position: ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-79.0, 35.0)),
+                imageIndex: 40,
+                scale: 1,
+                color: { red: 1, green: 1, blue: 0, alpha: 1 }
+            });
+            scene.getPrimitives().add(billboards);
+        };
+        image.src = '../../../Images/whiteShapes.png';
+    }
+    
+    function addBillboardsInReferenceframe(scene, ellipsoid) {
+        Sandcastle.declare(addBillboardsInReferenceframe);  // For highlighting in Sandcastle.
+        var image = new Image();
+        image.onload = function() {
+
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = scene.getContext().createTextureAtlas({image : image});
+            billboards.setTextureAtlas(textureAtlas);
+
+            var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+            billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+            billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
+            billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
+            billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
+            billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
+            scene.getPrimitives().add(billboards);
+        };
+        image.src = '../../../Images/facility.gif';
+    }
+    
+    function createButtons(widget) {
+        var ellipsoid = widget.ellipsoid;
+        var scene = widget.scene;
+        var primitives = scene.getPrimitives();
+        
+        new Button({
+            label: "Add billboard",
+            onClick: function() {
+                primitives.removeAll();
+                addBillboard(scene, ellipsoid); 
+                Sandcastle.highlight(addBillboard);
+            }
+        }).placeAt("toolbar");
+        
+        new Button({
+            label: "Set billboard properties at creation",
+            onClick: function() {
+                primitives.removeAll();
+                setBillboardPropertiesAtCreation(scene, ellipsoid); 
+                Sandcastle.highlight(setBillboardPropertiesAtCreation);
+            }
+        }).placeAt("toolbar");
+        
+        new Button({
+            label: "Change billboard properties",
+            onClick: function() {
+                primitives.removeAll();
+                setBillboardProperties(scene, ellipsoid); 
+                Sandcastle.highlight(setBillboardProperties);
+            }
+        }).placeAt("toolbar");
+        
+        new Button({
+            label: "Add multiple billboards",
+            onClick: function() {
+                primitives.removeAll();
+                addMultipleBillboards(scene, ellipsoid); 
+                Sandcastle.highlight(addMultipleBillboards);
+            }
+        }).placeAt("toolbar");
+        
+        new Button({
+            label: "Add point billboards",
+            onClick: function() {
+                primitives.removeAll();
+                addPointBillboards(scene, ellipsoid); 
+                Sandcastle.highlight(addPointBillboards);
+            }
+        }).placeAt("toolbar");
+        
+        new Button({
+            label: "Add marker billboards",
+            onClick: function() {
+                primitives.removeAll();
+                addMarkerBillboards(scene, ellipsoid); 
+                Sandcastle.highlight(addMarkerBillboards);
+            }
+        }).placeAt("toolbar");
+                
+        new Button({
+            label: "Add billboards in reference frame",
+            onClick: function() {
+                primitives.removeAll();
+                addBillboardsInReferenceframe(scene, ellipsoid); 
+                Sandcastle.highlight(addBillboardsInReferenceframe);
+            }
+        }).placeAt("toolbar");        
+    }
+
+    var cesiumWidget = new CesiumWidget({
+        postSetup : function(widget) {
+            createButtons(widget);
+            widget.startRenderLoop();
+            addBillboard(widget.scene, widget.ellipsoid);
+        }
+    }).placeAt(dom.byId("cesiumContainer"));
+    
+    dom.byId("toolbar").innerHTML = '';
+});
+
+</script>
+</body>
+</html>

@@ -825,7 +825,7 @@ define([
                 CesiumMath.PI_OVER_TWO
             );
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
-            frustumCull = frameState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 
@@ -872,7 +872,7 @@ define([
                 baseImageryProviderMaxExtent.south
             );
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
-            frustumCull = frameState.camera.getVisibility(boundingVolume) === Intersect.OUTSIDE;
+            frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
             occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
 

@@ -10,7 +10,6 @@ define([
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
         '../Core/Color',
-        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/Intersect',
         '../Renderer/BlendingState',
@@ -32,7 +31,6 @@ define([
         IndexDatatype,
         PrimitiveType,
         Color,
-        BoundingRectangle,
         BoundingSphere,
         Intersect,
         BlendingState,
@@ -135,7 +133,6 @@ define([
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
-        this._boundingRectangle = undefined;
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -597,10 +594,8 @@ define([
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolume = this._boundingVolume;
             modelMatrix = this.modelMatrix;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
             boundingVolume = this._boundingVolume2D;
-        } else if (frameState.mode === SceneMode.SCENE2D) {
-            boundingVolume = this._boundingRectangle;
         } else {
             boundingVolume = this._boundingVolume && this._boundingVolume2D && this._boundingVolume.union(this._boundingVolume2D);
         }
@@ -1425,9 +1420,9 @@ define([
 
         if (positions.length > 0) {
             if (typeof polyline._collection._boundingVolume === 'undefined') {
-                polyline._collection._boundingVolume = polyline._boundingVolume.clone();
+                polyline._collection._boundingVolume = BoundingSphere.clone(polyline._boundingVolume);
             } else {
-                polyline._collection._boundingVolume.union(polyline._boundingVolume, polyline._collection._boundingVolume);
+                polyline._collection._boundingVolume = polyline._collection._boundingVolume.union(polyline._boundingVolume, polyline._collection._boundingVolume);
             }
         }
 
@@ -1454,19 +1449,13 @@ define([
         }
 
         if (newPositions.length > 0) {
-            polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions);
-            polyline._boundingVolume2D.center = new Cartesian3(polyline._boundingVolume2D.center.z, polyline._boundingVolume2D.center.x, polyline._boundingVolume2D.center.y);
+            polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions, polyline._boundingVolume2D);
+            var center2D = polyline._boundingVolume2D.center;
+            polyline._boundingVolume2D.center = new Cartesian3( center2D.z,  center2D.x, center2D.y);
             if (typeof polyline._collection._boundingVolume2D === 'undefined') {
-                polyline._collection._boundingVolume2D = polyline._boundingVolume2D.clone();
+                polyline._collection._boundingVolume2D = BoundingSphere.clone(polyline._boundingVolume2D);
             } else {
-                polyline._collection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._collection._boundingVolume2D);
-            }
-
-            polyline._boundingRectangle = BoundingRectangle.fromPoints(newPositions);
-            if (typeof polyline._collection._boundingRectangle === 'undefined') {
-                polyline._collection._boundingRectangle = polyline._boundingRectangle.clone();
-            } else {
-                polyline._collection._boundingRectangle.union(polyline._boundingRectangle, polyline._collection._boundingRectangle);
+                polyline._collection._boundingVolume2D = polyline._collection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._collection._boundingVolume2D);
             }
         }
 

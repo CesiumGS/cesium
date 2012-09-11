@@ -4,13 +4,13 @@ define([
         '../Core/combine',
         '../Core/destroyObject',
         '../Core/Math',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Matrix4',
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
-        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
@@ -25,13 +25,13 @@ define([
         combine,
         destroyObject,
         CesiumMath,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Matrix4,
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
-        BoundingRectangle,
         BoundingSphere,
         BlendingState,
         BufferUsage,
@@ -135,7 +135,6 @@ define([
 
         this._baseVolume = new BoundingSphere();
         this._baseVolume2D = new BoundingSphere();
-        this._baseRectangle = new BoundingRectangle();
 
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -843,16 +842,12 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    function recomputeActualPositions3D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
+    function recomputeActualPositions(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
         var boundingVolume;
-        switch (frameState.mode) {
-        case SceneMode.SCENE3D:
+        if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolume = billboardCollection._baseVolume;
-            break;
-        case SceneMode.COLUMBUS_VIEW:
-        case SceneMode.MORPHING:
+        } else {
             boundingVolume = billboardCollection._baseVolume2D;
-            break;
         }
 
         var length = billboards.length;
@@ -872,38 +867,6 @@ define([
 
         if (recomputeBoundingVolume) {
             BoundingSphere.fromPoints(positions, boundingVolume);
-        }
-    }
-
-    function recomputeActualPositions2D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
-        var boundingVolume = billboardCollection._baseRectangle;
-
-        var length = billboards.length;
-        var positions = new Array(length);
-        for ( var i = 0; i < length; ++i) {
-            var billboard = billboards[i];
-            var position = billboard.getPosition();
-            var actualPosition = Billboard._computeActualPosition(position, frameState, morphTime, modelMatrix);
-            billboard._setActualPosition(actualPosition);
-
-            position = new Cartesian3(actualPosition.y, actualPosition.z, 0.0);
-
-            if (recomputeBoundingVolume) {
-                positions[i] = position;
-            } else {
-                boundingVolume.expand(position, boundingVolume);
-            }
-        }
-
-        if (recomputeBoundingVolume) {
-            BoundingRectangle.fromPoints(positions, boundingVolume);
-        }
-    }
-    function recomputeActualPositions(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
-        if (frameState.mode === SceneMode.SCENE2D) {
-            recomputeActualPositions2D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume);
-        } else {
-            recomputeActualPositions3D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume);
         }
     }
 
@@ -930,6 +893,8 @@ define([
         }
     };
 
+    var scratchCanvasDimensions = new Cartesian2();
+
     function updateBoundingVolumes(collection, context, frameState) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
@@ -943,23 +908,7 @@ define([
         var size;
         var offset;
 
-        if (mode === SceneMode.SCENE2D) {
-            boundingVolume = new BoundingRectangle();
-
-            pixelScale = (frustum.right - frustum.left) / context.getViewport().width;
-            size = pixelScale * collection._maxScale * collection._maxSize * textureSize;
-            if (collection._allHorizontalCenter) {
-                size *= 0.5;
-            }
-
-            offset = size + pixelScale * collection._maxPixelOffset + collection._maxEyeOffset;
-
-            boundingVolume.x = collection._baseRectangle.x - offset;
-            boundingVolume.y = collection._baseRectangle.y - offset;
-            boundingVolume.width = collection._baseRectangle.width + 2.0 * offset;
-            boundingVolume.height = collection._baseRectangle.height + 2.0 * offset;
-            return boundingVolume;
-        } else if (mode === SceneMode.SCENE3D) {
+        if (mode === SceneMode.SCENE3D) {
             boundingVolume = BoundingSphere.clone(collection._baseVolume);
         } else if (typeof collection._baseVolume2D !== 'undefined') {
             boundingVolume = BoundingSphere.clone(collection._baseVolume2D);
@@ -968,9 +917,12 @@ define([
         var toCenter = camera.getPositionWC().subtract(boundingVolume.center);
         var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()));
         var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
-        var tanPhi = Math.tan(frustum.fovy * 0.5);
-        var d1 = distance / tanPhi;
-        pixelScale = d1 / context.getViewport().width;
+
+        var canvas = context.getCanvas();
+        scratchCanvasDimensions.x = canvas.clientWidth;
+        scratchCanvasDimensions.y = canvas.clientHeight;
+        var pixelSize = frustum.getPixelSize(scratchCanvasDimensions, distance);
+        pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         size = pixelScale * collection._maxScale * collection._maxSize * textureSize;
         if (collection._allHorizontalCenter) {

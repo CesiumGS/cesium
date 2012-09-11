@@ -1,1 +1,0 @@
-({"text":"Açıklama:","insertImageTitle":"Resim Özellikleri","set":"Ayarla","newWindow":"Yeni Pencere","topWindow":"En Üst Pencere","target":"Hedef:","createLinkTitle":"Bağlantı Özellikleri","parentWindow":"Üst Pencere","currentWindow":"Geçerli Pencere","url":"URL:"})

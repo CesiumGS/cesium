@@ -86,24 +86,6 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1335301712065</id>
-			<name>Examples/Sandbox</name>
-			<type>6</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-CodeSnippetsConcatenated.js</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1335301712070</id>
-			<name>Examples/Sandbox</name>
-			<type>10</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-Images</arguments>
-			</matcher>
-		</filter>
-		<filter>
 			<id>1338843689105</id>
 			<name>Source/Shaders</name>
 			<type>22</type>

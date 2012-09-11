@@ -369,6 +369,9 @@ define([
         u_dayTextureAlpha : function() {
             return this.dayTextureAlpha;
         },
+        u_dayIntensity : function() {
+            return 0.1;
+        },
 
         center3D : undefined,
         modifiedModelView : undefined,
@@ -678,7 +681,7 @@ define([
 
     function isTileVisible(surface, frameState, tile) {
         var boundingVolume = tile.boundingSphere3D;
-        if (frameState.camera.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE) {
+        if (frameState.cullingVolume.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE) {
             return false;
         }
 
