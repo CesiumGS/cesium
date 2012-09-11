@@ -128,7 +128,7 @@ require([
     Box.prototype.update = function(context, frameState) {
         // Only supports 3D, not 2D or Columbus view.
         if (frameState.mode !== Cesium.SceneMode.SCENE3D) {
-            return undefined;
+            return [];
         }
         
         if (typeof this._va === 'undefined') {
@@ -175,36 +175,30 @@ require([
             this._pickId = context.createPickId(this);
         }
         
-        return {
-            boundingVolume : this._boundingSphere,
-            modelMatrix : this.modelMatrix
-        };
-    };
-    
-    Box.prototype.render = function(context) {
-        context.draw({
-            primitiveType: Cesium.PrimitiveType.LINES,
-            shaderProgram: this._sp,
-            uniformMap: this._drawUniforms,
-            vertexArray: this._va,
-            renderState: this._rs
-        });
-    };
-    
-    Box.prototype.updateForPick = function(context) {
-        this._pickId = this._pickId || context.createPickId(this);
-        this.updateForPick = function() {};
-    };
-    
-    Box.prototype.renderForPick = function(context, framebuffer) {
-        context.draw({
-            primitiveType: Cesium.PrimitiveType.LINES,
-            shaderProgram: this._sp,
-            uniformMap: this._pickUniforms,
-            vertexArray: this._va,
-            renderState: this._rs,
-            framebuffer: framebuffer
-        });
+        var pass = frameState.passes;
+        if (pass.color) {
+            return [{
+                boundingVolume : this._boundingSphere,
+                modelMatrix : this.modelMatrix,
+                primitiveType: Cesium.PrimitiveType.LINES,
+                shaderProgram: this._sp,
+                uniformMap: this._drawUniforms,
+                vertexArray: this._va,
+                renderState: this._rs
+            }];
+        } else if (pass.pick) {
+            return [{
+                boundingVolume : this._boundingSphere,
+                modelMatrix : this.modelMatrix,
+                primitiveType: Cesium.PrimitiveType.LINES,
+                shaderProgram: this._sp,
+                uniformMap: this._pickUniforms,
+                vertexArray: this._va,
+                renderState: this._rs,
+            }];
+        }
+        
+        return [];
     };
     
     Box.prototype.isDestroyed = function() {
@@ -392,7 +386,8 @@ require([
             });
         }
 
-        if (frameState.passes.pick && typeof this._pickId === 'undefined') {
+        var pass = frameState.passes;
+        if (pass.pick && typeof this._pickId === 'undefined') {
             this._pickId = context.createPickId(this);
         }
 
@@ -401,15 +396,32 @@ require([
             modelMatrix = this._modelMatrix;
         }
 
-        return {
-            boundingVolume : this._boundingSphere,
-            modelMatrix : modelMatrix
-        };
+        if (pass.color) {
+            return [{
+                boundingVolume : this._boundingSphere,
+                modelMatrix : modelMatrix,
+                primitiveType: Cesium.PrimitiveType.LINES,
+                shaderProgram: this._sp,
+                uniformMap: this._drawUniforms,
+                vertexArray: this._va,
+                renderState: this._rs
+            }];
+        } else if (pass.pick) {
+            return [{
+                boundingVolume : this._boundingSphere,
+                modelMatrix : modelMatrix,
+                primitiveType: Cesium.PrimitiveType.LINES,
+                shaderProgram: this._sp,
+                uniformMap: this._pickUniforms,
+                vertexArray: this._va,
+                renderState: this._rs,
+            }];
+        }
+        
+        return [];
     };
     
     // These functions are the same as before.
-    Box2.prototype.render = Box.prototype.render;
-    Box2.prototype.renderForPick = Box.prototype.renderForPick;
     Box2.prototype.isDestroyed = Box.prototype.isDestroyed;
     Box2.prototype.destroy = Box.prototype.destroy;
     
