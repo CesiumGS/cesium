@@ -95,7 +95,6 @@ require({
         var docTabs = {};
         var galleryTooltipTimer;
         var activeGalleryTooltipDemo;
-        var galleryHeight = -280;
         var cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dom.byId('docPopup');
         var docMessage = dom.byId('docPopupMessage');
@@ -355,32 +354,16 @@ require({
             }
         }
 
-        var galleryContainerElement = document.getElementById('galleryContainer');
-        var galleryBodyElement = document.getElementById('galleryBody');
+        var tabs = registry.byId('bottomPanel');
 
         function showGallery() {
-            if (galleryHeight < 0) {
-                galleryHeight = 0;
-                galleryContainerElement.setAttribute('style', 'bottom: 0;');
-            }
+            tabs.selectChild(registry.byId('galleryContainer'));
         }
 
         function hideGallery() {
             closeGalleryTooltip();
-            var height = Math.min(0, 10 - (galleryBodyElement.getBoundingClientRect().height));
-            if (galleryHeight !== height) {
-                galleryHeight = height;
-                galleryContainerElement.setAttribute('style', 'bottom: ' + galleryHeight + 'px;');
-            }
+            tabs.selectChild(registry.byId('logContainer'));
         }
-
-        on(dom.byId('appLayout'), 'mouseover', function() {
-            hideGallery();
-        });
-
-        on(dom.byId('galleryContainer'), 'mouseover', function() {
-            showGallery();
-        });
 
         CodeMirror.commands.runCesium = function(cm) {
             clearErrorsAddHints();
@@ -509,11 +492,9 @@ require({
                 }
             }
 
-            if (searchTerm === '') {
-                hideGallery();
-            } else {
-                showGallery();
-            }
+            registry.byId('demosContainer').scrollTo({x:0, y:0});
+            showGallery();
+
         });
 
         // Clicking the 'Run' button simply reloads the iframe.
