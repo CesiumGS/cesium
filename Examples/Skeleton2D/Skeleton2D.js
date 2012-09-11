@@ -34,7 +34,10 @@ require({
     function create(scene, imagery) {
         var primitives = scene.getPrimitives();
         var cb = new Cesium.CentralBody(ellipsoid);
-        cb.dayTileProvider = imagery;
+        cb.showNight = false;
+        cb.affectedByLighting = false;
+        var imageryLayerCollection = cb.getImageLayers();
+        imageryLayerCollection.addImageryProvider(imagery);
         cb.nightImageSource = '../../Images/land_ocean_ice_lights_2048.jpg';
         cb.specularMapSource = '../../Images/earthspec1k.jpg';
         cb.bumpMapSource = '../../Images/earthbump1k.jpg';
@@ -54,8 +57,8 @@ require({
 
     create(scene2D, bing2D);
 
-    var transitioner = new Cesium.SceneTransitioner(scene2D);
-    transitioner.to2D();
+    //var transitioner = new Cesium.SceneTransitioner(scene2D);
+    //transitioner.to2D();
 
     (function tick() {
         scene3D.render();

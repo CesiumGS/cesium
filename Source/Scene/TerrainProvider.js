@@ -131,15 +131,19 @@ define([
             index : TerrainProvider.attributeIndices.position2D,
             value : [0.0, 0.0]
         }];
-        var indexBuffer = buffers.indices.indexBuffer;
+
+        var indexBuffers = buffers.indices.indexBuffers || {};
+        var indexBuffer = indexBuffers[context.getId()];
         if (typeof indexBuffer === 'undefined' || indexBuffer.isDestroyed()) {
             var indices = buffers.indices;
             if (TerrainProvider.wireframe) {
                 indices = trianglesToLines(buffers.indices);
             }
-            indexBuffer = buffers.indices.indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
             indexBuffer.setVertexArrayDestroyable(false);
             indexBuffer.referenceCount = 1;
+            indexBuffers[context.getId()] = indexBuffer;
+            buffers.indices.indexBuffers = indexBuffers;
         } else {
             ++indexBuffer.referenceCount;
         }
