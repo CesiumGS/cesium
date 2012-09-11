@@ -177,10 +177,10 @@ define([
             return;
         }
 
-        this.position = eye;
-        this.direction = target.subtract(eye).normalize();
-        this.up = up.normalize();
-        this.right = this.direction.cross(this.up);
+        this.position = Cartesian3.clone(eye, this.position);
+        this.direction = Cartesian3.subtract(target, eye, this.direction).normalize(this.direction);
+        this.right = Cartesian3.cross(this.direction, up, this.right).normalize(this.right);
+        this.up = Cartesian3.cross(this.right, this.direction, this.up);
     };
 
     /**
