@@ -40,6 +40,7 @@
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro">
+
 <style>
 body {
     background: #000;
@@ -247,16 +248,15 @@ require([
                 if (!eroding && (pickedObject === sensor)) {
                     // Prevent multiple erosions
                     eroding = true;
-
                     scene.getAnimations().addProperty(sensor, 'erosion', 1.0, 0.0, {
                         onComplete : function() {
+                            if (!sensors.isDestroyed()) {
                             sensors.remove(sensor);
+                        }
                         }
                     });
                 }
-            },
-            Cesium.MouseEventType.LEFT_CLICK
-        );        
+            }, Cesium.MouseEventType.LEFT_CLICK);
     }
     
     function layerCompositePrimitive(scene, ellipsoid) {
@@ -264,24 +264,16 @@ require([
         var primitives = scene.getPrimitives();
         // Move the primitive that the mouse is over to the top.
         handler = new Cesium.EventHandler(scene.getCanvas());
-        handler.setMouseAction(
-            function (movement) {
+            handler.setMouseAction(function(movement) {
                 var p = scene.pick(movement.endPosition);
                 if (primitives.contains(p)) {
                     primitives.bringToFront(p);
                 }
-            },
-            Cesium.MouseEventType.MOVE
-        );
+            }, Cesium.MouseEventType.MOVE);
 
         // Construct the primitives.
         var redPolygon = new Cesium.Polygon(undefined);
-        redPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-            Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-            Cesium.Cartographic.fromDegrees(-60.0, 30.0),
-            Cesium.Cartographic.fromDegrees(-60.0, 40.0),
-            Cesium.Cartographic.fromDegrees(-70.0, 40.0)
-        ]));
+            redPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-70.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 40.0), Cesium.Cartographic.fromDegrees(-70.0, 40.0)]));
         redPolygon.material.uniforms.color = {
             red : 1.0,
             green : 0.0,
@@ -290,12 +282,7 @@ require([
         };
 
         var bluePolygon = new Cesium.Polygon(undefined);
-        bluePolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-            Cesium.Cartographic.fromDegrees(-75.0, 34.0),
-            Cesium.Cartographic.fromDegrees(-63.0, 34.0),
-            Cesium.Cartographic.fromDegrees(-63.0, 40.0),
-            Cesium.Cartographic.fromDegrees(-75.0, 40.0)
-        ]));
+            bluePolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-75.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 40.0), Cesium.Cartographic.fromDegrees(-75.0, 40.0)]));
         bluePolygon.material.uniforms.color = {
             red : 0.0,
             green : 0.0,
@@ -304,12 +291,7 @@ require([
         };
 
         var greenPolygon = new Cesium.Polygon(undefined);
-        greenPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-            Cesium.Cartographic.fromDegrees(-67.0, 36.0),
-            Cesium.Cartographic.fromDegrees(-55.0, 36.0),
-            Cesium.Cartographic.fromDegrees(-55.0, 30.0),
-            Cesium.Cartographic.fromDegrees(-67.0, 30.0)
-        ]));
+            greenPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-67.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 30.0), Cesium.Cartographic.fromDegrees(-67.0, 30.0)]));
         greenPolygon.material.uniforms.color = {
             red : 0.0,
             green : 1.0,
@@ -384,14 +366,13 @@ require([
             pickCartographicPosition(widget.scene, widget.ellipsoid); 
         }
     }).placeAt(dom.byId('cesiumContainer'));
-    
+
     on(window, 'resize', function() {
         cesiumWidget.resize();
     });
     
     dom.byId('toolbar').innerHTML = '';
 });
-
 </script>
 </body>
 </html>
