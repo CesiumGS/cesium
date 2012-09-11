@@ -193,11 +193,11 @@ a.linkButton:focus, a.linkButton:hover {
     overflow: hidden;
 }
 
-.claro .dijitTabContainerBottom-tabs .dijitTabChecked .dijitTabContent {
-    background-position: 0 -115px;
+.claro .dijitTabContainerTop-tabs .dijitTabChecked .dijitTabContent {
+    background-position: 0 -103px;
 }
 
-.claro .dijitTabContainerBottom-dijitContentPane {
+.claro .dijitTabContainerTop-dijitContentPane {
     padding: 0;
     overflow: hidden;
 }
