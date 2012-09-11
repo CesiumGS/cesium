@@ -132,7 +132,6 @@ define([
         this._modelMatrix = Matrix4.IDENTITY;
 
         this._boundingVolume = undefined;
-        this._boundingVolumeCV = undefined;
         this._boundingVolume2D = undefined;
 
         this._polylinesUpdated = false;
@@ -510,9 +509,7 @@ define([
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolume = this._boundingVolume;
             modelMatrix = this.modelMatrix;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingVolume = this._boundingVolumeCV;
-        } else if (frameState.mode === SceneMode.SCENE2D) {
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
             boundingVolume = this._boundingVolume2D;
         } else {
             boundingVolume = this._boundingVolume && this._boundingVolume2D && this._boundingVolume.union(this._boundingVolume2D);
@@ -1437,23 +1434,12 @@ define([
 
         if (newPositions.length > 0) {
             polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions, polyline._boundingVolume2D);
+            var center2D = polyline._boundingVolume2D.center;
+            polyline._boundingVolume2D.center = new Cartesian3( center2D.z,  center2D.x, center2D.y);
             if (typeof polyline._collection._boundingVolume2D === 'undefined') {
                 polyline._collection._boundingVolume2D = BoundingSphere.clone(polyline._boundingVolume2D);
             } else {
                 polyline._collection._boundingVolume2D = polyline._collection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._collection._boundingVolume2D);
-            }
-
-            var center2D = polyline._boundingVolume2D.center;
-            var centerCV = polyline._boundingVolumeCV.center;
-            centerCV.x = center2D.z;
-            centerCV.y = center2D.x;
-            centerCV.z = center2D.y;
-            polyline._boundingVolumeCV.radius = polyline._boundingVolume2D.radius;
-
-            if (typeof polyline._collection._boundingVolumeCV === 'undefined') {
-                polyline._collection._boundingVolumeCV = BoundingSphere.clone(polyline._boundingVolumeCV);
-            } else {
-                polyline._collection._boundingVolumeCV = polyline._collection._boundingVolumeCV.union(polyline._boundingVolumeCV, polyline._collection._boundingVolumeCV);
             }
         }
 

@@ -1149,6 +1149,7 @@ defineSuite([
             projection.project(ellipsoid.cartesianToCartographic(two.getPosition()))
         ];
         var bs = BoundingSphere.fromPoints(projectedPositions);
+        bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
         expect(actual.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
         expect(actual.radius > bs.radius).toEqual(true);
     });

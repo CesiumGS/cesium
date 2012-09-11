@@ -324,7 +324,7 @@ defineSuite([
         expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon._positions));
     });
 
-    it('test 2D bounding sphere from positions', function() {
+    function test2DBoundingSphereFromPositions(testMode) {
         var projection = frameState.scene2D.projection;
         var ellipsoid = projection.getEllipsoid();
         var positions = [
@@ -340,7 +340,7 @@ defineSuite([
         polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray(positions));
 
         var mode = frameState.mode;
-        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        frameState.mode = testMode;
         var boundingVolume = polygon.update(context, frameState)[0].boundingVolume;
         frameState.mode = mode;
 
@@ -353,37 +353,14 @@ defineSuite([
         sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
         expect(boundingVolume.center.equalsEpsilon(sphere.center, CesiumMath.EPSILON9)).toEqual(true);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON9);
+    }
+
+    it('test 2D bounding sphere from positions', function() {
+        test2DBoundingSphereFromPositions(SceneMode.COLUMBUS_VIEW);
     });
 
     it('test 2D bounding sphere from positions', function() {
-        var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
-        var positions = [
-            Cartographic.fromDegrees(-1.0, -1.0, 0.0),
-            Cartographic.fromDegrees(1.0, -1.0, 0.0),
-            Cartographic.fromDegrees(1.0, 1.0, 0.0),
-            Cartographic.fromDegrees(-1.0, 1.0, 0.0)
-        ];
-
-        var polygon = new Polygon();
-        polygon.ellipsoid = ellipsoid;
-        polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray(positions));
-
-        var mode = frameState.mode;
-        frameState.mode = SceneMode.SCENE2D;
-        var boundingVolume = polygon.update(context, frameState)[0].boundingVolume;
-        frameState.mode = mode;
-
-        var projectedPositions = [];
-        for (var i = 0; i < positions.length; ++i) {
-            var position = positions[i];
-            projectedPositions.push(projection.project(position));
-        }
-
-        var sphere = BoundingSphere.fromPoints(projectedPositions);
-        expect(boundingVolume.center.equalsEpsilon(sphere.center, CesiumMath.EPSILON9)).toEqual(true);
-        expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON9);
+        test2DBoundingSphereFromPositions(SceneMode.SCENE2D);
     });
 
     it('test 3D bounding sphere from extent', function() {
@@ -402,7 +379,7 @@ defineSuite([
         expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent, ellipsoid));
     });
 
-    it('test 2D bounding sphere from extent', function() {
+    function test2DBoundingSphereFromExtent(testMode) {
         var projection = frameState.scene2D.projection;
         var ellipsoid = projection.getEllipsoid();
         var extent = new Extent(
@@ -416,35 +393,21 @@ defineSuite([
         polygon.configureExtent(extent);
 
         var mode = frameState.mode;
-        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        frameState.mode = testMode;
         var boundingVolume = polygon.update(context, frameState)[0].boundingVolume;
         frameState.mode = mode;
 
         var sphere = BoundingSphere.fromExtent2D(extent, projection);
         sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
         expect(boundingVolume).toEqualEpsilon(sphere, CesiumMath.EPSILON9);
+    }
+
+    it('test 2D bounding sphere from extent', function() {
+        test2DBoundingSphereFromExtent(SceneMode.COLUMBUS_VIEW);
     });
 
     it('test 2D bounding sphere from extent', function() {
-        var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
-        var extent = new Extent(
-                0.0,
-                0.0,
-                CesiumMath.toRadians(10.0),
-                CesiumMath.toRadians(10.0));
-
-        var polygon = new Polygon();
-        polygon.ellipsoid = ellipsoid;
-        polygon.configureExtent(extent);
-
-        var mode = frameState.mode;
-        frameState.mode = SceneMode.SCENE2D;
-        var boundingVolume = polygon.update(context, frameState)[0].boundingVolume;
-        frameState.mode = mode;
-
-        var sphere = BoundingSphere.fromExtent2D(extent, projection);
-        expect(boundingVolume).toEqualEpsilon(sphere, CesiumMath.EPSILON9);
+        test2DBoundingSphereFromExtent(SceneMode.SCENE2D);
     });
 
     it('isDestroyed', function() {

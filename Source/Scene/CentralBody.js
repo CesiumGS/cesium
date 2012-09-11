@@ -882,47 +882,20 @@ define([
         var boundingVolume;
         if (frameState.mode === SceneMode.SCENE3D) {
             return tile.get3DBoundingSphere();
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingVolume = tile.get2DBoundingSphere(frameState.scene2D.projection).clone();
-            boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
-            return boundingVolume;
         }
 
         boundingVolume = tile.get2DBoundingSphere(frameState.scene2D.projection).clone();
         boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
-        return tile.get3DBoundingSphere().union(boundingVolume);
+
+        if (frameState.mode === SceneMode.MORPHING) {
+            return tile.get3DBoundingSphere().union(boundingVolume);
+        }
+
+        return boundingVolume;
     };
 
     CentralBody.prototype._cull = function(tile, frameState) {
-        var camera = frameState.camera;
         var cullingVolume = frameState.cullingVolume;
-
-        if (frameState.mode === SceneMode.SCENE2D) {
-            var bRect = tile.get2DBoundingRectangle(frameState.scene2D.projection);
-
-            var frustum = camera.frustum;
-            var position = camera.position;
-            var up = camera.up;
-            var right = camera.right;
-
-            var width = frustum.right - frustum.left;
-            var height = frustum.top - frustum.bottom;
-
-            var lowerLeft = position.add(right.multiplyByScalar(frustum.left));
-            lowerLeft = lowerLeft.add(up.multiplyByScalar(frustum.bottom));
-            var upperLeft = lowerLeft.add(up.multiplyByScalar(height));
-            var upperRight = upperLeft.add(right.multiplyByScalar(width));
-            var lowerRight = upperRight.add(up.multiplyByScalar(-height));
-
-            var x = Math.min(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x);
-            var y = Math.min(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y);
-            var w = Math.max(lowerLeft.x, lowerRight.x, upperLeft.x, upperRight.x) - x;
-            var h = Math.max(lowerLeft.y, lowerRight.y, upperLeft.y, upperRight.y) - y;
-
-            var fRect = new BoundingRectangle(x, y, w, h);
-
-            return !BoundingRectangle.intersect(bRect, fRect);
-        }
 
         var boundingVolume = this._getTileBoundingSphere(tile, frameState);
         if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) {

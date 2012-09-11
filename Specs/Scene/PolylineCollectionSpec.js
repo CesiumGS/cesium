@@ -1599,7 +1599,7 @@ defineSuite([
         expect(boundingVolume).toEqual(one._boundingVolume.union(two._boundingVolume).union(three._boundingVolume));
     });
 
-    it('computes bounding sphere in Columbus view', function() {
+    function test2DBoundingSphere(testMode) {
         var projection = frameState.scene2D.projection;
         var ellipsoid = projection.getEllipsoid();
 
@@ -1617,7 +1617,7 @@ defineSuite([
         });
 
         var mode = frameState.mode;
-        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        frameState.mode = testMode;
         var boundingVolume = polylines.update(context, frameState)[0].boundingVolume;
         frameState.mode = mode;
 
@@ -1628,52 +1628,7 @@ defineSuite([
             projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
         }
         var bs = BoundingSphere.fromPoints(projectedPositions);
-        bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
-        expect(one._boundingVolumeCV.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
-        expect(one._boundingVolumeCV.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
-
-        positions = two.getPositions();
-        projectedPositions = [];
-        for (i = 0; i < positions.length; ++i) {
-            projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
-        }
-        bs = BoundingSphere.fromPoints(projectedPositions);
-        bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
-        expect(two._boundingVolumeCV.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
-        expect(two._boundingVolumeCV.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
-
-        expect(boundingVolume).toEqual(one._boundingVolumeCV.union(two._boundingVolumeCV));
-    });
-
-    it('computes bounding rectangle in 2D', function() {
-        var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
-
-        var one = polylines.add({
-            positions : [
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0))
-            ]
-        });
-        var two = polylines.add({
-            positions : [
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
-            ]
-        });
-
-        var mode = frameState.mode;
-        frameState.mode = SceneMode.SCENE2D;
-        var boundingVolume = polylines.update(context, frameState)[0].boundingVolume;
-        frameState.mode = mode;
-
-        var positions = one.getPositions();
-        var projectedPositions = [];
-        var i;
-        for (i = 0; i < positions.length; ++i) {
-            projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
-        }
-        var bs = BoundingSphere.fromPoints(projectedPositions);
+        bs.center = new Cartesian3(bs.center.z, bs.center.x, bs.center.y);
         expect(one._boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
         expect(one._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
@@ -1683,10 +1638,19 @@ defineSuite([
             projectedPositions.push(projection.project(ellipsoid.cartesianToCartographic(positions[i])));
         }
         bs = BoundingSphere.fromPoints(projectedPositions);
+        bs.center = new Cartesian3(bs.center.z, bs.center.x, bs.center.y);
         expect(two._boundingVolume2D.center.equalsEpsilon(bs.center, CesiumMath.EPSILON8)).toEqual(true);
         expect(two._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
         expect(boundingVolume).toEqual(one._boundingVolume2D.union(two._boundingVolume2D));
+    }
+
+    it('computes bounding sphere in Columbus view', function() {
+        test2DBoundingSphere(SceneMode.COLUMBUS_VIEW);
+    });
+
+    it('computes bounding sphere in 2D', function() {
+        test2DBoundingSphere(SceneMode.SCENE2D);
     });
 
     it('isDestroyed', function() {

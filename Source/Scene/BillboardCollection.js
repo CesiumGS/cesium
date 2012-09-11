@@ -134,7 +134,6 @@ define([
         this._allHorizontalCenter = true;
 
         this._baseVolume = new BoundingSphere();
-        this._baseVolumeCV = new BoundingSphere();
         this._baseVolume2D = new BoundingSphere();
 
         /**
@@ -792,16 +791,12 @@ define([
         this._writeTextureCoordinatesAndImageSize(context, textureAtlasCoordinates, vafWriters, billboard);
     };
 
-    function recomputeActualPositions3D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
+    function recomputeActualPositions(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
         var boundingVolume;
-        switch (frameState.mode) {
-        case SceneMode.SCENE3D:
+        if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolume = billboardCollection._baseVolume;
-            break;
-        case SceneMode.COLUMBUS_VIEW:
-        case SceneMode.MORPHING:
-            boundingVolume = billboardCollection._baseVolumeCV;
-            break;
+        } else {
+            boundingVolume = billboardCollection._baseVolume2D;
         }
 
         var length = billboards.length;
@@ -821,39 +816,6 @@ define([
 
         if (recomputeBoundingVolume) {
             BoundingSphere.fromPoints(positions, boundingVolume);
-        }
-    }
-
-    function recomputeActualPositions2D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
-        var boundingVolume = billboardCollection._baseVolume2D;
-
-        var length = billboards.length;
-        var positions = new Array(length);
-        for ( var i = 0; i < length; ++i) {
-            var billboard = billboards[i];
-            var position = billboard.getPosition();
-            var actualPosition = Billboard._computeActualPosition(position, frameState, morphTime, modelMatrix);
-            billboard._setActualPosition(actualPosition);
-
-            position = new Cartesian3(actualPosition.y, actualPosition.z, 0.0);
-
-            if (recomputeBoundingVolume) {
-                positions[i] = position;
-            } else {
-                boundingVolume.expand(position, boundingVolume);
-            }
-        }
-
-        if (recomputeBoundingVolume) {
-            BoundingSphere.fromPoints(positions, boundingVolume);
-        }
-    }
-
-    function recomputeActualPositions(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume) {
-        if (frameState.mode === SceneMode.SCENE2D) {
-            recomputeActualPositions2D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume);
-        } else {
-            recomputeActualPositions3D(billboardCollection, billboards, frameState, morphTime, modelMatrix, recomputeBoundingVolume);
         }
     }
 
@@ -895,12 +857,10 @@ define([
         var size;
         var offset;
 
-        if (mode === SceneMode.SCENE2D) {
-            boundingVolume = BoundingSphere.clone(collection._baseVolume2D);
-        } else if (mode === SceneMode.SCENE3D) {
+        if (mode === SceneMode.SCENE3D) {
             boundingVolume = BoundingSphere.clone(collection._baseVolume);
-        } else if (typeof collection._baseVolumeCV !== 'undefined') {
-            boundingVolume = BoundingSphere.clone(collection._baseVolumeCV);
+        } else if (typeof collection._baseVolume2D !== 'undefined') {
+            boundingVolume = BoundingSphere.clone(collection._baseVolume2D);
         }
 
         var toCenter = camera.getPositionWC().subtract(boundingVolume.center);
