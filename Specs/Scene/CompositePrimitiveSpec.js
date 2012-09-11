@@ -484,8 +484,13 @@ defineSuite([
         var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
         primitives.setCentralBody(cb);
 
+        var savedCamera = frameState.camera;
+        frameState.camera = camera;
+
         render(context, primitives.update(context, frameState));
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        frameState.camera = savedCamera;
     });
 
     it('is not destroyed when first constructed', function() {
