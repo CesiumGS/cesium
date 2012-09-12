@@ -126,6 +126,8 @@ define([
         this._spReproject = undefined;
         this._vaReproject = undefined;
         this._fbReproject = undefined;
+
+        this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
     }
 
     /**
@@ -160,8 +162,21 @@ define([
         return rounded | 0;
     };
 
-    ImageryLayer.prototype.createTileImagerySkeletons = function(tile, terrainProvider) {
+    ImageryLayer.prototype.createTileImagerySkeletons = function(tile, terrainProvider, insertionPoint) {
         var imageryProvider = this.imageryProvider;
+
+        if (typeof insertionPoint === 'undefined') {
+            insertionPoint = tile.imagery.length;
+        }
+
+        if (!imageryProvider.isReady()) {
+            // The imagery provider is not ready, so we can't create skeletons, yet.
+            // Instead, add a placeholder so that we'll know to create
+            // the skeletons once the provider is ready.
+            this._skeletonPlaceholder.imagery.addReference();
+            tile.imagery.splice(insertionPoint, 0, this._skeletonPlaceholder);
+            return true;
+        }
 
         // Compute the extent of the imagery from this imageryProvider that overlaps
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
@@ -278,7 +293,8 @@ define([
 
                 var texCoordsExtent = new Cartesian4(minU, minV, maxU, maxV);
                 var imagery = this.getImageryFromCache(i, j, imageryLevel, imageryExtent);
-                tile.imagery.push(new TileImagery(imagery, texCoordsExtent));
+                tile.imagery.splice(insertionPoint, 0, new TileImagery(imagery, texCoordsExtent));
+                ++insertionPoint;
             }
         }
 

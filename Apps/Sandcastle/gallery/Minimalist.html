@@ -86,10 +86,12 @@ require([
     var ellipsoid = Cesium.Ellipsoid.WGS84;
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
-    var imagery = new Cesium.SingleTileProvider('../../../Images/NE2_50M_SR_W_2048.jpg');
+    var imagery = new Cesium.SingleTileImageryProvider({
+        url : '../../../Images/NE2_50M_SR_W_2048.jpg'
+    });
 
     var cb = new Cesium.CentralBody(ellipsoid);
-    cb.dayTileProvider = imagery;
+    cb.getImageLayers().addImageryProvider(imagery);
     cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../../Images/earthspec1k.jpg';
     cb.showSkyAtmosphere = true;

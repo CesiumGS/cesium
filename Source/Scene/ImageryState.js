@@ -12,7 +12,8 @@ define(['../Core/Enumeration'], function(Enumeration) {
         TEXTURE_LOADED : new Enumeration(3, 'TEXTURE_LOADED'),
         READY : new Enumeration(4, 'READY'),
         FAILED : new Enumeration(5, 'FAILED'),
-        INVALID : new Enumeration(6, 'INVALID')
+        INVALID : new Enumeration(6, 'INVALID'),
+        PLACEHOLDER : new Enumeration(7, 'PLACEHOLDER')
     };
 
     return ImageryState;

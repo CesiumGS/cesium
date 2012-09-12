@@ -13,11 +13,6 @@ define([
         this.y = y;
         this.level = level;
 
-        if (typeof extent === 'undefined') {
-            extent = imageryLayer.imageryProvider.getTilingScheme().tileXYToExtent(x, y, level);
-        }
-        this.extent = extent;
-
         if (level !== 0) {
             var parentX = x / 2 | 0;
             var parentY = y / 2 | 0;
@@ -30,6 +25,20 @@ define([
         this.image = undefined;
         this.texture = undefined;
         this.referenceCount = 0;
+
+        if (typeof extent === 'undefined' && imageryLayer.imageryProvider.isReady()) {
+            var tilingScheme = imageryLayer.imageryProvider.getTilingScheme();
+            extent = tilingScheme.tileXYToExtent(x, y, level);
+        }
+
+        this.extent = extent;
+    };
+
+    Imagery.createPlaceholder = function(imageryLayer) {
+        var result = new Imagery(imageryLayer, 0, 0, 0);
+        result.addReference();
+        result.state = ImageryState.PLACEHOLDER;
+        return result;
     };
 
     Imagery.prototype.addReference = function() {

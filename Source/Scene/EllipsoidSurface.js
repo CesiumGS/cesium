@@ -129,7 +129,7 @@ define([
             if (typeof newNextLayer !== 'undefined') {
                 moveTileImageryObjects(tile.imagery, layer, newNextLayer);
             }
-            tile = tile._replacementNext;
+            tile = tile.replacementNext;
         }
     };
 
@@ -162,7 +162,10 @@ define([
             if (startIndex !== -1) {
                 tileImageryCollection.splice(startIndex, numDestroyed);
             }
-            tile = tile._replacementNext;
+            if (tileImageryCollection.length === 0) {
+                tile.renderable = false;
+            }
+            tile = tile.replacementNext;
         }
     };
 
@@ -175,7 +178,7 @@ define([
         var tile = this._tileReplacementQueue.head;
         while (typeof tile !== 'undefined') {
             moveTileImageryObjects(tile.imagery, layer, newNextLayer);
-            tile = tile._replacementNext;
+            tile = tile.replacementNext;
         }
     };
 
@@ -615,12 +618,19 @@ define([
 
             var texture = surface._logoQuad.getTexture();
             if (typeof texture === 'undefined' || texture.getWidth() !== width || texture.getHeight() !== height) {
-                texture = context.createTexture2D({
-                    width : width,
-                    height : height
-                });
 
-                surface._logoQuad.setTexture(texture);
+                if (width === 0 || height === 0) {
+                    if (typeof texture !== 'undefined') {
+                        surface._logoQuad.destroy();
+                        surface._logoQuad = undefined;
+                    }
+                } else {
+                    texture = context.createTexture2D({
+                        width : width,
+                        height : height
+                    });
+                    surface._logoQuad.setTexture(texture);
+                }
             }
 
             var heightOffset = 0;
@@ -832,6 +842,17 @@ define([
                 var tileImagery = tileImageryCollection[i];
                 var imagery = tileImagery.imagery;
                 var imageryLayer = imagery.imageryLayer;
+
+                if (imagery.state === ImageryState.PLACEHOLDER) {
+                    if (imageryLayer.imageryProvider.isReady()) {
+                        // Remove the placeholder and add the actual skeletons (if any)
+                        // at the same position.  Then continue the loop at the same index.
+                        imagery.releaseReference();
+                        tileImageryCollection.splice(i, 1);
+                        imageryLayer.createTileImagerySkeletons(tile, terrainProvider, i);
+                        --i;
+                    }
+                }
 
                 if (imagery.state === ImageryState.UNLOADED) {
                     imagery.state = ImageryState.TRANSITIONING;

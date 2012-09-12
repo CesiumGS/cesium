@@ -99,8 +99,8 @@ require([
 
     function arcGisWorldStreetMaps(primitives) {
         Sandcastle.declare(arcGisWorldStreetMaps);  // For highlighting in Sandcastle.
-        var provider = new Cesium.ArcGISMapServerImageryProvider({
-            url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map',
+        var provider = new Cesium.ArcGisMapServerImageryProvider({
+            url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
             proxy: new Cesium.DefaultProxy('/proxy/')
         });
         
