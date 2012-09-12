@@ -73,7 +73,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polygon.update(context, frameState));
+        render(context, frameState, polygon);
         return context.readPixels();
     };
 

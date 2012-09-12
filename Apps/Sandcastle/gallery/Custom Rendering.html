@@ -98,8 +98,8 @@ require([
         this._pickId = undefined;
         
         this._boundingSphere = undefined;
-        this._colorCommand = new Command();
-        this._pickCommand = new Command();
+        this._colorCommand = new Cesium.Command();
+        this._pickCommand = new Cesium.Command();
     
         this.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
     
@@ -133,6 +133,9 @@ require([
             return;
         }
         
+        var colorCommand = this._colorCommand;
+        var pickCommand = this._pickCommand;
+            
         if (typeof this._va === 'undefined') {
             var vs = '';
             vs += 'attribute vec4 position;';
@@ -176,8 +179,6 @@ require([
         
             this._pickId = context.createPickId(this);
             
-            var colorCommand = this._colorCommand;
-            var pickCommand = this._pickCommand;
             colorCommand.boundingVolume = pickCommand.boundingVolume = this._boundingSphere;
             colorCommand.modelMatrix = pickCommand.modelMatrix = this.modelMatrix;
             colorCommand.primitiveType = pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
@@ -223,8 +224,8 @@ require([
         this._pickId = undefined;
 
         this._boundingSphere = undefined;
-        this._colorCommand = new Command();
-        this._pickCommand = new Command();
+        this._colorCommand = new Cesium.Command();
+        this._pickCommand = new Cesium.Command();
 
         this._mode = undefined;
         this._projection = undefined;

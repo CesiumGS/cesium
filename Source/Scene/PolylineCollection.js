@@ -430,14 +430,22 @@ define([
      * @memberof PolylineCollection
      *
      */
-    PolylineCollection.prototype.update = function(context, frameState) {
+    PolylineCollection.prototype.update = function(context, frameState, commandList) {
         if (typeof this._sp === 'undefined') {
             this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
         }
+
         this._removePolylines();
         this._updateMode(frameState);
+
         var bucket;
         var polyline;
+        var length;
+        var buckets;
+        var polylineBuckets;
+        var bucketLength;
+        var bucketLocator;
+
         var properties = this._propertiesChanged;
         if (this._createVertexArray || this._computeNewBuffersUsage()) {
             this._createVertexArrays(context);
@@ -466,8 +474,8 @@ define([
             if (properties[POSITION_SIZE_INDEX] || properties[WIDTH_INDEX] || properties[OUTLINE_WIDTH_INDEX] || createVertexArrays) {
                 this._createVertexArrays(context);
             } else {
-                var length = polylinesToUpdate.length;
-                var polylineBuckets = this._polylineBuckets;
+                length = polylinesToUpdate.length;
+                polylineBuckets = this._polylineBuckets;
                 for ( var ii = 0; ii < length; ++ii) {
                     polyline = polylinesToUpdate[ii];
                     properties = polyline._getChangedProperties();
@@ -516,18 +524,17 @@ define([
         }
 
         var pass = frameState.passes;
-        var polylineBuckets = this._polylineBuckets;
-        var commandList = [];
+        polylineBuckets = this._polylineBuckets;
         if (polylineBuckets) {
             if (pass.color) {
-                var length = this._colorVertexArrays.length;
-                for (var i = 0; i < length; ++i) {
-                    var vaColor = this._colorVertexArrays[i];
-                    var vaOutlineColor = this._outlineColorVertexArrays[i];
-                    var buckets = this._colorVertexArrays[i].buckets;
-                    var bucketLength = buckets.length;
-                    for ( var j = 0; j < bucketLength; ++j) {
-                        var bucketLocator = buckets[j];
+                length = this._colorVertexArrays.length;
+                for (var m = 0; m < length; ++m) {
+                    var vaColor = this._colorVertexArrays[m];
+                    var vaOutlineColor = this._outlineColorVertexArrays[m];
+                    buckets = this._colorVertexArrays[m].buckets;
+                    bucketLength = buckets.length;
+                    for ( var n = 0; n < bucketLength; ++n) {
+                        bucketLocator = buckets[n];
                         commandList.push({
                             boundingVolume : boundingVolume,
                             modelMatrix : modelMatrix,
@@ -563,14 +570,15 @@ define([
                         });
                     }
                 }
-            } else if (pass.pick) {
-                var length = this._pickColorVertexArrays.length;
-                for ( var i = 0; i < length; ++i) {
-                    var vaPickColor = this._pickColorVertexArrays[i];
-                    var buckets = vaPickColor.buckets;
-                    var bucketLength = buckets.length;
-                    for ( var j = 0; j < bucketLength; ++j) {
-                        var bucketLocator = buckets[j];
+            }
+            if (pass.pick) {
+                length = this._pickColorVertexArrays.length;
+                for ( var a = 0; a < length; ++a) {
+                    var vaPickColor = this._pickColorVertexArrays[a];
+                    buckets = vaPickColor.buckets;
+                    bucketLength = buckets.length;
+                    for ( var b = 0; b < bucketLength; ++b) {
+                        bucketLocator = buckets[b];
                         commandList.push({
                             boundingVolume : boundingVolume,
                             modelMatrix : modelMatrix,
@@ -586,8 +594,6 @@ define([
                 }
             }
         }
-
-        return commandList;
     };
 
     /**

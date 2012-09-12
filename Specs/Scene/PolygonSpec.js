@@ -230,7 +230,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polygon.update(context, frameState));
+        render(context, frameState, polygon);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -242,7 +242,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polygon.update(context, frameState));
+        render(context, frameState, polygon);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -254,7 +254,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polygon.update(context, frameState));
+        render(context, frameState, polygon);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -280,7 +280,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polygon.update(context, frameState));
+        render(context, frameState, polygon);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -294,14 +294,14 @@ defineSuite([
         };
         polygon.show = false;
 
-        expect(polygon.update(context, frameState).length).toEqual(0);
+        expect(render(context, frameState, polygon)).toEqual(0);
     });
 
     it('does not render without positions', function() {
         polygon = new Polygon();
         polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        expect(polygon.update(context, frameState).length).toEqual(0);
+        expect(render(context, frameState, polygon)).toEqual(0);
     });
 
     it('is picked', function() {
@@ -315,12 +315,14 @@ defineSuite([
         polygon = createPolygon();
         polygon.show = false;
 
-        expect(polygon.update(context, frameState).length).toEqual(0);
+        expect(render(context, frameState, polygon)).toEqual(0);
     });
 
     it('test 3D bounding sphere from positions', function() {
         polygon = createPolygon();
-        var boundingVolume = polygon.update(context, frameState)[0].boundingVolume;
+        var commandList = [];
+        polygon.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon._positions));
     });
 
@@ -341,7 +343,9 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = testMode;
-        var boundingVolume = polygon.update(context, frameState)[0].boundingVolume;
+        var commandList = [];
+        polygon.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var projectedPositions = [];
@@ -375,7 +379,9 @@ defineSuite([
         polygon.ellipsoid = ellipsoid;
         polygon.configureExtent(extent);
 
-        var boundingVolume = polygon.update(context, frameState)[0].boundingVolume;
+        var commandList = [];
+        polygon.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent, ellipsoid));
     });
 
@@ -394,7 +400,9 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = testMode;
-        var boundingVolume = polygon.update(context, frameState)[0].boundingVolume;
+        var commandList = [];
+        polygon.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var sphere = BoundingSphere.fromExtent2D(extent, projection);

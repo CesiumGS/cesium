@@ -9,7 +9,8 @@ define([
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
         '../Shaders/ViewportQuadVS',
-        '../Shaders/ViewportQuadFS'
+        '../Shaders/ViewportQuadFS',
+        './Command'
     ], function(
         destroyObject,
         defaultValue,
@@ -20,7 +21,8 @@ define([
         BlendEquation,
         BlendFunction,
         ViewportQuadVS,
-        ViewportQuadFS) {
+        ViewportQuadFS,
+        Command) {
     "use strict";
 
     /**
@@ -56,7 +58,7 @@ define([
         this._rectangle = BoundingRectangle.clone(rectangle);
 
         var that = this;
-        this._colorCommand.uniformMap = {
+        this._colorCommand.uniformMap = this.uniforms = {
             u_texture : function() {
                 return that._texture;
             }

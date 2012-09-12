@@ -378,7 +378,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
@@ -402,7 +402,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
@@ -420,7 +420,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
@@ -438,14 +438,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p1.setShow(false);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.clear();
@@ -455,7 +455,7 @@ defineSuite([
         polylines.add({positions:positions,
             color:{red:1, green:1, blue:0, alpha:1}});
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 0, 255]);
 
     });
@@ -476,7 +476,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
@@ -494,7 +494,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         polylines.add({
@@ -505,7 +505,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
     });
@@ -524,7 +524,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         var p2 = polylines.add({
@@ -535,7 +535,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         //recreates vertex array because buffer usage changed
@@ -544,7 +544,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         //should call PolylineCollection.writePositionsUpdate
@@ -553,7 +553,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
     });
@@ -572,7 +572,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         var p2 = polylines.add({
@@ -583,7 +583,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         //recreates vertex array because buffer usage changed
@@ -592,7 +592,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         //should call PolylineCollection.writeShowUpdate
@@ -601,7 +601,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
     });
@@ -620,7 +620,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         var p2 = polylines.add({
@@ -631,7 +631,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         //recreates vertex array because buffer usage changed
@@ -640,7 +640,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         //should call PolylineCollection.writeColorUpdate
@@ -649,7 +649,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
@@ -671,18 +671,18 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         // changes buffer usage, recreates vertex arrays
         p.setPositions(positions);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         for(var j = 0; j < 101; ++j){
-            render(context, polylines.update(context, frameState));
+            render(context, frameState, polylines);
         }
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
@@ -702,7 +702,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         var p2 = polylines.add({
@@ -713,7 +713,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         //recreates vertex array because buffer usage changed
@@ -722,7 +722,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         //should call PolylineCollection.writeColorUpdate
@@ -731,7 +731,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
@@ -757,7 +757,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -786,7 +786,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -813,14 +813,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         p.setShow(false);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
@@ -847,7 +847,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         polylines.remove(p);
@@ -855,7 +855,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
@@ -882,7 +882,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -909,7 +909,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         polylines.add({
@@ -931,7 +931,7 @@ defineSuite([
             }
         });
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
@@ -976,14 +976,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polylines.remove(bluePolyline);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
@@ -1010,14 +1010,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         polylines.removeAll();
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
@@ -1044,7 +1044,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         context.clear();
@@ -1070,7 +1070,7 @@ defineSuite([
             }
         });
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
@@ -1091,7 +1091,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         context.clear();
@@ -1107,7 +1107,7 @@ defineSuite([
             y : 1.0,
             z : 0.0
         }]); // Behind viewer
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p.setPositions([{
@@ -1120,7 +1120,7 @@ defineSuite([
             y : 1.0,
             z : 0.0
         }]); // Back in front of viewer
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -1141,7 +1141,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         context.clear();
@@ -1153,7 +1153,7 @@ defineSuite([
             blue : 1.0,
             alpha : 1.0
         });
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 255, 255]);
 
         // Update a second time since it goes through a different vertex array update path
@@ -1166,7 +1166,7 @@ defineSuite([
             blue : 0.0,
             alpha : 1.0
         });
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -1188,7 +1188,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         context.clear();
@@ -1200,7 +1200,7 @@ defineSuite([
             blue : 1.0,
             alpha : 1.0
         });
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         // Update a second time since it goes through a different vertex array update path
@@ -1213,7 +1213,7 @@ defineSuite([
             blue : 0.0,
             alpha : 1.0
         });
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -1265,7 +1265,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 0, 255]);
 
 
@@ -1273,14 +1273,14 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p.setShow(false);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p.setShow(true);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 0, 255]);
 
     });
@@ -1303,14 +1303,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p.setShow(false);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // Update a second time since it goes through a different vertex array update path
@@ -1318,7 +1318,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         p.setShow(true);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -1367,15 +1367,15 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         p2.setColor({red:1.0, green:1.0, blue:0.0, alpha:1.0});
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 0, 255]);
 
         p2.setColor({red:1.0, green:0.0, blue:0.0, alpha:1.0});
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
@@ -1400,12 +1400,12 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         p.setPositions(positions);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         positions.push({
@@ -1415,7 +1415,7 @@ defineSuite([
             });
 
         p.setPositions(positions);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -1447,19 +1447,19 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         p1.setWidth(2);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         p2.setWidth(2);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         p1.setWidth(1);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
     });
@@ -1492,19 +1492,19 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         p1.setOutlineWidth(2);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         p2.setOutlineWidth(2);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         p1.setOutlineWidth(1);
-        render(context, polylines.update(context, frameState));
+        render(context, frameState, polylines);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
     });
@@ -1591,7 +1591,9 @@ defineSuite([
             }]
         });
 
-        var boundingVolume = polylines.update(context, frameState)[0].boundingVolume;
+        var commandList = [];
+        polylines.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].boundingVolume;
 
         expect(one._boundingVolume).toEqual(BoundingSphere.fromPoints(one.getPositions()));
         expect(two._boundingVolume).toEqual(BoundingSphere.fromPoints(two.getPositions()));
@@ -1618,7 +1620,9 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = testMode;
-        var boundingVolume = polylines.update(context, frameState)[0].boundingVolume;
+        var commandList = [];
+        polylines.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var positions = one.getPositions();

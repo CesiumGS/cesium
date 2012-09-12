@@ -13,7 +13,9 @@ define([
         frameState.passes = (new FrameState()).passes;
         frameState.passes.pick = true;
 
-        var commandList = primitives.update(context, frameState);
+        var commandList = [];
+        primitives.update(context, frameState, commandList);
+
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
             var command = commandList[i];

@@ -203,7 +203,7 @@ defineSuite([
         });
 
         expect(function() {
-            billboards.update(context, frameState);
+            billboards.update(context, frameState, []);
         }).toThrow();
     });
 
@@ -417,7 +417,7 @@ defineSuite([
     });
 
     it('does not render when constructed', function() {
-        expect(billboards.update(context, frameState).length).toEqual(0);
+        expect(render(context, frameState, billboards)).toEqual(0);
     });
 
     it('modifies and removes a billboard, then renders', function() {
@@ -442,7 +442,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         b.setScale(2.0);
@@ -451,7 +451,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
@@ -469,7 +469,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -487,7 +487,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         billboards.add({
@@ -499,7 +499,7 @@ defineSuite([
             imageIndex : 1
         });
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
@@ -525,14 +525,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         billboards.remove(blueBillboard);
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -550,14 +550,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         billboards.removeAll();
-        expect(billboards.update(context, frameState).length).toEqual(0);
+        expect(render(context, frameState, billboards)).toEqual(0);
     });
 
     it('removes all billboards, adds a billboard, and renders', function() {
@@ -574,7 +574,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         context.clear();
@@ -590,7 +590,7 @@ defineSuite([
             imageIndex : 1
         });
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
@@ -608,14 +608,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         billboards.setTextureAtlas(createTextureAtlas([blueImage]));
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
@@ -633,13 +633,13 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -666,7 +666,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         context.clear();
@@ -675,7 +675,7 @@ defineSuite([
         greenBillboard.setShow(false);
         blueBillboard.setShow(true);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
@@ -693,7 +693,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         context.clear();
@@ -704,7 +704,7 @@ defineSuite([
             y : 0.0,
             z : 0.0
         }); // Behind viewer
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         b.setPosition({
@@ -712,7 +712,7 @@ defineSuite([
             y : 0.0,
             z : 0.0
         }); // Back in front of viewer
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -730,18 +730,18 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         b.setScale(0.0);
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         b.setScale(2.0);
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -759,14 +759,14 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         b.setImageIndex(1);
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
@@ -784,7 +784,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         context.clear();
@@ -796,7 +796,7 @@ defineSuite([
             blue : 1.0,
             alpha : 1.0
         });
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([255, 0, 255, 255]);
 
         // Update a second time since it goes through a different vertex array update path
@@ -809,7 +809,7 @@ defineSuite([
             blue : 0.0,
             alpha : 1.0
         });
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -831,7 +831,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // First render - default billboard color is white.
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         billboards.get(3).setColor({
@@ -843,7 +843,7 @@ defineSuite([
 
         // Second render - billboard is green
         context.clear();
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         billboards.get(3).setColor({
@@ -855,7 +855,7 @@ defineSuite([
 
         // Third render - update goes through a different vertex array update path
         context.clear();
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
@@ -887,7 +887,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, billboards.update(context, frameState));
+        render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -1069,7 +1069,9 @@ defineSuite([
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         });
 
-        var actual = billboards.update(context, frameState)[0].boundingVolume;
+        var commandList = [];
+        billboards.update(context, frameState, commandList);
+        var actual = commandList[0].boundingVolume;
 
         var positions = [one.getPosition(), two.getPosition()];
         var bs = BoundingSphere.fromPoints(positions);
@@ -1095,7 +1097,9 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = SceneMode.COLUMBUS_VIEW;
-        var actual = billboards.update(context, frameState)[0].boundingVolume;
+        var commandList = [];
+        billboards.update(context, frameState, commandList);
+        var actual = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var projectedPositions = [
@@ -1139,7 +1143,9 @@ defineSuite([
         frameState.mode = SceneMode.SCENE2D;
         camera.frustum = orthoFrustum;
 
-        var actual = billboards.update(context, frameState)[0].boundingVolume;
+        var commandList = [];
+        billboards.update(context, frameState, commandList);
+        var actual = commandList[0].boundingVolume;
 
         camera.frustum = frustum;
         frameState.mode = mode;

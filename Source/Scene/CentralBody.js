@@ -1558,16 +1558,16 @@ define([
     /**
      * @private
      */
-    CentralBody.prototype.update = function(context, frameState) {
+    CentralBody.prototype.update = function(context, frameState, commandList) {
         if (!this.show) {
-            return [];
+            return;
         }
 
         var width = context.getCanvas().clientWidth;
         var height = context.getCanvas().clientHeight;
 
         if (width === 0 || height === 0) {
-            return [];
+            return;
         }
 
         var mode = frameState.mode;
@@ -2051,7 +2051,6 @@ define([
         this._projection = projection;
 
         var pass = frameState.passes;
-        var commandList = [];
         if (pass.color) {
             if (this.showSkyAtmosphere) {
                 commandList.push({
@@ -2102,7 +2101,8 @@ define([
                 }
 
                 // render quad with vertical and horizontal gaussian blur
-                commandList = commandList.concat(this._quadV.update(context, frameState), this._quadH.update(context, frameState));
+                this._quadV.update(context, frameState, commandList);
+                this._quadH.update(context, frameState, commandList);
 
                 // render quads to fill the poles
                 if (this._mode === SceneMode.SCENE3D) {
@@ -2137,7 +2137,7 @@ define([
                 }
 
                 if (typeof this._quadLogo !== 'undefined' && !this._quadLogo.isDestroyed()) {
-                    commandList = commandList.concat(this._quadLogo.update(context, frameState));
+                    this._quadLogo.update(context, frameState, commandList);
                 }
             }
         } else if (pass.pick) {
@@ -2150,8 +2150,6 @@ define([
                 renderState : this._rsDepth
             });
         }
-
-        return commandList;
     };
 
     CentralBody.prototype._destroyTileTree = function() {

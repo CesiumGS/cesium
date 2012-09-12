@@ -66,6 +66,8 @@ define([
 
         this._shaderFrameCount = 0;
 
+        this._commandList = [];
+
         /**
          * The current mode of the scene.
          *
@@ -234,7 +236,8 @@ define([
         updateFrameState(scene);
         scene._frameState.passes.color = true;
 
-        return scene._primitives.update(scene._context, scene._frameState);
+        scene._commandList.length = 0;
+        scene._primitives.update(scene._context, scene._frameState, scene._commandList);
     }
 
     /**
@@ -242,7 +245,9 @@ define([
      * @memberof Scene
      */
     Scene.prototype.render = function() {
-        var commandList = update(this);
+        update(this);
+        var commandList = this._commandList;
+
         var context = this._context;
         context.clear(this._clearState);
 
@@ -356,8 +361,10 @@ define([
         frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
+        var commandList = this._commandList;
+        commandList.length = 0;
+        primitives.update(context, frameState, commandList);
 
-        var commandList = primitives.update(context, frameState);
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
             var command = commandList[i];

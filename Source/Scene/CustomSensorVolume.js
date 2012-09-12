@@ -19,7 +19,8 @@ define([
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
         '../Shaders/CustomSensorVolumeFS',
-        './SceneMode'
+        './SceneMode',
+        './Command'
     ], function(
         DeveloperError,
         Color,
@@ -40,7 +41,8 @@ define([
         ShadersSensorVolume,
         CustomSensorVolumeVS,
         CustomSensorVolumeFS,
-        SceneMode) {
+        SceneMode,
+        Command) {
     "use strict";
 
     var attributeIndices = {
@@ -349,7 +351,7 @@ define([
         // This would be better served by depth testing with a depth buffer that does not
         // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
         // so we can selectively depth test.
-        this._rs.depthTest.enabled = !this.showThroughEllipsoid;
+        this._colorCommand.renderState.depthTest.enabled = !this.showThroughEllipsoid;
 
         // Recreate vertex buffer when directions change
         if ((this._directionsDirty) || (this._bufferUsage !== this.bufferUsage)) {

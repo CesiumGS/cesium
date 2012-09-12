@@ -404,15 +404,13 @@ define([
     /**
      * @private
      */
-    CompositePrimitive.prototype.update = function(context, frameState) {
+    CompositePrimitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show) {
-            return [];
+            return;
         }
 
-        var commandList = [];
-
         if (this._centralBody) {
-            commandList = commandList.concat(this._centralBody.update(context, frameState));
+            this._centralBody.update(context, frameState, commandList);
         }
 
         var cullingVolume = frameState.cullingVolume;
@@ -426,7 +424,8 @@ define([
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
             var primitive = primitives[i];
-            var primitiveCommandList = primitive.update(context, frameState);
+            var primitiveCommandList = [];
+            primitive.update(context, frameState, primitiveCommandList);
 
             var commandLength = primitiveCommandList.length;
             for (var j = 0; j < commandLength; ++j) {
@@ -445,8 +444,6 @@ define([
                 commandList.push(command);
             }
         }
-
-        return commandList;
     };
 
     /**

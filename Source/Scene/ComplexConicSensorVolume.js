@@ -23,7 +23,8 @@ define([
         '../Shaders/SensorVolume',
         '../Shaders/ComplexConicSensorVolumeVS',
         '../Shaders/ComplexConicSensorVolumeFS',
-        './SceneMode'
+        './SceneMode',
+        './Command'
     ], function(
         DeveloperError,
         Color,
@@ -48,7 +49,8 @@ define([
         ShadersSensorVolume,
         ComplexConicSensorVolumeVS,
         ComplexConicSensorVolumeFS,
-        SceneMode) {
+        SceneMode,
+        Command) {
     "use strict";
 
     var attributeIndices = {

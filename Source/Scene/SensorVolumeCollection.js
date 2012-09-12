@@ -158,22 +158,17 @@ define([
     /**
      * @private
      */
-    SensorVolumeCollection.prototype.update = function(context, frameState) {
+    SensorVolumeCollection.prototype.update = function(context, frameState, commandList) {
         var mode = frameState.mode;
         if (mode !== SceneMode.SCENE3D) {
-            return [];
+            return;
         }
 
         var sensors = this._sensors;
         var length = sensors.length;
-        var commandList = [];
         for (var i = 0; i < length; ++i) {
-            var sensor = sensors[i];
-            var sensorCommandList = sensor.update(context, frameState);
-            commandList = commandList.concat(sensorCommandList);
+            sensors[i].update(context, frameState, commandList);
         }
-
-        return commandList;
     };
 
     /**
