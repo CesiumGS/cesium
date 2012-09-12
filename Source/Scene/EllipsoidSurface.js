@@ -350,9 +350,6 @@ define([
         u_center2D : function() {
             return Cartesian2.ZERO;
         },
-        u_ellipsoidRadii : function() {
-            return this.ellipsoidRadii;
-        },
         u_tileExtent : function() {
             return this.tileExtent;
         },
@@ -381,7 +378,6 @@ define([
         center3D : undefined,
         modifiedModelView : undefined,
         modifiedModelViewProjection : undefined,
-        ellipsoidRadii : undefined,
         tileExtent : undefined,
 
         dayTextures : [],
@@ -394,7 +390,7 @@ define([
         return a.distance - b.distance;
     };
 
-    EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, shaderSet, renderState) {
+    EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, shaderSet, renderState, mode) {
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         if (tilesToRenderByTextureCount.length === 0) {
             return;
@@ -403,6 +399,8 @@ define([
         var uniformState = context.getUniformState();
         var mv = uniformState.getModelView();
         var projection = uniformState.getProjection();
+        var ellipsoid = this._tilingScheme.ellipsoid;
+        var ellipsoidRadii = ellipsoid.getRadii();
 
         var uniformMap = combine([uniformMapTemplate, centralBodyUniformMap], false, false);
 
@@ -425,11 +423,15 @@ define([
                 var tile = tileSet[i];
 
                 uniformMap.level = tile.level;
+                uniformMap.center3D = tile.center;
 
                 var rtc = tile.center;
-                uniformMap.center3D = rtc;
-                uniformMap.ellipsoidRadii = tile.tilingScheme.ellipsoid.getRadii();
-                uniformMap.tileExtent = new Cartesian4(tile.extent.west, tile.extent.south, tile.extent.east, tile.extent.north);
+
+                if (mode === SceneMode.SCENE2D) {
+                    rtc = Cartesian3.ZERO;
+                }
+
+                uniformMap.tileExtent = new Cartesian4(tile.extent.west * ellipsoidRadii.x, tile.extent.south * ellipsoidRadii.z, tile.extent.east * ellipsoidRadii.x, tile.extent.north * ellipsoidRadii.z);
 
                 var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
                 uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);
