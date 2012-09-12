@@ -59,15 +59,14 @@ define([
     var CustomSensorVolume = function(template) {
         var t = template || {};
 
-        this._va = undefined;
-        this._sp = undefined;
-        this._rs = undefined;
-
-        this._spPick = undefined;
         this._pickId = undefined;
         this._pickIdThis = t._pickIdThis || this;
 
-        this._boundingVolume = undefined;
+        this._colorCommand = new Command();
+        this._pickCommand = new Command();
+
+        this._colorCommand.primitiveType = this._pickCommand.primitiveType = PrimitiveType.TRIANGLES;
+        this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new BoundingSphere();
 
         /**
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
@@ -198,8 +197,6 @@ define([
                 return that.erosion;
             }
         };
-        this._drawUniforms = undefined;
-        this._pickUniforms = undefined;
 
         this._mode = SceneMode.SCENE3D;
     };
@@ -253,7 +250,7 @@ define([
             boundingVolumePositions.push(p);
         }
 
-        this._boundingVolume = BoundingSphere.fromPoints(boundingVolumePositions);
+        BoundingSphere.fromPoints(boundingVolumePositions, this._colorCommand.boundingVolume);
 
         return positions;
     };
@@ -321,14 +318,10 @@ define([
      *
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
-    CustomSensorVolume.prototype.update = function(context, frameState) {
+    CustomSensorVolume.prototype.update = function(context, frameState, commandList) {
         this._mode = frameState.mode;
-        if (this._mode !== SceneMode.SCENE3D) {
-            return [];
-        }
-
-        if (!this.show) {
-            return [];
+        if (!this.show || this._mode !== SceneMode.SCENE3D) {
+            return;
         }
 
         if (this.radius < 0.0) {
@@ -336,8 +329,8 @@ define([
         }
 
         // Initial render state creation
-        if (typeof this._rs === 'undefined') {
-            this._rs = context.createRenderState({
+        if (typeof this._colorCommand.renderState === 'undefined') {
+            this._colorCommand.renderState = this._pickCommand.renderState = context.createRenderState({
                 blending : {
                     enabled : true,
                     equationRgb : BlendEquation.ADD,
@@ -358,56 +351,6 @@ define([
         // so we can selectively depth test.
         this._rs.depthTest.enabled = !this.showThroughEllipsoid;
 
-        var pass = frameState.passes;
-
-        var materialChanged = typeof this._material === 'undefined' ||
-            this._material !== this.material ||
-            this._affectedByLighting !== this.affectedByLighting;
-
-        // Recompile shader when material changes
-        if (pass.color && materialChanged) {
-
-            this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
-            this._material = this.material;
-            this._affectedByLighting = this.affectedByLighting;
-
-            var fsSource =
-                '#line 0\n' +
-                ShadersNoise +
-                '#line 0\n' +
-                ShadersSensorVolume +
-                '#line 0\n' +
-                this._material.shaderSource +
-                (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
-                '#line 0\n' +
-                CustomSensorVolumeFS;
-
-            this._sp = this._sp && this._sp.release();
-            this._sp = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
-
-            this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
-        }
-
-        if (pass.pick && typeof this._pickId === 'undefined') {
-            // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
-            var fsPickSource =
-                '#define RENDER_FOR_PICK 1\n' +
-                '#line 0\n' +
-                ShadersSensorVolume +
-                '#line 0\n' +
-                CustomSensorVolumeFS;
-
-            this._spPick = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsPickSource, attributeIndices);
-            this._pickId = context.createPickId(this._pickIdThis);
-
-            var that = this;
-            this._pickUniforms = combine([this._uniforms, {
-                u_pickColor : function() {
-                    return that._pickId.normalizedRgba;
-                }
-            }], false, false);
-        }
-
         // Recreate vertex buffer when directions change
         if ((this._directionsDirty) || (this._bufferUsage !== this.bufferUsage)) {
             this._directionsDirty = false;
@@ -416,37 +359,69 @@ define([
 
             var directions = this._directions;
             if (directions && (directions.length >= 3)) {
-                this._va = this._createVertexArray(context);
+                this._colorCommand.vertexArray = this._pickCommand.vertexArray = this._createVertexArray(context);
             }
         }
 
-        if (typeof this._va === 'undefined') {
-            return [];
+        if (typeof this._colorCommand.vertexArray === 'undefined') {
+            return;
         }
 
+        var pass = frameState.passes;
+        this._colorCommand.modelMatrix = this._pickCommand.modelMatrix = this.modelMatrix;
         if (pass.color) {
-            return [{
-                boundingVolume : this._boundingVolume,
-                modelMatrix : this.modelMatrix,
-                primitiveType : PrimitiveType.TRIANGLES,
-                shaderProgram : this._sp,
-                uniformMap : this._drawUniforms,
-                vertexArray : this._va,
-                renderState : this._rs
-            }];
-        } else if (pass.pick) {
-            return [{
-                boundingVolume : this._boundingVolume,
-                modelMatrix : this.modelMatrix,
-                primitiveType : PrimitiveType.TRIANGLES,
-                shaderProgram : this._spPick,
-                uniformMap : this._pickUniforms,
-                vertexArray : this._va,
-                renderState : this._rs
-            }];
-        }
+            var materialChanged = typeof this._material === 'undefined' ||
+            this._material !== this.material ||
+            this._affectedByLighting !== this.affectedByLighting;
 
-        return [];
+            // Recompile shader when material changes
+            if (materialChanged) {
+                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
+                this._material = this.material;
+                this._affectedByLighting = this.affectedByLighting;
+
+                var fsSource =
+                    '#line 0\n' +
+                    ShadersNoise +
+                    '#line 0\n' +
+                    ShadersSensorVolume +
+                    '#line 0\n' +
+                    this._material.shaderSource +
+                    (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                    '#line 0\n' +
+                    CustomSensorVolumeFS;
+
+                this._colorCommand.shaderProgram = this._colorCommand.shaderProgram && this._colorCommand.shaderProgram.release();
+                this._colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsSource, attributeIndices);
+
+                this._colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+            }
+
+            commandList.push(this._colorCommand);
+        }
+        if (pass.pick) {
+            if (typeof this._pickId === 'undefined') {
+                // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
+                var fsPickSource =
+                    '#define RENDER_FOR_PICK 1\n' +
+                    '#line 0\n' +
+                    ShadersSensorVolume +
+                    '#line 0\n' +
+                    CustomSensorVolumeFS;
+
+                this._pickCommand.shaderProgram = context.getShaderCache().getShaderProgram(CustomSensorVolumeVS, fsPickSource, attributeIndices);
+                this._pickId = context.createPickId(this._pickIdThis);
+
+                var that = this;
+                this._pickCommand.uniformMap = combine([this._uniforms, {
+                    u_pickColor : function() {
+                        return that._pickId.normalizedRgba;
+                    }
+                }], false, false);
+            }
+
+            commandList.push(this._pickCommand);
+        }
     };
 
     /**
@@ -462,9 +437,9 @@ define([
      * @memberof CustomSensorVolume
      */
     CustomSensorVolume.prototype.destroy = function() {
-        this._va = this._va && this._va.destroy();
-        this._sp = this._sp && this._sp.release();
-        this._spPick = this._spPick && this._spPick.release();
+        this._colorCommand.vertexArray = this._colorCommand.vertexArray && this._colorCommand.vertexArray.destroy();
+        this._colorCommand.shaderProgram = this._colorCommand.shaderProgram && this._colorCommand.shaderProgram.release();
+        this._pickCommand.shaderProgram = this._pickCommand.shaderProgram && this._pickCommand.shaderProgram.release();
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };

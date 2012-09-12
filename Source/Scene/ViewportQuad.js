@@ -40,8 +40,9 @@ define([
          */
         this.enableBlending = false;
 
-        this._sp = undefined;
         this._va = undefined;
+        this._colorCommand = new Command();
+        this._colorCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
 
         this._vertexShaderSource = defaultValue(vertexShaderSource, ViewportQuadVS);
         this._fragmentShaderSource = defaultValue(fragmentShaderSource, ViewportQuadFS);
@@ -52,13 +53,10 @@ define([
         this._framebuffer = undefined;
         this._destroyFramebuffer = false;
 
-        this._beforeDraw = undefined;
-        this._afterDraw = undefined;
-
         this._rectangle = BoundingRectangle.clone(rectangle);
 
         var that = this;
-        this.uniforms = {
+        this._colorCommand.uniformMap = {
             u_texture : function() {
                 return that._texture;
             }
@@ -228,14 +226,15 @@ define([
     /**
      * @private
      */
-    ViewportQuad.prototype.update = function(context, frameState) {
+    ViewportQuad.prototype.update = function(context, frameState, commandList) {
         if (typeof this._texture === 'undefined') {
-            return [];
+            return;
         }
 
-        if (typeof this._sp === 'undefined') {
-            this._sp = context.getShaderCache().getShaderProgram(this._vertexShaderSource, this._fragmentShaderSource, attributeIndices);
+        if (typeof this._colorCommand.shaderProgram === 'undefined') {
+            this._colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(this._vertexShaderSource, this._fragmentShaderSource, attributeIndices);
             this._va = getVertexArray(context);
+            this._colorCommand.vertexArray = this._va.vertexArray;
             this.renderState = context.createRenderState({
                 blending : {
                     enabled : true,
@@ -249,32 +248,24 @@ define([
             });
         }
 
-        this.renderState.blending.enabled = this.enableBlending;
-
-        if (typeof this._beforeDraw === 'undefined') {
+        if (typeof this._colorCommand.beforeDraw === 'undefined') {
             var that = this;
-            this._beforeDraw = function(context) {
+            this._colorCommand.beforeDraw = function(context) {
                 BoundingRectangle.clone(context.getViewport(), originalViewport);
                 context.setViewport(that._rectangle);
             };
         }
 
-        if (typeof this._afterDraw === 'undefined') {
-            this._afterDraw = function(context) {
+        if (typeof this._colorCommand.afterDraw === 'undefined') {
+            this._colorCommand.afterDraw = function(context) {
                 context.setViewport(originalViewport);
             };
         }
 
-        return [{
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
-            shaderProgram : this._sp,
-            uniformMap : this.uniforms,
-            vertexArray : this._va.vertexArray,
-            renderState : this.renderState,
-            framebuffer : this._framebuffer,
-            beforeDraw : this._beforeDraw,
-            afterDraw : this._afterDraw
-        }];
+        this.renderState.blending.enabled = this.enableBlending;
+        this._colorCommand.renderState = this.renderState;
+        this._colorCommand.framebuffer = this._framebuffer;
+        commandList.push(this._colorCommand);
     };
 
     /**
@@ -314,7 +305,7 @@ define([
      */
     ViewportQuad.prototype.destroy = function() {
         this._va = this._va && this._va.release();
-        this._sp = this._sp && this._sp.release();
+        this._colorCommand.shaderProgram = this._colorCommand.shaderProgram && this._colorCommand.shaderProgram.release();
         this._texture = this._destroyTexture && this._texture && this._texture.destroy();
         this._framebuffer = this._destroyFramebuffer && this._framebuffer && this._framebuffer.destroy();
 

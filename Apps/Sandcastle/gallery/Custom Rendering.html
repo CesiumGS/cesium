@@ -98,11 +98,13 @@ require([
         this._pickId = undefined;
         
         this._boundingSphere = undefined;
+        this._colorCommand = new Command();
+        this._pickCommand = new Command();
     
         this.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
     
         var that = this;
-        this._drawUniforms = {
+        this._colorCommand.uniformMap = {
             u_model: function() {
                 return that.modelMatrix;
             },
@@ -115,7 +117,7 @@ require([
                 };
             }
         };
-        this._pickUniforms = {
+        this._pickCommand.uniformMap = {
             u_model: function() {
                 return that.modelMatrix;
             },
@@ -125,10 +127,10 @@ require([
         };
     };
     
-    Box.prototype.update = function(context, frameState) {
+    Box.prototype.update = function(context, frameState, commandList) {
         // Only supports 3D, not 2D or Columbus view.
         if (frameState.mode !== Cesium.SceneMode.SCENE3D) {
-            return [];
+            return;
         }
         
         if (typeof this._va === 'undefined') {
@@ -173,32 +175,24 @@ require([
             });
         
             this._pickId = context.createPickId(this);
+            
+            var colorCommand = this._colorCommand;
+            var pickCommand = this._pickCommand;
+            colorCommand.boundingVolume = pickCommand.boundingVolume = this._boundingSphere;
+            colorCommand.modelMatrix = pickCommand.modelMatrix = this.modelMatrix;
+            colorCommand.primitiveType = pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
+            colorCommand.shaderProgram = pickCommand.shaderProgram = this._sp;
+            colorCommand.vertexArray = pickCommand.vertexArray = this._va;
+            colorCommand.renderState = pickCommand.renderState = this._rs;
         }
         
         var pass = frameState.passes;
         if (pass.color) {
-            return [{
-                boundingVolume : this._boundingSphere,
-                modelMatrix : this.modelMatrix,
-                primitiveType: Cesium.PrimitiveType.LINES,
-                shaderProgram: this._sp,
-                uniformMap: this._drawUniforms,
-                vertexArray: this._va,
-                renderState: this._rs
-            }];
-        } else if (pass.pick) {
-            return [{
-                boundingVolume : this._boundingSphere,
-                modelMatrix : this.modelMatrix,
-                primitiveType: Cesium.PrimitiveType.LINES,
-                shaderProgram: this._sp,
-                uniformMap: this._pickUniforms,
-                vertexArray: this._va,
-                renderState: this._rs,
-            }];
+            commandList.push(colorCommand);
+        } 
+        if (pass.pick) {
+            commandList.push(pickCommand);
         }
-        
-        return [];
     };
     
     Box.prototype.isDestroyed = function() {
@@ -229,6 +223,8 @@ require([
         this._pickId = undefined;
 
         this._boundingSphere = undefined;
+        this._colorCommand = new Command();
+        this._pickCommand = new Command();
 
         this._mode = undefined;
         this._projection = undefined;
@@ -243,7 +239,7 @@ require([
         this.morphTime = 1.0;
 
         var that = this;
-        this._drawUniforms = {
+        this._colorCommand.uniformMap = {
             u_model : function() {
                 if (that._mode === Cesium.SceneMode.SCENE3D) {
                     return that._modelMatrix;
@@ -257,7 +253,7 @@ require([
                 return that.morphTime;
             }
         };
-        this._pickUniforms = {
+        this._pickCommand.uniformMap = {
             u_model : function() {
                 if (that._mode === Cesium.SceneMode.SCENE3D) {
                     return that._modelMatrix;
@@ -273,10 +269,12 @@ require([
         };
     };
     
-    Box2.prototype.update = function(context, frameState) {
+    Box2.prototype.update = function(context, frameState, commandList) {
         var mode = frameState.mode;
         var projection = frameState.scene2D.projection;
-
+        var colorCommand = this._colorCommand;
+        var pickCommand = this._pickCommand;
+        
         if (mode !== this._mode || projection !== this._projection) {
             this._mode = mode;
             this._projection = projection;
@@ -358,6 +356,10 @@ require([
                 attributeIndices : this._attributeIndices,
                 bufferUsage      : Cesium.BufferUsage.STATIC_DRAW
             });
+            
+            colorCommand.boundingVolume = pickCommand.boundingVolume = this._boundingSphere;
+            colorCommand.primitiveType = pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
+            colorCommand.vertexArray = pickCommand.vertexArray = this._va;
         }
 
         if (typeof this._sp === 'undefined') {
@@ -384,6 +386,9 @@ require([
                     enabled : true
                 }
             });
+            
+            colorCommand.shaderProgram = pickCommand.shaderProgram = this._sp;
+            colorCommand.renderState = pickCommand.renderState = this._rs;
         }
 
         var pass = frameState.passes;
@@ -397,28 +402,13 @@ require([
         }
 
         if (pass.color) {
-            return [{
-                boundingVolume : this._boundingSphere,
-                modelMatrix : modelMatrix,
-                primitiveType: Cesium.PrimitiveType.LINES,
-                shaderProgram: this._sp,
-                uniformMap: this._drawUniforms,
-                vertexArray: this._va,
-                renderState: this._rs
-            }];
-        } else if (pass.pick) {
-            return [{
-                boundingVolume : this._boundingSphere,
-                modelMatrix : modelMatrix,
-                primitiveType: Cesium.PrimitiveType.LINES,
-                shaderProgram: this._sp,
-                uniformMap: this._pickUniforms,
-                vertexArray: this._va,
-                renderState: this._rs,
-            }];
+            colorCommand.modelMatrix = modelMatrix;
+            commandList.push(colorCommand);
+        } 
+        if (pass.pick) {
+            pickCommand.modelMatrix = modelMatrix;
+            commandList.push(pickCommand);
         }
-        
-        return [];
     };
     
     // These functions are the same as before.

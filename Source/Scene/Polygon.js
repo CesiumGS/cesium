@@ -581,7 +581,7 @@ define([
      *
      * @see Polygon#render
      */
-    Polygon.prototype.update = function(context, frameState) {
+    Polygon.prototype.update = function(context, frameState, commandList) {
         if (!this.ellipsoid) {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
@@ -594,7 +594,7 @@ define([
         }
 
         if (!this.show) {
-            return [];
+            return;
         }
 
         if (this._ellipsoid !== this.ellipsoid) {
@@ -640,72 +640,7 @@ define([
         }
 
         if (typeof this._vertices.getVertexArrays() === 'undefined') {
-            return [];
-        }
-
-        if (typeof this._rs === 'undefined') {
-            // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
-            this._rs = context.createRenderState({
-                cull : {
-                    enabled : true,
-                    face : CullFace.BACK
-                },
-                blending : BlendingState.ALPHA_BLEND
-            });
-        }
-
-        var pass = frameState.passes;
-
-        var materialChanged = typeof this._material === 'undefined' ||
-            this._material !== this.material ||
-            this._affectedByLighting !== this.affectedByLighting;
-
-        // Recompile shader when material or lighting changes
-        if (pass.color && materialChanged) {
-            this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
-            this._material = this.material;
-            this._affectedByLighting = this.affectedByLighting;
-
-            var fsSource =
-                '#line 0\n' +
-                Noise +
-                '#line 0\n' +
-                this._material.shaderSource +
-                (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
-                '#line 0\n' +
-                PolygonFS;
-
-            this._sp = this._sp && this._sp.release();
-            this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
-
-            this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
-        }
-
-        if (pass.pick && typeof this._pickId === 'undefined') {
-            this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
-
-            this._rsPick = context.createRenderState({
-                // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
-                cull : {
-                    enabled : true,
-                    face : CullFace.BACK
-                }
-            });
-
-            this._pickId = context.createPickId(this);
-
-            var that = this;
-            this._pickUniforms = {
-                u_pickColor : function() {
-                    return that._pickId.normalizedRgba;
-                },
-                u_morphTime : function() {
-                    return that.morphTime;
-                },
-                u_height : function() {
-                    return that.height;
-                }
-            };
+            return;
         }
 
         var boundingVolume;
@@ -717,36 +652,96 @@ define([
             boundingVolume = this._boundingVolume.union(this._boundingVolume2D);
         }
 
+        var pass = frameState.passes;
         var vas = this._vertices.getVertexArrays();
         var length = vas.length;
-        var commandList = new Array(length);
         if (pass.color) {
+            if (typeof this._rs === 'undefined') {
+                // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
+                this._rs = context.createRenderState({
+                    cull : {
+                        enabled : true,
+                        face : CullFace.BACK
+                    },
+                    blending : BlendingState.ALPHA_BLEND
+                });
+            }
+
+            var materialChanged = typeof this._material === 'undefined' ||
+            this._material !== this.material ||
+            this._affectedByLighting !== this.affectedByLighting;
+
+            // Recompile shader when material or lighting changes
+            if (materialChanged) {
+                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
+                this._material = this.material;
+                this._affectedByLighting = this.affectedByLighting;
+
+                var fsSource =
+                    '#line 0\n' +
+                    Noise +
+                    '#line 0\n' +
+                    this._material.shaderSource +
+                    (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                    '#line 0\n' +
+                    PolygonFS;
+
+                this._sp = this._sp && this._sp.release();
+                this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
+
+                this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
+            }
+
             for (var i = 0; i < length; ++i) {
-                commandList[i] = {
+                commandList.push({
                     boundingVolume : boundingVolume,
                     primitiveType : PrimitiveType.TRIANGLES,
                     shaderProgram : this._sp,
                     uniformMap : this._drawUniforms,
                     vertexArray : vas[i],
                     renderState : this._rs
+                });
+            }
+        }
+        if (pass.pick) {
+            if (typeof this._pickId === 'undefined') {
+                this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
+
+                this._rsPick = context.createRenderState({
+                    // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
+                    cull : {
+                        enabled : true,
+                        face : CullFace.BACK
+                    }
+                });
+
+                this._pickId = context.createPickId(this);
+
+                var that = this;
+                this._pickUniforms = {
+                    u_pickColor : function() {
+                        return that._pickId.normalizedRgba;
+                    },
+                    u_morphTime : function() {
+                        return that.morphTime;
+                    },
+                    u_height : function() {
+                        return that.height;
+                    }
                 };
             }
-            return commandList;
-        } else if (pass.pick) {
-            for ( var i = 0; i < length; ++i) {
-                commandList[i] = {
+
+            for (var j = 0; j < length; ++j) {
+                commandList.push({
                     boundingVolume : boundingVolume,
                     primitiveType : PrimitiveType.TRIANGLES,
                     shaderProgram : this._spPick,
                     uniformMap : this._pickUniforms,
-                    vertexArray : vas[i],
+                    vertexArray : vas[j],
                     renderState : this._rsPick
-                };
+                });
             }
-            return commandList;
         }
-
-        return [];
     };
 
     /**
