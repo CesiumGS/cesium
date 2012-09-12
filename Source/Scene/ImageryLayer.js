@@ -1,17 +1,15 @@
 /*global define*/
 define([
-        '../Core/combine',
+        '../Core/BoundingRectangle',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/ComponentDatatype',
         '../Core/DeveloperError',
         '../Core/Math',
-        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/Extent',
-        '../Core/PlaneTessellator',
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
         '../Renderer/MipmapHint',
@@ -21,27 +19,22 @@ define([
         './GeographicTilingScheme',
         './Imagery',
         './ImageryState',
-        './Tile',
         './TileImagery',
         './TexturePool',
-        './Projections',
-        './ViewportQuad',
         '../ThirdParty/when',
         '../Shaders/ReprojectWebMercatorVS',
         '../Shaders/ReprojectWebMercatorFS'
     ], function(
-        combine,
+        BoundingRectangle,
+        ComponentDatatype,
         defaultValue,
         destroyObject,
-        ComponentDatatype,
         DeveloperError,
         CesiumMath,
-        BoundingRectangle,
         Cartesian2,
         Cartesian4,
         Color,
         Extent,
-        PlaneTessellator,
         PrimitiveType,
         BufferUsage,
         MipmapHint,
@@ -51,11 +44,8 @@ define([
         GeographicTilingScheme,
         Imagery,
         ImageryState,
-        Tile,
         TileImagery,
         TexturePool,
-        Projections,
-        ViewportQuad,
         when,
         ReprojectWebMercatorVS,
         ReprojectWebMercatorFS) {
@@ -73,10 +63,15 @@ define([
      * @param {Number} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
      */
     function ImageryLayer(imageryProvider, description) {
-        description = defaultValue(description, {});
-
         this.imageryProvider = imageryProvider;
 
+        description = defaultValue(description, {});
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Extent}
+         */
         this.extent = defaultValue(description.extent, Extent.MAX_VALUE);
 
         /**
@@ -86,9 +81,6 @@ define([
          */
         this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 1.0);
 
-        this._imageryCache = {};
-        this._texturePool = new TexturePool();
-
         /**
          * The alpha blending value of this layer, from 0.0 to 1.0.
          *
@@ -96,30 +88,8 @@ define([
          */
         this.alpha = defaultValue(description.alpha, 1.0);
 
-        this._tileFailCount = 0;
-
-        /**
-         * The maximum number of tiles that can fail consecutively before the
-         * layer will stop loading tiles.
-         *
-         * @type {Number}
-         */
-        this.maxTileFailCount = 10;
-
-        /**
-         * The maximum number of failures allowed for each tile before the
-         * layer will stop loading a failing tile.
-         *
-         * @type {Number}
-         */
-        this.perTileMaxFailCount = 3;
-
-        /**
-         * The number of seconds between attempts to retry a failing tile.
-         *
-         * @type {Number}
-         */
-        this.failedTileRetryTime = 5.0;
+        this._imageryCache = {};
+        this._texturePool = new TexturePool();
 
         this._levelZeroMaximumTexelSpacing = undefined;
 
@@ -316,57 +286,25 @@ define([
                 scaleY);
     };
 
-    var activeTileImageRequests = {};
-
     ImageryLayer.prototype.requestImagery = function(imagery) {
         var imageryProvider = this.imageryProvider;
 
-        // Cap image requests per hostname, because the browser itself is capped,
-        // and we have no way to cancel an image load once it starts, but we need
-        // to be able to reorder pending image requests.
-        var maximumRequestsPerHostname = 6;
+        var imagePromise = imageryProvider.requestImage(imagery.x, imagery.y, imagery.level);
 
-        var hostnames = imageryProvider.getAvailableHostnames(imagery.x, imagery.y, imagery.level);
-        var hostnameIndex;
-        var hostname;
-
-        if (typeof hostnames !== 'undefined' && hostnames.length > 0) {
-            var bestActiveRequestsForHostname = maximumRequestsPerHostname + 1;
-
-            // Find the hostname with the fewest active requests.
-            for (var i = 0, len = hostnames.length; bestActiveRequestsForHostname > 0 && i < len; ++i) {
-                hostname = hostnames[i];
-
-                var activeRequestsForHostname = defaultValue(activeTileImageRequests[hostname], 0);
-                if (activeRequestsForHostname < bestActiveRequestsForHostname) {
-                    hostnameIndex = i;
-                    bestActiveRequestsForHostname = activeRequestsForHostname;
-                }
-            }
-
-            if (bestActiveRequestsForHostname >= maximumRequestsPerHostname) {
-                // All hostnames have too many requests, so postpone loading tile.
-                imagery.state = ImageryState.UNLOADED;
-                return;
-            }
-
-            hostname = hostnames[hostnameIndex];
-            activeTileImageRequests[hostname] = bestActiveRequestsForHostname + 1;
+        if (typeof imagePromise === 'undefined') {
+            // Too many parallel requests, so postpone loading tile.
+            imagery.state = ImageryState.UNLOADED;
+            return;
         }
 
-        when (imageryProvider.requestImage(hostnames, hostnameIndex, imagery.x, imagery.y, imagery.level), function(image) {
-            if (typeof hostname !== 'undefined') {
-                activeTileImageRequests[hostname]--;
-            }
-
+        when(imagePromise, function(image) {
             imagery.image = image;
 
             if (typeof image === 'undefined') {
                 imagery.state = ImageryState.INVALID;
-                return;
+            } else {
+                imagery.state = ImageryState.RECEIVED;
             }
-
-            imagery.state = ImageryState.RECEIVED;
         }, function(e) {
             /*global console*/
             console.error('failed to load imagery: ' + e);

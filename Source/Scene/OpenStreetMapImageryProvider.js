@@ -1,23 +1,19 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/getHostname',
         '../Core/DeveloperError',
-        '../Core/Extent',
-        '../Core/Math',
         '../Core/writeTextToCanvas',
         './ImageryProvider',
         './WebMercatorTilingScheme'
     ], function(
         defaultValue,
-        getHostname,
         DeveloperError,
-        Extent,
-        CesiumMath,
         writeTextToCanvas,
         ImageryProvider,
         WebMercatorTilingScheme) {
     "use strict";
+
+    var trailingSlashRegex = /\/$/;
 
     /**
      * Provides tile images hosted by OpenStreetMap.
@@ -25,7 +21,7 @@ define([
      * @alias OpenStreetMapImageryProvider
      * @constructor
      *
-     * @param {String} description.url The OpenStreetMap url.
+     * @param {String} [description.url='http://tile.openstreetmap.org'] The OpenStreetMap server url.
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A string crediting the data source, which is displayed on the canvas.
@@ -47,14 +43,16 @@ define([
     var OpenStreetMapImageryProvider = function(description) {
         description = defaultValue(description, {});
 
-        this._url = defaultValue(description.url, 'http://tile.openstreetmap.org/');
+        var url = defaultValue(description.url, 'http://tile.openstreetmap.org/');
+
+        if (!trailingSlashRegex.test(url)) {
+            url = url + '/';
+        }
+
+        this._url = url;
         this._fileExtension = defaultValue(description.fileExtension, 'png');
         this._proxy = description.proxy;
         this._tileDiscardPolicy = description.tileDiscardPolicy;
-        this._imageUrlHostnames = [getHostname(this._url)];
-
-        // TODO: should not hard-code, get from server?
-        this._credit = defaultValue(description.credit, 'MapQuest, Open Street Map and contributors, CC-BY-SA');
 
         this._tilingScheme = new WebMercatorTilingScheme();
 
@@ -65,8 +63,23 @@ define([
 
         this._ready = true;
 
-        this._logo = undefined;
+        // TODO: should not hard-code, get from server?
+        var credit = defaultValue(description.credit, 'MapQuest, Open Street Map and contributors, CC-BY-SA');
+        this._logo = writeTextToCanvas(credit, {
+            font : '12px sans-serif'
+        });
     };
+
+    function buildImageUrl(imageryProvider, x, y, level) {
+        var url = imageryProvider._url + level + '/' + x + '/' + y + '.' + imageryProvider._fileExtension;
+
+        var proxy = imageryProvider._proxy;
+        if (typeof proxy !== 'undefined') {
+            url = proxy.getURL(url);
+        }
+
+        return url;
+    }
 
     /**
      * Gets the URL of the service hosting the imagery.
@@ -143,41 +156,20 @@ define([
     };
 
     /**
-     * Gets an array containing the host names from which a particular tile image can
-     * be requested.
+     * Requests the image for a given tile.
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {Array} The host name(s) from which the tile can be requested.  The return
-     * value may be undefined if this imagery provider does not download data from any hosts.
+     *
+     * @return {Promise} A promise for the image that will resolve when the image is available, or
+     *         undefined if there are too many active requests to the server, and the request
+     *         should be retried later.  If the resulting image is not suitable for display,
+     *         the promise can resolve to undefined.  The resolved image may be either an
+     *         Image or a Canvas DOM object.
      */
-    OpenStreetMapImageryProvider.prototype.getAvailableHostnames = function(x, y, level) {
-        return this._imageUrlHostnames;
-    };
-
-    /**
-     * Loads the image for <code>tile</code>.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @param {Tile} tile The tile to load the image for.
-     * @param {Function} onload A function that will be called when the image is finished loading.
-     * @param {Function} onerror A function that will be called if there is an error loading the image.
-     *
-     * @exception {DeveloperError} <code>tile.level</code> is less than zero
-     * or greater than <code>maxLevel</code>.
-     */
-    OpenStreetMapImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
-        if (level < 0 || level > this._maximumLevel) {
-            throw new DeveloperError('tile.level must be in the range [0, maxLevel].');
-        }
-
-        var url = this._url + level + '/' + x + '/' + y + '.' + this._fileExtension;
-        if (typeof this._proxy !== 'undefined') {
-            url = this._proxy.getURL(url);
-        }
-
+    OpenStreetMapImageryProvider.prototype.requestImage = function(x, y, level) {
+        var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this._tileDiscardPolicy);
     };
 
@@ -186,12 +178,6 @@ define([
      * @memberof OpenStreetMapImageryProvider
      */
     OpenStreetMapImageryProvider.prototype.getLogo = function() {
-        if (!this._logo) {
-            this._logo = writeTextToCanvas(this._credit, {
-                font : '12px sans-serif'
-            });
-        }
-
         return this._logo;
     };
 

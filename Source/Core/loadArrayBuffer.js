@@ -10,7 +10,8 @@ define([
     /**
      * Asynchronously loads the given URL as raw binary data.  Returns a promise that will resolve to
      * an ArrayBuffer once loaded, or reject if the URL failed to load.  The data is loaded
-     * using XMLHttpRequest, which means that the server must have CORS enabled.
+     * using XMLHttpRequest, which means that requests to other origins must be to servers
+     * with CORS headers enabled.
      *
      * @exports loadArrayBuffer
      *

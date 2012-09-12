@@ -4,19 +4,13 @@ define([
         '../Core/loadImage',
         '../Core/DeveloperError',
         '../Core/Extent',
-        './Projections',
-        './GeographicTilingScheme',
-        './ImageryProvider',
-        './ImageryState'
+        './GeographicTilingScheme'
     ], function(
         defaultValue,
         loadImage,
         DeveloperError,
         Extent,
-        Projections,
-        GeographicTilingScheme,
-        ImageryProvider,
-        ImageryState) {
+        GeographicTilingScheme) {
     "use strict";
 
     /**
@@ -39,40 +33,48 @@ define([
     var SingleTileImageryProvider = function(description) {
         description = defaultValue(description, {});
 
-        if (typeof description.url === 'undefined') {
+        var url = description.url;
+        if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
 
-        this._url = description.url;
-        this._proxy = description.proxy;
+        this._url = url;
+
+        var proxy = description.proxy;
+        this._proxy = proxy;
+
         this._maximumLevel = 0;
-        this._tilingScheme = new GeographicTilingScheme({
-            extent : defaultValue(description.extent, Extent.MAX_VALUE),
+
+        var extent = defaultValue(description.extent, Extent.MAX_VALUE);
+        var tilingScheme = new GeographicTilingScheme({
+            extent : extent,
             numberOfLevelZeroTilesX : 1,
             numberOfLevelZeroTilesY : 1
         });
+        this._tilingScheme = tilingScheme;
 
         this._image = undefined;
         this._texture = undefined;
 
         this._ready = false;
 
+        var imageUrl = url;
+        if (typeof proxy !== 'undefined') {
+            imageUrl = proxy.getURL(imageUrl);
+        }
+
         var that = this;
-        this._image = loadImage(this._buildImageUrl()).then(function(image) {
+        this._image = loadImage(imageUrl).then(function(image) {
+            tilingScheme.levelZeroMaximumGeometricError = tilingScheme.ellipsoid.getRadii().x * (extent.east - extent.west) / image.width;
+
             that._image = image;
-
-            var tilingScheme = that._tilingScheme;
-            var ellipsoid = tilingScheme.ellipsoid;
-            var extent = tilingScheme.extent;
-
-            tilingScheme.levelZeroMaximumGeometricError = ellipsoid.getRadii().x * (extent.east - extent.west) / image.width;
-
             that._ready = true;
         });
     };
 
     /**
-     * Gets the URL of the ArcGIS MapServer.
+     * Gets the URL of the single, top-level imagery tile.
+     *
      * @returns {String} The URL.
      */
     SingleTileImageryProvider.prototype.getUrl = function() {
@@ -130,6 +132,7 @@ define([
      * Gets the tile discard policy.  If not undefined, the discard policy is responsible
      * for filtering out "missing" tiles via its shouldDiscardImage function.
      * By default, no tiles will be filtered.
+     *
      * @returns {TileDiscardPolicy} The discard policy.
      */
     SingleTileImageryProvider.prototype.getTileDiscardPolicy = function() {
@@ -146,47 +149,19 @@ define([
     };
 
     /**
-     * Gets an array containing the host names from which a particular tile image can
-     * be requested.
+     * Requests the image for a given tile.
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {Array} The host name(s) from which the tile can be requested.
+     *
+     * @return {Promise} A promise for the image that will resolve when the image is available, or
+     *         undefined if there are too many active requests to the server, and the request
+     *         should be retried later.  If the resulting image is not suitable for display,
+     *         the promise can resolve to undefined.  The resolved image may be either an
+     *         Image or a Canvas DOM object.
      */
-    SingleTileImageryProvider.prototype.getAvailableHostnames = function(x, y, level) {
-        return undefined;
-    };
-
-    /**
-     * Build a URL to retrieve the image for a tile.
-     *
-     * @param {Number} x The x coordinate of the tile.
-     * @param {Number} y The y coordinate of the tile.
-     * @param {Number} level The level-of-detail of the tile.
-     *
-     * @return {String|Promise} Either a string containing the URL, or a Promise for a string
-     *                          if the URL needs to be built asynchronously.
-     */
-    SingleTileImageryProvider.prototype._buildImageUrl = function(x, y, level) {
-        var url = this._url;
-
-        if (typeof this._proxy !== 'undefined') {
-            url = this._proxy.getURL(url);
-        }
-
-        return url;
-    };
-
-    /**
-     * Request the image for a given tile.
-     *
-     * @param {String} url The tile image URL.
-     *
-     * @return A promise for the image that will resolve when the image is available.
-     *         If the image is not suitable for display, the promise can resolve to undefined.
-     */
-    SingleTileImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
+    SingleTileImageryProvider.prototype.requestImage = function(x, y, level) {
         return this._image;
     };
 

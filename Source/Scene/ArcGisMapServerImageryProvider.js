@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/getHostname',
         '../Core/jsonp',
         '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
@@ -13,7 +12,6 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
-        getHostname,
         jsonp,
         writeTextToCanvas,
         DeveloperError,
@@ -63,7 +61,6 @@ define([
         this._url = description.url;
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
-        this._imageUrlHostnames = [getHostname(this._url)];
 
         this._tileWidth = undefined;
         this._tileHeight = undefined;
@@ -104,7 +101,7 @@ define([
             // Install the default tile discard policy if none has been supplied.
             if (typeof that._tileDiscardPolicy === 'undefined') {
                 that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-                    missingImageUrl : that._buildImageUrl(0, 0, that._maximumLevel),
+                    missingImageUrl : buildImageUrl(that, 0, 0, that._maximumLevel),
                     pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)],
                     disableCheckIfAllPixelsAreTransparent : true
                 });
@@ -118,6 +115,17 @@ define([
             console.error('failed to load metadata: ' + e);
         });
     };
+
+    function buildImageUrl(imageryProvider, x, y, level) {
+        var url = imageryProvider._url + '/tile/' + level + '/' + y + '/' + x;
+
+        var proxy = imageryProvider._proxy;
+        if (typeof proxy !== 'undefined') {
+            url = proxy.getURL(url);
+        }
+
+        return url;
+    }
 
     /**
      * Gets the URL of the ArcGIS MapServer.
@@ -194,56 +202,20 @@ define([
     };
 
     /**
-     * Gets an array containing the host names from which a particular tile image can
-     * be requested.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @returns {Array} The host name(s) from which the tile can be requested.  The return
-     * value may be undefined if this imagery provider does not download data from any hosts.
-     */
-    ArcGisMapServerImageryProvider.prototype.getAvailableHostnames = function(x, y, level) {
-        return this._imageUrlHostnames;
-    };
-
-    /**
-     * Build a URL to retrieve the image for a tile.
-     *
-     * @param {Number} x The x coordinate of the tile.
-     * @param {Number} y The y coordinate of the tile.
-     * @param {Number} level The level-of-detail of the tile.
-     *
-     * @return {String|Promise} Either a string containing the URL, or a Promise for a string
-     *                          if the URL needs to be built asynchronously.
-     */
-    ArcGisMapServerImageryProvider.prototype._buildImageUrl = function(x, y, level) {
-        var url = this._url + '/tile/' + level + '/' + y + '/' + x;
-
-        if (typeof this._proxy !== 'undefined') {
-            url = this._proxy.getURL(url);
-        }
-
-        return url;
-    };
-
-    /**
      * Requests the image for a given tile.
      *
-     * @param {Array} hostnames The list of available hostnames, as returned by
-     *                {@see getAvailableHostnames}.
-     * @param {Number} hostnameIndex The index in the hostnames array of the suggested
-     *                 host from which to request the image.
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
      *
-     * @return {Promise} A promise for the image that will resolve when the image is available.
-     *         If the image is not suitable for display, the promise can resolve to undefined.
-     *         The resolved image may be either an Image or a Canvas DOM object.
+     * @return {Promise} A promise for the image that will resolve when the image is available, or
+     *         undefined if there are too many active requests to the server, and the request
+     *         should be retried later.  If the resulting image is not suitable for display,
+     *         the promise can resolve to undefined.  The resolved image may be either an
+     *         Image or a Canvas DOM object.
      */
-    ArcGisMapServerImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
-        var url = this._buildImageUrl(x, y, level);
+    ArcGisMapServerImageryProvider.prototype.requestImage = function(x, y, level) {
+        var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this._tileDiscardPolicy);
     };
 

@@ -71,33 +71,21 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/getHostname',
         '../Core/jsonp',
-        '../Core/loadImage',
         '../Core/DeveloperError',
         '../Core/Cartesian2',
-        '../Core/Extent',
-        '../Core/Math',
         './BingMapsStyle',
         './ImageryProvider',
-        './Projections',
-        './TileState',
         './WebMercatorTilingScheme',
         './DiscardMissingTileImagePolicy',
         '../ThirdParty/when'
     ], function(
         defaultValue,
-        getHostname,
         jsonp,
-        loadImage,
         DeveloperError,
         Cartesian2,
-        Extent,
-        CesiumMath,
         BingMapsStyle,
         ImageryProvider,
-        Projections,
-        TileState,
         WebMercatorTilingScheme,
         DiscardMissingTileImagePolicy,
         when) {
@@ -159,7 +147,6 @@ define([
         this._maximumLevel = undefined;
         this._imageUrlTemplate = undefined;
         this._imageUrlSubdomains = undefined;
-        this._imageUrlHostnames = undefined;
 
         this._ready = false;
 
@@ -176,14 +163,11 @@ define([
             that._maximumLevel = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
             that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
-            that._imageUrlHostnames = that._imageUrlSubdomains.map(function(subdomain) {
-                return getHostname(that._imageUrlTemplate.replace('{subdomain}', subdomain));
-            });
 
             // Install the default tile discard policy if none has been supplied.
             if (typeof that._tileDiscardPolicy === 'undefined') {
                 that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-                    missingImageUrl : that._buildImageUrl(0, 0, 0, that._maximumLevel),
+                    missingImageUrl : buildImageUrl(that, 0, 0, that._maximumLevel),
                     pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
                     disableCheckIfAllPixelsAreTransparent : true
                 });
@@ -194,6 +178,24 @@ define([
             return that._imageUrlTemplate;
         });
     };
+
+    function buildImageUrl(imageryProvider, x, y, level) {
+        var imageUrl = imageryProvider._imageUrlTemplate;
+
+        var quadkey = BingMapsImageryProvider.tileXYToQuadKey(x, y, level);
+        imageUrl = imageUrl.replace('{quadkey}', quadkey);
+
+        var subdomains = imageryProvider._imageUrlSubdomains;
+        var subdomainIndex = (x + y + level) % subdomains.length;
+        imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
+
+        var proxy = imageryProvider._proxy;
+        if (typeof proxy !== 'undefined') {
+            imageUrl = proxy.getURL(imageUrl);
+        }
+
+        return imageUrl;
+    }
 
     /**
      * Gets the name of the Bing Maps server hosting the imagery.
@@ -350,52 +352,21 @@ define([
     };
 
     /**
-     * Gets an array containing the host names from which a particular tile image can
-     * be requested.
-     *
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @returns {Array} The host name(s) from which the tile can be requested.
-     */
-    BingMapsImageryProvider.prototype.getAvailableHostnames = function(x, y, level) {
-        return this._imageUrlHostnames;
-    };
-
-    BingMapsImageryProvider.prototype._buildImageUrl = function(subdomainIndex, x, y, level) {
-        var urlTemplate = this._imageUrlTemplate;
-        var quadkey = BingMapsImageryProvider.tileXYToQuadKey(x, y, level);
-        var subdomains = this._imageUrlSubdomains;
-
-        var imageUrl = urlTemplate.replace('{quadkey}', quadkey);
-        imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
-
-        var proxy = this._proxy;
-        if (typeof proxy !== 'undefined') {
-            imageUrl = proxy.getURL(imageUrl);
-        }
-
-        return imageUrl;
-    };
-
-    /**
      * Requests the image for a given tile.
      *
-     * @param {Array} hostnames The list of available hostnames, as returned by
-     *                {@see getAvailableHostnames}.
-     * @param {Number} hostnameIndex The index in the hostnames array of the suggested
-     *                 host from which to request the image.
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
      *
-     * @return {Promise} A promise for the image that will resolve when the image is available.
-     *         If the image is not suitable for display, the promise can resolve to undefined.
-     *         The resolved image may be either an Image or a Canvas DOM object.
+     * @return {Promise} A promise for the image that will resolve when the image is available, or
+     *         undefined if there are too many active requests to the server, and the request
+     *         should be retried later.  If the resulting image is not suitable for display,
+     *         the promise can resolve to undefined.  The resolved image may be either an
+     *         Image or a Canvas DOM object.
      */
-    BingMapsImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
-        var imageUrl = this._buildImageUrl(hostnameIndex, x, y, level);
-        return ImageryProvider.loadImageAndCheckDiscardPolicy(imageUrl, this._tileDiscardPolicy);
+    BingMapsImageryProvider.prototype.requestImage = function(x, y, level) {
+        var url = buildImageUrl(this, x, y, level);
+        return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this._tileDiscardPolicy);
     };
 
     /**

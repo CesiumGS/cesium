@@ -1,36 +1,20 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/getHostname',
-        '../Core/jsonp',
-        '../Core/loadImage',
         '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
-        '../Core/Cartesian2',
         '../Core/Extent',
-        './DiscardMissingTileImagePolicy',
         './ImageryProvider',
-        './ImageryState',
-        './Projections',
         './WebMercatorTilingScheme',
-        './GeographicTilingScheme',
-        '../ThirdParty/when'
+        './GeographicTilingScheme'
     ], function(
         defaultValue,
-        getHostname,
-        jsonp,
-        loadImage,
         writeTextToCanvas,
         DeveloperError,
-        Cartesian2,
         Extent,
-        DiscardMissingTileImagePolicy,
         ImageryProvider,
-        ImageryState,
-        Projections,
         WebMercatorTilingScheme,
-        GeographicTilingScheme,
-        when) {
+        GeographicTilingScheme) {
     "use strict";
 
     /**
@@ -74,14 +58,15 @@ define([
         this._url = description.url;
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
-        this._imageUrlHostnames = [getHostname(this._url)];
         this._layerName = description.layerName;
 
         this._tileWidth = 256;
         this._tileHeight = 256;
         this._maximumLevel = 18;
+
+        var extent = defaultValue(description.extent, Extent.MAX_VALUE);
         this._tilingScheme = new GeographicTilingScheme({
-            extent : defaultValue(description.extent, Extent.MAX_VALUE)
+            extent : extent
         });
 
         // Create the copyright message.
@@ -95,8 +80,28 @@ define([
         this._ready = true;
     };
 
+    function buildImageUrl(imageryProvider, x, y, level) {
+        var nativeExtent = imageryProvider._tilingScheme.tileXYToNativeExtent(x, y, level);
+        var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
+        var srs = 'EPSG:4326';
+
+        var url = imageryProvider._url;
+        url += '?service=WMS&version=1.1.0&request=GetMap&format=image%2Fjpeg&styles=&width=256&height=256';
+        url += '&layers=' + imageryProvider._layerName;
+        url += '&bbox=' + bbox;
+        url += '&srs=' + srs;
+
+        var proxy = imageryProvider._proxy;
+        if (typeof proxy !== 'undefined') {
+            url = proxy.getURL(url);
+        }
+
+        return url;
+    }
+
     /**
      * Gets the URL of the WMS server.
+     *
      * @returns {String} The URL.
      */
     WebMapServiceImageryProvider.prototype.getUrl = function() {
@@ -105,6 +110,7 @@ define([
 
     /**
      * Gets the name of the WMS layer.
+     *
      * @returns {String} The layer name.
      */
     WebMapServiceImageryProvider.prototype.getLayerName = function() {
@@ -162,6 +168,7 @@ define([
      * Gets the tile discard policy.  If not undefined, the discard policy is responsible
      * for filtering out "missing" tiles via its shouldDiscardImage function.
      * By default, no tiles will be filtered.
+     *
      * @returns {TileDiscardPolicy} The discard policy.
      */
     WebMapServiceImageryProvider.prototype.getTileDiscardPolicy = function() {
@@ -178,53 +185,21 @@ define([
     };
 
     /**
-     * Gets an array containing the host names from which a particular tile image can
-     * be requested.
+     * Requests the image for a given tile.
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {Array} The host name(s) from which the tile can be requested.  The return
-     * value may be undefined if this imagery provider does not download data from any hosts.
+     *
+     * @return {Promise} A promise for the image that will resolve when the image is available, or
+     *         undefined if there are too many active requests to the server, and the request
+     *         should be retried later.  If the resulting image is not suitable for display,
+     *         the promise can resolve to undefined.  The resolved image may be either an
+     *         Image or a Canvas DOM object.
      */
-    WebMapServiceImageryProvider.prototype.getAvailableHostnames = function(x, y, level) {
-        return this._imageUrlHostnames;
-    };
-
-    /**
-     * Build a URL to retrieve the image for a tile.
-     *
-     * @param {Number} x The x coordinate of the tile.
-     * @param {Number} y The y coordinate of the tile.
-     * @param {Number} level The level-of-detail of the tile.
-     *
-     * @return {String|Promise} Either a string containing the URL, or a Promise for a string
-     *                          if the URL needs to be built asynchronously.
-     */
-    WebMapServiceImageryProvider.prototype._buildImageUrl = function(x, y, level) {
-        var nativeExtent = this._tilingScheme.tileXYToNativeExtent(x, y, level);
-        var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
-        var srs = 'EPSG:4326';
-        var url = this._url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this._layerName + '&bbox='  + bbox + '&width=256&height=256&srs=' + srs + '&format=image%2Fjpeg&styles=';
-
-        if (typeof this._proxy !== 'undefined') {
-            url = this._proxy.getURL(url);
-        }
-
-        return url;
-    };
-
-    /**
-     * Request the image for a given tile.
-     *
-     * @param {String} url The tile image URL.
-     *
-     * @return A promise for the image that will resolve when the image is available.
-     *         If the image is not suitable for display, the promise can resolve to undefined.
-     */
-    WebMapServiceImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
-        var imageUrl = this._buildImageUrl(x, y, level);
-        return loadImage(imageUrl);
+    WebMapServiceImageryProvider.prototype.requestImage = function(x, y, level) {
+        var url = buildImageUrl(this, x, y, level);
+        return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this._tileDiscardPolicy);
     };
 
     /**
