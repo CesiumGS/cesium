@@ -21,6 +21,7 @@ define([
         './GeographicTilingScheme',
         './ImageryLayerCollection',
         './ImageryState',
+        './SceneMode',
         './TerrainProvider',
         './TileState',
         './TileImagery',
@@ -50,6 +51,7 @@ define([
         GeographicTilingScheme,
         ImageryLayerCollection,
         ImageryState,
+        SceneMode,
         TerrainProvider,
         TileState,
         TileImagery,
@@ -348,6 +350,12 @@ define([
         u_center2D : function() {
             return Cartesian2.ZERO;
         },
+        u_ellipsoidRadii : function() {
+            return this.ellipsoidRadii;
+        },
+        u_tileExtent : function() {
+            return this.tileExtent;
+        },
         u_modifiedModelView : function() {
             return this.modifiedModelView;
         },
@@ -373,6 +381,8 @@ define([
         center3D : undefined,
         modifiedModelView : undefined,
         modifiedModelViewProjection : undefined,
+        ellipsoidRadii : undefined,
+        tileExtent : undefined,
 
         dayTextures : [],
         dayTextureTranslationAndScale : [],
@@ -418,6 +428,8 @@ define([
 
                 var rtc = tile.center;
                 uniformMap.center3D = rtc;
+                uniformMap.ellipsoidRadii = tile.tilingScheme.ellipsoid.getRadii();
+                uniformMap.tileExtent = new Cartesian4(tile.extent.west, tile.extent.south, tile.extent.east, tile.extent.north);
 
                 var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
                 uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);
@@ -683,27 +695,66 @@ define([
         surface._texturesRendered += readyTextureCount;
     }
 
+    var boundingSphereScratch = new BoundingSphere();
+
     function isTileVisible(surface, frameState, tile) {
+        var cullingVolume = frameState.cullingVolume;
+
         var boundingVolume = tile.boundingSphere3D;
-        if (frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
+
+        if (frameState.mode !== SceneMode.SCENE3D) {
+            boundingVolume = boundingSphereScratch;
+            // TODO: If we show terrain heights in Columbus View, the bounding sphere
+            //       needs to be expanded to include the heights.
+            BoundingSphere.fromExtent2D(tile.extent, frameState.scene2D.projection, boundingVolume);
+            boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
+
+            if (frameState.mode === SceneMode.MORPHING) {
+                boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
+            }
+        }
+
+        if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
             return false;
         }
 
-        var occludeePoint = tile.getOccludeePoint();
-        var occluder = surface._occluder;
-        return (!occludeePoint || occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) && occluder.isVisible(boundingVolume);
+        if (frameState.mode === SceneMode.SCENE3D) {
+            var occludeePoint = tile.getOccludeePoint();
+            var occluder = surface._occluder;
+            return (!occludeePoint || occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) && occluder.isVisible(boundingVolume);
+        }
+
+        return true;
     }
 
-    function distanceSquaredToTile(cameraCartesianPosition, cameraCartographicPosition, tile) {
-        var vectorFromSouthwestCorner = cameraCartesianPosition.subtract(tile.southwestCornerCartesian);
-        var distanceToWestPlane = vectorFromSouthwestCorner.dot(tile.westNormal);
-        var distanceToSouthPlane = vectorFromSouthwestCorner.dot(tile.southNormal);
+    function distanceSquaredToTile(frameState, cameraCartesianPosition, cameraCartographicPosition, tile) {
+        var southwestCornerCartesian = tile.southwestCornerCartesian;
+        var northeastCornerCartesian = tile.northeastCornerCartesian;
+        var westNormal = tile.westNormal;
+        var southNormal = tile.southNormal;
+        var eastNormal = tile.eastNormal;
+        var northNormal = tile.northNormal;
+        var maxHeight = tile.maxHeight;
 
-        var vectorFromNortheastCorner = cameraCartesianPosition.subtract(tile.northeastCornerCartesian);
-        var distanceToEastPlane = vectorFromNortheastCorner.dot(tile.eastNormal);
-        var distanceToNorthPlane = vectorFromNortheastCorner.dot(tile.northNormal);
+        if (frameState.mode !== SceneMode.SCENE3D) {
+            southwestCornerCartesian = frameState.scene2D.projection.project(tile.extent.getSouthwest());
+            northeastCornerCartesian = frameState.scene2D.projection.project(tile.extent.getNortheast());
+            westNormal = Cartesian3.UNIT_Y.negate();
+            eastNormal = Cartesian3.UNIT_Y;
+            southNormal = Cartesian3.UNIT_Z.negate();
+            northNormal = Cartesian3.UNIT_Z;
+            maxHeight = 0.0;
+        }
 
-        var distanceFromTop = cameraCartographicPosition.height - tile.maxHeight;
+        var vectorFromSouthwestCorner = cameraCartesianPosition.subtract(southwestCornerCartesian);
+        var distanceToWestPlane = vectorFromSouthwestCorner.dot(westNormal);
+        var distanceToSouthPlane = vectorFromSouthwestCorner.dot(southNormal);
+
+        var vectorFromNortheastCorner = cameraCartesianPosition.subtract(northeastCornerCartesian);
+        var distanceToEastPlane = vectorFromNortheastCorner.dot(eastNormal);
+        var distanceToNorthPlane = vectorFromNortheastCorner.dot(northNormal);
+
+        var distanceFromTop = cameraCartographicPosition.height - maxHeight;
 
         var result = 0.0;
 
@@ -727,20 +778,31 @@ define([
     }
 
     function screenSpaceError(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
-        var extent = tile.extent;
-        var latitudeClosestToEquator = 0.0;
-        if (extent.south > 0.0) {
-            latitudeClosestToEquator = extent.south;
-        } else if (extent.north < 0.0) {
-            latitudeClosestToEquator = extent.north;
+        if (frameState.mode === SceneMode.SCENE2D) {
+            return screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile);
         }
 
-        var latitudeFactor = Math.cos(latitudeClosestToEquator);
+        var extent = tile.extent;
+
+        var latitudeFactor = 1.0;
+
+        // Adjust by latitude in 3D only.
+        if (frameState.mode === SceneMode.SCENE3D) {
+            var latitudeClosestToEquator = 0.0;
+            if (extent.south > 0.0) {
+                latitudeClosestToEquator = extent.south;
+            } else if (extent.north < 0.0) {
+                latitudeClosestToEquator = extent.north;
+            }
+
+            latitudeFactor = Math.cos(latitudeClosestToEquator);
+        }
+
         var maxGeometricError = latitudeFactor * surface.terrainProvider.getLevelMaximumGeometricError(tile.level);
 
         var camera = frameState.camera;
 
-        var distance = Math.sqrt(distanceSquaredToTile(cameraPosition, cameraPositionCartographic, tile));
+        var distance = Math.sqrt(distanceSquaredToTile(frameState, cameraPosition, cameraPositionCartographic, tile));
         tile.distance = distance;
 
         var viewportHeight = context.getViewport().height;
@@ -750,6 +812,11 @@ define([
 
         // PERFORMANCE_TODO: factor out stuff that's constant across tiles.
         return (maxGeometricError * viewportHeight) / (2 * distance * Math.tan(0.5 * fovy));
+    }
+
+    function screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
+        // TODO
+        return 1.0;
     }
 
     function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile) {

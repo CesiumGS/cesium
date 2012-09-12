@@ -1,6 +1,5 @@
 attribute vec3 position3D;
 attribute vec2 textureCoordinates;
-attribute vec2 position2D;
 
 uniform float u_morphTime;
 uniform int u_mode;
@@ -9,6 +8,8 @@ uniform vec3 u_center3D;
 uniform vec2 u_center2D;
 uniform mat4 u_modifiedModelView;
 uniform mat4 u_modifiedModelViewProjection;
+uniform vec4 u_tileExtent;
+uniform vec3 u_ellipsoidRadii;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -17,6 +18,12 @@ varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 
 varying vec2 v_textureCoordinates;
+
+vec3 get2DPosition()
+{
+    vec2 longLat = mix(u_tileExtent.st, u_tileExtent.pq, textureCoordinates);
+    return vec3(0.0, longLat.x * u_ellipsoidRadii.x, longLat.y * u_ellipsoidRadii.z);
+}
 
 void main() 
 {
@@ -28,10 +35,10 @@ void main()
     }
     else if (u_mode == czm_scene2D) {
         v_positionEC = (czm_modelView * vec4(position3DWC, 1.0)).xyz;
-        gl_Position = czm_projection * (u_modifiedModelView * vec4(0.0, position2D.x, position2D.y, 1.0));
+        gl_Position = czm_projection * (u_modifiedModelView * vec4(get2DPosition(), 1.0));
     }
     else {
-        vec3 position2DWC = vec3(0.0, position2D.x + u_center2D.x, position2D.y + u_center2D.y);
+        vec3 position2DWC = get2DPosition();
         v_positionEC = (czm_modelView * vec4(position3DWC, 1.0)).xyz;
         vec4 position = czm_columbusViewMorph(position2DWC, position3DWC, u_morphTime);
         gl_Position = czm_modelViewProjection * position;

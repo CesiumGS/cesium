@@ -182,6 +182,21 @@ define([
          */
         this.transientData = undefined;
 
+        /**
+         * The distance from the camera to this tile, updated when the tile is selected
+         * for rendering.  TODO: can we get rid of this?
+         * @type Number
+         */
+        this.distance = 0.0;
+
+        // TODO: acknowledge or remove these properties:
+        // southwestCornerCartesian
+        // northeastCornerCartesian
+        // westNormal
+        // southNormal
+        // eastNormal
+        // northNormal
+
         // TODO: write doc for these.
         this.occludeePoint = undefined;
         this.occludeePointComputed = false;
