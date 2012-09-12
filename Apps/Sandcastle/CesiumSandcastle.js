@@ -107,6 +107,8 @@ require({
         var demoTooltips = {};
         var errorLines = [];
         var highlightLines = [];
+        var searchTerm = '';
+        var searchRegExp;
         var hintGlobals = [
             'require',
             'document',
@@ -318,7 +320,19 @@ require({
                 jsEditor.setLineClass(line, null);
                 jsEditor.clearMarker(line);
             }
-            if (!JSHINT(jsEditor.getValue(), hintOptions)) {
+            var code = jsEditor.getValue();
+            if (searchTerm !== '') {
+                var codeLines = code.split('\n');
+                len = codeLines.length;
+                for (i = 0; i < len; ++i) {
+                    if (searchRegExp.test(codeLines[i])) {
+                        line = jsEditor.setMarker(i, makeLineLabel('Search: ' + searchTerm), "searchMarker");
+                        jsEditor.setLineClass(line, "searchLine");
+                        errorLines.push(line);
+                    }
+                }
+            }
+            if (!JSHINT(code, hintOptions)) {
                 hints = JSHINT.errors;
                 len = hints.length;
                 for (i = 0; i < len; ++i) {
@@ -338,6 +352,13 @@ require({
             }
             hintTimer = setTimeout(clearErrorsAddHints, 550);
             highlightRun();
+        }
+
+        function scheduleHintNoChange() {
+            if (typeof hintTimer !== 'undefined') {
+                window.clearTimeout(hintTimer);
+            }
+            hintTimer = setTimeout(clearErrorsAddHints, 550);
         }
 
         function scrollToLine(lineNumber) {
@@ -490,8 +511,8 @@ require({
         });
 
         registry.byId('search').on('change', function() {
-            var searchTerm = this.get('value');
-            var searchRegExp = new RegExp(searchTerm, 'i');
+            searchTerm = this.get('value');
+            searchRegExp = new RegExp(searchTerm, 'i');
             var numDemosShown = 0;
             for ( var i = 0; i < gallery_demos.length; i++) {
                 var demo = gallery_demos[i];
@@ -506,7 +527,7 @@ require({
 
             var galleryTab = registry.byId('galleryContainer');
             if (searchTerm !== '') {
-                galleryTab.set('title', 'Gallery Search Results');
+                galleryTab.set('title', 'Gallery - Search Results');
             } else {
                 galleryTab.set('title', 'Gallery');
             }
@@ -519,6 +540,7 @@ require({
 
             registry.byId('demosContainer').scrollTo({x:0, y:0});
             showGallery();
+            scheduleHintNoChange();
         });
 
         // Clicking the 'Run' button simply reloads the iframe.

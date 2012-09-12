@@ -219,6 +219,17 @@ a.linkButton:focus, a.linkButton:hover {
     background: rgba(0, 200, 0, 0.2);
 }
 
+.CodeMirror pre.searchMarker {
+    color: #222;
+    font-weight: bold;
+    background: #CEF;
+    border-radius: 3px;
+}
+
+.CodeMirror pre.searchLine {
+    background: rgba(180, 230, 240, 0.2);
+}
+
 .CodeMirror-gutter-text {
     cursor: default;
 }
