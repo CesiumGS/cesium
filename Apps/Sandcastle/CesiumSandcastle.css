@@ -42,7 +42,7 @@ html, body {
 .cesiumTitle {
     display: block;
     position: absolute;
-    top: 2px;
+    bottom: 0;
     right: 5px;
     color: #DDD;
     font-style: italic;
@@ -84,7 +84,7 @@ html, body {
     font-size: 0.9em;
 }
 
-.demoError {
+.galleryError {
     color: #f88;
 }
 

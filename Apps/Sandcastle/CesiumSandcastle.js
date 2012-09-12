@@ -162,6 +162,11 @@ require({
         };
         var hintTimer;
 
+        var galleryErrorMsg = document.createElement('span');
+        galleryErrorMsg.className = 'galleryError';
+        galleryErrorMsg.style.display = 'none';
+        galleryErrorMsg.textContent = 'No demos match your search terms.';
+
         xhr.get({
             url: '../../Build/Documentation/types.txt',
             handleAs: 'json',
@@ -487,11 +492,13 @@ require({
         registry.byId('search').on('change', function() {
             var searchTerm = this.get('value');
             var searchRegExp = new RegExp(searchTerm, 'i');
+            var numDemosShown = 0;
             for ( var i = 0; i < gallery_demos.length; i++) {
                 var demo = gallery_demos[i];
                 var demoName = demo.name;
                 if (searchRegExp.test(demoName) || searchRegExp.test(demo.code)) {
                     document.getElementById(demoName).style.display = 'inline-block';
+                    ++numDemosShown;
                 } else {
                     document.getElementById(demoName).style.display = 'none';
                 }
@@ -502,6 +509,12 @@ require({
                 galleryTab.set('title', 'Gallery Search Results');
             } else {
                 galleryTab.set('title', 'Gallery');
+            }
+
+            if (numDemosShown) {
+                galleryErrorMsg.style.display = 'none';
+            } else {
+                galleryErrorMsg.style.display = 'inline-block';
             }
 
             registry.byId('demosContainer').scrollTo({x:0, y:0});
@@ -644,7 +657,8 @@ require({
         }
 
         if (typeof gallery_demos === 'undefined') {
-            dom.byId('demos').innerHTML = '<span class="demoError">No demos found, please run the build script.</span>';
+            galleryErrorMsg.textContent = 'No demos found, please run the build script.';
+            galleryErrorMsg.style.display = 'inline-block';
         } else {
             var i;
             var len = gallery_demos.length;
@@ -671,4 +685,5 @@ require({
                 addFileToGallery(gallery_demos.length - 1);
             }
         }
+        dom.byId('demos').appendChild(galleryErrorMsg);
     });
