@@ -470,7 +470,7 @@ require([
         
         new DropDownButton({
             label : 'Scene Mode',
-            dropDown: sceneMenu,
+            dropDown: sceneMenu
         }).placeAt('toolbar');
     }
     
@@ -482,10 +482,6 @@ require([
         }
     }).placeAt(dom.byId('cesiumContainer'));
 
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
-    
     dom.byId('toolbar').innerHTML = '';
 });
 

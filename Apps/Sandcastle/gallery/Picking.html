@@ -251,8 +251,8 @@ require([
                     scene.getAnimations().addProperty(sensor, 'erosion', 1.0, 0.0, {
                         onComplete : function() {
                             if (!sensors.isDestroyed()) {
-	                            sensors.remove(sensor);
-	                        }
+                                sensors.remove(sensor);
+                            }
                         }
                     });
                 }
@@ -367,10 +367,6 @@ require([
         }
     }).placeAt(dom.byId('cesiumContainer'));
 
-    on(window, 'resize', function() {
-        cesiumWidget.resize();
-    });
-    
     dom.byId('toolbar').innerHTML = '';
 });
 </script>
