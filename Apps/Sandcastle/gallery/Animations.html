@@ -85,32 +85,34 @@ require([
     var polygon;
     var rectangularSensor;
     
-    function alphaAnimation(primitive, scene) {
-        Sandcastle.declare(alphaAnimation);     // For highlighting in Sandcastle.
-        scene.getAnimations().removeAll();
+    function addAlphaAnimation(primitive, scene) {
+        Sandcastle.declare(addAlphaAnimation);     // For highlighting in Sandcastle.
         scene.getAnimations().addAlpha(primitive.material, 0.0, 0.7);
     }
     
-    function erosionAnimation(primitive, scene) {
-        Sandcastle.declare(erosionAnimation);   // For highlighting in Sandcastle.
-        scene.getAnimations().removeAll();
+    function addErosionAnimation(primitive, scene) {
+        Sandcastle.declare(addErosionAnimation);   // For highlighting in Sandcastle.
         scene.getAnimations().addProperty(primitive, 'erosion', 0.0, 1.0, { 
             duration: 1000 
         });
     } 
     
-    function heightAnimation(primitive, scene) {
-        Sandcastle.declare(heightAnimation);    // For highlighting in Sandcastle.
-        scene.getAnimations().removeAll();
+    function addHeightAnimation(primitive, scene) {
+        Sandcastle.declare(addHeightAnimation);    // For highlighting in Sandcastle.
         scene.getAnimations().addProperty(primitive, 'height', 5000000.0, 0.0, { 
-            duration: 1000 
+            duration: 1000
         });
     }
     
-    function stripeAnimation(primitive, scene) {
-        Sandcastle.declare(stripeAnimation);    // For highlighting in Sandcastle.
-        scene.getAnimations().removeAll();
+    function addStripeAnimation(primitive, scene) {
+        Sandcastle.declare(addStripeAnimation);    // For highlighting in Sandcastle.
         scene.getAnimations().addOffsetIncrement(primitive.material);
+    }
+    
+    function resetPolygonPropeties(polygon) {
+        polygon.erosion = 1.0;
+        polygon.height = 0.0;
+        polygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
     }
     
     function createPrimitives(widget) {
@@ -146,32 +148,39 @@ require([
         new Button({
             label: 'Alpha Animation',
             onClick: function() {
-                alphaAnimation(polygon, scene); 
-                Sandcastle.highlight(alphaAnimation);
+                scene.getAnimations().removeAll();
+                resetPolygonPropeties(polygon);
+                addAlphaAnimation(polygon, scene); 
+                Sandcastle.highlight(addAlphaAnimation);
             }
         }).placeAt('toolbar');
         
         new Button({
             label: 'Erosion Animation',
             onClick: function() {
-                erosionAnimation(polygon, scene); 
-                Sandcastle.highlight(erosionAnimation);
+                scene.getAnimations().removeAll();
+                resetPolygonPropeties(polygon);
+                addErosionAnimation(polygon, scene); 
+                Sandcastle.highlight(addErosionAnimation);
             }
         }).placeAt('toolbar');
         
         new Button({
             label: 'Height Animation',
             onClick: function() {
-                heightAnimation(polygon, scene); 
-                Sandcastle.highlight(heightAnimation);
+                scene.getAnimations().removeAll();
+                resetPolygonPropeties(polygon);
+                addHeightAnimation(polygon, scene); 
+                Sandcastle.highlight(addHeightAnimation);
             }
         }).placeAt('toolbar');
         
         new Button({
             label: 'Stripe Animation',
             onClick: function() {
-                stripeAnimation(rectangularSensor, scene); 
-                Sandcastle.highlight(stripeAnimation);
+                scene.getAnimations().removeAll();
+                addStripeAnimation(rectangularSensor, scene); 
+                Sandcastle.highlight(addStripeAnimation);
             }
         }).placeAt('toolbar');
     }
