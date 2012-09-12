@@ -34,7 +34,7 @@ define([
      *
      * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
-     * @see OpenStreetMapTileProvider
+     * @see OpenStreetMapImageryProvider
      * @see CompositeTileProvider
      */
     var SolidColorImageryProvider = function(maxLevel) {

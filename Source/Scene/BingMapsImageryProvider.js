@@ -124,7 +124,7 @@ define([
      *
      * @see SingleTileImageryProvider
      * @see ArcGisMapServerImageryProvider
-     * @see OpenStreetMapTileProvider
+     * @see OpenStreetMapImageryProvider
      * @see CompositeTileProvider
      *
      * @see <a href='http://msdn.microsoft.com/en-us/library/ff701713.aspx'>Bing Maps REST Services</a>

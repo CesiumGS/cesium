@@ -42,7 +42,7 @@ define([
      *
      * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
-     * @see OpenStreetMapTileProvider
+     * @see OpenStreetMapImageryProvider
      * @see CompositeTileProvider
      *
      * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
@@ -63,7 +63,7 @@ define([
         this._url = description.url;
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
-        this._imageUrlHostnames = [getHostname(this.url)];
+        this._imageUrlHostnames = [getHostname(this._url)];
 
         this._tileWidth = undefined;
         this._tileHeight = undefined;
