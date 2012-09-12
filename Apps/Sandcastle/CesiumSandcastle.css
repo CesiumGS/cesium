@@ -178,6 +178,10 @@ a.linkButton:focus, a.linkButton:hover {
     overflow: hidden;
 }
 
+.mblScrollBarWrapper > div {
+    background-color: #9ED3FF !important;
+}
+
 .CodeMirror pre.errorMarker {
     color: #222;
     font-weight: bold;

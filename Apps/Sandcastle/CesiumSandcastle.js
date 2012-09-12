@@ -97,6 +97,7 @@ require({
         var suggestButton = registry.byId('buttonSuggest');
         var docTimer;
         var docTabs = {};
+        var docError = false;
         var galleryTooltipTimer;
         var activeGalleryTooltipDemo;
         var cesiumContainer = registry.byId('cesiumContainer');
@@ -165,8 +166,7 @@ require({
             url: '../../Build/Documentation/types.txt',
             handleAs: 'json',
             error: function(error) {
-                // Quiet for now, because the console will be cleared soon after this.
-                // We'll let the user know about this error further down.
+                docError = true;
             }
         }).then(function (value) {
             local.docTypes = value;
@@ -453,7 +453,7 @@ require({
                 jsEle.type = 'text/javascript';
                 jsEle.textContent = jsEditor.getValue();
                 bucketDoc.body.appendChild(jsEle);
-                if (local.docTypes.length === 0) {
+                if (docError) {
                     appendConsole('consoleError', "Documentation not available.  Please run the 'Documentation' build script to generate Cesium documentation.");
                 }
             } else if (typeof e.data.log !== 'undefined') {
@@ -650,9 +650,9 @@ require({
             var len = gallery_demos.length;
             var demos = dom.byId('demos');
 
-            // Sort by date descending.  This will eventually be a user option.
+            // Sort alphabetically.  This will eventually be a user option.
             gallery_demos.sort(function(a, b) {
-                return b.date - a.date;
+                return (b.name < a.name) ? 1 : ((b.name > a.name) ? -1 : 0);
             });
 
             var queryInGalleryIndex = false;
