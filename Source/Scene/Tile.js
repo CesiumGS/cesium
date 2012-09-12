@@ -132,7 +132,7 @@ define([
         this.maxHeight = undefined;
 
         /**
-         * A sphere that completely contains this tile.  This property may be
+         * A sphere that completely contains this tile on the globe.  This property may be
          * undefined until the tile's {@link vertexArray} is loaded.
          * @type BoundingSphere
          */

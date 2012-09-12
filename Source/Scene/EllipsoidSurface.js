@@ -685,7 +685,7 @@ define([
 
     function isTileVisible(surface, frameState, tile) {
         var boundingVolume = tile.boundingSphere3D;
-        if (frameState.cullingVolume.getVisibility(boundingVolume, BoundingSphere.planeSphereIntersect) === Intersect.OUTSIDE) {
+        if (frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
             return false;
         }
 
