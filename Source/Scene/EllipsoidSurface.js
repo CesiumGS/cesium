@@ -738,7 +738,13 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             southwestCornerCartesian = frameState.scene2D.projection.project(tile.extent.getSouthwest());
+            southwestCornerCartesian.z = southwestCornerCartesian.y;
+            southwestCornerCartesian.y = southwestCornerCartesian.x;
+            southwestCornerCartesian.x = 0.0;
             northeastCornerCartesian = frameState.scene2D.projection.project(tile.extent.getNortheast());
+            northeastCornerCartesian.z = northeastCornerCartesian.y;
+            northeastCornerCartesian.y = northeastCornerCartesian.x;
+            northeastCornerCartesian.x = 0.0;
             westNormal = Cartesian3.UNIT_Y.negate();
             eastNormal = Cartesian3.UNIT_Y;
             southNormal = Cartesian3.UNIT_Z.negate();
@@ -754,7 +760,13 @@ define([
         var distanceToEastPlane = vectorFromNortheastCorner.dot(eastNormal);
         var distanceToNorthPlane = vectorFromNortheastCorner.dot(northNormal);
 
-        var distanceFromTop = cameraCartographicPosition.height - maxHeight;
+        var cameraHeight;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            cameraHeight = cameraCartographicPosition.height;
+        } else {
+            cameraHeight = cameraCartesianPosition.x;
+        }
+        var distanceFromTop = cameraHeight - maxHeight;
 
         var result = 0.0;
 
@@ -800,13 +812,13 @@ define([
 
         var maxGeometricError = latitudeFactor * surface.terrainProvider.getLevelMaximumGeometricError(tile.level);
 
-        var camera = frameState.camera;
 
         var distance = Math.sqrt(distanceSquaredToTile(frameState, cameraPosition, cameraPositionCartographic, tile));
         tile.distance = distance;
 
         var viewportHeight = context.getViewport().height;
 
+        var camera = frameState.camera;
         var frustum = camera.frustum;
         var fovy = frustum.fovy;
 
