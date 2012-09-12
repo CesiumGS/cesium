@@ -15,8 +15,10 @@ require({
             location: '../Apps/Sandcastle'
         }]
     }, [
+        'Sandcastle/LinkButton',
         'Widgets/Dojo/CesiumWidget',
         'Widgets/Dojo/CesiumViewerWidget',
+        'dojo/mouse',
         'dojo/on',
         'dojo/parser',
         'dojo/dom',
@@ -44,11 +46,12 @@ require({
         'dijit/Toolbar',
         'dijit/ToolbarSeparator',
         'dojox/mobile/ScrollableView',
-        'Sandcastle/LinkButton',
         'dojo/domReady!'],
     function (
+            LinkButton,
             CesiumWidget,
             CesiumViewerWidget,
+            mouse,
             on,
             parser,
             dom,
@@ -612,16 +615,31 @@ require({
                 imgSrc = 'gallery/' + window.encodeURIComponent(demo.img);
             }
 
-            var demoName = demo.name;
-            var tile = document.createElement('div');
-            tile.className = 'demoTile';
-            tile.id = demoName;
-            tile.style.display = 'inline-block';
-            tile.innerHTML = '<div class="demoTileTitle">' + demoName + '</div>' +
-                             '<img src="' + imgSrc + '" class="demoTileThumbnail" alt="" width="225" height="150" onDragStart="return false;" />';
-            demos.appendChild(tile);
+            var demoLink = document.createElement('a');
+            demoLink.id = demo.name;
+            demoLink.className = 'linkButton';
+            demoLink.href = 'gallery/' + demo.name + '.html';
+            demos.appendChild(demoLink);
 
-            addLoadOnClickCallback(demoName, demo);
+            demoLink.onclick = function(e) {
+                if (mouse.isMiddle(e)) {
+                    window.open('gallery/' + demo.name +'.html');
+                } else {
+                    loadFromGallery(demo);
+                    var demoSrc = demo.name + '.html';
+                    if (demoSrc !== window.location.search.substring(1)) {
+                        window.history.pushState(demo, demo.name, '?src=' + demoSrc);
+                    }
+                    document.title = demo.name + ' - Cesium Sandcastle';
+                }
+                e.preventDefault();
+            };
+
+            new LinkButton({
+                'label': '<div class="demoTileTitle">' + demo.name + '</div>' +
+                         '<img src="' + imgSrc + '" class="demoTileThumbnail" alt="" onDragStart="return false;" />'
+            }).placeAt(demoLink);
+
             loadDemoFromFile(i);
         }
 
@@ -636,17 +654,6 @@ require({
             gallery_demos.sort(function(a, b) {
                 return b.date - a.date;
             });
-
-            var addLoadOnClickCallback = function(divId, demo) {
-                on(dom.byId(divId), 'click', function() {
-                    loadFromGallery(demo);
-                    var demoSrc = demo.name + '.html';
-                    if (demoSrc !== window.location.search.substring(1)) {
-                        window.history.pushState(demo, demo.name, '?src=' + demoSrc);
-                    }
-                    document.title = demo.name + ' - Cesium Sandcastle';
-                });
-            };
 
             var queryInGalleryIndex = false;
             var queryName =  window.decodeURIComponent(queryObject.src.replace('.html', ''));
