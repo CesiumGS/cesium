@@ -23,6 +23,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CullFace',
         '../Renderer/VertexLayout',
+        './Command',
         './Material',
         './SceneMode',
         '../Shaders/Noise',
@@ -54,6 +55,7 @@ define([
         BufferUsage,
         CullFace,
         VertexLayout,
+        Command,
         Material,
         SceneMode,
         Noise,
@@ -153,6 +155,8 @@ define([
 
         this._boundingVolume = new BoundingSphere();
         this._boundingVolume2D = new BoundingSphere();
+
+        this._commandList = [];
 
         /**
          * DOC_TBA
@@ -655,6 +659,9 @@ define([
         var pass = frameState.passes;
         var vas = this._vertices.getVertexArrays();
         var length = vas.length;
+        var commands = this._commandList;
+        var command;
+
         if (pass.color) {
             if (typeof this._rs === 'undefined') {
                 // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
@@ -692,15 +699,22 @@ define([
                 this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
             }
 
+            commands.length = length;
+
             for (var i = 0; i < length; ++i) {
-                commandList.push({
-                    boundingVolume : boundingVolume,
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._sp,
-                    uniformMap : this._drawUniforms,
-                    vertexArray : vas[i],
-                    renderState : this._rs
-                });
+                command = commands[i];
+                if (typeof command === 'undefined') {
+                    command = commands[i] = new Command();
+                }
+
+                command.boundingVolume = boundingVolume;
+                command.primitiveType = PrimitiveType.TRIANGLES;
+                command.shaderProgram = this._sp,
+                command.uniformMap = this._drawUniforms;
+                command.vertexArray = vas[i];
+                command.renderState = this._rs;
+
+                commandList.push(command);
             }
         }
         if (pass.pick) {
@@ -731,15 +745,22 @@ define([
                 };
             }
 
+            commands.length = length;
+
             for (var j = 0; j < length; ++j) {
-                commandList.push({
-                    boundingVolume : boundingVolume,
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._spPick,
-                    uniformMap : this._pickUniforms,
-                    vertexArray : vas[j],
-                    renderState : this._rsPick
-                });
+                command = commands[j];
+                if (typeof command === 'undefined') {
+                    command = commands[j] = new Command();
+                }
+
+                command.boundingVolume = boundingVolume;
+                command.primitiveType = PrimitiveType.TRIANGLES;
+                command.shaderProgram = this._spPick,
+                command.uniformMap = this._pickUniforms;
+                command.vertexArray = vas[j];
+                command.renderState = this._rsPick;
+
+                commandList.push(command);
             }
         }
     };

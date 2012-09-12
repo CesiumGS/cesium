@@ -91,17 +91,13 @@ require([
 
     var Box = function(position) {
         var ellipsoid = Cesium.Ellipsoid.WGS84;
-    
-        this._va = undefined;
-        this._sp = undefined;
-        this._rs = undefined;
         this._pickId = undefined;
         
-        this._boundingSphere = undefined;
         this._colorCommand = new Cesium.Command();
         this._pickCommand = new Cesium.Command();
-    
-        this.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+        this._colorCommand.primitiveType = this._pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
+        this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new BoundingSphere();
+        this._colorCommand.modelMatrix = this._pickCommand.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
     
         var that = this;
         this._colorCommand.uniformMap = {
@@ -136,7 +132,7 @@ require([
         var colorCommand = this._colorCommand;
         var pickCommand = this._pickCommand;
             
-        if (typeof this._va === 'undefined') {
+        if (typeof colorCommand.vertexArray === 'undefined') {
             var vs = '';
             vs += 'attribute vec4 position;';
             vs += 'void main()';
@@ -153,9 +149,7 @@ require([
             var dimensions = new Cesium.Cartesian3(500000.0, 500000.0, 500000.0);
             var maximumCorner = dimensions.multiplyByScalar(0.5);
             var minimumCorner = maximumCorner.negate();
-            this._boundingSphere = Cesium.BoundingSphere.fromPoints([
-                minimumCorner, maximumCorner
-            ]);
+            Cesium.BoundingSphere.fromPoints([minimumCorner, maximumCorner], colorCommand.boundingVolume);
         
             var mesh = Cesium.MeshFilters.toWireframeInPlace(
                 Cesium.BoxTessellator.compute({
@@ -164,27 +158,20 @@ require([
                 }));
             var attributeIndices = Cesium.MeshFilters.createAttributeIndices(mesh);
         
-            this._va = context.createVertexArrayFromMesh({
+            colorCommand.vertexArray = pickCommand.vertexArray = context.createVertexArrayFromMesh({
                 mesh: mesh,
                 attributeIndices: attributeIndices,
                 bufferUsage: Cesium.BufferUsage.STATIC_DRAW
             });
         
-            this._sp = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
-            this._rs = context.createRenderState({
+            colorCommand.shaderProgram = pickCommand.shaderProgram = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
+            colorCommand.renderState = pickCommand.renderState = context.createRenderState({
                 depthTest : {
                     enabled : true
                 }
             });
         
             this._pickId = context.createPickId(this);
-            
-            colorCommand.boundingVolume = pickCommand.boundingVolume = this._boundingSphere;
-            colorCommand.modelMatrix = pickCommand.modelMatrix = this.modelMatrix;
-            colorCommand.primitiveType = pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
-            colorCommand.shaderProgram = pickCommand.shaderProgram = this._sp;
-            colorCommand.vertexArray = pickCommand.vertexArray = this._va;
-            colorCommand.renderState = pickCommand.renderState = this._rs;
         }
         
         var pass = frameState.passes;
@@ -201,8 +188,9 @@ require([
     };
     
     Box.prototype.destroy = function() {
-        this._va = this._va && this._va.destroy();
-        this._sp = this._sp && this._sp.release();
+        var colorCommand = this._colorCommand;
+        colorCommand.vertexArray = colorCommand.vertexArray && colorCommand.vertexArray.destroy();
+        colorCommand.shaderProgram = colorCommand.shaderProgram && colorCommand.shaderProgram.release();
         this._pickId = this._pickId && this._pickId.destroy();
         return Cesium.destroyObject(this);
     };
@@ -218,14 +206,12 @@ require([
         var ellipsoid = Cesium.Ellipsoid.WGS84;
 
         this._ellipsoid = ellipsoid;
-        this._va = undefined;
-        this._sp = undefined;
-        this._rs = undefined;
         this._pickId = undefined;
 
-        this._boundingSphere = undefined;
         this._colorCommand = new Cesium.Command();
         this._pickCommand = new Cesium.Command();
+        this._colorCommand.primitiveType = this._pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
+        this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new BoundingSphere();
 
         this._mode = undefined;
         this._projection = undefined;
@@ -308,10 +294,10 @@ require([
                     value : [0.0, 0.0]
                 };
 
-                this._boundingSphere = Cesium.BoundingSphere.fromPoints([
+                Cesium.BoundingSphere.fromPoints([
                     new Cesium.Cartesian3(-x, -y, -z),
                     new Cesium.Cartesian3(x, y, z)
-                ]);
+                ], colorCommand.boundingVolume);
             } else {
                 var positions = mesh.attributes.position3D.values;
                 var projectedPositions = [];
@@ -331,8 +317,8 @@ require([
                 }
 
                 if (mode === Cesium.SceneMode.SCENE2D || mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-                    this._boundingSphere = Cesium.BoundingSphere.fromPoints(projectedPositions);
-                    this._boundingSphere.center = new Cesium.Cartesian3(this._boundingSphere.center.z, this._boundingSphere.center.x, this._boundingSphere.center.y);
+                    Cesium.BoundingSphere.fromPoints(projectedPositions, , colorCommand.boundingVolume);
+                    , colorCommand.boundingVolume.center = new Cesium.Cartesian3(, colorCommand.boundingVolume.z, , colorCommand.boundingVolume.x, , colorCommand.boundingVolume.center.y);
                 } else {
                     var bv3D = Cesium.BoundingSphere.fromPoints([
                         minimumCorner,
@@ -341,7 +327,7 @@ require([
                     var bv2D = Cesium.BoundingSphere.fromPoints(projectedPositions);
                     bv2D.center = new Cesium.Cartesian3(bv2D.center.z, bv2D.center.x, bv2D.center.y);
 
-                    this._boundingSphere = bv3D.union(bv2D);
+                    bv3D.union(bv2D, colorCommand.boundingVolume);
                 }
 
                 mesh.attributes.position2D = {
@@ -351,19 +337,15 @@ require([
                 };
             }
 
-            this._va = this._va && this._va.destroy();
-            this._va = context.createVertexArrayFromMesh({
+            colorCommand.vertexArray = colorCommand.vertexArray && colorCommand.vertexArray.destroy();
+            colorCommand.vertexArray = pickCommand.vertexArray = context.createVertexArrayFromMesh({
                 mesh             : mesh,
                 attributeIndices : this._attributeIndices,
                 bufferUsage      : Cesium.BufferUsage.STATIC_DRAW
             });
-            
-            colorCommand.boundingVolume = pickCommand.boundingVolume = this._boundingSphere;
-            colorCommand.primitiveType = pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
-            colorCommand.vertexArray = pickCommand.vertexArray = this._va;
         }
 
-        if (typeof this._sp === 'undefined') {
+        if (typeof colorCommand.shaderProgram === 'undefined') {
             var vs = '';
             vs += 'attribute vec3 position2D;';
             vs += 'attribute vec3 position3D;';
@@ -380,16 +362,12 @@ require([
             fs += '    gl_FragColor = u_color;';
             fs += '}';
 
-            this._sp = context.getShaderCache().getShaderProgram(vs, fs, this._attributeIndices);
-
-            this._rs = context.createRenderState({
+            colorCommand.shaderProgram = pickCommand.shaderProgram = context.getShaderCache().getShaderProgram(vs, fs, this._attributeIndices);
+            colorCommand.renderState = pickCommand.renderState = context.createRenderState({
                 depthTest : {
                     enabled : true
                 }
             });
-            
-            colorCommand.shaderProgram = pickCommand.shaderProgram = this._sp;
-            colorCommand.renderState = pickCommand.renderState = this._rs;
         }
 
         var pass = frameState.passes;

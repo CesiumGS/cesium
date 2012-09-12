@@ -14,6 +14,7 @@ define([
         '../Core/Intersect',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
+        './Command',
         './SceneMode',
         './Polyline',
         '../Shaders/PolylineVS',
@@ -35,6 +36,7 @@ define([
         Intersect,
         BlendingState,
         BufferUsage,
+        Command,
         SceneMode,
         Polyline,
         PolylineVS,
@@ -133,6 +135,8 @@ define([
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
+
+        this._commandList = [];
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -524,72 +528,99 @@ define([
         }
 
         var pass = frameState.passes;
+        var commands = this._commandList;
+        var command;
         polylineBuckets = this._polylineBuckets;
-        if (polylineBuckets) {
+
+        if (typeof polylineBuckets !== 'undefined') {
             if (pass.color) {
                 length = this._colorVertexArrays.length;
+                commands.length = 0;
                 for (var m = 0; m < length; ++m) {
                     var vaColor = this._colorVertexArrays[m];
                     var vaOutlineColor = this._outlineColorVertexArrays[m];
                     buckets = this._colorVertexArrays[m].buckets;
                     bucketLength = buckets.length;
-                    for ( var n = 0; n < bucketLength; ++n) {
+                    commands.length += bucketLength;
+                    for ( var n = 0, p = 0; n < bucketLength; ++n, p += 3) {
                         bucketLocator = buckets[n];
-                        commandList.push({
-                            boundingVolume : boundingVolume,
-                            modelMatrix : modelMatrix,
-                            primitiveType : PrimitiveType.LINES,
-                            count : bucketLocator.count,
-                            offset : bucketLocator.offset,
-                            shaderProgram : this._sp,
-                            uniformMap : this._drawUniformsOne,
-                            vertexArray : vaOutlineColor.va,
-                            renderState : bucketLocator.rsOne
-                        },
-                        {
-                            boundingVolume : boundingVolume,
-                            modelMatrix : modelMatrix,
-                            primitiveType : PrimitiveType.LINES,
-                            count : bucketLocator.count,
-                            offset : bucketLocator.offset,
-                            shaderProgram : this._sp,
-                            uniformMap : this._drawUniformsTwo,
-                            vertexArray : vaColor.va,
-                            renderState : bucketLocator.rsTwo
-                        },
-                        {
-                            boundingVolume : boundingVolume,
-                            modelMatrix : modelMatrix,
-                            primitiveType : PrimitiveType.LINES,
-                            count : bucketLocator.count,
-                            offset : bucketLocator.offset,
-                            shaderProgram : this._sp,
-                            uniformMap : this._drawUniformsThree,
-                            vertexArray : vaOutlineColor.va,
-                            renderState : bucketLocator.rsThree
-                        });
+
+                        command = commands[p];
+                        if (typeof command === 'undefined') {
+                            command = commands[p] = new Command();
+                        }
+
+                        command.boundingVolume = boundingVolume;
+                        command.modelMatrix = modelMatrix;
+                        command.primitiveType = PrimitiveType.LINES;
+                        command.count = bucketLocator.count;
+                        command.offset = bucketLocator.offset;
+                        command.shaderProgram = this._sp;
+                        command.uniformMap = this._drawUniformsOne;
+                        command.vertexArray = vaOutlineColor.va;
+                        command.renderState = bucketLocator.rsOne;
+                        commandList.push(command);
+
+                        command = commands[p + 1];
+                        if (typeof command === 'undefined') {
+                            command = commands[p + 1] = new Command();
+                        }
+
+                        command.boundingVolume = boundingVolume;
+                        command.modelMatrix = modelMatrix;
+                        command.primitiveType = PrimitiveType.LINES;
+                        command.count = bucketLocator.count;
+                        command.offset = bucketLocator.offset;
+                        command.shaderProgram = this._sp;
+                        command.uniformMap = this._drawUniformsTwo;
+                        command.vertexArray = vaColor.va;
+                        command.renderState = bucketLocator.rsTwo;
+                        commandList.push(command);
+
+                        command = commands[p + 2];
+                        if (typeof command === 'undefined') {
+                            command = commands[p + 2] = new Command();
+                        }
+
+                        command.boundingVolume = boundingVolume;
+                        command.modelMatrix = modelMatrix;
+                        command.primitiveType = PrimitiveType.LINES;
+                        command.count = bucketLocator.count;
+                        command.offset = bucketLocator.offset;
+                        command.shaderProgram = this._sp;
+                        command.uniformMap = this._drawUniformsThree;
+                        command.vertexArray = vaOutlineColor.va;
+                        command.renderState = bucketLocator.rsThree;
+                        commandList.push(command);
                     }
                 }
             }
             if (pass.pick) {
                 length = this._pickColorVertexArrays.length;
+                commands.length = 0;
                 for ( var a = 0; a < length; ++a) {
                     var vaPickColor = this._pickColorVertexArrays[a];
                     buckets = vaPickColor.buckets;
                     bucketLength = buckets.length;
+                    commands.length += bucketLength;
                     for ( var b = 0; b < bucketLength; ++b) {
                         bucketLocator = buckets[b];
-                        commandList.push({
-                            boundingVolume : boundingVolume,
-                            modelMatrix : modelMatrix,
-                            primitiveType : PrimitiveType.LINES,
-                            count : bucketLocator.count,
-                            offset : bucketLocator.offset,
-                            shaderProgram : this._sp,
-                            uniformMap : this._pickUniforms,
-                            vertexArray : vaPickColor.va,
-                            renderState : bucketLocator.rsPick
-                        });
+
+                        command = commands[b];
+                        if (typeof command === 'undefined') {
+                            command = commands[b] = new Command();
+                        }
+
+                        command.boundingVolume = boundingVolume;
+                        command.modelMatrix = modelMatrix;
+                        command.primitiveType = PrimitiveType.LINES;
+                        command.count = bucketLocator.count;
+                        command.offset = bucketLocator.offset;
+                        command.shaderProgram = this._sp;
+                        command.uniformMap = this._pickUniforms;
+                        command.vertexArray = vaPickColor.va;
+                        command.renderState = bucketLocator.rsPick;
+                        commandList.push(command);
                     }
                 }
             }

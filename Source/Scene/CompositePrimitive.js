@@ -401,6 +401,7 @@ define([
         return this._primitives.length;
     };
 
+    var scratchCommandList = [];
     /**
      * @private
      */
@@ -424,7 +425,9 @@ define([
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
             var primitive = primitives[i];
-            var primitiveCommandList = [];
+
+            var primitiveCommandList = scratchCommandList;
+            primitiveCommandList.length = 0;
             primitive.update(context, frameState, primitiveCommandList);
 
             var commandLength = primitiveCommandList.length;

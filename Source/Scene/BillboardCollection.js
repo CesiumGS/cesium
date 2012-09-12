@@ -15,6 +15,7 @@ define([
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/VertexArrayFacade',
+        './Command',
         './SceneMode',
         './Billboard',
         './HorizontalOrigin',
@@ -36,6 +37,7 @@ define([
         BlendingState,
         BufferUsage,
         VertexArrayFacade,
+        Command,
         SceneMode,
         Billboard,
         HorizontalOrigin,
@@ -135,6 +137,8 @@ define([
 
         this._baseVolume = new BoundingSphere();
         this._baseVolume2D = new BoundingSphere();
+
+        this._commandList = [];
 
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -1030,6 +1034,8 @@ define([
         var pass = frameState.passes;
         var va = this._vaf.va;
         var vaLength = va.length;
+        var commands = this._commandList;
+        var command;
         var j;
         if (pass.color) {
             if (typeof this._sp === 'undefined') {
@@ -1042,17 +1048,23 @@ define([
 
                 this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
             }
+
+            commands.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
-                commandList.push({
-                    boundingVolume : boundingVolume,
-                    modelMatrix : modelMatrix,
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    count : va[j].indicesCount,
-                    shaderProgram : this._sp,
-                    uniformMap : this._uniforms,
-                    vertexArray : va[j].va,
-                    renderState : this._rs
-                });
+                command = commands[j];
+                if (typeof command === 'undefined') {
+                    command = commands[j] = new Command();
+                }
+
+                command.boundingVolume = boundingVolume;
+                command.modelMatrix = modelMatrix;
+                command.primitiveType = PrimitiveType.TRIANGLES;
+                command.count = va[j].indicesCount;
+                command.shaderProgram = this._sp;
+                command.uniformMap = this._uniforms;
+                command.vertexArray = va[j].va;
+                command.renderState = this._rs;
+                commandList.push(command);
             }
         }
         if (pass.pick) {
@@ -1068,17 +1080,23 @@ define([
                         '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
                         attributeIndices);
             }
+
+            commands.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
-                commandList.push({
-                    boundingVolume : boundingVolume,
-                    modelMatrix : modelMatrix,
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    count : va[j].indicesCount,
-                    shaderProgram : this._spPick,
-                    uniformMap : this._uniforms,
-                    vertexArray : va[j].va,
-                    renderState : this._rsPick
-                });
+                command = commands[j];
+                if (typeof command === 'undefined') {
+                    command = commands[j] = new Command();
+                }
+
+                command.boundingVolume = boundingVolume;
+                command.modelMatrix = modelMatrix;
+                command.primitiveType = PrimitiveType.TRIANGLES;
+                command.count = va[j].indicesCount;
+                command.shaderProgram = this._spPick;
+                command.uniformMap = this._uniforms;
+                command.vertexArray = va[j].va;
+                command.renderState = this._rsPick;
+                commandList.push(command);
             }
         }
     };
