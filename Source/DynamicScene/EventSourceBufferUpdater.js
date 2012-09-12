@@ -1,11 +1,11 @@
 /*global define*/
 define(['../Core/DeveloperError',
         './fillBufferIncrementally',
-        '../Core/addEventSourceListener'
+        '../Core/incrementalGet'
     ], function(
          DeveloperError,
          fillBufferIncrementally,
-         addEventSourceListener) {
+         incrementalGet) {
     "use strict";
     /*global EventSource*/
 
@@ -22,7 +22,6 @@ define(['../Core/DeveloperError',
      *
      * @exception {DeveloperError} documentManager is required.
      * @exception {DeveloperError} url is required.
-     * @exception {DeveloperError} eventName is required.
      *
      * @see {DocumentManager}
      * @see <a href="http://www.w3.org/TR/eventsource/">EventSource</a>
@@ -34,15 +33,13 @@ define(['../Core/DeveloperError',
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
-        if (typeof eventName === 'undefined') {
-            throw new DeveloperError('eventName is required.');
-        }
         this._documentManager = documentManager;
         this._url = url;
         this._eventName = eventName;
         this._currentUrl = undefined;
         this._currentEventName = undefined;
         this._eventSource = undefined;
+        this._handle = undefined;
     };
 
     /**
@@ -54,14 +51,41 @@ define(['../Core/DeveloperError',
      */
     EventSourceBufferUpdater.prototype.update = function(currentTime, dynamicObjectCollection) {
         var url = this._url.getValue(currentTime);
-        var eventName = this._eventName.getValue(currentTime);
+
+        var eventName = this._eventName;
+        var eventNameValue;
+        if(typeof eventName !== 'undefined'){
+            eventNameValue = eventName.getValue(currentTime);
+        }
+
         var self = this;
-        if(url !== this._currentUrl || eventName !== this._currentEventName){
+        if(typeof eventNameValue === 'undefined' && url !== this._currentUrl){
             this._currentUrl = url;
-            this._currentEventName = eventName;
+            if(typeof this._handle !== 'undefined'){
+                this._handle.abort();
+            }
+            this._handle = incrementalGet(url, function(data){
+                self._documentManager.process(data, dynamicObjectCollection, url);
+            });
+        }
+        else if(eventNameValue !== this._currentEventName && url !== this._currentUrl){
+            this._currentUrl = url;
+            this._currentEventName = eventNameValue;
+            if(typeof this._eventSource !== 'undefined'){
+                this._eventSource.close();
+            }
             this._eventSource = new EventSource(url);
-            addEventSourceListener(this._eventSource, eventName, function(item){
-                self._documentManager.process(item, dynamicObjectCollection, url);
+            this._eventSource.addEventListener(eventNameValue, function (e) {
+                self._documentManager.process(JSON.parse(e.data), dynamicObjectCollection, url);
+            });
+        }
+        else if (eventNameValue !== this._currentEventName && url === this._currentUrl){
+            if(typeof this._currentEventName !== 'undefined'){
+                this._eventSource.removeEventListener(this._currentEventName);
+            }
+            this._currentEventName = eventNameValue;
+            this._eventSource.addEventListener(eventNameValue, function (e) {
+                self._documentManager.process(JSON.parse(e.data), dynamicObjectCollection, url);
             });
         }
     };
@@ -73,6 +97,9 @@ define(['../Core/DeveloperError',
     EventSourceBufferUpdater.prototype.abort = function() {
         if(typeof this._eventSource !== 'undefined'){
             this._eventSource.close();
+        }
+        if(typeof this._handle !== 'undefined'){
+            this._handle.abort();
         }
     };
 
