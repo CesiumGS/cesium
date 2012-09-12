@@ -27,10 +27,10 @@ define([
     "use strict";
 
     /**
-     * A class to maintain multiple documents. Use this class to add, remove and update distinct czml documents
+     * A class to maintain multiple {@link CompositeDynamicObjectCollection}. Use this class to add, remove and update distinct czml
      * from various sources.
      *
-     * @alias DocumentManager
+     * @alias CzmlProcessor
      * @constructor
      *
      * @param {Scene} scene The current scene.
@@ -39,7 +39,7 @@ define([
      *
      * @see Scene
      */
-    var DocumentManager = function(scene){
+    var CzmlProcessor = function(scene){
         if (typeof scene === 'undefined') {
             throw new DeveloperError('scene is required.');
         }
@@ -61,49 +61,49 @@ define([
 
     /**
      * Processes the JSON object to a new {@link CompositeDynamicObjectCollection} and adds it to the {@link CompositeDynamicObjectCollection} container.
-     * If the document contains external czml, it creates new documents according
+     * If the czml fragment contains an external property, it creates new {@link CompositeDynamicObjectCollection} according
      * to the scope of the external property. If the scope property is not specified or specified as PRIVATE. A new
      * CompositeDynamicObjectCollection is created and populated with the external CZML data. If the scope property
      * is specified as SHARED, then a new DynamicObjectCollection is created, populated with the external czml and
      * added to the existing CompositeDynamicObjectCollection. Any properties in a SHARED scope are then merged.
-     * @memberof DocumentManager
+     * @memberof CzmlProcessor
      *
      * @param {Object} json A JSON object with valid czml.
-     * @param {String} documentName The document's name to associate with the JSON object.
+     * @param {String} name The name to associate with the {@link CompositeDynamicObjectCollection}.
      * @returns {CompositeDynamicObjectCollection} The newly created {@link CompositeDynamicObjectCollection}.
      *
      */
-    DocumentManager.prototype.add = function(json, documentName){
+    CzmlProcessor.prototype.add = function(json, name){
         var dynamicObjectCollection  = new DynamicObjectCollection();
         var cDoc = new CompositeDynamicObjectCollection([dynamicObjectCollection]);
-        if(typeof documentName !== 'undefined'){
-            cDoc.documentName = documentName;
+        if(typeof name !== 'undefined'){
+            cDoc.name = name;
         }
         else{
-            cDoc.documentName = createGuid();
+            cDoc.name = createGuid();
         }
         this.compositeCollections.push(cDoc);
         this.visualizers.push(VisualizerCollection.createCzmlStandardCollection(this._scene, cDoc));
-        this.process(json, dynamicObjectCollection, documentName);
+        this.process(json, dynamicObjectCollection, name);
         return cDoc;
     };
 
     /**
-     * Removes a document from the document collection.
-     * @memberof DocumentManager
+     * Removes a {@link CompositeDynamicObjectCollection} from the {@link CompositeDynamicObjectCollection} collection.
+     * @memberof CzmlProcessor
      *
-     * @param {String} documentName The document's name to remove from the current composite collection.
+     * @param {String} name The {@link CompositeDynamicObjectCollection}'s name to remove from the current composite collection.
      *
-     * @exception {DeveloperError} documentName is required.
+     * @exception {DeveloperError} name is required.
      */
-    DocumentManager.prototype.remove = function(documentName){
-        if(typeof documentName === 'undefined'){
-            throw new DeveloperError('documentName is required.');
+    CzmlProcessor.prototype.remove = function(name){
+        if(typeof name === 'undefined'){
+            throw new DeveloperError('name is required.');
         }
         var length = this.compositeCollections.length;
         for(var i = 0; i < length; ++i){
             var compositeCollection = this.compositeCollections[i];
-            if(compositeCollection.documentName === documentName){
+            if(compositeCollection.name === name){
                 var updaterLength = this._updaters.length;
                 for(var j = 0; j < updaterLength; ++j){
                     if(this._updaters[j]._compositeDynamicObjectCollection === compositeCollection){
@@ -121,10 +121,10 @@ define([
     };
 
     /**
-     * Removes all documents from the document collection.
-     * @memberof DocumentManager
+     * Removes all {@link CompositeDynamicObjectCollection} from the composite collection.
+     * @memberof CzmlProcessor
      */
-    DocumentManager.prototype.removeAll = function(){
+    CzmlProcessor.prototype.removeAll = function(){
         var length = this.visualizers.length;
         for(var i = 0; i < length; ++i){
             this.visualizers[i].removeAllPrimitives();
@@ -136,21 +136,21 @@ define([
     };
 
     /**
-     * Processes the JSON object and updates the {@link DynamicObjectCollection}. It then looks for any external CZML properties and if the document
-     * contains external CZML, it creates new documents according to the scope of the external property. If the
+     * Processes the JSON object and updates the {@link DynamicObjectCollection}. It then looks for any external CZML properties and if the CZML
+     * contains an external CZML property, it creates new {@link CompositeDynamicObjectCollection} according to the scope of the external property. If the
      * scope property is not specified or specified as PRIVATE. A new CompositeDynamicObjectCollection is created
      * and populated with the external CZML data. If the scope property is specified as SHARED, then a new
      * DynamicObjectCollection is created, populated with the external CZML and added to the existing
      * CompositeDynamicObjectCollection. Any properties in a SHARED scope are then merged.
-     * @memberof DocumentManager
+     * @memberof CzmlProcessor
      *
      * @param {Object} json The JSON object to process.
      * @param {DynamicObjectCollection} dynamicObjectCollection The {@link DynamicObjectCollection} to update with the processed CZML.
-     * @param {String} documentName The name of the document.
+     * @param {String} name The name of the {@link CompositeDynamicObjectCollection}.
      */
-    DocumentManager.prototype.process = function(json, dynamicObjectCollection, documentName){
+    CzmlProcessor.prototype.process = function(json, dynamicObjectCollection, name){
         var compositeDynamicObjectCollection = dynamicObjectCollection.compositeCollection;
-        var updatedObjects = processCzml(json, dynamicObjectCollection, documentName);
+        var updatedObjects = processCzml(json, dynamicObjectCollection, name);
         var length = updatedObjects.length;
         for(var i = 0; i < length; ++i){
             var updatedObject = updatedObjects[i];
@@ -176,7 +176,7 @@ define([
                 }
                 else{
                     var cDoc = new CompositeDynamicObjectCollection([doc]);
-                    cDoc.documentName = createGuid();
+                    cDoc.name = createGuid();
                     cDoc.parent = compositeDynamicObjectCollection;
                     this.compositeCollections.push(cDoc);
                     this.visualizers.push(VisualizerCollection.createCzmlStandardCollection(this._scene, cDoc));
@@ -186,53 +186,53 @@ define([
     };
 
     /**
-     * Returns all documents.
-     * @memberof DocumentManager
+     * Returns all {@link CompositeDynamicObjectCollection}.
+     * @memberof CzmlProcessor
      *
-     * @returns {Array} The list of {@link CompositeDynamicObjectCollection} contained in the {@link DocumentManager}
+     * @returns {Array} The list of {@link CompositeDynamicObjectCollection} contained in the {@link CzmlProcessor}
      *
      * @see CompositeDynamicObjectCollection
      */
-    DocumentManager.prototype.getDocuments = function(){
+    CzmlProcessor.prototype.getDocuments = function(){
         return this.compositeCollections;
     };
 
     /**
      * Returns all visualizers.
-     * @memberof DocumentManager
+     * @memberof CzmlProcessor
      *
-     * @returns {Array} The list of {@link VisualizerCollection} contained in the {@link DocumentManager}
+     * @returns {Array} The list of {@link VisualizerCollection} contained in the {@link CzmlProcessor}
      *
      * @see VisualizerCollection
      */
-    DocumentManager.prototype.getVisualizers = function(){
+    CzmlProcessor.prototype.getVisualizers = function(){
         return this.visualizers;
     };
 
     /**
-     * Gets an object with the specified id in the specified document.
-     * @memberof DocumentManager
+     * Gets an object with the specified id in the specified {@link CompositeDynamicObjectCollection}.
+     * @memberof CzmlProcessor
      *
      * @param {String} objectId The id of the object to retrieve.
-     * @param {String} documentName The document's name to find the object.
+     * @param {String} name The {@link CompositeDynamicObjectCollection}'s name to find the object.
      * @returns {DynamicObject} The {@link DynamicObject} with the provided id or undefined if not found.
      *
      * @exception {DeveloperError} objectId is required.
-     * @exception {DeveloperError} documentName is required
+     * @exception {DeveloperError} name is required
      *
      * @see {DynamicObject}
      */
-    DocumentManager.prototype.getObject = function(objectId, documentName){
+    CzmlProcessor.prototype.getObject = function(objectId, name){
         if(typeof objectId === 'undefined'){
             throw new DeveloperError('objectId is required.');
         }
-        if(typeof documentName === 'undefined'){
-            throw new DeveloperError('documentName is required.');
+        if(typeof name === 'undefined'){
+            throw new DeveloperError('name is required.');
         }
         var length = this.compositeCollections.length;
         for(var i = 0; i < length; ++i){
             var compositeCollection = this.compositeCollections[i];
-            if(compositeCollection.documentName === documentName){
+            if(compositeCollection.name === name){
                 return compositeCollection.getObject(objectId);
             }
         }
@@ -244,11 +244,11 @@ define([
      * If the collection contains a mix of infinitely available data and non-infinite data,
      * It will return the interval pertaining to the non-infinite data only.  If all
      * data is infinite, an infinite interval will be returned.
-     * @memberof DocumentManager
+     * @memberof CzmlProcessor
      *
      * @returns {TimeInterval} The availability of DynamicObjects in the collection.
      */
-    DocumentManager.prototype.computeAvailability = function() {
+    CzmlProcessor.prototype.computeAvailability = function() {
         var startTime = Iso8601.MAXIMUM_VALUE;
         var stopTime = Iso8601.MINIMUM_VALUE;
         var i;
@@ -277,11 +277,11 @@ define([
 
     /**
      * Calls all document updaters and visualizers with the current time.
-     * @memberof DocumentManager
+     * @memberof CzmlProcessor
      *
      * @param {JulianDate} currentTime The current time.
      */
-    DocumentManager.prototype.update = function(currentTime){
+    CzmlProcessor.prototype.update = function(currentTime){
         var updaters = this._updaters;
         var length = updaters.length;
         var i;
@@ -294,5 +294,5 @@ define([
         }
     };
 
-    return DocumentManager;
+    return CzmlProcessor;
 });

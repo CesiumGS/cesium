@@ -16,24 +16,24 @@ define(['../Core/DeveloperError',
      * @alias EventSourceUpdater
      * @constructor
      *
-     * @param {DocumentManager} documentManager The document manager.
+     * @param {CzmlProcessor} czmlProcessor The CZML processor.
      * @param {String} url The url of the document.
      * @param {String} eventName The name of the event in the <a href="http://www.w3.org/TR/eventsource/">EventSource</a> to listen to.
      *
-     * @exception {DeveloperError} documentManager is required.
+     * @exception {DeveloperError} czmlProcessor is required.
      * @exception {DeveloperError} url is required.
      *
-     * @see {DocumentManager}
+     * @see {CzmlProcessor}
      * @see <a href="http://www.w3.org/TR/eventsource/">EventSource</a>
      */
-    var EventSourceUpdater = function EventSourceUpdater(documentManager, url, eventName) {
-        if (typeof documentManager === 'undefined') {
-            throw new DeveloperError('documentManager is required.');
+    var EventSourceUpdater = function EventSourceUpdater(czmlProcessor, url, eventName) {
+        if (typeof czmlProcessor === 'undefined') {
+            throw new DeveloperError('czmlProcessor is required.');
         }
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
-        this._documentManager = documentManager;
+        this._czmlProcessor = czmlProcessor;
         this._url = url;
         this._eventName = eventName;
         this._currentUrl = undefined;
@@ -65,7 +65,7 @@ define(['../Core/DeveloperError',
                 this._handle.abort();
             }
             this._handle = incrementalGet(url, function(data){
-                self._documentManager.process(data, dynamicObjectCollection, url);
+                self._czmlProcessor.process(data, dynamicObjectCollection, url);
             });
         }
         else if(eventNameValue !== this._currentEventName && url !== this._currentUrl){
@@ -76,7 +76,7 @@ define(['../Core/DeveloperError',
             }
             this._eventSource = new EventSource(url);
             this._eventSource.addEventListener(eventNameValue, function (e) {
-                self._documentManager.process(JSON.parse(e.data), dynamicObjectCollection, url);
+                self._czmlProcessor.process(JSON.parse(e.data), dynamicObjectCollection, url);
             });
         }
         else if (eventNameValue !== this._currentEventName && url === this._currentUrl){
@@ -85,7 +85,7 @@ define(['../Core/DeveloperError',
             }
             this._currentEventName = eventNameValue;
             this._eventSource.addEventListener(eventNameValue, function (e) {
-                self._documentManager.process(JSON.parse(e.data), dynamicObjectCollection, url);
+                self._czmlProcessor.process(JSON.parse(e.data), dynamicObjectCollection, url);
             });
         }
     };

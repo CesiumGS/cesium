@@ -42,7 +42,7 @@ define([
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileProvider',
         '../../Scene/PerformanceDisplay',
-        '../../DynamicScene/DocumentManager',
+        '../../DynamicScene/CzmlProcessor',
         'dojo/text!./CesiumViewerWidget.html'
     ], function (
         require,
@@ -87,7 +87,7 @@ define([
         SceneTransitioner,
         SingleTileProvider,
         PerformanceDisplay,
-        DocumentManager,
+        CzmlProcessor,
         template) {
     "use strict";
 
@@ -455,7 +455,7 @@ define([
             this.animPause.set('checked', true);
             this.animPlay.set('checked', false);
 
-            var availability = this.documentManager.computeAvailability();
+            var availability = this.czmlProcessor.computeAvailability();
             if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
                 clock.startTime = new JulianDate();
                 clock.stopTime = clock.startTime.addDays(1);
@@ -487,7 +487,7 @@ define([
             var reader = new FileReader();
             var widget = this;
             reader.onload = function(evt) {
-                widget.documentManager.add(JSON.parse(evt.target.result), f.name);
+                widget.czmlProcessor.add(JSON.parse(evt.target.result), f.name);
                 widget.setTimeFromBuffer();
             };
             reader.readAsText(f);
@@ -592,7 +592,7 @@ define([
             }
 
             var animationController = this.animationController;
-            this.documentManager = new DocumentManager(scene);
+            this.czmlProcessor = new CzmlProcessor(scene);
 
             var clock = this.clock;
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
@@ -600,7 +600,7 @@ define([
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 getJson(widget.endUserOptions.source).then(function(czmlData) {
-                    widget.documentManager.add(czmlData, widget.endUserOptions.source);
+                    widget.czmlProcessor.add(czmlData, widget.endUserOptions.source);
                     widget.setTimeFromBuffer();
                 },
                 function(error) {
@@ -971,10 +971,10 @@ define([
                 this._lastTimeLabelClock = currentTime;
                 this._lastTimeLabelDate = Date.now();
             }
-            this.documentManager.update(currentTime);
+            this.czmlProcessor.update(currentTime);
             // Update the camera to stay centered on the selected object, if any.
             if (cameraCenteredObjectID) {
-                var dynamicObject = this.documentManager.getObject(cameraCenteredObjectID);
+                var dynamicObject = this.czmlProcessor.getObject(cameraCenteredObjectID);
                 if (dynamicObject && dynamicObject.position) {
                     cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
                     if (typeof cameraCenteredObjectIDPosition !== 'undefined') {

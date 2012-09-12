@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/DocumentManager',
+         'DynamicScene/CzmlProcessor',
          'DynamicScene/SystemClockUpdater',
          'Core/JulianDate',
          'Core/Iso8601',
@@ -9,7 +9,7 @@ defineSuite([
          '../Specs/destroyScene',
          '../Specs/MockProperty'
      ], function(
-             DocumentManager,
+             CzmlProcessor,
              SystemClockUpdater,
              JulianDate,
              Iso8601,
@@ -33,45 +33,45 @@ defineSuite([
     afterEach(function() {
     });
 
-    it('DocumentManager throws with empty argument.', function() {
+    it('CzmlProcessor throws with empty argument.', function() {
         expect(function() {
-           return new DocumentManager();
+           return new CzmlProcessor();
         }).toThrow();
     });
 
-    it('adds a document to the document manager and increments document count', function(){
-        var dm = new DocumentManager(scene);
+    it('adds czml to the czml processor and increments CompositeDynamicObjectCollection count', function(){
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"e349b862-5ea3-48ca-b108-2fb4b95ae5c5","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         var docs = dm.getDocuments();
         expect(docs.length).toEqual(0);
         dm.add(json, "root");
         docs = dm.getDocuments();
         expect(docs.length).toEqual(1);
-        expect(docs[0].documentName).toEqual('root');
+        expect(docs[0].name).toEqual('root');
         var obj = dm.getObject("e349b862-5ea3-48ca-b108-2fb4b95ae5c5", "root");
         expect(obj).toBeDefined();
     });
 
-    it('adds a document to the document manager without a documentName creates a unique doc name', function(){
-        var dm = new DocumentManager(scene);
+    it('adds czml to the czml processor without a name creates a unique doc name', function(){
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"e349b862-5ea3-48ca-b108-2fb4b95ae5c5","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         var docs = dm.getDocuments();
         expect(docs.length).toEqual(0);
         dm.add(json);
         docs = dm.getDocuments();
         expect(docs.length).toEqual(1);
-        expect(docs[0].documentName).toBeDefined();
+        expect(docs[0].name).toBeDefined();
     });
 
-    it('removes without a document name causes exception', function(){
-        var dm = new DocumentManager(scene);
+    it('removes without a compositeDynamicObjectCollection name causes exception', function(){
+        var dm = new CzmlProcessor(scene);
         expect(function() {
             dm.remove();
         }).toThrow();
     });
 
-    it('removes with a invalid document name does nothing', function(){
-        var dm = new DocumentManager(scene);
+    it('removes with a invalid compositeDynamicObjectCollection name does nothing', function(){
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"e349b862-5ea3-48ca-b108-2fb4b95ae5c5","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         dm.add(json, "root");
         expect(dm.getDocuments().length).toEqual(1);
@@ -81,8 +81,8 @@ defineSuite([
         expect(dm.getVisualizers().length).toEqual(1);
     });
 
-    it('removes with a valid document name removes the document', function(){
-        var dm = new DocumentManager(scene);
+    it('removes with a valid compositeDynamicObjectCollection name removes the compositeDynamicObjectCollection', function(){
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"e349b862-5ea3-48ca-b108-2fb4b95ae5c5","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         dm.add(json, "root");
         dm.add(json, "toot");
@@ -96,12 +96,12 @@ defineSuite([
         var length = docs.length;
         for(var i = 0; i < length;++i){
             var doc = docs[i];
-            expect(doc.documentName).toNotEqual('root');
+            expect(doc.name).toNotEqual('root');
         }
     });
 
     it('removeAll empties the collection', function(){
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"e349b862-5ea3-48ca-b108-2fb4b95ae5c5","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         dm.add(json, "root");
         dm.add(json, "toot");
@@ -114,21 +114,21 @@ defineSuite([
     });
 
     it('getObject with no arguments throws exception', function(){
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         expect(function(){
             dm.getObject();
         }).toThrow();
     });
 
-    it('getObject without documentName argument throws exception', function(){
-        var dm = new DocumentManager(scene);
+    it('getObject without name argument throws exception', function(){
+        var dm = new CzmlProcessor(scene);
         expect(function(){
             dm.getObject('id');
         }).toThrow();
     });
 
     it('getObject with valid id and name returns an object', function(){
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"1","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         dm.add(json, "root");
         json = [{"id":"2","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
@@ -140,7 +140,7 @@ defineSuite([
     });
 
     it('getObject with invalid id returns undefined', function(){
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"1","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         dm.add(json, "root");
         json = [{"id":"2","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
@@ -151,8 +151,8 @@ defineSuite([
         expect(dm.getObject("2", 'root')).toBeUndefined();
     });
 
-    it('getObject with invalid documentName returns undefined', function(){
-        var dm = new DocumentManager(scene);
+    it('getObject with invalid name returns undefined', function(){
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"1","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         dm.add(json, "root");
         json = [{"id":"2","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
@@ -163,8 +163,8 @@ defineSuite([
         expect(dm.getObject("1", 'toot')).toBeUndefined();
     });
 
-    it('getObject with invalid id and documentName returns undefined', function(){
-        var dm = new DocumentManager(scene);
+    it('getObject with invalid id and name returns undefined', function(){
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"1","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         dm.add(json, "root");
         json = [{"id":"2","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
@@ -182,7 +182,7 @@ defineSuite([
                 }
         };
         spyOn(window, 'EventSource').andReturn(eventSource);
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"1","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         dm.add(json, "root");
         json = [{"id":"2","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
@@ -199,7 +199,7 @@ defineSuite([
     });
 
     it('computeAvailability returns infinite with no data.', function() {
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"1","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         dm.add(json, "root");
         var availability = dm.computeAvailability();
@@ -208,7 +208,7 @@ defineSuite([
     });
 
     it('computeAvailability returns intersction of collections.', function() {
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"1","external":{"polling":"http://localhost/test", "scope":"SHARED"}, "availability" : "2012-08-01/2012-08-02"},{"id":"2","external":{"polling":"http://localhost/test", "scope":"SHARED"}, "availability" : "2012-08-05/2012-08-06"}];
         dm.add(json, "root");
 
@@ -217,8 +217,8 @@ defineSuite([
         expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
     });
 
-    it('document has refreshInterval uses SystemClockUpdater.', function() {
-        var dm = new DocumentManager(scene);
+    it('czml has refreshInterval uses SystemClockUpdater.', function() {
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"1","external":{"polling":"http://localhost/test", "scope":"SHARED", "refreshInterval": "30"}}];
 
         dm.add(json, "root");
@@ -227,8 +227,8 @@ defineSuite([
         expect(dm._updaters[0]._updater instanceof SystemClockUpdater).toBeTruthy();
     });
 
-    it('document uses event source and adds to existing document.', function() {
-        var dm = new DocumentManager(scene);
+    it('czml uses event source and adds to existing compositeDynamicObjectCollection.', function() {
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"1","external":{"eventsource":"http://localhost/test",  "eventname":"access", "scope":"SHARED"}}];
 
         dm.add(json, "root");
@@ -237,8 +237,8 @@ defineSuite([
         expect(dc._collections.length).toEqual(2);
     });
 
-    it('document uses event source and adds to new document.', function() {
-        var dm = new DocumentManager(scene);
+    it('czml uses event source and adds to new compositeDynamicObjectCollection.', function() {
+        var dm = new CzmlProcessor(scene);
         var json = [{"id":"1","external":{"eventsource":"http://localhost/test", "eventname":"access", "scope":"PRIVATE"}}];
 
         dm.add(json, "root");

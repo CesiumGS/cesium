@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'DynamicScene/SystemClockUpdater',
-         'DynamicScene/DocumentManager',
+         'DynamicScene/CzmlProcessor',
          'DynamicScene/DynamicObjectCollection',
          'DynamicScene/DynamicExternalDocument',
          'Core/JulianDate',
@@ -10,7 +10,7 @@ defineSuite([
          '../Specs/MockProperty'
      ], function(
              SystemClockUpdater,
-             DocumentManager,
+             CzmlProcessor,
              DynamicObjectCollection,
              DynamicExternalDocument,
              JulianDate,
@@ -47,7 +47,7 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
         testObject.external.refreshInterval = new MockProperty(0.0001);
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var scdbu = new SystemClockUpdater(dm, testObject.external.polling, testObject.external.refreshInterval);
         var date = new Date();
         var curDate = null;
@@ -77,7 +77,7 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
         testObject.external.refreshInterval = new MockProperty(0.0001);
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var scdbu = new SystemClockUpdater(dm, testObject.external.polling, testObject.external.refreshInterval);
         var date = new Date();
         var curDate = null;
@@ -106,7 +106,7 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
         testObject.external.refreshInterval = new MockProperty(0.0001);
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var scdbu = new SystemClockUpdater(dm, testObject.external.polling, testObject.external.refreshInterval);
         var date = new Date();
         var curDate = null;

@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'DynamicScene/EventSourceUpdater',
-         'DynamicScene/DocumentManager',
+         'DynamicScene/CzmlProcessor',
          'DynamicScene/DynamicObjectCollection',
          'DynamicScene/DynamicExternalDocument',
          'Core/JulianDate',
@@ -10,7 +10,7 @@ defineSuite([
          '../Specs/MockProperty'
      ], function(
              EventSourceUpdater,
-             DocumentManager,
+             CzmlProcessor,
              DynamicObjectCollection,
              DynamicExternalDocument,
              JulianDate,
@@ -45,7 +45,7 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.eventsource = new MockProperty('localhost');
         testObject.external.eventname = new MockProperty('access');
-        var esbu = new EventSourceUpdater(new DocumentManager(scene), testObject.external.eventsource, testObject.external.eventname);
+        var esbu = new EventSourceUpdater(new CzmlProcessor(scene), testObject.external.eventsource, testObject.external.eventname);
         spyOn(eventSource, 'addEventListener');
 
         esbu.update(new JulianDate(), dynamicObjectCollection);
@@ -66,7 +66,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
         testObject.external.eventsource = new MockProperty('localhost');
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var esbu = new EventSourceUpdater(dm, testObject.external.eventsource);
         spyOn(dm, 'process');
         spyOn(eventSource, 'close');
@@ -97,7 +97,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         var eventsource = new MockProperty('localhost');
         var eventname = new MockProperty('access');
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var esbu = new EventSourceUpdater(dm, eventsource, eventname);
         spyOn(eventSource, 'removeEventListener');
         spyOn(eventSource, 'addEventListener').andCallThrough();
@@ -127,7 +127,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         var eventsource = new MockProperty('localhost');
         var eventname = new MockProperty('access');
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var esbu = new EventSourceUpdater(dm, eventsource, eventname);
         spyOn(eventSource, 'close');
         spyOn(eventSource, 'addEventListener');
@@ -149,7 +149,7 @@ defineSuite([
         spyOn(window, 'EventSource').andReturn(eventSource);
         var dynamicObjectCollection = new DynamicObjectCollection();
         var eventsource = new MockProperty('localhost');
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var esbu = new EventSourceUpdater(dm, eventsource);
         spyOn(eventSource, 'close');
         esbu.update(new JulianDate(), dynamicObjectCollection);
@@ -160,7 +160,7 @@ defineSuite([
         destroyScene(scene);
     });
 
-    it('update calls documentManager process.', function() {
+    it('update calls czmlProcessor process.', function() {
         var scene = createScene();
         var eventSource = {
                 addEventListener:function(e, callbackFunction){
@@ -173,7 +173,7 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.eventsource = new MockProperty('localhost');
         testObject.external.eventname = new MockProperty('access');
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var esbu = new EventSourceUpdater(dm, testObject.external.eventsource, testObject.external.eventname);
         spyOn(dm, 'process');
 
@@ -197,7 +197,7 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.eventsource = new MockProperty('localhost');
         testObject.external.eventname = new MockProperty('access');
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var esbu = new EventSourceUpdater(dm, testObject.external.eventsource, testObject.external.eventname);
         spyOn(eventSource, 'close');
 
@@ -222,7 +222,7 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.eventsource = new MockProperty('localhost');
         testObject.external.eventname = new MockProperty('access');
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var esbu = new EventSourceUpdater(dm, testObject.external.eventsource, testObject.external.eventname);
         spyOn(eventSource, 'close');
 

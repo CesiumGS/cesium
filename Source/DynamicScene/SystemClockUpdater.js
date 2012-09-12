@@ -14,19 +14,19 @@ define(['../Core/DeveloperError',
      * @alias SystemClockUpdater
      * @constructor
      *
-     * @param {DocumentManager} documentManager The document manager.
+     * @param {CzmlProcessor} czmlProcessor The document manager.
      * @param {String} url The url of the document.
      * @param {Number} refreshRate The time in seconds to poll the server.
      * @param {function} [fillFunction={@link fillIncrementally}] The function used to fill the {@link DynamicObjectCollection}.
      *
-     * @exception {DeveloperError} documentManager is required.
+     * @exception {DeveloperError} czmlProcessor is required.
      * @exception {DeveloperError} url is required.
      *
      * @see fillIncrementally
      */
-    var SystemClockUpdater = function SystemClockUpdater(documentManager, url, refreshRate, fillFunction) {
-        if (typeof documentManager === 'undefined') {
-            throw new DeveloperError('documentManager is required.');
+    var SystemClockUpdater = function SystemClockUpdater(czmlProcessor, url, refreshRate, fillFunction) {
+        if (typeof czmlProcessor === 'undefined') {
+            throw new DeveloperError('czmlProcessor is required.');
         }
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
@@ -36,7 +36,7 @@ define(['../Core/DeveloperError',
             fillFunction = fillIncrementally;
         }
 
-        this._documentManager = documentManager;
+        this._czmlProcessor = czmlProcessor;
         this._refreshRate = defaultValue(refreshRate, 60);//default to 60 seconds
         this._fillFunction = fillFunction;
         this._url = url;
@@ -59,7 +59,7 @@ define(['../Core/DeveloperError',
                 var storeHandle = true;
                 var handle = this._fillFunction(dynamicObjectCollection, this._url.getValue(currentTime),
                         function(item, buffer, url){
-                            self._documentManager.process(item, buffer, url);
+                            self._czmlProcessor.process(item, buffer, url);
                         },
                         function(czmlData) {
                             storeHandle = false;

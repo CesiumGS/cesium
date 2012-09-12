@@ -15,18 +15,18 @@ define([
      * @alias IterationDrivenUpdater
      * @constructor
      *
-     * @param {DocumentManager} documentManager The document manager.
+     * @param {CzmlProcessor} czmlProcessor The CZML processor.
      * @param {String} url The url of the document.
      * @param {Number} [numOfIterations=0] The number of iterations.
      * @param {function} [fillFunction={@link fillIncrementally}] The function used to fill the {@link DynamicObjectCollection}.
      *
-     * @exception {DeveloperError} documentManager is required.
+     * @exception {DeveloperError} czmlProcessor is required.
      * @exception {DeveloperError} url is required.
      *
      */
-    var IterationDrivenUpdater = function IterationDrivenUpdater(documentManager, url, numOfIterations, fillFunction) {
-        if (typeof documentManager === 'undefined') {
-            throw new DeveloperError('documentManager is required.');
+    var IterationDrivenUpdater = function IterationDrivenUpdater(czmlProcessor, url, numOfIterations, fillFunction) {
+        if (typeof czmlProcessor === 'undefined') {
+            throw new DeveloperError('czmlProcessor is required.');
         }
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
@@ -34,7 +34,7 @@ define([
         if (typeof fillFunction === 'undefined') {
             fillFunction = fillIncrementally;
         }
-        this._documentManager = documentManager;
+        this._czmlProcessor = czmlProcessor;
         this._numOfIterations = defaultValue(numOfIterations, 1);
         this._currentIteration = 0;
         this._fillFunction = fillFunction;
@@ -55,7 +55,7 @@ define([
                 var storeHandle = true;
                 var handle = this._fillFunction(dynamicObjectCollection, this._url.getValue(time),
                         function(item, doc, url){
-                            self._documentManager.process(item, doc, url);
+                            self._czmlProcessor.process(item, doc, url);
                         },
                         function() {
                             storeHandle = false;

@@ -62,12 +62,12 @@ define([
         this.objectsRemoved = new Event();
 
         /**
-        *  The document name.
+        *  The name of this composite collection.
         */
-        this.documentName = undefined;
+        this.name = undefined;
 
         /**
-        * The parent document.
+        * The parent composite collection, if any.
         */
         this.parent = undefined;
 

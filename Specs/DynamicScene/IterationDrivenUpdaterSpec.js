@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'DynamicScene/IterationDrivenUpdater',
-         'DynamicScene/DocumentManager',
+         'DynamicScene/CzmlProcessor',
          'DynamicScene/DynamicObjectCollection',
          'DynamicScene/DynamicExternalDocument',
          'Core/JulianDate',
@@ -10,7 +10,7 @@ defineSuite([
          '../Specs/MockProperty'
      ], function(
              IterationDrivenUpdater,
-             DocumentManager,
+             CzmlProcessor,
              DynamicObjectCollection,
              DynamicExternalDocument,
              JulianDate,
@@ -46,7 +46,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 1);
 
         spyOn(dm, 'process');
@@ -71,7 +71,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 1);
 
 
@@ -92,7 +92,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 2);
 
         spyOn(eventSource, 'close');
@@ -120,7 +120,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
-        var dm = new DocumentManager(scene);
+        var dm = new CzmlProcessor(scene);
         var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 1);
 
 
