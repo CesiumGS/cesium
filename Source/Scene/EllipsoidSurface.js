@@ -427,11 +427,25 @@ define([
 
                 var rtc = tile.center;
 
+                var tileExtent = new Cartesian4(
+                        tile.extent.west * ellipsoidRadii.x,
+                        tile.extent.south * ellipsoidRadii.z,
+                        tile.extent.east * ellipsoidRadii.x,
+                        tile.extent.north * ellipsoidRadii.z);
+
+                // In 2D, use the center of the tile for RTC rendering.
                 if (mode === SceneMode.SCENE2D) {
-                    rtc = Cartesian3.ZERO;
+                    rtc = new Cartesian3(
+                            0.0,
+                            (tileExtent.z + tileExtent.x) * 0.5,
+                            (tileExtent.w + tileExtent.y) * 0.5);
+                    tileExtent.x -= rtc.y;
+                    tileExtent.y -= rtc.z;
+                    tileExtent.z -= rtc.y;
+                    tileExtent.w -= rtc.z;
                 }
 
-                uniformMap.tileExtent = new Cartesian4(tile.extent.west * ellipsoidRadii.x, tile.extent.south * ellipsoidRadii.z, tile.extent.east * ellipsoidRadii.x, tile.extent.north * ellipsoidRadii.z);
+                uniformMap.tileExtent = tileExtent;
 
                 var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
                 uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);

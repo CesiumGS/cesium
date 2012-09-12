@@ -29,8 +29,7 @@ void main()
     else if (u_mode == czm_scene2D) {
         v_positionEC = (czm_modelView * vec4(position3DWC, 1.0)).xyz;
         vec3 rtcPosition2D = vec3(0.0, mix(u_tileExtent.st, u_tileExtent.pq, textureCoordinates));  
-        //gl_Position = czm_projection * (u_modifiedModelView * vec4(get2DPosition(), 1.0));
-        gl_Position = czm_modelViewProjection * vec4(rtcPosition2D, 1.0);
+        gl_Position = u_modifiedModelViewProjection * vec4(rtcPosition2D, 1.0);
     }
     else {
         vec3 position2DWC = vec3(0.0, mix(u_tileExtent.st, u_tileExtent.pq, textureCoordinates));
