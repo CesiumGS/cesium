@@ -101,6 +101,19 @@ define([
         this._boundingSphereVA = undefined;
         this._tileTraversalQueue = new Queue();
 
+        // Fields for collecting statistics.
+        this._maxDepth = 0;
+        this._tilesVisited = 0;
+        this._tilesCulled = 0;
+        this._tilesRendered = 0;
+        this._texturesRendered = 0;
+
+        this._lastMaxDepth = -1;
+        this._lastTilesVisited = -1;
+        this._lastTilesCulled = -1;
+        this._lastTilesRendered = -1;
+        this._lastTexturesRendered = -1;
+
         var that = this;
         when(this.terrainProvider.tilingScheme, function(tilingScheme) {
             that._tilingScheme = tilingScheme;
@@ -214,18 +227,6 @@ define([
         Array.prototype.splice.apply(tileImageryCollection, tileImageryObjects);
     }
 
-    var maxDepth;
-    var tilesVisited;
-    var tilesCulled;
-    var tilesRendered;
-    var texturesRendered;
-
-    var lastMaxDepth = -1;
-    var lastTilesVisited = -1;
-    var lastTilesCulled = -1;
-    var lastTilesRendered = -1;
-    var lastTexturesRendered = -1;
-
     EllipsoidSurface.prototype.update = function(context, frameState) {
         if (!this._doLodUpdate) {
             return;
@@ -259,11 +260,11 @@ define([
         var traversalQueue = this._tileTraversalQueue;
         traversalQueue.clear();
 
-        maxDepth = 0;
-        tilesVisited = 0;
-        tilesCulled = 0;
-        tilesRendered = 0;
-        texturesRendered = 0;
+        this._maxDepth = 0;
+        this._tilesVisited = 0;
+        this._tilesCulled = 0;
+        this._tilesRendered = 0;
+        this._texturesRendered = 0;
 
         this._tileLoadQueue.markInsertionPoint();
         this._tileReplacementQueue.markStartOfRenderFrame();
@@ -287,7 +288,7 @@ define([
             if (tile.renderable && isTileVisible(this, frameState, tile)) {
                 traversalQueue.enqueue(tile);
             } else {
-                ++tilesCulled;
+                ++this._tilesCulled;
             }
         }
 
@@ -296,12 +297,12 @@ define([
         // This maximizes the average detail across the scene and results in fewer sharp transitions
         // between very different LODs.
         while (typeof (tile = traversalQueue.dequeue()) !== 'undefined') {
-            ++tilesVisited;
+            ++this._tilesVisited;
 
             this._tileReplacementQueue.markTileRendered(tile);
 
-            if (tile.level > maxDepth) {
-                maxDepth = tile.level;
+            if (tile.level > this._maxDepth) {
+                this._maxDepth = tile.level;
             }
 
             // Algorithm #1: Don't load children unless we refine to them.
@@ -316,7 +317,7 @@ define([
                     if (isTileVisible(this, frameState, children[i])) {
                         traversalQueue.enqueue(children[i]);
                     } else {
-                        ++tilesCulled;
+                        ++this._tilesCulled;
                     }
                 }
             } else {
@@ -325,19 +326,19 @@ define([
             }
         }
 
-        if (tilesVisited !== lastTilesVisited ||
-            tilesRendered !== lastTilesRendered ||
-            texturesRendered !== lastTexturesRendered ||
-            tilesCulled !== lastTilesCulled ||
-            maxDepth !== lastMaxDepth) {
+        if (this._tilesVisited !== this._lastTilesVisited ||
+            this._tilesRendered !== this._lastTilesRendered ||
+            this._texturesRendered !== this._lastTexturesRendered ||
+            this._tilesCulled !== this._lastTilesCulled ||
+            this._maxDepth !== this._lastMaxDepth) {
 
-            console.log('Visited ' + tilesVisited + ', Rendered: ' + tilesRendered + ', Textures: ' + texturesRendered + ', Culled: ' + tilesCulled + ', Max Depth: ' + maxDepth);
+            console.log('Visited ' + this._tilesVisited + ', Rendered: ' + this._tilesRendered + ', Textures: ' + this._texturesRendered + ', Culled: ' + this._tilesCulled + ', Max Depth: ' + this._maxDepth);
 
-            lastTilesVisited = tilesVisited;
-            lastTilesRendered = tilesRendered;
-            lastTexturesRendered = texturesRendered;
-            lastTilesCulled = tilesCulled;
-            lastMaxDepth = maxDepth;
+            this._lastTilesVisited = this._tilesVisited;
+            this._lastTilesRendered = this._tilesRendered;
+            this._lastTexturesRendered = this._texturesRendered;
+            this._lastTilesCulled = this._tilesCulled;
+            this._lastMaxDepth = this._maxDepth;
         }
 
         processTileLoadQueue(this, context, frameState);
@@ -685,8 +686,8 @@ define([
 
         tileSet.push(tile);
 
-        ++tilesRendered;
-        texturesRendered += readyTextureCount;
+        ++surface._tilesRendered;
+        surface._texturesRendered += readyTextureCount;
     }
 
     function isTileVisible(surface, frameState, tile) {
