@@ -5,40 +5,40 @@ define(['../Core/incrementalGet'
     "use strict";
 
     /**
-     * Uses {@link incrementalGet} to load data into a given buffer.
+     * Uses {@link incrementalGet} to load data into a given {@link DynamicObjectCollection}.
      *
-     * @exports fillBufferIncrementally
+     * @exports fillIncrementally
      *
-     * @param {Object} buffer The buffer to update.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The collection to update.
      * @param {String} url The url to retrieve the data.
      * @param {function} processCallback The callback function to process the data.
      * @param {function} doneCallback Called when {@link incrementalGet} is finished.
      * @returns A handle to the <a href="http://www.w3.org/TR/eventsource/">EventSource</a>.
      *
      * @example
-     * var buffer = {
+     * var dynamicObjectCollection = {
      *   update:function(item){
-     *      //add item to buffer
+     *      //add item to the dynamicObjectCollection
      *   },
      *   cleanup:function(){
      *    //cleanup
      *   }
      * };
-     * var handle = fillBufferIncrementally(buffer, 'http://localhost/test', function(item, buffer, url){
-     *     buffer.update(item);
+     * var handle = fillIncrementally(dynamicObjectCollection, 'http://localhost/test', function(item, doc, url){
+     *     doc.update(item);
      * },
      * function(){
-     *   buffer.cleanup();
+     *   doc.cleanup();
      * });
      *  //to close use handle.abort();
      *
      * @see incrementalGet
      */
-    var fillBufferIncrementally = function fillBufferIncrementally(buffer, url, processCallback, doneCallback) {
+    var fillIncrementally = function fillIncrementally(dynamicObjectCollection, url, processCallback, doneCallback) {
         return incrementalGet(url, function(item) {
-            processCallback(item, buffer, url);
+            processCallback(item, dynamicObjectCollection, url);
         }, doneCallback);
     };
 
-    return fillBufferIncrementally;
+    return fillIncrementally;
 });

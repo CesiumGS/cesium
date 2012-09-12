@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/EventSourceBufferUpdater',
+         'DynamicScene/EventSourceUpdater',
          'DynamicScene/DocumentManager',
          'DynamicScene/DynamicObjectCollection',
          'DynamicScene/DynamicExternalDocument',
@@ -9,7 +9,7 @@ defineSuite([
          '../Specs/destroyScene',
          '../Specs/MockProperty'
      ], function(
-             EventSourceBufferUpdater,
+             EventSourceUpdater,
              DocumentManager,
              DynamicObjectCollection,
              DynamicExternalDocument,
@@ -20,15 +20,15 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('EventSourceBufferUpdater throws with empty arguments.', function() {
+    it('EventSourceUpdater throws with empty arguments.', function() {
         expect(function() {
-            return new EventSourceBufferUpdater();
+            return new EventSourceUpdater();
         }).toThrow();
     });
 
-    it('EventSourceBufferUpdater throws with out baseUrl and eventName.', function() {
+    it('EventSourceUpdater throws with out baseUrl and eventName.', function() {
         expect(function() {
-            return new EventSourceBufferUpdater({});
+            return new EventSourceUpdater({});
         }).toThrow();
     });
 
@@ -45,7 +45,7 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.eventsource = new MockProperty('localhost');
         testObject.external.eventname = new MockProperty('access');
-        var esbu = new EventSourceBufferUpdater(new DocumentManager(scene), testObject.external.eventsource, testObject.external.eventname);
+        var esbu = new EventSourceUpdater(new DocumentManager(scene), testObject.external.eventsource, testObject.external.eventname);
         spyOn(eventSource, 'addEventListener');
 
         esbu.update(new JulianDate(), dynamicObjectCollection);
@@ -67,7 +67,7 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.eventsource = new MockProperty('localhost');
         var dm = new DocumentManager(scene);
-        var esbu = new EventSourceBufferUpdater(dm, testObject.external.eventsource);
+        var esbu = new EventSourceUpdater(dm, testObject.external.eventsource);
         spyOn(dm, 'process');
         spyOn(eventSource, 'close');
         esbu.update(new JulianDate(), dynamicObjectCollection);
@@ -98,7 +98,7 @@ defineSuite([
         var eventsource = new MockProperty('localhost');
         var eventname = new MockProperty('access');
         var dm = new DocumentManager(scene);
-        var esbu = new EventSourceBufferUpdater(dm, eventsource, eventname);
+        var esbu = new EventSourceUpdater(dm, eventsource, eventname);
         spyOn(eventSource, 'removeEventListener');
         spyOn(eventSource, 'addEventListener').andCallThrough();
         esbu.update(new JulianDate(), dynamicObjectCollection);
@@ -128,7 +128,7 @@ defineSuite([
         var eventsource = new MockProperty('localhost');
         var eventname = new MockProperty('access');
         var dm = new DocumentManager(scene);
-        var esbu = new EventSourceBufferUpdater(dm, eventsource, eventname);
+        var esbu = new EventSourceUpdater(dm, eventsource, eventname);
         spyOn(eventSource, 'close');
         spyOn(eventSource, 'addEventListener');
         esbu.update(new JulianDate(), dynamicObjectCollection);
@@ -150,7 +150,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         var eventsource = new MockProperty('localhost');
         var dm = new DocumentManager(scene);
-        var esbu = new EventSourceBufferUpdater(dm, eventsource);
+        var esbu = new EventSourceUpdater(dm, eventsource);
         spyOn(eventSource, 'close');
         esbu.update(new JulianDate(), dynamicObjectCollection);
         esbu._url = new MockProperty('externalhost');
@@ -174,7 +174,7 @@ defineSuite([
         testObject.external.eventsource = new MockProperty('localhost');
         testObject.external.eventname = new MockProperty('access');
         var dm = new DocumentManager(scene);
-        var esbu = new EventSourceBufferUpdater(dm, testObject.external.eventsource, testObject.external.eventname);
+        var esbu = new EventSourceUpdater(dm, testObject.external.eventsource, testObject.external.eventname);
         spyOn(dm, 'process');
 
         esbu.update(new JulianDate(), dynamicObjectCollection);
@@ -198,7 +198,7 @@ defineSuite([
         testObject.external.eventsource = new MockProperty('localhost');
         testObject.external.eventname = new MockProperty('access');
         var dm = new DocumentManager(scene);
-        var esbu = new EventSourceBufferUpdater(dm, testObject.external.eventsource, testObject.external.eventname);
+        var esbu = new EventSourceUpdater(dm, testObject.external.eventsource, testObject.external.eventname);
         spyOn(eventSource, 'close');
 
         esbu.update(new JulianDate(), dynamicObjectCollection);
@@ -223,7 +223,7 @@ defineSuite([
         testObject.external.eventsource = new MockProperty('localhost');
         testObject.external.eventname = new MockProperty('access');
         var dm = new DocumentManager(scene);
-        var esbu = new EventSourceBufferUpdater(dm, testObject.external.eventsource, testObject.external.eventname);
+        var esbu = new EventSourceUpdater(dm, testObject.external.eventsource, testObject.external.eventname);
         spyOn(eventSource, 'close');
 
         esbu.abort();

@@ -6,10 +6,10 @@ define([
         '../Core/TimeInterval',
         './CompositeDynamicObjectCollection',
         './DynamicObjectCollection',
-        './IterationDrivenBufferUpdater',
+        './IterationDrivenUpdater',
         './processCzml',
-        './SystemClockDrivenBufferUpdater',
-        './EventSourceBufferUpdater',
+        './SystemClockUpdater',
+        './EventSourceUpdater',
         './VisualizerCollection'
     ], function(
             createGuid,
@@ -18,10 +18,10 @@ define([
             TimeInterval,
             CompositeDynamicObjectCollection,
             DynamicObjectCollection,
-            IterationDrivenBufferUpdater,
+            IterationDrivenUpdater,
             processCzml,
-            SystemClockDrivenBufferUpdater,
-            EventSourceBufferUpdater,
+            SystemClockUpdater,
+            EventSourceUpdater,
             VisualizerCollection
         ) {
     "use strict";
@@ -164,14 +164,14 @@ define([
                 var doc = new DynamicObjectCollection();
                 if(typeof external.polling !== 'undefined'){
                     if(typeof external.refreshInterval !== 'undefined'){
-                        doc.updater = new SystemClockDrivenBufferUpdater(this, external.polling, external.refreshInterval);
+                        doc.updater = new SystemClockUpdater(this, external.polling, external.refreshInterval);
                     }
                     else{
-                        doc.updater = new IterationDrivenBufferUpdater(this, external.polling, 1);
+                        doc.updater = new IterationDrivenUpdater(this, external.polling, 1);
                     }
                 }
                 else if(typeof external.eventsource !== 'undefined'){
-                    doc.updater = new EventSourceBufferUpdater(this, external.eventsource, external.eventname);
+                    doc.updater = new EventSourceUpdater(this, external.eventsource, external.eventname);
                 }
                 var scope = external.scope;
                 if(scope && scope === "SHARED"){

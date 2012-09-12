@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/SystemClockDrivenBufferUpdater',
+         'DynamicScene/SystemClockUpdater',
          'DynamicScene/DocumentManager',
          'DynamicScene/DynamicObjectCollection',
          'DynamicScene/DynamicExternalDocument',
@@ -9,7 +9,7 @@ defineSuite([
          '../Specs/destroyScene',
          '../Specs/MockProperty'
      ], function(
-             SystemClockDrivenBufferUpdater,
+             SystemClockUpdater,
              DocumentManager,
              DynamicObjectCollection,
              DynamicExternalDocument,
@@ -20,15 +20,15 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('SystemClockDrivenBufferUpdater throws with empty arguments.', function() {
+    it('SystemClockUpdater throws with empty arguments.', function() {
         expect(function() {
-            return new SystemClockDrivenBufferUpdater();
+            return new SystemClockUpdater();
         }).toThrow();
     });
 
-    it('SystemClockDrivenBufferUpdater throws with out baseUrl', function() {
+    it('SystemClockUpdater throws with out baseUrl', function() {
         expect(function() {
-            return new SystemClockDrivenBufferUpdater({});
+            return new SystemClockUpdater({});
         }).toThrow();
     });
 
@@ -48,7 +48,7 @@ defineSuite([
         testObject.external.polling = new MockProperty('localhost');
         testObject.external.refreshInterval = new MockProperty(0.0001);
         var dm = new DocumentManager(scene);
-        var scdbu = new SystemClockDrivenBufferUpdater(dm, testObject.external.polling, testObject.external.refreshInterval);
+        var scdbu = new SystemClockUpdater(dm, testObject.external.polling, testObject.external.refreshInterval);
         var date = new Date();
         var curDate = null;
 
@@ -78,7 +78,7 @@ defineSuite([
         testObject.external.polling = new MockProperty('localhost');
         testObject.external.refreshInterval = new MockProperty(0.0001);
         var dm = new DocumentManager(scene);
-        var scdbu = new SystemClockDrivenBufferUpdater(dm, testObject.external.polling, testObject.external.refreshInterval);
+        var scdbu = new SystemClockUpdater(dm, testObject.external.polling, testObject.external.refreshInterval);
         var date = new Date();
         var curDate = null;
 
@@ -107,7 +107,7 @@ defineSuite([
         testObject.external.polling = new MockProperty('localhost');
         testObject.external.refreshInterval = new MockProperty(0.0001);
         var dm = new DocumentManager(scene);
-        var scdbu = new SystemClockDrivenBufferUpdater(dm, testObject.external.polling, testObject.external.refreshInterval);
+        var scdbu = new SystemClockUpdater(dm, testObject.external.polling, testObject.external.refreshInterval);
         var date = new Date();
         var curDate = null;
 

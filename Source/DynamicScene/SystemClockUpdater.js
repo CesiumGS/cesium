@@ -1,66 +1,69 @@
 /*global define*/
-define([
-        '../Core/DeveloperError',
+define(['../Core/DeveloperError',
         '../Core/defaultValue',
-        './fillBufferIncrementally'
+        './fillIncrementally'
     ], function(
          DeveloperError,
          defaultValue,
-         fillBufferIncrementally) {
+         fillIncrementally) {
     "use strict";
 
     /**
-     * A buffer updater that updates for a certain number of iterations.
+     * A updater that retrieves data from the url at the specified refreshRate based on the system clock.
      *
-     * @alias IterationDrivenBufferUpdater
+     * @alias SystemClockUpdater
      * @constructor
      *
      * @param {DocumentManager} documentManager The document manager.
      * @param {String} url The url of the document.
-     * @param {Number} [numOfIterations=0] The number of iterations.
-     * @param {function} [bufferFillFunction={@link fillBufferIncrementally}] The function used to fill the buffer.
+     * @param {Number} refreshRate The time in seconds to poll the server.
+     * @param {function} [fillFunction={@link fillIncrementally}] The function used to fill the {@link DynamicObjectCollection}.
      *
      * @exception {DeveloperError} documentManager is required.
      * @exception {DeveloperError} url is required.
      *
+     * @see fillIncrementally
      */
-    var IterationDrivenBufferUpdater = function IterationDrivenBufferUpdater(documentManager, url, numOfIterations, bufferFillFunction) {
+    var SystemClockUpdater = function SystemClockUpdater(documentManager, url, refreshRate, fillFunction) {
         if (typeof documentManager === 'undefined') {
             throw new DeveloperError('documentManager is required.');
         }
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
-        if (typeof bufferFillFunction === 'undefined') {
-            bufferFillFunction = fillBufferIncrementally;
+
+        if (typeof fillFunction === 'undefined') {
+            fillFunction = fillIncrementally;
         }
+
         this._documentManager = documentManager;
-        this._numOfIterations = defaultValue(numOfIterations, 1);
-        this._currentIteration = 0;
-        this._bufferFillFunction = bufferFillFunction;
+        this._refreshRate = defaultValue(refreshRate, 60);//default to 60 seconds
+        this._fillFunction = fillFunction;
         this._url = url;
+        this._lastUpdateTime = new Date();
     };
 
     /**
      * Called during the Cesium update loop.
-     * @memberof IterationDrivenBufferUpdater
+     * @memberof SystemClockUpdater
      *
      * @param {JulianDate} currentTime The current time of the animation.
      * @param {DynamicObjectCollection} dynamicObjectCollection The buffer to update.
      */
-    IterationDrivenBufferUpdater.prototype.update = function(time, dynamicObjectCollection) {
-        if(this._currentIteration < this._numOfIterations){
+    SystemClockUpdater.prototype.update = function(currentTime, dynamicObjectCollection) {
+        var now = new Date();
+        if(typeof this._lastUpdateTime === 'undefined' || now.valueOf() >= this._lastUpdateTime.valueOf() + this._refreshRate.getValue(currentTime) * 1000){
+            this._lastUpdateTime = now;
             if (typeof this._handle === 'undefined') {
                 var self = this;
                 var storeHandle = true;
-                var handle = this._bufferFillFunction(dynamicObjectCollection, this._url.getValue(time),
+                var handle = this._fillFunction(dynamicObjectCollection, this._url.getValue(currentTime),
                         function(item, buffer, url){
                             self._documentManager.process(item, buffer, url);
                         },
                         function(czmlData) {
                             storeHandle = false;
                             self._handle = undefined;
-                            ++self._currentIteration;
                         }
                 );
                 if (storeHandle) {
@@ -71,15 +74,15 @@ define([
     };
 
     /**
-     * Aborts the buffer fill function.
-     * @memberof IterationDrivenBufferUpdater
+     * Aborts the current connection.
+     * @memberof SystemClockUpdater
      */
-    IterationDrivenBufferUpdater.prototype.abort = function() {
+    SystemClockUpdater.prototype.abort = function() {
         if (typeof this._handle !== 'undefined') {
             this._handle.abort();
             this._handle = undefined;
         }
     };
 
-    return IterationDrivenBufferUpdater;
+    return SystemClockUpdater;
 });

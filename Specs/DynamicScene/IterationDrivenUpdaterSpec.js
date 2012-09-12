@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/IterationDrivenBufferUpdater',
+         'DynamicScene/IterationDrivenUpdater',
          'DynamicScene/DocumentManager',
          'DynamicScene/DynamicObjectCollection',
          'DynamicScene/DynamicExternalDocument',
@@ -9,7 +9,7 @@ defineSuite([
          '../Specs/destroyScene',
          '../Specs/MockProperty'
      ], function(
-             IterationDrivenBufferUpdater,
+             IterationDrivenUpdater,
              DocumentManager,
              DynamicObjectCollection,
              DynamicExternalDocument,
@@ -20,15 +20,15 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('IterationDrivenBufferUpdater throws with empty arguments.', function() {
+    it('IterationDrivenUpdater throws with empty arguments.', function() {
         expect(function() {
-            return new IterationDrivenBufferUpdater();
+            return new IterationDrivenUpdater();
         }).toThrow();
     });
 
-    it('IterationDrivenBufferUpdater throws with out baseUrl', function() {
+    it('IterationDrivenUpdater throws with out baseUrl', function() {
         expect(function() {
-            return new IterationDrivenBufferUpdater({});
+            return new IterationDrivenUpdater({});
         }).toThrow();
     });
 
@@ -47,7 +47,7 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
         var dm = new DocumentManager(scene);
-        var idbu = new IterationDrivenBufferUpdater(dm, testObject.external.polling, 1);
+        var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 1);
 
         spyOn(dm, 'process');
         idbu.update(new JulianDate(), dynamicObjectCollection);
@@ -72,12 +72,37 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
         var dm = new DocumentManager(scene);
-        var idbu = new IterationDrivenBufferUpdater(dm, testObject.external.polling, 1);
+        var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 1);
 
 
         idbu.update(new JulianDate(), dynamicObjectCollection);
         eventSource.test();
         expect(idbu._handle).toBeUndefined();
+        destroyScene(scene);
+    });
+
+    it('closes the handle after the correct number of iterations.', function() {
+        var scene = createScene();
+        var eventSource = {
+                close:function(){
+                }
+        };
+        spyOn(window, 'EventSource').andReturn(eventSource);
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        testObject.external = new DynamicExternalDocument();
+        testObject.external.polling = new MockProperty('localhost');
+        var dm = new DocumentManager(scene);
+        var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 2);
+
+        spyOn(eventSource, 'close');
+        idbu.update(new JulianDate(), dynamicObjectCollection);
+        eventSource.onerror();
+        idbu.update(new JulianDate(), dynamicObjectCollection);
+        eventSource.onerror();
+        idbu.update(new JulianDate(), dynamicObjectCollection);
+        eventSource.onerror();
+        expect(eventSource.close).toHaveBeenCalled();
         destroyScene(scene);
     });
 
@@ -96,7 +121,7 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
         var dm = new DocumentManager(scene);
-        var idbu = new IterationDrivenBufferUpdater(dm, testObject.external.polling, 1);
+        var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 1);
 
 
         idbu.update(new JulianDate(), dynamicObjectCollection);

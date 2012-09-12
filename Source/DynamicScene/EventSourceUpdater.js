@@ -1,10 +1,10 @@
 /*global define*/
 define(['../Core/DeveloperError',
-        './fillBufferIncrementally',
+        './fillIncrementally',
         '../Core/incrementalGet'
     ], function(
          DeveloperError,
-         fillBufferIncrementally,
+         fillIncrementally,
          incrementalGet) {
     "use strict";
     /*global EventSource*/
@@ -13,7 +13,7 @@ define(['../Core/DeveloperError',
      * An updater that uses <a href="http://www.w3.org/TR/eventsource/">EventSource</a> to listen to named events pushed
      * from the server.
      *
-     * @alias EventSourceBufferUpdater
+     * @alias EventSourceUpdater
      * @constructor
      *
      * @param {DocumentManager} documentManager The document manager.
@@ -26,7 +26,7 @@ define(['../Core/DeveloperError',
      * @see {DocumentManager}
      * @see <a href="http://www.w3.org/TR/eventsource/">EventSource</a>
      */
-    var EventSourceBufferUpdater = function EventSourceBufferUpdater(documentManager, url, eventName) {
+    var EventSourceUpdater = function EventSourceUpdater(documentManager, url, eventName) {
         if (typeof documentManager === 'undefined') {
             throw new DeveloperError('documentManager is required.');
         }
@@ -44,12 +44,12 @@ define(['../Core/DeveloperError',
 
     /**
      * Called during the Cesium update loop.
-     * @memberof EventSourceBufferUpdater
+     * @memberof EventSourceUpdater
      *
      * @param {JulianDate} currentTime The current time of the animation.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The buffer to update.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamic object collection to update.
      */
-    EventSourceBufferUpdater.prototype.update = function(currentTime, dynamicObjectCollection) {
+    EventSourceUpdater.prototype.update = function(currentTime, dynamicObjectCollection) {
         var url = this._url.getValue(currentTime);
 
         var eventName = this._eventName;
@@ -91,10 +91,10 @@ define(['../Core/DeveloperError',
     };
 
     /**
-     * Aborts the buffer fill function.
-     * @memberof EventSourceBufferUpdater
+     * Aborts the connection to the <a href="http://www.w3.org/TR/eventsource/">EventSource</a>.
+     * @memberof EventSourceUpdater
      */
-    EventSourceBufferUpdater.prototype.abort = function() {
+    EventSourceUpdater.prototype.abort = function() {
         if(typeof this._eventSource !== 'undefined'){
             this._eventSource.close();
         }
@@ -103,5 +103,5 @@ define(['../Core/DeveloperError',
         }
     };
 
-    return EventSourceBufferUpdater;
+    return EventSourceUpdater;
 });

@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'DynamicScene/DocumentManager',
-         'DynamicScene/SystemClockDrivenBufferUpdater',
+         'DynamicScene/SystemClockUpdater',
          'Core/JulianDate',
          'Core/Iso8601',
          'Core/TimeInterval',
@@ -10,7 +10,7 @@ defineSuite([
          '../Specs/MockProperty'
      ], function(
              DocumentManager,
-             SystemClockDrivenBufferUpdater,
+             SystemClockUpdater,
              JulianDate,
              Iso8601,
              TimeInterval,
@@ -218,14 +218,14 @@ defineSuite([
         expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
     });
 
-    it('document has refreshInterval uses SystemClockDrivenBufferUpdater.', function() {
+    it('document has refreshInterval uses SystemClockUpdater.', function() {
         var dm = new DocumentManager(scene);
         var json = [{"id":"1","external":{"polling":"http://localhost/test", "scope":"SHARED", "refreshInterval": "30"}}];
 
         dm.add(json, "root");
         var dc = dm.getDocuments()[0];
         expect(dc._collections[1].updater).toBeDefined();
-        expect(dc._collections[1].updater instanceof SystemClockDrivenBufferUpdater).toBeTruthy();
+        expect(dc._collections[1].updater instanceof SystemClockUpdater).toBeTruthy();
     });
 
     it('document uses event source and adds to existing document.', function() {
