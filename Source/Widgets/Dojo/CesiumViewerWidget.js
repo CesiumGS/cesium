@@ -318,58 +318,53 @@ define([
          */
         onObjectMousedOver : undefined,
         /**
-         * Override this function to be notified when the left mouse button is pressed down on an object.
+         * Override this function to be notified when the left mouse button is pressed down.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         * @param {Object} The object with the position of the mouse.
          */
         onLeftMouseDown : undefined,
         /**
-         * Override this function to be notified when the left mouse button is released from an object.
+         * Override this function to be notified when the left mouse button is released.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         * @param {Object} The object with the position of the mouse.
          */
         onLeftMouseUp : undefined,
         /**
-         * Override this function to be notified when the right mouse button is pressed down on an object.
+         * Override this function to be notified when the right mouse button is pressed down.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         * @param {Object} The object with the position of the mouse.
          */
         onRightMouseDown : undefined,
         /**
-         * Override this function to be notified when the right mouse button is released from an object.
+         * Override this function to be notified when the right mouse button is released.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         * @param {Object} The object with the position of the mouse.
          */
         onRightMouseUp : undefined,
         /**
-         * DOC_TBA
+         * Override this function to be notified when the left mouse button is dragged.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
+         * @param {Object} The object with the start and end position of the mouse.
          */
         onLeftDrag : undefined,
         /**
-         * DOC_TBA
+         * Override this function to be notified when the right mouse button is dragged or mouse wheel is zoomed.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
+         * @param {Object} The object with the start and end position of the mouse.
          */
         onZoom : undefined,
-        /**
-         * DOC_TBA
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         */
-        onCameraToggled : undefined,
 
         _handleLeftClick : function(e) {
             if (typeof this.onObjectSelected !== 'undefined') {
