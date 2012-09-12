@@ -175,6 +175,7 @@ define([
             if (startIndex !== -1) {
                 tileImageryCollection.splice(startIndex, numDestroyed);
             }
+            // If the tile has no imagery left, mark it as non-renderable.
             if (tileImageryCollection.length === 0) {
                 tile.renderable = false;
             }
@@ -245,14 +246,6 @@ define([
 
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
-        }
-
-        // Verify that all imagery providers are ready.
-        var imageryLayerCollection = this._imageryLayerCollection;
-        for (i = 0, len = imageryLayerCollection.getLength(); i < len; i++) {
-            if (!imageryLayerCollection.get(i).imageryProvider.isReady()) {
-                return;
-            }
         }
 
         updateLogos(this, context, frameState);
