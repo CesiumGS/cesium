@@ -827,8 +827,15 @@ define([
     }
 
     function screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
-        // TODO
-        return 1.0;
+        var camera = frameState.camera;
+        var frustum = camera.frustum;
+        var viewport = context.getViewport();
+        var viewportWidth = viewport.width;
+        var viewportHeight = viewport.height;
+
+        var maxGeometricError = surface.terrainProvider.getLevelMaximumGeometricError(tile.level);
+        var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(viewportWidth, viewportHeight);
+        return maxGeometricError / pixelSize;
     }
 
     function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile) {

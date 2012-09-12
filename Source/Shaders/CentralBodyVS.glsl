@@ -35,7 +35,8 @@ void main()
     }
     else if (u_mode == czm_scene2D) {
         v_positionEC = (czm_modelView * vec4(position3DWC, 1.0)).xyz;
-        gl_Position = czm_projection * (u_modifiedModelView * vec4(get2DPosition(), 1.0));
+        //gl_Position = czm_projection * (u_modifiedModelView * vec4(get2DPosition(), 1.0));
+        gl_Position = czm_modelViewProjection * vec4(get2DPosition(), 1.0);
     }
     else {
         vec3 position2DWC = get2DPosition();
