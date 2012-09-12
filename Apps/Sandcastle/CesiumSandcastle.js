@@ -561,7 +561,7 @@ require({
         if (window.location.search) {
             queryObject = ioQuery.queryToObject(window.location.search.substring(1));
         } else {
-            queryObject.src = 'Minimalist.html';
+            queryObject.src = 'Hello World.html';
         }
 
         function loadDemoFromFile(index) {
@@ -644,7 +644,7 @@ require({
         }
 
         if (typeof gallery_demos === 'undefined') {
-            dom.byId('demos').textContent = 'No demos found, please run the build script.';
+            dom.byId('demos').innerHTML = '<span class="demoError">No demos found, please run the build script.</span>';
         } else {
             var i;
             var len = gallery_demos.length;

@@ -84,6 +84,10 @@ html, body {
     font-size: 0.9em;
 }
 
+.demoError {
+    color: #f88;
+}
+
 #docPopup {
     display: block;
     position: absolute;
