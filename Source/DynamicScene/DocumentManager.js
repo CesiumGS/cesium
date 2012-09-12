@@ -45,7 +45,18 @@ define([
         }
         this.compositeCollections = [];
         this.visualizers = [];
-        this.scene = scene;
+        this._scene = scene;
+        this._updaters = [];
+    };
+
+    var Updater = function(cdoc, doc, updater){
+        this._compositeDynamicObjectCollection = cdoc;
+        this._dynamicObjectCollection = doc;
+        this._updater = updater;
+    };
+
+    Updater.prototype.update = function(currentTime){
+        this._updater.update(currentTime, this._dynamicObjectCollection);
     };
 
     /**
@@ -72,33 +83,9 @@ define([
             cDoc.documentName = createGuid();
         }
         this.compositeCollections.push(cDoc);
-        this.visualizers.push(VisualizerCollection.createCzmlStandardCollection(this.scene, cDoc));
+        this.visualizers.push(VisualizerCollection.createCzmlStandardCollection(this._scene, cDoc));
         this.process(json, dynamicObjectCollection, documentName);
         return cDoc;
-    };
-
-    /**
-     * Returns all documents.
-     * @memberof DocumentManager
-     *
-     * @returns {Array} The list of {@link CompositeDynamicObjectCollection} contained in the {@link DocumentManager}
-     *
-     * @see CompositeDynamicObjectCollection
-     */
-    DocumentManager.prototype.getDocuments = function(){
-        return this.compositeCollections;
-    };
-
-    /**
-     * Returns all visualizers.
-     * @memberof DocumentManager
-     *
-     * @returns {Array} The list of {@link VisualizerCollection} contained in the {@link DocumentManager}
-     *
-     * @see VisualizerCollection
-     */
-    DocumentManager.prototype.getVisualizers = function(){
-        return this.visualizers;
     };
 
     /**
@@ -117,6 +104,13 @@ define([
         for(var i = 0; i < length; ++i){
             var compositeCollection = this.compositeCollections[i];
             if(compositeCollection.documentName === documentName){
+                var updaterLength = this._updaters.length;
+                for(var j = 0; j < updaterLength; ++j){
+                    if(this._updaters[j]._compositeDynamicObjectCollection === compositeCollection){
+                        this._updaters.splice(j, 1);
+                        break;
+                    }
+                }
                 this.visualizers[i].removeAllPrimitives();
                 compositeCollection.clear();
                 this.compositeCollections.splice(i, 1);
@@ -138,6 +132,7 @@ define([
         }
         this.visualizers.length = 0;
         this.compositeCollections.length = 0;
+        this._updaters.length = 0;
     };
 
     /**
@@ -164,14 +159,14 @@ define([
                 var doc = new DynamicObjectCollection();
                 if(typeof external.polling !== 'undefined'){
                     if(typeof external.refreshInterval !== 'undefined'){
-                        doc.updater = new SystemClockUpdater(this, external.polling, external.refreshInterval);
+                        this._updaters.push(new Updater(compositeDynamicObjectCollection, doc, new SystemClockUpdater(this, external.polling, external.refreshInterval)));
                     }
                     else{
-                        doc.updater = new IterationDrivenUpdater(this, external.polling, 1);
+                        this._updaters.push(new Updater(compositeDynamicObjectCollection, doc, new IterationDrivenUpdater(this, external.polling, 1)));
                     }
                 }
                 else if(typeof external.eventsource !== 'undefined'){
-                    doc.updater = new EventSourceUpdater(this, external.eventsource, external.eventname);
+                    this._updaters.push(new Updater(compositeDynamicObjectCollection, doc, new EventSourceUpdater(this, external.eventsource, external.eventname)));
                 }
                 var scope = external.scope;
                 if(scope && scope === "SHARED"){
@@ -184,10 +179,34 @@ define([
                     cDoc.documentName = createGuid();
                     cDoc.parent = compositeDynamicObjectCollection;
                     this.compositeCollections.push(cDoc);
-                    this.visualizers.push(VisualizerCollection.createCzmlStandardCollection(this.scene, cDoc));
+                    this.visualizers.push(VisualizerCollection.createCzmlStandardCollection(this._scene, cDoc));
                 }
             }
         }
+    };
+
+    /**
+     * Returns all documents.
+     * @memberof DocumentManager
+     *
+     * @returns {Array} The list of {@link CompositeDynamicObjectCollection} contained in the {@link DocumentManager}
+     *
+     * @see CompositeDynamicObjectCollection
+     */
+    DocumentManager.prototype.getDocuments = function(){
+        return this.compositeCollections;
+    };
+
+    /**
+     * Returns all visualizers.
+     * @memberof DocumentManager
+     *
+     * @returns {Array} The list of {@link VisualizerCollection} contained in the {@link DocumentManager}
+     *
+     * @see VisualizerCollection
+     */
+    DocumentManager.prototype.getVisualizers = function(){
+        return this.visualizers;
     };
 
     /**
@@ -263,9 +282,14 @@ define([
      * @param {JulianDate} currentTime The current time.
      */
     DocumentManager.prototype.update = function(currentTime){
-        var length = this.visualizers.length;
-        for(var i = 0; i <  length; ++i){
-            this.compositeCollections[i].updateBuffer(currentTime);
+        var updaters = this._updaters;
+        var length = updaters.length;
+        var i;
+        for(i = 0; i < length; ++i){
+            updaters[i].update(currentTime);
+        }
+        length = this.visualizers.length;
+        for(i = 0; i <  length; ++i){
             this.visualizers[i].update(currentTime);
         }
     };

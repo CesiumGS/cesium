@@ -202,41 +202,4 @@ defineSuite([
         expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.TOP);
     });
 
-    it('Calling updateBuffer with no bufferUpdaters assigned ', function() {
-        var dynamicObjectCollection1 = new DynamicObjectCollection();
-        spyOn(dynamicObjectCollection1, 'updateBuffer');
-        processCzml(czml1, dynamicObjectCollection1);
-
-        var dynamicObjectCollection2 = new DynamicObjectCollection();
-        processCzml(czml2, dynamicObjectCollection2);
-
-        var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection([dynamicObjectCollection1, dynamicObjectCollection2]);
-        spyOn(compositeDynamicObjectCollection, 'updateBuffer').andCallThrough();
-        compositeDynamicObjectCollection.updateBuffer(new JulianDate());
-        expect(compositeDynamicObjectCollection.updateBuffer).toHaveBeenCalled();
-        expect(dynamicObjectCollection1.updateBuffer).toHaveBeenCalled();
-    });
-
-    it('Calling updateBuffer with one bufferUpdater assigned ', function() {
-        var dynamicObjectCollection1 = new DynamicObjectCollection();
-        spyOn(dynamicObjectCollection1, 'updateBuffer').andCallThrough();
-        var bufferUpdater = {
-                update:function(currentTime, objectCollection){
-
-                }
-        };
-        dynamicObjectCollection1.updater = bufferUpdater;
-        spyOn(bufferUpdater, 'update');
-        processCzml(czml1, dynamicObjectCollection1);
-
-        var dynamicObjectCollection2 = new DynamicObjectCollection();
-        processCzml(czml2, dynamicObjectCollection2);
-
-        var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection([dynamicObjectCollection1, dynamicObjectCollection2]);
-        spyOn(compositeDynamicObjectCollection, 'updateBuffer').andCallThrough();
-        compositeDynamicObjectCollection.updateBuffer(new JulianDate());
-        expect(compositeDynamicObjectCollection.updateBuffer).toHaveBeenCalled();
-        expect(dynamicObjectCollection1.updateBuffer).toHaveBeenCalled();
-        expect(bufferUpdater.update).toHaveBeenCalled();
-    });
 });

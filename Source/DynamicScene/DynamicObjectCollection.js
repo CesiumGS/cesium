@@ -132,15 +132,5 @@ define([
         }
     };
 
-    /**
-     * Updates the DynamicObjectCollection if it has an updater like {@link EventSourceUpdater} assigned to it.
-     * @param {JulainDate} currentTime the current update time.
-     */
-    DynamicObjectCollection.prototype.updateBuffer = function(currentTime){
-         if(typeof this.updater !== 'undefined'){
-             this.updater.update(currentTime, this);
-         }
-    };
-
     return DynamicObjectCollection;
 });

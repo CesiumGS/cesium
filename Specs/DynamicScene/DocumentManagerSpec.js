@@ -175,7 +175,7 @@ defineSuite([
         expect(dm.getObject("1", 'bucky')).toBeUndefined();
     });
 
-    it('update calls updateBuffer', function(){
+    it('update calls updater', function(){
         var eventSource = {
                 test:function(){
                     this.onmessage({data:"{\"test\":\"value\"}"});
@@ -189,14 +189,13 @@ defineSuite([
         dm.add(json, "toot");
         json = [{"id":"3","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         dm.add(json, "soot");
-        var docs = dm.getDocuments();
         var visualizers = dm.getVisualizers();
-        spyOn(docs[0], 'updateBuffer');
+        spyOn(dm._updaters[0], 'update');
         spyOn(visualizers[0], 'update');
 
         dm.update(new JulianDate());
-        expect(docs[0].updateBuffer).toHaveBeenCalled();
         expect(visualizers[0].update).toHaveBeenCalled();
+        expect(dm._updaters[0].update).toHaveBeenCalled();
     });
 
     it('computeAvailability returns infinite with no data.', function() {
@@ -224,8 +223,8 @@ defineSuite([
 
         dm.add(json, "root");
         var dc = dm.getDocuments()[0];
-        expect(dc._collections[1].updater).toBeDefined();
-        expect(dc._collections[1].updater instanceof SystemClockUpdater).toBeTruthy();
+        expect(dc._collections[1]).toBeDefined();
+        expect(dm._updaters[0]._updater instanceof SystemClockUpdater).toBeTruthy();
     });
 
     it('document uses event source and adds to existing document.', function() {

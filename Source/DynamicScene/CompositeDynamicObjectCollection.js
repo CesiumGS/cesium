@@ -200,19 +200,6 @@ define([
         this.setCollections([]);
     };
 
-    /**
-     * Updates all DynamicObjectCollections with the current time.
-     * @memberof CompositeDynamicObjectCollection
-     */
-    CompositeDynamicObjectCollection.prototype.updateBuffer = function(currentTime){
-        var collection = this._collections;
-        var length = collection.length;
-        for(var i = 0; i < length; ++i){
-            var buffer = collection[i];
-            buffer.updateBuffer(currentTime);
-        }
-    };
-
     CompositeDynamicObjectCollection.prototype._getOrCreateObject = function(id) {
         var obj = this._hash[id];
         if (!obj) {
