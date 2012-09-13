@@ -370,6 +370,7 @@ define([
             var command = commandList[i];
             command.framebuffer = fb;
             context.draw(command);
+            command.framebuffer = undefined;
         }
 
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);

@@ -97,13 +97,13 @@ require([
         this._colorCommand = new Cesium.Command();
         this._pickCommand = new Cesium.Command();
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
-        this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new BoundingSphere();
+        this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new Cesium.BoundingSphere();
         this._colorCommand.modelMatrix = this._pickCommand.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
     
         var that = this;
         this._colorCommand.uniformMap = {
             u_model: function() {
-                return that.modelMatrix;
+                return that._colorCommand.modelMatrix;
             },
             u_color: function() {
                 return {
@@ -116,7 +116,7 @@ require([
         };
         this._pickCommand.uniformMap = {
             u_model: function() {
-                return that.modelMatrix;
+                return that._pickCommand.modelMatrix;
             },
             u_color: function() {
                 return that._pickId.normalizedRgba;
@@ -212,7 +212,7 @@ require([
         this._colorCommand = new Cesium.Command();
         this._pickCommand = new Cesium.Command();
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
-        this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new BoundingSphere();
+        this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new Cesium.BoundingSphere();
 
         this._mode = undefined;
         this._projection = undefined;
