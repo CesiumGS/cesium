@@ -1,17 +1,11 @@
 @import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css');
 
-/* @import url('../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/darker/darker.css');
-
-@import url('../../ThirdParty/dojo-release-1.7.2-src/dojox/mobile/themes/darker/Slider.css'); */
-
 html, body {
     height: 100%;
     margin: 0;
     overflow: hidden;
     padding: 0;
     font-family: sans-serif;
-    -moz-user-select: none;
-    -webkit-user-select: none;
 }
 
 #loading {
@@ -35,18 +29,63 @@ html, body {
     height: 100%;
 }
 
+#toolbar, #galleryContainer {
+    -moz-user-select: -moz-none;  /* allows for re-enabling on sub-elements like the search box */
+    -webkit-user-select: none;
+}
+
+#search {
+    -moz-user-select: text;
+    -webkit-user-select: text;
+ }
+
 .cesiumTitle {
     display: block;
     position: absolute;
-    top: 2px;
+    bottom: 0;
     right: 5px;
     color: #DDD;
     font-style: italic;
     font-size: 24px;
+    z-index: -1;
 }
 
 #codeContainer {
     width: 40%;
+}
+
+#bottomPanel {
+	height: 205px;
+}
+
+#galleryContainer {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.8);
+}
+
+#demosContainer {
+	overflow: auto;
+}
+
+#demos {
+    padding: 5px;
+    white-space: nowrap;
+}
+
+.demoTileThumbnail {	
+    max-height: 150px;
+    max-width: 225px;
+    height: 125px;
+    width: auto;
+}
+
+.demoTileTitle {
+    margin: 0 auto 2px auto;
+    font-size: 0.9em;
+}
+
+.galleryError {
+    color: #f88;
 }
 
 #docPopup {
@@ -134,13 +173,17 @@ a.linkButton:focus, a.linkButton:hover {
     overflow: hidden;
 }
 
-.claro .dijitTabContainerBottom-tabs .dijitTabChecked .dijitTabContent {
-    background-position: 0 -115px;
+.claro .dijitTabContainerTop-tabs .dijitTabChecked .dijitTabContent {
+    background-position: 0 -103px;
 }
 
-.claro .dijitTabContainerBottom-dijitContentPane {
+.claro .dijitTabContainerTop-dijitContentPane {
     padding: 0;
     overflow: hidden;
+}
+
+.mblScrollBarWrapper > div {
+    background-color: #9ED3FF !important;
 }
 
 .CodeMirror pre.errorMarker {
@@ -174,6 +217,17 @@ a.linkButton:focus, a.linkButton:hover {
 
 .CodeMirror pre.highlightLine {
     background: rgba(0, 200, 0, 0.2);
+}
+
+.CodeMirror pre.searchMarker {
+    color: #222;
+    font-weight: bold;
+    background: #CEF;
+    border-radius: 3px;
+}
+
+.CodeMirror pre.searchLine {
+    background: rgba(180, 230, 240, 0.2);
 }
 
 .CodeMirror-gutter-text {
