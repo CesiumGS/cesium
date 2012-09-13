@@ -79,6 +79,22 @@ defineSuite([
         expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
     });
 
+    it('computeAvailability works if only start or stop time is infinite.', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+
+        var dynamicObject = dynamicObjectCollection.getOrCreateObject('1');
+        dynamicObject._setAvailability(TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z'));
+
+        dynamicObject = dynamicObjectCollection.getOrCreateObject('2');
+
+        dynamicObject = dynamicObjectCollection.getOrCreateObject('3');
+        dynamicObject._setAvailability(TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06'));
+
+        var availability = dynamicObjectCollection.computeAvailability();
+        expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
+        expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
+    });
+
     it('clear removes all objects', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         dynamicObjectCollection.getOrCreateObject('1');
