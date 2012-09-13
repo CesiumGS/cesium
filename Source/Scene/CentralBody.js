@@ -660,14 +660,6 @@ define([
         return this._imageryLayerCollection;
     };
 
-    CentralBody._isModeTransition = function(oldMode, newMode) {
-        // SCENE2D, COLUMBUS_VIEW, and MORPHING use the same rendering path, so a
-        // transition only occurs when switching from/to SCENE3D
-        return ((oldMode !== newMode) &&
-                ((oldMode === SceneMode.SCENE3D) ||
-                 (newMode === SceneMode.SCENE3D)));
-    };
-
     CentralBody.prototype._createScissorRectangle = function(description) {
         var quad = description.quad;
 
@@ -995,8 +987,10 @@ define([
 
         var mode = frameState.mode;
         var projection = frameState.scene2D.projection;
+        var modeChanged = false;
 
-        if (CentralBody._isModeTransition(this._mode, mode) || this._projection !== projection) {
+        if (this._mode !== mode || typeof this._rsColor === 'undefined') {
+            modeChanged = true;
             if (mode === SceneMode.SCENE3D) {
                 this._rsColor = context.createRenderState({ // Write color and depth
                     cull : {
@@ -1193,8 +1187,9 @@ define([
         var specularChanged = ((this._showSpecular !== this.showSpecular) && (!this.showSpecular || this._specularTexture));
         var bumpsChanged = ((this._showBumps !== this.showBumps) && (!this.showBumps || this._bumpTexture));
 
-        if (typeof this._activeSurfaceShaderSet === 'undefined' || typeof this._spPoles === 'undefined' ||
-            dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged ||
+        if (typeof this._activeSurfaceShaderSet === 'undefined' ||
+            typeof this._spPoles === 'undefined' ||
+            modeChanged || dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged ||
             this._showTerminator !== this.showTerminator ||
             this._affectedByLighting !== this.affectedByLighting) {
 
@@ -1209,15 +1204,39 @@ define([
                 '#line 0\n' +
                 CentralBodyFSCommon;
 
+            var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
+            var getPosition2DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DMode(position3DWC); }';
+            var getPositionColumbusViewMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionColumbusViewMode(position3DWC); }';
+            var getPositionMorphingMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionMorphingMode(position3DWC); }';
+
+            var getPositionMode;
+
+            switch (mode) {
+                case SceneMode.SCENE3D:
+                    getPositionMode = getPosition3DMode;
+                    break;
+                case SceneMode.SCENE2D:
+                    getPositionMode = getPosition2DMode;
+                    break;
+                case SceneMode.COLUMBUS_VIEW:
+                    getPositionMode = getPositionColumbusViewMode;
+                    break;
+                case SceneMode.MORPHING:
+                    getPositionMode = getPositionMorphingMode;
+                    break;
+            }
+
             this._surfaceShaderSetWithoutAtmosphere.baseVertexShaderString =
                 '#line 0\n' +
                  GroundAtmosphere +
                 '#line 0\n' +
-                 CentralBodyVS;
+                 CentralBodyVS + '\n' +
+                 getPositionMode;
             this._surfaceShaderSetWithoutAtmosphere.baseFragmentShaderString =
                 fsPrepend +
                 '#line 0\n' +
                 CentralBodyFS;
+            this._surfaceShaderSetWithoutAtmosphere.invalidateShaders();
 
             var groundFromSpacePrepend =
                 '#define SHOW_GROUND_ATMOSPHERE 1\n' +
@@ -1228,6 +1247,7 @@ define([
             this._surfaceShaderSetGroundFromSpace.baseFragmentShaderString =
                 groundFromSpacePrepend +
                 this._surfaceShaderSetWithoutAtmosphere.baseFragmentShaderString;
+            this._surfaceShaderSetGroundFromSpace.invalidateShaders();
 
             var groundFromAtmospherePrepend =
                 '#define SHOW_GROUND_ATMOSPHERE 1\n' +
@@ -1238,6 +1258,7 @@ define([
             this._surfaceShaderSetGroundFromAtmosphere.baseFragmentShaderString =
                 groundFromAtmospherePrepend +
                 this._surfaceShaderSetWithoutAtmosphere.baseFragmentShaderString;
+            this._surfaceShaderSetWithoutAtmosphere.invalidateShaders();
 
             vs = CentralBodyVSPole;
             fs = fsPrepend + GroundAtmosphere + CentralBodyFSPole;
@@ -1464,6 +1485,17 @@ define([
         this.baseVertexShaderString = undefined;
         this.baseFragmentShaderString = undefined;
     }
+
+    SurfaceShaderSet.prototype.invalidateShaders = function() {
+        var shadersByTextureCount = this.shadersByTextureCount;
+        for (var i = 0, len = shadersByTextureCount.length; i < len; ++i) {
+            var shader = shadersByTextureCount[i];
+            if (typeof shader !== 'undefined') {
+                shader.release();
+            }
+        }
+        this.shadersByTextureCount = [];
+    };
 
     SurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount) {
         var shader = this.shadersByTextureCount[textureCount];

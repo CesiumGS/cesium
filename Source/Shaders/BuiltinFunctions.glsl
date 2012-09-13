@@ -485,6 +485,14 @@ const int czm_columbusView = 1;
 const int czm_scene3D = 2;
 
 /**
+ * Specifies that the scene is morphing between modes.
+ * 
+ * @name czml_morphing
+ * @glslConstant
+ */
+const int czml_morphing = 3;
+
+/**
  * DOC_TBA
  *
  * @name czm_columbusViewMorph
