@@ -788,10 +788,10 @@ define([
         }
 
         var baseImageryProvider = baseLayer.imageryProvider;
-        if (!baseImageryProvider.ready) {
+        if (!baseImageryProvider.isReady()) {
             return;
         }
-        var baseImageryProviderMaxExtent = baseImageryProvider.extent;
+        var baseImageryProviderMaxExtent = baseImageryProvider.getExtent();
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
         var viewportTransformation = context.getUniformState().getViewportTransformation();
