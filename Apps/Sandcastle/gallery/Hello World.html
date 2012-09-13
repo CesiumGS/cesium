@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="A starting point for creating Cesium applications (uses Bing imagery).">
     <title>Cesium Demo</title>
     <script>
     var Sandcastle = {};
@@ -92,7 +93,7 @@ require([
     //includes everything.
 
     var canvas = document.createElement('canvas');
-    canvas.className = "fullSize";
+    canvas.className = 'fullSize';
     document.getElementById('cesiumContainer').appendChild(canvas);
     var ellipsoid = Cesium.Ellipsoid.WGS84;
     var scene = new Cesium.Scene(canvas);
@@ -125,7 +126,7 @@ require([
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
     ///////////////////////////////////////////////////////////////////////////
-    // Add your code here:
+    // INSERT CODE HERE to create graphics primitives in the scene.
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -160,17 +161,17 @@ require([
     // or click on a toolbar inside the iframe.
     function keydownHandler(e) {
         switch (e.keyCode) {
-        case "3".charCodeAt(0): // "3" -> 3D globe
+        case '3'.charCodeAt(0):  // '3' -> 3D globe
             cb.showSkyAtmosphere = true;
             cb.showGroundAtmosphere = true;
             transitioner.morphTo3D();
             break;
-        case "2".charCodeAt(0): // "2" -> Columbus View
+        case '2'.charCodeAt(0):  // '2' -> Columbus View
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphToColumbusView();
             break;
-        case "1".charCodeAt(0): // "1" -> 2D map
+        case '1'.charCodeAt(0):  // '1' -> 2D map
             cb.showSkyAtmosphere = false;
             cb.showGroundAtmosphere = false;
             transitioner.morphTo2D();
