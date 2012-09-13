@@ -1250,9 +1250,9 @@ define([
         var provider = this._dayTileProvider;
 
         var projection = frameState.scene2D.projection;
-        var viewport = context.getViewport();
-        var viewportWidth = viewport.width;
-        var viewportHeight = viewport.height;
+        var canvas = context.getCanvas();
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
 
         if (typeof provider === 'undefined') {
             return false;
@@ -1280,7 +1280,7 @@ define([
         var b = projection.project(new Cartographic(tile.extent.east, tile.extent.south));
         var diagonal = a.subtract(b);
         var texelSize = Math.max(diagonal.x, diagonal.y) / Math.max(tileWidth, tileHeight);
-        var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(viewportWidth, viewportHeight);
+        var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
 
         if (texelSize > pixelSize * texturePixelError) {
             return true;

@@ -224,7 +224,6 @@ define([
         return cachedVA;
     }
 
-    var originalViewport = new BoundingRectangle();
     /**
      * @private
      */
@@ -250,21 +249,8 @@ define([
             });
         }
 
-        if (typeof this._colorCommand.beforeDraw === 'undefined') {
-            var that = this;
-            this._colorCommand.beforeDraw = function(context) {
-                BoundingRectangle.clone(context.getViewport(), originalViewport);
-                context.setViewport(that._rectangle);
-            };
-        }
-
-        if (typeof this._colorCommand.afterDraw === 'undefined') {
-            this._colorCommand.afterDraw = function(context) {
-                context.setViewport(originalViewport);
-            };
-        }
-
         this.renderState.blending.enabled = this.enableBlending;
+        this.renderState.viewport = this._rectangle;
         this._colorCommand.renderState = this.renderState;
         this._colorCommand.framebuffer = this._framebuffer;
         commandList.push(this._colorCommand);

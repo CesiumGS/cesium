@@ -85,13 +85,43 @@ define([
         return this._context;
     };
 
-    UniformState.prototype._cleanViewport = function() {
-        var v = this._context.getViewport();
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @param {BoundingRectangle} viewport DOC_TBA.
+     *
+     * @see UniformState#getViewport
+     * @see czm_viewport
+     */
+    UniformState.prototype.setViewport = function(viewport) {
+        if (!BoundingRectangle.equals(viewport, this._viewport)) {
+            BoundingRectangle.clone(viewport, this._viewport);
+            this._viewportDirty = true;
+        }
+    };
 
-        if (!BoundingRectangle.equals(v, this._viewport)) {
-            BoundingRectangle.clone(v, this._viewport);
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * return {BoundingRectangle} DOC_TBA.
+     *
+     * @see UniformState#setViewport
+     * @see czm_viewport
+     */
+    UniformState.prototype.getViewport = function () {
+        return this._viewport;
+    };
+
+    UniformState.prototype._cleanViewport = function() {
+        if (this._viewportDirty) {
+            var v = this._viewport;
             Matrix4.computeOrthographicOffCenter(v.x, v.x + v.width, v.y, v.y + v.height, 0.0, 1.0, this._viewportOrthographicMatrix);
             Matrix4.computeViewportTransformation(v, 0.0, 1.0, this._viewportTransformation);
+            this._viewportDirty = false;
         }
     };
 

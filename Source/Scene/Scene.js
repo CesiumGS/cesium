@@ -254,16 +254,7 @@ define([
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
             var command = commandList[i];
-
-            if (typeof command.beforeDraw !== 'undefined') {
-                command.beforeDraw(context);
-            }
-
             context.draw(command);
-
-            if (typeof command.afterDraw !== 'undefined') {
-                command.afterDraw(context);
-            }
         }
     };
 

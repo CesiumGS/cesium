@@ -13,8 +13,6 @@ define(function() {
         this.uniformMap = undefined;
         this.renderState = undefined;
         this.framebuffer = undefined;
-        this.beforeDraw = undefined;
-        this.afterDraw = undefined;
     };
 
     return Command;

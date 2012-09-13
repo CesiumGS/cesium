@@ -142,7 +142,7 @@ define([
             this._texture.copyFrom(this._canvas);
         }
 
-        var viewportHeight = context.getViewport().height;
+        var viewportHeight = context.getCanvas().clientHeight;
         if (viewportHeight !== this._viewportHeight) {
             this._viewportHeight = viewportHeight;
             this._quad.setRectangle(new BoundingRectangle(this._rectangle.x, viewportHeight - canvasHeight - this._rectangle.y, canvasWidth, canvasHeight));
