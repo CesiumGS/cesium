@@ -233,6 +233,7 @@ require({
 
         function showDocPopup () {
             var selectedText = jsEditor.getSelection();
+            var lowerText = selectedText.toLowerCase();
 
             var onDocClick = function () {
                 openDocTab(this.textContent, this.href);
@@ -242,11 +243,11 @@ require({
             docTimer = undefined;
             if (docError && selectedText && selectedText.length < 50) {
                 hideGallery();
-            } else if (selectedText && selectedText in local.docTypes && typeof local.docTypes[selectedText].push === 'function') {
-                var member, ele, i, len = local.docTypes[selectedText].length;
+            } else if (lowerText && lowerText in local.docTypes && typeof local.docTypes[lowerText].push === 'function') {
+                var member, ele, i, len = local.docTypes[lowerText].length;
                 docMessage.innerHTML = '';
                 for (i = 0; i < len; ++i) {
-                    member = local.docTypes[selectedText][i];
+                    member = local.docTypes[lowerText][i];
                     ele = document.createElement('a');
                     ele.target = "_blank";
                     ele.textContent = member.replace('.html', '').replace('module-', '').replace('#', '.');
