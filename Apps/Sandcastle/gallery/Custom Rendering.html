@@ -317,8 +317,8 @@ require([
                 }
 
                 if (mode === Cesium.SceneMode.SCENE2D || mode === Cesium.SceneMode.COLUMBUS_VIEW) {
-                    Cesium.BoundingSphere.fromPoints(projectedPositions, , colorCommand.boundingVolume);
-                    , colorCommand.boundingVolume.center = new Cesium.Cartesian3(, colorCommand.boundingVolume.z, , colorCommand.boundingVolume.x, , colorCommand.boundingVolume.center.y);
+                    Cesium.BoundingSphere.fromPoints(projectedPositions, colorCommand.boundingVolume);
+                    colorCommand.boundingVolume.center = new Cesium.Cartesian3(colorCommand.boundingVolume.center.z, colorCommand.boundingVolume.center.x, colorCommand.boundingVolume.center.y);
                 } else {
                     var bv3D = Cesium.BoundingSphere.fromPoints([
                         minimumCorner,
