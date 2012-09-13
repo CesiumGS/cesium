@@ -50,9 +50,37 @@
 
     console.originalError = console.error;
     console.error = function (d1) {
-        // TODO: Look for d1.stack, "bucket.html:line:char"
         console.originalError.apply(console, arguments);
-        window.parent.postMessage({ 'error': (typeof d1 === 'undefined') ? 'undefined' : d1.toString() }, '*');
+        if (typeof d1 === 'undefined') {
+            window.parent.postMessage({ 'error': 'undefined' }, '*');
+        } else {
+            // Look for d1.stack, "bucket.html:line:char"
+            var lineNumber = -1, lineStart, lineEnd;
+            var errorMsg = d1.toString();
+            var rawErrorMsg = errorMsg;
+            if (typeof d1.stack === 'string') {
+                var stack = d1.stack;
+                var pos = stack.indexOf('bucket.html');
+                if (pos >= 0) {
+                    lineStart = stack.indexOf(':', pos);
+                    if (lineStart > 0) {
+                        lineEnd = stack.indexOf(':', lineStart + 1);
+                        if (lineEnd > 0) {
+                            try {
+                                lineNumber = parseInt(stack.substring(lineStart + 1, lineEnd, 10));
+                            } catch (ex) { }
+                        }
+                    }
+                }
+            }
+
+            if (lineNumber >= 0) {
+                errorMsg += ' (on line ' + lineNumber + ')';
+                window.parent.postMessage({ 'error': errorMsg, 'lineNumber': lineNumber, 'rawErrorMsg': rawErrorMsg }, '*');
+            } else {
+                window.parent.postMessage({ 'error': errorMsg }, '*');
+            }
+        }
     };
 
     window.onerror = function (errorMsg, url, lineNumber) {
