@@ -240,7 +240,9 @@ require({
             };
 
             docTimer = undefined;
-            if (selectedText && selectedText in local.docTypes && typeof local.docTypes[selectedText].push === 'function') {
+            if (docError && selectedText && selectedText.length < 50) {
+                hideGallery();
+            } else if (selectedText && selectedText in local.docTypes && typeof local.docTypes[selectedText].push === 'function') {
                 var member, ele, i, len = local.docTypes[selectedText].length;
                 docMessage.innerHTML = '';
                 for (i = 0; i < len; ++i) {
