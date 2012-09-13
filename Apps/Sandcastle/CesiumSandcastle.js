@@ -480,7 +480,8 @@ require({
                 jsEle.textContent = jsEditor.getValue();
                 bucketDoc.body.appendChild(jsEle);
                 if (docError) {
-                    appendConsole('consoleError', "Documentation not available.  Please run the 'Documentation' build script to generate Cesium documentation.");
+                    appendConsole('consoleError', "Documentation not available.  Please run the 'generateDocumentation' build script to generate Cesium documentation.");
+                    showGallery();
                 }
             } else if (typeof e.data.log !== 'undefined') {
                 // Console log messages from the iframe display in Sandcastle.
