@@ -259,13 +259,13 @@ defineSuite([
         expect(polylines.getLength()).toEqual(0);
     });
 
-    it('removes null', function() {
+    it('returns false when removing undefined', function() {
         polylines.add({
             positions : [{
                 x : 1.0,
                 y : 2.0,
                 z : 3.0
-            },{
+            }, {
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
@@ -273,7 +273,7 @@ defineSuite([
         });
         expect(polylines.getLength()).toEqual(1);
 
-        expect(polylines.remove(null)).toEqual(false);
+        expect(polylines.remove(undefined)).toEqual(false);
         expect(polylines.getLength()).toEqual(1);
     });
 
@@ -350,26 +350,26 @@ defineSuite([
         expect(polylines.getLength()).toEqual(0);
     });
 
-    it('contains a polyline', function() {
-        var p = polylines.add();
-        polylines.add(p);
+    it('can check if it contains a polyline', function() {
+        var polyline = polylines.add();
 
-        expect(polylines.contains(p)).toEqual(true);
+        expect(polylines.contains(polyline)).toEqual(true);
     });
 
-    it('does not contain a polyline', function() {
-        var p0 = polylines.add();
-        var p1 = polylines.add();
+    it('returns false when checking if it contains a polyline it does not contain', function() {
+        var polyline = polylines.add();
+        polylines.remove(polyline);
 
-        polylines.add(p0);
-        polylines.add(p1);
-        polylines.remove(p0);
-
-        expect(polylines.contains(p0)).toEqual(false);
+        expect(polylines.contains(polyline)).toEqual(false);
     });
 
     it('does not contain undefined', function() {
-        expect(polylines.contains()).toBeFalsy();
+        expect(polylines.contains(undefined)).toEqual(false);
+    });
+
+    it('does not contain random other objects', function() {
+        expect(polylines.contains({})).toEqual(false);
+        expect(polylines.contains(new Cartesian3())).toEqual(false);
     });
 
     it('does not render when constructed', function() {
@@ -1616,9 +1616,9 @@ defineSuite([
         expect(pickedObject).not.toBeDefined();
     });
 
-    it('does not equal null', function() {
-        var p = polylines.add({});
-        expect(p === null).toBeFalsy();
+    it('does not equal undefined', function() {
+        var polyline = polylines.add();
+        expect(polyline.equals(undefined)).toEqual(false);
     });
 
     it('throws when accessing without an index', function() {
