@@ -55,19 +55,26 @@ define([
         var dynamicObjects = this._array;
         for (i = 0, len = dynamicObjects.length; i < len; i++) {
             object = dynamicObjects[i];
-            if (typeof object.availability !== 'undefined') {
-                if (object.availability.start.lessThan(startTime)) {
+            var availability = object.availability;
+            if (typeof availability !== 'undefined') {
+                var start = availability.start;
+                var stop = availability.stop;
+                if (start.lessThan(startTime) && !start.equals(Iso8601.MINIMUM_VALUE)) {
                     startTime = object.availability.start;
                 }
-                if (object.availability.stop.greaterThan(stopTime)) {
+                if (stop.greaterThan(stopTime) && !stop.equals(Iso8601.MAXIMUM_VALUE)) {
                     stopTime = object.availability.stop;
                 }
             }
         }
-        if (startTime !== Iso8601.MAXIMUM_VALUE && stopTime !== Iso8601.MINIMUM_VALUE) {
-            return new TimeInterval(startTime, stopTime, true, true);
+
+        if (startTime === Iso8601.MAXIMUM_VALUE) {
+            startTime = Iso8601.MINIMUM_VALUE;
         }
-        return new TimeInterval(Iso8601.MINIMUM_VALUE, Iso8601.MAXIMUM_VALUE, true, true);
+        if (stopTime === Iso8601.MINIMUM_VALUE) {
+            stopTime = Iso8601.MAXIMUM_VALUE;
+        }
+        return new TimeInterval(startTime, stopTime, true, true);
     };
 
     /**
