@@ -9,8 +9,8 @@ define([
         TimeInterval) {
     "use strict";
 
-    var MINIMUM_VALUE = freezeObject(JulianDate.fromDate(new Date(Date.UTC(-1, 0, 1, 0, 0, 0))));
-    var MAXIMUM_VALUE = freezeObject(JulianDate.fromDate(new Date(Date.UTC(10000, 0, 1, 0, 0, 0))));
+    var MINIMUM_VALUE = freezeObject(JulianDate.fromIso8601('0000-01-01T00:00:00Z'));
+    var MAXIMUM_VALUE = freezeObject(JulianDate.fromIso8601('9999-12-31T24:00:00Z'));
     var MAXIMUM_INTERVAL = freezeObject(new TimeInterval(MINIMUM_VALUE, MAXIMUM_VALUE, true, true));
 
     /**
