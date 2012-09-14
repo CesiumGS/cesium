@@ -81,9 +81,6 @@ defineSuite([
     it('update with different eventName calls removeEventListener.', function(){
         var scene = createScene();
         var eventSource = {
-                test:function(){
-                    this.onmessage({data:"{\"test\":\"value}"});
-                },
                 close:function(){
                 },
                 addEventListener:function(e, callbackFunction){

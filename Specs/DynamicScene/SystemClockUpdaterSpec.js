@@ -35,9 +35,6 @@ defineSuite([
     it('update calls document manager process function.', function() {
         var scene = createScene();
         var eventSource = {
-                test:function(){
-                    this.onmessage({data:"{\"test\":\"value\"}"});
-                },
                 close:function(){
                 }
         };
@@ -56,7 +53,7 @@ defineSuite([
         while(curDate-date < 20);
         spyOn(dm, 'process');
         scdbu.update(new JulianDate(), dynamicObjectCollection);
-        eventSource.test();
+        eventSource.onmessage({data:"{\"test\":\"value\"}"});
         expect(dm.process).toHaveBeenCalled();
         destroyScene(scene);
     });
@@ -94,9 +91,6 @@ defineSuite([
     it('abort closes handle.', function() {
         var scene = createScene();
         var eventSource = {
-                test:function(){
-                    this.onmessage({data:"{\"test\":\"value\"}"});
-                },
                 close:function(){
                 }
         };
@@ -115,7 +109,7 @@ defineSuite([
         while(curDate-date < 20);
 
         scdbu.update(new JulianDate(), dynamicObjectCollection);
-        eventSource.test();
+        eventSource.onmessage({data:"{\"test\":\"value\"}"});
         scdbu.abort();
         expect(scdbu._handle).toBeUndefined();
         destroyScene(scene);
