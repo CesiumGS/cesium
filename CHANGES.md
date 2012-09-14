@@ -11,7 +11,8 @@ Beta Releases
 * The new Sandcastle live editor and demo gallery replace the Sandbox and Skeleton examples.
 * Improved picking performance and accuracy.
 * `Extent` functions now take optional result parameters.  Also added `getCenter`, `intersectWith`, and `contains` functions.
-
+* Added 'CzmlProcessor' to process multiple CZML fragments/documents. CzmlProcessor also knows how to handle 'external' CZML links and update the documents appropriately based on the CZML properties.
+* Added 'DynamicExternalDocument' to support CZML 'external' property. The external property allows linking with documents that are located at an external url.
 ### b8 - 09/05/2012
 
 * Breaking changes:

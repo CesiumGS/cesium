@@ -23,7 +23,7 @@ define(['../Core/DeveloperError',
      * @exception {DeveloperError} czmlProcessor is required.
      * @exception {DeveloperError} url is required.
      *
-     * @see {CzmlProcessor}
+     * @see CzmlProcessor
      * @see <a href="http://www.w3.org/TR/eventsource/">EventSource</a>
      */
     var EventSourceUpdater = function EventSourceUpdater(czmlProcessor, url, eventName) {

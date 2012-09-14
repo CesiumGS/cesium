@@ -27,7 +27,7 @@ define([
     "use strict";
 
     /**
-     * A class to maintain multiple {@link CompositeDynamicObjectCollection}. Use this class to add, remove and update distinct czml
+     * A class to maintain multiple {@link CompositeDynamicObjectCollection}. Use this class to add, remove and update distinct CZML
      * from various sources.
      *
      * @alias CzmlProcessor
@@ -61,14 +61,14 @@ define([
 
     /**
      * Processes the JSON object to a new {@link CompositeDynamicObjectCollection} and adds it to the {@link CompositeDynamicObjectCollection} container.
-     * If the czml fragment contains an external property, it creates new {@link CompositeDynamicObjectCollection} according
+     * If the CZML fragment contains an external property, it creates a new {@link CompositeDynamicObjectCollection} according
      * to the scope of the external property. If the scope property is not specified or specified as PRIVATE. A new
      * CompositeDynamicObjectCollection is created and populated with the external CZML data. If the scope property
-     * is specified as SHARED, then a new DynamicObjectCollection is created, populated with the external czml and
+     * is specified as SHARED, then a new DynamicObjectCollection is created, populated with the external CZML and
      * added to the existing CompositeDynamicObjectCollection. Any properties in a SHARED scope are then merged.
      * @memberof CzmlProcessor
      *
-     * @param {Object} json A JSON object with valid czml.
+     * @param {Object} json A JSON object with valid CZML.
      * @param {String} name The name to associate with the {@link CompositeDynamicObjectCollection}.
      * @returns {CompositeDynamicObjectCollection} The newly created {@link CompositeDynamicObjectCollection}.
      *
@@ -138,10 +138,10 @@ define([
     /**
      * Processes the JSON object and updates the {@link DynamicObjectCollection}. It then looks for any external CZML properties and if the CZML
      * contains an external CZML property, it creates new {@link CompositeDynamicObjectCollection} according to the scope of the external property. If the
-     * scope property is not specified or specified as PRIVATE. A new CompositeDynamicObjectCollection is created
+     * scope property is not specified or specified as PRIVATE, a new {@link CompositeDynamicObjectCollection} is created
      * and populated with the external CZML data. If the scope property is specified as SHARED, then a new
-     * DynamicObjectCollection is created, populated with the external CZML and added to the existing
-     * CompositeDynamicObjectCollection. Any properties in a SHARED scope are then merged.
+     * {@link DynamicObjectCollection} is created, populated with the external CZML and added to the existing
+     * {@link CompositeDynamicObjectCollection}. Any properties in a SHARED scope are then merged.
      * @memberof CzmlProcessor
      *
      * @param {Object} json The JSON object to process.
