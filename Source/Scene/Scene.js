@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/EquidistantCylindricalProjection',
         '../Core/Ellipsoid',
@@ -13,6 +14,7 @@ define([
         '../Core/IntersectionTests',
         '../Renderer/Context',
         './Camera',
+        './Command',
         './CompositePrimitive',
         './AnimationCollection',
         './SceneMode',
@@ -21,6 +23,7 @@ define([
         './PerspectiveOffCenterFrustum'
     ], function(
         Color,
+        defaultValue,
         destroyObject,
         EquidistantCylindricalProjection,
         Ellipsoid,
@@ -33,6 +36,7 @@ define([
         IntersectionTests,
         Context,
         Camera,
+        Command,
         CompositePrimitive,
         AnimationCollection,
         SceneMode,
@@ -335,6 +339,7 @@ define([
     var rectangleWidth = 3.0;
     var rectangleHeight = 3.0;
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
+    var scratchPickCommand = new Command();
 
     /**
      * DOC_TBA
@@ -358,10 +363,9 @@ define([
 
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
-            var command = commandList[i];
-            command.framebuffer = fb;
+            var command = Command.cloneDrawArguments(commandList[i], scratchPickCommand);
+            command.framebuffer = defaultValue(command.framebuffer, fb);
             context.draw(command);
-            command.framebuffer = undefined;
         }
 
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
