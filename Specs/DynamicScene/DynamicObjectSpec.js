@@ -97,6 +97,26 @@ defineSuite([
         expect(dynamicObject.vertexPositions).toBeUndefined();
     });
 
+    it('processCzmlPacketViewFrom works.', function() {
+        var packet = {
+            'viewFrom' : {
+                'cartesian' : [1.0, 2.0, 3.0]
+            }
+        };
+
+        var dynamicObject = new DynamicObject('dynamicObject');
+        expect(DynamicObject.processCzmlPacketViewFrom(dynamicObject, packet)).toEqual(true);
+        expect(dynamicObject.viewFrom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+    });
+
+    it('processCzmlPacketViewFrom returns false if no data.', function() {
+        var packet = {};
+        var dynamicObject = new DynamicObject('dynamicObject');
+        expect(DynamicObject.processCzmlPacketViewFrom(dynamicObject, packet)).toEqual(false);
+        expect(dynamicObject.viewFrom).toBeUndefined();
+    });
+
+
     it('processCzmlPacketAvailability works.', function() {
         var packet = {
             availability : '2000-01-01/2001-01-01'
@@ -152,19 +172,22 @@ defineSuite([
         objectToMerge.orientation = 2;
         objectToMerge.vertexPositions = 3;
         objectToMerge.availability = 4;
+        objectToMerge.viewFrom = 5;
 
         var targetObject = new DynamicObject('targetObject');
-        targetObject.position = 5;
-        targetObject.orientation = 6;
-        targetObject.vertexPositions = 7;
-        targetObject.availability = 8;
+        targetObject.position = 6;
+        targetObject.orientation = 7;
+        targetObject.vertexPositions = 8;
+        targetObject.availability = 9;
+        targetObject.viewFrom = 10;
 
         DynamicObject.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.position).toEqual(targetObject.position);
-        expect(targetObject.orientation).toEqual(targetObject.orientation);
-        expect(targetObject.vertexPositions).toEqual(targetObject.vertexPositions);
-        expect(targetObject.availability).toEqual(targetObject.availability);
+        expect(targetObject.position).toEqual(6);
+        expect(targetObject.orientation).toEqual(7);
+        expect(targetObject.vertexPositions).toEqual(8);
+        expect(targetObject.availability).toEqual(9);
+        expect(targetObject.viewFrom).toEqual(10);
     });
 
     it('mergeProperties creates and configures an undefined object', function() {
@@ -173,6 +196,7 @@ defineSuite([
         objectToMerge.orientation = 2;
         objectToMerge.vertexPositions = 3;
         objectToMerge.availability = 4;
+        objectToMerge.viewFrom = 4;
 
         var targetObject = new DynamicObject('targetObject');
 
@@ -182,6 +206,7 @@ defineSuite([
         expect(targetObject.orientation).toEqual(objectToMerge.orientation);
         expect(targetObject.vertexPositions).toEqual(objectToMerge.vertexPositions);
         expect(targetObject.availability).toEqual(objectToMerge.availability);
+        expect(targetObject.viewFrom).toEqual(objectToMerge.viewFrom);
     });
 
     it('mergeProperties does not change when used with an undefined object', function() {
@@ -192,13 +217,15 @@ defineSuite([
         targetObject.orientation = 2;
         targetObject.vertexPositions = 3;
         targetObject.availability = 4;
+        targetObject.viewFrom = 5;
 
         DynamicObject.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.position).toEqual(targetObject.position);
-        expect(targetObject.orientation).toEqual(targetObject.orientation);
-        expect(targetObject.vertexPositions).toEqual(targetObject.vertexPositions);
-        expect(targetObject.availability).toEqual(targetObject.availability);
+        expect(targetObject.position).toEqual(1);
+        expect(targetObject.orientation).toEqual(2);
+        expect(targetObject.vertexPositions).toEqual(3);
+        expect(targetObject.availability).toEqual(4);
+        expect(targetObject.viewFrom).toEqual(5);
     });
 
     it('undefineProperties works', function() {
@@ -208,6 +235,7 @@ defineSuite([
         dynamicObject.orientation = 2;
         dynamicObject.vertexPositions = 3;
         dynamicObject.availability = 4;
+        dynamicObject.viewFrom = 5;
 
         DynamicObject.undefineProperties(dynamicObject);
 
@@ -215,5 +243,6 @@ defineSuite([
         expect(dynamicObject.orientation).toBeUndefined();
         expect(dynamicObject.vertexPositions).toBeUndefined();
         expect(dynamicObject.availability).toBeUndefined();
+        expect(dynamicObject.viewFrom).toBeUndefined();
     });
 });
