@@ -1329,9 +1329,6 @@ define([
      */
     CentralBody.prototype.render = function(context) {
         if (this.show) {
-            // clear FBO
-            context.clear(context.createClearState(clearState));
-
             if (this.showSkyAtmosphere) {
                 context.draw({
                     primitiveType : PrimitiveType.TRIANGLES,
