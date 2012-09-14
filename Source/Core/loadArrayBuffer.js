@@ -10,14 +10,15 @@ define([
     /**
      * Asynchronously loads the given URL as raw binary data.  Returns a promise that will resolve to
      * an ArrayBuffer once loaded, or reject if the URL failed to load.  The data is loaded
-     * using XMLHttpRequest, which means that requests to other origins must be to servers
-     * with CORS headers enabled.
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
      *
      * @exports loadArrayBuffer
      *
      * @param {String|Promise} url The URL of the binary data, or a promise for the URL.
+     * @param {Object} [headers] HTTP headers to send with the requests.
      *
-     * @returns {Object} a promise that will resolve to the requested data when loaded.
+     * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
@@ -30,7 +31,7 @@ define([
      *     // an error occurred
      * });
      */
-    var loadArrayBuffer = function(url) {
+    var loadArrayBuffer = function(url, headers) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
@@ -38,6 +39,15 @@ define([
         return when(url, function(url) {
             var xhr = new XMLHttpRequest();
             xhr.open('GET', url, true);
+
+            if (typeof headers !== 'undefined') {
+                for ( var key in headers) {
+                    if (headers.hasOwnProperty(key)) {
+                        xhr.setRequestHeader(key, headers[key]);
+                    }
+                }
+            }
+
             xhr.responseType = 'arraybuffer';
 
             var deferred = when.defer();
