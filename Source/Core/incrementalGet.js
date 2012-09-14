@@ -39,12 +39,7 @@ define(['./DeveloperError'],
         if (itemCallback) {
             eventSource.onmessage = function(event) {
                 if (event.data !== '') {
-                    try {
-                        itemCallback(JSON.parse(event.data));
-                    } catch (e) {
-                        console.log(e);
-                        eventSource.onerror();
-                    }
+                    itemCallback(JSON.parse(event.data));
                 }
             };
         }
