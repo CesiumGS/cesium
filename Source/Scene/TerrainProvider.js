@@ -41,8 +41,7 @@ define([
      */
     TerrainProvider.attributeIndices = {
         position3D : 0,
-        textureCoordinates : 1,
-        position2D : 2
+        textureCoordinates : 1
     };
 
     TerrainProvider.wireframe = false;
@@ -127,9 +126,6 @@ define([
             componentsPerAttribute : 2,
             offsetInBytes : 3 * datatype.sizeInBytes,
             strideInBytes : stride
-        }, {
-            index : TerrainProvider.attributeIndices.position2D,
-            value : [0.0, 0.0]
         }];
 
         var indexBuffers = buffers.indices.indexBuffers || {};
@@ -147,41 +143,6 @@ define([
         } else {
             ++indexBuffer.referenceCount;
         }
-
-        tile.vertexArray = context.createVertexArray(attributes, indexBuffer);
-    };
-
-    TerrainProvider.createTilePlaneGeometryFromBuffers = function(context, tile, buffers) {
-        var datatype = ComponentDatatype.FLOAT;
-        var usage = BufferUsage.STATIC_DRAW;
-
-        var typedArray = datatype.toTypedArray(buffers.vertices);
-        var buffer = context.createVertexBuffer(typedArray, usage);
-        var stride = 7 * datatype.sizeInBytes;
-        var attributes = [{
-            index : TerrainProvider.attributeIndices.position3D,
-            vertexBuffer : buffer,
-            componentDatatype : datatype,
-            componentsPerAttribute : 3,
-            offsetInBytes : 0,
-            strideInBytes : stride
-        }, {
-            index : TerrainProvider.attributeIndices.textureCoordinates,
-            vertexBuffer : buffer,
-            componentDatatype : datatype,
-            componentsPerAttribute : 2,
-            offsetInBytes : 3 * datatype.sizeInBytes,
-            strideInBytes : stride
-        }, {
-            index : TerrainProvider.attributeIndices.position2D,
-            vertexBuffer : buffer,
-            componentDatatype : datatype,
-            componentsPerAttribute : 2,
-            offsetInBytes : 5 * datatype.sizeInBytes,
-            strideInBytes : stride
-        }];
-
-        var indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), usage, IndexDatatype.UNSIGNED_SHORT);
 
         tile.vertexArray = context.createVertexArray(attributes, indexBuffer);
     };
