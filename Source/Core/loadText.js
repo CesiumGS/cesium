@@ -15,8 +15,8 @@ define([
      *
      * @exports loadText
      *
-     * @param {String|Promise} url The URL of the binary data, or a promise for the URL.
-     * @param {Object} [headers] HTTP headers to send with the requests.
+     * @param {String|Promise} url The URL to request, or a promise for the URL.
+     * @param {Object} [headers] HTTP headers to send with the request.
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
      * @exception {DeveloperError} url is required.

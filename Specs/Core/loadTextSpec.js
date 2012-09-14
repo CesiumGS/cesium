@@ -26,7 +26,7 @@ defineSuite([
         spyOn(window, 'XMLHttpRequest').andReturn(fakeXHR);
     });
 
-    it('throws with no url.', function() {
+    it('throws with no url', function() {
         expect(function() {
             loadText();
         }).toThrow();

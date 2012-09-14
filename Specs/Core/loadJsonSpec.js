@@ -26,14 +26,16 @@ defineSuite([
         spyOn(window, 'XMLHttpRequest').andReturn(fakeXHR);
     });
 
-    it('loadJson throws with empty argument.', function() {
+    it('throws with no url', function() {
         expect(function() {
             loadJson();
         }).toThrow();
     });
 
-    it('loadJson sets headers and adds Accept header.', function() {
-        loadJson("test", {'Cache-Control':'no-cache'});
+    it('creates and sends request, adding Accept header', function() {
+        loadJson("test", {
+            'Cache-Control' : 'no-cache'
+        });
 
         expect(fakeXHR.open).toHaveBeenCalledWith('GET', "test", true);
         expect(fakeXHR.setRequestHeader.callCount).toEqual(2);
@@ -59,9 +61,11 @@ defineSuite([
         expect(resolvedValue).toBeUndefined();
         expect(rejectedError).toBeUndefined();
 
-        var response = "{\"good\":\"data\"}";
+        var response = '{"good":"data"}';
         fakeXHR.simulateLoad(response);
-        expect(resolvedValue).toEqual({good:'data'});
+        expect(resolvedValue).toEqual({
+            good : 'data'
+        });
         expect(rejectedError).toBeUndefined();
     });
 
@@ -87,5 +91,4 @@ defineSuite([
         expect(resolvedValue).toBeUndefined();
         expect(rejectedError).toEqual(error);
     });
-
 });

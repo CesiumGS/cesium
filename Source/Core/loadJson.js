@@ -1,23 +1,27 @@
 /*global define*/
 define([
+        './defaultValue',
         './loadText',
         './DeveloperError'
     ], function(
+        defaultValue,
         loadText,
         DeveloperError) {
     "use strict";
 
     /**
-     * Asynchronously loads the given URL as text.  Returns a promise that will resolve to
+     * Asynchronously loads the given URL as JSON.  Returns a promise that will resolve to
      * a JSON object once loaded, or reject if the URL failed to load.  The data is loaded
      * using XMLHttpRequest, which means that in order to make requests to another origin,
-     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled. This method
-     * always adds 'Accept: application/json' to the request header.
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled. This function
+     * always adds 'Accept: application/json' to the request headers.
      *
      * @exports loadJson
      *
-     * @param {String} url The url to retrieve the JSON data.
-     * @param {Object} headers An associative array of name value pairs to append to the request header. 'Accept: application/json' is added to the request header internally and does not need to be specified.
+     * @param {String|Promise} url The URL to request, or a promise for the URL.
+     * @param {Object} [headers] HTTP headers to send with the request.
+     * 'Accept: application/json' is added to the request headers automatically
+     * and does not need to be specified.
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
      * @exception {DeveloperError} url is required.
@@ -25,19 +29,22 @@ define([
      * @example
      * loadJson('http://someUrl.com/someJson.txt').then(function(jsonData){
      *     //Do something with the JSON object
+     * }, function() {
+     *     // an error occurred
      * });
      *
      * @see loadText
-     * @see when
+     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
      */
     var loadJson = function loadJson(url, headers) {
-        if(typeof headers === 'undefined'){
-            headers = {};
-        }
-        headers.Accept = 'application/json';
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
+
+        headers = defaultValue(headers, {});
+        headers.Accept = 'application/json';
+
         return loadText(url, headers).then(function(value) {
             return JSON.parse(value);
         });
