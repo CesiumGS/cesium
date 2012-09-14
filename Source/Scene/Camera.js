@@ -329,6 +329,10 @@ define([
         this.frustum.left = -right;
         this.frustum.top = top;
         this.frustum.bottom = -top;
+
+        //Orient the camera north.
+        this.right = Cartesian3.UNIT_X;
+        this.up = this.right.cross(this.direction);
     };
 
     function updateViewMatrix(camera) {

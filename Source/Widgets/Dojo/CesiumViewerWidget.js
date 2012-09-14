@@ -19,6 +19,7 @@ define([
         '../../Core/Clock',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
+        '../../Core/Extent',
         '../../Core/AnimationController',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
@@ -34,6 +35,9 @@ define([
         '../../Core/Transforms',
         '../../Core/requestAnimationFrame',
         '../../Core/Color',
+        '../../Core/Matrix4',
+        '../../Core/Math',
+        '../../Scene/PerspectiveFrustum',
         '../../Scene/Material',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
@@ -68,6 +72,7 @@ define([
         Clock,
         ClockStep,
         ClockRange,
+        Extent,
         AnimationController,
         Ellipsoid,
         Iso8601,
@@ -83,6 +88,9 @@ define([
         Transforms,
         requestAnimationFrame,
         Color,
+        Matrix4,
+        CesiumMath,
+        PerspectiveFrustum,
         Material,
         Scene,
         CentralBody,
@@ -129,13 +137,6 @@ define([
          * @see CesiumViewerWidget#setStreamingImageryMapStyle
          */
         mapStyle : BingMapsStyle.AERIAL,
-        /**
-         * The default camera, which looks at the "home" view.
-         *
-         * @type {Camera}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        defaultCamera : undefined,
         /**
          * The URL for a daytime image on the globe.
          *
@@ -402,6 +403,8 @@ define([
          * @param {Object} The object with the start and end position of the mouse.
          */
         onZoom : undefined,
+
+        _camera3D : undefined,
 
         _handleLeftClick : function(e) {
             if (typeof this.onObjectSelected !== 'undefined') {
@@ -736,14 +739,7 @@ define([
             });
 
             on(viewHomeButton, 'Click', function() {
-                view2D.set('checked', false);
-                view3D.set('checked', true);
-                viewColumbus.set('checked', false);
-                transitioner.morphTo3D();
-                widget._viewFromTo = undefined;
                 widget.viewHome();
-                widget.showSkyAtmosphere(true);
-                widget.showGroundAtmosphere(true);
             });
             on(view2D, 'Click', function() {
                 view2D.set('checked', true);
@@ -816,29 +812,65 @@ define([
                 });
             }
 
+            this._camera3D = this.scene.getCamera().clone();
+
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);
             }
-
-            this.defaultCamera = camera.clone();
         },
 
         /**
-         * Reset the camera to the home (default) view.
+         * Reset the camera to the home view for the current scene mode.
          * @function
          * @memberof CesiumViewerWidget.prototype
          */
         viewHome : function() {
-            var camera = this.scene.getCamera();
-            camera.position = this.defaultCamera.position;
-            camera.direction = this.defaultCamera.direction;
-            camera.up = this.defaultCamera.up;
-            camera.transform = this.defaultCamera.transform;
-            camera.frustum = this.defaultCamera.frustum.clone();
+            this._viewFromTo = undefined;
 
+            var scene = this.scene;
+            var mode = scene.mode;
+            var camera = scene.getCamera();
             var controllers = camera.getControllers();
             controllers.removeAll();
-            this.centralBodyCameraController = controllers.addCentralBody();
+
+            if (mode === SceneMode.SCENE2D) {
+                controllers.add2D(scene.scene2D.projection);
+                scene.viewExtent(Extent.MAX_VALUE);
+            } else if (mode === SceneMode.SCENE3D) {
+                this.centralBodyCameraController = controllers.addCentralBody();
+                var camera3D = this._camera3D;
+                camera3D.position.clone(camera.position);
+                camera3D.direction.clone(camera.direction);
+                camera3D.up.clone(camera.up);
+                camera3D.right.clone(camera.right);
+                camera3D.transform.clone(camera.transform);
+                camera3D.frustum.clone(camera.frustum);
+            } else if (mode === SceneMode.COLUMBUS_VIEW) {
+                var transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                            1.0, 0.0, 0.0, 0.0,
+                                            0.0, 1.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 1.0);
+
+                var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+                var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
+                var direction = Cartesian3.ZERO.subtract(position).normalize();
+                var right = direction.cross(Cartesian3.UNIT_Z).normalize();
+                var up = right.cross(direction);
+
+                var frustum = new PerspectiveFrustum();
+                frustum.fovy = CesiumMath.toRadians(60.0);
+                frustum.aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
+                frustum.near = 0.01 * maxRadii;
+                frustum.far = 60.0 * maxRadii;
+
+                camera.position = position;
+                camera.direction = direction;
+                camera.up = up;
+                camera.frustum = frustum;
+                camera.transform = transform;
+
+                controllers.addColumbusView();
+            }
         },
 
         /**
