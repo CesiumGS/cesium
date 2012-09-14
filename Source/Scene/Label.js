@@ -674,19 +674,19 @@ define([
      */
     Label.prototype.equals = function(other) {
         return this === other ||
-               (typeof other !== 'undefined' &&
-                this._show === other._show &&
-                this._scale === other._scale &&
-                this._style === other._style &&
-                this._verticalOrigin === other._verticalOrigin &&
-                this._horizontalOrigin === other._horizontalOrigin &&
-                this._text === other._text &&
-                this._font === other._font &&
-                Cartesian3.equals(this._position, other._position) &&
-                Color.equals(this._fillColor, other._fillColor) &&
-                Color.equals(this._outlineColor, other._outlineColor) &&
-                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
-                Cartesian3.equals(this._eyeOffset, other._eyeOffset));
+               typeof other !== 'undefined' &&
+               this._show === other._show &&
+               this._scale === other._scale &&
+               this._style === other._style &&
+               this._verticalOrigin === other._verticalOrigin &&
+               this._horizontalOrigin === other._horizontalOrigin &&
+               this._text === other._text &&
+               this._font === other._font &&
+               Cartesian3.equals(this._position, other._position) &&
+               Color.equals(this._fillColor, other._fillColor) &&
+               Color.equals(this._outlineColor, other._outlineColor) &&
+               Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
+               Cartesian3.equals(this._eyeOffset, other._eyeOffset);
     };
 
     /**

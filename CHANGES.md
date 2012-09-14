@@ -7,10 +7,15 @@ Beta Releases
 ### b9 - xx/xx/2012
 
 * Breaking changes:
-   * ...
+   * `shallowEquals` has been removed.
+   * Passing `undefined` to any of the set functions on `Billboard` now throws an exception.
+   * Passing `undefined` to any of the set functions on `Polyline` now throws an exception.
 * The new Sandcastle live editor and demo gallery replace the Sandbox and Skeleton examples.
 * Improved picking performance and accuracy.
 * `Extent` functions now take optional result parameters.  Also added `getCenter`, `intersectWith`, and `contains` functions.
+* Add new utility class, `DynamicObjectView` for tracking a DynamicObject with the camera across scene modes; also hooked up CesiumViewerWidget to use it.
+* Added `enableTranslate`, `enableZoom`, and `enableRotate` properties to `Camera2DController` to selectively toggle camera behavior.  All values default to `true`.
+* Added `Camera2DController.setPositionCartographic` to simplify moving the camera programmatically when in 2D mode.
 
 ### b8 - 09/05/2012
 

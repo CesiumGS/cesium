@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Stream imagery from different providers, including Bing Maps, OpenStreetMaps, Stamen Maps and more">
     <title>Cesium Demo</title>
     <script>
     var Sandcastle = {};
@@ -163,7 +164,7 @@ require([
                 bingMapsRoad(primitives);
                 Sandcastle.highlight(bingMapsRoad);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new ToggleButton({
             label: "ArcGIS World Street Maps",
@@ -171,7 +172,7 @@ require([
                 arcGisWorldStreetMaps(primitives);
                 Sandcastle.highlight(arcGisWorldStreetMaps);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
 
         new ToggleButton({
             label: "OpenStreetMaps",
@@ -179,7 +180,7 @@ require([
                 openStreetMaps(primitives);
                 Sandcastle.highlight(openStreetMaps);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
 
         new ToggleButton({
             label: "MapQuest OpenStreetMaps",
@@ -187,7 +188,7 @@ require([
                 mapQuestOpenStreetMaps(primitives);
                 Sandcastle.highlight(mapQuestOpenStreetMaps);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
 
         new ToggleButton({
             label: "Stamen Maps",
@@ -195,7 +196,7 @@ require([
                 stamenMaps(primitives);
                 Sandcastle.highlight(stamenMaps);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new ToggleButton({
             label: "Single Image",
@@ -203,7 +204,7 @@ require([
                 singleImage(primitives); 
                 Sandcastle.highlight(singleImage);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
     }
     
     var cesiumWidget = new CesiumWidget({
@@ -211,9 +212,9 @@ require([
             createButtons(widget.scene.getPrimitives());
             widget.startRenderLoop();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId('cesiumContainer'));
 
-    dom.byId("toolbar").innerHTML = '';
+    dom.byId('toolbar').innerHTML = '';
 });
 
 </script>

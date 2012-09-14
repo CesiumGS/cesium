@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Fly to a specified location or view a geographic extent.">
     <title>Cesium Demo</title>
     <script>
     var Sandcastle = {};
@@ -40,8 +41,6 @@
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro">
-
-
 <style>
 body {
     background: #000;
@@ -84,11 +83,11 @@ require([
 {
     "use strict";
 
-    function flyToLosAngeles(scene) {
-        Sandcastle.declare(flyToLosAngeles);    // For highlighting in Sandcastle.
+    function flyToSanDiego(scene) {
+        Sandcastle.declare(flyToSanDiego);    // For highlighting in Sandcastle.
         scene.getCamera().getControllers().addFlight({
             destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-                Cesium.Cartographic.fromDegrees(-118.26, 34.19, 100000.0)),
+                Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0)),
             duration: 3.0
         });        
     }
@@ -131,12 +130,12 @@ require([
     
     function createButtons(scene) {
         new ToggleButton({
-            label: "Fly to Los Angeles",
+            label: "Fly to San Diego",
             onClick: function() { 
-                flyToLosAngeles(scene);
-                Sandcastle.highlight(flyToLosAngeles);
+                flyToSanDiego(scene);
+                Sandcastle.highlight(flyToSanDiego);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
         
         new ToggleButton({
             label: "Fly to My Location",
@@ -144,7 +143,7 @@ require([
                 flyToMyLocation(scene);
                 Sandcastle.highlight(flyToMyLocation);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
 
         new ToggleButton({
             label: "View an Extent",
@@ -152,7 +151,7 @@ require([
                 viewAnExtent(scene);
                 Sandcastle.highlight(viewAnExtent);
             }
-        }).placeAt("toolbar");
+        }).placeAt('toolbar');
     }
     
     var cesiumWidget = new CesiumWidget({
@@ -160,9 +159,9 @@ require([
             createButtons(widget.scene);
             widget.startRenderLoop();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
+    }).placeAt(dom.byId('cesiumContainer'));
 
-    dom.byId("toolbar").innerHTML = '';
+    dom.byId('toolbar').innerHTML = '';
 });
 
 </script>
