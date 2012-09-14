@@ -19,6 +19,7 @@ define([
         '../../Core/Clock',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
+        '../../Core/Extent',
         '../../Core/AnimationController',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
@@ -34,6 +35,9 @@ define([
         '../../Core/Transforms',
         '../../Core/requestAnimationFrame',
         '../../Core/Color',
+        '../../Core/Matrix4',
+        '../../Core/Math',
+        '../../Scene/PerspectiveFrustum',
         '../../Scene/Material',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
@@ -42,6 +46,8 @@ define([
         '../../Scene/SceneTransitioner',
         '../../Scene/SingleTileProvider',
         '../../Scene/PerformanceDisplay',
+        '../../Scene/SceneMode',
+        '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/CzmlProcessor',
         'dojo/text!./CesiumViewerWidget.html'
     ], function (
@@ -64,6 +70,7 @@ define([
         Clock,
         ClockStep,
         ClockRange,
+        Extent,
         AnimationController,
         Ellipsoid,
         Iso8601,
@@ -79,6 +86,9 @@ define([
         Transforms,
         requestAnimationFrame,
         Color,
+        Matrix4,
+        CesiumMath,
+        PerspectiveFrustum,
         Material,
         Scene,
         CentralBody,
@@ -87,6 +97,8 @@ define([
         SceneTransitioner,
         SingleTileProvider,
         PerformanceDisplay,
+        SceneMode,
+        DynamicObjectView,
         CzmlProcessor,
         template) {
     "use strict";
@@ -121,13 +133,6 @@ define([
          * @see CesiumViewerWidget#setStreamingImageryMapStyle
          */
         mapStyle : BingMapsStyle.AERIAL,
-        /**
-         * The default camera, which looks at the "home" view.
-         *
-         * @type {Camera}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        defaultCamera : undefined,
         /**
          * The URL for a daytime image on the globe.
          *
@@ -192,7 +197,7 @@ define([
          * @memberof CesiumViewerWidget.prototype
          * @default false
          */
-        enableDragDrop : false,
+        enableDragDrop: false,
         /**
          * Register this widget's resize handler to get called every time the browser window
          * resize event fires.  This is read-only after construction.  Generally this should
@@ -211,7 +216,7 @@ define([
          * @default true
          * @see CesiumViewerWidget#resize
          */
-        resizeWidgetOnWindowResize : true,
+        resizeWidgetOnWindowResize: true,
 
         // for Dojo use only
         constructor : function() {
@@ -275,6 +280,19 @@ define([
         },
 
         /**
+         * Have the camera track a particular object based on the result of a pick.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object to track, or <code>undefined</code> to stop tracking.
+         */
+        centerCameraOnPick : function(selectedObject) {
+            this.centerCameraOnObject(typeof selectedObject !== 'undefined' ? selectedObject.dynamicObject : undefined);
+        },
+
+        _viewFromTo : undefined,
+
+        /**
          * Have the camera track a particular object.
          *
          * @function
@@ -282,10 +300,30 @@ define([
          * @param {Object} selectedObject - The object to track, or <code>undefined</code> to stop tracking.
          */
         centerCameraOnObject : function(selectedObject) {
-            if (selectedObject && selectedObject.dynamicObject) {
-                this.cameraCenteredObjectID = selectedObject.dynamicObject.id;
+            if (typeof selectedObject !== 'undefined' && typeof selectedObject.position !== 'undefined') {
+                var viewFromTo = this._viewFromTo;
+                if (typeof viewFromTo === 'undefined') {
+                    this._viewFromTo = viewFromTo = new DynamicObjectView(selectedObject, this.scene, this.ellipsoid);
+                } else {
+                    viewFromTo.dynamicObject = selectedObject;
+                }
             } else {
-                this.cameraCenteredObjectID = undefined;
+                this._viewFromTo = undefined;
+
+                var scene = this.scene;
+                var mode = scene.mode;
+                var camera = scene.getCamera();
+                var controllers = camera.getControllers();
+                if (mode === SceneMode.SCENE2D) {
+                    controllers.removeAll();
+                    controllers.add2D(scene.scene2D.projection);
+                } else if (mode === SceneMode.SCENE3D) {
+                    //For now just rename at the last location
+                    //camera will stay in spindle/rotate mode.
+                } else if (mode === SceneMode.COLUMBUS_VIEW) {
+                    controllers.removeAll();
+                    controllers.addColumbusView();
+                }
             }
         },
 
@@ -305,6 +343,14 @@ define([
          * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
          */
         onObjectRightClickSelected : undefined,
+        /**
+         * Override this function to be notified when an object is left-double-clicked.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
+         */
+        onObjectLeftDoubleClickSelected : undefined,
         /**
          * Override this function to be notified when an object hovered by the mouse.
          *
@@ -362,9 +408,11 @@ define([
          */
         onZoom : undefined,
 
+        _camera3D : undefined,
+
         _handleLeftClick : function(e) {
             if (typeof this.onObjectSelected !== 'undefined') {
-                // If the user left-clicks, we re-send the selection event, regardless if it's a duplicate,
+                // Fire the selection event, regardless if it's a duplicate,
                 // because the client may want to react to re-selection in some way.
                 this.selectedObject = this.scene.pick(e.position);
                 this.onObjectSelected(this.selectedObject);
@@ -373,10 +421,19 @@ define([
 
         _handleRightClick : function(e) {
             if (typeof this.onObjectRightClickSelected !== 'undefined') {
-                // If the user right-clicks, we re-send the selection event, regardless if it's a duplicate,
+                // Fire the selection event, regardless if it's a duplicate,
                 // because the client may want to react to re-selection in some way.
                 this.selectedObject = this.scene.pick(e.position);
                 this.onObjectRightClickSelected(this.selectedObject);
+            }
+        },
+
+        _handleLeftDoubleClick : function(e) {
+            if (typeof this.onObjectLeftDoubleClickSelected !== 'undefined') {
+                // Fire the selection event, regardless if it's a duplicate,
+                // because the client may want to react to re-selection in some way.
+                this.selectedObject = this.scene.pick(e.position);
+                this.onObjectLeftDoubleClickSelected(this.selectedObject);
             }
         },
 
@@ -520,11 +577,12 @@ define([
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
-            centralBody.showSkyAtmosphere = true;
-            centralBody.showGroundAtmosphere = true;
+
             // This logo is replicated by the imagery selector button, so it's hidden here.
             centralBody.logoOffset = new Cartesian2(-100, -100);
 
+            this.showSkyAtmosphere(true);
+            this.showGroundAtmosphere(true);
             this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
@@ -540,6 +598,7 @@ define([
             var handler = new EventHandler(canvas);
             handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleRightClick'), MouseEventType.RIGHT_CLICK);
+            handler.setMouseAction(lang.hitch(this, '_handleLeftDoubleClick'), MouseEventType.LEFT_DOUBLE_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), MouseEventType.MOVE);
             handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), MouseEventType.LEFT_DOWN);
             handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), MouseEventType.LEFT_UP);
@@ -558,10 +617,13 @@ define([
                 this.highlightMaterial.uniforms.color = this.highlightColor;
             }
 
-            if (typeof this.onObjectRightClickSelected === 'undefined') {
-                this.onObjectRightClickSelected = this.centerCameraOnObject;
+            if (typeof this.onObjectLeftDoubleClickSelected === 'undefined') {
+                this.onObjectLeftDoubleClickSelected = function(selectedObject) {
+                    if (typeof selectedObject !== 'undefined' && typeof selectedObject.dynamicObject !== 'undefined') {
+                        this.centerCameraOnPick(selectedObject);
+                    }
+                };
             }
-
             if (this.enableDragDrop) {
                 var dropBox = this.cesiumNode;
                 on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));
@@ -597,14 +659,13 @@ define([
                 loadJson(widget.endUserOptions.source).then(function(czmlData) {
                     widget.czmlProcessor.add(czmlData, widget.endUserOptions.source);
                     widget.setTimeFromBuffer();
+                    if (typeof widget.endUserOptions.lookAt !== 'undefined') {
+                        widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(widget.endUserOptions.lookAt));
+                    }
                 },
                 function(error) {
                     window.alert(error);
                 });
-            }
-
-            if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                widget.cameraCenteredObjectID = widget.endUserOptions.lookAt;
             }
 
             if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
@@ -691,16 +752,9 @@ define([
             });
 
             on(viewHomeButton, 'Click', function() {
-                view2D.set('checked', false);
-                view3D.set('checked', true);
-                viewColumbus.set('checked', false);
-                transitioner.morphTo3D();
                 widget.viewHome();
-                widget.showSkyAtmosphere(true);
-                widget.showGroundAtmosphere(true);
             });
             on(view2D, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', true);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', false);
@@ -709,7 +763,6 @@ define([
                 transitioner.morphTo2D();
             });
             on(view3D, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
@@ -718,7 +771,6 @@ define([
                 widget.showGroundAtmosphere(true);
             });
             on(viewColumbus, 'Click', function() {
-                widget.cameraCenteredObjectID = undefined;
                 view2D.set('checked', false);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', true);
@@ -730,6 +782,8 @@ define([
             var cbLighting = widget.cbLighting;
             on(cbLighting, 'Change', function(value) {
                 widget.centralBody.affectedByLighting = !value;
+                widget.centralBody.showSkyAtmosphere = widget._showSkyAtmosphere && !value;
+                widget.centralBody.showGroundAtmosphere = widget._showGroundAtmosphere && !value;
             });
 
             var imagery = widget.imagery;
@@ -771,29 +825,65 @@ define([
                 });
             }
 
+            this._camera3D = this.scene.getCamera().clone();
+
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);
             }
-
-            this.defaultCamera = camera.clone();
         },
 
         /**
-         * Reset the camera to the home (default) view.
+         * Reset the camera to the home view for the current scene mode.
          * @function
          * @memberof CesiumViewerWidget.prototype
          */
         viewHome : function() {
-            var camera = this.scene.getCamera();
-            camera.position = this.defaultCamera.position;
-            camera.direction = this.defaultCamera.direction;
-            camera.up = this.defaultCamera.up;
-            camera.transform = this.defaultCamera.transform;
-            camera.frustum = this.defaultCamera.frustum.clone();
+            this._viewFromTo = undefined;
 
+            var scene = this.scene;
+            var mode = scene.mode;
+            var camera = scene.getCamera();
             var controllers = camera.getControllers();
             controllers.removeAll();
+
+            if (mode === SceneMode.SCENE2D) {
+                controllers.add2D(scene.scene2D.projection);
+                scene.viewExtent(Extent.MAX_VALUE);
+            } else if (mode === SceneMode.SCENE3D) {
             this.centralBodyCameraController = controllers.addCentralBody();
+                var camera3D = this._camera3D;
+                camera3D.position.clone(camera.position);
+                camera3D.direction.clone(camera.direction);
+                camera3D.up.clone(camera.up);
+                camera3D.right.clone(camera.right);
+                camera3D.transform.clone(camera.transform);
+                camera3D.frustum.clone(camera.frustum);
+            } else if (mode === SceneMode.COLUMBUS_VIEW) {
+                var transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                            1.0, 0.0, 0.0, 0.0,
+                                            0.0, 1.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 1.0);
+
+                var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+                var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
+                var direction = Cartesian3.ZERO.subtract(position).normalize();
+                var right = direction.cross(Cartesian3.UNIT_Z).normalize();
+                var up = right.cross(direction);
+
+                var frustum = new PerspectiveFrustum();
+                frustum.fovy = CesiumMath.toRadians(60.0);
+                frustum.aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
+                frustum.near = 0.01 * maxRadii;
+                frustum.far = 60.0 * maxRadii;
+
+                camera.position = position;
+                camera.direction = direction;
+                camera.up = up;
+                camera.frustum = frustum;
+                camera.transform = transform;
+
+                controllers.addColumbusView();
+            }
         },
 
         /**
@@ -847,7 +937,8 @@ define([
          * @param {Boolean} show - <code>true</code> to enable the effect.
          */
         showSkyAtmosphere : function(show) {
-            this.centralBody.showSkyAtmosphere = show;
+            this._showSkyAtmosphere = show;
+            this.centralBody.showSkyAtmosphere = show && this.centralBody.affectedByLighting;
         },
 
         /**
@@ -859,7 +950,8 @@ define([
          * @param {Boolean} show - <code>true</code> to enable the effect.
          */
         showGroundAtmosphere : function(show) {
-            this.centralBody.showGroundAtmosphere = show;
+            this._showGroundAtmosphere = show;
+            this.centralBody.showGroundAtmosphere = show && this.centralBody.affectedByLighting;
         },
 
         /**
@@ -941,8 +1033,6 @@ define([
             }
         },
 
-        _cameraCenteredObjectIDPosition : new Cartesian3(),
-
         _sunPosition : new Cartesian3(),
 
         /**
@@ -954,8 +1044,6 @@ define([
          * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
         update : function(currentTime) {
-            var cameraCenteredObjectID = this.cameraCenteredObjectID;
-            var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
 
             this._updateSpeedIndicator();
             this.timelineControl.updateFromClock();
@@ -968,30 +1056,10 @@ define([
             }
             this.czmlProcessor.update(currentTime);
             // Update the camera to stay centered on the selected object, if any.
-            if (cameraCenteredObjectID) {
-                var dynamicObject = this.czmlProcessor.getObject(cameraCenteredObjectID);
-                if (dynamicObject && dynamicObject.position) {
-                    cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
-                    if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
-                        // If we're centering on an object for the first time, zoom to within 2km of it.
-                        if (this._lastCameraCenteredObjectID !== cameraCenteredObjectID) {
-                            var camera = this.scene.getCamera();
-                            camera.position = camera.position.normalize().multiplyByScalar(5000.0);
-
-                            var controllers = camera.getControllers();
-                            controllers.removeAll();
-                            this.objectSpindleController = controllers.addSpindle();
-                            this.objectSpindleController.constrainedAxis = Cartesian3.UNIT_Z;
-                        }
-
-                        if (typeof spindleController !== 'undefined' && !this.objectSpindleController.isDestroyed()) {
-                            var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, this.ellipsoid);
-                            this.objectSpindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
-                        }
-                    }
-                }
+            var viewFromTo = this._viewFromTo;
+            if (typeof viewFromTo !== 'undefined') {
+                viewFromTo.update(currentTime);
             }
-            this._lastCameraCenteredObjectID = cameraCenteredObjectID;
         },
 
         /**

@@ -69,6 +69,7 @@ define([
                     DynamicPyramid.processCzmlPacket,
                     DynamicExternalDocument.processCzmlPacket,
                     DynamicObject.processCzmlPacketPosition,
+                    DynamicObject.processCzmlPacketViewFrom,
                     DynamicObject.processCzmlPacketOrientation,
                     DynamicObject.processCzmlPacketVertexPositions,
                     DynamicObject.processCzmlPacketAvailability],
