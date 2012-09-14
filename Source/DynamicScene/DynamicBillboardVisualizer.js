@@ -271,7 +271,7 @@ define([
         }
 
         position = positionProperty.getValueCartesian(time, position);
-        if (position !== 'undefined') {
+        if (typeof position !== 'undefined') {
             billboard.setPosition(position);
         }
 
