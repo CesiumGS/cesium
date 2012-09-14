@@ -10,20 +10,25 @@ define([
     /**
      * Asynchronously loads the given URL as text.  Returns a promise that will resolve to
      * a String once loaded, or reject if the URL failed to load.  The data is loaded
-     * using XMLHttpRequest, which means that the server must have CORS enabled.
+     * using XMLHttpRequest, which means that in order to make requests to another origin,
+     * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
      *
      * @exports loadText
      *
      * @param {String|Promise} url The URL of the binary data, or a promise for the URL.
-     * @param {Array} headers An associative array of value pairs to add to the XMLHttpRequest header.
-     * @returns {Object} a promise that will resolve to the requested data when loaded.
+     * @param {Object} [headers] HTTP headers to send with the requests.
+     * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
      * @exception {DeveloperError} url is required.
      *
      * @example
-     * var headers = {'Accept':'application/json'};
-     * loadText('http://someUrl.com/someJson.txt', headers).then(function(jsonData){
-     *     //Do something with the JSON object
+     * // load text from a URL, setting a custom header
+     * loadText('http://someUrl.com/someJson.txt', {
+     *   'X-Custom-Header' : 'some value'
+     * }).then(function(text) {
+     *     //Do something with the text
+     * }, function() {
+     *     // an error occurred
      * });
      *
      * @see <a href="http://en.wikipedia.org/wiki/XMLHttpRequest">XMLHttpRequest</a>
@@ -34,25 +39,30 @@ define([
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
+
         return when(url, function(url) {
-            var xmlHttp = new XMLHttpRequest();
-            xmlHttp.open("GET", url, true);
-            for(var key in headers){
-                if(headers.hasOwnProperty(key)){
-                    xmlHttp.setRequestHeader(key, headers[key]);
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+
+            if (typeof headers !== 'undefined') {
+                for ( var key in headers) {
+                    if (headers.hasOwnProperty(key)) {
+                        xhr.setRequestHeader(key, headers[key]);
+                    }
                 }
             }
+
             var deferred = when.defer();
 
-            xmlHttp.onload = function(e) {
-                deferred.resolve(xmlHttp.response);
+            xhr.onload = function(e) {
+                deferred.resolve(xhr.response);
             };
 
-            xmlHttp.onerror = function(e) {
+            xhr.onerror = function(e) {
                 deferred.reject(e);
             };
 
-            xmlHttp.send();
+            xhr.send();
 
             return deferred.promise;
         });
