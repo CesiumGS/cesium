@@ -1573,7 +1573,8 @@ define([
         color : new Color(0.0, 0.0, 0.0, 0.0)
     };
 
-    var scratchQuadCommands = [];
+    // MULTIFRUSTUM TODO: Revisit this when adding blur passes, depth plane and logo back
+    //var scratchQuadCommands = [];
     /**
      * @private
      */
@@ -2056,9 +2057,12 @@ define([
         if (pass.color) {
             commands = this._commandLists.colorList;
 
+            // MULTIFRUSTUM TODO: Revisit this when adding blur passes, depth plane and logo back
+            /*
             if (this.showSkyAtmosphere) {
                 commands.push(this._skyCommand);
             }
+            */
 
             if (this._renderQueue.length !== 0) {
                 var mv = frameState.camera.getViewMatrix();
@@ -2095,16 +2099,20 @@ define([
                         command = tileCommands[j - 1] = new Command();
                     }
 
-                    command.framebuffer = this._fb;
+                    // MULTIFRUSTUM TODO: Revisit this when adding blur passes, depth plane and logo back
+                    //command.framebuffer = this._fb;
                     command.shaderProgram = this._sp;
                     command.renderState = this._rsColor;
                     command.primitiveType = PrimitiveType.TRIANGLES;
                     command.vertexArray = curTile._extentVA;
                     command.uniformMap = curTile._drawUniforms;
+                    command.boundingVolume = this._getTileBoundingSphere(curTile, frameState);
 
                     commands.push(command);
                 }
 
+                // MULTIFRUSTUM TODO: Add blur passes, depth plane and logo back
+                /*
                 // render quad with vertical and horizontal gaussian blur
                 scratchQuadCommands.length = 0;
                 this._quadV.update(context, frameState, scratchQuadCommands);
@@ -2130,6 +2138,7 @@ define([
                     this._quadLogo.update(context, frameState, scratchQuadCommands);
                     commands.push.apply(commands, scratchQuadCommands[0].colorList);
                 }
+                */
             }
         }
         if (pass.pick) {

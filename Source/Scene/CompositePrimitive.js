@@ -56,7 +56,6 @@ define([
         this._centralBody = null;
         this._primitives = [];
         this._guid = createGuid();
-        this._commandLists = new CommandLists();
 
         /**
          * DOC_TBA
@@ -404,26 +403,6 @@ define([
         return this._primitives.length;
     };
 
-    function findPotentiallyVisiblySet(primitiveCommandList, compositeCommandList, cullingVolume, occluder) {
-        var commandLength = primitiveCommandList.length;
-        for (var j = 0; j < commandLength; ++j) {
-            var command = primitiveCommandList[j];
-            var boundingVolume = command.boundingVolume;
-            if (typeof boundingVolume !== 'undefined') {
-                var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
-                //TODO: Remove this allocation.
-                var transformedBV = boundingVolume.transform(modelMatrix);
-
-                if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
-                        (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
-                    continue;
-                }
-            }
-            compositeCommandList.push(command);
-        }
-    }
-
-    var scratchCommands = [];
     /**
      * @private
      */
@@ -436,33 +415,11 @@ define([
             this._centralBody.update(context, frameState, commandList);
         }
 
-        var cullingVolume = frameState.cullingVolume;
-        var occluder;
-
-        if (frameState.mode === SceneMode.SCENE3D) {
-            occluder = frameState.occluder;
-        }
-
-        this._commandLists.removeAll();
         var primitives = this._primitives;
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
             var primitive = primitives[i];
-
-            var primitiveCommands = scratchCommands;
-            primitiveCommands.length = 0;
-            primitive.update(context, frameState, primitiveCommands);
-
-            var pListLength = primitiveCommands.length;
-            for (var j = 0; j < pListLength; ++j) {
-                var commandLists = primitiveCommands[j];
-                findPotentiallyVisiblySet(commandLists.colorList, this._commandLists.colorList, cullingVolume, occluder);
-                findPotentiallyVisiblySet(commandLists.pickList, this._commandLists.pickList, cullingVolume, occluder);
-            }
-        }
-
-        if (!this._commandLists.empty()) {
-            commandList.push(this._commandLists);
+            primitive.update(context, frameState, commandList);
         }
     };
 
@@ -507,9 +464,7 @@ define([
      */
     CompositePrimitive.prototype.destroy = function() {
         this.removeAll();
-
         this._centralBody = this.destroyPrimitives && this._centralBody && this._centralBody.destroy();
-
         return destroyObject(this);
     };
 
