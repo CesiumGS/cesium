@@ -232,8 +232,6 @@ define([
         this._aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
         this._aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
         this._maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
-        var v = gl.getParameter(gl.VIEWPORT);
-        this._viewport = new BoundingRectangle(v[0], v[1], v[2], v[3]);
 
         // Query and initialize extensions
         this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
@@ -408,7 +406,14 @@ define([
         this._enableOrDisable(this._gl.DITHER, dither);
     };
 
+    var scratchViewport = new BoundingRectangle();
     Context.prototype._applyViewport = function(viewport) {
+        if (typeof viewport === 'undefined') {
+            viewport = scratchViewport;
+            viewport.width = this._canvas.clientWidth;
+            viewport.height = this._canvas.clientHeight;
+        }
+
         this._us.setViewport(viewport);
         this._gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
     };
@@ -1824,7 +1829,7 @@ define([
         var stencilTestFrontOperation = stencilTest.frontOperation || {};
         var stencilTestBackOperation = stencilTest.backOperation || {};
         var sampleCoverage = rs.sampleCoverage || {};
-        var viewport = rs.viewport || {};
+        var viewport = rs.viewport;
 
         var r = {
             frontFace : (typeof rs.frontFace === 'undefined') ? WindingOrder.COUNTER_CLOCKWISE : rs.frontFace,
@@ -1902,13 +1907,8 @@ define([
                 value : (typeof sampleCoverage.value === 'undefined') ? 1.0 : sampleCoverage.value,
                 invert : (typeof sampleCoverage.invert === 'undefined') ? false : sampleCoverage.invert
             },
-            dither : (typeof rs.dither === 'undefined') ? true : rs.dither,
-            viewport : {
-                x : (typeof viewport.x === 'undefined') ? 0.0 : viewport.x,
-                y : (typeof viewport.y === 'undefined') ? 0.0 : viewport.y,
-                width : (typeof viewport.width === 'undefined') ? this._canvas.clientWidth : viewport.width,
-                height : (typeof viewport.height === 'undefined') ? this._canvas.clientHeight : viewport.height
-            }
+            dither : (typeof rs.dither === 'undefined') ? true : rs.dither
+            // viewport is set below because it is allowed to be undefined - meaning always the canvas size.
         };
 
         // Validate
@@ -2015,20 +2015,29 @@ define([
             throw new DeveloperError('Invalid renderState.stencilTest.backOperation.zPass.');
         }
 
-        if (r.viewport.width < 0) {
-            throw new DeveloperError('renderState.viewport.width must be greater than or equal to zero.');
-        }
+        if (typeof vieport !== 'undefined') {
+            if (viewport.width < 0) {
+                throw new DeveloperError('renderState.viewport.width must be greater than or equal to zero.');
+            }
 
-        if (r.viewport.width > this.getMaximumViewportWidth()) {
-            throw new RuntimeError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.getMaximumViewportWidth().toString() + ').  Check getMaximumViewportWidth().');
-        }
+            if (viewport.width > this.getMaximumViewportWidth()) {
+                throw new RuntimeError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.getMaximumViewportWidth().toString() + ').  Check getMaximumViewportWidth().');
+            }
 
-        if (r.viewport.height < 0) {
-            throw new DeveloperError('renderState.viewport.height must be greater than or equal to zero.');
-        }
+            if (viewport.height < 0) {
+                throw new DeveloperError('renderState.viewport.height must be greater than or equal to zero.');
+            }
 
-        if (r.viewport.height > this.getMaximumViewportHeight()) {
-            throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
+            if (viewport.height > this.getMaximumViewportHeight()) {
+                throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
+            }
+
+            r.viewport = {
+                x : (typeof viewport.x === 'undefined') ? 0.0 : viewport.x,
+                y : (typeof viewport.y === 'undefined') ? 0.0 : viewport.y,
+                width : (typeof viewport.width === 'undefined') ? this._canvas.clientWidth : viewport.width,
+                height : (typeof viewport.height === 'undefined') ? this._canvas.clientHeight : viewport.height
+            };
         }
 
         return r;
