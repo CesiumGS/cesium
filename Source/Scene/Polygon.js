@@ -527,7 +527,7 @@ define([
         var processedMeshes = [];
         for (i = 0; i < meshes.length; i++) {
             mesh = meshes[i];
-            mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
+            mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, this.height, this.ellipsoid);
             mesh = MeshFilters.reorderForPostVertexCache(mesh);
             mesh = MeshFilters.reorderForPreVertexCache(mesh);
 
