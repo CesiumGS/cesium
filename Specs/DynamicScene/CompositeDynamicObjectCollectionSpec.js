@@ -111,6 +111,23 @@ defineSuite([
         expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
     });
 
+    it('computeAvailability works if only start or stop time is infinite.', function() {
+        var collection1 = new DynamicObjectCollection();
+        var dynamicObject = collection1.getOrCreateObject('1');
+        dynamicObject._setAvailability(TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z'));
+        dynamicObject = collection1.getOrCreateObject('2');
+
+        var collection2 = new DynamicObjectCollection();
+        dynamicObject = collection2.getOrCreateObject('3');
+        dynamicObject._setAvailability(TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06'));
+
+        var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection([collection1, collection2]);
+
+        var availability = compositeDynamicObjectCollection.computeAvailability();
+        expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
+        expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
+    });
+
     it('setCollections works with existing dynamicObjectCollections', function() {
         var dynamicObjectCollection1 = new DynamicObjectCollection();
         processCzml(czml1, dynamicObjectCollection1);

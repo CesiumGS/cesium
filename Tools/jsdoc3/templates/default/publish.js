@@ -394,29 +394,31 @@
             };
             
             var path = outdir + '/' + filename,
-                html = view.render('container.tmpl', data);
+                html = view.render('container.tmpl', data),
+                titleLower = title.toLowerCase();
             
             html = helper.resolveLinks(html); // turn {@link foo} into <a href="foodoc.html">foo</a>
             
-            if (title in types_json) {
-                types_json[title].push(filename);
+            if (titleLower in types_json) {
+                types_json[titleLower].push(filename);
             } else {
-                types_json[title] = [ filename ];
+                types_json[titleLower] = [ filename ];
             }
             
-            var pos = 0, pos2, member, match = 'h4 class="name" id="', matchLen = match.length;
+            var pos = 0, pos2, member, memberLower, match = 'h4 class="name" id="', matchLen = match.length;
             while ((pos = html.indexOf(match, pos)) >= 0) {
                 pos += matchLen;
                 if ((pos2 = html.indexOf('"', pos)) > 0) {
                     member = html.substring(pos, pos2);
-                    if (member !== title) {
-                        if (member in types_json) {
-                            // Note that ".toString" and ".valueOf" are discarded here.
-                            if (typeof types_json[member].push === 'function') {
-                                types_json[member].push(filename + '#' + member);
+                    memberLower = member.toLowerCase();
+                    if (memberLower !== titleLower) {
+                        if (memberLower in types_json) {
+                            // Note ".toString" and ".valueOf" used to be discarded here, before .toLowerCase() was used.
+                            if (typeof types_json[memberLower].push === 'function') {
+                                types_json[memberLower].push(filename + '#' + member);
                             }
                         } else {
-                            types_json[member] = [ filename + '#' + member ];
+                            types_json[memberLower] = [ filename + '#' + member ];
                         }
                     }
                 }
