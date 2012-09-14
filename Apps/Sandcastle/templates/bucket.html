@@ -55,7 +55,7 @@
             window.parent.postMessage({ 'error': 'undefined' }, '*');
         } else {
             // Look for d1.stack, "bucket.html:line:char"
-            var lineNumber = -1, lineStart, lineEnd;
+            var lineNumber = -1, lineStart, lineEnd1, lineEnd2;
             var errorMsg = d1.toString();
             var rawErrorMsg = errorMsg;
             if (typeof d1.stack === 'string') {
@@ -63,11 +63,15 @@
                 var pos = stack.indexOf('bucket.html');
                 if (pos >= 0) {
                     lineStart = stack.indexOf(':', pos);
-                    if (lineStart > 0) {
-                        lineEnd = stack.indexOf(':', lineStart + 1);
-                        if (lineEnd > 0) {
+                    if (lineStart > pos) {
+                        lineEnd1 = stack.indexOf(':', lineStart + 1);
+                        lineEnd2 = stack.indexOf('\n', lineStart + 1);
+                        if (lineEnd2 > lineStart && (lineEnd2 < lineEnd1 || lineEnd1 < lineStart)) {
+                            lineEnd1 = lineEnd2;
+                        }
+                        if (lineEnd1 > lineStart) {
                             try {
-                                lineNumber = parseInt(stack.substring(lineStart + 1, lineEnd, 10));
+                                lineNumber = parseInt(stack.substring(lineStart + 1, lineEnd1), 10);
                             } catch (ex) { }
                         }
                     }
