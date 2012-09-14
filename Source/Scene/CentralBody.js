@@ -636,8 +636,7 @@ define([
 
     var attributeIndices = {
         position3D : 0,
-        textureCoordinates : 1,
-        position2D : 2
+        textureCoordinates : 1
     };
 
     /**
