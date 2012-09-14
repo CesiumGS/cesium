@@ -5,7 +5,6 @@ uniform float u_morphTime;
 uniform int u_mode;
 
 uniform vec3 u_center3D;
-uniform vec2 u_center2D;
 uniform mat4 u_modifiedModelView;
 uniform mat4 u_modifiedModelViewProjection;
 uniform vec4 u_tileExtent;

@@ -903,14 +903,7 @@ define([
         var that = this;
         var drawUniforms = {
             u_dayIntensity : function() {
-                var baseLayer = getBaseLayer(that);
-                if (typeof baseLayer !== 'undefined') {
-                    var baseImageryProvider = baseLayer.imageryProvider;
-                    if (typeof baseImageryProvider.getPoleIntensity === 'function') {
-                        return baseImageryProvider.getPoleIntensity();
-                    }
-                }
-                return 0.0;
+                return 0.2;
             }
         };
 
@@ -1327,7 +1320,7 @@ define([
     var clearState = {
         framebuffer : undefined,
         color : new Color(0.0, 0.0, 0.0, 0.0),
-        depth : true
+        depth : 1.0
     };
 
     /**

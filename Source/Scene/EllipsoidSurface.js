@@ -347,9 +347,6 @@ define([
         u_center3D : function() {
             return this.center3D;
         },
-        u_center2D : function() {
-            return Cartesian2.ZERO;
-        },
         u_tileExtent : function() {
             return this.tileExtent;
         },
@@ -372,7 +369,7 @@ define([
             return this.dayTextureAlpha;
         },
         u_dayIntensity : function() {
-            return 0.1;
+            return 0.2;
         },
 
         center3D : undefined,
