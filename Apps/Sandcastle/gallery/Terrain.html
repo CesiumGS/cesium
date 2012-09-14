@@ -108,6 +108,7 @@ require([
     cb.specularMapSource = '../../../Images/earthspec1k.jpg';
     cb.showSkyAtmosphere = true;
     cb.showGroundAtmosphere = false;
+    cb.affectedByLighting = false;
     primitives.setCentralBody(cb);
 
     scene.getCamera().frustum.near = 10.0;
