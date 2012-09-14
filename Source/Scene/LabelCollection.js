@@ -507,26 +507,18 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Check whether this collection contains a given label.
      *
      * @memberof LabelCollection
      *
-     * @param {Object} label DOC_TBA
+     * @param {Label} label The label to check for.
+     *
+     * @return {Boolean} true if this collection contains the label, false otherwise.
      *
      * @see LabelCollection#get
      */
     LabelCollection.prototype.contains = function(label) {
-        if (typeof label !== 'undefined') {
-            var labels = this._labels;
-
-            for ( var i = 0, len = labels.length; i < len; ++i) {
-                if (labels[i] === label) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return typeof label !== 'undefined' && label._labelCollection === this;
     };
 
     /**

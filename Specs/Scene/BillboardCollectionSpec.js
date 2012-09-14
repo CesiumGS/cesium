@@ -297,7 +297,7 @@ defineSuite([
         expect(billboards.getLength()).toEqual(0);
     });
 
-    it('removes null', function() {
+    it('returns false when removing undefined', function() {
         billboards.add({
             position : {
                 x : 1.0,
@@ -307,7 +307,7 @@ defineSuite([
         });
         expect(billboards.getLength()).toEqual(1);
 
-        expect(billboards.remove(null)).toEqual(false);
+        expect(billboards.remove(undefined)).toEqual(false);
         expect(billboards.getLength()).toEqual(1);
     });
 
@@ -364,26 +364,26 @@ defineSuite([
         expect(billboards.getLength()).toEqual(0);
     });
 
-    it('contains a billboard', function() {
-        var b = billboards.add();
-        billboards.add(b);
+    it('can check if it contains a billboard', function() {
+        var billboard = billboards.add();
 
-        expect(billboards.contains(b)).toEqual(true);
+        expect(billboards.contains(billboard)).toEqual(true);
     });
 
-    it('does not contain a billboard', function() {
-        var b0 = billboards.add();
-        var b1 = billboards.add();
+    it('returns false when checking if it contains a billboard it does not contain', function() {
+        var billboard = billboards.add();
+        billboards.remove(billboard);
 
-        billboards.add(b0);
-        billboards.add(b1);
-        billboards.remove(b0);
-
-        expect(billboards.contains(b0)).toEqual(false);
+        expect(billboards.contains(billboard)).toEqual(false);
     });
 
     it('does not contain undefined', function() {
-        expect(billboards.contains()).toBeFalsy();
+        expect(billboards.contains(undefined)).toEqual(false);
+    });
+
+    it('does not contain random other objects', function() {
+        expect(billboards.contains({})).toEqual(false);
+        expect(billboards.contains(new Cartesian2())).toEqual(false);
     });
 
     it('sets and gets a texture atlas', function() {
@@ -1042,9 +1042,9 @@ defineSuite([
         expect(b.equals(b2)).toEqual(false);
     });
 
-    it('does not equal null', function() {
-        var b = billboards.add({});
-        expect(b.equals(null)).toBeFalsy();
+    it('does not equal undefined', function() {
+        var billboard = billboards.add();
+        expect(billboard.equals(undefined)).toEqual(false);
     });
 
     it('throws when accessing without an index', function() {

@@ -362,7 +362,7 @@ define([
     }
 
     BillboardCollection.prototype._updateBillboard = function(billboard, propertyChanged) {
-        if (!billboard._isDirty()) {
+        if (!billboard._dirty) {
             this._billboardsToUpdate.push(billboard);
         }
 
@@ -370,16 +370,18 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Check whether this collection contains a given billboard.
      *
      * @memberof BillboardCollection
      *
-     * @param {Object} billboard DOC_TBA
+     * @param {Billboard} billboard The billboard to check for.
+     *
+     * @return {Boolean} true if this collection contains the billboard, false otherwise.
      *
      * @see BillboardCollection#get
      */
     BillboardCollection.prototype.contains = function(billboard) {
-        return (billboard && (billboard._getCollection() === this));
+        return typeof billboard !== 'undefined' && billboard._billboardCollection === this;
     };
 
     /**
@@ -942,7 +944,7 @@ define([
                 // Rewrite entire buffer if billboards were added or removed.
                 for (var i = 0; i < length; ++i) {
                     var billboard = this._billboards[i];
-                    billboard._clean(); // In case it needed an update.
+                    billboard._dirty = false; // In case it needed an update.
                     writeBillboard(this, context, textureAtlasCoordinates, vafWriters, billboard);
                 }
 
@@ -993,7 +995,7 @@ define([
 
                     for (var m = 0; m < updateLength; ++m) {
                         var b = billboardsToUpdate[m];
-                        b._clean();
+                        b._dirty = false;
 
                         for ( var n = 0; n < writers.length; ++n) {
                             writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
@@ -1003,7 +1005,7 @@ define([
                 } else {
                     for (var h = 0; h < updateLength; ++h) {
                         var bb = billboardsToUpdate[h];
-                        bb._clean();
+                        bb._dirty = false;
 
                         for ( var o = 0; o < writers.length; ++o) {
                             writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
