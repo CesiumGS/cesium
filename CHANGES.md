@@ -12,6 +12,7 @@ Beta Releases
    * `shallowEquals` has been removed.
    * Passing `undefined` to any of the set functions on `Billboard` now throws an exception.
    * Passing `undefined` to any of the set functions on `Polyline` now throws an exception.
+   * `PolygonPipeline.scaleToGeodeticHeight` now takes ellipsoid as the last parameter, instead of the first.  It also now defaults to `Ellipsoid.WGS84` if no parameter is provided.
 * The new Sandcastle live editor and demo gallery replace the Sandbox and Skeleton examples.
 * Improved picking performance and accuracy.
 * `Extent` functions now take optional result parameters.  Also added `getCenter`, `intersectWith`, and `contains` functions.
