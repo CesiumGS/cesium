@@ -2,38 +2,37 @@
 defineSuite([
          'DynamicScene/fillIncrementally'
      ], function(
-             fillIncrementally) {
+         fillIncrementally) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('fillIncrementally calls processCallback.', function() {
         var buffer = {};
-        var eventSource = {
-        };
+        var eventSource = {};
         spyOn(window, 'EventSource').andReturn(eventSource);
         var called = false;
-        fillIncrementally(buffer, "localhost", function(item, buffer, url){
+        fillIncrementally(buffer, "localhost", function(item, buffer, url) {
             called = true;
         });
-        eventSource.onmessage({data:"{\"test\":\"value\"}"});
+        eventSource.onmessage({
+            data : "{\"test\":\"value\"}"
+        });
         expect(called).toEqual(true);
     });
 
     it('fillIncrementally calls done callback.', function() {
         var buffer = {};
         var eventSource = {
-                close:function(){
-                }
+            close : function() {
+            }
         };
         spyOn(window, 'EventSource').andReturn(eventSource);
         var called = false;
-        var handle = fillIncrementally(buffer, "localhost", function(item, buffer, url){
-
-        },
-        function(){
+        var abort = fillIncrementally(buffer, "localhost", function(item, buffer, url) {
+        }, function() {
             called = true;
         });
-        handle.abort();
+        abort();
         expect(called).toEqual(true);
     });
 });

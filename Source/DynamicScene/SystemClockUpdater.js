@@ -79,7 +79,7 @@ define(['../Core/DeveloperError',
      */
     SystemClockUpdater.prototype.abort = function() {
         if (typeof this._handle !== 'undefined') {
-            this._handle.abort();
+            this._handle();
             this._handle = undefined;
         }
     };

@@ -1,7 +1,8 @@
 /*global define*/
-define(['../Core/incrementalGet'
-       ], function(
-         incrementalGet) {
+define([
+        '../Core/incrementalGet'
+    ], function(
+        incrementalGet) {
     "use strict";
 
     /**
@@ -10,27 +11,26 @@ define(['../Core/incrementalGet'
      * @exports fillIncrementally
      *
      * @param {DynamicObjectCollection} dynamicObjectCollection The collection to update.
-     * @param {String} url The url to retrieve the data.
+     * @param {String} url The URL of the event stream.
      * @param {function} processCallback The callback function to process the data.
      * @param {function} doneCallback Called when {@link incrementalGet} is finished.
      * @returns A handle to the <a href="http://www.w3.org/TR/eventsource/">EventSource</a>.
      *
      * @example
      * var dynamicObjectCollection = {
-     *   update:function(item){
+     *   update : function(item) {
      *      //add item to the dynamicObjectCollection
      *   },
-     *   cleanup:function(){
+     *   cleanup : function() {
      *    //cleanup
      *   }
      * };
-     * var handle = fillIncrementally(dynamicObjectCollection, 'http://localhost/test', function(item, doc, url){
+     * var abort = fillIncrementally(dynamicObjectCollection, 'http://localhost/test', function(item, doc, url) {
      *     doc.update(item);
-     * },
-     * function(){
+     * }, function() {
      *   doc.cleanup();
      * });
-     *  //to close use handle.abort();
+     * //to close call abort();
      *
      * @see incrementalGet
      */

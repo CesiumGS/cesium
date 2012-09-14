@@ -1,31 +1,30 @@
 /*global define*/
-define(['./DeveloperError'],
-        function(
-                DeveloperError) {
+define([
+        './DeveloperError'
+    ], function(
+        DeveloperError) {
     "use strict";
-    /*global EventSource console*/
+    /*global EventSource*/
 
     /**
-     * Uses <a href="http://www.w3.org/TR/eventsource/">EventSource</a> to retrieve the JSON data from the given url.
-     * EventSource is a way to enable servers to push data to Web pages over HTTP or using dedicated server-push protocols.
-     * Use this to stream data to your client to make better use of network resources in cases where the user
-     * agent implementor and the network operator are able to coordinate in advance. Amongst other benefits,
-     * this can result in significant savings in battery life on portable devices.
+     * Uses <a href="http://www.w3.org/TR/eventsource/">EventSource</a> to load JSON data
+     * incrementally from the given url.  Each event in the stream is expected to be a
+     * JSON object.  itemCallback is called asynchronously once for each object as it arrives.
      *
      * @exports incrementalGet
      *
-     * @param {String} url The url to retrieve the JSON data.
-     * @param {Function} itemCallback The function to use when data is retrieved from the <a href="http://www.w3.org/TR/eventsource/">EventSource</a>.
-     * @param {Function} doneCallback The function to use when the EventSource is closed.
-     * @returns A handle to close the <a href="http://www.w3.org/TR/eventsource/">EventSource</a>.
+     * @param {String} url The URL of the event stream.
+     * @param {Function} [itemCallback] A function that will be called with each item as it arrives.
+     * @param {Function} [doneCallback] A function that will be called when the event stream closes.
+     * @returns A function that will close the stream.
      *
      * @exception {DeveloperError} url is required.
 
      * @example
-     * incrementalGet("http://localhost/test", function(json){
-     *  //process json data.
-     * }, function(){
-     *  //The event source closed, do clean up.
+     * var abort = incrementalGet('http://example.com/test', function(item) {
+     *  // process item.
+     * }, function() {
+     *  // no more items.
      * });
      *
      * @see <a href="http://www.w3.org/TR/eventsource/">EventSource</a>
@@ -34,9 +33,10 @@ define(['./DeveloperError'],
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
+
         var eventSource = new EventSource(url);
 
-        if (itemCallback) {
+        if (typeof itemCallback !== 'undefined') {
             eventSource.onmessage = function(event) {
                 if (event.data !== '') {
                     itemCallback(JSON.parse(event.data));
@@ -44,18 +44,16 @@ define(['./DeveloperError'],
             };
         }
 
-        var finish = function() {
-            if (doneCallback) {
+        function finish() {
+            if (typeof doneCallback !== 'undefined') {
                 doneCallback();
             }
             eventSource.close();
-        };
+        }
 
         eventSource.onerror = finish;
+        return finish;
+    };
 
-        return {
-            abort : finish
-        };
-    };
     return incrementalGet;
 });

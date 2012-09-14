@@ -6,45 +6,64 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('incrementalGet throws with empty argument.', function() {
+    var fakeEventSource;
+    var fakeEventSourceConstructor;
+
+    beforeEach(function() {
+        fakeEventSource = jasmine.createSpyObj('EventSource', ['close']);
+        fakeEventSourceConstructor = spyOn(window, 'EventSource').andReturn(fakeEventSource);
+    });
+
+    it('throws with an empty url', function() {
         expect(function() {
             incrementalGet();
         }).toThrow();
     });
 
-    it('incrementalGet with itemCallback', function() {
-        var eventSource = {
-        };
-        spyOn(window, 'EventSource').andReturn(eventSource);
-        incrementalGet("test", function(data){
-            expect(data).toEqual({test:"value"});
+    it('constructs an EventSource and calls itemCallback with each item', function() {
+        var testUrl = 'http://example.com/test';
+        var itemCallback = jasmine.createSpy('itemCallback');
+        incrementalGet(testUrl, itemCallback);
+
+        expect(fakeEventSourceConstructor).toHaveBeenCalledWith(testUrl);
+        expect(itemCallback).not.toHaveBeenCalled();
+
+        fakeEventSource.onmessage({
+            data : '{"test":"value"}'
         });
-        eventSource.onmessage({data:"{\"test\":\"value\"}"});
+
+        expect(itemCallback).toHaveBeenCalledWith({
+            test : 'value'
+        });
     });
 
-    it('incrementalGet with doneCallback', function() {
-        var fakeEventSource = jasmine.createSpyObj('EventSource', ['close']);
-        var called = false;
-        spyOn(window, 'EventSource').andReturn(fakeEventSource);
-        var handle = incrementalGet("test", function(data){
-        },
-        function(){
-            called = true;
-        });
-        handle.abort();
+    it('calls doneCallback and closes the EventSource when onerror fires (i.e. the connection closes)', function() {
+        var testUrl = 'http://example.com/test';
+        var itemCallback = jasmine.createSpy('itemCallback');
+        var doneCallback = jasmine.createSpy('doneCallback');
+        incrementalGet(testUrl, itemCallback, doneCallback);
+
+        expect(doneCallback).not.toHaveBeenCalled();
+        expect(fakeEventSource.close).not.toHaveBeenCalled();
+
+        fakeEventSource.onerror();
+
+        expect(doneCallback).toHaveBeenCalled();
         expect(fakeEventSource.close).toHaveBeenCalled();
-        expect(called).toBeTruthy();
     });
 
+    it('calls doneCallback and closes the EventSource when abort is called', function() {
+        var testUrl = 'http://example.com/test';
+        var itemCallback = jasmine.createSpy('itemCallback');
+        var doneCallback = jasmine.createSpy('doneCallback');
+        var abort = incrementalGet(testUrl, itemCallback, doneCallback);
 
-    it('incrementalGet with bad data closes throws exception', function() {
-        var fakeEventSource = jasmine.createSpyObj('EventSource', ['close']);
-        spyOn(window, 'XMLHttpRequest').andReturn(fakeEventSource);
-        incrementalGet("test", function(data){
-        });
-        expect(function() {
-            fakeEventSource.onmessage({data:"{\"test\":\"value}"});
-        }).toThrow();
+        expect(doneCallback).not.toHaveBeenCalled();
+        expect(fakeEventSource.close).not.toHaveBeenCalled();
+
+        abort();
+
+        expect(doneCallback).toHaveBeenCalled();
+        expect(fakeEventSource.close).toHaveBeenCalled();
     });
-
 });

@@ -1,24 +1,23 @@
 /*global define*/
-define(['../Core/DeveloperError',
-        './fillIncrementally',
-        '../Core/incrementalGet'
+define([
+        '../Core/DeveloperError'
     ], function(
-         DeveloperError,
-         fillIncrementally,
-         incrementalGet) {
+        DeveloperError) {
     "use strict";
     /*global EventSource*/
 
     /**
-     * An updater that uses <a href="http://www.w3.org/TR/eventsource/">EventSource</a> to listen to named events pushed
-     * from the server.
+     * An updater that uses an <a href="http://www.w3.org/TR/eventsource/">EventSource</a> to
+     * listen to events containing CZML packets streamed from a server.
      *
      * @alias EventSourceUpdater
      * @constructor
      *
      * @param {CzmlProcessor} czmlProcessor The CZML processor.
-     * @param {String} url The url of the document.
-     * @param {String} eventName The name of the event in the <a href="http://www.w3.org/TR/eventsource/">EventSource</a> to listen to.
+     * @param {DynamicProperty} urlProperty A dynamic property whose value is the URL of the event stream.
+     * @param {DynamicProperty} [eventNameProperty] A dynamic property whose value is the name of the
+     * event in the stream to listen to.  If the property is undefined, or has a value of undefined,
+     * all messages on the stream will be interpreted as CZML packets.
      *
      * @exception {DeveloperError} czmlProcessor is required.
      * @exception {DeveloperError} url is required.
@@ -26,20 +25,20 @@ define(['../Core/DeveloperError',
      * @see CzmlProcessor
      * @see <a href="http://www.w3.org/TR/eventsource/">EventSource</a>
      */
-    var EventSourceUpdater = function EventSourceUpdater(czmlProcessor, url, eventName) {
+    var EventSourceUpdater = function EventSourceUpdater(czmlProcessor, urlProperty, eventNameProperty) {
         if (typeof czmlProcessor === 'undefined') {
             throw new DeveloperError('czmlProcessor is required.');
         }
-        if (typeof url === 'undefined') {
-            throw new DeveloperError('url is required.');
+        if (typeof urlProperty === 'undefined') {
+            throw new DeveloperError('urlProperty is required.');
         }
+
         this._czmlProcessor = czmlProcessor;
-        this._url = url;
-        this._eventName = eventName;
+        this._urlProperty = urlProperty;
+        this._eventNameProperty = eventNameProperty;
         this._currentUrl = undefined;
         this._currentEventName = undefined;
         this._eventSource = undefined;
-        this._handle = undefined;
     };
 
     /**
@@ -50,56 +49,47 @@ define(['../Core/DeveloperError',
      * @param {DynamicObjectCollection} dynamicObjectCollection The dynamic object collection to update.
      */
     EventSourceUpdater.prototype.update = function(currentTime, dynamicObjectCollection) {
-        var url = this._url.getValue(currentTime);
-
-        var eventName = this._eventName;
-        var eventNameValue;
-        if(typeof eventName !== 'undefined'){
-            eventNameValue = eventName.getValue(currentTime);
+        var eventSource = this._eventSource;
+        var url = this._urlProperty.getValue(currentTime);
+        if (url !== this._currentUrl) {
+            // connect, or re-connect
+            if (typeof eventSource !== 'undefined') {
+                eventSource.close();
+            }
+            eventSource = new EventSource(url);
+            this._eventSource = eventSource;
         }
 
-        var self = this;
-        if(typeof eventNameValue === 'undefined' && url !== this._currentUrl){
-            this._currentUrl = url;
-            if(typeof this._handle !== 'undefined'){
-                this._handle.abort();
-            }
-            this._handle = incrementalGet(url, function(data){
-                self._czmlProcessor.process(data, dynamicObjectCollection, url);
-            });
+        // use a default message type of 'message' if no event name is specified
+        var eventName = 'message';
+        var eventNameProperty = this._eventNameProperty;
+        if (typeof eventNameProperty !== 'undefined') {
+            eventName = eventNameProperty.getValue(currentTime);
         }
-        else if(eventNameValue !== this._currentEventName && url !== this._currentUrl){
-            this._currentUrl = url;
-            this._currentEventName = eventNameValue;
-            if(typeof this._eventSource !== 'undefined'){
-                this._eventSource.close();
+
+        if (eventName !== this._currentEventName) {
+            // attach, or re-attach, event listeners
+            if (typeof this._currentEventName !== 'undefined') {
+                eventSource.removeEventListener(this._currentEventName);
             }
-            this._eventSource = new EventSource(url);
-            this._eventSource.addEventListener(eventNameValue, function (e) {
-                self._czmlProcessor.process(JSON.parse(e.data), dynamicObjectCollection, url);
-            });
-        }
-        else if (eventNameValue !== this._currentEventName && url === this._currentUrl){
-            if(typeof this._currentEventName !== 'undefined'){
-                this._eventSource.removeEventListener(this._currentEventName);
-            }
-            this._currentEventName = eventNameValue;
-            this._eventSource.addEventListener(eventNameValue, function (e) {
-                self._czmlProcessor.process(JSON.parse(e.data), dynamicObjectCollection, url);
+
+            this._currentEventName = eventName;
+
+            var czmlProcessor = this._czmlProcessor;
+            eventSource.addEventListener(eventName, function(e) {
+                czmlProcessor.process(JSON.parse(e.data), dynamicObjectCollection, url);
             });
         }
     };
 
     /**
-     * Aborts the connection to the <a href="http://www.w3.org/TR/eventsource/">EventSource</a>.
+     * Closes the connection to the event stream.
+     *
      * @memberof EventSourceUpdater
      */
     EventSourceUpdater.prototype.abort = function() {
-        if(typeof this._eventSource !== 'undefined'){
+        if (typeof this._eventSource !== 'undefined') {
             this._eventSource.close();
-        }
-        if(typeof this._handle !== 'undefined'){
-            this._handle.abort();
         }
     };
 
