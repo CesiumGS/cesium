@@ -54,6 +54,8 @@ define([
 
         // Note: the 64 below does NOT need to match the actual vertex dimensions.
         this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, 64, this.tilingScheme.numberOfLevelZeroTilesX);
+
+        this.ready = true;
     }
 
     /**

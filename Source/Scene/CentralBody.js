@@ -782,16 +782,15 @@ define([
     }
 
     CentralBody.prototype._fillPoles = function(context, frameState) {
-        var baseLayer = getBaseLayer(this);
-        if (typeof baseLayer === 'undefined' || frameState.mode !== SceneMode.SCENE3D) {
+        var terrainProvider = this._surface.terrainProvider;
+        if (typeof terrainProvider === 'undefined' || frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
 
-        var baseImageryProvider = baseLayer.imageryProvider;
-        if (!baseImageryProvider.isReady()) {
+        if (!terrainProvider.ready) {
             return;
         }
-        var baseImageryProviderMaxExtent = baseImageryProvider.getExtent();
+        var terrainMaxExtent = terrainProvider.tilingScheme.extent;
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
         var viewportTransformation = context.getUniformState().getViewportTransformation();
@@ -809,10 +808,10 @@ define([
         var occluder = this._occluder;
 
         // handle north pole
-        if (baseImageryProviderMaxExtent.north < CesiumMath.PI_OVER_TWO) {
+        if (terrainMaxExtent.north < CesiumMath.PI_OVER_TWO) {
             extent = new Extent(
                 -Math.PI,
-                baseImageryProviderMaxExtent.north,
+                terrainMaxExtent.north,
                 Math.PI,
                 CesiumMath.PI_OVER_TWO
             );
@@ -856,12 +855,12 @@ define([
         }
 
         // handle south pole
-        if (baseImageryProviderMaxExtent.south > -CesiumMath.PI_OVER_TWO) {
+        if (terrainMaxExtent.south > -CesiumMath.PI_OVER_TWO) {
             extent = new Extent(
                 -Math.PI,
                 -CesiumMath.PI_OVER_TWO,
                 Math.PI,
-                baseImageryProviderMaxExtent.south
+                terrainMaxExtent.south
             );
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
             frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;

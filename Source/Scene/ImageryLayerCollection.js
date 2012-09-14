@@ -47,6 +47,15 @@ define([
             this._layers.splice(index, 0, layer);
         }
 
+        if (index === 0) {
+            layer._isBaseLayer = true;
+            if (this._layers.length > 1) {
+                this._layers[1]._isBaseLayer = false;
+            }
+        } else {
+            layer._isBaseLayer = false;
+        }
+
         this.layerAdded.raiseEvent(layer, index);
     };
 
@@ -89,6 +98,10 @@ define([
 
         var index = this._layers.indexOf(layer);
         if (index !== -1) {
+            if (index === 0 && this._layers.length > 1) {
+                this._layers[1]._isBaseLayer = true;
+            }
+
             this._layers.splice(index, 1);
 
             this.layerRemoved.raiseEvent(layer, index);
@@ -198,6 +211,11 @@ define([
         arr[i] = arr[j];
         arr[j] = temp;
 
+        arr[i]._isBaseLayer = false;
+        arr[j]._isBaseLayer = false;
+
+        arr[0]._isBaseLayer = true;
+
         collection.layerMoved.raiseEvent(temp, j, i);
     }
 
@@ -246,6 +264,9 @@ define([
         this._layers.splice(index, 1);
         this._layers.push(layer);
 
+        layer._isBaseLayer = false;
+        this._layers[0]._isBaseLayer = true;
+
         this.layerMoved.raiseEvent(layer, layer.length - 1, index);
     };
 
@@ -263,6 +284,11 @@ define([
         var index = getLayerIndex(this._layers, layer);
         this._layers.splice(index, 1);
         this._layers.splice(0, 0, layer);
+
+        this._layers[0]._isBaseLayer = true;
+        if (this._layers.length > 1) {
+            this._layers[1]._isBaseLayer = false;
+        }
 
         this.layerMoved.raiseEvent(layer, 0, index);
     };

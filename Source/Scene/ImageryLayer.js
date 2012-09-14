@@ -98,7 +98,22 @@ define([
         this._fbReproject = undefined;
 
         this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
+
+        this._isBaseLayer = false;
     }
+
+    /**
+     * Gets a value indicating whether this layer is the base layer in the
+     * {@link ImageryLayerCollection}.  The base layer is the one that underlies all
+     * others.  It is special in that it is treated as if it has global extent, even if
+     * it actually does not, by stretching the texels at the edges over the entire
+     * globe.
+     *
+     * @returns {Boolean}
+     */
+    ImageryLayer.prototype.isBaseLayer = function() {
+        return this._isBaseLayer;
+    };
 
     /**
      * Gets the level with the specified world coordinate spacing between texels, or less.
@@ -221,11 +236,11 @@ define([
         // If this is the northern-most or western-most tile in the imagery tiling scheme,
         // it may not start at the northern or western edge of the terrain tile.
         // Calculate where it does start.
-        if (northwestTileCoordinates.x === 0) {
+        if (!this.isBaseLayer() && northwestTileCoordinates.x === 0) {
             maxU = Math.min(1.0, (imageryExtent.west - terrainExtent.west) / (terrainExtent.east - terrainExtent.west));
         }
 
-        if (northwestTileCoordinates.y === 0) {
+        if (!this.isBaseLayer() && northwestTileCoordinates.y === 0) {
             minV = Math.max(0.0, (imageryExtent.north - terrainExtent.south) / (terrainExtent.north - terrainExtent.south));
         }
 
@@ -241,7 +256,7 @@ define([
             // and there are more imagery tiles to the east of this one, the maxU
             // should be 1.0 to make sure rounding errors don't make the last
             // image fall shy of the edge of the terrain tile.
-            if (i === southeastTileCoordinates.x && i < imageryMaxX - 1) {
+            if (i === southeastTileCoordinates.x && (this.isBaseLayer() || i < imageryMaxX - 1)) {
                 maxU = 1.0;
             }
 
@@ -257,7 +272,7 @@ define([
                 // and there are more imagery tiles to the south of this one, the minV
                 // should be 0.0 to make sure rounding errors don't make the last
                 // image fall shy of the edge of the terrain tile.
-                if (j === southeastTileCoordinates.y && j < imageryMaxY - 1) {
+                if (j === southeastTileCoordinates.y && (this.isBaseLayer() || j < imageryMaxY - 1)) {
                     minV = 0.0;
                 }
 
