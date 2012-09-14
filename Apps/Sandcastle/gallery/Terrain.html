@@ -95,9 +95,15 @@ require([
         // cross-origin image loading, so we need to load Bing imagery using a proxy.
         proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
     });
-
-    var terrainProvider;
     
+    var terrainProvider;
+
+    /*terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
+        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+        token : 'D8j6pWVs9k1FenI1Pw4QoOGDTVtDe8ARm7d6qOza08sephJ1SMtQOT5QxrIFsgnP2UwpB7iaaF6kYcIHxm7waw..',
+        proxy : new Cesium.DefaultProxy('/terrain/')
+    });*/
+
     terrainProvider = new Cesium.TileMapServiceTerrainProvider({
         url : 'http://cesium.agi.com/terrain'
     });
