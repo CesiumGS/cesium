@@ -18,6 +18,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Matrix3',
+        '../Core/Matrix4',
         '../Core/Queue',
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
@@ -75,6 +76,7 @@ define([
         Cartesian4,
         Cartographic,
         Matrix3,
+        Matrix4,
         Queue,
         ComponentDatatype,
         IndexDatatype,
@@ -1418,13 +1420,18 @@ define([
                 halfHeight * 2.0);
     };
 
+    var viewportScratch = new BoundingRectangle();
+    var vpTransformScratch = new Matrix4();
     CentralBody.prototype._fillPoles = function(context, frameState) {
         if (typeof this._dayTileProvider === 'undefined' || frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
-        var viewportTransformation = context.getUniformState().getViewportTransformation();
+        var viewport = viewportScratch;
+        viewport.width = context.getCanvas().clientWidth;
+        viewport.height = context.getCanvas().clientHeight;
+        var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, vpTransformScratch);
         var latitudeExtension = 0.05;
 
         var extent;
@@ -2107,7 +2114,7 @@ define([
                 commands.push.apply(commands, scratchQuadCommands[0].colorList);
                 scratchQuadCommands.length = 0;
 
-                // render quads to fill the poles
+                // render quads to fill the poles and depth plane
                 if (this._mode === SceneMode.SCENE3D) {
                     if (this._drawNorthPole) {
                         commands.push(this._northPoleCommand);
@@ -2115,10 +2122,7 @@ define([
                     if (this._drawSouthPole) {
                         commands.push(this._southPoleCommand);
                     }
-                }
 
-                // render depth plane
-                if (this._mode === SceneMode.SCENE3D) {
                     commands.push(this._depthCommand);
                 }
 
