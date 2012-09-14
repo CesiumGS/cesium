@@ -1366,7 +1366,8 @@ define([
                 this._drawUniforms,
                 this._activeSurfaceShaderSet,
                 this._rsColor,
-                this._mode);
+                this._mode,
+                this._projection);
 
             // render depth plane
             if (this._mode === SceneMode.SCENE3D) {

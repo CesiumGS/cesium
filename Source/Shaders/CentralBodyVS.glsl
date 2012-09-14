@@ -37,6 +37,7 @@ vec4 getPositionColumbusViewMode(vec3 position3DWC)
 
 vec4 getPositionMorphingMode(vec3 position3DWC)
 {
+    // TODO: RTC while morphing?
     vec3 position2DWC = vec3(0.0, mix(u_tileExtent.st, u_tileExtent.pq, textureCoordinates));
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, position3DWC, u_morphTime);
     return czm_modelViewProjection * morphPosition;

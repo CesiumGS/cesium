@@ -387,7 +387,7 @@ define([
         return a.distance - b.distance;
     };
 
-    EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, shaderSet, renderState, mode) {
+    EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         if (tilesToRenderByTextureCount.length === 0) {
             return;
@@ -395,9 +395,8 @@ define([
 
         var uniformState = context.getUniformState();
         var mv = uniformState.getModelView();
-        var projection = uniformState.getProjection();
+        var projectionMatrix = uniformState.getProjection();
         var ellipsoid = this._tilingScheme.ellipsoid;
-        var ellipsoidRadii = ellipsoid.getRadii();
 
         var uniformMap = combine([uniformMapTemplate, centralBodyUniformMap], false, false);
 
@@ -424,29 +423,34 @@ define([
 
                 var rtc = tile.center;
 
-                var tileExtent = new Cartesian4(
-                        tile.extent.west * ellipsoidRadii.x,
-                        tile.extent.south * ellipsoidRadii.z,
-                        tile.extent.east * ellipsoidRadii.x,
-                        tile.extent.north * ellipsoidRadii.z);
+                if (mode !== SceneMode.SCENE3D) {
+                    var southwest = projection.project(tile.extent.getSouthwest());
+                    var northeast = projection.project(tile.extent.getNortheast());
 
-                // In 2D, use the center of the tile for RTC rendering.
-                if (mode === SceneMode.SCENE2D) {
-                    rtc = new Cartesian3(
-                            0.0,
-                            (tileExtent.z + tileExtent.x) * 0.5,
-                            (tileExtent.w + tileExtent.y) * 0.5);
-                    tileExtent.x -= rtc.y;
-                    tileExtent.y -= rtc.z;
-                    tileExtent.z -= rtc.y;
-                    tileExtent.w -= rtc.z;
+                    var tileExtent = new Cartesian4(
+                            southwest.x,
+                            southwest.y,
+                            northeast.x,
+                            northeast.y);
+
+                    // In 2D, use the center of the tile for RTC rendering.
+                    if (mode === SceneMode.SCENE2D) {
+                        rtc = new Cartesian3(
+                                0.0,
+                                (tileExtent.z + tileExtent.x) * 0.5,
+                                (tileExtent.w + tileExtent.y) * 0.5);
+                        tileExtent.x -= rtc.y;
+                        tileExtent.y -= rtc.z;
+                        tileExtent.z -= rtc.y;
+                        tileExtent.w -= rtc.z;
+                    }
+
+                    uniformMap.tileExtent = tileExtent;
                 }
-
-                uniformMap.tileExtent = tileExtent;
 
                 var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
                 uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);
-                uniformMap.modifiedModelViewProjection = Matrix4.multiply(projection, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
+                uniformMap.modifiedModelViewProjection = Matrix4.multiply(projectionMatrix, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
 
                 var tileImageryCollection = tile.imagery;
                 var imageryIndex = 0;
@@ -509,7 +513,7 @@ define([
 
             var centerEye2 = mv.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
             uniformMap.modifiedModelView = mv.setColumn(3, centerEye2, uniformMap.modifiedModelView);
-            uniformMap.modifiedModelViewProjection = Matrix4.multiply(projection, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
+            uniformMap.modifiedModelViewProjection = Matrix4.multiply(projectionMatrix, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
 
             uniformMap.dayTextures[0] = context.getDefaultTexture();
             uniformMap.dayTextureTranslationAndScale[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
