@@ -344,12 +344,14 @@ define([
      *
      * @memberof PolylineCollection
      *
-     * @param {Object} polyline
+     * @param {Polyline} polyline The polyline to check for.
+     *
+     * @return {Boolean} true if this collection contains the billboard, false otherwise.
      *
      * @see PolylineCollection#get
      */
     PolylineCollection.prototype.contains = function(polyline) {
-        return (polyline && (polyline._getCollection() === this));
+        return typeof polyline !== 'undefined' && polyline._polylineCollection === this;
     };
 
     /**
@@ -534,7 +536,7 @@ define([
                 var updateLength = polylinesToUpdate.length;
                 for ( var i = 0; i < updateLength; ++i) {
                     polyline = polylinesToUpdate[i];
-                    var changedProperties = polyline._getChangedProperties();
+                    var changedProperties = polyline._propertiesChanged;
                     if (changedProperties[POSITION_INDEX]) {
                         if(intersectsIDL(polyline)){
                             var newSegments = polyline._createSegments(this._projection._ellipsoid);
@@ -555,7 +557,7 @@ define([
                 var polylineBuckets = this._polylineBuckets;
                 for ( var ii = 0; ii < length; ++ii) {
                     polyline = polylinesToUpdate[ii];
-                    properties = polyline._getChangedProperties();
+                    properties = polyline._propertiesChanged;
                     bucket = polyline._bucket;
                     var index = 0;
                     for ( var x in polylineBuckets) {
@@ -968,7 +970,7 @@ define([
         this._outlineColorVertexArrays.length = 0;
     };
 
-    PolylineCollection.prototype._updatePolyline = function(propertyChanged, polyline) {
+    PolylineCollection.prototype._updatePolyline = function(polyline, propertyChanged) {
         this._polylinesUpdated = true;
         this._polylinesToUpdate.push(polyline);
         ++this._propertiesChanged[propertyChanged];
@@ -1419,10 +1421,10 @@ define([
         var positions = polyline.getPositions();
 
         if (positions.length > 0) {
-            if (typeof polyline._collection._boundingVolume === 'undefined') {
-                polyline._collection._boundingVolume = BoundingSphere.clone(polyline._boundingVolume);
+            if (typeof polyline._polylineCollection._boundingVolume === 'undefined') {
+                polyline._polylineCollection._boundingVolume = BoundingSphere.clone(polyline._boundingVolume);
             } else {
-                polyline._collection._boundingVolume = polyline._collection._boundingVolume.union(polyline._boundingVolume, polyline._collection._boundingVolume);
+                polyline._polylineCollection._boundingVolume = polyline._polylineCollection._boundingVolume.union(polyline._boundingVolume, polyline._polylineCollection._boundingVolume);
             }
         }
 
@@ -1452,10 +1454,10 @@ define([
             polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions, polyline._boundingVolume2D);
             var center2D = polyline._boundingVolume2D.center;
             polyline._boundingVolume2D.center = new Cartesian3( center2D.z,  center2D.x, center2D.y);
-            if (typeof polyline._collection._boundingVolume2D === 'undefined') {
-                polyline._collection._boundingVolume2D = BoundingSphere.clone(polyline._boundingVolume2D);
+            if (typeof polyline._polylineCollection._boundingVolume2D === 'undefined') {
+                polyline._polylineCollection._boundingVolume2D = BoundingSphere.clone(polyline._boundingVolume2D);
             } else {
-                polyline._collection._boundingVolume2D = polyline._collection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._collection._boundingVolume2D);
+                polyline._polylineCollection._boundingVolume2D = polyline._polylineCollection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._polylineCollection._boundingVolume2D);
             }
         }
 

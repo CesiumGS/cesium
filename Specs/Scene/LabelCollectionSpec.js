@@ -280,7 +280,6 @@ defineSuite([
 
     it('can check if it contains a label', function() {
         var label = labels.add();
-        labels.add(label);
 
         expect(labels.contains(label)).toEqual(true);
     });
@@ -294,6 +293,11 @@ defineSuite([
 
     it('does not contain undefined', function() {
         expect(labels.contains(undefined)).toEqual(false);
+    });
+
+    it('does not contain random other objects', function() {
+        expect(labels.contains({})).toEqual(false);
+        expect(labels.contains(new Cartesian2())).toEqual(false);
     });
 
     it('does not render when constructed', function() {
