@@ -435,7 +435,7 @@ define([
     Camera2DController.prototype._translate = function(movement) {
         var frustum = this._camera.frustum;
 
-       if (frustum.left === null || frustum.right === null ||
+        if (frustum.left === null || frustum.right === null ||
            frustum.top === null || frustum.bottom === null) {
             throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
         }

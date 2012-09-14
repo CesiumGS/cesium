@@ -416,7 +416,7 @@ define([
 
         _handleLeftClick : function(e) {
             if (typeof this.onObjectSelected !== 'undefined') {
-                // If the user left-clicks, we re-send the selection event, regardless if it's a duplicate,
+                // Fire the selection event, regardless if it's a duplicate,
                 // because the client may want to react to re-selection in some way.
                 this.selectedObject = this.scene.pick(e.position);
                 this.onObjectSelected(this.selectedObject);
@@ -425,7 +425,7 @@ define([
 
         _handleRightClick : function(e) {
             if (typeof this.onObjectRightClickSelected !== 'undefined') {
-                // If the user right-clicks, we re-send the selection event, regardless if it's a duplicate,
+                // Fire the selection event, regardless if it's a duplicate,
                 // because the client may want to react to re-selection in some way.
                 this.selectedObject = this.scene.pick(e.position);
                 this.onObjectRightClickSelected(this.selectedObject);
@@ -434,7 +434,7 @@ define([
 
         _handleLeftDoubleClick : function(e) {
             if (typeof this.onObjectLeftDoubleClickSelected !== 'undefined') {
-                // If the user right-clicks, we re-send the selection event, regardless if it's a duplicate,
+                // Fire the selection event, regardless if it's a duplicate,
                 // because the client may want to react to re-selection in some way.
                 this.selectedObject = this.scene.pick(e.position);
                 this.onObjectLeftDoubleClickSelected(this.selectedObject);
