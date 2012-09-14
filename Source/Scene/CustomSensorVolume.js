@@ -14,14 +14,14 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
+        '../Renderer/Command',
+        '../Renderer/CommandLists',
         './Material',
         '../Shaders/Noise',
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
         '../Shaders/CustomSensorVolumeFS',
-        './SceneMode',
-        './Command',
-        './CommandLists'
+        './SceneMode'
     ], function(
         DeveloperError,
         Color,
@@ -37,14 +37,14 @@ define([
         BufferUsage,
         BlendEquation,
         BlendFunction,
+        Command,
+        CommandLists,
         Material,
         ShadersNoise,
         ShadersSensorVolume,
         CustomSensorVolumeVS,
         CustomSensorVolumeFS,
-        SceneMode,
-        Command,
-        CommandLists) {
+        SceneMode) {
     "use strict";
 
     var attributeIndices = {

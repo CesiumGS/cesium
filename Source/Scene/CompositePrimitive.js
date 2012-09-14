@@ -10,7 +10,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Intersect',
         '../Core/Matrix4',
-        './CommandLists',
+        '../Renderer/CommandLists',
         './SceneMode'
     ], function(
         createGuid,
@@ -404,7 +404,7 @@ define([
         return this._primitives.length;
     };
 
-    function cull(primitiveCommandList, compositeCommandList, cullingVolume, occluder) {
+    function findPotentiallyVisiblySet(primitiveCommandList, compositeCommandList, cullingVolume, occluder) {
         var commandLength = primitiveCommandList.length;
         for (var j = 0; j < commandLength; ++j) {
             var command = primitiveCommandList[j];
@@ -423,7 +423,7 @@ define([
         }
     }
 
-    var scratchCommandList = [];
+    var scratchCommands = [];
     /**
      * @private
      */
@@ -449,15 +449,15 @@ define([
         for (var i = 0; i < length; ++i) {
             var primitive = primitives[i];
 
-            var primitiveCommandList = scratchCommandList;
-            primitiveCommandList.length = 0;
-            primitive.update(context, frameState, primitiveCommandList);
+            var primitiveCommands = scratchCommands;
+            primitiveCommands.length = 0;
+            primitive.update(context, frameState, primitiveCommands);
 
-            var pListLength = primitiveCommandList.length;
+            var pListLength = primitiveCommands.length;
             for (var j = 0; j < pListLength; ++j) {
-                var commandLists = primitiveCommandList[j];
-                cull(commandLists.colorList, this._commandLists.colorList, cullingVolume, occluder);
-                cull(commandLists.pickList, this._commandLists.pickList, cullingVolume, occluder);
+                var commandLists = primitiveCommands[j];
+                findPotentiallyVisiblySet(commandLists.colorList, this._commandLists.colorList, cullingVolume, occluder);
+                findPotentiallyVisiblySet(commandLists.pickList, this._commandLists.pickList, cullingVolume, occluder);
             }
         }
 

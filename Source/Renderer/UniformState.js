@@ -29,6 +29,7 @@ define([
     var UniformState = function(context) {
         this._context = context;
         this._viewport = new BoundingRectangle();
+        this._viewportDirty = false;
         this._viewportOrthographicMatrix = Matrix4.IDENTITY.clone();
         this._viewportTransformation = Matrix4.IDENTITY.clone();
 

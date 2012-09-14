@@ -1845,12 +1845,7 @@ define([
             },
             scissorTest : {
                 enabled : (typeof scissorTest.enabled === 'undefined') ? false : scissorTest.enabled,
-                rectangle : {
-                    x : (typeof scissorTestRectangle.x === 'undefined') ? 0 : scissorTestRectangle.x,
-                    y : (typeof scissorTestRectangle.y === 'undefined') ? 0 : scissorTestRectangle.y,
-                    width : (typeof scissorTestRectangle.width === 'undefined') ? 0 : scissorTestRectangle.width,
-                    height : (typeof scissorTestRectangle.height === 'undefined') ? 0 : scissorTestRectangle.height
-                }
+                rectangle : BoundingRectangle.clone(scissorTestRectangle)
             },
             depthRange : {
                 near : (typeof depthRange.near === 'undefined') ? 0 : depthRange.near,
@@ -2032,12 +2027,9 @@ define([
                 throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
             }
 
-            r.viewport = {
-                x : (typeof viewport.x === 'undefined') ? 0.0 : viewport.x,
-                y : (typeof viewport.y === 'undefined') ? 0.0 : viewport.y,
-                width : (typeof viewport.width === 'undefined') ? this._canvas.clientWidth : viewport.width,
-                height : (typeof viewport.height === 'undefined') ? this._canvas.clientHeight : viewport.height
-            };
+            r.viewport = new BoundingRectangle(viewport.x, viewport.y,
+                    (typeof viewport.width === 'undefined') ? this._canvas.clientWidth : viewport.width,
+                    (typeof viewport.height === 'undefined') ? this._canvas.clientHeight : viewport.height);
         }
 
         return r;

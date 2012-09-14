@@ -8,10 +8,10 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
+        '../Renderer/Command',
+        '../Renderer/CommandLists',
         '../Shaders/ViewportQuadVS',
-        '../Shaders/ViewportQuadFS',
-        './Command',
-        './CommandLists'
+        '../Shaders/ViewportQuadFS'
     ], function(
         destroyObject,
         defaultValue,
@@ -21,10 +21,10 @@ define([
         BufferUsage,
         BlendEquation,
         BlendFunction,
-        ViewportQuadVS,
-        ViewportQuadFS,
         Command,
-        CommandLists) {
+        CommandLists,
+        ViewportQuadVS,
+        ViewportQuadFS) {
     "use strict";
 
     /**

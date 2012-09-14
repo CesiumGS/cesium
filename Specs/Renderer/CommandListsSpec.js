@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/CommandLists',
-         'Scene/Command'
+         'Renderer/CommandLists',
+         'Renderer/Command'
      ], function(
          CommandLists,
          Command) {

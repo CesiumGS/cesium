@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Command',
+         'Renderer/Command',
          'Core/BoundingSphere',
          'Core/Matrix4',
          'Core/PrimitiveType'

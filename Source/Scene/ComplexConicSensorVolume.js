@@ -13,6 +13,8 @@ define([
         '../Core/BoxTessellator',
         '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
+        '../Renderer/Command',
+        '../Renderer/CommandLists',
         '../Renderer/CullFace',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
@@ -23,9 +25,7 @@ define([
         '../Shaders/SensorVolume',
         '../Shaders/ComplexConicSensorVolumeVS',
         '../Shaders/ComplexConicSensorVolumeFS',
-        './SceneMode',
-        './Command',
-        './CommandLists'
+        './SceneMode'
     ], function(
         DeveloperError,
         Color,
@@ -40,6 +40,8 @@ define([
         BoxTessellator,
         BoundingSphere,
         BufferUsage,
+        Command,
+        CommandLists,
         CullFace,
         BlendEquation,
         BlendFunction,
@@ -50,9 +52,7 @@ define([
         ShadersSensorVolume,
         ComplexConicSensorVolumeVS,
         ComplexConicSensorVolumeFS,
-        SceneMode,
-        Command,
-        CommandLists) {
+        SceneMode) {
     "use strict";
 
     var attributeIndices = {
