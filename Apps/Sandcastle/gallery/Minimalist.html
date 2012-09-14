@@ -102,10 +102,11 @@ require([
         scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
     });
 
-    (function tick() {
+    function tick() {
         scene.render();
         Cesium.requestAnimationFrame(tick);
-    }());
+    }
+    tick();
 
     // Prevent right-click from opening a context menu.
     canvas.oncontextmenu = function () {
