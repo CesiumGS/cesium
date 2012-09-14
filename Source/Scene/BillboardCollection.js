@@ -16,6 +16,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/VertexArrayFacade',
         './Command',
+        './CommandLists',
         './SceneMode',
         './Billboard',
         './HorizontalOrigin',
@@ -38,6 +39,7 @@ define([
         BufferUsage,
         VertexArrayFacade,
         Command,
+        CommandLists,
         SceneMode,
         Billboard,
         HorizontalOrigin,
@@ -138,7 +140,7 @@ define([
         this._baseVolume = new BoundingSphere();
         this._baseVolume2D = new BoundingSphere();
 
-        this._commandList = [];
+        this._commandLists = new CommandLists();
 
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -1034,9 +1036,10 @@ define([
         var pass = frameState.passes;
         var va = this._vaf.va;
         var vaLength = va.length;
-        var commands = this._commandList;
+        var commands;
         var command;
         var j;
+        this._commandLists.removeAll();
         if (pass.color) {
             if (typeof this._sp === 'undefined') {
                 this._rs = context.createRenderState({
@@ -1049,6 +1052,7 @@ define([
                 this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
             }
 
+            commands = this._commandLists.colorList;
             commands.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
                 command = commands[j];
@@ -1064,7 +1068,6 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
-                commandList.push(command);
             }
         }
         if (pass.pick) {
@@ -1081,6 +1084,7 @@ define([
                         attributeIndices);
             }
 
+            commands = this._commandLists.pickList;
             commands.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
                 command = commands[j];
@@ -1096,8 +1100,11 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rsPick;
-                commandList.push(command);
             }
+        }
+
+        if (!this._commandLists.empty()) {
+            commandList.push(this._commandLists);
         }
     };
 

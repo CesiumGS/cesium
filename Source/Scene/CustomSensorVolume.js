@@ -20,7 +20,8 @@ define([
         '../Shaders/CustomSensorVolumeVS',
         '../Shaders/CustomSensorVolumeFS',
         './SceneMode',
-        './Command'
+        './Command',
+        './CommandLists'
     ], function(
         DeveloperError,
         Color,
@@ -42,7 +43,8 @@ define([
         CustomSensorVolumeVS,
         CustomSensorVolumeFS,
         SceneMode,
-        Command) {
+        Command,
+        CommandLists) {
     "use strict";
 
     var attributeIndices = {
@@ -66,6 +68,7 @@ define([
 
         this._colorCommand = new Command();
         this._pickCommand = new Command();
+        this._commandLists = new CommandLists();
 
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new BoundingSphere();
@@ -371,6 +374,7 @@ define([
 
         var pass = frameState.passes;
         this._colorCommand.modelMatrix = this._pickCommand.modelMatrix = this.modelMatrix;
+        this._commandLists.removeAll();
         if (pass.color) {
             var materialChanged = typeof this._material === 'undefined' ||
             this._material !== this.material ||
@@ -399,7 +403,7 @@ define([
                 this._colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
             }
 
-            commandList.push(this._colorCommand);
+            this._commandLists.colorList.push(this._colorCommand);
         }
         if (pass.pick) {
             if (typeof this._pickId === 'undefined') {
@@ -422,7 +426,11 @@ define([
                 }], false, false);
             }
 
-            commandList.push(this._pickCommand);
+            this._commandLists.pickList.push(this._pickCommand);
+        }
+
+        if (!this._commandLists.empty()) {
+            commandList.push(this._commandLists);
         }
     };
 

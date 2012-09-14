@@ -99,6 +99,8 @@ require([
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
         this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new Cesium.BoundingSphere();
         this._colorCommand.modelMatrix = this._pickCommand.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+        
+        this._commandLists = new Cesium.CommandLists();
     
         var that = this;
         this._colorCommand.uniformMap = {
@@ -176,12 +178,15 @@ require([
         }
         
         var pass = frameState.passes;
+        this._commandLists.removeAll();
         if (pass.color) {
-            commandList.push(colorCommand);
+            this._commandLists.colorList.push(colorCommand);
         } 
         if (pass.pick) {
-            commandList.push(pickCommand);
+            this._commandLists.pickList.push(pickCommand);
         }
+        
+        commandList.push(this._commandLists);
     };
     
     Box.prototype.isDestroyed = function() {
@@ -214,6 +219,8 @@ require([
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
         this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new Cesium.BoundingSphere();
 
+        this._commandLists = new Cesium.CommandLists();
+        
         this._mode = undefined;
         this._projection = undefined;
 
@@ -381,14 +388,17 @@ require([
             modelMatrix = this._modelMatrix;
         }
 
+        this._commandLists.removeAll();
         if (pass.color) {
             colorCommand.modelMatrix = modelMatrix;
-            commandList.push(colorCommand);
+            this._commandLists.colorList.push(colorCommand);
         } 
         if (pass.pick) {
             pickCommand.modelMatrix = modelMatrix;
-            commandList.push(pickCommand);
+            this._commandLists.pickList.push(pickCommand);
         }
+        
+        commandList.push(this._commandLists);
     };
     
     // These functions are the same as before.

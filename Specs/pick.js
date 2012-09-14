@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        'Core/defaultValue',
         'Scene/FrameState'
     ], function(
+        defaultValue,
         FrameState) {
     "use strict";
 
@@ -13,14 +15,18 @@ define([
         frameState.passes = (new FrameState()).passes;
         frameState.passes.pick = true;
 
-        var commandList = [];
-        primitives.update(context, frameState, commandList);
+        var commandLists = [];
+        primitives.update(context, frameState, commandLists);
 
-        var length = commandList.length;
+        var length = commandLists.length;
         for (var i = 0; i < length; ++i) {
-            var command = commandList[i];
-            command.framebuffer = fb;
-            context.draw(command);
+            var commandList = commandLists[i].pickList;
+            var commandListLength = commandList.length;
+            for (var j = 0; j < commandListLength; ++j) {
+                var command = commandList[j];
+                command.framebuffer = defaultValue(command.framebuffer, fb);
+                context.draw(command);
+            }
         }
 
         frameState.passes = oldPasses;

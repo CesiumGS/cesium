@@ -10,6 +10,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Intersect',
         '../Core/Matrix4',
+        './CommandLists',
         './SceneMode'
     ], function(
         createGuid,
@@ -22,6 +23,7 @@ define([
         DeveloperError,
         Intersect,
         Matrix4,
+        CommandLists,
         SceneMode) {
     "use strict";
 
@@ -54,6 +56,7 @@ define([
         this._centralBody = null;
         this._primitives = [];
         this._guid = createGuid();
+        this._commandLists = new CommandLists();
 
         /**
          * DOC_TBA
@@ -401,6 +404,25 @@ define([
         return this._primitives.length;
     };
 
+    function cull(primitiveCommandList, compositeCommandList, cullingVolume, occluder) {
+        var commandLength = primitiveCommandList.length;
+        for (var j = 0; j < commandLength; ++j) {
+            var command = primitiveCommandList[j];
+            var boundingVolume = command.boundingVolume;
+            if (typeof boundingVolume !== 'undefined') {
+                var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
+                //TODO: Remove this allocation.
+                var transformedBV = boundingVolume.transform(modelMatrix);
+
+                if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
+                        (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
+                    continue;
+                }
+            }
+            compositeCommandList.push(command);
+        }
+    }
+
     var scratchCommandList = [];
     /**
      * @private
@@ -421,6 +443,7 @@ define([
             occluder = frameState.occluder;
         }
 
+        this._commandLists.removeAll();
         var primitives = this._primitives;
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
@@ -430,22 +453,16 @@ define([
             primitiveCommandList.length = 0;
             primitive.update(context, frameState, primitiveCommandList);
 
-            var commandLength = primitiveCommandList.length;
-            for (var j = 0; j < commandLength; ++j) {
-                var command = primitiveCommandList[j];
-                var boundingVolume = command.boundingVolume;
-                if (typeof boundingVolume !== 'undefined') {
-                    var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
-                    //TODO: Remove this allocation.
-                    var transformedBV = boundingVolume.transform(modelMatrix);
-
-                    if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
-                            (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
-                        continue;
-                    }
-                }
-                commandList.push(command);
+            var pListLength = primitiveCommandList.length;
+            for (var j = 0; j < pListLength; ++j) {
+                var commandLists = primitiveCommandList[j];
+                cull(commandLists.colorList, this._commandLists.colorList, cullingVolume, occluder);
+                cull(commandLists.pickList, this._commandLists.pickList, cullingVolume, occluder);
             }
+        }
+
+        if (!this._commandLists.empty()) {
+            commandList.push(this._commandLists);
         }
     };
 

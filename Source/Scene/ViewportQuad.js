@@ -10,7 +10,8 @@ define([
         '../Renderer/BlendFunction',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS',
-        './Command'
+        './Command',
+        './CommandLists'
     ], function(
         destroyObject,
         defaultValue,
@@ -22,7 +23,8 @@ define([
         BlendFunction,
         ViewportQuadVS,
         ViewportQuadFS,
-        Command) {
+        Command,
+        CommandLists) {
     "use strict";
 
     /**
@@ -45,6 +47,7 @@ define([
         this._va = undefined;
         this._colorCommand = new Command();
         this._colorCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._commandLists = new CommandLists();
 
         this._vertexShaderSource = defaultValue(vertexShaderSource, ViewportQuadVS);
         this._fragmentShaderSource = defaultValue(fragmentShaderSource, ViewportQuadFS);
@@ -253,7 +256,13 @@ define([
         this.renderState.viewport = this._rectangle;
         this._colorCommand.renderState = this.renderState;
         this._colorCommand.framebuffer = this._framebuffer;
-        commandList.push(this._colorCommand);
+
+        this._commandLists.removeAll();
+        if (frameState.passes.color) {
+            this._commandLists.colorList.push(this._colorCommand);
+        }
+
+        commandList.push(this._commandLists);
     };
 
     /**

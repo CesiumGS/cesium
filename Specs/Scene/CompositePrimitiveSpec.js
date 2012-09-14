@@ -672,9 +672,7 @@ defineSuite([
         return numRendered;
     }
 
-    function testCullIn3D(primitive, verifyNumRendered) {
-        verifyNumRendered = defaultValue(verifyNumRendered, 1);
-
+    function testCullIn3D(primitive) {
         primitives.add(primitive);
 
         var savedVolume = frameState.cullingVolume;
@@ -686,7 +684,7 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].boundingVolume;
+        var bv = commandList[0].colorList[0].boundingVolume;
         camera.position = bv.center.clone();
         camera.position = camera.position.normalize().multiplyByScalar(camera.position.magnitude() + 1.0);
         camera.direction = camera.position.negate().normalize();
@@ -695,7 +693,7 @@ defineSuite([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
-        expect(numRendered).toEqual(verifyNumRendered);
+        expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
@@ -708,9 +706,7 @@ defineSuite([
         frameState.cullingVolume = savedVolume;
     }
 
-    function testCullInColumbusView(primitive, verifyNumRendered) {
-        verifyNumRendered = defaultValue(verifyNumRendered, 1);
-
+    function testCullInColumbusView(primitive) {
         primitives.add(primitive);
 
         var savedVolume = frameState.cullingVolume;
@@ -724,7 +720,7 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].boundingVolume;
+        var bv = commandList[0].colorList[0].boundingVolume;
         camera.position = bv.center.clone();
         camera.position.z += 1.0;
         camera.direction = Cartesian3.UNIT_Z.negate();
@@ -733,7 +729,7 @@ defineSuite([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
-        expect(numRendered).toEqual(verifyNumRendered);
+        expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
@@ -747,9 +743,7 @@ defineSuite([
         frameState.cullingVolume = savedVolume;
     }
 
-    function testCullIn2D(primitive, verifyNumRendered) {
-        verifyNumRendered = defaultValue(verifyNumRendered, 1);
-
+    function testCullIn2D(primitive) {
         primitives.add(primitive);
 
         var mode = frameState.mode;
@@ -771,7 +765,7 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].boundingVolume;
+        var bv = commandList[0].colorList[0].boundingVolume;
         camera.position = bv.center.clone();
         camera.position.z += 1.0;
         camera.direction = Cartesian3.UNIT_Z.negate();
@@ -780,7 +774,7 @@ defineSuite([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
-        expect(numRendered).toEqual(verifyNumRendered);
+        expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume is outside frustum.
         camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
@@ -794,9 +788,7 @@ defineSuite([
         frameState.cullingVolume = savedVolume;
     }
 
-    function testOcclusionCull(primitive, verifyNumRendered) {
-        verifyNumRendered = defaultValue(verifyNumRendered, 1);
-
+    function testOcclusionCull(primitive) {
         primitives.add(primitive);
 
         var savedCamera = frameState.camera;
@@ -805,7 +797,7 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].boundingVolume;
+        var bv = commandList[0].colorList[0].boundingVolume;
         camera.position = bv.center.clone();
         camera.position = camera.position.normalize().multiplyByScalar(camera.position.magnitude() + 1.0);
         camera.direction = camera.position.negate().normalize();
@@ -816,7 +808,7 @@ defineSuite([
         frameState.occluder = occluder;
 
         var numRendered = verifyDraw();
-        expect(numRendered).toEqual(verifyNumRendered);
+        expect(numRendered).toEqual(1);
 
         // reposition camera so bounding volume on the other side of the ellipsoid.
         camera.position = camera.position.negate();
@@ -973,21 +965,21 @@ defineSuite([
 
     it('frustum culls polylines in 3D', function() {
         var polylines = createPolylines();
-        testCullIn3D(polylines, 3);
+        testCullIn3D(polylines);
     });
 
     it('frustum culls polylines in Columbus view', function() {
         var polylines = createPolylines();
-        testCullInColumbusView(polylines, 3);
+        testCullInColumbusView(polylines);
     });
 
     it('frustum culls polylines in 2D', function() {
         var polylines = createPolylines();
-        testCullIn2D(polylines, 3);
+        testCullIn2D(polylines);
     });
 
     it('polyline occlusion', function() {
         var polylines = createPolylines();
-        testOcclusionCull(polylines, 3);
+        testOcclusionCull(polylines);
     });
 });

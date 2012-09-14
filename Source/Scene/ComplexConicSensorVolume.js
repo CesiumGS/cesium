@@ -24,7 +24,8 @@ define([
         '../Shaders/ComplexConicSensorVolumeVS',
         '../Shaders/ComplexConicSensorVolumeFS',
         './SceneMode',
-        './Command'
+        './Command',
+        './CommandLists'
     ], function(
         DeveloperError,
         Color,
@@ -50,7 +51,8 @@ define([
         ComplexConicSensorVolumeVS,
         ComplexConicSensorVolumeFS,
         SceneMode,
-        Command) {
+        Command,
+        CommandLists) {
     "use strict";
 
     var attributeIndices = {
@@ -72,6 +74,7 @@ define([
 
         this._colorCommand = new Command();
         this._pickCommand = new Command();
+        this._commandLists = new CommandLists();
 
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new BoundingSphere();
@@ -429,6 +432,7 @@ define([
         var pass = frameState.passes;
         this._colorCommand.modelMatrix = this._colorCommand.modelMatrix = this.modelMatrix;
 
+        this._commandLists.removeAll();
         if (pass.color) {
             var outerChanged = typeof this._outerMaterial === 'undefined' || this._outerMaterial !== this.outerMaterial;
             var innerChanged = typeof this._innerMaterial === 'undefined' || this._innerMaterial !== this.innerMaterial;
@@ -466,7 +470,7 @@ define([
                 this._colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
             }
 
-            commandList.push(this._colorCommand);
+            this._commandLists.colorList.push(this._colorCommand);
         }
         if (pass.pick) {
             if (typeof this._pickId === 'undefined') {
@@ -493,7 +497,11 @@ define([
                 }], false, false);
             }
 
-            commandList.push(this._pickCommand);
+            this._commandLists.pickList.push(this._pickCommand);
+        }
+
+        if (!this._commandLists.empty()) {
+            commandList.push(this._commandLists);
         }
     };
 

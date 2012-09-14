@@ -15,6 +15,7 @@ define([
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         './Command',
+        './CommandLists',
         './SceneMode',
         './Polyline',
         '../Shaders/PolylineVS',
@@ -37,6 +38,7 @@ define([
         BlendingState,
         BufferUsage,
         Command,
+        CommandLists,
         SceneMode,
         Polyline,
         PolylineVS,
@@ -136,7 +138,7 @@ define([
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
 
-        this._commandList = [];
+        this._commandLists = new CommandLists();
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -528,21 +530,23 @@ define([
         }
 
         var pass = frameState.passes;
-        var commands = this._commandList;
+        var commands;
         var command;
         polylineBuckets = this._polylineBuckets;
 
+        this._commandLists.removeAll();
         if (typeof polylineBuckets !== 'undefined') {
             if (pass.color) {
                 length = this._colorVertexArrays.length;
-                commands.length = 0;
+                commands = this._commandLists.colorList;
                 for (var m = 0; m < length; ++m) {
                     var vaColor = this._colorVertexArrays[m];
                     var vaOutlineColor = this._outlineColorVertexArrays[m];
                     buckets = this._colorVertexArrays[m].buckets;
                     bucketLength = buckets.length;
-                    commands.length += bucketLength;
-                    for ( var n = 0, p = 0; n < bucketLength; ++n, p += 3) {
+                    var p = commands.length;
+                    commands.length += bucketLength * 3;
+                    for ( var n = 0; n < bucketLength; ++n, p += 3) {
                         bucketLocator = buckets[n];
 
                         command = commands[p];
@@ -559,7 +563,6 @@ define([
                         command.uniformMap = this._drawUniformsOne;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsOne;
-                        commandList.push(command);
 
                         command = commands[p + 1];
                         if (typeof command === 'undefined') {
@@ -575,7 +578,6 @@ define([
                         command.uniformMap = this._drawUniformsTwo;
                         command.vertexArray = vaColor.va;
                         command.renderState = bucketLocator.rsTwo;
-                        commandList.push(command);
 
                         command = commands[p + 2];
                         if (typeof command === 'undefined') {
@@ -591,13 +593,12 @@ define([
                         command.uniformMap = this._drawUniformsThree;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsThree;
-                        commandList.push(command);
                     }
                 }
             }
             if (pass.pick) {
                 length = this._pickColorVertexArrays.length;
-                commands.length = 0;
+                commands = this._commandLists.pickList;
                 for ( var a = 0; a < length; ++a) {
                     var vaPickColor = this._pickColorVertexArrays[a];
                     buckets = vaPickColor.buckets;
@@ -620,10 +621,13 @@ define([
                         command.uniformMap = this._pickUniforms;
                         command.vertexArray = vaPickColor.va;
                         command.renderState = bucketLocator.rsPick;
-                        commandList.push(command);
                     }
                 }
             }
+        }
+
+        if (!this._commandLists.empty()) {
+            commandList.push(this._commandLists);
         }
     };
 

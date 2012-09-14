@@ -37,6 +37,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         './Command',
+        './CommandLists',
         './Projections',
         './Tile',
         './TileState',
@@ -93,6 +94,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         Command,
+        CommandLists,
         Projections,
         Tile,
         TileState,
@@ -284,6 +286,8 @@ define([
 
         this._drawNorthPole = false;
         this._drawSouthPole = false;
+
+        this._commandLists = new CommandLists();
 
         /**
          * Determines the color of the north pole. If the day tile provider imagery does not
@@ -1562,6 +1566,7 @@ define([
         color : new Color(0.0, 0.0, 0.0, 0.0)
     };
 
+    var scratchQuadCommands = [];
     /**
      * @private
      */
@@ -2039,9 +2044,13 @@ define([
         this._projection = projection;
 
         var pass = frameState.passes;
+        var commands;
+        this._commandLists.removeAll();
         if (pass.color) {
+            commands = this._commandLists.colorList;
+
             if (this.showSkyAtmosphere) {
-                commandList.push(this._skyCommand);
+                commands.push(this._skyCommand);
             }
 
             if (this._renderQueue.length !== 0) {
@@ -2053,8 +2062,8 @@ define([
                 });
 
                 // render tiles to FBO
-                var commands = this._tileCommandList;
-                commands.length = this._renderQueue.length;
+                var tileCommands = this._tileCommandList;
+                tileCommands.length = this._renderQueue.length;
                 var j = 0;
                 while (this._renderQueue.length > 0) {
                     var curTile = this._renderQueue.dequeue();
@@ -2074,9 +2083,9 @@ define([
                     var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
                     curTile.modelView = mv.setColumn(3, centerEye, curTile.modelView);
 
-                    var command = commands[j++];
+                    var command = tileCommands[j++];
                     if (typeof command === 'undefined') {
-                        command = commands[j - 1] = new Command();
+                        command = tileCommands[j - 1] = new Command();
                     }
 
                     command.framebuffer = this._fb;
@@ -2086,36 +2095,48 @@ define([
                     command.vertexArray = curTile._extentVA;
                     command.uniformMap = curTile._drawUniforms;
 
-                    commandList.push(command);
+                    commands.push(command);
                 }
 
                 // render quad with vertical and horizontal gaussian blur
-                this._quadV.update(context, frameState, commandList);
-                this._quadH.update(context, frameState, commandList);
+                scratchQuadCommands.length = 0;
+                this._quadV.update(context, frameState, scratchQuadCommands);
+                commands.push.apply(commands, scratchQuadCommands[0].colorList);
+                scratchQuadCommands.length = 0;
+                this._quadH.update(context, frameState, scratchQuadCommands);
+                commands.push.apply(commands, scratchQuadCommands[0].colorList);
+                scratchQuadCommands.length = 0;
 
                 // render quads to fill the poles
                 if (this._mode === SceneMode.SCENE3D) {
                     if (this._drawNorthPole) {
-                        commandList.push(this._northPoleCommand);
+                        commands.push(this._northPoleCommand);
                     }
                     if (this._drawSouthPole) {
-                        commandList.push(this._southPoleCommand);
+                        commands.push(this._southPoleCommand);
                     }
                 }
 
                 // render depth plane
                 if (this._mode === SceneMode.SCENE3D) {
-                    commandList.push(this._depthCommand);
+                    commands.push(this._depthCommand);
                 }
 
                 if (typeof this._quadLogo !== 'undefined' && !this._quadLogo.isDestroyed()) {
-                    this._quadLogo.update(context, frameState, commandList);
+                    this._quadLogo.update(context, frameState, scratchQuadCommands);
+                    commands.push.apply(commands, scratchQuadCommands[0].colorList);
                 }
             }
-        } else if (pass.pick) {
+        }
+        if (pass.pick) {
             // Not actually pickable, but render depth-only so primitives on the backface
             // of the globe are not picked.
-            commandList.push(this._depthCommand);
+            commands = this._commandLists.pickList;
+            commands.push(this._depthCommand);
+        }
+
+        if (!this._commandLists.empty()) {
+            commandList.push(this._commandLists);
         }
     };
 

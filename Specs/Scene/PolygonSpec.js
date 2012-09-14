@@ -322,7 +322,7 @@ defineSuite([
         polygon = createPolygon();
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon._positions));
     });
 
@@ -345,7 +345,7 @@ defineSuite([
         frameState.mode = testMode;
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
         frameState.mode = mode;
 
         var projectedPositions = [];
@@ -381,7 +381,7 @@ defineSuite([
 
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent, ellipsoid));
     });
 
@@ -402,7 +402,7 @@ defineSuite([
         frameState.mode = testMode;
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
         frameState.mode = mode;
 
         var sphere = BoundingSphere.fromExtent2D(extent, projection);

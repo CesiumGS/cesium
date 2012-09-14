@@ -1593,7 +1593,7 @@ defineSuite([
 
         var commandList = [];
         polylines.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
 
         expect(one._boundingVolume).toEqual(BoundingSphere.fromPoints(one.getPositions()));
         expect(two._boundingVolume).toEqual(BoundingSphere.fromPoints(two.getPositions()));
@@ -1622,7 +1622,7 @@ defineSuite([
         frameState.mode = testMode;
         var commandList = [];
         polylines.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].boundingVolume;
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
         frameState.mode = mode;
 
         var positions = one.getPositions();

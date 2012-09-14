@@ -24,6 +24,7 @@ define([
         '../Renderer/CullFace',
         '../Renderer/VertexLayout',
         './Command',
+        './CommandLists',
         './Material',
         './SceneMode',
         '../Shaders/Noise',
@@ -56,6 +57,7 @@ define([
         CullFace,
         VertexLayout,
         Command,
+        CommandLists,
         Material,
         SceneMode,
         Noise,
@@ -156,7 +158,7 @@ define([
         this._boundingVolume = new BoundingSphere();
         this._boundingVolume2D = new BoundingSphere();
 
-        this._commandList = [];
+        this._commandLists = new CommandLists();
 
         /**
          * DOC_TBA
@@ -659,9 +661,10 @@ define([
         var pass = frameState.passes;
         var vas = this._vertices.getVertexArrays();
         var length = vas.length;
-        var commands = this._commandList;
+        var commands;
         var command;
 
+        this._commandLists.removeAll();
         if (pass.color) {
             if (typeof this._rs === 'undefined') {
                 // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
@@ -699,6 +702,7 @@ define([
                 this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
             }
 
+            commands = this._commandLists.colorList;
             commands.length = length;
 
             for (var i = 0; i < length; ++i) {
@@ -713,8 +717,6 @@ define([
                 command.uniformMap = this._drawUniforms;
                 command.vertexArray = vas[i];
                 command.renderState = this._rs;
-
-                commandList.push(command);
             }
         }
         if (pass.pick) {
@@ -745,6 +747,7 @@ define([
                 };
             }
 
+            commands = this._commandLists.pickList;
             commands.length = length;
 
             for (var j = 0; j < length; ++j) {
@@ -759,9 +762,11 @@ define([
                 command.uniformMap = this._pickUniforms;
                 command.vertexArray = vas[j];
                 command.renderState = this._rsPick;
-
-                commandList.push(command);
             }
+        }
+
+        if (!this._commandLists.empty()) {
+            commandList.push(this._commandLists);
         }
     };
 
