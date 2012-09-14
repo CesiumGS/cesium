@@ -14,58 +14,37 @@ defineSuite([
 
     it('incrementalGet with itemCallback', function() {
         var eventSource = {
-                test:function(){
-                    this.onmessage({data:"{\"test\":\"value\"}"});
-                }
         };
         spyOn(window, 'EventSource').andReturn(eventSource);
         incrementalGet("test", function(data){
             expect(data).toEqual({test:"value"});
         });
-        eventSource.test();
+        eventSource.onmessage({data:"{\"test\":\"value\"}"});
     });
 
     it('incrementalGet with doneCallback', function() {
-        var eventSource = {
-                test:function(){
-                    this.onmessage({data:"{\"test\":\"value\"}"});
-                },
-                close:function(){
-                }
-        };
+        var fakeEventSource = jasmine.createSpyObj('EventSource', ['close']);
         var called = false;
-        spyOn(window, 'EventSource').andReturn(eventSource);
+        spyOn(window, 'EventSource').andReturn(fakeEventSource);
         var handle = incrementalGet("test", function(data){
         },
         function(){
             called = true;
         });
-        spyOn(eventSource, 'close');
         handle.abort();
-        expect(eventSource.close).toHaveBeenCalled();
+        expect(fakeEventSource.close).toHaveBeenCalled();
         expect(called).toBeTruthy();
     });
 
 
-    it('incrementalGet with bad data closes eventSource', function() {
-        var eventSource = {
-                test:function(){
-                    this.onmessage({data:"{\"test\":\"value}"});
-                },
-                close:function(){
-                }
-        };
-        var called = false;
-        spyOn(window, 'EventSource').andReturn(eventSource);
-        spyOn(eventSource, 'close');
+    it('incrementalGet with bad data closes throws exception', function() {
+        var fakeEventSource = jasmine.createSpyObj('EventSource', ['close']);
+        spyOn(window, 'XMLHttpRequest').andReturn(fakeEventSource);
         incrementalGet("test", function(data){
-        },
-        function(){
-            called = true;
         });
-        eventSource.test();
-        expect(eventSource.close).toHaveBeenCalled();
-        expect(called).toBeTruthy();
+        expect(function() {
+            fakeEventSource.onmessage({data:"{\"test\":\"value}"});
+        }).toThrow();
     });
 
 });

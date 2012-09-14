@@ -9,27 +9,20 @@ defineSuite([
     it('fillIncrementally calls processCallback.', function() {
         var buffer = {};
         var eventSource = {
-                test:function(){
-                    this.onmessage({data:"{\"test\":\"value\"}"});
-                }
         };
         spyOn(window, 'EventSource').andReturn(eventSource);
         var called = false;
         fillIncrementally(buffer, "localhost", function(item, buffer, url){
             called = true;
         });
-        eventSource.test();
+        eventSource.onmessage({data:"{\"test\":\"value\"}"});
         expect(called).toEqual(true);
     });
 
     it('fillIncrementally calls done callback.', function() {
         var buffer = {};
         var eventSource = {
-                test:function(){
-                    this.onmessage({data:"{\"test\":\"value\"}"});
-                },
                 close:function(){
-
                 }
         };
         spyOn(window, 'EventSource').andReturn(eventSource);

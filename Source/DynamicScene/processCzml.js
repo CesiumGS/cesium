@@ -42,7 +42,7 @@ define([
      * @example
      * var url = 'http://someUrl.com/myCzmlFile.czml';
      * var dynamicObjectCollection = new DynamicObjectCollection();
-     * getJson(url).then(function(czml) {
+     * loadJson(url).then(function(czml) {
      *     processCzml(czml, dynamicObjectCollection, url);
      * });
      */

@@ -13,8 +13,8 @@ define([
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/TooltipDialog',
-        './getJson',
         './TimelineWidget',
+        '../../Core/loadJson',
         '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
@@ -58,8 +58,8 @@ define([
         ToggleButton,
         DropDownButton,
         TooltipDialog,
-        getJson,
         TimelineWidget,
+        loadJson,
         BoundingRectangle,
         Clock,
         ClockStep,
@@ -594,7 +594,7 @@ define([
 
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
-                getJson(widget.endUserOptions.source).then(function(czmlData) {
+                loadJson(widget.endUserOptions.source).then(function(czmlData) {
                     widget.czmlProcessor.add(czmlData, widget.endUserOptions.source);
                     widget.setTimeFromBuffer();
                 },
