@@ -94,6 +94,7 @@ require({
 
         var jsEditor;
         var htmlEditor;
+        var addExtraLine = false;
         var suggestButton = registry.byId('buttonSuggest');
         var docTimer;
         var docTabs = {};
@@ -168,6 +169,11 @@ require({
         galleryErrorMsg.className = 'galleryError';
         galleryErrorMsg.style.display = 'none';
         galleryErrorMsg.textContent = 'No demos match your search terms.';
+
+        if (navigator.userAgent.indexOf('Firefox/') >= 0) {
+            // FireFox line numbers are zero-based, not one-based.
+            addExtraLine = true;
+        }
 
         xhr.get({
             url: '../../Build/Documentation/types.txt',
@@ -480,7 +486,7 @@ require({
                 bucketDoc.body.appendChild(bodyEle);
                 var jsEle = bucketDoc.createElement('script');
                 jsEle.type = 'text/javascript';
-                jsEle.textContent = jsEditor.getValue();
+                jsEle.textContent = (addExtraLine ? '\n' : '') + jsEditor.getValue();
                 bucketDoc.body.appendChild(jsEle);
                 if (docError) {
                     appendConsole('consoleError', "Documentation not available.  Please run the 'generateDocumentation' build script to generate Cesium documentation.");
