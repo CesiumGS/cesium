@@ -348,6 +348,14 @@ define([
          */
         onObjectRightClickSelected : undefined,
         /**
+         * Override this function to be notified when an object is left-double-clicked.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
+         */
+        onObjectLeftDoubleClickSelected : undefined,
+        /**
          * Override this function to be notified when an object hovered by the mouse.
          *
          * @function
@@ -421,6 +429,15 @@ define([
                 // because the client may want to react to re-selection in some way.
                 this.selectedObject = this.scene.pick(e.position);
                 this.onObjectRightClickSelected(this.selectedObject);
+            }
+        },
+
+        _handleLeftDoubleClick : function(e) {
+            if (typeof this.onObjectLeftDoubleClickSelected !== 'undefined') {
+                // If the user right-clicks, we re-send the selection event, regardless if it's a duplicate,
+                // because the client may want to react to re-selection in some way.
+                this.selectedObject = this.scene.pick(e.position);
+                this.onObjectLeftDoubleClickSelected(this.selectedObject);
             }
         },
 
@@ -590,6 +607,7 @@ define([
             var handler = new EventHandler(canvas);
             handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleRightClick'), MouseEventType.RIGHT_CLICK);
+            handler.setMouseAction(lang.hitch(this, '_handleLeftDoubleClick'), MouseEventType.LEFT_DOUBLE_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), MouseEventType.MOVE);
             handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), MouseEventType.LEFT_DOWN);
             handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), MouseEventType.LEFT_UP);
@@ -608,10 +626,13 @@ define([
                 this.highlightMaterial.uniforms.color = this.highlightColor;
             }
 
-            if (typeof this.onObjectRightClickSelected === 'undefined') {
-                this.onObjectRightClickSelected = this.centerCameraOnPick;
-            }
-
+            if (typeof this.onObjectLeftDoubleClickSelected === 'undefined') {
+                this.onObjectLeftDoubleClickSelected = function(selectedObject) {
+                    if (typeof selectedObject !== 'undefined' && typeof selectedObject.dynamicObject !== 'undefined') {
+                        this.centerCameraOnPick(selectedObject);
+                    }
+                };
+                                }
             if (this.enableDragDrop) {
                 var dropBox = this.cesiumNode;
                 on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));

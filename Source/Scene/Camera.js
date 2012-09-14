@@ -274,7 +274,7 @@ define([
 
         // Not exactly -z direction because that would lock the camera in place with a constrained z axis.
         this.direction = new Cartesian3(0.0, 0.0001, -0.999);
-        this.right = Cartesian3.UNIT_X;
+        Cartesian3.UNIT_X.clone(this.right);
         this.up = this.right.cross(this.direction);
     };
 
@@ -331,7 +331,7 @@ define([
         this.frustum.bottom = -top;
 
         //Orient the camera north.
-        this.right = Cartesian3.UNIT_X;
+        Cartesian3.UNIT_X.clone(this.right);
         this.up = this.right.cross(this.direction);
     };
 
