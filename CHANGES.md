@@ -7,6 +7,8 @@ Beta Releases
 ### b9 - xx/xx/2012
 
 * Breaking changes:
+   * Removed the `render` and `renderForPick` functions of primitives. The primitive `update` function updates a list of commands for the renderer. For more details, see the [Data Driven Renderer](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Data-Driven-Renderer-Details).
+   * Removed `Context.getViewport` and `Context.setViewport`. The viewport defaults to the size of the canvas if a primitive does not override the viewport property in the render state.
    * `shallowEquals` has been removed.
    * Passing `undefined` to any of the set functions on `Billboard` now throws an exception.
    * Passing `undefined` to any of the set functions on `Polyline` now throws an exception.
