@@ -272,8 +272,6 @@ define([
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.scene.getContext().setViewport(new BoundingRectangle(0, 0, width, height));
-
             var frustum = this.scene.getCamera().frustum;
             if (typeof frustum.aspectRatio !== 'undefined') {
                 frustum.aspectRatio = width / height;

@@ -71,7 +71,7 @@ define([
      * Update the display.  This function should only be called once per frame, because
      * each call records a frame in the internal buffer and redraws the display.
      */
-    PerformanceDisplay.prototype.update = function(context, frameState) {
+    PerformanceDisplay.prototype.update = function(context, frameState, commandList) {
         if (typeof this._time === 'undefined') {
             //first update
             this._lastFpsSampleTime = this._time = Date.now();
@@ -142,13 +142,13 @@ define([
             this._texture.copyFrom(this._canvas);
         }
 
-        var viewportHeight = context.getViewport().height;
+        var viewportHeight = context.getCanvas().clientHeight;
         if (viewportHeight !== this._viewportHeight) {
             this._viewportHeight = viewportHeight;
             this._quad.setRectangle(new BoundingRectangle(this._rectangle.x, viewportHeight - canvasHeight - this._rectangle.y, canvasWidth, canvasHeight));
         }
 
-        return this._quad.update(context, frameState);
+        this._quad.update(context, frameState, commandList);
     };
 
     PerformanceDisplay.prototype._drawLine = function(style, x, valuePercent) {
@@ -169,13 +169,6 @@ define([
         var y = canvasHeight - lineHeight;
         ctx.lineTo(x, y);
         ctx.stroke();
-    };
-
-    /**
-     * Renders the display.
-     */
-    PerformanceDisplay.prototype.render = function(context) {
-        this._quad.render(context);
     };
 
     /**
