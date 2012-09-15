@@ -176,12 +176,9 @@ defineSuite([
     });
 
     it('update calls updater', function(){
-        var eventSource = {
-                test:function(){
-                    this.onmessage({data:"{\"test\":\"value\"}"});
-                }
-        };
-        spyOn(window, 'EventSource').andReturn(eventSource);
+        var fakeEventSource = jasmine.createSpyObj('EventSource', ['addEventListener', 'removeEventListener', 'close']);
+        spyOn(window, 'EventSource').andReturn(fakeEventSource);
+
         var dm = new CzmlProcessor(scene);
         var json = [{"id":"1","external":{"polling":"http://localhost/test", "scope":"SHARED"}}];
         dm.add(json, "root");

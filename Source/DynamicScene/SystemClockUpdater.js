@@ -15,18 +15,23 @@ define(['../Core/DeveloperError',
      * @constructor
      *
      * @param {CzmlProcessor} czmlProcessor The document manager.
-     * @param {String} url The url of the document.
-     * @param {Number} refreshRate The time in seconds to poll the server.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamic object collection to update.
+     * @param {DynamicObject} url A dynamic property whose value is the URL of the event stream.
+     * @param {DynamicObject} refreshRate A dynamic property whose value is the interval to request data from the URL.
      * @param {function} [fillFunction={@link fillIncrementally}] The function used to fill the {@link DynamicObjectCollection}.
      *
      * @exception {DeveloperError} czmlProcessor is required.
+     * @exception {DeveloperError} dynamicObjectCollection is required.
      * @exception {DeveloperError} url is required.
      *
      * @see fillIncrementally
      */
-    var SystemClockUpdater = function SystemClockUpdater(czmlProcessor, url, refreshRate, fillFunction) {
+    var SystemClockUpdater = function SystemClockUpdater(czmlProcessor, dynamicObjectCollection, url, refreshRate, fillFunction) {
         if (typeof czmlProcessor === 'undefined') {
             throw new DeveloperError('czmlProcessor is required.');
+        }
+        if (typeof dynamicObjectCollection === 'undefined') {
+            throw new DeveloperError('dynamicObjectCollection is required.');
         }
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
@@ -37,6 +42,7 @@ define(['../Core/DeveloperError',
         }
 
         this._czmlProcessor = czmlProcessor;
+        this._dynamicObjectCollection = dynamicObjectCollection;
         this._refreshRate = defaultValue(refreshRate, 60);//default to 60 seconds
         this._fillFunction = fillFunction;
         this._url = url;
@@ -48,18 +54,17 @@ define(['../Core/DeveloperError',
      * @memberof SystemClockUpdater
      *
      * @param {JulianDate} currentTime The current time of the animation.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The buffer to update.
      */
-    SystemClockUpdater.prototype.update = function(currentTime, dynamicObjectCollection) {
+    SystemClockUpdater.prototype.update = function(currentTime) {
         var now = new Date();
         if(typeof this._lastUpdateTime === 'undefined' || now.valueOf() >= this._lastUpdateTime.valueOf() + this._refreshRate.getValue(currentTime) * 1000){
             this._lastUpdateTime = now;
             if (typeof this._handle === 'undefined') {
                 var self = this;
                 var storeHandle = true;
-                var handle = this._fillFunction(dynamicObjectCollection, this._url.getValue(currentTime),
-                        function(item, buffer, url){
-                            self._czmlProcessor.process(item, buffer, url);
+                var handle = this._fillFunction(this._dynamicObjectCollection, this._url.getValue(currentTime),
+                        function(item, dynamicObjectCollection, url){
+                            self._czmlProcessor.process(item, dynamicObjectCollection, url);
                         },
                         function(czmlData) {
                             storeHandle = false;

@@ -16,17 +16,22 @@ define([
      * @constructor
      *
      * @param {CzmlProcessor} czmlProcessor The CZML processor.
-     * @param {String} url The url of the document.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamic object collection to update.
+     * @param {DynamicObject} url The url of the document.
      * @param {Number} [numOfIterations=0] The number of iterations.
      * @param {function} [fillFunction={@link fillIncrementally}] The function used to fill the {@link DynamicObjectCollection}.
      *
      * @exception {DeveloperError} czmlProcessor is required.
+     * @exception {DeveloperError} dynamicObjectCollection is required.
      * @exception {DeveloperError} url is required.
      *
      */
-    var IterationDrivenUpdater = function IterationDrivenUpdater(czmlProcessor, url, numOfIterations, fillFunction) {
+    var IterationDrivenUpdater = function IterationDrivenUpdater(czmlProcessor, dynamicObjectCollection, url, numOfIterations, fillFunction) {
         if (typeof czmlProcessor === 'undefined') {
             throw new DeveloperError('czmlProcessor is required.');
+        }
+        if (typeof dynamicObjectCollection === 'undefined') {
+            throw new DeveloperError('dynamicObjectCollection is required.');
         }
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
@@ -35,6 +40,7 @@ define([
             fillFunction = fillIncrementally;
         }
         this._czmlProcessor = czmlProcessor;
+        this._dynamicObjectCollection = dynamicObjectCollection;
         this._numOfIterations = defaultValue(numOfIterations, 1);
         this._currentIteration = 0;
         this._fillFunction = fillFunction;
@@ -46,16 +52,15 @@ define([
      * @memberof IterationDrivenUpdater
      *
      * @param {JulianDate} currentTime The current time of the animation.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The collection to update.
      */
-    IterationDrivenUpdater.prototype.update = function(time, dynamicObjectCollection) {
+    IterationDrivenUpdater.prototype.update = function(time) {
         if(this._currentIteration < this._numOfIterations){
             if (typeof this._handle === 'undefined') {
                 var self = this;
                 var storeHandle = true;
-                var handle = this._fillFunction(dynamicObjectCollection, this._url.getValue(time),
-                        function(item, doc, url){
-                            self._czmlProcessor.process(item, doc, url);
+                var handle = this._fillFunction(this._dynamicObjectCollection, this._url.getValue(time),
+                        function(item, dynamicObjectCollection, url){
+                            self._czmlProcessor.process(item, dynamicObjectCollection, url);
                         },
                         function() {
                             storeHandle = false;

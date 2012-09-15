@@ -20,108 +20,94 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    var scene;
+
+    beforeAll(function() {
+        scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
+    });
+
+    var fakeEventSource;
+    var fakeEventSourceConstructor;
+    var dynamicObjectCollection;
+    var processor;
+
+    beforeEach(function() {
+        fakeEventSource = jasmine.createSpyObj('EventSource', ['close']);
+        fakeEventSourceConstructor = spyOn(window, 'EventSource').andReturn(fakeEventSource);
+
+        dynamicObjectCollection = new DynamicObjectCollection();
+        processor = new CzmlProcessor(scene);
+    });
+
     it('IterationDrivenUpdater throws with empty arguments.', function() {
         expect(function() {
             return new IterationDrivenUpdater();
         }).toThrow();
     });
 
-    it('IterationDrivenUpdater throws with out baseUrl', function() {
+    it('IterationDrivenUpdater throws with out dynamicObjectCollection and baseUrl', function() {
         expect(function() {
             return new IterationDrivenUpdater({});
         }).toThrow();
     });
 
-    it('update calls document manager process function.', function() {
-        var scene = createScene();
-        var eventSource = {
-                close:function(){
-                }
-        };
-        spyOn(window, 'EventSource').andReturn(eventSource);
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.external = new DynamicExternalDocument();
-        testObject.external.polling = new MockProperty('localhost');
-        var dm = new CzmlProcessor(scene);
-        var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 1);
-
-        spyOn(dm, 'process');
-        idbu.update(new JulianDate(), dynamicObjectCollection);
-        eventSource.onmessage({data:"{\"test\":\"value\"}"});
-        expect(dm.process).toHaveBeenCalled();
-        destroyScene(scene);
+    it('IterationDrivenUpdater throws with out baseUrl', function() {
+        expect(function() {
+            return new IterationDrivenUpdater({}, {});
+        }).toThrow();
     });
 
-    it('eventsource closing causes handle to be undefined.', function() {
-        var scene = createScene();
-        var eventSource = {
-                test:function(){
-                    this.onmessage({data:"{\"test\":\"value\"}"});
-                    this.onerror();
-                },
-                close:function(){
-                }
-        };
-        spyOn(window, 'EventSource').andReturn(eventSource);
-        var dynamicObjectCollection = new DynamicObjectCollection();
+    it('update calls the CzmlProcessor process function.', function() {
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
-        testObject.external.polling = new MockProperty('localhost');
-        var dm = new CzmlProcessor(scene);
-        var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 1);
+        var eventSourceUrl = 'localhost/eventsource';
+        testObject.external.polling = new MockProperty(eventSourceUrl);
+        var updater = new IterationDrivenUpdater(processor, dynamicObjectCollection, testObject.external.polling, 1);
 
+        updater.update(new JulianDate());
+        spyOn(processor, 'process');
 
-        idbu.update(new JulianDate(), dynamicObjectCollection);
-        eventSource.test();
-        expect(idbu._handle).toBeUndefined();
-        destroyScene(scene);
+        fakeEventSource.onmessage({
+            data : '{"test":"value"}'
+        });
+
+        expect(processor.process).toHaveBeenCalledWith({
+            test : 'value'
+        }, dynamicObjectCollection, eventSourceUrl);
+        expect(fakeEventSourceConstructor).toHaveBeenCalledWith(eventSourceUrl);
     });
 
     it('closes the handle after the correct number of iterations.', function() {
-        var scene = createScene();
-        var eventSource = {
-                close:function(){
-                }
-        };
-        spyOn(window, 'EventSource').andReturn(eventSource);
-        var dynamicObjectCollection = new DynamicObjectCollection();
+
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
-        var dm = new CzmlProcessor(scene);
-        var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 2);
 
-        spyOn(eventSource, 'close');
-        idbu.update(new JulianDate(), dynamicObjectCollection);
-        eventSource.onerror();
-        idbu.update(new JulianDate(), dynamicObjectCollection);
-        eventSource.onerror();
-        idbu.update(new JulianDate(), dynamicObjectCollection);
-        eventSource.onerror();
-        expect(eventSource.close).toHaveBeenCalled();
-        destroyScene(scene);
+        var updater  = new IterationDrivenUpdater(processor, dynamicObjectCollection, testObject.external.polling, 2);
+
+        updater.update(new JulianDate());
+        fakeEventSource.onerror();
+        updater.update(new JulianDate());
+        fakeEventSource.onerror();
+        updater.update(new JulianDate());
+        fakeEventSource.onerror();
+        expect(fakeEventSource.close).toHaveBeenCalled();
     });
 
     it('abort closes handle.', function() {
-        var scene = createScene();
-        var eventSource = {
-                close:function(){
-                }
-        };
-        spyOn(window, 'EventSource').andReturn(eventSource);
-        var dynamicObjectCollection = new DynamicObjectCollection();
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
         testObject.external.polling = new MockProperty('localhost');
-        var dm = new CzmlProcessor(scene);
-        var idbu = new IterationDrivenUpdater(dm, testObject.external.polling, 1);
 
+        var updater = new IterationDrivenUpdater(processor, dynamicObjectCollection, testObject.external.polling, 1);
 
-        idbu.update(new JulianDate(), dynamicObjectCollection);
-        eventSource.onmessage({data:"{\"test\":\"value\"}"});
-        idbu.abort();
-        expect(idbu._handle).toBeUndefined();
-        destroyScene(scene);
+        updater.update(new JulianDate());
+        fakeEventSource.onmessage({data:"{\"test\":\"value\"}"});
+        updater.abort();
+        expect(fakeEventSource.close).toHaveBeenCalled();
     });
 });

@@ -53,9 +53,15 @@ defineSuite([
         }).toThrow();
     });
 
-    it('throws with missing urlProperty', function() {
+    it('throws with missing dynamicObjectColleciontProperty and urlProperty', function() {
         expect(function() {
             return new EventSourceUpdater({});
+        }).toThrow();
+    });
+
+    it('throws with missing urlProperty', function() {
+        expect(function() {
+            return new EventSourceUpdater({}, {});
         }).toThrow();
     });
 
@@ -69,9 +75,9 @@ defineSuite([
         var eventName = 'access';
         testObject.external.eventname = new MockProperty(eventName);
 
-        var updater = new EventSourceUpdater(processor, testObject.external.eventsource, testObject.external.eventname);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource, testObject.external.eventname);
 
-        updater.update(new JulianDate(), dynamicObjectCollection);
+        updater.update(new JulianDate());
 
         expect(fakeEventSourceConstructor).toHaveBeenCalledWith(eventSourceUrl);
         expect(fakeEventSource.addEventListener).toHaveBeenCalledWith(eventName, jasmine.any(Function));
@@ -84,9 +90,9 @@ defineSuite([
         var eventSourceUrl = 'http://example.com/eventsource';
         testObject.external.eventsource = new MockProperty(eventSourceUrl);
 
-        var updater = new EventSourceUpdater(processor, testObject.external.eventsource);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource);
 
-        updater.update(new JulianDate(), dynamicObjectCollection);
+        updater.update(new JulianDate());
 
         expect(fakeEventSourceConstructor).toHaveBeenCalledWith(eventSourceUrl);
         expect(fakeEventSource.addEventListener).toHaveBeenCalledWith('message', jasmine.any(Function));
@@ -100,9 +106,9 @@ defineSuite([
         testObject.external.eventsource = new MockProperty(eventSourceUrl);
         testObject.external.eventname = new MockProperty(undefined);
 
-        var updater = new EventSourceUpdater(processor, testObject.external.eventsource);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource);
 
-        updater.update(new JulianDate(), dynamicObjectCollection);
+        updater.update(new JulianDate());
 
         expect(fakeEventSourceConstructor).toHaveBeenCalledWith(eventSourceUrl);
         expect(fakeEventSource.addEventListener).toHaveBeenCalledWith('message', jasmine.any(Function));
@@ -118,15 +124,15 @@ defineSuite([
         var secondEventName = 'other';
         testObject.external.eventname = new MockProperty(firstEventName);
 
-        var updater = new EventSourceUpdater(processor, testObject.external.eventsource, testObject.external.eventname);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource, testObject.external.eventname);
 
-        updater.update(new JulianDate(), dynamicObjectCollection);
+        updater.update(new JulianDate());
 
         expect(fakeEventSource.addEventListener).toHaveBeenCalledWith(firstEventName, jasmine.any(Function));
 
         testObject.external.eventname.value = secondEventName;
 
-        updater.update(new JulianDate(), dynamicObjectCollection);
+        updater.update(new JulianDate());
 
         expect(fakeEventSource.removeEventListener).toHaveBeenCalledWith(firstEventName);
         expect(fakeEventSource.addEventListener).toHaveBeenCalledWith(secondEventName, jasmine.any(Function));
@@ -140,15 +146,15 @@ defineSuite([
         var secondUrl = 'http://example.com/othereventsource';
         testObject.external.eventsource = new MockProperty(firstUrl);
 
-        var updater = new EventSourceUpdater(processor, testObject.external.eventsource, testObject.external.eventname);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource, testObject.external.eventname);
 
-        updater.update(new JulianDate(), dynamicObjectCollection);
+        updater.update(new JulianDate());
 
         expect(fakeEventSourceConstructor).toHaveBeenCalledWith(firstUrl);
 
         testObject.external.eventsource.value = secondUrl;
 
-        updater.update(new JulianDate(), dynamicObjectCollection);
+        updater.update(new JulianDate());
 
         expect(fakeEventSource.close).toHaveBeenCalled();
         expect(fakeEventSourceConstructor).toHaveBeenCalledWith(secondUrl);
@@ -164,9 +170,9 @@ defineSuite([
         var eventName = 'access';
         testObject.external.eventname = new MockProperty(eventName);
 
-        var updater = new EventSourceUpdater(processor, testObject.external.eventsource, testObject.external.eventname);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource, testObject.external.eventname);
 
-        updater.update(new JulianDate(), dynamicObjectCollection);
+        updater.update(new JulianDate());
 
         spyOn(processor, 'process');
 
@@ -185,8 +191,8 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
         testObject.external.eventsource = new MockProperty('http://example.com/eventsource');
 
-        var updater = new EventSourceUpdater(processor, testObject.external.eventsource, testObject.external.eventname);
-        updater.update(new JulianDate(), dynamicObjectCollection);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource, testObject.external.eventname);
+        updater.update(new JulianDate());
 
         updater.abort();
 

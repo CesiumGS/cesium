@@ -49,14 +49,13 @@ define([
         this._updaters = [];
     };
 
-    var Updater = function(cdoc, doc, updater){
+    var Updater = function(cdoc, updater){
         this._compositeDynamicObjectCollection = cdoc;
-        this._dynamicObjectCollection = doc;
         this._updater = updater;
     };
 
     Updater.prototype.update = function(currentTime){
-        this._updater.update(currentTime, this._dynamicObjectCollection);
+        this._updater.update(currentTime);
     };
 
     /**
@@ -159,14 +158,14 @@ define([
                 var doc = new DynamicObjectCollection();
                 if(typeof external.polling !== 'undefined'){
                     if(typeof external.refreshInterval !== 'undefined'){
-                        this._updaters.push(new Updater(compositeDynamicObjectCollection, doc, new SystemClockUpdater(this, external.polling, external.refreshInterval)));
+                        this._updaters.push(new Updater(compositeDynamicObjectCollection, new SystemClockUpdater(this, doc, external.polling, external.refreshInterval)));
                     }
                     else{
-                        this._updaters.push(new Updater(compositeDynamicObjectCollection, doc, new IterationDrivenUpdater(this, external.polling, 1)));
+                        this._updaters.push(new Updater(compositeDynamicObjectCollection, new IterationDrivenUpdater(this, doc, external.polling, 1)));
                     }
                 }
                 else if(typeof external.eventsource !== 'undefined'){
-                    this._updaters.push(new Updater(compositeDynamicObjectCollection, doc, new EventSourceUpdater(this, external.eventsource, external.eventname)));
+                    this._updaters.push(new Updater(compositeDynamicObjectCollection, new EventSourceUpdater(this, doc, external.eventsource, external.eventname)));
                 }
                 var scope = external.scope;
                 if(scope && scope === "SHARED"){

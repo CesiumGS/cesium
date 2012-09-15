@@ -14,26 +14,32 @@ define([
      * @constructor
      *
      * @param {CzmlProcessor} czmlProcessor The CZML processor.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamic object collection to update.
      * @param {DynamicProperty} urlProperty A dynamic property whose value is the URL of the event stream.
      * @param {DynamicProperty} [eventNameProperty] A dynamic property whose value is the name of the
      * event in the stream to listen to.  If the property is undefined, or has a value of undefined,
      * all messages on the stream will be interpreted as CZML packets.
      *
      * @exception {DeveloperError} czmlProcessor is required.
+     * @exception {DeveloperError} dynamicObjectCollection is required.
      * @exception {DeveloperError} url is required.
      *
      * @see CzmlProcessor
      * @see <a href="http://www.w3.org/TR/eventsource/">EventSource</a>
      */
-    var EventSourceUpdater = function EventSourceUpdater(czmlProcessor, urlProperty, eventNameProperty) {
+    var EventSourceUpdater = function EventSourceUpdater(czmlProcessor, dynamicObjectCollection, urlProperty, eventNameProperty) {
         if (typeof czmlProcessor === 'undefined') {
             throw new DeveloperError('czmlProcessor is required.');
+        }
+        if (typeof dynamicObjectCollection === 'undefined') {
+            throw new DeveloperError('dynamicObjectCollection is required.');
         }
         if (typeof urlProperty === 'undefined') {
             throw new DeveloperError('urlProperty is required.');
         }
 
         this._czmlProcessor = czmlProcessor;
+        this._dynamicObjectCollection = dynamicObjectCollection;
         this._urlProperty = urlProperty;
         this._eventNameProperty = eventNameProperty;
         this._currentUrl = undefined;
@@ -46,9 +52,8 @@ define([
      * @memberof EventSourceUpdater
      *
      * @param {JulianDate} currentTime The current time of the animation.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamic object collection to update.
      */
-    EventSourceUpdater.prototype.update = function(currentTime, dynamicObjectCollection) {
+    EventSourceUpdater.prototype.update = function(currentTime) {
         var eventSource = this._eventSource;
         var url = this._urlProperty.getValue(currentTime);
         if (url !== this._currentUrl) {
@@ -76,8 +81,9 @@ define([
             this._currentEventName = eventName;
 
             var czmlProcessor = this._czmlProcessor;
+            var self = this;
             eventSource.addEventListener(eventName, function(e) {
-                czmlProcessor.process(JSON.parse(e.data), dynamicObjectCollection, url);
+                czmlProcessor.process(JSON.parse(e.data), self._dynamicObjectCollection, url);
             });
         }
     };
