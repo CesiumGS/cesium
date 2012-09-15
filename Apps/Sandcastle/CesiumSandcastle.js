@@ -569,7 +569,7 @@ require({
 
             var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
             currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
-            html = html.replace('<head>', '<head>\n\t<meta name="description" content="' + demoTooltips[currentDemoName].get('content') + '">');
+            html = html.replace('<title>', '<meta name="description" content="' + demoTooltips[currentDemoName].get('content') + '">\n    <title>');
 
             var octetBB = new BlobBuilder();
             octetBB.append(html);
