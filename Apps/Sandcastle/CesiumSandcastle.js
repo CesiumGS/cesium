@@ -1,4 +1,4 @@
-/*global require,CodeMirror,JSHINT,gallery_demos*/
+/*global require,Blob,CodeMirror,JSHINT,gallery_demos*/
 require({
         baseUrl: '../../Source',
         packages: [{
@@ -84,12 +84,10 @@ require({
             hideGallery();
         }
 
-        // NOTE: BlobBuilder will eventually be deprecated and replaced with a direct constructor on Blob itself.
-        // https://developer.mozilla.org/en/DOM/Blob
-        var BlobBuilder = BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
         var getURL = window.URL || window.webkitURL || window;
-        if (typeof BlobBuilder === 'undefined') {
+        if (typeof Blob === 'undefined') {
             registry.byId('buttonSaveAs').set('disabled', true);
+            registry.byId('buttonNewWindow').set('disabled', true);
         }
 
         var jsEditor;
@@ -571,9 +569,7 @@ require({
             currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
             html = html.replace('<title>', '<meta name="description" content="' + demoTooltips[currentDemoName].get('content') + '">\n    <title>');
 
-            var octetBB = new BlobBuilder();
-            octetBB.append(html);
-            var octetBlob = octetBB.getBlob("application/octet-stream");
+            var octetBlob = new Blob([ html ], { 'type' : 'application/octet-stream', 'endings' : 'native' });
             var octetBlobURL = getURL.createObjectURL(octetBlob);
             dom.byId('saveAsFile').href = octetBlobURL;
         });
@@ -586,9 +582,7 @@ require({
             var pos = baseHref.lastIndexOf('/');
             baseHref = baseHref.substring(0, pos) + '/gallery/';
             html = html.replace('<head>', '<head>\n    <base href="' + baseHref + '">');
-            var htmlBB = new BlobBuilder();
-            htmlBB.append(html);
-            var htmlBlob = htmlBB.getBlob("text/html;charset=utf-8");
+            var htmlBlob = new Blob([ html ], { 'type' : 'text/html;charset=utf-8', 'endings' : 'native' });
             var htmlBlobURL = getURL.createObjectURL(htmlBlob);
             window.open(htmlBlobURL, '_blank');
             window.focus();
