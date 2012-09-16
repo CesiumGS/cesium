@@ -599,7 +599,7 @@ define([
                     create : function(uniform) {
                         return {
                             _set : function(uniformState) {
-                                var v = uniformState.getContext().getViewport();
+                                var v = uniformState.getViewport();
                                 uniform.value = {
                                     x : v.x,
                                     y : v.y,

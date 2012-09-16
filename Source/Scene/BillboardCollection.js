@@ -14,6 +14,8 @@ define([
         '../Core/BoundingSphere',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
+        '../Renderer/Command',
+        '../Renderer/CommandLists',
         '../Renderer/VertexArrayFacade',
         './SceneMode',
         './Billboard',
@@ -35,6 +37,8 @@ define([
         BoundingSphere,
         BlendingState,
         BufferUsage,
+        Command,
+        CommandLists,
         VertexArrayFacade,
         SceneMode,
         Billboard,
@@ -135,6 +139,8 @@ define([
 
         this._baseVolume = new BoundingSphere();
         this._baseVolume2D = new BoundingSphere();
+
+        this._commandLists = new CommandLists();
 
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -343,7 +349,7 @@ define([
             var newBillboards = [];
             var billboards = billboardCollection._billboards;
             var length = billboards.length;
-            for ( var i = 0, j = 0; i < length; ++i) {
+            for (var i = 0, j = 0; i < length; ++i) {
                 var billboard = billboards[i];
                 if (billboard) {
                     billboard._index = j++;
@@ -557,7 +563,7 @@ define([
         c.directionsVertexBuffer = c.directionsVertexBuffer && c.directionsVertexBuffer.destroy();
 
         var directions = new Uint8Array(sixteenK * 4 * 2);
-        for ( var i = 0, j = 0; i < sixteenK; ++i) {
+        for (var i = 0, j = 0; i < sixteenK; ++i) {
             directions[j++] = 0;
             directions[j++] = 0;
 
@@ -593,7 +599,7 @@ define([
 
         var length = sixteenK * 6;
         var indices = new Uint16Array(length);
-        for ( var i = 0, j = 0; i < length; i += 6, j += 4) {
+        for (var i = 0, j = 0; i < length; i += 6, j += 4) {
             indices[i + 0] = j + 0;
             indices[i + 1] = j + 1;
             indices[i + 2] = j + 2;
@@ -609,57 +615,6 @@ define([
         c.indexBuffer.setVertexArrayDestroyable(false);
         return c.indexBuffer;
     }
-
-    /**
-     * Renders the billboards.  In order for changes to properties to be realized,
-     * {@link BillboardCollection#update} must be called before <code>render</code>.
-     * <br /><br />
-     * A texture atlas must be assigned to the billboard collection using
-     * {@link BillboardCollection#setTextureAtlas}, otherwise no billboards will be rendered.
-     * <br /><br />
-     * Billboards are rendered in a single pass using an uber-shader.
-     *
-     * @memberof BillboardCollection
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see BillboardCollection#update
-     * @see BillboardCollection#setTextureAtlas
-     */
-    BillboardCollection.prototype.render = function(context) {
-        var va = this._vaf.va;
-        var length = va.length;
-        for ( var i = 0; i < length; ++i) {
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLES,
-                count : va[i].indicesCount,
-                shaderProgram : this._sp,
-                uniformMap : this._uniforms,
-                vertexArray : va[i].va,
-                renderState : this._rs
-            });
-        }
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof BillboardCollection
-     */
-    BillboardCollection.prototype.renderForPick = function(context, framebuffer) {
-        var va = this._vaf.va;
-        var length = va.length;
-        for ( var i = 0; i < length; ++i) {
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLES,
-                count : va[i].indicesCount,
-                shaderProgram : this._spPick,
-                uniformMap : this._uniforms,
-                vertexArray : va[i].va,
-                renderState : this._rsPick,
-                framebuffer : framebuffer
-            });
-        }
-    };
 
     BillboardCollection.prototype.computeNewBuffersUsage = function() {
         var buffersUsage = this._buffersUsage;
@@ -854,7 +809,7 @@ define([
 
         var length = billboards.length;
         var positions = new Array(length);
-        for ( var i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             var billboard = billboards[i];
             var position = billboard.getPosition();
             var actualPosition = Billboard._computeActualPosition(position, frameState, morphTime, modelMatrix);
@@ -901,7 +856,9 @@ define([
     }
 
     var scratchCanvasDimensions = new Cartesian2();
-
+    var scratchBV = new BoundingSphere();
+    var scratchToCenter = new Cartesian3();
+    var scratchProj = new Cartesian3();
     function updateBoundingVolumes(collection, context, frameState) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
@@ -910,19 +867,19 @@ define([
         var textureDimensions = collection._textureAtlas.getTexture().getDimensions();
         var textureSize = Math.max(textureDimensions.x, textureDimensions.y);
 
-        var boundingVolume;
+        var boundingVolume = scratchBV;
         var pixelScale;
         var size;
         var offset;
 
         if (mode === SceneMode.SCENE3D) {
-            boundingVolume = BoundingSphere.clone(collection._baseVolume);
+            boundingVolume = BoundingSphere.clone(collection._baseVolume, boundingVolume);
         } else if (typeof collection._baseVolume2D !== 'undefined') {
-            boundingVolume = BoundingSphere.clone(collection._baseVolume2D);
+            boundingVolume = BoundingSphere.clone(collection._baseVolume2D, boundingVolume);
         }
 
-        var toCenter = camera.getPositionWC().subtract(boundingVolume.center);
-        var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()));
+        var toCenter = camera.getPositionWC().subtract(boundingVolume.center, scratchToCenter);
+        var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()), scratchProj);
         var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
 
         var canvas = context.getCanvas();
@@ -945,19 +902,19 @@ define([
     /**
      * @private
      */
-    BillboardCollection.prototype.update = function(context, frameState) {
+    BillboardCollection.prototype.update = function(context, frameState, commandList) {
         var textureAtlas = this._textureAtlas;
         if (typeof textureAtlas === 'undefined') {
             // Can't write billboard vertices until we have texture coordinates
             // provided by a texture atlas
-            return undefined;
+            return;
         }
 
         var textureAtlasCoordinates = textureAtlas.getTextureCoordinates();
         if (textureAtlasCoordinates.length === 0) {
             // Can't write billboard vertices until we have texture coordinates
             // provided by a texture atlas
-            return undefined;
+            return;
         }
 
         removeBillboards(this);
@@ -985,7 +942,7 @@ define([
                 vafWriters = this._vaf.writers;
 
                 // Rewrite entire buffer if billboards were added or removed.
-                for ( var i = 0; i < length; ++i) {
+                for (var i = 0; i < length; ++i) {
                     var billboard = this._billboards[i];
                     billboard._dirty = false; // In case it needed an update.
                     writeBillboard(this, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -1036,7 +993,7 @@ define([
 
                     // PERFORMANCE_IDEA:  I totally made up 10% :).
 
-                    for ( var m = 0; m < updateLength; ++m) {
+                    for (var m = 0; m < updateLength; ++m) {
                         var b = billboardsToUpdate[m];
                         b._dirty = false;
 
@@ -1046,7 +1003,7 @@ define([
                     }
                     this._vaf.commit(getIndexBuffer(context));
                 } else {
-                    for ( var h = 0; h < updateLength; ++h) {
+                    for (var h = 0; h < updateLength; ++h) {
                         var bb = billboardsToUpdate[h];
                         bb._dirty = false;
 
@@ -1062,51 +1019,95 @@ define([
             }
         }
 
-        for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
+        for (var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
             properties[k] = 0;
         }
 
         if (typeof this._vaf === 'undefined' || typeof this._vaf.va === 'undefined') {
-            return undefined;
-        }
-
-        if (typeof this._sp === 'undefined') {
-            this._rs = context.createRenderState({
-                depthTest : {
-                    enabled : true
-                },
-                blending : BlendingState.ALPHA_BLEND
-            });
-
-            this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
-        }
-
-        if (frameState.passes.pick && typeof this._spPick === 'undefined') {
-            this._rsPick = context.createRenderState({
-                depthTest : {
-                    enabled : true
-                }
-            });
-
-            this._spPick = context.getShaderCache().getShaderProgram(
-                    BillboardCollectionVS,
-                    '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
-                    attributeIndices);
+            return;
         }
 
         this._uniforms = (frameState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;
 
         var boundingVolume = updateBoundingVolumes(this, context, frameState);
         var modelMatrix = Matrix4.IDENTITY;
-
         if (frameState.mode === SceneMode.SCENE3D) {
             modelMatrix = this.modelMatrix;
         }
 
-        return {
-            boundingVolume : boundingVolume,
-            modelMatrix : modelMatrix
-        };
+        var pass = frameState.passes;
+        var va = this._vaf.va;
+        var vaLength = va.length;
+        var commands;
+        var command;
+        var j;
+        this._commandLists.removeAll();
+        if (pass.color) {
+            if (typeof this._sp === 'undefined') {
+                this._rs = context.createRenderState({
+                    depthTest : {
+                        enabled : true
+                    },
+                    blending : BlendingState.ALPHA_BLEND
+                });
+
+                this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
+            }
+
+            commands = this._commandLists.colorList;
+            commands.length = vaLength;
+            for (j = 0; j < vaLength; ++j) {
+                command = commands[j];
+                if (typeof command === 'undefined') {
+                    command = commands[j] = new Command();
+                }
+
+                command.boundingVolume = boundingVolume;
+                command.modelMatrix = modelMatrix;
+                command.primitiveType = PrimitiveType.TRIANGLES;
+                command.count = va[j].indicesCount;
+                command.shaderProgram = this._sp;
+                command.uniformMap = this._uniforms;
+                command.vertexArray = va[j].va;
+                command.renderState = this._rs;
+            }
+        }
+        if (pass.pick) {
+            if (typeof this._spPick === 'undefined') {
+                this._rsPick = context.createRenderState({
+                    depthTest : {
+                        enabled : true
+                    }
+                });
+
+                this._spPick = context.getShaderCache().getShaderProgram(
+                        BillboardCollectionVS,
+                        '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
+                        attributeIndices);
+            }
+
+            commands = this._commandLists.pickList;
+            commands.length = vaLength;
+            for (j = 0; j < vaLength; ++j) {
+                command = commands[j];
+                if (typeof command === 'undefined') {
+                    command = commands[j] = new Command();
+                }
+
+                command.boundingVolume = boundingVolume;
+                command.modelMatrix = modelMatrix;
+                command.primitiveType = PrimitiveType.TRIANGLES;
+                command.count = va[j].indicesCount;
+                command.shaderProgram = this._spPick;
+                command.uniformMap = this._uniforms;
+                command.vertexArray = va[j].va;
+                command.renderState = this._rsPick;
+            }
+        }
+
+        if (!this._commandLists.empty()) {
+            commandList.push(this._commandLists);
+        }
     };
 
     /**
@@ -1157,7 +1158,7 @@ define([
     BillboardCollection.prototype._destroyBillboards = function() {
         var billboards = this._billboards;
         var length = billboards.length;
-        for ( var i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             if (billboards[i]) {
                 billboards[i]._destroy();
             }

@@ -2,6 +2,7 @@
 defineSuite([
          '../Specs/createContext',
          '../Specs/destroyContext',
+         'Core/BoundingRectangle',
          'Core/Math',
          'Core/Matrix4',
          'Core/PrimitiveType',
@@ -9,6 +10,7 @@ defineSuite([
      ], 'Renderer/BuiltinFunctions', function(
          createContext,
          destroyContext,
+         BoundingRectangle,
          CesiumMath,
          Matrix4,
          PrimitiveType,
@@ -85,7 +87,11 @@ defineSuite([
     });
 
     it('has czm_eyeToWindowCoordinates', function() {
-        var vp = context.getViewport();
+        var canvas = context.getCanvas();
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+        var vp = new BoundingRectangle(0.0, 0.0, width, height);
+        context.getUniformState().setViewport(vp);
         var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
         context.getUniformState().setProjection(perspective);
 
@@ -105,7 +111,11 @@ defineSuite([
     });
 
     it('has czm_windowToEyeCoordinates', function() {
-        var vp = context.getViewport();
+        var canvas = context.getCanvas();
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+        var vp = new BoundingRectangle(0.0, 0.0, width, height);
+        context.getUniformState().setViewport(vp);
         var perspective = Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), vp.width / vp.height, 1.0, 10.0);
         context.getUniformState().setProjection(perspective);
 

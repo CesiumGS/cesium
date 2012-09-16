@@ -163,7 +163,7 @@ define([
      * @exception {DeveloperError} this.xHalfAngle and this.yHalfAngle must each be less than 90 degrees.
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
-    RectangularPyramidSensorVolume.prototype.update = function(context, frameState) {
+    RectangularPyramidSensorVolume.prototype.update = function(context, frameState, commandList) {
         if ((this.xHalfAngle > CesiumMath.PI_OVER_TWO) || (this.yHalfAngle > CesiumMath.PI_OVER_TWO)) {
             throw new DeveloperError('this.xHalfAngle and this.yHalfAngle must each be less than or equal to 90 degrees.');
         }
@@ -207,23 +207,7 @@ define([
             }]);
         }
 
-        return s.update(context, frameState);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
-     */
-    RectangularPyramidSensorVolume.prototype.render = function(context) {
-        this._customSensor.render(context);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
-     */
-    RectangularPyramidSensorVolume.prototype.renderForPick = function(context, framebuffer) {
-        this._customSensor.renderForPick(context, framebuffer);
+        s.update(context, frameState, commandList);
     };
 
     /**
