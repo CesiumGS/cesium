@@ -5,6 +5,7 @@ defineSuite([
          '../Specs/destroyContext',
          '../Specs/frameState',
          '../Specs/pick',
+         '../Specs/render',
          'Core/BoundingRectangle',
          'Core/BoundingSphere',
          'Core/Cartesian3',
@@ -21,6 +22,7 @@ defineSuite([
          destroyContext,
          frameState,
          pick,
+         render,
          BoundingRectangle,
          BoundingSphere,
          Cartesian3,
@@ -228,8 +230,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        polygon.update(context, frameState);
-        polygon.render(context, us);
+        render(context, frameState, polygon);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -241,8 +242,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        polygon.update(context, frameState);
-        polygon.render(context, us);
+        render(context, frameState, polygon);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -254,8 +254,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        polygon.update(context, frameState);
-        polygon.render(context, us);
+        render(context, frameState, polygon);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -281,8 +280,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        polygon.update(context, frameState);
-        polygon.render(context, us);
+        render(context, frameState, polygon);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -296,14 +294,14 @@ defineSuite([
         };
         polygon.show = false;
 
-        expect(typeof polygon.update(context, frameState) === 'undefined').toEqual(true);
+        expect(render(context, frameState, polygon)).toEqual(0);
     });
 
     it('does not render without positions', function() {
         polygon = new Polygon();
         polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        expect(typeof polygon.update(context, frameState) === 'undefined').toEqual(true);
+        expect(render(context, frameState, polygon)).toEqual(0);
     });
 
     it('is picked', function() {
@@ -317,12 +315,14 @@ defineSuite([
         polygon = createPolygon();
         polygon.show = false;
 
-        expect(typeof polygon.update(context, frameState) === 'undefined').toEqual(true);
+        expect(render(context, frameState, polygon)).toEqual(0);
     });
 
     it('test 3D bounding sphere from positions', function() {
         polygon = createPolygon();
-        var boundingVolume = polygon.update(context, frameState).boundingVolume;
+        var commandList = [];
+        polygon.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon._positions));
     });
 
@@ -343,7 +343,9 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = testMode;
-        var boundingVolume = polygon.update(context, frameState).boundingVolume;
+        var commandList = [];
+        polygon.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
         frameState.mode = mode;
 
         var projectedPositions = [];
@@ -377,7 +379,9 @@ defineSuite([
         polygon.ellipsoid = ellipsoid;
         polygon.configureExtent(extent);
 
-        var boundingVolume = polygon.update(context, frameState).boundingVolume;
+        var commandList = [];
+        polygon.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent, ellipsoid));
     });
 
@@ -396,7 +400,9 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = testMode;
-        var boundingVolume = polygon.update(context, frameState).boundingVolume;
+        var commandList = [];
+        polygon.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
         frameState.mode = mode;
 
         var sphere = BoundingSphere.fromExtent2D(extent, projection);

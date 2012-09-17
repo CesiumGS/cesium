@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/EquidistantCylindricalProjection',
         '../Core/Ellipsoid',
@@ -12,6 +13,7 @@ define([
         '../Core/Cartesian3',
         '../Core/IntersectionTests',
         '../Renderer/Context',
+        '../Renderer/Command',
         './Camera',
         './CompositePrimitive',
         './AnimationCollection',
@@ -21,6 +23,7 @@ define([
         './PerspectiveOffCenterFrustum'
     ], function(
         Color,
+        defaultValue,
         destroyObject,
         EquidistantCylindricalProjection,
         Ellipsoid,
@@ -32,6 +35,7 @@ define([
         Cartesian3,
         IntersectionTests,
         Context,
+        Command,
         Camera,
         CompositePrimitive,
         AnimationCollection,
@@ -65,6 +69,8 @@ define([
         this._animations = new AnimationCollection();
 
         this._shaderFrameCount = 0;
+
+        this._commandList = [];
 
         /**
          * The current mode of the scene.
@@ -183,6 +189,7 @@ define([
     };
 
     function clearPasses(passes) {
+        passes.color = false;
         passes.pick = false;
     }
 
@@ -231,7 +238,10 @@ define([
         }
 
         updateFrameState(scene);
-        scene._primitives.update(scene._context, scene._frameState);
+        scene._frameState.passes.color = true;
+
+        scene._commandList.length = 0;
+        scene._primitives.update(scene._context, scene._frameState, scene._commandList);
     }
 
     /**
@@ -240,9 +250,20 @@ define([
      */
     Scene.prototype.render = function() {
         update(this);
+        var commandLists = this._commandList;
 
-        //this._context.clear(this._clearState);
-        this._primitives.render(this._context);
+        var context = this._context;
+        context.clear(this._clearState);
+
+        var length = commandLists.length;
+        for (var i = 0; i < length; ++i) {
+            var commandList = commandLists[i].colorList;
+            var commandListLength = commandList.length;
+            for (var j = 0; j < commandListLength; ++j) {
+                var command = commandList[j];
+                context.draw(command);
+            }
+        }
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -322,6 +343,7 @@ define([
     var rectangleWidth = 3.0;
     var rectangleHeight = 3.0;
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
+    var scratchPickCommand = new Command();
 
     /**
      * DOC_TBA
@@ -339,8 +361,20 @@ define([
         frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
-        primitives.update(context, frameState);
-        primitives.renderForPick(context, fb);
+        var commandLists = this._commandList;
+        commandLists.length = 0;
+        primitives.update(context, frameState, commandLists);
+
+        var length = commandLists.length;
+        for (var i = 0; i < length; ++i) {
+            var commandList = commandLists[i].pickList;
+            var commandListLength = commandList.length;
+            for (var j = 0; j < commandListLength; ++j) {
+                var command = Command.cloneDrawArguments(commandList[j], scratchPickCommand);
+                command.framebuffer = defaultValue(command.framebuffer, fb);
+                context.draw(command);
+            }
+        }
 
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);

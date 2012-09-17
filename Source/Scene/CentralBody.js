@@ -19,12 +19,15 @@ define([
         '../Core/Cartographic',
         '../Core/EquidistantCylindricalProjection',
         '../Core/Matrix3',
+        '../Core/Matrix4',
         '../Core/ComponentDatatype',
         '../Core/MeshFilters',
         '../Core/PrimitiveType',
         '../Core/CubeMapEllipsoidTessellator',
         '../Core/Transforms',
         '../Renderer/BufferUsage',
+        '../Renderer/Command',
+        '../Renderer/CommandLists',
         '../Renderer/CullFace',
         '../Renderer/DepthFunction',
         '../Renderer/PixelFormat',
@@ -65,12 +68,15 @@ define([
         Cartographic,
         EquidistantCylindricalProjection,
         Matrix3,
+        Matrix4,
         ComponentDatatype,
         MeshFilters,
         PrimitiveType,
         CubeMapEllipsoidTessellator,
         Transforms,
         BufferUsage,
+        Command,
+        CommandLists,
         CullFace,
         DepthFunction,
         PixelFormat,
@@ -131,24 +137,29 @@ define([
 
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
-        this._vaSky = undefined; // Reference to sky-from-space or sky-from-atmosphere
-        this._spSky = undefined;
-        this._rsSky = undefined;
 
-        this._spDepth = undefined;
-        this._vaDepth = undefined;
-        this._rsDepth = undefined;
+        this._skyCommand = new Command();
+        this._skyCommand.primitiveType = PrimitiveType.TRIANGLES;
+        // this._skyCommand.shaderProgram references sky-from-space or sky-from-atmosphere
 
-        this._vaNorthPole = undefined;
-        this._vaSouthPole = undefined;
+        this._depthCommand = new Command();
+        this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
+
+        this._northPoleCommand = new Command();
+        this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._southPoleCommand = new Command();
+        this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+
+        // this._northPoleCommand.shaderProgram and this.southPoleCommand.shaderProgram reference
+        // without-atmosphere, ground-from-space, or ground-from-atmosphere
         this._spPolesWithoutAtmosphere = undefined;
         this._spPolesGroundFromSpace = undefined;
         this._spPolesGroundFromAtmosphere = undefined;
-        this._spPoles = undefined; // Reference to without-atmosphere, ground-from-space, or ground-from-atmosphere
-        this._northPoleUniforms = undefined;
-        this._southPoleUniforms = undefined;
+
         this._drawNorthPole = false;
         this._drawSouthPole = false;
+
+        this._commandLists = new CommandLists();
 
         /**
          * Determines the color of the north pole. If the day tile provider imagery does not
@@ -634,6 +645,7 @@ define([
         // PERFORMANCE_IDEA:  Only combine these if showing the atmosphere.  Maybe this is too much of a micro-optimization.
         // http://jsperf.com/object-property-access-propcount
         this._drawUniforms = combine([uniforms, atmosphereUniforms], false, false);
+        this._skyCommand.uniformMap = this._drawUniforms;
     };
 
     var attributeIndices = {
@@ -778,10 +790,8 @@ define([
                 halfHeight * 2.0);
     };
 
-    function getBaseLayer(centralBody) {
-        return centralBody._imageryLayerCollection.get(0);
-    }
-
+    var viewportScratch = new BoundingRectangle();
+    var vpTransformScratch = new Matrix4();
     CentralBody.prototype._fillPoles = function(context, frameState) {
         var terrainProvider = this._surface.terrainProvider;
         if (typeof terrainProvider === 'undefined' || frameState.mode !== SceneMode.SCENE3D) {
@@ -794,7 +804,10 @@ define([
         var terrainMaxExtent = terrainProvider.tilingScheme.extent;
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
-        var viewportTransformation = context.getUniformState().getViewportTransformation();
+        var viewport = viewportScratch;
+        viewport.width = context.getCanvas().clientWidth;
+        viewport.height = context.getCanvas().clientHeight;
+        var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, vpTransformScratch);
         var latitudeExtension = 0.05;
 
         var extent;
@@ -831,7 +844,7 @@ define([
                     rect.x, rect.y + rect.height
                 ];
 
-                if (typeof this._vaNorthPole === 'undefined') {
+                if (typeof this._northPoleCommand.vertexArray === 'undefined') {
                     mesh = {
                         attributes : {
                             position : {
@@ -841,7 +854,7 @@ define([
                             }
                         }
                     };
-                    this._vaNorthPole = context.createVertexArrayFromMesh({
+                    this._northPoleCommand.vertexArray = context.createVertexArrayFromMesh({
                         mesh : mesh,
                         attributeIndices : {
                             position : 0
@@ -850,7 +863,7 @@ define([
                     });
                 } else {
                     datatype = ComponentDatatype.FLOAT;
-                    this._vaNorthPole.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                    this._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
                 }
             }
         }
@@ -878,7 +891,7 @@ define([
                      rect.x, rect.y + rect.height
                  ];
 
-                 if (typeof this._vaSouthPole === 'undefined') {
+                 if (typeof this._southPoleCommand.vertexArray === 'undefined') {
                      mesh = {
                          attributes : {
                              position : {
@@ -888,7 +901,7 @@ define([
                              }
                          }
                      };
-                     this._vaSouthPole = context.createVertexArrayFromMesh({
+                     this._southPoleCommand.vertexArray = context.createVertexArrayFromMesh({
                          mesh : mesh,
                          attributeIndices : {
                              position : 0
@@ -897,7 +910,7 @@ define([
                      });
                  } else {
                      datatype = ComponentDatatype.FLOAT;
-                     this._vaSouthPole.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                     this._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
                  }
             }
         }
@@ -909,27 +922,33 @@ define([
             }
         };
 
-        if (typeof this._northPoleUniforms === 'undefined') {
-            this._northPoleUniforms = combine([drawUniforms, this._drawUniforms, {
+        if (typeof this._northPoleCommand.uniformMap === 'undefined') {
+            var northPoleUniforms = combine([drawUniforms, {
                 u_color : function() {
                     return that.northPoleColor;
                 }
             }], false, false);
+            this._northPoleCommand.uniformMap = combine([northPoleUniforms, this._drawUniforms], false, false);
         }
 
-        if (typeof this._southPoleUniforms === 'undefined') {
-            this._southPoleUniforms = combine([drawUniforms, this._drawUniforms, {
+        if (typeof this._southPoleCommand.uniformMap === 'undefined') {
+            var southPoleUniforms = combine([drawUniforms, {
                 u_color : function() {
                     return that.southPoleColor;
                 }
             }], false, false);
+            this._southPoleCommand.uniformMap = combine([southPoleUniforms, this._drawUniforms], false, false);
         }
     };
 
     /**
      * @private
      */
-    CentralBody.prototype.update = function(context, frameState) {
+    CentralBody.prototype.update = function(context, frameState, commandList) {
+        if (!this.show) {
+            return;
+        }
+
         var width = context.getCanvas().clientWidth;
         var height = context.getCanvas().clientHeight;
 
@@ -941,18 +960,18 @@ define([
         var fs;
         var shaderCache = context.getShaderCache();
 
-        if (this.showSkyAtmosphere && !this._vaSky) {
+        if (this.showSkyAtmosphere && !this._skyCommand.vertexArray) {
             // PERFORMANCE_IDEA:  Is 60 the right amount to tessellate?  I think scaling the original
             // geometry in a vertex is a bad idea; at least, because it introduces a draw call per tile.
             var skyMesh = CubeMapEllipsoidTessellator.compute(Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
-            this._vaSky = context.createVertexArrayFromMesh({
+            this._skyCommand.vertexArray = context.createVertexArrayFromMesh({
                 mesh : skyMesh,
                 attributeIndices : MeshFilters.createAttributeIndices(skyMesh),
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            vs = '#define SKY_FROM_SPACE \n' +
-                 '#line 0 \n' +
+            vs = '#define SKY_FROM_SPACE\n' +
+                 '#line 0\n' +
                  SkyAtmosphereVS;
 
             fs = '#line 0\n' +
@@ -960,12 +979,12 @@ define([
 
             this._spSkyFromSpace = shaderCache.getShaderProgram(vs, fs);
 
-            vs = '#define SKY_FROM_ATMOSPHERE' +
-                 '#line 0 \n' +
+            vs = '#define SKY_FROM_ATMOSPHERE\n' +
+                 '#line 0\n' +
                  SkyAtmosphereVS;
 
             this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, fs);
-            this._rsSky = context.createRenderState({
+            this._skyCommand.renderState = context.createRenderState({
                 cull : {
                     enabled : true,
                     face : CullFace.FRONT
@@ -1001,7 +1020,7 @@ define([
                         enabled : false
                     }
                 });
-                this._rsDepth = context.createRenderState({ // Write depth, not color
+                this._depthCommand.renderState = context.createRenderState({ // Write depth, not color
                     cull : {
                         enabled : true
                     },
@@ -1019,7 +1038,7 @@ define([
             } else {
                 this._rsColor = context.createRenderState();
                 this._rsColorWithoutDepthTest = context.createRenderState();
-                this._rsDepth = context.createRenderState();
+                this._depthCommand.renderState = context.createRenderState();
             }
         }
 
@@ -1028,38 +1047,16 @@ define([
         var cull = (mode === SceneMode.SCENE3D) || (mode === SceneMode.MORPHING);
         this._rsColor.cull.enabled = cull;
         this._rsColorWithoutDepthTest.cull.enabled = cull;
-        this._rsDepth.cull.enabled = cull;
+        this._depthCommand.renderState.cull.enabled = cull;
 
-        // update scisor/depth plane
+        this._northPoleCommand.renderState = this._rsColorWithoutDepthTest;
+        this._southPoleCommand.renderState = this._rsColorWithoutDepthTest;
+
+        // update depth plane
         var depthQuad = this._computeDepthQuad(frameState);
 
-        // TODO: Re-enable scissor test.
-        /*var scissorTest = { enabled : false };
-        if (mode === SceneMode.SCENE3D) {
-            var uniformState = context.getUniformState();
-            var mvp = uniformState.getModelViewProjection();
-            var rect = this._createScissorRectangle({
-                frameState : frameState,
-                width : width,
-                height : height,
-                quad : depthQuad,
-                modelViewProjection : mvp,
-                viewportTransformation : uniformState.getViewportTransformation()
-            });
-
-            if (typeof rect !== 'undefined') {
-                scissorTest = {
-                    enabled : true,
-                    rectangle : rect
-                };
-            }
-        }
-        this._rsColor.scissorTest = scissorTest;
-        this._rsColorWithoutDepth.scissorTest = scissorTest;
-        this._rsDepth.scissorTest = scissorTest;*/
-
         // depth plane
-        if (!this._vaDepth) {
+        if (!this._depthCommand.vertexArray) {
             var mesh = {
                 attributes : {
                     position : {
@@ -1073,7 +1070,7 @@ define([
                     values : [0, 1, 2, 2, 1, 3]
                 }]
             };
-            this._vaDepth = context.createVertexArrayFromMesh({
+            this._depthCommand.vertexArray = context.createVertexArrayFromMesh({
                 mesh : mesh,
                 attributeIndices : {
                     position : 0
@@ -1082,11 +1079,14 @@ define([
             });
         } else {
             var datatype = ComponentDatatype.FLOAT;
-            this._vaDepth.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(depthQuad));
+            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(depthQuad));
         }
 
-        if (!this._spDepth) {
-            this._spDepth = shaderCache.getShaderProgram(CentralBodyVSDepth, CentralBodyFSDepth, {
+        if (!this._depthCommand.shaderProgram) {
+            this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
+                    CentralBodyVSDepth,
+                    '#line 0\n' +
+                    CentralBodyFSDepth, {
                         position : 0
                     });
         }
@@ -1182,7 +1182,8 @@ define([
         var projectionChanged = this._projection !== projection;
 
         if (typeof this._activeSurfaceShaderSet === 'undefined' ||
-            typeof this._spPoles === 'undefined' ||
+            typeof this._northPoleCommand.shaderProgram === 'undefined' ||
+            typeof this._southPoleCommand.shaderProgram === 'undefined' ||
             modeChanged || projectionChanged || dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged ||
             this._showTerminator !== this.showTerminator ||
             this._affectedByLighting !== this.affectedByLighting) {
@@ -1207,22 +1208,22 @@ define([
             var getPositionMode;
 
             switch (mode) {
-                case SceneMode.SCENE3D:
-                    getPositionMode = getPosition3DMode;
-                    break;
-                case SceneMode.SCENE2D:
-                    if (projection instanceof EquidistantCylindricalProjection) {
-                        getPositionMode = getPosition2DGeographicMode;
-                    } else {
-                        getPositionMode = getPosition2DWebMercatorMode;
-                    }
-                    break;
-                case SceneMode.COLUMBUS_VIEW:
-                    getPositionMode = getPositionColumbusViewMode;
-                    break;
-                case SceneMode.MORPHING:
-                    getPositionMode = getPositionMorphingMode;
-                    break;
+            case SceneMode.SCENE3D:
+                getPositionMode = getPosition3DMode;
+                break;
+            case SceneMode.SCENE2D:
+                if (projection instanceof EquidistantCylindricalProjection) {
+                    getPositionMode = getPosition2DGeographicMode;
+                } else {
+                    getPositionMode = getPosition2DWebMercatorMode;
+                }
+                break;
+            case SceneMode.COLUMBUS_VIEW:
+                getPositionMode = getPositionColumbusViewMode;
+                break;
+            case SceneMode.MORPHING:
+                getPositionMode = getPositionMorphingMode;
+                break;
             }
 
             this._surfaceShaderSetWithoutAtmosphere.baseVertexShaderString =
@@ -1266,12 +1267,12 @@ define([
             this._spPolesGroundFromSpace = this._spPolesGroundFromSpace && this._spPolesGroundFromSpace.release();
             this._spPolesGroundFromAtmosphere = this._spPolesGroundFromAtmosphere && this._spPolesGroundFromAtmosphere.release();
 
-            this._spPolesWithoutAtmosphere = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
-            this._spPolesGroundFromSpace = context.getShaderCache().getShaderProgram(
+            this._spPolesWithoutAtmosphere = shaderCache.getShaderProgram(vs, fs, attributeIndices);
+            this._spPolesGroundFromSpace = shaderCache.getShaderProgram(
                     vs,
                     groundFromSpacePrepend + fs,
                     attributeIndices);
-            this._spPolesGroundFromAtmosphere = context.getShaderCache().getShaderProgram(
+            this._spPolesGroundFromAtmosphere = shaderCache.getShaderProgram(
                     vs,
                     groundFromAtmospherePrepend + fs,
                     attributeIndices);
@@ -1294,120 +1295,87 @@ define([
 
         if (this._fCameraHeight > this._outerRadius) {
             // Viewer in space
-            this._spSky = this._spSkyFromSpace;
+            this._skyCommand.shaderProgram = this._spSkyFromSpace;
             if (this.showGroundAtmosphere) {
                 this._activeSurfaceShaderSet = this._surfaceShaderSetGroundFromSpace;
-                this._spPoles = this._spPolesGroundFromSpace;
+
+                this._northPoleCommand.shaderProgram = this._spPolesGroundFromSpace;
+                this._southPoleCommand.shaderProgram = this._spPolesGroundFromSpace;
             } else {
                 this._activeSurfaceShaderSet = this._surfaceShaderSetWithoutAtmosphere;
-                this._spPoles = this._spPolesWithoutAtmosphere;
+
+                this._northPoleCommand.shaderProgram = this._spPolesWithoutAtmosphere;
+                this._southPoleCommand.shaderProgram = this._spPolesWithoutAtmosphere;
             }
         } else {
             // after the camera passes the minimum height, there is no ground atmosphere effect
             var showAtmosphere = this._ellipsoid.cartesianToCartographic(cameraPosition).height >= this._minGroundFromAtmosphereHeight;
             if (this.showGroundAtmosphere && showAtmosphere) {
                 this._activeSurfaceShaderSet = this._surfaceShaderSetGroundFromAtmosphere;
-                this._spPoles = this._spPolesGroundFromAtmosphere;
+
+                this._northPoleCommand.shaderProgram = this._spPolesGroundFromAtmosphere;
+                this._southPoleCommand.shaderProgram = this._spPolesGroundFromAtmosphere;
             } else {
                 this._activeSurfaceShaderSet = this._surfaceShaderSetWithoutAtmosphere;
-                this._spPoles = this._spPolesWithoutAtmosphere;
+
+                this._northPoleCommand.shaderProgram = this._spPolesWithoutAtmosphere;
+                this._southPoleCommand.shaderProgram = this._spPolesWithoutAtmosphere;
             }
-            this._spSky = this._spSkyFromAtmosphere;
+            this._skyCommand.shaderProgram = this._spSkyFromAtmosphere;
         }
 
         this._occluder.setCameraPosition(cameraPosition);
 
         this._fillPoles(context, frameState);
 
-        this._surface.update(context, frameState);
-
         this._mode = mode;
         this._projection = projection;
-    };
 
-    var clearState = {
-        framebuffer : undefined,
-        color : new Color(0.0, 0.0, 0.0, 0.0),
-        depth : 1.0
-    };
+        var pass = frameState.passes;
+        var commandLists = this._commandLists;
+        commandLists.removeAll();
 
-    /**
-     * DOC_TBA
-     * @memberof CentralBody
-     */
-    CentralBody.prototype.render = function(context) {
-        if (this.show) {
+        if (pass.color) {
+            var colorCommandList = commandLists.colorList;
             if (this.showSkyAtmosphere) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._spSky,
-                    uniformMap : this._drawUniforms,
-                    vertexArray : this._vaSky,
-                    renderState : this._rsSky
-                });
+                colorCommandList.push(this._skyCommand);
             }
 
             // render quads to fill the poles
-            if (this._mode === SceneMode.SCENE3D) {
+            if (mode === SceneMode.SCENE3D) {
                 if (this._drawNorthPole) {
-                    context.draw({
-                        primitiveType : PrimitiveType.TRIANGLE_FAN,
-                        shaderProgram : this._spPoles,
-                        uniformMap : this._northPoleUniforms,
-                        vertexArray : this._vaNorthPole,
-                        renderState : this._rsColorWithoutDepthTest
-                    });
+                    colorCommandList.push(this._northPoleCommand);
                 }
+
                 if (this._drawSouthPole) {
-                    context.draw({
-                        primitiveType : PrimitiveType.TRIANGLE_FAN,
-                        shaderProgram : this._spPoles,
-                        uniformMap : this._southPoleUniforms,
-                        vertexArray : this._vaSouthPole,
-                        renderState : this._rsColorWithoutDepthTest
-                    });
+                    colorCommandList.push(this._southPoleCommand);
                 }
             }
 
-            this._surface.render(
-                context,
-                this._drawUniforms,
-                this._activeSurfaceShaderSet,
-                this._rsColor,
-                this._mode,
-                this._projection);
+            this._surface.update(context,
+                    frameState,
+                    commandList,
+                    colorCommandList,
+                    this._drawUniforms,
+                    this._activeSurfaceShaderSet,
+                    this._rsColor,
+                    this._mode,
+                    this._projection);
 
             // render depth plane
-            if (this._mode === SceneMode.SCENE3D) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._spDepth,
-                    vertexArray : this._vaDepth,
-                    renderState : this._rsDepth
-                });
+            if (mode === SceneMode.SCENE3D) {
+                colorCommandList.push(this._depthCommand);
             }
-
-            this._surface._renderLogos(context);
         }
-    };
 
-    /**
-     * DOC_TBA
-     * @memberof CentralBody
-     */
-    CentralBody.prototype.renderForPick = function(context, framebuffer) {
-        if (this.show) {
-            if (this._mode === SceneMode.SCENE3D) {
-                // Not actually pickable, but render depth-only so primitives on the backface
-                // of the globe are not picked.
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._spDepth,
-                    vertexArray : this._vaDepth,
-                    renderState : this._rsDepth,
-                    framebuffer : framebuffer
-                });
-            }
+        if (pass.pick) {
+            // Not actually pickable, but render depth-only so primitives on the backface
+            // of the globe are not picked.
+            commandLists.pickList.push(this._depthCommand);
+        }
+
+        if (!commandLists.empty()) {
+            commandList.push(commandLists);
         }
     };
 
@@ -1447,8 +1415,8 @@ define([
      * centralBody = centralBody && centralBody.destroy();
      */
     CentralBody.prototype.destroy = function() {
-        this._vaNorthPole = this._vaNorthPole && this._vaNorthPole.destroy();
-        this._vaSouthPole = this._vaSouthPole && this._vaSouthPole.destroy();
+        this._northPoleCommand.vertexArray = this._northPoleCommand.vertexArray && this._northPoleCommand.vertexArray.destroy();
+        this._southPoleCommand.vertexArray = this._southPoleCommand.vertexArray && this._southPoleCommand.vertexArray.destroy();
 
         this._surfaceShaderSetWithoutAtmosphere = this._surfaceShaderSetWithoutAtmosphere && this._surfaceShaderSetWithoutAtmosphere.destroy();
         this._surfaceShaderSetGroundFromSpace = this._surfaceShaderSetGroundFromSpace && this._surfaceShaderSetGroundFromSpace.destroy();
@@ -1462,12 +1430,12 @@ define([
         this._spGroundFromSpace = this._spGroundFromSpace && this._spGroundFromSpace.release();
         this._spGroundFromAtmosphere = this._spGroundFromAtmosphere && this._spGroundFromAtmosphere.release();
 
-        this._vaSky = this._vaSky && this._vaSky.destroy();
+        this._skyCommand.vertexArray = this._skyCommand.vertexArray && this._skyCommand.vertexArray.destroy();
         this._spSkyFromSpace = this._spSkyFromSpace && this._spSkyFromSpace.release();
         this._spSkyFromAtmosphere = this._spSkyFromAtmosphere && this._spSkyFromAtmosphere.release();
 
-        this._spDepth = this._spDepth && this._spDepth.release();
-        this._vaDepth = this._vaDepth && this._vaDepth.destroy();
+        this._depthCommand.shaderProgram = this._depthCommand.shaderProgram && this._depthCommand.shaderProgram.release();
+        this._depthCommand.vertexArray = this._depthCommand.vertexArray && this._depthCommand.vertexArray.destroy();
 
         this._nightTexture = this._nightTexture && this._nightTexture.destroy();
         this._specularTexture = this._specularTexture && this._specularTexture.destroy();
