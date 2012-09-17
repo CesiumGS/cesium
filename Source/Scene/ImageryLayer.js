@@ -397,7 +397,6 @@ define([
     };
 
     var float32ArrayScratch = new Float32Array(1);
-    var originalViewport = new BoundingRectangle();
 
     function reprojectToGeographic(imageryLayer, context, texture, extent) {
         if (typeof imageryLayer._fbReproject === 'undefined') {
@@ -484,24 +483,23 @@ define([
             color : new Color(0.0, 0.0, 0.0, 0.0)
         }));
 
-        BoundingRectangle.clone(context.getViewport(), originalViewport);
-        context.setViewport({
-            x      : 0,
-            y      : 0,
-            width  : width,
-            height : height
-        });
+        var renderState = imageryLayer._rsColor;
+        var viewport = renderState.viewport;
+        if (typeof viewport === 'undefined') {
+            viewport = new BoundingRectangle();
+            renderState.viewport = viewport;
+        }
+        viewport.width = width;
+        viewport.height = height;
 
         context.draw({
             framebuffer : imageryLayer._fbReproject,
             shaderProgram : imageryLayer._spReproject,
-            renderState : imageryLayer._rsColor,
+            renderState : renderState,
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             vertexArray : imageryLayer._vaReproject,
             uniformMap : uniformMap
         });
-
-        context.setViewport(originalViewport);
 
         return outputTexture;
     }

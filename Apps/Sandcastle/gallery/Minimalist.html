@@ -105,10 +105,11 @@ require([
         scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
     });
 
-    (function tick() {
+    function tick() {
         scene.render();
         Cesium.requestAnimationFrame(tick);
-    }());
+    }
+    tick();
 
     // Prevent right-click from opening a context menu.
     canvas.oncontextmenu = function () {
@@ -128,9 +129,6 @@ require([
 
         canvas.width = width;
         canvas.height = height;
-
-        scene.getContext().setViewport(new Cesium.BoundingRectangle(0, 0, width, height));
-
         scene.getCamera().frustum.aspectRatio = width / height;
     };
     window.addEventListener('resize', onResize, false);

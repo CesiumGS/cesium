@@ -149,11 +149,12 @@ require([
     var transitioner = new Cesium.SceneTransitioner(scene2D);
     transitioner.to2D();
 
-    (function tick() {
+    function tick() {
         scene3D.render();
         scene2D.render();
         Cesium.requestAnimationFrame(tick);
-    }());
+    }
+    tick();
 
     // Resize handler
     var onResizeScene = function (canvas, scene) {
@@ -166,9 +167,6 @@ require([
 
         canvas.width = width;
         canvas.height = height;
-
-        scene.getContext().setViewport(new Cesium.BoundingRectangle(0, 0, width, height));
-
         scene.getCamera().frustum.aspectRatio = width / height;
     };
     var onResize = function () {

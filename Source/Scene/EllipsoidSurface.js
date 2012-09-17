@@ -19,6 +19,7 @@ define([
         '../Core/MercatorProjection',
         '../Core/MeshFilters',
         '../Core/Queue',
+        '../Renderer/Command',
         './GeographicTilingScheme',
         './ImageryLayerCollection',
         './ImageryState',
@@ -50,6 +51,7 @@ define([
         MercatorProjection,
         MeshFilters,
         Queue,
+        Command,
         GeographicTilingScheme,
         ImageryLayerCollection,
         ImageryState,
@@ -96,12 +98,14 @@ define([
 
         this._levelZeroTiles = undefined;
         this._tilesToRenderByTextureCount = [];
+        this._tileCommands = [];
         this._tileLoadQueue = new TileLoadQueue();
         this._tileReplacementQueue = new TileReplacementQueue();
         this._tilingScheme = undefined;
         this._occluder = undefined;
         this._doLodUpdate = true;
         this._boundingSphereTile = undefined;
+        this._boundingSphereCommand = undefined;
         this._boundingSphereVA = undefined;
         this._tileTraversalQueue = new Queue();
 
@@ -232,7 +236,13 @@ define([
         Array.prototype.splice.apply(tileImageryCollection, tileImageryObjects);
     }
 
-    EllipsoidSurface.prototype.update = function(context, frameState) {
+    function tileDistanceSortFunction(a, b) {
+        return a.distance - b.distance;
+    }
+
+    var float32ArrayScratch = new Float32Array(1);
+
+    EllipsoidSurface.prototype.update = function(context, frameState, commandList, colorCommandList, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
         if (!this._doLodUpdate) {
             return;
         }
@@ -251,8 +261,6 @@ define([
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
-
-        updateLogos(this, context, frameState);
 
         var traversalQueue = this._tileTraversalQueue;
         traversalQueue.clear();
@@ -339,81 +347,7 @@ define([
         }
 
         processTileLoadQueue(this, context, frameState);
-    };
 
-    EllipsoidSurface.prototype.toggleLodUpdate = function(frameState) {
-        this._doLodUpdate = !this._doLodUpdate;
-    };
-
-    var uniformMapTemplate = {
-        u_center3D : function() {
-            return this.center3D;
-        },
-        u_tileExtent : function() {
-            return this.tileExtent;
-        },
-        u_modifiedModelView : function() {
-            return this.modifiedModelView;
-        },
-        u_modifiedModelViewProjection : function() {
-            return this.modifiedModelViewProjection;
-        },
-        u_dayTextures : function() {
-            return this.dayTextures;
-        },
-        u_dayTextureTranslationAndScale : function() {
-            return this.dayTextureTranslationAndScale;
-        },
-        u_dayTextureTexCoordsExtent : function() {
-            return this.dayTextureTexCoordsExtent;
-        },
-        u_dayTextureAlpha : function() {
-            return this.dayTextureAlpha;
-        },
-        u_dayIntensity : function() {
-            return 0.2;
-        },
-        u_southLatitude : function() {
-            return this.southLatitude;
-        },
-        u_northLatitude : function() {
-            return this.northLatitude;
-        },
-        u_southMercatorYLow : function() {
-            return this.southMercatorYLow;
-        },
-        u_southMercatorYHigh : function() {
-            return this.southMercatorYHigh;
-        },
-        u_oneOverMercatorHeight : function() {
-            return this.oneOverMercatorHeight;
-        },
-
-        center3D : undefined,
-        modifiedModelView : undefined,
-        modifiedModelViewProjection : undefined,
-        tileExtent : undefined,
-
-        dayTextures : [],
-        dayTextureTranslationAndScale : [],
-        dayTextureTexCoordsExtent : [],
-        dayTextureAlpha : [],
-
-        southLatitude : 0.0,
-        northLatitude : 0.0,
-        southMercatorYLow : 0.0,
-        southMercatorYHigh : 0.0,
-        oneOverMercatorHeight : 0.0
-    };
-
-    var tileDistanceSortFunction = function(a, b) {
-        return a.distance - b.distance;
-    };
-
-    var float32ArrayScratch = new Float32Array(1);
-
-    EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
-        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         if (tilesToRenderByTextureCount.length === 0) {
             return;
         }
@@ -422,9 +356,10 @@ define([
         var mv = uniformState.getModelView();
         var projectionMatrix = uniformState.getProjection();
 
-        var uniformMap = combine([uniformMapTemplate, centralBodyUniformMap], false, false);
-
         var maxTextures = context.getMaximumTextureImageUnits();
+
+        var tileCommandIndex = -1;
+        var tileCommands = this._tileCommands;
 
         for (var tileSetIndex = 1, tileSetLength = tilesToRenderByTextureCount.length; tileSetIndex < tileSetLength; ++tileSetIndex) {
             var tileSet = tilesToRenderByTextureCount[tileSetIndex];
@@ -434,14 +369,73 @@ define([
 
             tileSet.sort(tileDistanceSortFunction);
 
-            context.beginDraw({
-                shaderProgram : shaderSet.getShaderProgram(context, tileSetIndex),
-                renderState : renderState
-            });
+            var shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex);
 
-            for ( var i = 0, len = tileSet.length; i < len; i++) {
-                var tile = tileSet[i];
+            for (i = 0, len = tileSet.length; i < len; i++) {
+                tile = tileSet[i];
 
+                var uniformMapTemplate = {
+                    u_center3D : function() {
+                        return this.center3D;
+                    },
+                    u_tileExtent : function() {
+                        return this.tileExtent;
+                    },
+                    u_modifiedModelView : function() {
+                        return this.modifiedModelView;
+                    },
+                    u_modifiedModelViewProjection : function() {
+                        return this.modifiedModelViewProjection;
+                    },
+                    u_dayTextures : function() {
+                        return this.dayTextures;
+                    },
+                    u_dayTextureTranslationAndScale : function() {
+                        return this.dayTextureTranslationAndScale;
+                    },
+                    u_dayTextureTexCoordsExtent : function() {
+                        return this.dayTextureTexCoordsExtent;
+                    },
+                    u_dayTextureAlpha : function() {
+                        return this.dayTextureAlpha;
+                    },
+                    u_dayIntensity : function() {
+                        return 0.2;
+                    },
+                    u_southLatitude : function() {
+                        return this.southLatitude;
+                    },
+                    u_northLatitude : function() {
+                        return this.northLatitude;
+                    },
+                    u_southMercatorYLow : function() {
+                        return this.southMercatorYLow;
+                    },
+                    u_southMercatorYHigh : function() {
+                        return this.southMercatorYHigh;
+                    },
+                    u_oneOverMercatorHeight : function() {
+                        return this.oneOverMercatorHeight;
+                    },
+
+                    center3D : undefined,
+                    modifiedModelView : undefined,
+                    modifiedModelViewProjection : undefined,
+                    tileExtent : undefined,
+
+                    dayTextures : [],
+                    dayTextureTranslationAndScale : [],
+                    dayTextureTexCoordsExtent : [],
+                    dayTextureAlpha : [],
+
+                    southLatitude : 0.0,
+                    northLatitude : 0.0,
+                    southMercatorYLow : 0.0,
+                    southMercatorYHigh : 0.0,
+                    oneOverMercatorHeight : 0.0
+                };
+
+                var uniformMap = combine([uniformMapTemplate, centralBodyUniformMap], false, false);
                 uniformMap.level = tile.level;
                 uniformMap.center3D = tile.center;
 
@@ -522,16 +516,26 @@ define([
                     // which might get destroyed eventually
                     uniformMap.dayTextures.length = numberOfDayTextures;
 
-                    context.continueDraw({
-                        primitiveType : TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES,
-                        vertexArray : tile.vertexArray,
-                        uniformMap : uniformMap
-                    });
+                    ++tileCommandIndex;
+                    var command = tileCommands[tileCommandIndex];
+                    if (typeof command === 'undefined') {
+                        command = new Command();
+                        tileCommands[tileCommandIndex] = command;
+                    }
+
+                    colorCommandList.push(command);
+
+                    command.shaderProgram = shaderProgram;
+                    command.renderState = renderState;
+                    command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
+                    command.vertexArray = tile.vertexArray;
+                    command.uniformMap = uniformMap;
                 }
             }
-
-            context.endDraw();
         }
+
+        // trim command list to the number actually needed
+        tileCommands.length = Math.max(0, tileCommandIndex);
 
         if (this._boundingSphereTile) {
             if (!this._boundingSphereVA) {
@@ -544,12 +548,70 @@ define([
                 });
             }
 
-            context.beginDraw({
-                shaderProgram : shaderSet.getShaderProgram(context, 1),
-                renderState : renderState
-            });
-
             var rtc2 = this._boundingSphereTile.center;
+
+            var uniformMapTemplate = {
+                u_center3D : function() {
+                    return this.center3D;
+                },
+                u_tileExtent : function() {
+                    return this.tileExtent;
+                },
+                u_modifiedModelView : function() {
+                    return this.modifiedModelView;
+                },
+                u_modifiedModelViewProjection : function() {
+                    return this.modifiedModelViewProjection;
+                },
+                u_dayTextures : function() {
+                    return this.dayTextures;
+                },
+                u_dayTextureTranslationAndScale : function() {
+                    return this.dayTextureTranslationAndScale;
+                },
+                u_dayTextureTexCoordsExtent : function() {
+                    return this.dayTextureTexCoordsExtent;
+                },
+                u_dayTextureAlpha : function() {
+                    return this.dayTextureAlpha;
+                },
+                u_dayIntensity : function() {
+                    return 0.2;
+                },
+                u_southLatitude : function() {
+                    return this.southLatitude;
+                },
+                u_northLatitude : function() {
+                    return this.northLatitude;
+                },
+                u_southMercatorYLow : function() {
+                    return this.southMercatorYLow;
+                },
+                u_southMercatorYHigh : function() {
+                    return this.southMercatorYHigh;
+                },
+                u_oneOverMercatorHeight : function() {
+                    return this.oneOverMercatorHeight;
+                },
+
+                center3D : undefined,
+                modifiedModelView : undefined,
+                modifiedModelViewProjection : undefined,
+                tileExtent : undefined,
+
+                dayTextures : [],
+                dayTextureTranslationAndScale : [],
+                dayTextureTexCoordsExtent : [],
+                dayTextureAlpha : [],
+
+                southLatitude : 0.0,
+                northLatitude : 0.0,
+                southMercatorYLow : 0.0,
+                southMercatorYHigh : 0.0,
+                oneOverMercatorHeight : 0.0
+            };
+
+            var uniformMap = combine([uniformMapTemplate, centralBodyUniformMap], false, false);
             uniformMap.center3D = rtc2;
 
             var centerEye2 = mv.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
@@ -561,20 +623,26 @@ define([
             uniformMap.dayTextureTexCoordsExtent[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
             uniformMap.dayTextureAlpha[0] = 1.0;
 
-            context.continueDraw({
-                primitiveType : PrimitiveType.LINES,
-                vertexArray : this._boundingSphereVA,
-                uniformMap : uniformMap
-            });
+            var boundingSphereCommand = this._boundingSphereCommand;
+            if (typeof boundingSphereCommand === 'undefined') {
+                boundingSphereCommand = new Command();
+                this._boundingSphereCommand = boundingSphereCommand;
+            }
 
-            context.endDraw();
+            boundingSphereCommand.shaderProgram = shaderSet.getShaderProgram(context, 1);
+            boundingSphereCommand.renderState = renderState;
+            boundingSphereCommand.primitiveType = PrimitiveType.LINES;
+            boundingSphereCommand.vertexArray = this._boundingSphereVA;
+            boundingSphereCommand.uniformMap = uniformMap;
+
+            colorCommandList.push(boundingSphereCommand);
         }
+
+        updateLogos(this, context, frameState, commandList);
     };
 
-    EllipsoidSurface.prototype._renderLogos = function(context) {
-        if (typeof this._logoQuad !== 'undefined') {
-            this._logoQuad.render(context);
-        }
+    EllipsoidSurface.prototype.toggleLodUpdate = function(frameState) {
+        this._doLodUpdate = !this._doLodUpdate;
     };
 
     /**
@@ -654,7 +722,7 @@ define([
         totalLogoHeight : 0
     };
 
-    function updateLogos(surface, context, frameState) {
+    function updateLogos(surface, context, frameState, commandList) {
         logoData.logos = surface._logos;
         logoData.logoIndex = 0;
         logoData.rebuildLogo = false;
@@ -708,7 +776,7 @@ define([
         }
 
         if (typeof surface._logoQuad !== 'undefined') {
-            surface._logoQuad.update(context, frameState);
+            surface._logoQuad.update(context, frameState, commandList);
         }
     }
 
@@ -874,25 +942,26 @@ define([
         var distance = Math.sqrt(distanceSquaredToTile(frameState, cameraPosition, cameraPositionCartographic, tile));
         tile.distance = distance;
 
-        var viewportHeight = context.getViewport().height;
+        var canvas = context.getCanvas();
+        var height = canvas.clientHeight;
 
         var camera = frameState.camera;
         var frustum = camera.frustum;
         var fovy = frustum.fovy;
 
         // PERFORMANCE_TODO: factor out stuff that's constant across tiles.
-        return (maxGeometricError * viewportHeight) / (2 * distance * Math.tan(0.5 * fovy));
+        return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
     }
 
     function screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
-        var viewport = context.getViewport();
-        var viewportWidth = viewport.width;
-        var viewportHeight = viewport.height;
+        var canvas = context.getCanvas();
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
 
         var maxGeometricError = surface.terrainProvider.getLevelMaximumGeometricError(tile.level);
-        var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(viewportWidth, viewportHeight);
+        var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
         return maxGeometricError / pixelSize;
     }
 
