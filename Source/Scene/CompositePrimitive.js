@@ -1,30 +1,12 @@
 /*global define*/
 define([
         '../Core/createGuid',
-        '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/BoundingRectangle',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/DeveloperError',
-        '../Core/Intersect',
-        '../Core/Matrix4',
-        '../Renderer/CommandLists',
-        './SceneMode'
+        '../Core/DeveloperError'
     ], function(
         createGuid,
-        defaultValue,
         destroyObject,
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian3,
-        Cartesian4,
-        DeveloperError,
-        Intersect,
-        Matrix4,
-        CommandLists,
-        SceneMode) {
+        DeveloperError) {
     "use strict";
 
     // PERFORMANCE_IDEA: Add hierarchical culling and state sorting.

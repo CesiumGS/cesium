@@ -11,11 +11,13 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Intersect',
         '../Core/IntersectionTests',
         '../Renderer/Context',
         '../Renderer/Command',
         './Camera',
         './CompositePrimitive',
+        './CullingVolume',
         './AnimationCollection',
         './SceneMode',
         './FrameState',
@@ -33,11 +35,13 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Intersect,
         IntersectionTests,
         Context,
         Command,
         Camera,
         CompositePrimitive,
+        CullingVolume,
         AnimationCollection,
         SceneMode,
         FrameState,
@@ -244,6 +248,7 @@ define([
         scene._primitives.update(scene._context, scene._frameState, scene._commandList);
     }
 
+    var scratchCullingVolume = new CullingVolume();
     /**
      * DOC_TBA
      * @memberof Scene
@@ -251,9 +256,19 @@ define([
     Scene.prototype.render = function() {
         update(this);
         var commandLists = this._commandList;
+        var cullingVolume = this._frameState.cullingVolume;
+        var camera = this._camera;
 
-        var context = this._context;
-        context.clear(this._clearState);
+        var renderList = [];
+        var near = Number.MAX_VALUE;
+        var far = Number.MIN_VALUE;
+        var undefBV = false;
+
+        var planes = scratchCullingVolume.planes;
+        for (var k = 0; k < 5; ++k) {
+            planes[k] = cullingVolume.planes[k];
+        }
+        cullingVolume = scratchCullingVolume;
 
         var length = commandLists.length;
         for (var i = 0; i < length; ++i) {
@@ -261,7 +276,82 @@ define([
             var commandListLength = commandList.length;
             for (var j = 0; j < commandListLength; ++j) {
                 var command = commandList[j];
-                context.draw(command);
+                var boundingVolume = command.boundingVolume;
+                if (typeof boundingVolume !== 'undefined') {
+                    if (cullingVolume.getVisibility(boundingVolume) !== Intersect.OUTSIDE) {
+                        renderList.push(command);
+
+                        // MULTIFRUSTUM TODO: move logic to bounding volume
+                        var toCenter = boundingVolume.center.subtract(camera.getPositionWC());
+                        var proj = camera.getDirectionWC().multiplyByScalar(camera.getDirectionWC().dot(toCenter));
+                        var distance = proj.magnitude();
+
+                        near = Math.min(near, distance - boundingVolume.radius);
+                        far = Math.max(far, distance + boundingVolume.radius);
+                    }
+                } else {
+                    undefBV = true;
+                    renderList.push(command);
+                }
+            }
+        }
+
+        if (undefBV) {
+            near = camera.frustum.near;
+            far = camera.frustum.far;
+        } else if (near <= 0.0) {          // MULTIFRUSTUM TODO: closest near plane?
+            near = 0.001;
+        }
+
+        var farToNearRatio = 1000.0;
+        var numFrustums = Math.log(far / near) / Math.log(farToNearRatio);
+
+        var context = this._context;
+        var us = context.getUniformState();
+        var clearColor = context.createClearState({
+            color : Color.BLACK
+        });
+        var clearDepth = context.createClearState({
+            depth : 1.0
+        });
+        context.clear(clearColor);
+
+        var frustum = camera.frustum.clone();
+        for (var p = 0; p < numFrustums; ++p) {
+            context.clear(clearDepth);
+            frustum.near = Math.max(near, Math.pow(farToNearRatio, numFrustums - p - 1.0) + near - 1.0);
+            frustum.far = frustum.near * farToNearRatio;
+
+            us.setProjection(frustum.getProjectionMatrix());
+            if (frustum.getInfiniteProjectionMatrix) {
+                us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
+            }
+
+            cullingVolume = frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+
+            length = renderList.length;
+            for (var q = 0; q < length; ++q) {
+                var renderCommand = renderList[q];
+
+                // MULTIFRUSTUM TODO: do what if boundingVolume is undefined?
+                var bv = renderCommand.boundingVolume;
+
+                // MULTIFRUSTUM TODO: move logic to bounding volume
+                var c = bv.center.subtract(camera.getPositionWC());
+                var r = camera.getDirectionWC().multiplyByScalar(camera.getDirectionWC().dot(c));
+                var d = r.magnitude();
+
+                if (d - bv.radius > frustum.far) {
+                    continue; // MULTIFRUSTUM TODO: discard
+                }
+
+                if (d + bv.radius < frustum.near) {
+                    continue;
+                }
+
+                context.draw(renderCommand);
+
+                // MULTIFRUSTUM TODO: discard if command isn't needed in any furture frustum
             }
         }
     };
