@@ -103,12 +103,7 @@ bool isCloud(float cloudCover)
 vec3 dayColor(vec3 positionMC, vec3 positionEC, vec3 normalEC, vec3 startColor, vec2 txCoord, float cloudCover)
 {
     // TODO: where does this come from?
-#ifdef SHOW_GROUND_ATMOSPHERE
-    // When the atmosphere is shown, the diffuse component should be low
-    vec4 diffuseSpecularAmbientShininess = vec4(0.35, 0.5, u_dayIntensity, 10.0);
-#else
     vec4 diffuseSpecularAmbientShininess = vec4(0.75, 0.5, u_dayIntensity, 10.0);
-#endif
     
 #ifdef SHOW_SPECULAR    
     float specularWeight = texture2D(u_specularMap, txCoord).r;

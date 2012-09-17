@@ -373,25 +373,6 @@ define([
      * DOC_TBA
      * @memberof BingMapsImageryProvider
      */
-    BingMapsImageryProvider.prototype.getIntensity = function(tile) {
-        if ((this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) && tile.level <= 8.0) {
-            return 1.0;
-        }
-        return 0.1;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof BingMapsImageryProvider
-     */
-    BingMapsImageryProvider.prototype.getPoleIntensity = function() {
-        return 1.0;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof BingMapsImageryProvider
-     */
     BingMapsImageryProvider.prototype.getLogo = function() {
         if (typeof BingMapsImageryProvider._logo === 'undefined') {
             var image = new Image();
