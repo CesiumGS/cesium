@@ -146,11 +146,12 @@ require([
     var transitioner = new Cesium.SceneTransitioner(scene2D);
     transitioner.to2D();
 
-    (function tick() {
+    function tick() {
         scene3D.render();
         scene2D.render();
         Cesium.requestAnimationFrame(tick);
-    }());
+    }
+    tick();
 
     // Resize handler
     var onResizeScene = function (canvas, scene) {
