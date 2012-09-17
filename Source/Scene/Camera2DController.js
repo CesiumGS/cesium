@@ -286,7 +286,8 @@ define([
             frustum.bottom = -frustum.top;
         }
 
-        this._camera.position = this._projection.project(cartographic);
+        //We use Cartesian2 instead of 3 here because Z must be constant in 2D mode.
+        Cartesian2.clone(this._projection.project(cartographic), this._camera.position);
     };
 
     /**
@@ -434,7 +435,7 @@ define([
     Camera2DController.prototype._translate = function(movement) {
         var frustum = this._camera.frustum;
 
-       if (frustum.left === null || frustum.right === null ||
+        if (frustum.left === null || frustum.right === null ||
            frustum.top === null || frustum.bottom === null) {
             throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
         }

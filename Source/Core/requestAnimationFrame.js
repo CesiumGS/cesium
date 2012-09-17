@@ -13,10 +13,11 @@ define(function() {
      * @example
      * // Create a draw loop using requestAnimationFrame. The
      * // tick callback function is called for every animation frame.
-     * (function tick() {
+     * function tick() {
      *   scene.render();
      *   requestAnimationFrame(tick);
-     * }());
+     * }
+     * tick();
      */
     var requestAnimationFrame = function(callback) {
         //delay the selection of the appropriate function until the first invocation

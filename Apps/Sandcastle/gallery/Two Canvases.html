@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Create two canvases on the same page for visualizing different scenes.">
     <title>Cesium Demo</title>
     <script>
     var Sandcastle = {};
@@ -145,11 +146,12 @@ require([
     var transitioner = new Cesium.SceneTransitioner(scene2D);
     transitioner.to2D();
 
-    (function tick() {
+    function tick() {
         scene3D.render();
         scene2D.render();
         Cesium.requestAnimationFrame(tick);
-    }());
+    }
+    tick();
 
     // Resize handler
     var onResizeScene = function (canvas, scene) {
@@ -162,9 +164,6 @@ require([
 
         canvas.width = width;
         canvas.height = height;
-
-        scene.getContext().setViewport(new Cesium.BoundingRectangle(0, 0, width, height));
-
         scene.getCamera().frustum.aspectRatio = width / height;
     };
     var onResize = function () {

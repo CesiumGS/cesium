@@ -50,7 +50,7 @@ define([
         cartographic.height = viewDistance;
         if (objectChanged || controllerChanged) {
             //TODO This is a hack around near plane issues until multi-frustum is in place.
-            camera.frustum.near = viewDistance;
+            camera.frustum.near = 1.0;
             //END HACK
 
             controller.setPositionCartographic(cartographic);

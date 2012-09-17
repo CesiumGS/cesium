@@ -19,6 +19,7 @@ define([
         '../../Core/Clock',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
+        '../../Core/Extent',
         '../../Core/AnimationController',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
@@ -34,6 +35,9 @@ define([
         '../../Core/Transforms',
         '../../Core/requestAnimationFrame',
         '../../Core/Color',
+        '../../Core/Matrix4',
+        '../../Core/Math',
+        '../../Scene/PerspectiveFrustum',
         '../../Scene/Material',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
@@ -68,6 +72,7 @@ define([
         Clock,
         ClockStep,
         ClockRange,
+        Extent,
         AnimationController,
         Ellipsoid,
         Iso8601,
@@ -83,6 +88,9 @@ define([
         Transforms,
         requestAnimationFrame,
         Color,
+        Matrix4,
+        CesiumMath,
+        PerspectiveFrustum,
         Material,
         Scene,
         CentralBody,
@@ -129,13 +137,6 @@ define([
          * @see CesiumViewerWidget#setStreamingImageryMapStyle
          */
         mapStyle : BingMapsStyle.AERIAL,
-        /**
-         * The default camera, which looks at the "home" view.
-         *
-         * @type {Camera}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        defaultCamera : undefined,
         /**
          * The URL for a daytime image on the globe.
          *
@@ -271,8 +272,6 @@ define([
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.scene.getContext().setViewport(new BoundingRectangle(0, 0, width, height));
-
             var frustum = this.scene.getCamera().frustum;
             if (typeof frustum.aspectRatio !== 'undefined') {
                 frustum.aspectRatio = width / height;
@@ -347,6 +346,14 @@ define([
          */
         onObjectRightClickSelected : undefined,
         /**
+         * Override this function to be notified when an object is left-double-clicked.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
+         */
+        onObjectLeftDoubleClickSelected : undefined,
+        /**
          * Override this function to be notified when an object hovered by the mouse.
          *
          * @function
@@ -355,62 +362,59 @@ define([
          */
         onObjectMousedOver : undefined,
         /**
-         * Override this function to be notified when the left mouse button is pressed down on an object.
+         * Override this function to be notified when the left mouse button is pressed down.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         * @param {Object} The object with the position of the mouse.
          */
         onLeftMouseDown : undefined,
         /**
-         * Override this function to be notified when the left mouse button is released from an object.
+         * Override this function to be notified when the left mouse button is released.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         * @param {Object} The object with the position of the mouse.
          */
         onLeftMouseUp : undefined,
         /**
-         * Override this function to be notified when the right mouse button is pressed down on an object.
+         * Override this function to be notified when the right mouse button is pressed down.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         * @param {Object} The object with the position of the mouse.
          */
         onRightMouseDown : undefined,
         /**
-         * Override this function to be notified when the right mouse button is released from an object.
+         * Override this function to be notified when the right mouse button is released.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {Object} selectedObject - The object, or <code>undefined</code> if none.
+         * @param {Object} The object with the position of the mouse.
          */
         onRightMouseUp : undefined,
         /**
-         * DOC_TBA
+         * Override this function to be notified when the left mouse button is dragged.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
+         * @param {Object} The object with the start and end position of the mouse.
          */
         onLeftDrag : undefined,
         /**
-         * DOC_TBA
+         * Override this function to be notified when the right mouse button is dragged or mouse wheel is zoomed.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
+         * @param {Object} The object with the start and end position of the mouse.
          */
         onZoom : undefined,
-        /**
-         * DOC_TBA
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         */
-        onCameraToggled : undefined,
+
+        _camera3D : undefined,
 
         _handleLeftClick : function(e) {
             if (typeof this.onObjectSelected !== 'undefined') {
-                // If the user left-clicks, we re-send the selection event, regardless if it's a duplicate,
+                // Fire the selection event, regardless if it's a duplicate,
                 // because the client may want to react to re-selection in some way.
                 this.selectedObject = this.scene.pick(e.position);
                 this.onObjectSelected(this.selectedObject);
@@ -419,10 +423,19 @@ define([
 
         _handleRightClick : function(e) {
             if (typeof this.onObjectRightClickSelected !== 'undefined') {
-                // If the user right-clicks, we re-send the selection event, regardless if it's a duplicate,
+                // Fire the selection event, regardless if it's a duplicate,
                 // because the client may want to react to re-selection in some way.
                 this.selectedObject = this.scene.pick(e.position);
                 this.onObjectRightClickSelected(this.selectedObject);
+            }
+        },
+
+        _handleLeftDoubleClick : function(e) {
+            if (typeof this.onObjectLeftDoubleClickSelected !== 'undefined') {
+                // Fire the selection event, regardless if it's a duplicate,
+                // because the client may want to react to re-selection in some way.
+                this.selectedObject = this.scene.pick(e.position);
+                this.onObjectLeftDoubleClickSelected(this.selectedObject);
             }
         },
 
@@ -592,6 +605,7 @@ define([
             var handler = new EventHandler(canvas);
             handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleRightClick'), MouseEventType.RIGHT_CLICK);
+            handler.setMouseAction(lang.hitch(this, '_handleLeftDoubleClick'), MouseEventType.LEFT_DOUBLE_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), MouseEventType.MOVE);
             handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), MouseEventType.LEFT_DOWN);
             handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), MouseEventType.LEFT_UP);
@@ -610,10 +624,13 @@ define([
                 this.highlightMaterial.uniforms.color = this.highlightColor;
             }
 
-            if (typeof this.onObjectRightClickSelected === 'undefined') {
-                this.onObjectRightClickSelected = this.centerCameraOnPick;
-            }
-
+            if (typeof this.onObjectLeftDoubleClickSelected === 'undefined') {
+                this.onObjectLeftDoubleClickSelected = function(selectedObject) {
+                    if (typeof selectedObject !== 'undefined' && typeof selectedObject.dynamicObject !== 'undefined') {
+                        this.centerCameraOnPick(selectedObject);
+                    }
+                };
+                                }
             if (this.enableDragDrop) {
                 var dropBox = this.cesiumNode;
                 on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));
@@ -741,14 +758,7 @@ define([
             });
 
             on(viewHomeButton, 'Click', function() {
-                view2D.set('checked', false);
-                view3D.set('checked', true);
-                viewColumbus.set('checked', false);
-                transitioner.morphTo3D();
-                widget._viewFromTo = undefined;
                 widget.viewHome();
-                widget.showSkyAtmosphere(true);
-                widget.showGroundAtmosphere(true);
             });
             on(view2D, 'Click', function() {
                 view2D.set('checked', true);
@@ -821,29 +831,65 @@ define([
                 });
             }
 
+            this._camera3D = this.scene.getCamera().clone();
+
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);
             }
-
-            this.defaultCamera = camera.clone();
         },
 
         /**
-         * Reset the camera to the home (default) view.
+         * Reset the camera to the home view for the current scene mode.
          * @function
          * @memberof CesiumViewerWidget.prototype
          */
         viewHome : function() {
-            var camera = this.scene.getCamera();
-            camera.position = this.defaultCamera.position;
-            camera.direction = this.defaultCamera.direction;
-            camera.up = this.defaultCamera.up;
-            camera.transform = this.defaultCamera.transform;
-            camera.frustum = this.defaultCamera.frustum.clone();
+            this._viewFromTo = undefined;
 
+            var scene = this.scene;
+            var mode = scene.mode;
+            var camera = scene.getCamera();
             var controllers = camera.getControllers();
             controllers.removeAll();
-            this.centralBodyCameraController = controllers.addCentralBody();
+
+            if (mode === SceneMode.SCENE2D) {
+                controllers.add2D(scene.scene2D.projection);
+                scene.viewExtent(Extent.MAX_VALUE);
+            } else if (mode === SceneMode.SCENE3D) {
+                this.centralBodyCameraController = controllers.addCentralBody();
+                var camera3D = this._camera3D;
+                camera3D.position.clone(camera.position);
+                camera3D.direction.clone(camera.direction);
+                camera3D.up.clone(camera.up);
+                camera3D.right.clone(camera.right);
+                camera3D.transform.clone(camera.transform);
+                camera3D.frustum.clone(camera.frustum);
+            } else if (mode === SceneMode.COLUMBUS_VIEW) {
+                var transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                            1.0, 0.0, 0.0, 0.0,
+                                            0.0, 1.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 1.0);
+
+                var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+                var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
+                var direction = Cartesian3.ZERO.subtract(position).normalize();
+                var right = direction.cross(Cartesian3.UNIT_Z).normalize();
+                var up = right.cross(direction);
+
+                var frustum = new PerspectiveFrustum();
+                frustum.fovy = CesiumMath.toRadians(60.0);
+                frustum.aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
+                frustum.near = 0.01 * maxRadii;
+                frustum.far = 60.0 * maxRadii;
+
+                camera.position = position;
+                camera.direction = direction;
+                camera.up = up;
+                camera.frustum = frustum;
+                camera.transform = transform;
+
+                controllers.addColumbusView();
+            }
         },
 
         /**
@@ -986,7 +1032,7 @@ define([
                         this._originalMaterial = selectedObject.outerMaterial;
                         selectedObject.outerMaterial = this.highlightMaterial;
                     } else {
-                        this._originalColor = selectedObject.getColor();
+                        this._originalColor = Color.clone(selectedObject.getColor(), this._originalColor);
                         selectedObject.setColor(this.highlightColor);
                     }
                 }

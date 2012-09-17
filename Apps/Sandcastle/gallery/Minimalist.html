@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="The simplest example for getting started with Cesium (uses static imagery).">
     <title>Cesium Demo</title>
     <script>
     var Sandcastle = {};
@@ -101,10 +102,11 @@ require([
         scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
     });
 
-    (function tick() {
+    function tick() {
         scene.render();
         Cesium.requestAnimationFrame(tick);
-    }());
+    }
+    tick();
 
     // Prevent right-click from opening a context menu.
     canvas.oncontextmenu = function () {
@@ -124,9 +126,6 @@ require([
 
         canvas.width = width;
         canvas.height = height;
-
-        scene.getContext().setViewport(new Cesium.BoundingRectangle(0, 0, width, height));
-
         scene.getCamera().frustum.aspectRatio = width / height;
     };
     window.addEventListener('resize', onResize, false);
