@@ -1342,7 +1342,7 @@ define([
             }
 
             // render quads to fill the poles
-            if (this._mode === SceneMode.SCENE3D) {
+            if (mode === SceneMode.SCENE3D) {
                 if (this._drawNorthPole) {
                     colorCommandList.push(this._northPoleCommand);
                 }
@@ -1363,7 +1363,9 @@ define([
                     this._projection);
 
             // render depth plane
-            colorCommandList.push(this._depthCommand);
+            if (mode === SceneMode.SCENE3D) {
+                colorCommandList.push(this._depthCommand);
+            }
         }
 
         if (pass.pick) {
