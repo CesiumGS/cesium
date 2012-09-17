@@ -1,1 +1,0 @@
-({"singleSort":"Enkelt sortering","indirectSelectionRadio":"Række ${0}, enkelt valg, valgknap","ascending":"Stigende","indirectSelectionCheckBox":"Række ${0}, flere valg, afkrydsningsfelt","selectAll":"Markér alle","descending":"Faldende","nestedSort":"Indlejret sortering","unsorted":"Sortér ikke denne kolonne","sortingState":"${0} - ${1}"})

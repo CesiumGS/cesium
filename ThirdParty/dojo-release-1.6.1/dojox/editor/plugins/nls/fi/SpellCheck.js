@@ -1,1 +1,0 @@
-({"cancel":"Peruuta","toDic":"Lisää sanastoon","skip":"Ohita","iMsg":"Ei oikeinkirjoitusehdotuksia","replaceAll":"Korvaa kaikki","widgetLabel":"Eräoikoluku","skipAll":"Ohita kaikki","suggestions":"Ehdotukset","iSkipAll":"Ohita kaikki samanlaiset","replaceWith":"Korvaava","msg":"Kirjoitusvirheitä ei löytynyt","replace":"Korvaa","unfound":"Ei löydy","iSkip":"Ohita tämä"})

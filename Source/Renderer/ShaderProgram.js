@@ -335,7 +335,7 @@ define([
                     } else if (typeof v.x !== 'undefined') {
                         _gl.uniform4f(_location, v.x, v.y, v.z, v.w);
                     } else {
-                        throw new DeveloperError('Invalid vec4 value.');
+                        throw new DeveloperError('Invalid vec4 value for uniform "' + activeUniform.name + '".');
                     }
                 };
             case _gl.SAMPLER_2D:
@@ -378,7 +378,7 @@ define([
                     _gl.uniformMatrix4fv(_location, false, Matrix4.toArray(this.value));
                 };
             default:
-                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type);
+                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + activeUniform.name + '".');
             }
         }();
 
@@ -599,7 +599,7 @@ define([
                     create : function(uniform) {
                         return {
                             _set : function(uniformState) {
-                                var v = uniformState.getContext().getViewport();
+                                var v = uniformState.getViewport();
                                 uniform.value = {
                                     x : v.x,
                                     y : v.y,

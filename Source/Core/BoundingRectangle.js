@@ -2,11 +2,13 @@
 define([
         './defaultValue',
         './DeveloperError',
+        './Cartographic',
         './EquidistantCylindricalProjection',
         './Intersect'
     ], function(
         defaultValue,
         DeveloperError,
+        Cartographic,
         EquidistantCylindricalProjection,
         Intersect) {
     "use strict";
@@ -98,6 +100,8 @@ define([
     };
 
     var defaultProjection = new EquidistantCylindricalProjection();
+    var fromExtentLowerLeft = new Cartographic();
+    var fromExtentUpperRight = new Cartographic();
     /**
      * Computes a bounding rectangle from an extent.
      * @memberof BoundingRectangle
@@ -122,8 +126,8 @@ define([
 
         projection = (typeof projection !== 'undefined') ? projection : defaultProjection;
 
-        var lowerLeft = projection.project(extent.getSouthwest());
-        var upperRight = projection.project(extent.getNortheast());
+        var lowerLeft = projection.project(extent.getSouthwest(fromExtentLowerLeft));
+        var upperRight = projection.project(extent.getNortheast(fromExtentUpperRight));
 
         upperRight.subtract(lowerLeft, upperRight);
 

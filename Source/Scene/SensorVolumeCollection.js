@@ -35,7 +35,6 @@ define([
      */
     var SensorVolumeCollection = function() {
         this._sensors = [];
-        this._renderList = [];
     };
 
     /**
@@ -159,71 +158,17 @@ define([
     /**
      * @private
      */
-    SensorVolumeCollection.prototype.update = function(context, frameState) {
+    SensorVolumeCollection.prototype.update = function(context, frameState, commandList) {
         var mode = frameState.mode;
         if (mode !== SceneMode.SCENE3D) {
-            return undefined;
+            return;
         }
 
         var sensors = this._sensors;
         var length = sensors.length;
-        var camera = frameState.camera;
-
-        for ( var i = 0; i < length; ++i) {
-            var sensor = sensors[i];
-            var spatialState = sensor.update(context, frameState);
-
-            if (typeof spatialState === 'undefined') {
-                continue;
-            }
-
-            var boundingVolume = spatialState.boundingVolume;
-            var modelMatrix = defaultValue(spatialState.modelMatrix, Matrix4.IDENTITY);
-
-            if (typeof boundingVolume !== 'undefined') {
-                var center = new Cartesian4(boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center.z, 1.0);
-                center = Cartesian3.fromCartesian4(modelMatrix.multiplyByVector(center));
-                boundingVolume = new BoundingSphere(center, boundingVolume.radius);
-
-                if (camera.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
-                    continue;
-                }
-
-                var occluder = frameState.occluder;
-                if (typeof occluder !== 'undefined' &&
-                        !occluder.isVisible(boundingVolume)) {
-                    continue;
-                }
-            }
-
-            this._renderList.push(sensor);
+        for (var i = 0; i < length; ++i) {
+            sensors[i].update(context, frameState, commandList);
         }
-
-        return {};
-    };
-
-    /**
-     * @private
-     */
-    SensorVolumeCollection.prototype.render = function(context) {
-        var sensors = this._renderList;
-        var length = sensors.length;
-        for ( var i = 0; i < length; ++i) {
-            sensors[i].render(context);
-        }
-        this._renderList.length = 0;
-    };
-
-    /**
-     * @private
-     */
-    SensorVolumeCollection.prototype.renderForPick = function(context, framebuffer) {
-        var sensors = this._renderList;
-        var length = sensors.length;
-        for ( var i = 0; i < length; ++i) {
-            sensors[i].renderForPick(context, framebuffer);
-        }
-        this._renderList.length = 0;
     };
 
     /**

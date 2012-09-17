@@ -1,1 +1,0 @@
-({"redLabel":"อาร์","valueLabel":"วี","hueLabel":"เอช","saturationLabel":"เอส","saturationPickerTitle":"ตัวเลือกความอิ่มของสี","huePickerTitle":"ตัวเลือกสี","greenLabel":"จี","blueLabel":"บี","hexLabel":"hex","degLabel":"°"})

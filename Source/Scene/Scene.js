@@ -1,34 +1,48 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/EquidistantCylindricalProjection',
         '../Core/Ellipsoid',
         '../Core/DeveloperError',
         '../Core/Occluder',
+        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/IntersectionTests',
         '../Renderer/Context',
+        '../Renderer/Command',
         './Camera',
         './CompositePrimitive',
         './AnimationCollection',
         './SceneMode',
-        './FrameState'
+        './FrameState',
+        './OrthographicFrustum',
+        './PerspectiveOffCenterFrustum'
     ], function(
         Color,
+        defaultValue,
         destroyObject,
         EquidistantCylindricalProjection,
         Ellipsoid,
         DeveloperError,
         Occluder,
+        BoundingRectangle,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
+        IntersectionTests,
         Context,
+        Command,
         Camera,
         CompositePrimitive,
         AnimationCollection,
         SceneMode,
-        FrameState) {
+        FrameState,
+        OrthographicFrustum,
+        PerspectiveOffCenterFrustum) {
     "use strict";
 
     /**
@@ -55,6 +69,8 @@ define([
         this._animations = new AnimationCollection();
 
         this._shaderFrameCount = 0;
+
+        this._commandList = [];
 
         /**
          * The current mode of the scene.
@@ -173,6 +189,7 @@ define([
     };
 
     function clearPasses(passes) {
+        passes.color = false;
         passes.pick = false;
     }
 
@@ -183,6 +200,7 @@ define([
         frameState.mode = scene.mode;
         frameState.scene2D = scene.scene2D;
         frameState.camera = camera;
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
         frameState.occluder = undefined;
 
         // TODO: The occluder is the top-level central body. When we add
@@ -197,42 +215,135 @@ define([
         clearPasses(frameState.passes);
     }
 
-    Scene.prototype._update = function() {
-        var us = this.getUniformState();
-        var camera = this._camera;
+    function update(scene) {
+        var us = scene.getUniformState();
+        var camera = scene._camera;
 
         // Destroy released shaders once every 120 frames to avoid thrashing the cache
-        if (this._shaderFrameCount++ === 120) {
-            this._shaderFrameCount = 0;
-            this._context.getShaderCache().destroyReleasedShaderPrograms();
+        if (scene._shaderFrameCount++ === 120) {
+            scene._shaderFrameCount = 0;
+            scene._context.getShaderCache().destroyReleasedShaderPrograms();
         }
 
-        this._animations.update();
+        scene._animations.update();
         camera.update();
+        us.setView(camera.getViewMatrix());
         us.setProjection(camera.frustum.getProjectionMatrix());
         if (camera.frustum.getInfiniteProjectionMatrix) {
             us.setInfiniteProjection(camera.frustum.getInfiniteProjectionMatrix());
         }
-        us.setView(camera.getViewMatrix());
 
-        if (this._animate) {
-            this._animate();
+        if (scene._animate) {
+            scene._animate();
         }
 
-        updateFrameState(this);
-        this._primitives.update(this._context, this._frameState);
-    };
+        updateFrameState(scene);
+        scene._frameState.passes.color = true;
+
+        scene._commandList.length = 0;
+        scene._primitives.update(scene._context, scene._frameState, scene._commandList);
+    }
 
     /**
      * DOC_TBA
      * @memberof Scene
      */
     Scene.prototype.render = function() {
-        this._update();
+        update(this);
+        var commandLists = this._commandList;
 
-        this._context.clear(this._clearState);
-        this._primitives.render(this._context);
+        var context = this._context;
+        context.clear(this._clearState);
+
+        var length = commandLists.length;
+        for (var i = 0; i < length; ++i) {
+            var commandList = commandLists[i].colorList;
+            var commandListLength = commandList.length;
+            for (var j = 0; j < commandListLength; ++j) {
+                var command = commandList[j];
+                context.draw(command);
+            }
+        }
     };
+
+    var orthoPickingFrustum = new OrthographicFrustum();
+    function getPickOrthographicCullingVolume(scene, windowPosition, width, height) {
+        var canvas = scene._canvas;
+        var camera = scene._camera;
+        var frustum = camera.frustum;
+
+        var canvasWidth = canvas.clientWidth;
+        var canvasHeight = canvas.clientHeight;
+
+        var x = (2.0 / canvasWidth) * windowPosition.x - 1.0;
+        x *= (frustum.right - frustum.left) * 0.5;
+        var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
+        y *= (frustum.top - frustum.bottom) * 0.5;
+
+        var position = camera.position.clone();
+        position.x += x;
+        position.y += y;
+
+        var pixelSize = frustum.getPixelSize(new Cartesian2(canvasWidth, canvasHeight));
+
+        var ortho = orthoPickingFrustum;
+        ortho.right = pixelSize.x * 0.5;
+        ortho.left = -ortho.right;
+        ortho.top = pixelSize.y * 0.5;
+        ortho.bottom = -ortho.top;
+        ortho.near = frustum.near;
+        ortho.far = frustum.far;
+
+        return ortho.computeCullingVolume(position, camera.direction, camera.up);
+    }
+
+    var perspPickingFrustum = new PerspectiveOffCenterFrustum();
+    function getPickPerspectiveCullingVolume(scene, windowPosition, width, height) {
+        var canvas = scene._canvas;
+        var camera = scene._camera;
+        var frustum = camera.frustum;
+        var near = frustum.near;
+
+        var canvasWidth = canvas.clientWidth;
+        var canvasHeight = canvas.clientHeight;
+
+        var tanPhi = Math.tan(frustum.fovy * 0.5);
+        var tanTheta = frustum.aspectRatio * tanPhi;
+
+        var x = (2.0 / canvasWidth) * windowPosition.x - 1.0;
+        var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
+
+        var xDir = x * near * tanTheta;
+        var yDir = y * near * tanPhi;
+
+        var pixelSize = frustum.getPixelSize(new Cartesian2(canvasWidth, canvasHeight));
+        var pickWidth = pixelSize.x * width * 0.5;
+        var pickHeight = pixelSize.y * height * 0.5;
+
+        var offCenter = perspPickingFrustum;
+        offCenter.top = yDir + pickHeight;
+        offCenter.bottom = yDir - pickHeight;
+        offCenter.right = xDir + pickWidth;
+        offCenter.left = xDir - pickWidth;
+        offCenter.near = frustum.near;
+        offCenter.far = frustum.far;
+
+        return offCenter.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+    }
+
+    function getPickCullingVolume(scene, windowPosition, width, height) {
+        if (scene.mode === SceneMode.SCENE2D) {
+            return getPickOrthographicCullingVolume(scene, windowPosition, width, height);
+        }
+
+        return getPickPerspectiveCullingVolume(scene, windowPosition, width, height);
+    }
+
+    // pick rectangle width and height, assumed odd
+    var rectangleWidth = 3.0;
+    var rectangleHeight = 3.0;
+    var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
+    var scratchPickCommand = new Command();
 
     /**
      * DOC_TBA
@@ -247,15 +358,27 @@ define([
         var fb = this._pickFramebuffer.begin();
 
         updateFrameState(this);
+        frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
-        primitives.update(context, frameState);
-        primitives.renderForPick(context, fb);
+        var commandLists = this._commandList;
+        commandLists.length = 0;
+        primitives.update(context, frameState, commandLists);
 
-        return this._pickFramebuffer.end({
-            x : windowPosition.x,
-            y : (this._canvas.clientHeight - windowPosition.y)
-        });
+        var length = commandLists.length;
+        for (var i = 0; i < length; ++i) {
+            var commandList = commandLists[i].pickList;
+            var commandListLength = commandList.length;
+            for (var j = 0; j < commandListLength; ++j) {
+                var command = Command.cloneDrawArguments(commandList[j], scratchPickCommand);
+                command.framebuffer = defaultValue(command.framebuffer, fb);
+                context.draw(command);
+            }
+        }
+
+        scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
+        scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+        return this._pickFramebuffer.end(scratchRectangle);
     };
 
     /**

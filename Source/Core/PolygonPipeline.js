@@ -4,6 +4,7 @@ define([
         './Math',
         './Cartesian2',
         './Cartesian3',
+        './Ellipsoid',
         './EllipsoidTangentPlane',
         './defaultValue',
         './pointInsideTriangle2D',
@@ -16,6 +17,7 @@ define([
         CesiumMath,
         Cartesian2,
         Cartesian3,
+        Ellipsoid,
         EllipsoidTangentPlane,
         defaultValue,
         pointInsideTriangle2D,
@@ -301,7 +303,7 @@ define([
      *
      * @private
      */
-    function eliminateHole(outerRing, innerRings) {
+    function eliminateHole(outerRing, innerRings, ellipsoid) {
         // Check that the holes are defined in the winding order opposite that of the outer ring.
         var windingOrder = PolygonPipeline.computeWindingOrder2D(outerRing);
         for ( var i = 0; i < innerRings.length; i++) {
@@ -319,7 +321,7 @@ define([
         }
 
         // Project points onto a tangent plane to find the mutually visible vertex.
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
         var tangentOuterRing = tangentPlane.projectPointsOntoPlane(outerRing);
         var tangentInnerRings = [];
         for (i = 0; i < innerRings.length; i++) {
@@ -708,10 +710,8 @@ define([
          *
          * @exception {DeveloperError} ellipsoid is required.
          */
-        scaleToGeodeticHeight : function(ellipsoid, mesh, height) {
-            if (!ellipsoid) {
-                throw new DeveloperError('ellipsoid is required.');
-            }
+        scaleToGeodeticHeight : function(mesh, height, ellipsoid) {
+            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
             var n = scaleToGeodeticHeightN;
             var p = scaleToGeodeticHeightP;
@@ -759,7 +759,7 @@ define([
          * outerRing = PolygonPipeline.eliminateHoles(outerRing, innerRings);
          * polygon.setPositions(outerRing);
          */
-        eliminateHoles : function(outerRing, innerRings) {
+        eliminateHoles : function(outerRing, innerRings, ellipsoid) {
             if (typeof outerRing === 'undefined') {
                 throw new DeveloperError('outerRing is required.');
             }
@@ -769,6 +769,7 @@ define([
             if (typeof innerRings === 'undefined') {
                 throw new DeveloperError('innerRings is required.');
             }
+            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
             var innerRingsCopy = [];
             for ( var i = 0; i < innerRings.length; i++) {
@@ -781,7 +782,7 @@ define([
 
             var newPolygonVertices = outerRing;
             while (innerRingsCopy.length > 0) {
-                newPolygonVertices = eliminateHole(newPolygonVertices, innerRingsCopy);
+                newPolygonVertices = eliminateHole(newPolygonVertices, innerRingsCopy, ellipsoid);
             }
             return newPolygonVertices;
         }

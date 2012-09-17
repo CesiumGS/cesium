@@ -13,6 +13,8 @@ define([
         '../Core/BoxTessellator',
         '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
+        '../Renderer/Command',
+        '../Renderer/CommandLists',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         './Material',
@@ -37,6 +39,8 @@ define([
         BoxTessellator,
         BoundingSphere,
         BufferUsage,
+        Command,
+        CommandLists,
         CullFace,
         BlendingState,
         Material,
@@ -64,14 +68,14 @@ define([
     var ComplexConicSensorVolume = function(template) {
         var t = template || {};
 
-        this._va = undefined;
-        this._sp = undefined;
-        this._rs = undefined;
-
-        this._spPick = undefined;
         this._pickId = undefined;
 
-        this._boundingVolume = undefined;
+        this._colorCommand = new Command();
+        this._pickCommand = new Command();
+        this._commandLists = new CommandLists();
+
+        this._colorCommand.primitiveType = this._pickCommand.primitiveType = PrimitiveType.TRIANGLES;
+        this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new BoundingSphere();
 
         /**
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
@@ -81,9 +85,11 @@ define([
         this.show = (typeof t.show === 'undefined') ? true : t.show;
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.  The default is <code>true</code>.
          *
          * @type Boolean
+         *
+         * @see ComplexConicSensorVolume#intersectionColor
          */
         this.showIntersection = (typeof t.showIntersection === 'undefined') ? true : t.showIntersection;
 
@@ -196,9 +202,13 @@ define([
         this._silhouetteMaterial = undefined;
 
         /**
-         * DOC_TBA
+         * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
+         *
+         * @type Color
+         *
+         * @see ComplexConicSensorVolume#showIntersection
          */
-        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : new Color(1.0, 1.0, 0.0, 1.0);
+        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : Color.clone(Color.WHITE);
 
         /**
          * <p>
@@ -250,8 +260,6 @@ define([
                 return that.erosion;
             }
         };
-        this._drawUniforms = null;
-        this._pickUniforms = null;
         this._mode = SceneMode.SCENE3D;
     };
 
@@ -299,7 +307,7 @@ define([
                 }]
             };
 
-            this._boundingVolume = BoundingSphere.fromPoints(positions);
+            BoundingSphere.fromPoints(positions, this._colorCommand.boundingVolume);
         } else if (this.outerHalfAngle <= CesiumMath.toRadians(90.0)) {
          // Bound sensor with box in the +z half-space
             minimumCorner = new Cartesian3(-r, -r, 0.0);
@@ -310,7 +318,7 @@ define([
                 maximumCorner : maximumCorner
             });
 
-            this._boundingVolume = BoundingSphere.fromPoints([minimumCorner, maximumCorner]);
+            BoundingSphere.fromPoints([minimumCorner, maximumCorner], this._colorCommand.boundingVolume);
         } else {
             // Bound sensor with box
             minimumCorner = new Cartesian3(-r, -r, -r);
@@ -321,7 +329,7 @@ define([
                 maximumCorner : maximumCorner
             });
 
-            this._boundingVolume = BoundingSphere.fromPoints([minimumCorner, maximumCorner]);
+            BoundingSphere.fromPoints([minimumCorner, maximumCorner], this._colorCommand.boundingVolume);
         }
 
         return mesh;
@@ -374,14 +382,10 @@ define([
      * @exception {DeveloperError} this.innerHalfAngle cannot be greater than this.outerHalfAngle.
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
-    ComplexConicSensorVolume.prototype.update = function(context, frameState) {
+    ComplexConicSensorVolume.prototype.update = function(context, frameState, commandList) {
         this._mode = frameState.mode;
-        if (this._mode !== SceneMode.SCENE3D) {
-            return undefined;
-        }
-
-        if (!this.show) {
-            return undefined;
+        if (!this.show || this._mode !== SceneMode.SCENE3D) {
+            return;
         }
 
         if (this.innerHalfAngle > this.outerHalfAngle) {
@@ -397,116 +401,98 @@ define([
             this._outerHalfAngle = this.outerHalfAngle;
             this._radius = this.radius;
 
-            this._va = context.createVertexArrayFromMesh({
+            this._colorCommand.vertexArray = this._pickCommand.vertexArray = context.createVertexArrayFromMesh({
                 mesh : this._getBoundingVolume(),
                 attributeIndices : attributeIndices,
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
         }
 
-        // Recompile shader when material changes
-        if ((!this._outerMaterial || (this._outerMaterial !== this.outerMaterial)) ||
-            (!this._innerMaterial || (this._innerMaterial !== this.innerMaterial)) ||
-            (!this._capMaterial || (this._capMaterial !== this.capMaterial)) ||
-            (!this._silhouetteMaterial || (this._silhouetteMaterial !== this.silhouetteMaterial)) ||
-            this._affectedByLighting !== this.affectedByLighting) {
-
-            this._outerMaterial = (typeof this.outerMaterial !== 'undefined') ? this.outerMaterial : Material.fromType(context, Material.ColorType);
-            this._innerMaterial = (typeof this.innerMaterial !== 'undefined') ? this.innerMaterial : Material.fromType(context, Material.ColorType);
-            this._capMaterial = (typeof this.capMaterial !== 'undefined') ? this.capMaterial : Material.fromType(context, Material.ColorType);
-            this._silhouetteMaterial = (typeof this.silhouetteMaterial !== 'undefined') ? this.silhouetteMaterial : Material.fromType(context, Material.ColorType);
-            this._affectedByLighting = this.affectedByLighting;
-
-            var material = this._combineMaterials();
-            this._drawUniforms = combine([this._uniforms, material._uniforms], false, false);
-
-            var fsSource =
-                '#line 0\n' +
-                ShadersNoise +
-                '#line 0\n' +
-                ShadersRay +
-                '#line 0\n' +
-                ShadersConstructiveSolidGeometry +
-                '#line 0\n' +
-                ShadersSensorVolume +
-                '#line 0\n' +
-                material.shaderSource +
-                (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
-                '#line 0\n' +
-                ComplexConicSensorVolumeFS;
-
-            this._sp = this._sp && this._sp.release();
-            this._sp = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
+        if (typeof this._colorCommand.renderState === 'undefined') {
+            this._colorCommand.renderState = this._pickCommand.renderState = context.createRenderState({
+                cull : {
+                    enabled : true,
+                    face : CullFace.FRONT
+                },
+                blending : BlendingState.ALPHA_BLEND
+               // Does not read or write depth
+            });
         }
 
-        // Initial render state creation
-        this._rs = this._rs || context.createRenderState({
-            cull : {
-                enabled : true,
-                face : CullFace.FRONT
-            },
-            blending : BlendingState.ALPHA_BLEND
-            // Does not read or write depth
-        });
+        var pass = frameState.passes;
+        this._colorCommand.modelMatrix = this._colorCommand.modelMatrix = this.modelMatrix;
 
-        if (frameState.passes.pick && typeof this._pickId === 'undefined') {
-            // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
-            var fsPickSource =
-                '#define RENDER_FOR_PICK 1\n' +
-                '#line 0\n' +
-                ShadersRay +
-                '#line 0\n' +
-                ShadersConstructiveSolidGeometry +
-                '#line 0\n' +
-                ShadersSensorVolume +
-                '#line 0\n' +
-                ComplexConicSensorVolumeFS;
+        this._commandLists.removeAll();
+        if (pass.color) {
+            var outerChanged = typeof this._outerMaterial === 'undefined' || this._outerMaterial !== this.outerMaterial;
+            var innerChanged = typeof this._innerMaterial === 'undefined' || this._innerMaterial !== this.innerMaterial;
+            var capChanged = typeof this._capMaterial === 'undefined' || this._capMaterial !== this.capMaterial;
+            var silhouetteChanged = typeof this._silhouetteMaterial === 'undefined' || this._silhouetteMaterial !== this.silhouetteMaterial;
+            var affectedByLightingChanged = this._affectedByLighting !== this.affectedByLighting;
+            var materialChanged = outerChanged || innerChanged || capChanged || silhouetteChanged || affectedByLightingChanged;
 
-            this._spPick = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsPickSource, attributeIndices);
-            this._pickId = context.createPickId(this);
+            if (materialChanged) {
+                this._outerMaterial = (typeof this.outerMaterial !== 'undefined') ? this.outerMaterial : Material.fromType(context, Material.ColorType);
+                this._innerMaterial = (typeof this.innerMaterial !== 'undefined') ? this.innerMaterial : Material.fromType(context, Material.ColorType);
+                this._capMaterial = (typeof this.capMaterial !== 'undefined') ? this.capMaterial : Material.fromType(context, Material.ColorType);
+                this._silhouetteMaterial = (typeof this.silhouetteMaterial !== 'undefined') ? this.silhouetteMaterial : Material.fromType(context, Material.ColorType);
+                this._affectedByLighting = this.affectedByLighting;
 
-            var that = this;
+                var material = this._combineMaterials();
+                this._colorCommand.uniformMap = combine([this._uniforms, material._uniforms], false, false);
 
-            this._pickUniforms = combine([this._uniforms, {
-                u_pickColor : function() {
-                    return that._pickId.normalizedRgba;
-                }
-            }], false, false);
+                var fsSource =
+                    '#line 0\n' +
+                    ShadersNoise +
+                    '#line 0\n' +
+                    ShadersRay +
+                    '#line 0\n' +
+                    ShadersConstructiveSolidGeometry +
+                    '#line 0\n' +
+                    ShadersSensorVolume +
+                    '#line 0\n' +
+                    material.shaderSource +
+                    (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                    '#line 0\n' +
+                    ComplexConicSensorVolumeFS;
+
+                this._colorCommand.shaderProgram = this._colorCommand.shaderProgram && this._colorCommand.shaderProgram.release();
+                this._colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsSource, attributeIndices);
+            }
+
+            this._commandLists.colorList.push(this._colorCommand);
+        }
+        if (pass.pick) {
+            if (typeof this._pickId === 'undefined') {
+                // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
+                var fsPickSource =
+                    '#define RENDER_FOR_PICK 1\n' +
+                    '#line 0\n' +
+                    ShadersRay +
+                    '#line 0\n' +
+                    ShadersConstructiveSolidGeometry +
+                    '#line 0\n' +
+                    ShadersSensorVolume +
+                    '#line 0\n' +
+                    ComplexConicSensorVolumeFS;
+
+                this._pickCommand.shaderProgram = context.getShaderCache().getShaderProgram(ComplexConicSensorVolumeVS, fsPickSource, attributeIndices);
+                this._pickId = context.createPickId(this);
+
+                var that = this;
+                this._pickCommand.uniformMap = combine([this._uniforms, {
+                    u_pickColor : function() {
+                        return that._pickId.normalizedRgba;
+                    }
+                }], false, false);
+            }
+
+            this._commandLists.pickList.push(this._pickCommand);
         }
 
-        return {
-            boundingVolume : this._boundingVolume,
-            modelMatrix : this.modelMatrix
-        };
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ComplexConicSensorVolume
-     */
-    ComplexConicSensorVolume.prototype.render = function(context) {
-        context.draw({
-            primitiveType : PrimitiveType.TRIANGLES,
-            shaderProgram : this._sp,
-            uniformMap : this._drawUniforms,
-            vertexArray : this._va,
-            renderState : this._rs
-        });
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ComplexConicSensorVolume
-     */
-    ComplexConicSensorVolume.prototype.renderForPick = function(context, framebuffer) {
-        context.draw({
-            primitiveType : PrimitiveType.TRIANGLES,
-            shaderProgram : this._spPick,
-            uniformMap : this._pickUniforms,
-            vertexArray : this._va,
-            renderState : this._rs,
-            framebuffer : framebuffer
-        });
+        if (!this._commandLists.empty()) {
+            commandList.push(this._commandLists);
+        }
     };
 
     /**
@@ -522,9 +508,9 @@ define([
      * @memberof ComplexConicSensorVolume
      */
     ComplexConicSensorVolume.prototype.destroy = function() {
-        this._va = this._va && this._va.destroy();
-        this._sp = this._sp && this._sp.release();
-        this._spPick = this._spPick && this._spPick.release();
+        this._colorCommand.vertexArray = this._colorCommand.vertexArray && this._colorCommand.vertexArray.destroy();
+        this._colorCommand.shaderProgram = this._colorCommand.shaderProgram && this._colorCommand.shaderProgram.release();
+        this._pickCommand.shaderProgram = this._pickCommand.shaderProgram && this._pickCommand.shaderProgram.release();
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };

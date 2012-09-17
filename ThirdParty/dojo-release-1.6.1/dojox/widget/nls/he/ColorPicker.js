@@ -1,1 +1,0 @@
-({"saturationPickerTitle":"בורר רוויה","valueLabel":"ע","blueLabel":"כ","saturationLabel":"ר","greenLabel":"י","redLabel":"א","hueLabel":"ג","hexLabel":"הקס","huePickerTitle":"בורר גוון","degLabel":"°"})

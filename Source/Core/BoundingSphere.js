@@ -3,18 +3,24 @@ define([
         './defaultValue',
         './DeveloperError',
         './Cartesian3',
+        './Cartesian4',
+        './Cartographic',
         './Ellipsoid',
         './EquidistantCylindricalProjection',
         './Extent',
-        './Intersect'
+        './Intersect',
+        './Matrix4'
     ], function(
         defaultValue,
         DeveloperError,
         Cartesian3,
+        Cartesian4,
+        Cartographic,
         Ellipsoid,
         EquidistantCylindricalProjection,
         Extent,
-        Intersect) {
+        Intersect,
+        Matrix4) {
     "use strict";
 
     /**
@@ -201,6 +207,8 @@ define([
     };
 
     var defaultProjection = new EquidistantCylindricalProjection();
+    var fromExtent2DLowerLeft = new Cartographic();
+    var fromExtent2DUpperRight = new Cartographic();
     /**
      * Computes a bounding sphere from an extent projected in 2D.
      * @memberof BoundingSphere
@@ -223,8 +231,8 @@ define([
 
         projection = (typeof projection !== 'undefined') ? projection : defaultProjection;
 
-        var lowerLeft = projection.project(extent.getSouthwest());
-        var upperRight = projection.project(extent.getNortheast());
+        var lowerLeft = projection.project(extent.getSouthwest(fromExtent2DLowerLeft));
+        var upperRight = projection.project(extent.getNortheast(fromExtent2DUpperRight));
 
         var width = upperRight.x - lowerLeft.x;
         var height = upperRight.y - lowerLeft.y;
@@ -237,6 +245,7 @@ define([
         return result;
     };
 
+    var fromExtent3DScratch = [];
     /**
      * Computes a bounding sphere from an extent in 3D. The bounding sphere is created using a subsample of points
      * on the ellipsoid and contained in the extent. It may not be accurate for all extents on all types of ellipsoids.
@@ -249,7 +258,7 @@ define([
      */
     BoundingSphere.fromExtent3D = function(extent, ellipsoid, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var positions = typeof extent !== 'undefined' ? extent.subsample(ellipsoid) : undefined;
+        var positions = typeof extent !== 'undefined' ? extent.subsample(ellipsoid, fromExtent3DScratch) : undefined;
         return BoundingSphere.fromPoints(positions, result);
     };
 
@@ -385,6 +394,43 @@ define([
         return Intersect.INSIDE;
     };
 
+    var transformCart4 = Cartesian4.UNIT_W.clone();
+    /**
+     * Applies a 4x4 affine transformation matrix to a bounding sphere.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.
+     * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} sphere is required.
+     * @exception {DeveloperError} transform is required.
+     */
+    BoundingSphere.transform = function(sphere, transform, result) {
+        if (typeof sphere === 'undefined') {
+            throw new DeveloperError('sphere is required.');
+        }
+
+        if (typeof transform === 'undefined') {
+            throw new DeveloperError('transform is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new BoundingSphere();
+        }
+
+        var center = sphere.center;
+        transformCart4.x = center.x;
+        transformCart4.y = center.y;
+        transformCart4.z = center.z;
+        Matrix4.multiplyByVector(transform, transformCart4, transformCart4);
+
+        Cartesian3.clone(transformCart4, result.center);
+        result.radius = sphere.radius;
+        return result;
+    };
+
     /**
      * Compares the provided BoundingSphere componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -455,6 +501,20 @@ define([
      */
     BoundingSphere.prototype.intersect = function(plane) {
         return BoundingSphere.intersect(this, plane);
+    };
+
+    /**
+     * Applies a 4x4 affine transformation matrix to this bounding sphere.
+     * @memberof BoundingSphere
+     *
+     * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} transform is required.
+     */
+    BoundingSphere.prototype.transform = function(transform, result) {
+        return BoundingSphere.transform(this, transform, result);
     };
 
     /**
