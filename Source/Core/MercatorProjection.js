@@ -21,11 +21,9 @@ define([
     var MercatorProjection = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
-        var radii = ellipsoid.getRadii();
-
         this._ellipsoid = ellipsoid;
-        this._halfEquatorCircumference = Math.PI * (Math.max(radii.x, radii.y));
-        this._quarterPolarCircumference = 0.5 * Math.PI * radii.z;
+        this._semimajorAxis = ellipsoid.getMaximumRadius();
+        this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
     };
 
     /**
@@ -41,12 +39,11 @@ define([
      * @memberof MercatorProjection
      */
     MercatorProjection.prototype.project = function(cartographic) {
-        // Scale to [-1, 1]
-        var lon = cartographic.longitude / Math.PI;
-        var lat = cartographic.latitude / CesiumMath.PI_OVER_TWO;
-
         // TODO: Deal with latitude outside ~(-85, 85) degrees
-        return new Cartesian3(lon * this._halfEquatorCircumference, Math.log((1.0 + Math.sin(lat)) / Math.cos(lat)) * this._quarterPolarCircumference, cartographic.height);
+        var semimajorAxis = this._semimajorAxis;
+        return new Cartesian3(cartographic.longitude * semimajorAxis,
+                              Math.log(Math.tan((CesiumMath.PI_OVER_TWO + cartographic.latitude) * 0.5)) * semimajorAxis,
+                              cartographic.height);
     };
 
     /**
@@ -54,12 +51,10 @@ define([
      * @memberof MercatorProjection
      */
     MercatorProjection.prototype.unproject = function(cartesian) {
-        var lon = cartesian.x / this._halfEquatorCircumference;
-
-        var lat = Math.exp(cartesian.y / this._quarterPolarCircumference);
-        lat = 2.0 * Math.atan((lat - 1.0) / (lat + 1.0));
-
-        return new Cartographic(lon * Math.PI, lat * CesiumMath.PI_OVER_TWO, cartesian.z);
+        var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
+        var longitude = cartesian.x * oneOverEarthSemimajorAxis;
+        var latitude = CesiumMath.PI_OVER_TWO - (2.0 * Math.atan(Math.exp(-cartesian.y * oneOverEarthSemimajorAxis)));
+        return new Cartographic(longitude, latitude, cartesian.z);
     };
 
     return MercatorProjection;

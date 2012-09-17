@@ -16,6 +16,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/BoundingRectangle',
         '../Core/CubeMapEllipsoidTessellator',
+        '../Core/MercatorProjection',
         '../Core/MeshFilters',
         '../Core/Queue',
         './GeographicTilingScheme',
@@ -46,6 +47,7 @@ define([
         PrimitiveType,
         BoundingRectangle,
         CubeMapEllipsoidTessellator,
+        MercatorProjection,
         MeshFilters,
         Queue,
         GeographicTilingScheme,
@@ -371,6 +373,21 @@ define([
         u_dayIntensity : function() {
             return 0.2;
         },
+        u_southLatitude : function() {
+            return this.southLatitude;
+        },
+        u_northLatitude : function() {
+            return this.northLatitude;
+        },
+        u_southMercatorYLow : function() {
+            return this.southMercatorYLow;
+        },
+        u_southMercatorYHigh : function() {
+            return this.southMercatorYHigh;
+        },
+        u_oneOverMercatorHeight : function() {
+            return this.oneOverMercatorHeight;
+        },
 
         center3D : undefined,
         modifiedModelView : undefined,
@@ -380,12 +397,20 @@ define([
         dayTextures : [],
         dayTextureTranslationAndScale : [],
         dayTextureTexCoordsExtent : [],
-        dayTextureAlpha : []
+        dayTextureAlpha : [],
+
+        southLatitude : 0.0,
+        northLatitude : 0.0,
+        southMercatorYLow : 0.0,
+        southMercatorYHigh : 0.0,
+        oneOverMercatorHeight : 0.0
     };
 
     var tileDistanceSortFunction = function(a, b) {
         return a.distance - b.distance;
     };
+
+    var float32ArrayScratch = new Float32Array(1);
 
     EllipsoidSurface.prototype.render = function(context, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
@@ -396,7 +421,6 @@ define([
         var uniformState = context.getUniformState();
         var mv = uniformState.getModelView();
         var projectionMatrix = uniformState.getProjection();
-        var ellipsoid = this._tilingScheme.ellipsoid;
 
         var uniformMap = combine([uniformMapTemplate, centralBodyUniformMap], false, false);
 
@@ -446,6 +470,23 @@ define([
                     }
 
                     uniformMap.tileExtent = tileExtent;
+
+                    if (projection instanceof MercatorProjection) {
+                        uniformMap.southLatitude = tile.extent.south;
+                        uniformMap.northLatitude = tile.extent.north;
+
+                        var sinLatitude = Math.sin(tile.extent.south);
+                        var southMercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+
+                        sinLatitude = Math.sin(tile.extent.north);
+                        var northMercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+
+                        float32ArrayScratch[0] = southMercatorY;
+                        uniformMap.southMercatorYHigh = float32ArrayScratch[0];
+                        uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
+
+                        uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+                    }
                 }
 
                 var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));

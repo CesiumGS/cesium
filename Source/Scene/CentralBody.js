@@ -17,6 +17,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/EquidistantCylindricalProjection',
         '../Core/Matrix3',
         '../Core/ComponentDatatype',
         '../Core/MeshFilters',
@@ -62,6 +63,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        EquidistantCylindricalProjection,
         Matrix3,
         ComponentDatatype,
         MeshFilters,
@@ -1177,10 +1179,11 @@ define([
         var cloudShadowsChanged = ((this._showCloudShadows !== this.showCloudShadows) && (!this.showCloudShadows || this._cloudsTexture));
         var specularChanged = ((this._showSpecular !== this.showSpecular) && (!this.showSpecular || this._specularTexture));
         var bumpsChanged = ((this._showBumps !== this.showBumps) && (!this.showBumps || this._bumpTexture));
+        var projectionChanged = this._projection !== projection;
 
         if (typeof this._activeSurfaceShaderSet === 'undefined' ||
             typeof this._spPoles === 'undefined' ||
-            modeChanged || dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged ||
+            modeChanged || projectionChanged || dayChanged || nightChanged || cloudsChanged || cloudShadowsChanged || specularChanged || bumpsChanged ||
             this._showTerminator !== this.showTerminator ||
             this._affectedByLighting !== this.affectedByLighting) {
 
@@ -1196,7 +1199,8 @@ define([
                 CentralBodyFSCommon;
 
             var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
-            var getPosition2DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DMode(position3DWC); }';
+            var getPosition2DGeographicMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DGeographicMode(position3DWC); }';
+            var getPosition2DWebMercatorMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DWebMercatorMode(position3DWC); }';
             var getPositionColumbusViewMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionColumbusViewMode(position3DWC); }';
             var getPositionMorphingMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionMorphingMode(position3DWC); }';
 
@@ -1207,7 +1211,11 @@ define([
                     getPositionMode = getPosition3DMode;
                     break;
                 case SceneMode.SCENE2D:
-                    getPositionMode = getPosition2DMode;
+                    if (projection instanceof EquidistantCylindricalProjection) {
+                        getPositionMode = getPosition2DGeographicMode;
+                    } else {
+                        getPositionMode = getPosition2DWebMercatorMode;
+                    }
                     break;
                 case SceneMode.COLUMBUS_VIEW:
                     getPositionMode = getPositionColumbusViewMode;

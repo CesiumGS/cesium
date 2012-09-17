@@ -12,6 +12,7 @@ define([
         '../Core/TaskProcessor',
         './TerrainProvider',
         './TileState',
+        './GeographicTilingScheme',
         './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
@@ -27,6 +28,7 @@ define([
         TaskProcessor,
         TerrainProvider,
         TileState,
+        GeographicTilingScheme,
         WebMercatorTilingScheme,
         when) {
     "use strict";
@@ -51,6 +53,7 @@ define([
          * @type TilingScheme
          */
         this.tilingScheme = defaultValue(tilingScheme, new WebMercatorTilingScheme());
+        //this.tilingScheme = defaultValue(tilingScheme, new GeographicTilingScheme());
 
         // Note: the 64 below does NOT need to match the actual vertex dimensions.
         this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, 64, this.tilingScheme.numberOfLevelZeroTilesX);
