@@ -269,6 +269,7 @@ define([
 
         this._depthCommand = new Command();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
+        this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
 
         this._quadH = undefined;
         this._quadV = undefined;
@@ -1773,8 +1774,7 @@ define([
             }
         }
 
-        // TODO: Wait until multi-frustum
-        //this._rsColor.depthTest.enabled = (mode === SceneMode.MORPHING);  // Depth test during morph
+        this._rsColor.depthTest.enabled = (mode === SceneMode.MORPHING);  // Depth test during morph
         var cull = (mode === SceneMode.SCENE3D) || (mode === SceneMode.MORPHING);
         this._rsColor.cull.enabled = cull;
         this._depthCommand.renderState.cull.enabled = cull;
@@ -2121,19 +2121,21 @@ define([
                 this._quadH.update(context, frameState, scratchQuadCommands);
                 commands.push.apply(commands, scratchQuadCommands[0].colorList);
                 scratchQuadCommands.length = 0;
+                */
 
                 // render quads to fill the poles and depth plane
                 if (this._mode === SceneMode.SCENE3D) {
                     if (this._drawNorthPole) {
-                        commands.push(this._northPoleCommand);
+                    //    commands.push(this._northPoleCommand);
                     }
                     if (this._drawSouthPole) {
-                        commands.push(this._southPoleCommand);
+                    //    commands.push(this._southPoleCommand);
                     }
 
                     commands.push(this._depthCommand);
                 }
 
+                /*
                 if (typeof this._quadLogo !== 'undefined' && !this._quadLogo.isDestroyed()) {
                     this._quadLogo.update(context, frameState, scratchQuadCommands);
                     commands.push.apply(commands, scratchQuadCommands[0].colorList);

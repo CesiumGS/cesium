@@ -13,6 +13,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Intersect',
         '../Core/IntersectionTests',
+        '../Core/Matrix4',
         '../Renderer/Context',
         '../Renderer/Command',
         './Camera',
@@ -37,6 +38,7 @@ define([
         Cartesian3,
         Intersect,
         IntersectionTests,
+        Matrix4,
         Context,
         Command,
         Camera,
@@ -278,16 +280,19 @@ define([
                 var command = commandList[j];
                 var boundingVolume = command.boundingVolume;
                 if (typeof boundingVolume !== 'undefined') {
-                    if (cullingVolume.getVisibility(boundingVolume) !== Intersect.OUTSIDE) {
+                    var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
+                    //TODO: Remove this allocation.
+                    var transformedBV = boundingVolume.transform(modelMatrix);
+                    if (cullingVolume.getVisibility(transformedBV) !== Intersect.OUTSIDE) {
                         renderList.push(command);
 
                         // MULTIFRUSTUM TODO: move logic to bounding volume
-                        var toCenter = boundingVolume.center.subtract(camera.getPositionWC());
+                        var toCenter = transformedBV.center.subtract(camera.getPositionWC());
                         var proj = camera.getDirectionWC().multiplyByScalar(camera.getDirectionWC().dot(toCenter));
                         var distance = proj.magnitude();
 
-                        near = Math.min(near, distance - boundingVolume.radius);
-                        far = Math.max(far, distance + boundingVolume.radius);
+                        near = Math.min(near, distance - transformedBV.radius);
+                        far = Math.max(far, distance + transformedBV.radius);
                     }
                 } else {
                     undefBV = true;
@@ -304,7 +309,7 @@ define([
         }
 
         var farToNearRatio = 1000.0;
-        var numFrustums = Math.log(far / near) / Math.log(farToNearRatio);
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
 
         var context = this._context;
         var us = context.getUniformState();
@@ -335,6 +340,9 @@ define([
 
                 // MULTIFRUSTUM TODO: do what if boundingVolume is undefined?
                 var bv = renderCommand.boundingVolume;
+                var mm = defaultValue(renderCommand.modelMatrix, Matrix4.IDENTITY);
+                //MULTIFRUSTUM TODO: Remove this allocation.
+                bv = bv.transform(mm);
                 if (cullingVolume.getVisibility(bv) !== Intersect.OUTSIDE) {
                     context.draw(renderCommand);
                 }
