@@ -299,7 +299,7 @@ define([
         if (undefBV) {
             near = camera.frustum.near;
             far = camera.frustum.far;
-        } else if (near <= 0.0) {          // MULTIFRUSTUM TODO: closest near plane?
+        } else if (near < 0.001) {          // MULTIFRUSTUM TODO: closest near plane?
             near = 0.001;
         }
 
@@ -319,7 +319,7 @@ define([
         var frustum = camera.frustum.clone();
         for (var p = 0; p < numFrustums; ++p) {
             context.clear(clearDepth);
-            frustum.near = Math.max(near, Math.pow(farToNearRatio, numFrustums - p - 1.0) + near - 1.0);
+            frustum.near = Math.pow(farToNearRatio, numFrustums - p - 1.0) + near;
             frustum.far = frustum.near * farToNearRatio;
 
             us.setProjection(frustum.getProjectionMatrix());
@@ -335,21 +335,9 @@ define([
 
                 // MULTIFRUSTUM TODO: do what if boundingVolume is undefined?
                 var bv = renderCommand.boundingVolume;
-
-                // MULTIFRUSTUM TODO: move logic to bounding volume
-                var c = bv.center.subtract(camera.getPositionWC());
-                var r = camera.getDirectionWC().multiplyByScalar(camera.getDirectionWC().dot(c));
-                var d = r.magnitude();
-
-                if (d - bv.radius > frustum.far) {
-                    continue; // MULTIFRUSTUM TODO: discard
+                if (cullingVolume.getVisibility(bv) !== Intersect.OUTSIDE) {
+                    context.draw(renderCommand);
                 }
-
-                if (d + bv.radius < frustum.near) {
-                    continue;
-                }
-
-                context.draw(renderCommand);
 
                 // MULTIFRUSTUM TODO: discard if command isn't needed in any furture frustum
             }
