@@ -211,7 +211,7 @@ define([
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createCommandsForTilesToRender(this, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState);
-        debugRenderTileBoundingSphere(this, context, centralBodyUniformMap, shaderSet, renderState, colorCommandList);
+        debugCreateCommandsForTileBoundingSphere(this, context, centralBodyUniformMap, shaderSet, renderState, colorCommandList);
         updateLogos(this, context, frameState, commandList);
     };
 
@@ -683,7 +683,7 @@ define([
 
     // This is debug code to render the bounding sphere of the tile in
     // EllipsoidSurface._debug.boundingSphereTile.
-    function debugRenderTileBoundingSphere(surface, context, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
+    function debugCreateCommandsForTileBoundingSphere(surface, context, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
         if (typeof surface._debug !== 'undefined' && typeof surface._debug.boundingSphereTile !== 'undefined') {
             if (!surface._debug.boundingSphereVA) {
                 var radius = surface._debug.boundingSphereTile.boundingSphere3D.radius;
