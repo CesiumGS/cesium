@@ -3,7 +3,6 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
-        '../Core/Quaternion',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/EllipsoidPrimitive',
@@ -12,7 +11,6 @@ define([
          DeveloperError,
          destroyObject,
          Color,
-         Quaternion,
          Matrix3,
          Matrix4,
          EllipsoidPrimitive,
@@ -194,6 +192,11 @@ define([
             return;
         }
 
+        var orientationProperty = dynamicObject.orientation;
+        if (typeof orientationProperty === 'undefined') {
+            return;
+        }
+
         var ellipsoid;
         var showProperty = dynamicEllipsoid.show;
         var ellipsoidVisualizerIndex = dynamicObject._ellipsoidVisualizerIndex;
@@ -237,17 +240,9 @@ define([
         ellipsoid.radii = radiiProperty.getValue(time, ellipsoid.radii);
 
         position = positionProperty.getValueCartesian(time, position) || ellipsoid._visualizerPosition;
-        var orientationProperty = dynamicObject.orientation;
-        if (typeof orientationProperty === 'undefined') {
-            orientation = Quaternion.clone(Quaternion.IDENTITY, ellipsoid._visualizerOrientation);
-        } else {
-            orientation = orientationProperty.getValue(time, orientation) || ellipsoid._visualizerOrientation;
-        }
+        orientation = orientationProperty.getValue(time, orientation) || ellipsoid._visualizerOrientation;
 
-        if (typeof position !== 'undefined' &&
-            typeof orientation !== 'undefined' &&
-            (!position.equals(ellipsoid._visualizerPosition) ||
-             !orientation.equals(ellipsoid._visualizerOrientation))) {
+        if (typeof position !== 'undefined' && typeof orientation !== 'undefined' && (!position.equals(ellipsoid._visualizerPosition) || !orientation.equals(ellipsoid._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, ellipsoid.modelMatrix);
             position.clone(ellipsoid._visualizerPosition);
             orientation.clone(ellipsoid._visualizerOrientation);
