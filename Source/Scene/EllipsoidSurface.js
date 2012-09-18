@@ -99,13 +99,13 @@ define([
         this._levelZeroTiles = undefined;
         this._tilesToRenderByTextureCount = [];
         this._tileCommands = [];
+        this._tileCommandUniformMaps = [];
         this._tileLoadQueue = new TileLoadQueue();
         this._tileReplacementQueue = new TileReplacementQueue();
         this._tilingScheme = undefined;
         this._occluder = undefined;
         this._doLodUpdate = true;
         this._boundingSphereTile = undefined;
-        this._boundingSphereCommand = undefined;
         this._boundingSphereVA = undefined;
         this._tileTraversalQueue = new Queue();
 
@@ -240,7 +240,83 @@ define([
         return a.distance - b.distance;
     }
 
+    function createTileUniformMap() {
+        return {
+            u_center3D : function() {
+                return this.center3D;
+            },
+            u_tileExtent : function() {
+                return this.tileExtent;
+            },
+            u_modifiedModelView : function() {
+                return this.modifiedModelView;
+            },
+            u_modifiedModelViewProjection : function() {
+                return this.modifiedModelViewProjection;
+            },
+            u_dayTextures : function() {
+                return this.dayTextures;
+            },
+            u_dayTextureTranslationAndScale : function() {
+                return this.dayTextureTranslationAndScale;
+            },
+            u_dayTextureTexCoordsExtent : function() {
+                return this.dayTextureTexCoordsExtent;
+            },
+            u_dayTextureAlpha : function() {
+                return this.dayTextureAlpha;
+            },
+            u_dayIntensity : function() {
+                return 0.2;
+            },
+            u_southLatitude : function() {
+                return this.southLatitude;
+            },
+            u_northLatitude : function() {
+                return this.northLatitude;
+            },
+            u_southMercatorYLow : function() {
+                return this.southMercatorYLow;
+            },
+            u_southMercatorYHigh : function() {
+                return this.southMercatorYHigh;
+            },
+            u_oneOverMercatorHeight : function() {
+                return this.oneOverMercatorHeight;
+            },
+
+            center3D : undefined,
+            modifiedModelView : new Matrix4(),
+            modifiedModelViewProjection : new Matrix4(),
+            tileExtent : new Cartesian4(),
+
+            dayTextures : [],
+            dayTextureTranslationAndScale : [],
+            dayTextureTexCoordsExtent : [],
+            dayTextureAlpha : [],
+
+            southLatitude : 0.0,
+            northLatitude : 0.0,
+            southMercatorYLow : 0.0,
+            southMercatorYHigh : 0.0,
+            oneOverMercatorHeight : 0.0
+        };
+    }
+
+    function mergeUniformMap(target, source) {
+        for (var property in source) {
+            if (source.hasOwnProperty(property)) {
+                target[property] = source[property];
+            }
+        }
+    }
+
     var float32ArrayScratch = new Float32Array(1);
+    var modifiedModelViewScratch = new Matrix4();
+    var modifiedModelViewProjectionScratch = new Matrix4();
+    var tileExtentScratch = new Cartesian4();
+    var rtcScratch = new Cartesian3();
+    var centerEyeScratch = new Cartesian4();
 
     EllipsoidSurface.prototype.update = function(context, frameState, commandList, colorCommandList, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
         if (!this._doLodUpdate) {
@@ -258,6 +334,7 @@ define([
             }
         }
 
+        // We can't render anything before the level zero tiles exist.
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
@@ -348,18 +425,15 @@ define([
 
         processTileLoadQueue(this, context, frameState);
 
-        if (tilesToRenderByTextureCount.length === 0) {
-            return;
-        }
-
         var uniformState = context.getUniformState();
         var mv = uniformState.getModelView();
         var projectionMatrix = uniformState.getProjection();
 
         var maxTextures = context.getMaximumTextureImageUnits();
 
-        var tileCommandIndex = -1;
         var tileCommands = this._tileCommands;
+        var tileCommandUniformMaps = this._tileCommandUniformMaps;
+        var tileCommandIndex = -1;
 
         for (var tileSetIndex = 1, tileSetLength = tilesToRenderByTextureCount.length; tileSetIndex < tileSetLength; ++tileSetIndex) {
             var tileSet = tilesToRenderByTextureCount[tileSetIndex];
@@ -374,100 +448,42 @@ define([
             for (i = 0, len = tileSet.length; i < len; i++) {
                 tile = tileSet[i];
 
-                var uniformMapTemplate = {
-                    u_center3D : function() {
-                        return this.center3D;
-                    },
-                    u_tileExtent : function() {
-                        return this.tileExtent;
-                    },
-                    u_modifiedModelView : function() {
-                        return this.modifiedModelView;
-                    },
-                    u_modifiedModelViewProjection : function() {
-                        return this.modifiedModelViewProjection;
-                    },
-                    u_dayTextures : function() {
-                        return this.dayTextures;
-                    },
-                    u_dayTextureTranslationAndScale : function() {
-                        return this.dayTextureTranslationAndScale;
-                    },
-                    u_dayTextureTexCoordsExtent : function() {
-                        return this.dayTextureTexCoordsExtent;
-                    },
-                    u_dayTextureAlpha : function() {
-                        return this.dayTextureAlpha;
-                    },
-                    u_dayIntensity : function() {
-                        return 0.2;
-                    },
-                    u_southLatitude : function() {
-                        return this.southLatitude;
-                    },
-                    u_northLatitude : function() {
-                        return this.northLatitude;
-                    },
-                    u_southMercatorYLow : function() {
-                        return this.southMercatorYLow;
-                    },
-                    u_southMercatorYHigh : function() {
-                        return this.southMercatorYHigh;
-                    },
-                    u_oneOverMercatorHeight : function() {
-                        return this.oneOverMercatorHeight;
-                    },
-
-                    center3D : undefined,
-                    modifiedModelView : undefined,
-                    modifiedModelViewProjection : undefined,
-                    tileExtent : undefined,
-
-                    dayTextures : [],
-                    dayTextureTranslationAndScale : [],
-                    dayTextureTexCoordsExtent : [],
-                    dayTextureAlpha : [],
-
-                    southLatitude : 0.0,
-                    northLatitude : 0.0,
-                    southMercatorYLow : 0.0,
-                    southMercatorYHigh : 0.0,
-                    oneOverMercatorHeight : 0.0
-                };
-
-                var uniformMap = combine([uniformMapTemplate, centralBodyUniformMap], false, false);
-                uniformMap.level = tile.level;
-                uniformMap.center3D = tile.center;
-
                 var rtc = tile.center;
+
+                // Not used in 3D.
+                var tileExtent = tileExtentScratch;
+
+                // Only used for Mercator projections.
+                var southLatitude = 0.0;
+                var northLatitude = 0.0;
+                var southMercatorYHigh = 0.0;
+                var southMercatorYLow = 0.0;
+                var oneOverMercatorHeight = 0.0;
 
                 if (mode !== SceneMode.SCENE3D) {
                     var southwest = projection.project(tile.extent.getSouthwest());
                     var northeast = projection.project(tile.extent.getNortheast());
 
-                    var tileExtent = new Cartesian4(
-                            southwest.x,
-                            southwest.y,
-                            northeast.x,
-                            northeast.y);
+                    tileExtent.x = southwest.x;
+                    tileExtent.y = southwest.y;
+                    tileExtent.z = northeast.x;
+                    tileExtent.w = northeast.y;
 
                     // In 2D, use the center of the tile for RTC rendering.
                     if (mode === SceneMode.SCENE2D) {
-                        rtc = new Cartesian3(
-                                0.0,
-                                (tileExtent.z + tileExtent.x) * 0.5,
-                                (tileExtent.w + tileExtent.y) * 0.5);
+                        rtc = rtcScratch;
+                        rtc.x = 0.0;
+                        rtc.y = (tileExtent.z + tileExtent.x) * 0.5;
+                        rtc.z = (tileExtent.w + tileExtent.y) * 0.5;
                         tileExtent.x -= rtc.y;
                         tileExtent.y -= rtc.z;
                         tileExtent.z -= rtc.y;
                         tileExtent.w -= rtc.z;
                     }
 
-                    uniformMap.tileExtent = tileExtent;
-
                     if (projection instanceof MercatorProjection) {
-                        uniformMap.southLatitude = tile.extent.south;
-                        uniformMap.northLatitude = tile.extent.north;
+                        southLatitude = tile.extent.south;
+                        northLatitude = tile.extent.north;
 
                         var sinLatitude = Math.sin(tile.extent.south);
                         var southMercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
@@ -476,16 +492,22 @@ define([
                         var northMercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
 
                         float32ArrayScratch[0] = southMercatorY;
-                        uniformMap.southMercatorYHigh = float32ArrayScratch[0];
-                        uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
+                        southMercatorYHigh = float32ArrayScratch[0];
+                        southMercatorYLow = southMercatorY - float32ArrayScratch[0];
 
-                        uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
+                        oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
                     }
                 }
 
-                var centerEye = mv.multiplyByVector(new Cartesian4(rtc.x, rtc.y, rtc.z, 1.0));
-                uniformMap.modifiedModelView = mv.setColumn(3, centerEye, uniformMap.modifiedModelView);
-                uniformMap.modifiedModelViewProjection = Matrix4.multiply(projectionMatrix, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
+                var centerEye = centerEyeScratch;
+                centerEye.x = rtc.x;
+                centerEye.y = rtc.y;
+                centerEye.z = rtc.z;
+                centerEye.w = 1.0;
+
+                Matrix4.multiplyByVector(mv, centerEye, centerEye);
+                mv.setColumn(3, centerEye, modifiedModelViewScratch);
+                Matrix4.multiply(projectionMatrix, modifiedModelViewScratch, modifiedModelViewProjectionScratch);
 
                 var tileImageryCollection = tile.imagery;
                 var imageryIndex = 0;
@@ -493,6 +515,28 @@ define([
 
                 while (imageryIndex < imageryLen) {
                     var numberOfDayTextures = 0;
+
+                    ++tileCommandIndex;
+                    var command = tileCommands[tileCommandIndex];
+                    if (typeof command === 'undefined') {
+                        command = new Command();
+                        tileCommands[tileCommandIndex] = command;
+                        tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap();
+                    }
+                    var uniformMap = tileCommandUniformMaps[tileCommandIndex];
+
+                    mergeUniformMap(uniformMap, centralBodyUniformMap);
+
+                    uniformMap.center3D = tile.center;
+
+                    Cartesian4.clone(tileExtent, uniformMap.tileExtent);
+                    uniformMap.southLatitude = southLatitude;
+                    uniformMap.northLatitude = northLatitude;
+                    uniformMap.southMercatorYHigh = southMercatorYHigh;
+                    uniformMap.southMercatorYLow = southMercatorYLow;
+                    uniformMap.oneOverMercatorHeight = oneOverMercatorHeight;
+                    Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
+                    Matrix4.clone(modifiedModelViewProjectionScratch, uniformMap.modifiedModelViewProjection);
 
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                         var tileImagery = tileImageryCollection[imageryIndex];
@@ -516,13 +560,6 @@ define([
                     // which might get destroyed eventually
                     uniformMap.dayTextures.length = numberOfDayTextures;
 
-                    ++tileCommandIndex;
-                    var command = tileCommands[tileCommandIndex];
-                    if (typeof command === 'undefined') {
-                        command = new Command();
-                        tileCommands[tileCommandIndex] = command;
-                    }
-
                     colorCommandList.push(command);
 
                     command.shaderProgram = shaderProgram;
@@ -537,109 +574,55 @@ define([
         // trim command list to the number actually needed
         tileCommands.length = Math.max(0, tileCommandIndex);
 
-        if (this._boundingSphereTile) {
-            if (!this._boundingSphereVA) {
-                var radius = this._boundingSphereTile.boundingSphere3D.radius;
+        debugRenderTileBoundingSphere(this, context, centralBodyUniformMap, shaderSet, renderState, colorCommandList);
+
+        updateLogos(this, context, frameState, commandList);
+    };
+
+    // This is debug code to render the bounding sphere of the tile in
+    // EllipsoidSurface._boundingSphereTile.
+    function debugRenderTileBoundingSphere(surface, context, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
+        if (surface._boundingSphereTile) {
+            if (!surface._boundingSphereVA) {
+                var radius = surface._boundingSphereTile.boundingSphere3D.radius;
                 var sphere = CubeMapEllipsoidTessellator.compute(new Ellipsoid(radius, radius, radius), 10);
                 MeshFilters.toWireframeInPlace(sphere);
-                this._boundingSphereVA = context.createVertexArrayFromMesh({
+                surface._boundingSphereVA = context.createVertexArrayFromMesh({
                     mesh : sphere,
                     attributeIndices : MeshFilters.createAttributeIndices(sphere)
                 });
             }
 
-            var rtc2 = this._boundingSphereTile.center;
+            var rtc2 = surface._boundingSphereTile.center;
 
-            var uniformMapTemplate = {
-                u_center3D : function() {
-                    return this.center3D;
-                },
-                u_tileExtent : function() {
-                    return this.tileExtent;
-                },
-                u_modifiedModelView : function() {
-                    return this.modifiedModelView;
-                },
-                u_modifiedModelViewProjection : function() {
-                    return this.modifiedModelViewProjection;
-                },
-                u_dayTextures : function() {
-                    return this.dayTextures;
-                },
-                u_dayTextureTranslationAndScale : function() {
-                    return this.dayTextureTranslationAndScale;
-                },
-                u_dayTextureTexCoordsExtent : function() {
-                    return this.dayTextureTexCoordsExtent;
-                },
-                u_dayTextureAlpha : function() {
-                    return this.dayTextureAlpha;
-                },
-                u_dayIntensity : function() {
-                    return 0.2;
-                },
-                u_southLatitude : function() {
-                    return this.southLatitude;
-                },
-                u_northLatitude : function() {
-                    return this.northLatitude;
-                },
-                u_southMercatorYLow : function() {
-                    return this.southMercatorYLow;
-                },
-                u_southMercatorYHigh : function() {
-                    return this.southMercatorYHigh;
-                },
-                u_oneOverMercatorHeight : function() {
-                    return this.oneOverMercatorHeight;
-                },
+            var uniformMap2 = createTileUniformMap();
+            mergeUniformMap(uniformMap2, centralBodyUniformMap);
 
-                center3D : undefined,
-                modifiedModelView : undefined,
-                modifiedModelViewProjection : undefined,
-                tileExtent : undefined,
+            uniformMap2.center3D = rtc2;
 
-                dayTextures : [],
-                dayTextureTranslationAndScale : [],
-                dayTextureTexCoordsExtent : [],
-                dayTextureAlpha : [],
-
-                southLatitude : 0.0,
-                northLatitude : 0.0,
-                southMercatorYLow : 0.0,
-                southMercatorYHigh : 0.0,
-                oneOverMercatorHeight : 0.0
-            };
-
-            var uniformMap = combine([uniformMapTemplate, centralBodyUniformMap], false, false);
-            uniformMap.center3D = rtc2;
+            var uniformState = context.getUniformState();
+            var mv = uniformState.getModelView();
+            var projectionMatrix = uniformState.getProjection();
 
             var centerEye2 = mv.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
-            uniformMap.modifiedModelView = mv.setColumn(3, centerEye2, uniformMap.modifiedModelView);
-            uniformMap.modifiedModelViewProjection = Matrix4.multiply(projectionMatrix, uniformMap.modifiedModelView, uniformMap.modifiedModelViewProjection);
+            uniformMap2.modifiedModelView = mv.setColumn(3, centerEye2, uniformMap2.modifiedModelView);
+            uniformMap2.modifiedModelViewProjection = Matrix4.multiply(projectionMatrix, uniformMap2.modifiedModelView, uniformMap2.modifiedModelViewProjection);
 
-            uniformMap.dayTextures[0] = context.getDefaultTexture();
-            uniformMap.dayTextureTranslationAndScale[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
-            uniformMap.dayTextureTexCoordsExtent[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
-            uniformMap.dayTextureAlpha[0] = 1.0;
+            uniformMap2.dayTextures[0] = context.getDefaultTexture();
+            uniformMap2.dayTextureTranslationAndScale[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+            uniformMap2.dayTextureTexCoordsExtent[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+            uniformMap2.dayTextureAlpha[0] = 1.0;
 
-            var boundingSphereCommand = this._boundingSphereCommand;
-            if (typeof boundingSphereCommand === 'undefined') {
-                boundingSphereCommand = new Command();
-                this._boundingSphereCommand = boundingSphereCommand;
-            }
-
+            var boundingSphereCommand = new Command();
             boundingSphereCommand.shaderProgram = shaderSet.getShaderProgram(context, 1);
             boundingSphereCommand.renderState = renderState;
             boundingSphereCommand.primitiveType = PrimitiveType.LINES;
-            boundingSphereCommand.vertexArray = this._boundingSphereVA;
-            boundingSphereCommand.uniformMap = uniformMap;
+            boundingSphereCommand.vertexArray = surface._boundingSphereVA;
+            boundingSphereCommand.uniformMap = uniformMap2;
 
             colorCommandList.push(boundingSphereCommand);
         }
-
-        updateLogos(this, context, frameState, commandList);
-    };
+    }
 
     EllipsoidSurface.prototype.toggleLodUpdate = function(frameState) {
         this._doLodUpdate = !this._doLodUpdate;
