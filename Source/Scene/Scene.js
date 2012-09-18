@@ -310,7 +310,6 @@ define([
                     }
 
                     renderList.push(command);
-                    command._timesRendered = 0;
 
                     distances = transformedBV.distance(position, direction, distances);
                     near = Math.min(near, distances.x);
