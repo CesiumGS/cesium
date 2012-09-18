@@ -79,6 +79,7 @@ define([
         this._shaderFrameCount = 0;
 
         this._commandList = [];
+        this._renderList = [];
 
         /**
          * The current mode of the scene.
@@ -86,7 +87,6 @@ define([
          * @type SceneMode
          */
         this.mode = SceneMode.SCENE3D;
-
         /**
          * DOC_TBA
          */
@@ -96,7 +96,6 @@ define([
              */
             projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
         };
-
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
@@ -104,6 +103,18 @@ define([
          * @type Number
          */
         this.morphTime = 1.0;
+        /**
+         * The far-to-near ratio of the multi-frustum. The default is 1,000.0.
+         *
+         * @type Number
+         */
+        this.farToNearRatio = 1000.0;
+        /**
+         * The minimum near plane distance for the multi-frustum. The default is 1.0.
+         *
+         * @type Number
+         */
+        this.minimumNearDistance = 1.0;
     };
 
     /**
@@ -253,27 +264,22 @@ define([
     }
 
     var scratchCullingVolume = new CullingVolume();
-    var scratchNearPlane = new Cartesian4();
-    var scratchFarPlane = new Cartesian4();
-    var scratchRenderCartesian3 = new Cartesian3();
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.render = function() {
-        update(this);
-        var commandLists = this._commandList;
-        var cullingVolume = this._frameState.cullingVolume;
-        var camera = this._camera;
+    var distances = new Cartesian2();
+    function createPotentiallyVisibleSet(scene, listName) {
+        var commandLists = scene._commandList;
+        var cullingVolume = scene._frameState.cullingVolume;
+        var camera = scene._camera;
 
-        var renderList = [];
+        var renderList = scene._renderList;
+        renderList.length = 0;
+
         var near = Number.MAX_VALUE;
         var far = Number.MIN_VALUE;
         var undefBV = false;
 
         var occluder;
-        if (this._frameState.mode === SceneMode.SCENE3D) {
-            occluder = this._frameState.occluder;
+        if (scene._frameState.mode === SceneMode.SCENE3D) {
+            occluder = scene._frameState.occluder;
         }
 
         // get user culling volume minus the far plane.
@@ -285,7 +291,7 @@ define([
 
         var length = commandLists.length;
         for (var i = 0; i < length; ++i) {
-            var commandList = commandLists[i].colorList;
+            var commandList = commandLists[i][listName];
             var commandListLength = commandList.length;
             for (var j = 0; j < commandListLength; ++j) {
                 var command = commandList[j];
@@ -301,13 +307,9 @@ define([
 
                     renderList.push(command);
 
-                    // MULTIFRUSTUM TODO: move logic to bounding volume
-                    var toCenter = transformedBV.center.subtract(camera.getPositionWC());
-                    var proj = camera.getDirectionWC().multiplyByScalar(camera.getDirectionWC().dot(toCenter));
-                    var distance = proj.magnitude();
-
-                    near = Math.min(near, distance - transformedBV.radius);
-                    far = Math.max(far, distance + transformedBV.radius);
+                    distances = transformedBV.distance(camera.getPositionWC(), camera.getDirectionWC(), distances);
+                    near = Math.min(near, distances.x);
+                    far = Math.max(far, distances.y);
                 } else {
                     undefBV = true;
                     renderList.push(command);
@@ -318,15 +320,29 @@ define([
         if (undefBV) {
             near = camera.frustum.near;
             far = camera.frustum.far;
-        } else if (near < 0.001) {          // MULTIFRUSTUM TODO: closest near plane?
-            near = 0.001;
+        } else if (near < scene.minimumNearDistance) {
+            near = scene.minimumNearDistance;
         }
 
-        var farToNearRatio = 1000.0;
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+        scene._near = near;
+        scene._far = far;
+    }
+
+    var scratchNearPlane = new Cartesian4();
+    var scratchFarPlane = new Cartesian4();
+    var scratchRenderCartesian3 = new Cartesian3();
+    var scratchCommand = new Command();
+    function render(scene, framebuffer) {
+        var near = scene._near;
+        var far = scene._far;
+        var farToNearRatio = scene.farToNearRatio;
+        var camera = scene._camera;
+        var renderList = scene._renderList;
 
         var direction = camera.getDirectionWC();
         var position = camera.getPositionWC();
+
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
 
         var nearPlane = scratchNearPlane;
         nearPlane.x = direction.x;
@@ -338,7 +354,7 @@ define([
         farPlane.y = -direction.y;
         farPlane.z = -direction.z;
 
-        var context = this._context;
+        var context = scene._context;
         var us = context.getUniformState();
         var clearColor = context.createClearState({
             color : Color.BLACK
@@ -371,36 +387,49 @@ define([
             Cartesian3.add(position, farCenter, farCenter);
             farPlane.w = -Cartesian3.dot(farPlane, farCenter);
 
-            length = renderList.length;
+            var length = renderList.length;
             for (var q = 0; q < length; ++q) {
                 var renderCommand = renderList[q];
 
-                var bv = renderCommand.boundingVolume;
-                if (typeof bv !== 'undefined') {
-                    var mm = defaultValue(renderCommand.modelMatrix, Matrix4.IDENTITY);
+                var boundingVolume = renderCommand.boundingVolume;
+                if (typeof boundingVolume !== 'undefined') {
+                    var modelMatrix = defaultValue(renderCommand.modelMatrix, Matrix4.IDENTITY);
                     //MULTIFRUSTUM TODO: Remove this allocation.
-                    bv = bv.transform(mm);
+                    var transformedBV = boundingVolume.transform(modelMatrix);
 
-                    if (bv.intersect(farPlane) === Intersect.OUTSIDE) {
+                    if (transformedBV.intersect(farPlane) === Intersect.OUTSIDE) {
                         continue; // MULTIFURSTUM TODO: discard command
                     }
 
-                    var nearIntersect = bv.intersect(nearPlane);
+                    var nearIntersect = transformedBV.intersect(nearPlane);
                     if (nearIntersect === Intersect.OUTSIDE) {
                         continue;
                     }
 
-                    context.draw(renderCommand);
+                    var command = Command.cloneDrawArguments(renderCommand, scratchCommand);
+                    command.framebuffer = defaultValue(command.framebuffer, framebuffer);
+                    context.draw(command);
 
-                    // MULTIFRUSTUM TODO: discard if command isn't needed in any future frustum
-                    //if (nearIntersect === Intersect.INSIDE) {
-                        // discard
-                    //}
+                    if (nearIntersect === Intersect.INSIDE) {
+                        renderList.splice(q, 1);
+                        length = renderList.length;
+                        --q;
+                    }
                 } else {
                     context.draw(renderCommand);
                 }
             }
         }
+    }
+
+    /**
+     * DOC_TBA
+     * @memberof Scene
+     */
+    Scene.prototype.render = function() {
+        update(this);
+        createPotentiallyVisibleSet(this, 'colorList');
+        render(this);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -480,7 +509,6 @@ define([
     var rectangleWidth = 3.0;
     var rectangleHeight = 3.0;
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
-    var scratchPickCommand = new Command();
 
     /**
      * DOC_TBA
@@ -502,16 +530,8 @@ define([
         commandLists.length = 0;
         primitives.update(context, frameState, commandLists);
 
-        var length = commandLists.length;
-        for (var i = 0; i < length; ++i) {
-            var commandList = commandLists[i].pickList;
-            var commandListLength = commandList.length;
-            for (var j = 0; j < commandListLength; ++j) {
-                var command = Command.cloneDrawArguments(commandList[j], scratchPickCommand);
-                command.framebuffer = defaultValue(command.framebuffer, fb);
-                context.draw(command);
-            }
-        }
+        createPotentiallyVisibleSet(this, 'pickList');
+        render(this, fb);
 
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
