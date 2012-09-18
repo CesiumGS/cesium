@@ -54,33 +54,55 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * A renderable ellipsoid.  It can also draw spheres when the three {@link EllipsoidPrimitive#radii} components are equal.
      *
      * @alias EllipsoidPrimitive
      * @constructor
+     *
+     * @example
+     * // 1. Create a sphere using the ellipsoid primitive
+     * var e = new EllipsoidPrimitive();
+     * e.center = ellipsoid.cartographicToCartesian(
+     *   Cartographic.fromDegrees(-75.0, 40.0, 500000.0));
+     * e.radii = new Cartesian3(500000.0, 500000.0, 500000.0);
+     * primitives.add(e);
+     *
+     * @example
+     * // 2. Create a tall ellipsoid in an east-north-up reference frame
+     * var e = new EllipsoidPrimitive();
+     * e.modelMatrix = Transforms.eastNorthUpToFixedFrame(
+     *   ellipsoid.cartographicToCartesian(
+     *     Cartographic.fromDegrees(-95.0, 40.0, 200000.0)));
+     * e.radii = new Cartesian3(100000.0, 100000.0, 200000.0);
+     * primitives.add(e);
      */
     var EllipsoidPrimitive = function() {
-        this._sp = undefined;
-        this._rs = undefined;
-        this._va = undefined;
-
-        this._pickSP = undefined;
-        this._pickMaterial = undefined;
-        this._pickId = undefined;
-
-        // TODO: Sensible defaults for position and radii?  Undefined is probably sensible.  Or take them with the constructor?
-
         /**
-         * DOC_TBA
+         * The center of the ellipsoid in the ellipsoid's model coordinates.
+         * <p>
+         * The default is {@link Cartesian3.ZERO}.
+         * </p>
          *
          * @type Cartesian3
+         *
+         * @see EllipsoidPrimitive#modelMatrix
          */
-        this.position = undefined;
+        this.center = Cartesian3.ZERO.clone();
 
         /**
-         * DOC_TBA
+         * The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
+         * When these are the same, the ellipsoid is a sphere.
+         * <p>
+         * The default is <code>undefined</code>.  The ellipsoid is not drawn until a radii is provided.
+         * </p>
          *
          * @type Cartesian3
+         *
+         * @example
+         * // A sphere with a radius of 2.0
+         * e.radii = new Cartesian3(2.0, 2.0, 2.0);
+         *
+         * @see EllipsoidPrimitive#modelMatrix
          */
         this.radii = undefined;
         this._radii = new Cartesian3();
@@ -89,15 +111,33 @@ define([
         this._boundingSphere = new BoundingSphere();
 
         /**
-         * DOC_TBA
+         * The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
+         * When this is the identity matrix, the ellipsoid is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
+         * shaders via {@link czm_model} and derived uniforms.
+         * <p>
+         * The default is {@link Matrix4.IDENTITY}.
+         * </p>
          *
          * @type Matrix4
+         *
+         * @example
+         * var origin = ellipsoid.cartographicToCartesian(
+         *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * e.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+         *
+         * @see Transforms.eastNorthUpToFixedFrame
+         * @see czm_model
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
         this._computedModelMatrix = Matrix4.IDENTITY.clone();
 
         /**
          * Determines if the ellipsoid primitive will be shown.
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
          *
          * @type Boolean
          */
@@ -118,11 +158,33 @@ define([
         this._affectedByLighting = true;
 
         /**
-         * DOC_TBA
-         * @see Material
+         * The surface appearance of the ellipsoid.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * <p>
+         * The default material is <code>Material.ColorType</code>.
+         * </p>
+         *
+         * @type Material
+         *
+         * @example
+         * // 1. Change the color of the default material to yellow
+         * e.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         *
+         * // 2. Change material to horizontal stripes
+         * e.material = Material.fromType(scene.getContext(), Material.StripeType);
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
+
+        this._sp = undefined;
+        this._rs = undefined;
+        this._va = undefined;
+
+        this._pickSP = undefined;
+        this._pickMaterial = undefined;
+        this._pickId = undefined;
 
         this._colorCommand = new Command();
         this._pickCommand = new Command();
@@ -130,7 +192,6 @@ define([
 
         var that = this;
         this._uniforms = {
-            // TODO: Change engine so u_model isn't required.
             u_model : function() {
                 return that._computedModelMatrix;
             },
@@ -143,11 +204,10 @@ define([
         };
     };
 
+    // Per-context cache for ellipsoids
     var vertexArrayCache = {};
 
     function getVertexArray(context) {
-        // Per-context cache for ellipsoids
-
         var c = vertexArrayCache[context.getId()];
 
         if (typeof c !== 'undefined' &&
@@ -160,9 +220,6 @@ define([
         var mesh = BoxTessellator.compute({
             dimensions : new Cartesian3(2.0, 2.0, 2.0)
         });
-
-        mesh.attributes.position3D = mesh.attributes.position;
-        delete mesh.attributes.position;
 
         var va = context.createVertexArrayFromMesh({
             mesh: mesh,
@@ -179,7 +236,7 @@ define([
     }
 
     function releaseVertexArray(context) {
-        // TODO: Schedule this for a few 100 frames later so we don't thrash the cache
+        // PERFORMANCE_IDEA: Schedule this for a few hundred frames later so we don't thrash the cache
         var c = vertexArrayCache[context.getId()];
         if (typeof c !== 'undefined' &&
             typeof c.vertexArray !== 'undefined' &&
@@ -192,12 +249,12 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * @private
      */
     EllipsoidPrimitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             (frameState.mode !== SceneMode.SCENE3D) ||
-            (typeof this.position === 'undefined') ||
+            (typeof this.center === 'undefined') ||
             (typeof this.radii === 'undefined')) {
             return;
         }
@@ -240,7 +297,7 @@ define([
         }
 
         // Translate model coordinates used for rendering such that the origin is the center of the ellipsoid.
-        Matrix4.multiplyByTranslation(this.modelMatrix, this.position, this._computedModelMatrix);
+        Matrix4.multiplyByTranslation(this.modelMatrix, this.center, this._computedModelMatrix);
 
         var ellipsoidCommandLists = this._commandLists;
         ellipsoidCommandLists.removeAll();
@@ -269,14 +326,15 @@ define([
                 this._sp = this._sp && this._sp.release();
                 this._sp = context.getShaderCache().getShaderProgram(EllipsoidVS, fsSource, attributeIndices);
 
-                colorCommand.boundingVolume = this._boundingSphere;
-                colorCommand.modelMatrix = (frameState.mode === SceneMode.SCENE3D) ? this._computedModelMatrix : Matrix4.IDENTITY;
                 colorCommand.primitiveType = PrimitiveType.TRIANGLES;
                 colorCommand.vertexArray = this._va;
                 colorCommand.renderState = this._rs;
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
             }
+
+            colorCommand.boundingVolume = this._boundingSphere;
+            colorCommand.modelMatrix = this._computedModelMatrix;
 
             ellipsoidCommandLists.colorList.push(colorCommand);
         }
@@ -294,7 +352,7 @@ define([
                     '#line 0\n' +
                     Noise +
                     '#line 0\n' +
-                    this.material.shaderSource +
+                    pickMaterial.shaderSource +
                     // AFFECTED_BY_LIGHTING is not defined
                     '#line 0\n' +
                     EllipsoidFS;
@@ -303,14 +361,15 @@ define([
                 this._pickMaterial = pickMaterial;
                 this._pickSP = context.getShaderCache().getShaderProgram(EllipsoidVS, pickFS, attributeIndices);
 
-                pickCommand.boundingVolume = this._boundingSphere;
-                pickCommand.modelMatrix = (frameState.mode === SceneMode.SCENE3D) ? this._computedModelMatrix : Matrix4.IDENTITY;
                 pickCommand.primitiveType = PrimitiveType.TRIANGLES;
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = combine([this._uniforms, pickMaterial._uniforms], false, false);
             }
+
+            pickCommand.boundingVolume = this._boundingSphere;
+            pickCommand.modelMatrix = this._computedModelMatrix;
 
             ellipsoidCommandLists.pickList.push(pickCommand);
         }
@@ -351,7 +410,7 @@ define([
      * @see EllipsoidPrimitive#isDestroyed
      *
      * @example
-     * ellipsoidPrimitive = ellipsoidPrimitive && ellipsoidPrimitive();
+     * e = e && e.destroy();
      */
     EllipsoidPrimitive.prototype.destroy = function() {
         this._sp = this._sp && this._sp.release();
