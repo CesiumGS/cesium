@@ -12,6 +12,7 @@ define([
         '../Core/Matrix4',
         '../Core/MeshFilters',
         '../Core/BoundingSphere',
+        '../Core/PrimitiveType',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
@@ -21,8 +22,7 @@ define([
         './SceneMode',
         '../Shaders/Noise',
         '../Shaders/EllipsoidVS',
-        '../Shaders/EllipsoidFS',
-        '../Core/PrimitiveType'
+        '../Shaders/EllipsoidFS'
     ], function(
         BoxTessellator,
         Cartesian3,
@@ -36,6 +36,7 @@ define([
         Matrix4,
         MeshFilters,
         BoundingSphere,
+        PrimitiveType,
         CullFace,
         BlendingState,
         BufferUsage,
@@ -45,13 +46,11 @@ define([
         SceneMode,
         Noise,
         EllipsoidVS,
-        EllipsoidFS,
-        PrimitiveType) {
+        EllipsoidFS) {
     "use strict";
 
     var attributeIndices = {
-        position2D : 0,
-        position3D : 1
+        position : 0
     };
 
     /**
@@ -97,17 +96,6 @@ define([
         this.modelMatrix = Matrix4.IDENTITY.clone();
         this._computedModelMatrix = Matrix4.IDENTITY.clone();
 
-        this._mode = undefined;
-        this._projection = undefined;
-
-        /**
-         * The current morph transition time between 2D/Columbus View and 3D,
-         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         *
-         * @type Number
-         */
-        this.morphTime = 1.0;
-
         /**
          * Determines if the ellipsoid primitive will be shown.
          *
@@ -142,13 +130,9 @@ define([
 
         var that = this;
         this._uniforms = {
-            u_morphTime : function() {
-                return that.morphTime;
-            },
-
             // TODO: Change engine so u_model isn't required.
             u_model : function() {
-                return (that._mode === SceneMode.SCENE3D) ? that._computedModelMatrix : Matrix4.IDENTITY;
+                return that._computedModelMatrix;
             },
             u_radii : function() {
                 return that.radii;
@@ -179,37 +163,6 @@ define([
 
         mesh.attributes.position3D = mesh.attributes.position;
         delete mesh.attributes.position;
-
-//        if (this._mode === SceneMode.SCENE3D) {
-            mesh.attributes.position2D = {
-                value : [0.0, 0.0, 0.0]
-            };
-/*
-        } else {
-            var positions = mesh.attributes.position3D.values;
-            var projectedPositions = [];
-            var projectedPositionsFlat = [];
-            for (var i = 0; i < positions.length; i += 3) {
-                var p = new Cartesian4(positions[i], positions[i + 1], positions[i + 2], 1.0);
-                p = this.modelMatrix.multiplyByVector(p);
-
-                positions[i] = p.x;
-                positions[i + 1] = p.y;
-                positions[i + 2] = p.z;
-
-                p = projection.project(this._ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p)));
-
-                projectedPositions.push(p);
-                projectedPositionsFlat.push(p.z, p.x, p.y);
-            }
-
-            mesh.attributes.position2D = {
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : projectedPositionsFlat
-            };
-        }
-*/
 
         var va = context.createVertexArrayFromMesh({
             mesh: mesh,
@@ -243,6 +196,7 @@ define([
      */
     EllipsoidPrimitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
+            (frameState.mode !== SceneMode.SCENE3D) ||
             (typeof this.position === 'undefined') ||
             (typeof this.radii === 'undefined')) {
             return;
@@ -269,21 +223,7 @@ define([
             });
         }
 
-        var mode = frameState.mode;
-        var projection = frameState.scene2D.projection;
-
-        // TODO: When do we really need to rewrite?
-        if ((typeof this._va === 'undefined') ||
-            (this._mode !== mode) ||
-            (this._projection !== projection)) {
-
-            this._mode = mode;
-            this._projection = projection;
-
-            if (typeof mode.morphTime !== 'undefined') {
-                this.morphTime = mode.morphTime;
-            }
-
+        if (typeof this._va === 'undefined') {
             this._va = getVertexArray(context);
         }
 
@@ -321,8 +261,8 @@ define([
                     '#line 0\n' +
                     Noise +
                     '#line 0\n' +
-                    this._material.shaderSource +
-                    (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                    this.material.shaderSource +
+                    (this.affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                     '#line 0\n' +
                     EllipsoidFS;
 
@@ -354,7 +294,7 @@ define([
                     '#line 0\n' +
                     Noise +
                     '#line 0\n' +
-                    this._material.shaderSource +
+                    this.material.shaderSource +
                     // AFFECTED_BY_LIGHTING is not defined
                     '#line 0\n' +
                     EllipsoidFS;

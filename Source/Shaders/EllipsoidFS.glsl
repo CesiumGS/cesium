@@ -44,8 +44,6 @@ void main()
     }
     else
     {
-// TODO: remove this debug code    
-//        gl_FragColor = vec4(1.0, 0.0, 0.0, 0.75);
         discard;
     }
 }
