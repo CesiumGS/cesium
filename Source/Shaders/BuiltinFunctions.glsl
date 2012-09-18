@@ -617,7 +617,7 @@ czm_ellipsoid czm_ellipsoidNew(vec3 center, vec3 radii)
  */
 bool czm_ellipsoidContainsPoint(czm_ellipsoid ellipsoid, vec3 point)
 {
-    vec3 scaled = ellipsoid.inverseRadii * (czm_inverseView * vec4(point, 1.0)).xyz;
+    vec3 scaled = ellipsoid.inverseRadii * (czm_inverseModelView * vec4(point, 1.0)).xyz;
     return (dot(scaled, scaled) <= 1.0);
 }
 
@@ -630,13 +630,7 @@ bool czm_ellipsoidContainsPoint(czm_ellipsoid ellipsoid, vec3 point)
  */
 czm_raySegment czm_rayEllipsoidIntersectionInterval(czm_ray ray, czm_ellipsoid ellipsoid)
 {
-/*
-    vec3 q = ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.origin, 1.0)).xyz;
-    vec3 w = ellipsoid.inverseRadii * (czm_inverseView * vec4(ray.direction, 0.0)).xyz;
-   
-    q = q - ellipsoid.inverseRadii * (czm_inverseView * vec4(ellipsoid.center, 1.0)).xyz;
-*/
-
+   // ray and ellipsoid center in eye coordinates.  radii in model coordinates.
     vec3 q = ellipsoid.inverseRadii * (czm_inverseModelView * vec4(ray.origin, 1.0)).xyz;
     vec3 w = ellipsoid.inverseRadii * (czm_inverseModelView * vec4(ray.direction, 0.0)).xyz;
    

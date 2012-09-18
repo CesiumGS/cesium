@@ -616,57 +616,6 @@ define([
         return c.indexBuffer;
     }
 
-    /**
-     * Renders the billboards.  In order for changes to properties to be realized,
-     * {@link BillboardCollection#update} must be called before <code>render</code>.
-     * <br /><br />
-     * A texture atlas must be assigned to the billboard collection using
-     * {@link BillboardCollection#setTextureAtlas}, otherwise no billboards will be rendered.
-     * <br /><br />
-     * Billboards are rendered in a single pass using an uber-shader.
-     *
-     * @memberof BillboardCollection
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see BillboardCollection#update
-     * @see BillboardCollection#setTextureAtlas
-     */
-    BillboardCollection.prototype.render = function(context) {
-        var va = this._vaf.va;
-        var length = va.length;
-        for ( var i = 0; i < length; ++i) {
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLES,
-                count : va[i].indicesCount,
-                shaderProgram : this._sp,
-                uniformMap : this._uniforms,
-                vertexArray : va[i].va,
-                renderState : this._rs
-            });
-        }
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof BillboardCollection
-     */
-    BillboardCollection.prototype.renderForPick = function(context, framebuffer) {
-        var va = this._vaf.va;
-        var length = va.length;
-        for ( var i = 0; i < length; ++i) {
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLES,
-                count : va[i].indicesCount,
-                shaderProgram : this._spPick,
-                uniformMap : this._uniforms,
-                vertexArray : va[i].va,
-                renderState : this._rsPick,
-                framebuffer : framebuffer
-            });
-        }
-    };
-
     BillboardCollection.prototype.computeNewBuffersUsage = function() {
         var buffersUsage = this._buffersUsage;
         var usageChanged = false;

@@ -11,6 +11,8 @@ define([
         '../Core/Ellipsoid',
         '../Core/Matrix4',
         '../Core/MeshFilters',
+        '../Core/BoundingSphere',
+        '../Core/PrimitiveType',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
@@ -20,8 +22,7 @@ define([
         './SceneMode',
         '../Shaders/Noise',
         '../Shaders/EllipsoidVS',
-        '../Shaders/EllipsoidFS',
-        '../Core/PrimitiveType'
+        '../Shaders/EllipsoidFS'
     ], function(
         BoxTessellator,
         Cartesian3,
@@ -34,6 +35,8 @@ define([
         Ellipsoid,
         Matrix4,
         MeshFilters,
+        BoundingSphere,
+        PrimitiveType,
         CullFace,
         BlendingState,
         BufferUsage,
@@ -43,65 +46,98 @@ define([
         SceneMode,
         Noise,
         EllipsoidVS,
-        EllipsoidFS,
-        PrimitiveType) {
+        EllipsoidFS) {
     "use strict";
 
     var attributeIndices = {
-        position2D : 0,
-        position3D : 1
+        position : 0
     };
 
     /**
-     * DOC_TBA
+     * A renderable ellipsoid.  It can also draw spheres when the three {@link EllipsoidPrimitive#radii} components are equal.
      *
      * @alias EllipsoidPrimitive
      * @constructor
+     *
+     * @example
+     * // 1. Create a sphere using the ellipsoid primitive
+     * var e = new EllipsoidPrimitive();
+     * e.center = ellipsoid.cartographicToCartesian(
+     *   Cartographic.fromDegrees(-75.0, 40.0, 500000.0));
+     * e.radii = new Cartesian3(500000.0, 500000.0, 500000.0);
+     * primitives.add(e);
+     *
+     * @example
+     * // 2. Create a tall ellipsoid in an east-north-up reference frame
+     * var e = new EllipsoidPrimitive();
+     * e.modelMatrix = Transforms.eastNorthUpToFixedFrame(
+     *   ellipsoid.cartographicToCartesian(
+     *     Cartographic.fromDegrees(-95.0, 40.0, 200000.0)));
+     * e.radii = new Cartesian3(100000.0, 100000.0, 200000.0);
+     * primitives.add(e);
      */
     var EllipsoidPrimitive = function() {
-        this._sp = undefined;
-        this._rs = undefined;
-        this._va = undefined;
-        this._pickId = undefined;
-
-        // TODO: Sensible defaults for position and radii?  Undefined is probably sensible.  Or take them with the constructor?
-
         /**
-         * DOC_TBA
+         * The center of the ellipsoid in the ellipsoid's model coordinates.
+         * <p>
+         * The default is {@link Cartesian3.ZERO}.
+         * </p>
          *
          * @type Cartesian3
+         *
+         * @see EllipsoidPrimitive#modelMatrix
          */
-        this.position = undefined;
+        this.center = Cartesian3.ZERO.clone();
 
         /**
-         * DOC_TBA
+         * The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
+         * When these are the same, the ellipsoid is a sphere.
+         * <p>
+         * The default is <code>undefined</code>.  The ellipsoid is not drawn until a radii is provided.
+         * </p>
          *
          * @type Cartesian3
+         *
+         * @example
+         * // A sphere with a radius of 2.0
+         * e.radii = new Cartesian3(2.0, 2.0, 2.0);
+         *
+         * @see EllipsoidPrimitive#modelMatrix
          */
         this.radii = undefined;
+        this._radii = new Cartesian3();
+
         this._oneOverEllipsoidRadiiSquared = new Cartesian3();
+        this._boundingSphere = new BoundingSphere();
 
         /**
-         * DOC_TBA
+         * The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
+         * When this is the identity matrix, the ellipsoid is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
+         * shaders via {@link czm_model} and derived uniforms.
+         * <p>
+         * The default is {@link Matrix4.IDENTITY}.
+         * </p>
          *
          * @type Matrix4
+         *
+         * @example
+         * var origin = ellipsoid.cartographicToCartesian(
+         *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * e.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+         *
+         * @see Transforms.eastNorthUpToFixedFrame
+         * @see czm_model
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
         this._computedModelMatrix = Matrix4.IDENTITY.clone();
 
-        this._mode = undefined;
-        this._projection = undefined;
-
-        /**
-         * The current morph transition time between 2D/Columbus View and 3D,
-         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         *
-         * @type Number
-         */
-        this.morphTime = 1.0;
-
         /**
          * Determines if the ellipsoid primitive will be shown.
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
          *
          * @type Boolean
          */
@@ -122,92 +158,68 @@ define([
         this._affectedByLighting = true;
 
         /**
-         * DOC_TBA
-         * @see Material
+         * The surface appearance of the ellipsoid.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * <p>
+         * The default material is <code>Material.ColorType</code>.
+         * </p>
+         *
+         * @type Material
+         *
+         * @example
+         * // 1. Change the color of the default material to yellow
+         * e.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         *
+         * // 2. Change material to horizontal stripes
+         * e.material = Material.fromType(scene.getContext(), Material.StripeType);
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
 
-        // TODO: commands for picking
+        this._sp = undefined;
+        this._rs = undefined;
+        this._va = undefined;
+
+        this._pickSP = undefined;
+        this._pickMaterial = undefined;
+        this._pickId = undefined;
+
         this._colorCommand = new Command();
+        this._pickCommand = new Command();
         this._commandLists = new CommandLists();
 
         var that = this;
         this._uniforms = {
-            u_morphTime : function() {
-                return that.morphTime;
-            },
-
-            // TODO: Change engine so u_model isn't required.
             u_model : function() {
-                return (that._mode === SceneMode.SCENE3D) ? that._computedModelMatrix : Matrix4.IDENTITY;
+                return that._computedModelMatrix;
             },
             u_radii : function() {
                 return that.radii;
             },
             u_oneOverEllipsoidRadiiSquared : function() {
-                var radii = that.radii;
-                var r = that._oneOverEllipsoidRadiiSquared;
-                r.x = 1.0 / (radii.x * radii.x);
-                r.y = 1.0 / (radii.y * radii.y);
-                r.z = 1.0 / (radii.z * radii.z);
-
-                return r;
+                return that._oneOverEllipsoidRadiiSquared;
             }
         };
     };
 
+    // Per-context cache for ellipsoids
     var vertexArrayCache = {};
 
     function getVertexArray(context) {
-        // Per-context cache for ellipsoids
-
         var c = vertexArrayCache[context.getId()];
 
         if (typeof c !== 'undefined' &&
             typeof c.vertexArray !== 'undefined') {
 
             ++c.referenceCount;
-            return c.vertexArray;
+            return c;
         }
 
         var mesh = BoxTessellator.compute({
             dimensions : new Cartesian3(2.0, 2.0, 2.0)
         });
-
-        mesh.attributes.position3D = mesh.attributes.position;
-        delete mesh.attributes.position;
-
-//        if (this._mode === SceneMode.SCENE3D) {
-            mesh.attributes.position2D = {
-                value : [0.0, 0.0, 0.0]
-            };
-/*
-        } else {
-            var positions = mesh.attributes.position3D.values;
-            var projectedPositions = [];
-            var projectedPositionsFlat = [];
-            for (var i = 0; i < positions.length; i += 3) {
-                var p = new Cartesian4(positions[i], positions[i + 1], positions[i + 2], 1.0);
-                p = this.modelMatrix.multiplyByVector(p);
-
-                positions[i] = p.x;
-                positions[i + 1] = p.y;
-                positions[i + 2] = p.z;
-
-                p = projection.project(this._ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p)));
-
-                projectedPositions.push(p);
-                projectedPositionsFlat.push(p.z, p.x, p.y);
-            }
-
-            mesh.attributes.position2D = {
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : projectedPositionsFlat
-            };
-        }
-*/
 
         var va = context.createVertexArrayFromMesh({
             mesh: mesh,
@@ -215,33 +227,33 @@ define([
             bufferUsage: BufferUsage.STATIC_DRAW
         });
 
-        vertexArrayCache[context.getId()] = {
+        var cachedVA = {
             vertexArray : va,
-            referenceCount : 1
+            referenceCount : 1,
+
+            release : function() {
+                if (typeof this.vertexArray !== 'undefined' &&
+                    --this.referenceCount === 0) {
+
+                    // PERFORMANCE_IDEA: Schedule this for a few hundred frames later so we don't thrash the cache
+                    this.vertexArray = this.vertexArray.destroy();
+                }
+
+                return undefined;
+            }
         };
 
-        return va;
-    }
-
-    function releaseVertexArray(context) {
-        // TODO: Schedule this for a few 100 frames later so we don't thrash the cache
-        var c = vertexArrayCache[context.getId()];
-        if (typeof c !== 'undefined' &&
-            typeof c.vertexArray !== 'undefined' &&
-            --c.referenceCount === 0) {
-
-            c.vertexArray = c.vertexArray.destroy();
-        }
-
-        return undefined;
+        vertexArrayCache[context.getId()] = cachedVA;
+        return cachedVA;
     }
 
     /**
-     * DOC_TBA
+     * @private
      */
     EllipsoidPrimitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
-            (typeof this.position === 'undefined') ||
+            (frameState.mode !== SceneMode.SCENE3D) ||
+            (typeof this.center === 'undefined') ||
             (typeof this.radii === 'undefined')) {
             return;
         }
@@ -267,64 +279,98 @@ define([
             });
         }
 
-        var mode = frameState.mode;
-        var projection = frameState.scene2D.projection;
-
-        // TODO: When do we really need to rewrite?
-        if ((typeof this._va === 'undefined') ||
-            (this._mode !== mode) ||
-            (this._projection !== projection)) {
-
-            this._mode = mode;
-            this._projection = projection;
-
-            if (typeof mode.morphTime !== 'undefined') {
-                this.morphTime = mode.morphTime;
-            }
-
+        if (typeof this._va === 'undefined') {
             this._va = getVertexArray(context);
         }
 
-        var colorCommand = this._colorCommand;
+        var radii = this.radii;
+        if (!Cartesian3.equals(this._radii, radii)) {
+            Cartesian3.clone(radii, this._radii);
 
-        // Recompile shader when material changes
-        if (typeof this._material === 'undefined' ||
-            this._material !== this.material ||
-            this._affectedByLighting !== this.affectedByLighting) {
+            var r = this._oneOverEllipsoidRadiiSquared;
+            r.x = 1.0 / (radii.x * radii.x);
+            r.y = 1.0 / (radii.y * radii.y);
+            r.z = 1.0 / (radii.z * radii.z);
 
-            this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
-            this._material = this.material;
-            this._affectedByLighting = this.affectedByLighting;
-
-            var fsSource =
-                '#line 0\n' +
-                Noise +
-                '#line 0\n' +
-                this._material.shaderSource +
-                (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
-                '#line 0\n' +
-                EllipsoidFS;
-
-            this._sp = this._sp && this._sp.release();
-            this._sp = context.getShaderCache().getShaderProgram(EllipsoidVS, fsSource, attributeIndices);
-
-            colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+            this._boundingSphere.radius = Cartesian3.getMaximumComponent(radii);
         }
 
         // Translate model coordinates used for rendering such that the origin is the center of the ellipsoid.
-        Matrix4.multiplyByTranslation(this.modelMatrix, this.position, this._computedModelMatrix);
-
-        // TODO: colorCommand.boundingVolume = ...
-        colorCommand.modelMatrix = (frameState.mode === SceneMode.SCENE3D) ? this._computedModelMatrix : Matrix4.IDENTITY;
-        colorCommand.primitiveType = PrimitiveType.TRIANGLES;
-        colorCommand.vertexArray = this._va;
-        colorCommand.renderState = this._rs;
-        colorCommand.shaderProgram = this._sp;
+        Matrix4.multiplyByTranslation(this.modelMatrix, this.center, this._computedModelMatrix);
 
         var ellipsoidCommandLists = this._commandLists;
         ellipsoidCommandLists.removeAll();
+
         if (frameState.passes.color) {
+            var colorCommand = this._colorCommand;
+
+            // Recompile shader when material changes
+            if (typeof this._material === 'undefined' ||
+                this._material !== this.material ||
+                this._affectedByLighting !== this.affectedByLighting) {
+
+                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
+                this._material = this.material;
+                this._affectedByLighting = this.affectedByLighting;
+
+                var fsSource =
+                    '#line 0\n' +
+                    Noise +
+                    '#line 0\n' +
+                    this.material.shaderSource +
+                    (this.affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                    '#line 0\n' +
+                    EllipsoidFS;
+
+                this._sp = this._sp && this._sp.release();
+                this._sp = context.getShaderCache().getShaderProgram(EllipsoidVS, fsSource, attributeIndices);
+
+                colorCommand.primitiveType = PrimitiveType.TRIANGLES;
+                colorCommand.vertexArray = this._va.vertexArray;
+                colorCommand.renderState = this._rs;
+                colorCommand.shaderProgram = this._sp;
+                colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+            }
+
+            colorCommand.boundingVolume = this._boundingSphere;
+            colorCommand.modelMatrix = this._computedModelMatrix;
+
             ellipsoidCommandLists.colorList.push(colorCommand);
+        }
+
+        if (frameState.passes.pick) {
+            var pickCommand = this._pickCommand;
+
+            if (typeof this._pickId === 'undefined') {
+                var pickId = context.createPickId(this);
+
+                var pickMaterial = Material.fromType(context, Material.ColorType);
+                pickMaterial.uniforms.color = pickId.normalizedRgba;
+
+                var pickFS =
+                    '#line 0\n' +
+                    Noise +
+                    '#line 0\n' +
+                    pickMaterial.shaderSource +
+                    // AFFECTED_BY_LIGHTING is not defined
+                    '#line 0\n' +
+                    EllipsoidFS;
+
+                this._pickId = pickId;
+                this._pickMaterial = pickMaterial;
+                this._pickSP = context.getShaderCache().getShaderProgram(EllipsoidVS, pickFS, attributeIndices);
+
+                pickCommand.primitiveType = PrimitiveType.TRIANGLES;
+                pickCommand.vertexArray = this._va.vertexArray;
+                pickCommand.renderState = this._rs;
+                pickCommand.shaderProgram = this._pickSP;
+                pickCommand.uniformMap = combine([this._uniforms, pickMaterial._uniforms], false, false);
+            }
+
+            pickCommand.boundingVolume = this._boundingSphere;
+            pickCommand.modelMatrix = this._computedModelMatrix;
+
+            ellipsoidCommandLists.pickList.push(pickCommand);
         }
 
         commandList.push(this._commandLists);
@@ -363,11 +409,12 @@ define([
      * @see EllipsoidPrimitive#isDestroyed
      *
      * @example
-     * ellipsoidPrimitive = ellipsoidPrimitive && ellipsoidPrimitive();
+     * e = e && e.destroy();
      */
     EllipsoidPrimitive.prototype.destroy = function() {
         this._sp = this._sp && this._sp.release();
-        this._va = this._va && releaseVertexArray(context);
+        this._va = this._va && this._va.release();
+        this._pickSP = this._pickSP && this._pickSP.release();
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };

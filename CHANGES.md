@@ -9,8 +9,6 @@ Beta Releases
 * Breaking changes:
    * Removed `erosion` property from `Polygon`, `ComplexConicSensorVolume`, `RectangularPyramidSensorVolume`, and `ComplexConicSensorVolume`.  Use the new `Erosion` material.  See the Sandbox examples.
    * Replaced the `positionToEyeWC` field of the `czm_materialInput` struct with its equivalent in eye coordinates, `positionToEyeEC`.
-* Added EllipsoidPrimitive for visualizing ellipsoids and spheres.
-* Added Matrix4.multiplyByTranslation, Matrix4.fromScale, and Matrix3.fromScale.
 * Added new Materials: `RimLighting`, Erosion`, TODO.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
 
 ### b9 - xx/xx/2012
@@ -24,10 +22,12 @@ Beta Releases
    * `PolygonPipeline.scaleToGeodeticHeight` now takes ellipsoid as the last parameter, instead of the first.  It also now defaults to `Ellipsoid.WGS84` if no parameter is provided.
 * The new Sandcastle live editor and demo gallery replace the Sandbox and Skeleton examples.
 * Improved picking performance and accuracy.
+* Added EllipsoidPrimitive for visualizing ellipsoids and spheres.
 * `Extent` functions now take optional result parameters.  Also added `getCenter`, `intersectWith`, and `contains` functions.
 * Add new utility class, `DynamicObjectView` for tracking a DynamicObject with the camera across scene modes; also hooked up CesiumViewerWidget to use it.
 * Added `enableTranslate`, `enableZoom`, and `enableRotate` properties to `Camera2DController` to selectively toggle camera behavior.  All values default to `true`.
 * Added `Camera2DController.setPositionCartographic` to simplify moving the camera programmatically when in 2D mode.
+* Added Matrix4.multiplyByTranslation, Matrix4.fromScale, and Matrix3.fromScale.
 
 ### b8 - 09/05/2012
 
@@ -57,7 +57,6 @@ Beta Releases
     * Renamed `agi_` prefix on GLSL identifiers to `czm_`.
     * Replaced `ViewportQuad` properties `vertexShader` and `fragmentShader` with optional constructor arguments.
     * Changed the GLSL automatic uniform `czm_viewport` from an `ivec4` to a `vec4` to reduce casting.
-
     * `Billboard` now defaults to an image index of `-1` indicating no texture, previously billboards defaulted to `0` indicating the first texture in the atlas. For example, change:
 
             billboards.add({
