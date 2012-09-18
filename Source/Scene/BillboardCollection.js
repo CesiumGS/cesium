@@ -139,6 +139,7 @@ define([
 
         this._baseVolume = new BoundingSphere();
         this._baseVolume2D = new BoundingSphere();
+        this._boundingVolume = new BoundingSphere();
 
         this._commandLists = new CommandLists();
 
@@ -856,7 +857,6 @@ define([
     }
 
     var scratchCanvasDimensions = new Cartesian2();
-    var scratchBV = new BoundingSphere();
     var scratchToCenter = new Cartesian3();
     var scratchProj = new Cartesian3();
     function updateBoundingVolumes(collection, context, frameState) {
@@ -867,7 +867,7 @@ define([
         var textureDimensions = collection._textureAtlas.getTexture().getDimensions();
         var textureSize = Math.max(textureDimensions.x, textureDimensions.y);
 
-        var boundingVolume = scratchBV;
+        var boundingVolume = collection._boundingVolume;
         var pixelScale;
         var size;
         var offset;
