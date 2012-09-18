@@ -11,6 +11,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Matrix4',
         '../Core/MeshFilters',
+        '../Core/BoundingSphere',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
@@ -34,6 +35,7 @@ define([
         Ellipsoid,
         Matrix4,
         MeshFilters,
+        BoundingSphere,
         CullFace,
         BlendingState,
         BufferUsage,
@@ -79,7 +81,10 @@ define([
          * @type Cartesian3
          */
         this.radii = undefined;
+        this._radii = new Cartesian3();
+
         this._oneOverEllipsoidRadiiSquared = new Cartesian3();
+        this._boundingSphere = new BoundingSphere();
 
         /**
          * DOC_TBA
@@ -146,13 +151,7 @@ define([
                 return that.radii;
             },
             u_oneOverEllipsoidRadiiSquared : function() {
-                var radii = that.radii;
-                var r = that._oneOverEllipsoidRadiiSquared;
-                r.x = 1.0 / (radii.x * radii.x);
-                r.y = 1.0 / (radii.y * radii.y);
-                r.z = 1.0 / (radii.z * radii.z);
-
-                return r;
+                return that._oneOverEllipsoidRadiiSquared;
             }
         };
     };
@@ -311,10 +310,22 @@ define([
             colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
         }
 
+        var radii = this.radii;
+        if (!Cartesian3.equals(this._radii, radii)) {
+            Cartesian3.clone(radii, this._radii);
+
+            var r = this._oneOverEllipsoidRadiiSquared;
+            r.x = 1.0 / (radii.x * radii.x);
+            r.y = 1.0 / (radii.y * radii.y);
+            r.z = 1.0 / (radii.z * radii.z);
+
+            this._boundingSphere.radius = Cartesian3.getMaximumComponent(radii);
+        }
+
         // Translate model coordinates used for rendering such that the origin is the center of the ellipsoid.
         Matrix4.multiplyByTranslation(this.modelMatrix, this.position, this._computedModelMatrix);
 
-        // TODO: colorCommand.boundingVolume = ...
+        colorCommand.boundingVolume = this._boundingSphere;
         colorCommand.modelMatrix = (frameState.mode === SceneMode.SCENE3D) ? this._computedModelMatrix : Matrix4.IDENTITY;
         colorCommand.primitiveType = PrimitiveType.TRIANGLES;
         colorCommand.vertexArray = this._va;
