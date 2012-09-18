@@ -2139,12 +2139,9 @@ define([
                     commands.push(this._depthCommand);
                 }
 
-                /*
                 if (typeof this._quadLogo !== 'undefined' && !this._quadLogo.isDestroyed()) {
-                    this._quadLogo.update(context, frameState, scratchQuadCommands);
-                    commands.push.apply(commands, scratchQuadCommands[0].colorList);
+                    this._quadLogo.update(context, frameState, commandList);
                 }
-                */
             }
         }
         if (pass.pick) {

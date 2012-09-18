@@ -258,6 +258,7 @@ define([
 
         updateFrameState(scene);
         scene._frameState.passes.color = true;
+        scene._frameState.passes.overlay = true;
 
         scene._commandList.length = 0;
         scene._primitives.update(scene._context, scene._frameState, scene._commandList);
@@ -332,7 +333,7 @@ define([
     var scratchFarPlane = new Cartesian4();
     var scratchRenderCartesian3 = new Cartesian3();
     var scratchCommand = new Command();
-    function render(scene, framebuffer) {
+    function renderPrimitives(scene, framebuffer) {
         var near = scene._near;
         var far = scene._far;
         var farToNearRatio = scene.farToNearRatio;
@@ -422,6 +423,20 @@ define([
         }
     }
 
+    function renderOverlays(scene) {
+        var context = scene._context;
+        var commandLists = scene._commandList;
+        var length = commandLists.length;
+        for (var i = 0; i < length; ++i) {
+            var commandList = commandLists[i].overlayList;
+            var commandListLength = commandList.length;
+            for (var j = 0; j < commandListLength; ++j) {
+                var command = commandList[j];
+                context.draw(command);
+            }
+        }
+    }
+
     /**
      * DOC_TBA
      * @memberof Scene
@@ -429,7 +444,8 @@ define([
     Scene.prototype.render = function() {
         update(this);
         createPotentiallyVisibleSet(this, 'colorList');
-        render(this);
+        renderPrimitives(this);
+        renderOverlays(this);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -531,7 +547,7 @@ define([
         primitives.update(context, frameState, commandLists);
 
         createPotentiallyVisibleSet(this, 'pickList');
-        render(this, fb);
+        renderPrimitives(this, fb);
 
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
