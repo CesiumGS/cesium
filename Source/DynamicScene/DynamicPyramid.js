@@ -40,7 +40,6 @@ define([
          * @type DynamicProperty
          */
         this.show = undefined;
-
         /**
          * A DynamicDirectionsProperty which determines the projection of the pyramid.
          * @type DynamicDirectionsProperty
