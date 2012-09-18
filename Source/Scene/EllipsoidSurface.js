@@ -105,22 +105,24 @@ define([
         this._tilingScheme = undefined;
         this._occluder = undefined;
         this._doLodUpdate = true;
-        this._boundingSphereTile = undefined;
-        this._boundingSphereVA = undefined;
         this._tileTraversalQueue = new Queue();
 
-        // Fields for collecting statistics.
-        this._maxDepth = 0;
-        this._tilesVisited = 0;
-        this._tilesCulled = 0;
-        this._tilesRendered = 0;
-        this._texturesRendered = 0;
+        this._debug = {
+            boundingSphereTile : undefined,
+            boundingSphereVA : undefined,
 
-        this._lastMaxDepth = -1;
-        this._lastTilesVisited = -1;
-        this._lastTilesCulled = -1;
-        this._lastTilesRendered = -1;
-        this._lastTexturesRendered = -1;
+            maxDepth : 0,
+            tilesVisited : 0,
+            tilesCulled : 0,
+            tilesRendered : 0,
+            texturesRendered : 0,
+
+            lastMaxDepth : -1,
+            lastTilesVisited : -1,
+            lastTilesCulled : -1,
+            lastTilesRendered : -1,
+            lastTexturesRendered : -1
+        };
 
         var that = this;
         when(this.terrainProvider.tilingScheme, function(tilingScheme) {
@@ -342,11 +344,11 @@ define([
         var traversalQueue = this._tileTraversalQueue;
         traversalQueue.clear();
 
-        this._maxDepth = 0;
-        this._tilesVisited = 0;
-        this._tilesCulled = 0;
-        this._tilesRendered = 0;
-        this._texturesRendered = 0;
+        this._debug.maxDepth = 0;
+        this._debug.tilesVisited = 0;
+        this._debug.tilesCulled = 0;
+        this._debug.tilesRendered = 0;
+        this._debug.texturesRendered = 0;
 
         this._tileLoadQueue.markInsertionPoint();
         this._tileReplacementQueue.markStartOfRenderFrame();
@@ -370,7 +372,7 @@ define([
             if (tile.renderable && isTileVisible(this, frameState, tile)) {
                 traversalQueue.enqueue(tile);
             } else {
-                ++this._tilesCulled;
+                ++this._debug.tilesCulled;
             }
         }
 
@@ -379,12 +381,12 @@ define([
         // This maximizes the average detail across the scene and results in fewer sharp transitions
         // between very different LODs.
         while (typeof (tile = traversalQueue.dequeue()) !== 'undefined') {
-            ++this._tilesVisited;
+            ++this._debug.tilesVisited;
 
             this._tileReplacementQueue.markTileRendered(tile);
 
-            if (tile.level > this._maxDepth) {
-                this._maxDepth = tile.level;
+            if (tile.level > this._debug.maxDepth) {
+                this._debug.maxDepth = tile.level;
             }
 
             // Algorithm #1: Don't load children unless we refine to them.
@@ -399,7 +401,7 @@ define([
                     if (isTileVisible(this, frameState, children[i])) {
                         traversalQueue.enqueue(children[i]);
                     } else {
-                        ++this._tilesCulled;
+                        ++this._debug.tilesCulled;
                     }
                 }
             } else {
@@ -408,19 +410,19 @@ define([
             }
         }
 
-        if (this._tilesVisited !== this._lastTilesVisited ||
-            this._tilesRendered !== this._lastTilesRendered ||
-            this._texturesRendered !== this._lastTexturesRendered ||
-            this._tilesCulled !== this._lastTilesCulled ||
-            this._maxDepth !== this._lastMaxDepth) {
+        if (this._debug.tilesVisited !== this._debug.lastTilesVisited ||
+            this._debug.tilesRendered !== this._debug.lastTilesRendered ||
+            this._debug.texturesRendered !== this._debug.lastTexturesRendered ||
+            this._debug.tilesCulled !== this._debug.lastTilesCulled ||
+            this._debug.maxDepth !== this._debug.lastMaxDepth) {
 
-            console.log('Visited ' + this._tilesVisited + ', Rendered: ' + this._tilesRendered + ', Textures: ' + this._texturesRendered + ', Culled: ' + this._tilesCulled + ', Max Depth: ' + this._maxDepth);
+            console.log('Visited ' + this._debug.tilesVisited + ', Rendered: ' + this._debug.tilesRendered + ', Textures: ' + this._debug.texturesRendered + ', Culled: ' + this._debug.tilesCulled + ', Max Depth: ' + this._debug.maxDepth);
 
-            this._lastTilesVisited = this._tilesVisited;
-            this._lastTilesRendered = this._tilesRendered;
-            this._lastTexturesRendered = this._texturesRendered;
-            this._lastTilesCulled = this._tilesCulled;
-            this._lastMaxDepth = this._maxDepth;
+            this._debug.lastTilesVisited = this._debug.tilesVisited;
+            this._debug.lastTilesRendered = this._debug.tilesRendered;
+            this._debug.lastTexturesRendered = this._debug.texturesRendered;
+            this._debug.lastTilesCulled = this._debug.tilesCulled;
+            this._debug.lastMaxDepth = this._debug.maxDepth;
         }
 
         processTileLoadQueue(this, context, frameState);
@@ -580,20 +582,20 @@ define([
     };
 
     // This is debug code to render the bounding sphere of the tile in
-    // EllipsoidSurface._boundingSphereTile.
+    // EllipsoidSurface._debug.boundingSphereTile.
     function debugRenderTileBoundingSphere(surface, context, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
-        if (surface._boundingSphereTile) {
-            if (!surface._boundingSphereVA) {
-                var radius = surface._boundingSphereTile.boundingSphere3D.radius;
+        if (typeof surface._debug !== 'undefined' && typeof surface._debug.boundingSphereTile !== 'undefined') {
+            if (!surface._debug.boundingSphereVA) {
+                var radius = surface._debug.boundingSphereTile.boundingSphere3D.radius;
                 var sphere = CubeMapEllipsoidTessellator.compute(new Ellipsoid(radius, radius, radius), 10);
                 MeshFilters.toWireframeInPlace(sphere);
-                surface._boundingSphereVA = context.createVertexArrayFromMesh({
+                surface._debug.boundingSphereVA = context.createVertexArrayFromMesh({
                     mesh : sphere,
                     attributeIndices : MeshFilters.createAttributeIndices(sphere)
                 });
             }
 
-            var rtc2 = surface._boundingSphereTile.center;
+            var rtc2 = surface._debug.boundingSphereTile.center;
 
             var uniformMap2 = createTileUniformMap();
             mergeUniformMap(uniformMap2, centralBodyUniformMap);
@@ -617,7 +619,7 @@ define([
             boundingSphereCommand.shaderProgram = shaderSet.getShaderProgram(context, 1);
             boundingSphereCommand.renderState = renderState;
             boundingSphereCommand.primitiveType = PrimitiveType.LINES;
-            boundingSphereCommand.vertexArray = surface._boundingSphereVA;
+            boundingSphereCommand.vertexArray = surface._debug.boundingSphereVA;
             boundingSphereCommand.uniformMap = uniformMap2;
 
             colorCommandList.push(boundingSphereCommand);
@@ -692,9 +694,8 @@ define([
             console.log('x: ' + result.x + ' y: ' + result.y + ' level: ' + result.level);
         }
 
-
-        this._boundingSphereTile = result;
-        this._boundingSphereVA = undefined;
+        this._debug.boundingSphereTile = result;
+        this._debug.boundingSphereVA = undefined;
     };
 
     var logoData = {
@@ -800,8 +801,8 @@ define([
 
         tileSet.push(tile);
 
-        ++surface._tilesRendered;
-        surface._texturesRendered += readyTextureCount;
+        ++surface._debug.tilesRendered;
+        surface._debug.texturesRendered += readyTextureCount;
     }
 
     var boundingSphereScratch = new BoundingSphere();
