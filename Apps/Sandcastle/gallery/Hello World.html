@@ -136,10 +136,11 @@ require([
         // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
     });
 
-    (function tick() {
+    function tick() {
         scene.render();
         Cesium.requestAnimationFrame(tick);
-    }());
+    }
+    tick();
 
     ///////////////////////////////////////////////////////////////////////////
     // Example mouse & keyboard handlers
@@ -200,9 +201,6 @@ require([
 
         canvas.width = width;
         canvas.height = height;
-
-        scene.getContext().setViewport(new Cesium.BoundingRectangle(0, 0, width, height));
-
         scene.getCamera().frustum.aspectRatio = width / height;
     };
     window.addEventListener('resize', onResize, false);
