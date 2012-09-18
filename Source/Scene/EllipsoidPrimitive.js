@@ -64,6 +64,9 @@ define([
         this._sp = undefined;
         this._rs = undefined;
         this._va = undefined;
+
+        this._pickSP = undefined;
+        this._pickMaterial = undefined;
         this._pickId = undefined;
 
         // TODO: Sensible defaults for position and radii?  Undefined is probably sensible.  Or take them with the constructor?
@@ -133,8 +136,8 @@ define([
         this.material = Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
 
-        // TODO: commands for picking
         this._colorCommand = new Command();
+        this._pickCommand = new Command();
         this._commandLists = new CommandLists();
 
         var that = this;
@@ -284,32 +287,6 @@ define([
             this._va = getVertexArray(context);
         }
 
-        var colorCommand = this._colorCommand;
-
-        // Recompile shader when material changes
-        if (typeof this._material === 'undefined' ||
-            this._material !== this.material ||
-            this._affectedByLighting !== this.affectedByLighting) {
-
-            this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
-            this._material = this.material;
-            this._affectedByLighting = this.affectedByLighting;
-
-            var fsSource =
-                '#line 0\n' +
-                Noise +
-                '#line 0\n' +
-                this._material.shaderSource +
-                (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
-                '#line 0\n' +
-                EllipsoidFS;
-
-            this._sp = this._sp && this._sp.release();
-            this._sp = context.getShaderCache().getShaderProgram(EllipsoidVS, fsSource, attributeIndices);
-
-            colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
-        }
-
         var radii = this.radii;
         if (!Cartesian3.equals(this._radii, radii)) {
             Cartesian3.clone(radii, this._radii);
@@ -325,17 +302,77 @@ define([
         // Translate model coordinates used for rendering such that the origin is the center of the ellipsoid.
         Matrix4.multiplyByTranslation(this.modelMatrix, this.position, this._computedModelMatrix);
 
-        colorCommand.boundingVolume = this._boundingSphere;
-        colorCommand.modelMatrix = (frameState.mode === SceneMode.SCENE3D) ? this._computedModelMatrix : Matrix4.IDENTITY;
-        colorCommand.primitiveType = PrimitiveType.TRIANGLES;
-        colorCommand.vertexArray = this._va;
-        colorCommand.renderState = this._rs;
-        colorCommand.shaderProgram = this._sp;
-
         var ellipsoidCommandLists = this._commandLists;
         ellipsoidCommandLists.removeAll();
+
         if (frameState.passes.color) {
+            var colorCommand = this._colorCommand;
+
+            // Recompile shader when material changes
+            if (typeof this._material === 'undefined' ||
+                this._material !== this.material ||
+                this._affectedByLighting !== this.affectedByLighting) {
+
+                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
+                this._material = this.material;
+                this._affectedByLighting = this.affectedByLighting;
+
+                var fsSource =
+                    '#line 0\n' +
+                    Noise +
+                    '#line 0\n' +
+                    this._material.shaderSource +
+                    (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                    '#line 0\n' +
+                    EllipsoidFS;
+
+                this._sp = this._sp && this._sp.release();
+                this._sp = context.getShaderCache().getShaderProgram(EllipsoidVS, fsSource, attributeIndices);
+
+                colorCommand.boundingVolume = this._boundingSphere;
+                colorCommand.modelMatrix = (frameState.mode === SceneMode.SCENE3D) ? this._computedModelMatrix : Matrix4.IDENTITY;
+                colorCommand.primitiveType = PrimitiveType.TRIANGLES;
+                colorCommand.vertexArray = this._va;
+                colorCommand.renderState = this._rs;
+                colorCommand.shaderProgram = this._sp;
+                colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+            }
+
             ellipsoidCommandLists.colorList.push(colorCommand);
+        }
+
+        if (frameState.passes.pick) {
+            var pickCommand = this._pickCommand;
+
+            if (typeof this._pickId === 'undefined') {
+                var pickId = context.createPickId(this);
+
+                var pickMaterial = Material.fromType(context, Material.ColorType);
+                pickMaterial.uniforms.color = pickId.normalizedRgba;
+
+                var pickFS =
+                    '#line 0\n' +
+                    Noise +
+                    '#line 0\n' +
+                    this._material.shaderSource +
+                    // AFFECTED_BY_LIGHTING is not defined
+                    '#line 0\n' +
+                    EllipsoidFS;
+
+                this._pickId = pickId;
+                this._pickMaterial = pickMaterial;
+                this._pickSP = context.getShaderCache().getShaderProgram(EllipsoidVS, pickFS, attributeIndices);
+
+                pickCommand.boundingVolume = this._boundingSphere;
+                pickCommand.modelMatrix = (frameState.mode === SceneMode.SCENE3D) ? this._computedModelMatrix : Matrix4.IDENTITY;
+                pickCommand.primitiveType = PrimitiveType.TRIANGLES;
+                pickCommand.vertexArray = this._va;
+                pickCommand.renderState = this._rs;
+                pickCommand.shaderProgram = this._pickSP;
+                pickCommand.uniformMap = combine([this._uniforms, pickMaterial._uniforms], false, false);
+            }
+
+            ellipsoidCommandLists.pickList.push(pickCommand);
         }
 
         commandList.push(this._commandLists);
@@ -379,6 +416,7 @@ define([
     EllipsoidPrimitive.prototype.destroy = function() {
         this._sp = this._sp && this._sp.release();
         this._va = this._va && releaseVertexArray(context);
+        this._pickSP = this._pickSP && this._pickSP.release();
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };
