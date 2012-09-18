@@ -92,6 +92,12 @@ define([
         this.cone = undefined;
 
         /**
+         * Gets or sets the ellipsoid.
+         * @type DynamicEllipsoid
+         */
+        this.ellipsoid = undefined;
+
+        /**
          * Gets or sets the label.
          * @type DynamicLabel
          */
