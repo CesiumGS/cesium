@@ -1,1 +1,0 @@
-({"close":"[kapat]","title":"Başlık","authors":"Yazarlar","summary":"Özet","content":"İçerik","contributors":"Katkıda Bulunanlar","updated":"Güncelleştirildi","displayOptions":"[görüntüleme seçenekleri]","id":"Kimlik"})

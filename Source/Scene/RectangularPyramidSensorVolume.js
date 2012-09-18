@@ -38,9 +38,11 @@ define([
         this.show = (typeof t.show === 'undefined') ? true : t.show;
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.  The default is <code>true</code>.
          *
          * @type Boolean
+         *
+         * @see RectangularPyramidSensorVolume#intersectionColor
          */
         this.showIntersection = (typeof t.showIntersection === 'undefined') ? true : t.showIntersection;
 
@@ -134,9 +136,13 @@ define([
         this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromType(undefined, Material.ColorType);
 
         /**
-         * DOC_TBA
+         * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
+         *
+         * @type Color
+         *
+         * @see RectangularPyramidSensorVolume#showIntersection
          */
-        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : new Color(1.0, 1.0, 0.0, 1.0);
+        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : Color.clone(Color.WHITE);
 
         t._pickIdThis = t._pickIdThis || this;
         this._customSensor = new CustomSensorVolume(t);
@@ -150,7 +156,7 @@ define([
      * @exception {DeveloperError} this.xHalfAngle and this.yHalfAngle must each be less than 90 degrees.
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
-    RectangularPyramidSensorVolume.prototype.update = function(context, frameState) {
+    RectangularPyramidSensorVolume.prototype.update = function(context, frameState, commandList) {
         if ((this.xHalfAngle > CesiumMath.PI_OVER_TWO) || (this.yHalfAngle > CesiumMath.PI_OVER_TWO)) {
             throw new DeveloperError('this.xHalfAngle and this.yHalfAngle must each be less than or equal to 90 degrees.');
         }
@@ -193,23 +199,7 @@ define([
             }]);
         }
 
-        return s.update(context, frameState);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
-     */
-    RectangularPyramidSensorVolume.prototype.render = function(context) {
-        this._customSensor.render(context);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
-     */
-    RectangularPyramidSensorVolume.prototype.renderForPick = function(context, framebuffer) {
-        this._customSensor.renderForPick(context, framebuffer);
+        s.update(context, frameState, commandList);
     };
 
     /**

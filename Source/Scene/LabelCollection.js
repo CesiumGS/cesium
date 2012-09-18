@@ -507,26 +507,18 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Check whether this collection contains a given label.
      *
      * @memberof LabelCollection
      *
-     * @param {Object} label DOC_TBA
+     * @param {Label} label The label to check for.
+     *
+     * @return {Boolean} true if this collection contains the label, false otherwise.
      *
      * @see LabelCollection#get
      */
     LabelCollection.prototype.contains = function(label) {
-        if (typeof label !== 'undefined') {
-            var labels = this._labels;
-
-            for ( var i = 0, len = labels.length; i < len; ++i) {
-                if (labels[i] === label) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return typeof label !== 'undefined' && label._labelCollection === this;
     };
 
     /**
@@ -599,7 +591,7 @@ define([
     /**
      * @private
      */
-    LabelCollection.prototype.update = function(context, frameState) {
+    LabelCollection.prototype.update = function(context, frameState, commandList) {
         var billboardCollection = this._billboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
@@ -656,32 +648,7 @@ define([
         }
         labelsToUpdate.length = 0;
 
-        return this._billboardCollection.update(context, frameState);
-    };
-
-    /**
-     * Renders the labels.  In order for changes to properties to be realized,
-     * {@link LabelCollection#update} must be called before <code>render</code>.
-     * <br /><br />
-     * Labels are rendered in a single pass using an uber-shader with a texture atlas, where
-     * each image in the atlas corresponds to one label.
-     *
-     * @memberof LabelCollection
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see LabelCollection#update
-     */
-    LabelCollection.prototype.render = function(context) {
-        this._billboardCollection.render(context);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof LabelCollection
-     */
-    LabelCollection.prototype.renderForPick = function(context, framebuffer) {
-        this._billboardCollection.renderForPick(context, framebuffer);
+        this._billboardCollection.update(context, frameState, commandList);
     };
 
     /**

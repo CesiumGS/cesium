@@ -13,13 +13,18 @@
 					<exclude name="**/*.profile.js" />
 				</fileset>
 			</createCesiumJs>
+
 			<createSpecList output="${specsDirectory}/SpecList.js">
 				<fileset dir="${specsDirectory}" includes="**/*.js" excludes="*.js" />
 			</createSpecList>
+
+			<createGalleryList output="${galleryDirectory}/gallery-index.js">
+				<fileset dir="${galleryDirectory}" includes="**/*.html" />
+			</createGalleryList>
 		</parallel>
 	</target>
 
-	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript, concatenateSandboxSnippets" />
+	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript" />
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
 		<antcall target="combine">
@@ -64,6 +69,7 @@
 			<fileset dir="${instrumentedDirectory}" defaultexcludes="false" />
 			<fileset dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
 			<fileset dir="${specsDirectory}" includes="SpecList.js" />
+			<fileset dir="${galleryDirectory}" includes="gallery-index.js" />
 			<fileset dir="." includes="Cesium-*.zip" />
 		</delete>
 	</target>
@@ -72,10 +78,11 @@
 	<property name="build.minification" value="false" />
 
 	<!-- Inputs -->
-	<property name="version" value="b7" />
+	<property name="version" value="b8" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
+	<property name="galleryDirectory" location="Apps/Sandcastle/gallery" />
 	<property name="specsDirectory" location="Specs" />
 	<property name="imagesDirectory" location="Images" />
 	<property name="toolsDirectory" location="Tools" />
@@ -300,6 +307,50 @@ if (oldContents !== contents) {
 ]]>
 	</scriptdef>
 
+	<scriptdef name="createGalleryList" language="javascript">
+		<attribute name="output" />
+		<element name="fileset" type="fileset" />
+		<![CDATA[
+importClass(java.io.File);
+importClass(java.io.FileReader);
+importClass(java.io.FileWriter);
+importClass(Packages.org.apache.tools.ant.util.FileUtils);
+
+var demos = [];
+
+var filesets = elements.get("fileset");
+for (var i = 0, len = filesets.size(); i < len; i++) {
+  var fileset = filesets.get(i);
+  var basedir  = fileset.getDir(project);
+  var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
+
+  for (var j = 0, len2 = filenames.length; j < len2; j++) {
+    var relativePath = filenames[j];
+    var demo = relativePath.substring(0, relativePath.lastIndexOf('.')).replace('\\', '/');
+    var thumbnail = new File(basedir, demo + '.jpg').exists() ? (", 'img':'" + demo + ".jpg'") : '';
+    var fileDate = new File(basedir, demo + '.html').lastModified().toString();
+    demos.push("\n\t{'name':'" + demo + "'" + thumbnail + ", 'date':" + fileDate + '}');
+  }
+}
+
+var output = attributes.get("output");
+if (new File(output).exists()) {
+  var reader = new FileReader(output);
+  var oldContents = String(FileUtils.readFully(reader));
+  reader.close();
+}
+
+var contents = '// This file is automatically rebuilt by the Cesium build process.\n' +
+    'var gallery_demos = [' + demos.join(',') + '\n];';
+
+if (oldContents !== contents) {
+  var writer = new FileWriter(output);
+  writer.write(contents);
+  writer.close();
+}
+]]>
+	</scriptdef>
+
 	<target name="combineJavaScript.setNodePathValue">
 		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
 			<os family="windows" />
@@ -374,15 +425,6 @@ if (oldContents !== contents) {
 	</target>
 
 	<target name="combineJavaScript" depends="combineJavaScript.createUnminified,combineJavaScript.createMinified" />
-
-	<target name="concatenateSandboxSnippets">
-		<concat destfile="${examplesDirectory}/Sandbox/CodeSnippetsConcatenated.js" fixLastLine="true">
-			<fileset dir="${examplesDirectory}/Sandbox/CodeSnippets" includes="**/*.js" />
-		</concat>
-		<copy todir="${examplesDirectory}/Sandbox/Images">
-			<fileset dir="${imagesDirectory}" />
-		</copy>
-	</target>
 
 	<target name="copyIndexHtml">
 		<copy file="index.html" todir="${buildDirectory}" />

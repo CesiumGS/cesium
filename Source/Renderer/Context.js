@@ -232,8 +232,6 @@ define([
         this._aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
         this._aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
         this._maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
-        var v = gl.getParameter(gl.VIEWPORT);
-        this._viewport = new BoundingRectangle(v[0], v[1], v[2], v[3]);
 
         // Query and initialize extensions
         this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
@@ -408,6 +406,18 @@ define([
         this._enableOrDisable(this._gl.DITHER, dither);
     };
 
+    var scratchViewport = new BoundingRectangle();
+    Context.prototype._applyViewport = function(viewport) {
+        if (typeof viewport === 'undefined') {
+            viewport = scratchViewport;
+            viewport.width = this._canvas.clientWidth;
+            viewport.height = this._canvas.clientHeight;
+        }
+
+        this._us.setViewport(viewport);
+        this._gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+    };
+
     Context.prototype._applyRenderState = function(state) {
         this._applyFrontFace(state.frontFace);
         this._applyCull(state.cull);
@@ -423,6 +433,7 @@ define([
         this._applyStencilTest(state.stencilTest);
         this._applySampleCoverage(state.sampleCoverage);
         this._applyDither(state.dither);
+        this._applyViewport(state.viewport);
     };
 
     /**
@@ -464,91 +475,6 @@ define([
      */
     Context.prototype.getUniformState = function() {
         return this._us;
-    };
-
-    /**
-     * Returns the viewport, which determines the rectangular region of the canvas that is rendered to.  The viewport contains four
-     * properties: <code>x</code> and <code>y</code>, which define the lower left corner of the viewport in window coordinates
-     * (relative to the canvas), and its <code>width</code> and <code>height</code> in pixels.
-     *
-     * @memberof Context
-     *
-     * @returns {BoundingRectangle} The viewport defined by its <code>x</code> and <code>y</code> window coordinates and its <code>width</code> and <code>height</code>.
-     *
-     * @see Context#setViewport
-     * @see Context#getCanvas
-     * @see czm_viewport
-     *
-     * @example
-     * var viewport = context.getViewport();
-     * console.log(viewport.x);
-     * console.log(viewport.y);
-     * console.log(viewport.width);
-     * console.log(viewport.height);
-     */
-    Context.prototype.getViewport = function() {
-        return this._viewport;
-    };
-
-    /**
-     * Sets the viewport, which determines the rectangular region of the canvas that is rendered to.  The viewport contains four
-     * properties: <code>x</code> and <code>y</code>, which define the lower left corner of the viewport in window coordinates
-     * (relative to the canvas), and its <code>width</code> and <code>height</code> in pixels.
-     *
-     * @memberof Context
-     *
-     * @param {BoundingRectangle} viewport The new viewport defined by its <code>x</code> and <code>y</code> window coordinates and its <code>width</code> and <code>height</code>.
-     *
-     * @exception {RuntimeError} viewport.width must be less than or equal to the maximum viewport width.
-     * @exception {RuntimeError} viewport.height must be less than or equal to the maximum viewport height.
-     *
-     * @exception {DeveloperError} A viewport with x, y, width, and height properties is required.
-     * @exception {DeveloperError} viewport.width must be greater than or equal to zero.
-     * @exception {DeveloperError} viewport.height must be greater than or equal to zero.
-     *
-     * @see Context#getViewport
-     * @see Context#getMaximumViewportWidth
-     * @see Context#getMaximumViewportHeight
-     * @see Context#getCanvas
-     * @see czm_viewport
-     *
-     * @example
-     * context.setViewport(new BoundingRectangle(0, 0, 640, 480));
-     */
-    Context.prototype.setViewport = function(viewport) {
-        if ((typeof viewport === 'undefined') ||
-            (typeof viewport.x === 'undefined') ||
-            (typeof viewport.y === 'undefined') ||
-            (typeof viewport.width === 'undefined') ||
-            (typeof viewport.height === 'undefined')) {
-            throw new DeveloperError('A viewport with x, y, width, and height properties is required.');
-        }
-
-        var x = viewport.x;
-        var y = viewport.y;
-        var w = viewport.width;
-        var h = viewport.height;
-
-        if (w < 0) {
-            throw new DeveloperError('viewport.width must be greater than or equal to zero.');
-        }
-
-        if (w > this.getMaximumViewportWidth()) {
-            throw new RuntimeError('viewport.width must be less than or equal to the maximum viewport width (' + this.getMaximumViewportWidth().toString() + ').  Check getMaximumViewportWidth().');
-        }
-
-        if (h < 0) {
-            throw new DeveloperError('viewport.height must be greater than or equal to zero.');
-        }
-
-        if (h > this.getMaximumViewportHeight()) {
-            throw new RuntimeError('viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
-        }
-
-        if (!BoundingRectangle.equals(viewport, this._viewport)) {
-            BoundingRectangle.clone(viewport, this._viewport);
-            this._gl.viewport(x, y, w, h);
-        }
     };
 
     /**
@@ -1883,6 +1809,10 @@ define([
      * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.fail.
      * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.zFail.
      * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.zPass.
+     * @exception {DeveloperError} renderState.viewport.width must be greater than or equal to zero.
+     * @exception {DeveloperError} renderState.viewport.width must be less than or equal to the maximum viewport width.
+     * @exception {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
+     * @exception {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
      */
     Context.prototype.createRenderState = function(renderState) {
         var rs = renderState || {};
@@ -1899,6 +1829,7 @@ define([
         var stencilTestFrontOperation = stencilTest.frontOperation || {};
         var stencilTestBackOperation = stencilTest.backOperation || {};
         var sampleCoverage = rs.sampleCoverage || {};
+        var viewport = rs.viewport;
 
         var r = {
             frontFace : (typeof rs.frontFace === 'undefined') ? WindingOrder.COUNTER_CLOCKWISE : rs.frontFace,
@@ -1914,12 +1845,7 @@ define([
             },
             scissorTest : {
                 enabled : (typeof scissorTest.enabled === 'undefined') ? false : scissorTest.enabled,
-                rectangle : {
-                    x : (typeof scissorTestRectangle.x === 'undefined') ? 0 : scissorTestRectangle.x,
-                    y : (typeof scissorTestRectangle.y === 'undefined') ? 0 : scissorTestRectangle.y,
-                    width : (typeof scissorTestRectangle.width === 'undefined') ? 0 : scissorTestRectangle.width,
-                    height : (typeof scissorTestRectangle.height === 'undefined') ? 0 : scissorTestRectangle.height
-                }
+                rectangle : BoundingRectangle.clone(scissorTestRectangle)
             },
             depthRange : {
                 near : (typeof depthRange.near === 'undefined') ? 0 : depthRange.near,
@@ -1977,6 +1903,7 @@ define([
                 invert : (typeof sampleCoverage.invert === 'undefined') ? false : sampleCoverage.invert
             },
             dither : (typeof rs.dither === 'undefined') ? true : rs.dither
+            // viewport is set below because it is allowed to be undefined - meaning always the canvas size.
         };
 
         // Validate
@@ -2081,6 +2008,28 @@ define([
 
         if (!StencilOperation.validate(r.stencilTest.backOperation.zPass)) {
             throw new DeveloperError('Invalid renderState.stencilTest.backOperation.zPass.');
+        }
+
+        if (typeof vieport !== 'undefined') {
+            if (viewport.width < 0) {
+                throw new DeveloperError('renderState.viewport.width must be greater than or equal to zero.');
+            }
+
+            if (viewport.width > this.getMaximumViewportWidth()) {
+                throw new RuntimeError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.getMaximumViewportWidth().toString() + ').  Check getMaximumViewportWidth().');
+            }
+
+            if (viewport.height < 0) {
+                throw new DeveloperError('renderState.viewport.height must be greater than or equal to zero.');
+            }
+
+            if (viewport.height > this.getMaximumViewportHeight()) {
+                throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
+            }
+
+            r.viewport = new BoundingRectangle(viewport.x, viewport.y,
+                    (typeof viewport.width === 'undefined') ? this._canvas.clientWidth : viewport.width,
+                    (typeof viewport.height === 'undefined') ? this._canvas.clientHeight : viewport.height);
         }
 
         return r;
@@ -2757,7 +2706,7 @@ define([
         return va;
     };
 
-    /*
+    /**
      * DOC_TBA
      *
      * @memberof Context

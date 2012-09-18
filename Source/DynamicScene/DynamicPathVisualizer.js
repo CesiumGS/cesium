@@ -17,7 +17,7 @@ define([
         var hasTrailTime = typeof trailTime !== 'undefined';
 
         if (!hasAvailability && (!hasLeadTime || !hasTrailTime)) {
-            return undefined;
+            return [];
         }
 
         var sampleStart;

@@ -14,6 +14,8 @@ define([
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
+        '../Renderer/Command',
+        '../Renderer/CommandLists',
         './Material',
         './SceneMode',
         '../Shaders/Noise',
@@ -35,6 +37,8 @@ define([
         CullFace,
         BlendingState,
         BufferUsage,
+        Command,
+        CommandLists,
         Material,
         SceneMode,
         Noise,
@@ -124,6 +128,10 @@ define([
         this.material = Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
 
+        // TODO: commands for picking
+        this._colorCommand = new Command();
+        this._commandLists = new CommandLists();
+
         var that = this;
         this._uniforms = {
             u_morphTime : function() {
@@ -147,8 +155,6 @@ define([
                 return r;
             }
         };
-        this._pickUniforms = undefined;
-        this._drawUniforms = undefined;
     };
 
     var vertexArrayCache = {};
@@ -231,24 +237,13 @@ define([
     }
 
     /**
-     * Commits changes to properties before rendering by updating the object's WebGL resources.
-     * This must be called before calling {@link EllipsoidPrimitive#render} in order to realize
-     * changes to EllipsoidPrimitive's positions and properties.
-     *
-     * @memberof EllipsoidPrimitive
-     *
-     * @param context
-     * @param sceneState
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Polygon#render
+     * DOC_TBA
      */
-    EllipsoidPrimitive.prototype.update = function(context, sceneState) {
+    EllipsoidPrimitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             (typeof this.position === 'undefined') ||
             (typeof this.radii === 'undefined')) {
-            return undefined;
+            return;
         }
 
         if (typeof this._rs === 'undefined') {
@@ -272,8 +267,8 @@ define([
             });
         }
 
-        var mode = sceneState.mode;
-        var projection = sceneState.scene2D.projection;
+        var mode = frameState.mode;
+        var projection = frameState.scene2D.projection;
 
         // TODO: When do we really need to rewrite?
         if ((typeof this._va === 'undefined') ||
@@ -289,6 +284,8 @@ define([
 
             this._va = getVertexArray(context);
         }
+
+        var colorCommand = this._colorCommand;
 
         // Recompile shader when material changes
         if (typeof this._material === 'undefined' ||
@@ -311,40 +308,27 @@ define([
             this._sp = this._sp && this._sp.release();
             this._sp = context.getShaderCache().getShaderProgram(EllipsoidVS, fsSource, attributeIndices);
 
-            this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
+            colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
         }
 
         // Translate model coordinates used for rendering such that the origin is the center of the ellipsoid.
         Matrix4.multiplyByTranslation(this.modelMatrix, this.position, this._computedModelMatrix);
 
-        return {
-            modelMatrix : (sceneState.mode === SceneMode.SCENE3D) ? this._computedModelMatrix : Matrix4.IDENTITY
-        };
-    };
+        // TODO: colorCommand.boundingVolume = ...
+        colorCommand.modelMatrix = (frameState.mode === SceneMode.SCENE3D) ? this._computedModelMatrix : Matrix4.IDENTITY;
+        colorCommand.primitiveType = PrimitiveType.TRIANGLES;
+        colorCommand.vertexArray = this._va;
+        colorCommand.renderState = this._rs;
+        colorCommand.shaderProgram = this._sp;
 
-    /**
-     * Renders the ellipsoid primitive. In order for changes to positions and properties to be realized,
-     * {@link EllipsoidPrimitive#update} must be called before <code>render</code>.
-     *
-     * @memberof EllipsoidPrimitive
-     *
-     * @param context
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see EllipsoidPrimitive#update
-     */
-    EllipsoidPrimitive.prototype.render = function(context) {
-        context.draw({
-            primitiveType: PrimitiveType.TRIANGLES,
-            shaderProgram: this._sp,
-            uniformMap: this._drawUniforms,
-            vertexArray: this._va,
-            renderState: this._rs
-        });
-    };
+        var ellipsoidCommandLists = this._commandLists;
+        ellipsoidCommandLists.removeAll();
+        if (frameState.passes.color) {
+            ellipsoidCommandLists.colorList.push(colorCommand);
+        }
 
-    // TODO: Picking
+        commandList.push(this._commandLists);
+    };
 
     /**
      * Returns true if this object was destroyed; otherwise, false.

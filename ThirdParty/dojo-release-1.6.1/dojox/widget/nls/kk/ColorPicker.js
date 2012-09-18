@@ -1,1 +1,0 @@
-({"saturationPickerTitle":"Қанықтықты іріктеу","valueLabel":"п","blueLabel":"ә","saturationLabel":"ң","greenLabel":"д","redLabel":"r","hueLabel":"е","hexLabel":"алтылық","huePickerTitle":"Реңкті іріктеу","degLabel":"°"})
