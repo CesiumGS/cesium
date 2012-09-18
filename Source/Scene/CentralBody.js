@@ -1470,6 +1470,7 @@ define([
                 ];
 
                 if (typeof this._northPoleCommand.vertexArray === 'undefined') {
+                    this._northPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
                     mesh = {
                         attributes : {
                             position : {
@@ -1517,6 +1518,7 @@ define([
                  ];
 
                  if (typeof this._southPoleCommand.vertexArray === 'undefined') {
+                     this._southPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
                      mesh = {
                          attributes : {
                              position : {
@@ -1670,7 +1672,8 @@ define([
                 })
             });
 
-            this._skyCommand.framebuffer = this._fb;
+            // MULTIFRUSTUM TODO: blur passes?
+            //this._skyCommand.framebuffer = this._fb;
 
             // create viewport quad for vertical gaussian blur pass
             this._quadV = new ViewportQuad(
@@ -1744,6 +1747,7 @@ define([
                 },
                 depthMask : false*/
             });
+            this._skyCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMaximumRadius() * 1.025);
         }
 
         if (CentralBody._isModeTransition(this._mode, mode) || this._projection !== projection) {
@@ -2057,12 +2061,19 @@ define([
         if (pass.color) {
             commands = this._commandLists.colorList;
 
-            // MULTIFRUSTUM TODO: Revisit this when adding blur passes, depth plane and logo back
-            /*
             if (this.showSkyAtmosphere) {
                 commands.push(this._skyCommand);
             }
-            */
+
+            // render quads to fill the poles
+            if (this._mode === SceneMode.SCENE3D) {
+                if (this._drawNorthPole) {
+                    commands.push(this._northPoleCommand);
+                }
+                if (this._drawSouthPole) {
+                    commands.push(this._southPoleCommand);
+                }
+            }
 
             if (this._renderQueue.length !== 0) {
                 var mv = frameState.camera.getViewMatrix();
@@ -2099,7 +2110,7 @@ define([
                         command = tileCommands[j - 1] = new Command();
                     }
 
-                    // MULTIFRUSTUM TODO: Revisit this when adding blur passes, depth plane and logo back
+                    // MULTIFRUSTUM TODO: Revisit this when adding blur passes and logo back
                     //command.framebuffer = this._fb;
                     command.shaderProgram = this._sp;
                     command.renderState = this._rsColor;
@@ -2123,15 +2134,8 @@ define([
                 scratchQuadCommands.length = 0;
                 */
 
-                // render quads to fill the poles and depth plane
+                // render depth plane
                 if (this._mode === SceneMode.SCENE3D) {
-                    if (this._drawNorthPole) {
-                    //    commands.push(this._northPoleCommand);
-                    }
-                    if (this._drawSouthPole) {
-                    //    commands.push(this._southPoleCommand);
-                    }
-
                     commands.push(this._depthCommand);
                 }
 

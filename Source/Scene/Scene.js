@@ -11,6 +11,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Intersect',
         '../Core/IntersectionTests',
         '../Core/Matrix4',
@@ -36,6 +37,7 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         Intersect,
         IntersectionTests,
         Matrix4,
@@ -251,6 +253,9 @@ define([
     }
 
     var scratchCullingVolume = new CullingVolume();
+    var scratchNearPlane = new Cartesian4();
+    var scratchFarPlane = new Cartesian4();
+    var scratchRenderCartesian3 = new Cartesian3();
     /**
      * DOC_TBA
      * @memberof Scene
@@ -266,6 +271,12 @@ define([
         var far = Number.MIN_VALUE;
         var undefBV = false;
 
+        var occluder;
+        if (this._frameState.mode === SceneMode.SCENE3D) {
+            occluder = this._frameState.occluder;
+        }
+
+        // get user culling volume minus the far plane.
         var planes = scratchCullingVolume.planes;
         for (var k = 0; k < 5; ++k) {
             planes[k] = cullingVolume.planes[k];
@@ -283,7 +294,8 @@ define([
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     //TODO: Remove this allocation.
                     var transformedBV = boundingVolume.transform(modelMatrix);
-                    if (cullingVolume.getVisibility(transformedBV) !== Intersect.OUTSIDE) {
+                    if (cullingVolume.getVisibility(transformedBV) !== Intersect.OUTSIDE ||
+                            (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
                         renderList.push(command);
 
                         // MULTIFRUSTUM TODO: move logic to bounding volume
@@ -311,6 +323,19 @@ define([
         var farToNearRatio = 1000.0;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
 
+        var direction = camera.getDirectionWC();
+        var position = camera.getPositionWC();
+
+        var nearPlane = scratchNearPlane;
+        nearPlane.x = direction.x;
+        nearPlane.y = direction.y;
+        nearPlane.z = direction.z;
+
+        var farPlane = scratchFarPlane;
+        farPlane.x = -direction.x;
+        farPlane.y = -direction.y;
+        farPlane.z = -direction.z;
+
         var context = this._context;
         var us = context.getUniformState();
         var clearColor = context.createClearState({
@@ -324,7 +349,7 @@ define([
         var frustum = camera.frustum.clone();
         for (var p = 0; p < numFrustums; ++p) {
             context.clear(clearDepth);
-            frustum.near = Math.pow(farToNearRatio, numFrustums - p - 1.0) + near;
+            frustum.near = Math.pow(farToNearRatio, numFrustums - p - 1.0) * near;
             frustum.far = frustum.near * farToNearRatio;
 
             us.setProjection(frustum.getProjectionMatrix());
@@ -332,22 +357,46 @@ define([
                 us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
             }
 
-            cullingVolume = frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+            // compute near plane
+            var nearCenter = scratchRenderCartesian3;
+            Cartesian3.multiplyByScalar(direction, frustum.near, nearCenter);
+            Cartesian3.add(position, nearCenter, nearCenter);
+            nearPlane.w = -Cartesian3.dot(direction, nearCenter);
+
+            // compute far plane
+            var farCenter = scratchRenderCartesian3;
+            Cartesian3.multiplyByScalar(direction, frustum.far, farCenter);
+            Cartesian3.add(position, farCenter, farCenter);
+            farPlane.w = -Cartesian3.dot(farPlane, farCenter);
 
             length = renderList.length;
             for (var q = 0; q < length; ++q) {
                 var renderCommand = renderList[q];
 
-                // MULTIFRUSTUM TODO: do what if boundingVolume is undefined?
                 var bv = renderCommand.boundingVolume;
-                var mm = defaultValue(renderCommand.modelMatrix, Matrix4.IDENTITY);
-                //MULTIFRUSTUM TODO: Remove this allocation.
-                bv = bv.transform(mm);
-                if (cullingVolume.getVisibility(bv) !== Intersect.OUTSIDE) {
+                if (typeof bv !== 'undefined') {
+                    var mm = defaultValue(renderCommand.modelMatrix, Matrix4.IDENTITY);
+                    //MULTIFRUSTUM TODO: Remove this allocation.
+                    bv = bv.transform(mm);
+
+                    if (bv.intersect(farPlane) === Intersect.OUTSIDE) {
+                        continue; // MULTIFURSTUM TODO: discard command
+                    }
+
+                    var nearIntersect = bv.intersect(nearPlane);
+                    if (nearIntersect === Intersect.OUTSIDE) {
+                        continue;
+                    }
+
+                    context.draw(renderCommand);
+
+                    // MULTIFRUSTUM TODO: discard if command isn't needed in any future frustum
+                    //if (nearIntersect === Intersect.INSIDE) {
+                        // discard
+                    //}
+                } else {
                     context.draw(renderCommand);
                 }
-
-                // MULTIFRUSTUM TODO: discard if command isn't needed in any furture frustum
             }
         }
     };
