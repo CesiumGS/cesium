@@ -294,18 +294,20 @@ define([
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     //TODO: Remove this allocation.
                     var transformedBV = boundingVolume.transform(modelMatrix);
-                    if (cullingVolume.getVisibility(transformedBV) !== Intersect.OUTSIDE ||
+                    if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
                             (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
-                        renderList.push(command);
-
-                        // MULTIFRUSTUM TODO: move logic to bounding volume
-                        var toCenter = transformedBV.center.subtract(camera.getPositionWC());
-                        var proj = camera.getDirectionWC().multiplyByScalar(camera.getDirectionWC().dot(toCenter));
-                        var distance = proj.magnitude();
-
-                        near = Math.min(near, distance - transformedBV.radius);
-                        far = Math.max(far, distance + transformedBV.radius);
+                        continue;
                     }
+
+                    renderList.push(command);
+
+                    // MULTIFRUSTUM TODO: move logic to bounding volume
+                    var toCenter = transformedBV.center.subtract(camera.getPositionWC());
+                    var proj = camera.getDirectionWC().multiplyByScalar(camera.getDirectionWC().dot(toCenter));
+                    var distance = proj.magnitude();
+
+                    near = Math.min(near, distance - transformedBV.radius);
+                    far = Math.max(far, distance + transformedBV.radius);
                 } else {
                     undefBV = true;
                     renderList.push(command);
