@@ -80,8 +80,6 @@ define([
 
         this._commandList = [];
         this._renderList = [];
-        this._numCulled = 0;
-        this._numDrawn = 0;
 
         /**
          * The current mode of the scene.
@@ -117,12 +115,6 @@ define([
          * @type Number
          */
         this.minimumNearDistance = 1.0;
-        /**
-         * Prints debug information to the console if enabled.
-         *
-         * @type Boolean
-         */
-        this.printDebugInfo = true;
     };
 
     /**
@@ -301,7 +293,6 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
-        scene._numCulled = 0;
         var length = commandLists.length;
         for (var i = 0; i < length; ++i) {
             var commandList = commandLists[i][listName];
@@ -315,7 +306,6 @@ define([
                     var transformedBV = boundingVolume.transform(modelMatrix);
                     if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
                             (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
-                        scene._numCulled++;
                         continue;
                     }
 
@@ -331,8 +321,6 @@ define([
                 }
             }
         }
-
-        scene._numDrawn = renderList.length;
 
         if (undefBV) {
             near = camera.frustum.near;
@@ -423,7 +411,6 @@ define([
                         continue;
                     }
 
-                    renderCommand._timesRendered++;
                     var command = Command.cloneDrawArguments(renderCommand, scratchCommand);
                     command.framebuffer = defaultValue(command.framebuffer, framebuffer);
                     context.draw(command);
@@ -434,7 +421,6 @@ define([
                         --q;
                     }
                 } else {
-                    renderCommand._timesRendered++;
                     context.draw(renderCommand);
                 }
             }
@@ -464,12 +450,6 @@ define([
         createPotentiallyVisibleSet(this, 'colorList');
         renderPrimitives(this);
         renderOverlays(this);
-
-        if (this.printDebugInfo) {
-            var that = this;
-            console.log("RenderInformation : ");
-            console.log({ culled : that._numCulled, drawn : that._numDrawn });
-        }
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -572,12 +552,6 @@ define([
 
         createPotentiallyVisibleSet(this, 'pickList');
         renderPrimitives(this, fb);
-
-        if (this.printDebugInfo) {
-            var that = this;
-            console.log("PickInformation : ");
-            console.log({ culled : that._numCulled, drawn : that._numDrawn });
-        }
 
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);

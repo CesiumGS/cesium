@@ -9,8 +9,6 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
      * @constructor
      */
     var Command = function() {
-        this._timesRendered = 0;
-
         /**
          * The bounding volume of the geometry.
          * @type DOC_TBA
