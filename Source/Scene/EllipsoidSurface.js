@@ -991,8 +991,6 @@ define([
                 var oneOverMercatorHeight = 0.0;
 
                 if (mode !== SceneMode.SCENE3D) {
-                    var geographicExtent = tile.extent;
-
                     var southwest = projection.project(tile.extent.getSouthwest());
                     var northeast = projection.project(tile.extent.getNortheast());
 
@@ -1017,28 +1015,8 @@ define([
                         southLatitude = tile.extent.south;
                         northLatitude = tile.extent.north;
 
-                        var mercatorSouthLatitude = southLatitude;
-                        var mercatorNorthLatitude = northLatitude;
-
-                        var maxMercatorLatitude = CesiumMath.PI_OVER_TWO - (2.0 * Math.atan(Math.exp(-Math.PI)));
-                        if (mercatorSouthLatitude < -maxMercatorLatitude) {
-                            mercatorSouthLatitude = -maxMercatorLatitude;
-                            if (mercatorNorthLatitude < -maxMercatorLatitude) {
-                                mercatorNorthLatitude = -maxMercatorLatitude;
-                            }
-                        }
-                        if (mercatorNorthLatitude > maxMercatorLatitude) {
-                            mercatorNorthLatitude = maxMercatorLatitude;
-                            if (mercatorSouthLatitude > maxMercatorLatitude) {
-                                mercatorSouthLatitude = maxMercatorLatitude;
-                            }
-                        }
-
-                        var sinLatitude = Math.sin(mercatorSouthLatitude);
-                        var southMercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
-
-                        sinLatitude = Math.sin(mercatorNorthLatitude);
-                        var northMercatorY = 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+                        var southMercatorY = MercatorProjection.geodeticLatitudeToMercatorAngle(southLatitude);
+                        var northMercatorY = MercatorProjection.geodeticLatitudeToMercatorAngle(northLatitude);
 
                         float32ArrayScratch[0] = southMercatorY;
                         southMercatorYHigh = float32ArrayScratch[0];
