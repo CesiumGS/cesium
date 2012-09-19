@@ -45,6 +45,7 @@ float get2DMercatorYPositionFraction()
     if (u_northLatitude - u_southLatitude > maxTileWidth)
     {
         float currentLatitude = mix(u_southLatitude, u_northLatitude, textureCoordinates.y);
+        currentLatitude = clamp(currentLatitude, -czm_webMercatorMaxLatitude, czm_webMercatorMaxLatitude);
         float sinLatitude = sin(currentLatitude);
         float mercatorY = 0.5 * log((1.0 + sinLatitude) / (1.0 - sinLatitude));
     

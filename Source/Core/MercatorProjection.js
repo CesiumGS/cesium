@@ -24,6 +24,7 @@ define([
         this._ellipsoid = ellipsoid;
         this._semimajorAxis = ellipsoid.getMaximumRadius();
         this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
+        this._maxMercatorLatitude = CesiumMath.PI_OVER_TWO - (2.0 * Math.atan(Math.exp(-Math.PI)));
     };
 
     /**
@@ -39,10 +40,17 @@ define([
      * @memberof MercatorProjection
      */
     MercatorProjection.prototype.project = function(cartographic) {
-        // TODO: Deal with latitude outside ~(-85, 85) degrees
+        // Clamp the latitude coordinate to the valid Mercator bounds.
+        var latitude = cartographic.latitude;
+        if (latitude > this._maxMercatorLatitude) {
+            latitude = this._maxMercatorLatitude;
+        } else if (latitude < -this._maxMercatorLatitude) {
+            latitude = -this._maxMercatorLatitude;
+        }
+
         var semimajorAxis = this._semimajorAxis;
         return new Cartesian3(cartographic.longitude * semimajorAxis,
-                              Math.log(Math.tan((CesiumMath.PI_OVER_TWO + cartographic.latitude) * 0.5)) * semimajorAxis,
+                              Math.log(Math.tan((CesiumMath.PI_OVER_TWO + latitude) * 0.5)) * semimajorAxis,
                               cartographic.height);
     };
 
