@@ -57,7 +57,7 @@ define([
      *
      * @param {Array} positions List of points that the bounding box will enclose.  Each point must have a <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
-     * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if none was provided.
+     * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
      *
      * @example
      * // Compute an axis aligned bounding box enclosing two points.
@@ -204,7 +204,7 @@ define([
      * @memberof AxisAlignedBoundingBox
      *
      * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
-     * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if none was provided.
+     * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
      */
     AxisAlignedBoundingBox.prototype.clone = function(result) {
         return AxisAlignedBoundingBox.clone(this, result);

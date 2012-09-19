@@ -52,7 +52,7 @@ define([
      * @param {Number} [latitude=0.0] The latitude, in degrees.
      * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
+     * @return {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
      */
     Cartographic.fromDegrees = function(longitude, latitude, height, result) {
         longitude = CesiumMath.toRadians(defaultValue(longitude, 0.0));
@@ -75,7 +75,7 @@ define([
      *
      * @param {Cartographic} cartographic The cartographic to duplicate.
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
+     * @return {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
      *
      * @exception {DeveloperError} cartographic is required.
      */
@@ -163,7 +163,7 @@ define([
      * @memberof Cartographic
      *
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
+     * @return {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
      */
     Cartographic.prototype.clone = function(result) {
         return Cartographic.clone(this, result);

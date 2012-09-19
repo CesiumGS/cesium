@@ -240,7 +240,7 @@ define([
      *
      * @param {Cartesian3} date The JulianDate to duplicate.
      * @param {Cartesian3} [result] The object onto which to store the JulianDate.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} date is required.
      */
@@ -602,7 +602,7 @@ define([
      * @memberof JulianDate
      *
      * @param {Cartesian3} [result] The object onto which to store the JulianDate.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     JulianDate.prototype.clone = function(result) {
         return JulianDate.clone(this, result);

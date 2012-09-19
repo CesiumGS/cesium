@@ -58,7 +58,7 @@ define([
      *
      * @param {Array} positions List of points that the bounding rectangle will enclose.  Each point must have <code>x</code> and <code>y</code> properties.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if none was provided.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      */
     BoundingRectangle.fromPoints = function(positions, result) {
         if (typeof result === 'undefined') {
@@ -109,7 +109,7 @@ define([
      * @param {Extent} extent The valid extent used to create a bounding rectangle.
      * @param {Object} [projection=EquidistantCylindricalProjection] The projection used to project the extent into 2D.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if none was provided.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      */
     BoundingRectangle.fromExtent = function(extent, projection, result) {
         if (typeof result === 'undefined') {
@@ -144,7 +144,7 @@ define([
      *
      * @param {BoundingRectangle} rectangle The bounding rectangle to duplicate.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if none was provided.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      *
      * @exception {DeveloperError} rectangle is required.
      */
@@ -171,7 +171,7 @@ define([
      * @param {BoundingRectangle} left A rectangle to enclose in bounding rectangle.
      * @param {BoundingRectangle} right A rectangle to enclose in a bounding rectangle.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if none was provided.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -208,7 +208,7 @@ define([
      * @param {BoundingRectangle} rectangle A rectangle to expand.
      * @param {Cartesian2} point A point to enclose in a bounding rectangle.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if none was provided.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      *
      * @exception {DeveloperError} rectangle is required.
      * @exception {DeveloperError} point is required.
@@ -302,7 +302,7 @@ define([
      * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if none was provided.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      */
     BoundingRectangle.prototype.clone = function(result) {
         return BoundingRectangle.clone(this, result);
@@ -314,7 +314,7 @@ define([
      *
      * @param {BoundingRectangle} right The rectangle to enclose in this bounding rectangle.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if none was provided.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -327,7 +327,7 @@ define([
      * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} point A point to enclose in a bounding rectangle.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if none was provided.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      *
      * @exception {DeveloperError} point is required.
      */
