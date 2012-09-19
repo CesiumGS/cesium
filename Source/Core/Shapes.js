@@ -145,10 +145,10 @@ define([
          *
          * @example
          * // Create a filled ellipse.
-         * var polygon = new Cesium.Polygon();
-         * polygon.setPositions(Cesium.Shapes.computeEllipseBoundary(
+         * var polygon = new Polygon();
+         * polygon.setPositions(Shapes.computeEllipseBoundary(
          *   ellipsoid, ellipsoid.cartographicToCartesian(
-         *      Cartographic.fromDegrees(-75.59777, 40.03883)), 500000.0, 300000.0, Cesium.Math.toRadians(60)));
+         *      Cartographic.fromDegrees(-75.59777, 40.03883)), 500000.0, 300000.0, Math.toRadians(60)));
          */
         computeEllipseBoundary : function(ellipsoid, center, semiMajorAxis, semiMinorAxis, bearing, granularity) {
             if (!ellipsoid || !center || !semiMajorAxis || !semiMinorAxis) {
