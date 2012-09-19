@@ -61,7 +61,7 @@ define([
             };
 
             image.onerror = function(e) {
-                deferred.reject();
+                deferred.reject(e);
             };
 
             if (crossOrigin) {

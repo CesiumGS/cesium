@@ -47,6 +47,9 @@ define([
         return when(requestFunction(url), function(result) {
             activeRequests[server]--;
             return result;
+        }, function(error) {
+            activeRequests[server]--;
+            return when.reject(error);
         });
     }
 
