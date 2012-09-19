@@ -55,6 +55,9 @@ define([
 
     /**
      * A renderable ellipsoid.  It can also draw spheres when the three {@link EllipsoidPrimitive#radii} components are equal.
+     * <p>
+     * This is only supported in 3D.  The ellipsoid is not shown in 2D or Columbus view.
+     * </p>
      *
      * @alias EllipsoidPrimitive
      * @constructor
