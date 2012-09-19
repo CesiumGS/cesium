@@ -477,6 +477,7 @@ define([
      * Computes a bounding sphere that is sphere expanded to contain point.
      * @memberof BoundingSphere
      *
+     * @param {Cartesian3} point A point to enclose in a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
