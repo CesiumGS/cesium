@@ -214,7 +214,7 @@ define([
             typeof c.vertexArray !== 'undefined') {
 
             ++c.referenceCount;
-            return c.vertexArray;
+            return c;
         }
 
         var mesh = BoxTessellator.compute({
@@ -227,25 +227,24 @@ define([
             bufferUsage: BufferUsage.STATIC_DRAW
         });
 
-        vertexArrayCache[context.getId()] = {
+        var cachedVA = {
             vertexArray : va,
-            referenceCount : 1
+            referenceCount : 1,
+
+            release : function() {
+                if (typeof this.vertexArray !== 'undefined' &&
+                    --this.referenceCount === 0) {
+
+                    // PERFORMANCE_IDEA: Schedule this for a few hundred frames later so we don't thrash the cache
+                    this.vertexArray = this.vertexArray.destroy();
+                }
+
+                return undefined;
+            }
         };
 
-        return va;
-    }
-
-    function releaseVertexArray(context) {
-        // PERFORMANCE_IDEA: Schedule this for a few hundred frames later so we don't thrash the cache
-        var c = vertexArrayCache[context.getId()];
-        if (typeof c !== 'undefined' &&
-            typeof c.vertexArray !== 'undefined' &&
-            --c.referenceCount === 0) {
-
-            c.vertexArray = c.vertexArray.destroy();
-        }
-
-        return undefined;
+        vertexArrayCache[context.getId()] = cachedVA;
+        return cachedVA;
     }
 
     /**
@@ -327,7 +326,7 @@ define([
                 this._sp = context.getShaderCache().getShaderProgram(EllipsoidVS, fsSource, attributeIndices);
 
                 colorCommand.primitiveType = PrimitiveType.TRIANGLES;
-                colorCommand.vertexArray = this._va;
+                colorCommand.vertexArray = this._va.vertexArray;
                 colorCommand.renderState = this._rs;
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
@@ -362,7 +361,7 @@ define([
                 this._pickSP = context.getShaderCache().getShaderProgram(EllipsoidVS, pickFS, attributeIndices);
 
                 pickCommand.primitiveType = PrimitiveType.TRIANGLES;
-                pickCommand.vertexArray = this._va;
+                pickCommand.vertexArray = this._va.vertexArray;
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = combine([this._uniforms, pickMaterial._uniforms], false, false);
@@ -414,7 +413,7 @@ define([
      */
     EllipsoidPrimitive.prototype.destroy = function() {
         this._sp = this._sp && this._sp.release();
-        this._va = this._va && releaseVertexArray(context);
+        this._va = this._va && this._va.release();
         this._pickSP = this._pickSP && this._pickSP.release();
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);

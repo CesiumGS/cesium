@@ -50,7 +50,6 @@ Beta Releases
     * Renamed `agi_` prefix on GLSL identifiers to `czm_`.
     * Replaced `ViewportQuad` properties `vertexShader` and `fragmentShader` with optional constructor arguments.
     * Changed the GLSL automatic uniform `czm_viewport` from an `ivec4` to a `vec4` to reduce casting.
-
     * `Billboard` now defaults to an image index of `-1` indicating no texture, previously billboards defaulted to `0` indicating the first texture in the atlas. For example, change:
 
             billboards.add({
