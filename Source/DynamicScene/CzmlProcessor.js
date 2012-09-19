@@ -156,18 +156,19 @@ define([
             if(typeof updatedObject.external !== 'undefined'){
                 var external = updatedObject.external;
                 var doc = new DynamicObjectCollection();
-                if(typeof external.polling !== 'undefined'){
-                    if(typeof external.refreshInterval !== 'undefined'){
-                        this._updaters.push(new Updater(compositeDynamicObjectCollection, new SystemClockUpdater(this, doc, external.polling, external.refreshInterval)));
+                if(typeof external.sourceType === 'undefined' || external.sourceType.getValue(Iso8601.MAXIMUM_INTERVAL) === 'json'){
+                    if(typeof external.pollingUpdate === 'undefined'){
+                        this._updaters.push(new Updater(compositeDynamicObjectCollection, new IterationDrivenUpdater(this, doc, external.url, 1)));
                     }
                     else{
-                        this._updaters.push(new Updater(compositeDynamicObjectCollection, new IterationDrivenUpdater(this, doc, external.polling, 1)));
+                        var pollingUpdate = external.pollingUpdate;
+                        this._updaters.push(new Updater(compositeDynamicObjectCollection, new SystemClockUpdater(this, doc, external.url, pollingUpdate.refreshInterval)));
                     }
                 }
-                else if(typeof external.eventsource !== 'undefined'){
-                    this._updaters.push(new Updater(compositeDynamicObjectCollection, new EventSourceUpdater(this, doc, external.eventsource, external.eventname)));
+                else if(external.sourceType.getValue(Iso8601.MAXIMUM_INTERVAL) === 'eventstream'){
+                    this._updaters.push(new Updater(compositeDynamicObjectCollection, new EventSourceUpdater(this, doc, external.url, external.eventname)));
                 }
-                var scope = external.scope;
+                var scope = external.scope.getValue(Iso8601.MAXIMUM_INTERVAL);
                 if(scope && scope === "SHARED"){
                     var collections = compositeDynamicObjectCollection.getCollections();
                     collections.splice(collections.length, 0, doc);

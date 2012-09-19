@@ -63,6 +63,7 @@ define([
             }
             eventSource = new EventSource(url);
             this._eventSource = eventSource;
+            this._currentUrl = url;
         }
 
         // use a default message type of 'message' if no event name is specified

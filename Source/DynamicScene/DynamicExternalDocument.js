@@ -4,13 +4,15 @@ define([
         '../Core/TimeInterval',
         './CzmlNumber',
         './CzmlString',
-        './DynamicProperty'
+        './DynamicProperty',
+        './DynamicPollingUpdate'
     ], function(
         defaultValue,
         TimeInterval,
         CzmlNumber,
         CzmlString,
-        DynamicProperty
+        DynamicProperty,
+        DynamicPollingUpdate
         ) {
     "use strict";
 
@@ -26,10 +28,12 @@ define([
      * @see CzmlDefaults
      */
     var DynamicExternalDocument = function() {
-        this.polling = undefined;
-        this.refreshInterval = undefined;
-        this.eventsource = undefined;
+        this.pollingUpdate = undefined;
+        this.simulationDrivenUpdate = undefined;
+        this.url = undefined;
         this.eventname = undefined;
+        this.sourceType = undefined;
+
     };
 
     /**
@@ -66,33 +70,54 @@ define([
             interval = TimeInterval.fromIso8601(interval);
         }
 
+        if(typeof externalData.url !== 'undefined'){
+            var url = external.url;
+            if (typeof url === 'undefined') {
+                external.url = url = new DynamicProperty(CzmlString);
+                externalUpdated = true;
+            }
+            url.processCzmlIntervals(externalData.url, interval);
+        }
+
+        if(typeof externalData.sourceType !== 'undefined'){
+            var sourceType = external.sourceType;
+            if (typeof sourceType === 'undefined') {
+                external.sourceType = sourceType = new DynamicProperty(CzmlString);
+                externalUpdated = true;
+            }
+            sourceType.processCzmlIntervals(externalData.sourceType, interval);
+        }
+
         if(typeof externalData.scope !== 'undefined'){
-            if(typeof external.scope === 'undefined'){
-                external.scope = externalData.scope;
+            var scope = external.scope;
+            if (typeof scope === 'undefined') {
+                external.scope = scope = new DynamicProperty(CzmlString);
                 externalUpdated = true;
             }
+            scope.processCzmlIntervals(externalData.scope, interval);
         }
 
-        if (typeof externalData.polling !== 'undefined') {
-            var polling = external.polling;
-            if (typeof polling === 'undefined') {
-                external.polling = polling = new DynamicProperty(CzmlString);
+        if(typeof externalData.eventname !== 'undefined'){
+            var eventname = external.eventname;
+            if (typeof eventname === 'undefined') {
+                external.eventname = eventname = new DynamicProperty(CzmlString);
                 externalUpdated = true;
             }
-            polling.processCzmlIntervals(externalData.polling, interval);
-
-            if(typeof externalData.refreshInterval !== 'undefined'){
-                var refreshInterval = external.refreshInterval;
-                if(typeof refreshInterval === 'undefined'){
-                    external.refreshInterval = refreshInterval = new DynamicProperty(CzmlNumber);
-                    refreshInterval.processCzmlIntervals(externalData.refreshInterval, interval);
-                    externalUpdated = true;
-                }
-            }
+            eventname.processCzmlIntervals(externalData.eventname, interval);
         }
-        else if(typeof externalData.eventsource !== 'undefined'){
-            var eventsource = external.eventsource;
-            if(typeof eventsource === 'undefined'){
+
+        if (typeof externalData.pollingUpdate !== 'undefined') {
+            var pollingUpdate = external.pollingUpdate;
+            if (typeof pollingUpdate === 'undefined') {
+                external.pollingUpdate = pollingUpdate = new DynamicPollingUpdate();
+                externalUpdated = true;
+            }
+            pollingUpdate.processCzmlIntervals(externalData.pollingUpdate);
+
+        }
+        if(typeof externalData.simulationDrivenUpdate !== 'undefined'){
+            var simulationDrivenUpdate = external.simulationDrivenUpdate;
+            /*if(typeof eventsource === 'undefined'){
                 external.eventsource = eventsource = new DynamicProperty(CzmlString);
                 externalUpdated = true;
             }
@@ -104,7 +129,7 @@ define([
                     eventname.processCzmlIntervals(externalData.eventname, interval);
                     externalUpdated = true;
                 }
-            }
+            }*/
         }
 
         return externalUpdated;
@@ -122,7 +147,7 @@ define([
      * @see CzmlDefaults
      */
     DynamicExternalDocument.mergeProperties = function(targetObject, objectToMerge) {
-        var externalToMerge = objectToMerge.external;
+        /*var externalToMerge = objectToMerge.external;
         if (typeof externalToMerge !== 'undefined') {
 
             var targetExternal = targetObject.external;
@@ -130,8 +155,8 @@ define([
                 targetObject.external = targetExternal = new DynamicExternalDocument();
             }
 
-            targetExternal.polling = defaultValue(targetExternal.polling, externalToMerge.polling);
-        }
+            //targetExternal.polling = defaultValue(targetExternal.polling, externalToMerge.polling);
+        }*/
     };
 
     /**
