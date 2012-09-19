@@ -80,6 +80,11 @@ define([
 
         this._commandList = [];
         this._renderList = [];
+        this._bins = [];
+        this._useBins = false;
+
+        this._near = this._camera.frustum.near;
+        this._far = this._camera.frustum.far;
 
         /**
          * The current mode of the scene.
@@ -264,6 +269,36 @@ define([
         scene._primitives.update(scene._context, scene._frameState, scene._commandList);
     }
 
+    function insertIntoBin(scene, command, distance) {
+        var near = scene._near;
+        var far = scene._far;
+        var farToNearRatio = scene.farToNearRatio;
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+
+        if (scene._bins.length === 0) {
+            scene._bins.length = numFrustums;
+        }
+        for (var i = 0; i < numFrustums; ++i) {
+            var curNear = Math.pow(farToNearRatio, i) * near;
+            var curFar = farToNearRatio * curNear;
+
+            if (distance.x > curFar) {
+                continue;
+            }
+
+            if (distance.y < curNear) {
+                break;
+            }
+
+            // MULTIFRUSTUM TODO: sort bins
+            var bin = scene._bins[i];
+            if (typeof bin === 'undefined') {
+                bin = scene._bins[i] = [];
+            }
+            bin.push(command);
+        }
+    }
+
     var scratchCullingVolume = new CullingVolume();
     var distances = new Cartesian2();
     function createPotentiallyVisibleSet(scene, listName) {
@@ -276,6 +311,8 @@ define([
 
         var renderList = scene._renderList;
         renderList.length = 0;
+        var bins = scene._bins;
+        bins.length = 0;
 
         var near = Number.MAX_VALUE;
         var far = Number.MIN_VALUE;
@@ -314,6 +351,8 @@ define([
                     distances = transformedBV.distance(position, direction, distances);
                     near = Math.min(near, distances.x);
                     far = Math.max(far, distances.y);
+
+                    insertIntoBin(scene, command, distances);
                 } else {
                     undefBV = true;
                     renderList.push(command);
@@ -328,8 +367,14 @@ define([
             near = scene.minimumNearDistance;
         }
 
-        scene._near = near;
-        scene._far = far;
+        // MULTIFRUSTUM TODO: determine the amount of change in frustum distances.
+        if (Math.abs(scene._near - near) < 1.0 && Math.abs(scene._far - far) < 1.0) {
+            scene._useBins = true;
+        } else {
+            scene._near = near;
+            scene._far = far;
+            scene._useBins = false;
+        }
     }
 
     var scratchNearPlane = new Cartesian4();
@@ -342,6 +387,7 @@ define([
         var farToNearRatio = scene.farToNearRatio;
         var camera = scene._camera;
         var renderList = scene._renderList;
+        var bins = scene._bins;
 
         var direction = camera.getDirectionWC();
         var position = camera.getPositionWC();
@@ -368,59 +414,83 @@ define([
         });
         context.clear(clearColor);
 
+        var length;
         var frustum = camera.frustum.clone();
-        for (var p = 0; p < numFrustums; ++p) {
-            context.clear(clearDepth);
-            frustum.near = Math.pow(farToNearRatio, numFrustums - p - 1.0) * near;
-            frustum.far = frustum.near * farToNearRatio;
+        if (scene._useBins) {
+            for (var i = 0; i < numFrustums; ++i) {
+                context.clear(clearDepth);
+                var binIndex = numFrustums - i - 1.0;
+                frustum.near = Math.pow(farToNearRatio, binIndex) * near;
+                frustum.far = frustum.near * farToNearRatio;
 
-            us.setProjection(frustum.getProjectionMatrix());
-            if (frustum.getInfiniteProjectionMatrix) {
-                us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
+                us.setProjection(frustum.getProjectionMatrix());
+                if (frustum.getInfiniteProjectionMatrix) {
+                    us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
+                }
+
+                var bin = bins[binIndex];
+                if (typeof bin !== 'undefined') {
+                    length = bin.length;
+                    for (var j = 0; j < length; ++j) {
+                        var command = bin[j];
+                        context.draw(command);
+                    }
+                }
             }
+        } else {
+            for (var p = 0; p < numFrustums; ++p) {
+                context.clear(clearDepth);
+                frustum.near = Math.pow(farToNearRatio, numFrustums - p - 1.0) * near;
+                frustum.far = frustum.near * farToNearRatio;
 
-            // compute near plane
-            var nearCenter = scratchRenderCartesian3;
-            Cartesian3.multiplyByScalar(direction, frustum.near, nearCenter);
-            Cartesian3.add(position, nearCenter, nearCenter);
-            nearPlane.w = -Cartesian3.dot(direction, nearCenter);
+                us.setProjection(frustum.getProjectionMatrix());
+                if (frustum.getInfiniteProjectionMatrix) {
+                    us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
+                }
 
-            // compute far plane
-            var farCenter = scratchRenderCartesian3;
-            Cartesian3.multiplyByScalar(direction, frustum.far, farCenter);
-            Cartesian3.add(position, farCenter, farCenter);
-            farPlane.w = -Cartesian3.dot(farPlane, farCenter);
+                // compute near plane
+                var nearCenter = scratchRenderCartesian3;
+                Cartesian3.multiplyByScalar(direction, frustum.near, nearCenter);
+                Cartesian3.add(position, nearCenter, nearCenter);
+                nearPlane.w = -Cartesian3.dot(direction, nearCenter);
 
-            var length = renderList.length;
-            for (var q = 0; q < length; ++q) {
-                var renderCommand = renderList[q];
+                // compute far plane
+                var farCenter = scratchRenderCartesian3;
+                Cartesian3.multiplyByScalar(direction, frustum.far, farCenter);
+                Cartesian3.add(position, farCenter, farCenter);
+                farPlane.w = -Cartesian3.dot(farPlane, farCenter);
 
-                var boundingVolume = renderCommand.boundingVolume;
-                if (typeof boundingVolume !== 'undefined') {
-                    var modelMatrix = defaultValue(renderCommand.modelMatrix, Matrix4.IDENTITY);
-                    //MULTIFRUSTUM TODO: Remove this allocation.
-                    var transformedBV = boundingVolume.transform(modelMatrix);
+                length = renderList.length;
+                for (var q = 0; q < length; ++q) {
+                    var renderCommand = renderList[q];
 
-                    if (transformedBV.intersect(farPlane) === Intersect.OUTSIDE) {
-                        continue; // MULTIFURSTUM TODO: discard command
+                    var boundingVolume = renderCommand.boundingVolume;
+                    if (typeof boundingVolume !== 'undefined') {
+                        var modelMatrix = defaultValue(renderCommand.modelMatrix, Matrix4.IDENTITY);
+                        //MULTIFRUSTUM TODO: Remove this allocation.
+                        var transformedBV = boundingVolume.transform(modelMatrix);
+
+                        if (transformedBV.intersect(farPlane) === Intersect.OUTSIDE) {
+                            continue; // MULTIFURSTUM TODO: discard command
+                        }
+
+                        var nearIntersect = transformedBV.intersect(nearPlane);
+                        if (nearIntersect === Intersect.OUTSIDE) {
+                            continue;
+                        }
+
+                        var cloneCommand = Command.cloneDrawArguments(renderCommand, scratchCommand);
+                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
+                        context.draw(cloneCommand);
+
+                        if (nearIntersect === Intersect.INSIDE) {
+                            renderList.splice(q, 1);
+                            length = renderList.length;
+                            --q;
+                        }
+                    } else {
+                        context.draw(renderCommand);
                     }
-
-                    var nearIntersect = transformedBV.intersect(nearPlane);
-                    if (nearIntersect === Intersect.OUTSIDE) {
-                        continue;
-                    }
-
-                    var command = Command.cloneDrawArguments(renderCommand, scratchCommand);
-                    command.framebuffer = defaultValue(command.framebuffer, framebuffer);
-                    context.draw(command);
-
-                    if (nearIntersect === Intersect.INSIDE) {
-                        renderList.splice(q, 1);
-                        length = renderList.length;
-                        --q;
-                    }
-                } else {
-                    context.draw(renderCommand);
                 }
             }
         }
