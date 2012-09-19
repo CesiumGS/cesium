@@ -12,8 +12,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
-        '../Renderer/BlendEquation',
-        '../Renderer/BlendFunction',
+        '../Renderer/BlendingState',
         '../Renderer/Command',
         '../Renderer/CommandLists',
         './Material',
@@ -35,8 +34,7 @@ define([
         PrimitiveType,
         BoundingSphere,
         BufferUsage,
-        BlendEquation,
-        BlendFunction,
+        BlendingState,
         Command,
         CommandLists,
         Material,
@@ -160,7 +158,22 @@ define([
         this.setDirections(t.directions);
 
         /**
-         * DOC_TBA
+         * The surface appearance of the sensor.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * <p>
+         * The default material is <code>Material.ColorType</code>.
+         * </p>
+         *
+         * @type Material
+         *
+         * @example
+         * // 1. Change the color of the default material to yellow
+         * sensor.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         *
+         * // 2. Change material to horizontal stripes
+         * sensor.material = Material.fromType(scene.getContext(), Material.StripeType);
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
@@ -336,19 +349,11 @@ define([
         // Initial render state creation
         if (typeof this._colorCommand.renderState === 'undefined') {
             this._colorCommand.renderState = this._pickCommand.renderState = context.createRenderState({
-                blending : {
-                    enabled : true,
-                    equationRgb : BlendEquation.ADD,
-                    equationAlpha : BlendEquation.ADD,
-                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-                    functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
-                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
-                    functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
-                },
                 depthTest : {
                     enabled : true
                 },
-                depthMask : false
+                depthMask : false,
+                blending : BlendingState.ALPHA_BLEND
             });
         }
         // This would be better served by depth testing with a depth buffer that does not

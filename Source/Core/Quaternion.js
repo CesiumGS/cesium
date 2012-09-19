@@ -60,7 +60,7 @@ define([
      * @param {Cartesian3} axis The axis of rotation.
      * @param {Number} angle The angle in radians to rotate around the axis.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} axis is required.
      * @exception {DeveloperError} angle is required and must be a number.
@@ -97,7 +97,7 @@ define([
      *
      * @param {Matrix3} matrix The rotation matrix.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      *
@@ -188,7 +188,7 @@ define([
      *
      * @param {Quaternion} quaternion The quaternion to duplicate.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} quaternion is required.
      */
@@ -214,7 +214,7 @@ define([
      *
      * @param {Quaternion} quaternion The quaternion to conjugate.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} quaternion is required.
      */
@@ -270,7 +270,7 @@ define([
      *
      * @param {Quaternion} quaternion The quaternion to normalize.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} quaternion is required.
      */
@@ -297,7 +297,7 @@ define([
      *
      * @param {Quaternion} quaternion The quaternion to normalize.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} quaternion is required.
      */
@@ -314,7 +314,7 @@ define([
      * @param {Quaternion} left The first quaternion.
      * @param {Quaternion} right The second quaternion.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -343,7 +343,7 @@ define([
      * @param {Quaternion} left The first quaternion.
      * @param {Quaternion} right The second quaternion.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -371,7 +371,7 @@ define([
      *
      * @param {Quaternion} quaternion The quaternion to be negated.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} quaternion is required.
      */
@@ -418,7 +418,7 @@ define([
      * @param {Quaternion} left The first quaternion.
      * @param {Quaternion} right The second quaternion.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -462,7 +462,7 @@ define([
      * @param {Quaternion} quaternion The quaternion to be scaled.
      * @param {Number} scalar The scalar to multiply with.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} quaternion is required.
      * @exception {DeveloperError} scalar is required and must be a number.
@@ -491,7 +491,7 @@ define([
      * @param {Quaternion} quaternion The quaternion to be divided.
      * @param {Number} scalar The scalar to divide by.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} quaternion is required.
      * @exception {DeveloperError} scalar is required and must be a number.
@@ -519,7 +519,7 @@ define([
      *
      * @param {Quaternion} quaternion The quaternion to use.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} quaternion is required.
      */
@@ -576,7 +576,7 @@ define([
      * @param end The value corresponding to t at 1.0.
      * @param t The point along t at which to interpolate.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} start is required.
      * @exception {DeveloperError} end is required.
@@ -608,7 +608,7 @@ define([
      * @param end The value corresponding to t at 1.0.
      * @param t The point along t at which to interpolate.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} start is required.
      * @exception {DeveloperError} end is required.
@@ -710,7 +710,7 @@ define([
      * @memberof Quaternion
      *
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      */
     Quaternion.prototype.clone = function(result) {
         return Quaternion.clone(this, result);
@@ -721,7 +721,7 @@ define([
      * @memberof Quaternion
      *
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      */
     Quaternion.prototype.conjugate = function(result) {
         return Quaternion.conjugate(this, result);
@@ -752,7 +752,7 @@ define([
      * @memberof Quaternion
      *
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      */
     Quaternion.prototype.normalize = function(result) {
         return Quaternion.normalize(this, result);
@@ -763,7 +763,7 @@ define([
      * @memberof Quaternion
      *
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      */
     Quaternion.prototype.inverse = function(result) {
         return Quaternion.inverse(this, result);
@@ -775,7 +775,7 @@ define([
      *
      * @param {Quaternion} right The right hand side quaternion.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -789,7 +789,7 @@ define([
      *
      * @param {Quaternion} right The right hand side quaternion.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
 
      * @exception {DeveloperError} right is required.
      */
@@ -802,7 +802,7 @@ define([
      * @memberof Quaternion
      *
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      */
     Quaternion.prototype.negate = function(result) {
         return Quaternion.negate(this, result);
@@ -828,7 +828,7 @@ define([
      *
      * @param {Quaternion} right The right hande side quaternion.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -842,7 +842,7 @@ define([
      *
      * @param {Number} scalar The scalar to multiply with.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
@@ -856,7 +856,7 @@ define([
      *
      * @param {Number} scalar The scalar to divide by.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
@@ -869,7 +869,7 @@ define([
      * @memberof Quaternion
      *
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Quaternion.prototype.getAxis = function(result) {
         return Quaternion.getAxis(this, result);
@@ -893,7 +893,7 @@ define([
      * @param end The value corresponding to t at 1.0.
      * @param t The point along t at which to interpolate.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} end is required.
      * @exception {DeveloperError} t is required and must be a number.
@@ -910,7 +910,7 @@ define([
      * @param end The value corresponding to t at 1.0.
      * @param t The point along t at which to interpolate.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
      *
      * @exception {DeveloperError} end is required.
      * @exception {DeveloperError} t is required and must be a number.

@@ -16,8 +16,7 @@ define([
         '../Renderer/Command',
         '../Renderer/CommandLists',
         '../Renderer/CullFace',
-        '../Renderer/BlendEquation',
-        '../Renderer/BlendFunction',
+        '../Renderer/BlendingState',
         './Material',
         '../Shaders/Noise',
         '../Shaders/Ray',
@@ -43,8 +42,7 @@ define([
         Command,
         CommandLists,
         CullFace,
-        BlendEquation,
-        BlendFunction,
+        BlendingState,
         Material,
         ShadersNoise,
         ShadersRay,
@@ -416,16 +414,8 @@ define([
                     enabled : true,
                     face : CullFace.FRONT
                 },
-                blending : {
-                    enabled : true,
-                    equationRgb : BlendEquation.ADD,
-                    equationAlpha : BlendEquation.ADD,
-                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-                    functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
-                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
-                    functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
-                }
-                // Does not read or write depth
+                blending : BlendingState.ALPHA_BLEND
+               // Does not read or write depth
             });
         }
 

@@ -437,15 +437,15 @@ define([
     };
 
     /**
-      * Returns a unique ID for this context.
-      *
-      * @memberof Context
-      *
-      * @returns {String} A unique ID for this context.
-      */
-     Context.prototype.getId = function() {
-         return this._id;
-     };
+     * Returns a unique ID for this context.
+     *
+     * @memberof Context
+     *
+     * @returns {String} A unique ID for this context.
+     */
+    Context.prototype.getId = function() {
+        return this._id;
+    };
 
     /**
      * Returns the canvas assoicated with this context.
