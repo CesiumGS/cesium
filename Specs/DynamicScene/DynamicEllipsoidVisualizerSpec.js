@@ -127,6 +127,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.ellipsoid = new DynamicEllipsoid();
+        testObject.ellipsoid.radii = new MockProperty(new Cartesian3(1, 2, 3));
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
     });
