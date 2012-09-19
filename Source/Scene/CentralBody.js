@@ -1200,8 +1200,7 @@ define([
                 CentralBodyFSCommon;
 
             var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
-            var getPosition2DGeographicMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DGeographicMode(position3DWC); }';
-            var getPosition2DWebMercatorMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DWebMercatorMode(position3DWC); }';
+            var getPosition2DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DMode(position3DWC); }';
             var getPositionColumbusViewMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionColumbusViewMode(position3DWC); }';
             var getPositionMorphingMode = 'vec4 getPosition(vec3 position3DWC) { return getPositionMorphingMode(position3DWC); }';
 
@@ -1212,11 +1211,7 @@ define([
                 getPositionMode = getPosition3DMode;
                 break;
             case SceneMode.SCENE2D:
-                if (projection instanceof EquidistantCylindricalProjection) {
-                    getPositionMode = getPosition2DGeographicMode;
-                } else {
-                    getPositionMode = getPosition2DWebMercatorMode;
-                }
+                getPositionMode = getPosition2DMode;
                 break;
             case SceneMode.COLUMBUS_VIEW:
                 getPositionMode = getPositionColumbusViewMode;
@@ -1226,12 +1221,24 @@ define([
                 break;
             }
 
+            var get2DYPositionFractionGeographicProjection = 'float get2DYPositionFraction() { return get2DGeographicYPositionFraction(); }';
+            var get2DYPositionFractionMercatorProjection = 'float get2DYPositionFraction() { return get2DMercatorYPositionFraction(); }';
+
+            var get2DYPositionFraction;
+
+            if (projection instanceof EquidistantCylindricalProjection) {
+                get2DYPositionFraction = get2DYPositionFractionGeographicProjection;
+            } else {
+                get2DYPositionFraction = get2DYPositionFractionMercatorProjection;
+            }
+
             this._surfaceShaderSetWithoutAtmosphere.baseVertexShaderString =
                 '#line 0\n' +
                  GroundAtmosphere +
                 '#line 0\n' +
                  CentralBodyVS + '\n' +
-                 getPositionMode;
+                 getPositionMode + '\n' +
+                 get2DYPositionFraction;
             this._surfaceShaderSetWithoutAtmosphere.baseFragmentShaderString =
                 fsPrepend +
                 '#line 0\n' +
