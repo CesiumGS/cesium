@@ -77,10 +77,10 @@ body {
 
 <script id="cesium_sandcastle_script">
 require([
-    'Source/Cesium', 'Widgets/Dojo/CesiumWidget',
+    'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
     'dojo/on', 'dojo/dom', 'dijit/form/Button'
 ], function(
-    Cesium, CesiumWidget,
+    Cesium, CesiumViewerWidget,
     on, dom, ToggleButton)
 {
     "use strict";
@@ -112,7 +112,7 @@ require([
         webMercator.set('checked', false);
     }
     
-    var cesiumWidget = new CesiumWidget({
+    var cesiumWidget = new CesiumViewerWidget({
         postSetup : function(widget) {
             //Cesium.TerrainProvider.wireframe = true;
             widget.showSkyAtmosphere(false);

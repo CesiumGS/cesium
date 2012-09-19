@@ -24,62 +24,70 @@ varying vec3 v_mieColor;
 
 varying vec2 v_textureCoordinates;
 
+// These functions are generated at runtime.
+vec4 getPosition(vec3 position3DWC);
+float get2DYPositionFraction();
+
 vec4 getPosition3DMode(vec3 position3DWC)
 {
     return u_modifiedModelViewProjection * vec4(position3D, 1.0);
 }
 
-vec4 getPosition2DGeographicMode(vec3 position3DWC)
+float get2DMercatorYPositionFraction()
 {
-    vec4 rtcPosition2D = vec4(0.0, mix(u_tileExtent.st, u_tileExtent.pq, textureCoordinates), 1.0);  
-    return u_modifiedModelViewProjection * rtcPosition2D;
-}
-
-vec4 getPosition2DWebMercatorMode(vec3 position3DWC)
-{
-    // The width of a tile, in radians, at level 11 (assuming a single root tile) is
+    // The width of a tile at level 11, in radians and assuming a single root tile, is
     //   2.0 * czm_pi / pow(2.0, 11.0)
     // We want to just linearly interpolate the 2D position from the texture coordinates
-    // when we're at this level or higher.  The constant below the expression
+    // when we're at this level or higher.  The constant below is the expression
     // above evaluated and then rounded up at the 4th significant digit.
     const float maxTileWidth = 0.003068;
-    float mercatorFraction = textureCoordinates.y;
+    float positionFraction = textureCoordinates.y;
     if (u_northLatitude - u_southLatitude > maxTileWidth)
     {
-	    float currentLatitude = mix(u_southLatitude, u_northLatitude, textureCoordinates.y);
-	    float sinLatitude = sin(currentLatitude);
-	    float mercatorY = 0.5 * log((1.0 + sinLatitude) / (1.0 - sinLatitude));
-	
-	    // mercatorY - u_southMercatorY in simulated double precision.
-	    float t1 = 0.0 - u_southMercatorYLow;
-	    float e = t1 - 0.0;
-	    float t2 = ((-u_southMercatorYLow - e) + (0.0 - (t1 - e))) + mercatorY - u_southMercatorYHigh;
-	    float highDifference = t1 + t2;
-	    float lowDifference = t2 - (highDifference - t1);
-	    
-	    mercatorFraction = highDifference * u_oneOverMercatorHeight + lowDifference * u_oneOverMercatorHeight;
-    }
+        float currentLatitude = mix(u_southLatitude, u_northLatitude, textureCoordinates.y);
+        float sinLatitude = sin(currentLatitude);
+        float mercatorY = 0.5 * log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+    
+        // mercatorY - u_southMercatorY in simulated double precision.
+        float t1 = 0.0 - u_southMercatorYLow;
+        float e = t1 - 0.0;
+        float t2 = ((-u_southMercatorYLow - e) + (0.0 - (t1 - e))) + mercatorY - u_southMercatorYHigh;
+        float highDifference = t1 + t2;
+        float lowDifference = t2 - (highDifference - t1);
         
-    vec4 rtcPosition2D = vec4(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, mercatorFraction)), 1.0);  
+        positionFraction = highDifference * u_oneOverMercatorHeight + lowDifference * u_oneOverMercatorHeight;
+    }    
+    return positionFraction;
+}
+
+float get2DGeographicYPositionFraction()
+{
+    return textureCoordinates.y;
+}
+
+vec4 getPosition2DMode(vec3 position3DWC)
+{
+    float yPositionFraction = get2DYPositionFraction();
+    vec4 rtcPosition2D = vec4(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);  
     return u_modifiedModelViewProjection * rtcPosition2D;
 }
 
 vec4 getPositionColumbusViewMode(vec3 position3DWC)
 {
     // TODO: RTC in Columbus View
-    vec4 position2DWC = vec4(0.0, mix(u_tileExtent.st, u_tileExtent.pq, textureCoordinates), 1.0);
+    float yPositionFraction = get2DYPositionFraction();
+    vec4 position2DWC = vec4(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
     return czm_modelViewProjection * position2DWC;
 }
 
 vec4 getPositionMorphingMode(vec3 position3DWC)
 {
     // TODO: RTC while morphing?
-    vec3 position2DWC = vec3(0.0, mix(u_tileExtent.st, u_tileExtent.pq, textureCoordinates));
+    float yPositionFraction = get2DYPositionFraction();
+    vec3 position2DWC = vec3(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)));
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, position3DWC, u_morphTime);
     return czm_modelViewProjection * morphPosition;
 }
-
-vec4 getPosition(vec3 position3DWC);
 
 void main() 
 {
