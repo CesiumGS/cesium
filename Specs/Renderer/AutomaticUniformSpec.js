@@ -347,6 +347,33 @@ defineSuite([
                 0.0, 0.0, 0.0, 1.0));
     });
 
+    it('has czm_modelViewProjectionRelativeToEye', function() {
+        var us = context.getUniformState();
+        us.setView(new Matrix4(1.0, 0.0, 0.0, 0.0,
+                               0.0, 1.0, 0.0, 8.0,
+                               0.0, 0.0, 1.0, 0.0,
+                               0.0, 0.0, 0.0, 1.0));
+        us.setProjection(new Matrix4(1.0, 0.0, 0.0, 0.0,
+                                     0.0, 1.0, 0.0, 0.0,
+                                     0.0, 0.0, 1.0, 9.0,
+                                     0.0, 0.0, 0.0, 1.0));
+
+        var fs =
+            'void main() { ' +
+            '  bool b0 = (czm_modelViewProjectionRelativeToEye[0][0] == 1.0) && (czm_modelViewProjectionRelativeToEye[1][0] == 0.0) && (czm_modelViewProjectionRelativeToEye[2][0] == 0.0) && (czm_modelViewProjectionRelativeToEye[3][0] == 0.0); ' +
+            '  bool b1 = (czm_modelViewProjectionRelativeToEye[0][1] == 0.0) && (czm_modelViewProjectionRelativeToEye[1][1] == 1.0) && (czm_modelViewProjectionRelativeToEye[2][1] == 0.0) && (czm_modelViewProjectionRelativeToEye[3][1] == 0.0); ' +
+            '  bool b2 = (czm_modelViewProjectionRelativeToEye[0][2] == 0.0) && (czm_modelViewProjectionRelativeToEye[1][2] == 0.0) && (czm_modelViewProjectionRelativeToEye[2][2] == 1.0) && (czm_modelViewProjectionRelativeToEye[3][2] == 9.0); ' +
+            '  bool b3 = (czm_modelViewProjectionRelativeToEye[0][3] == 0.0) && (czm_modelViewProjectionRelativeToEye[1][3] == 0.0) && (czm_modelViewProjectionRelativeToEye[2][3] == 0.0) && (czm_modelViewProjectionRelativeToEye[3][3] == 1.0); ' +
+            '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
+            '}';
+
+        verifyDraw(fs, new Matrix4(
+                1.0, 0.0, 0.0, 7.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0));
+    });
+
     it('has czm_modelViewInfiniteProjection', function() {
         var us = context.getUniformState();
         us.setView(new Matrix4(1.0, 0.0, 0.0, 0.0,

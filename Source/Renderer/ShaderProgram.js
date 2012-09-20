@@ -642,6 +642,23 @@ define([
         },
 
         /**
+         * DOC_TBA
+         */
+        czm_modelViewProjectionRelativeToEye : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getModelViewProjectionRelativeToEye();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
          * transforms model coordinates to clip coordinates.  Clip coordinates is the
          * coordinate system for a vertex shader's <code>gl_Position</code> output.  The projection matrix places

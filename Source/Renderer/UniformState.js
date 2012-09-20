@@ -65,6 +65,9 @@ define([
         this._modelViewProjectionDirty = true;
         this._modelViewProjection = new Matrix4();
 
+        this._modelViewProjectionRelativeToEyeDirty = true;
+        this._modelViewProjectionRelativeToEye = new Matrix4();
+
         this._modelViewInfiniteProjectionDirty = true;
         this._modelViewInfiniteProjection = new Matrix4();
 
@@ -170,6 +173,7 @@ define([
         this._modelViewRelativeToEyeDirty = true;
         this._inverseModelViewDirty = true;
         this._modelViewProjectionDirty = true;
+        this._modelViewProjectionRelativeToEyeDirty = true;
         this._modelViewInfiniteProjectionDirty = true;
         this._normalDirty = true;
         this._inverseNormalDirty = true;
@@ -211,6 +215,7 @@ define([
         this._inverseModelViewDirty = true;
         this._viewProjectionDirty = true;
         this._modelViewProjectionDirty = true;
+        this._modelViewProjectionRelativeToEyeDirty = true;
         this._modelViewInfiniteProjectionDirty = true;
         this._normalDirty = true;
         this._inverseNormalDirty = true;
@@ -299,6 +304,7 @@ define([
         this._inverseProjectionDirty = true;
         this._viewProjectionDirty = true;
         this._modelViewProjectionDirty = true;
+        this._modelViewProjectionRelativeToEyeDirty = true;
     };
 
     /**
@@ -493,6 +499,28 @@ define([
     UniformState.prototype.getModelViewProjection = function() {
         cleanModelViewProjection(this);
         return this._modelViewProjection;
+    };
+
+    function cleanModelViewProjectionRelativeToEye(uniformState) {
+        if (uniformState._modelViewProjectionRelativeToEyeDirty) {
+            uniformState._modelViewProjectionRelativeToEyeDirty = false;
+
+            Matrix4.multiply(uniformState._projection, uniformState.getModelViewRelativeToEye(), uniformState._modelViewProjectionRelativeToEye);
+        }
+    }
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix4} DOC_TBA.
+     *
+     * @see czm_modelViewProjectionRelativeToEye
+     */
+    UniformState.prototype.getModelViewProjectionRelativeToEye = function() {
+        cleanModelViewProjectionRelativeToEye(this);
+        return this._modelViewProjectionRelativeToEye;
     };
 
     function cleanModelViewInfiniteProjection(uniformState) {
