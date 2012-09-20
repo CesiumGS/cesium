@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/LabelCollection',
-         '../Specs/createContext',
-         '../Specs/destroyContext',
-         '../Specs/frameState',
-         '../Specs/pick',
-         '../Specs/render',
+         'Specs/createContext',
+         'Specs/destroyContext',
+         'Specs/frameState',
+         'Specs/pick',
+         'Specs/render',
          'Core/BoundingSphere',
          'Core/Cartesian2',
          'Core/Cartesian3',
