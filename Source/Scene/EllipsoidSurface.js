@@ -16,7 +16,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/BoundingRectangle',
         '../Core/CubeMapEllipsoidTessellator',
-        '../Core/MercatorProjection',
+        '../Core/WebMercatorProjection',
         '../Core/MeshFilters',
         '../Core/Queue',
         '../Renderer/Command',
@@ -48,7 +48,7 @@ define([
         PrimitiveType,
         BoundingRectangle,
         CubeMapEllipsoidTessellator,
-        MercatorProjection,
+        WebMercatorProjection,
         MeshFilters,
         Queue,
         Command,
@@ -1012,12 +1012,12 @@ define([
                         tileExtent.w -= rtc.z;
                     }
 
-                    if (projection instanceof MercatorProjection) {
+                    if (projection instanceof WebMercatorProjection) {
                         southLatitude = tile.extent.south;
                         northLatitude = tile.extent.north;
 
-                        var southMercatorY = MercatorProjection.geodeticLatitudeToMercatorAngle(southLatitude);
-                        var northMercatorY = MercatorProjection.geodeticLatitudeToMercatorAngle(northLatitude);
+                        var southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(southLatitude);
+                        var northMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(northLatitude);
 
                         float32ArrayScratch[0] = southMercatorY;
                         southMercatorYHigh = float32ArrayScratch[0];
