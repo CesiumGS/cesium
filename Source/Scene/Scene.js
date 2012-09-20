@@ -341,8 +341,7 @@ define([
                 var boundingVolume = command.boundingVolume;
                 if (typeof boundingVolume !== 'undefined') {
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
-                    //TODO: Remove this allocation.
-                    var transformedBV = boundingVolume.transform(modelMatrix);
+                    var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
                     if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
                             (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
                         continue;
@@ -406,7 +405,6 @@ define([
         var far;
         var length;
 
-        //scene._useBins = false;
         if (scene._useBins) {
             var bins = scene._bins;
             near = scene._binNear;
@@ -482,8 +480,7 @@ define([
                     var boundingVolume = renderCommand.boundingVolume;
                     if (typeof boundingVolume !== 'undefined') {
                         var modelMatrix = defaultValue(renderCommand.modelMatrix, Matrix4.IDENTITY);
-                        //MULTIFRUSTUM TODO: Remove this allocation.
-                        var transformedBV = boundingVolume.transform(modelMatrix);
+                        var transformedBV = boundingVolume.transform(modelMatrix); //MULTIFRUSTUM TODO: Remove this allocation.
 
                         if (transformedBV.intersect(farPlane) === Intersect.OUTSIDE) {
                             continue; // MULTIFURSTUM TODO: discard command
