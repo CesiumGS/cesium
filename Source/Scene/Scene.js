@@ -78,13 +78,16 @@ define([
 
         this._shaderFrameCount = 0;
 
-        this._commandList = [];
-        this._renderList = [];
-        this._bins = [];
-        this._useBins = false;
-
         this._near = this._camera.frustum.near;
         this._far = this._camera.frustum.far;
+
+        this._commandList = [];
+        this._renderList = [];
+
+        this._bins = [];
+        this._binNear = Number.MAX_VALUE;
+        this._binFar = Number.MIN_VALUE;
+        this._useBins = false;
 
         /**
          * The current mode of the scene.
@@ -114,12 +117,6 @@ define([
          * @type Number
          */
         this.farToNearRatio = 1000.0;
-        /**
-         * The minimum near plane distance for the multi-frustum. The default is 1.0.
-         *
-         * @type Number
-         */
-        this.minimumNearDistance = 1.0;
     };
 
     /**
@@ -270,14 +267,19 @@ define([
     }
 
     function insertIntoBin(scene, command, distance) {
-        var near = scene._near;
-        var far = scene._far;
+        var near = scene._binNear;
+        var far = scene._binFar;
         var farToNearRatio = scene.farToNearRatio;
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
 
+        if (far < near) {
+            return;
+        }
+
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         if (scene._bins.length === 0) {
             scene._bins.length = numFrustums;
         }
+
         for (var i = 0; i < numFrustums; ++i) {
             var curNear = Math.pow(farToNearRatio, i) * near;
             var curFar = farToNearRatio * curNear;
@@ -363,17 +365,20 @@ define([
         if (undefBV) {
             near = camera.frustum.near;
             far = camera.frustum.far;
-        } else if (near < scene.minimumNearDistance) {
-            near = scene.minimumNearDistance;
+        } else if (near < camera.frustum.near) {
+            near = camera.frustum.near;
         }
 
-        // MULTIFRUSTUM TODO: determine the amount of change in frustum distances.
-        if (Math.abs(scene._near - near) < 1.0 && Math.abs(scene._far - far) < 1.0) {
+        scene._near = near;
+        scene._far = far;
+
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(scene.farToNearRatio));
+        if (near >= scene._binNear && far <= scene._binFar && numFrustums === scene._bins.length) {
             scene._useBins = true;
         } else {
-            scene._near = near;
-            scene._far = far;
             scene._useBins = false;
+            scene._binNear = near;
+            scene._binFar = far;
         }
     }
 
@@ -382,27 +387,9 @@ define([
     var scratchRenderCartesian3 = new Cartesian3();
     var scratchCommand = new Command();
     function renderPrimitives(scene, framebuffer) {
-        var near = scene._near;
-        var far = scene._far;
         var farToNearRatio = scene.farToNearRatio;
         var camera = scene._camera;
-        var renderList = scene._renderList;
-        var bins = scene._bins;
-
-        var direction = camera.getDirectionWC();
-        var position = camera.getPositionWC();
-
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-
-        var nearPlane = scratchNearPlane;
-        nearPlane.x = direction.x;
-        nearPlane.y = direction.y;
-        nearPlane.z = direction.z;
-
-        var farPlane = scratchFarPlane;
-        farPlane.x = -direction.x;
-        farPlane.y = -direction.y;
-        farPlane.z = -direction.z;
+        var frustum = camera.frustum.clone();
 
         var context = scene._context;
         var us = context.getUniformState();
@@ -414,9 +401,18 @@ define([
         });
         context.clear(clearColor);
 
+        var numFrustums;
+        var near;
+        var far;
         var length;
-        var frustum = camera.frustum.clone();
+
+        //scene._useBins = false;
         if (scene._useBins) {
+            var bins = scene._bins;
+            near = scene._binNear;
+            far = scene._binFar;
+
+            numFrustums = bins.length;
             for (var i = 0; i < numFrustums; ++i) {
                 context.clear(clearDepth);
                 var binIndex = numFrustums - i - 1.0;
@@ -438,6 +434,25 @@ define([
                 }
             }
         } else {
+            var renderList = scene._renderList;
+
+            near = scene._near;
+            far = scene._far;
+
+            var direction = camera.getDirectionWC();
+            var position = camera.getPositionWC();
+
+            var nearPlane = scratchNearPlane;
+            nearPlane.x = direction.x;
+            nearPlane.y = direction.y;
+            nearPlane.z = direction.z;
+
+            var farPlane = scratchFarPlane;
+            farPlane.x = -direction.x;
+            farPlane.y = -direction.y;
+            farPlane.z = -direction.z;
+
+            numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
             for (var p = 0; p < numFrustums; ++p) {
                 context.clear(clearDepth);
                 frustum.near = Math.pow(farToNearRatio, numFrustums - p - 1.0) * near;
