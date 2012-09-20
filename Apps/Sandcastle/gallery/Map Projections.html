@@ -101,7 +101,7 @@ require([
         var webMercator = new ToggleButton({
             label: "Web Mercator",
             onClick: function() {
-                scene.scene2D.projection = new Cesium.MercatorProjection(Cesium.Ellipsoid.WGS84);
+                scene.scene2D.projection = new Cesium.WebMercatorProjection(Cesium.Ellipsoid.WGS84);
                 geographic.set('checked', false);
                 webMercator.set('checked', true);
             }

@@ -12,13 +12,13 @@ define([
     "use strict";
 
     /**
-     * @alias MercatorProjection
+     * @alias WebMercatorProjection
      *
      * @constructor
      *
      * @immutable
      */
-    var MercatorProjection = function(ellipsoid) {
+    var WebMercatorProjection = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._ellipsoid = ellipsoid;
@@ -31,16 +31,16 @@ define([
      * @param mercatorAngle
      * @returns {Number}
      */
-    MercatorProjection.mercatorAngleToGeodeticLatitude = function(mercatorAngle) {
+    WebMercatorProjection.mercatorAngleToGeodeticLatitude = function(mercatorAngle) {
         return CesiumMath.PI_OVER_TWO - (2.0 * Math.atan(Math.exp(-mercatorAngle)));
     };
 
-    MercatorProjection.geodeticLatitudeToMercatorAngle = function(latitude) {
+    WebMercatorProjection.geodeticLatitudeToMercatorAngle = function(latitude) {
         // Clamp the latitude coordinate to the valid Mercator bounds.
-        if (latitude > MercatorProjection.MaximumLatitude) {
-            latitude = MercatorProjection.MaximumLatitude;
-        } else if (latitude < -MercatorProjection.MaximumLatitude) {
-            latitude = -MercatorProjection.MaximumLatitude;
+        if (latitude > WebMercatorProjection.MaximumLatitude) {
+            latitude = WebMercatorProjection.MaximumLatitude;
+        } else if (latitude < -WebMercatorProjection.MaximumLatitude) {
+            latitude = -WebMercatorProjection.MaximumLatitude;
         }
         return Math.log(Math.tan((CesiumMath.PI_OVER_TWO + latitude) * 0.5));
     };
@@ -55,17 +55,17 @@ define([
      * square.  That is, the extent is equal in the X and Y directions.
      *
      * The constant value is computed by calling:
-     *    MercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI)
+     *    WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI)
      *
      * @type {Number}
      */
-    MercatorProjection.MaximumLatitude = MercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI);
+    WebMercatorProjection.MaximumLatitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI);
 
     /**
      * DOC_TBA
-     * @memberof MercatorProjection
+     * @memberof WebMercatorProjection
      */
-    MercatorProjection.prototype.getEllipsoid = function() {
+    WebMercatorProjection.prototype.getEllipsoid = function() {
         return this._ellipsoid;
     };
 
@@ -73,23 +73,23 @@ define([
      * DOC_TBA
      * @memberof MercatorProjection
      */
-    MercatorProjection.prototype.project = function(cartographic) {
+    WebMercatorProjection.prototype.project = function(cartographic) {
         var semimajorAxis = this._semimajorAxis;
         return new Cartesian3(cartographic.longitude * semimajorAxis,
-                              MercatorProjection.geodeticLatitudeToMercatorAngle(cartographic.latitude) * semimajorAxis,
+                WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographic.latitude) * semimajorAxis,
                               cartographic.height);
     };
 
     /**
      * DOC_TBA
-     * @memberof MercatorProjection
+     * @memberof WebMercatorProjection
      */
-    MercatorProjection.prototype.unproject = function(cartesian) {
+    WebMercatorProjection.prototype.unproject = function(cartesian) {
         var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
         var longitude = cartesian.x * oneOverEarthSemimajorAxis;
-        var latitude = MercatorProjection.mercatorAngleToGeodeticLatitude(cartesian.y * oneOverEarthSemimajorAxis);
+        var latitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(cartesian.y * oneOverEarthSemimajorAxis);
         return new Cartographic(longitude, latitude, cartesian.z);
     };
 
-    return MercatorProjection;
+    return WebMercatorProjection;
 });
