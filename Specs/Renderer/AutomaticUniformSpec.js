@@ -253,6 +253,28 @@ defineSuite([
             0.0, 0.0, 0.0, 1.0));
     });
 
+    it('has czm_modelViewRelativeToEye', function() {
+        var us = context.getUniformState();
+        us.setView(new Matrix4(1.0, 0.0, 0.0, 1.0,
+                               0.0, 1.0, 0.0, 1.0,
+                               0.0, 0.0, 1.0, 1.0,
+                               0.0, 0.0, 0.0, 1.0));
+
+        var fs =
+            'void main() { ' +
+            '  bool b0 = (czm_modelViewRelativeToEye[0][0] == 2.0) && (czm_modelViewRelativeToEye[1][0] == 0.0) && (czm_modelViewRelativeToEye[2][0] == 0.0) && (czm_modelViewRelativeToEye[3][0] == 0.0); ' +
+            '  bool b1 = (czm_modelViewRelativeToEye[0][1] == 0.0) && (czm_modelViewRelativeToEye[1][1] == 2.0) && (czm_modelViewRelativeToEye[2][1] == 0.0) && (czm_modelViewRelativeToEye[3][1] == 0.0); ' +
+            '  bool b2 = (czm_modelViewRelativeToEye[0][2] == 0.0) && (czm_modelViewRelativeToEye[1][2] == 0.0) && (czm_modelViewRelativeToEye[2][2] == 2.0) && (czm_modelViewRelativeToEye[3][2] == 0.0); ' +
+            '  bool b3 = (czm_modelViewRelativeToEye[0][3] == 0.0) && (czm_modelViewRelativeToEye[1][3] == 0.0) && (czm_modelViewRelativeToEye[2][3] == 0.0) && (czm_modelViewRelativeToEye[3][3] == 1.0); ' +
+            '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
+            '}';
+        verifyDraw(fs, new Matrix4(
+            2.0, 0.0, 0.0, 0.0,
+            0.0, 2.0, 0.0, 0.0,
+            0.0, 0.0, 2.0, 0.0,
+            0.0, 0.0, 0.0, 1.0));
+    });
+
     it('has czm_inverseModelView', function() {
         var us = context.getUniformState();
         us.setView(new Matrix4(1.0, 0.0, 0.0, 0.0,

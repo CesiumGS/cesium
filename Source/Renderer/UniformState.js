@@ -53,6 +53,9 @@ define([
         this._modelViewDirty = true;
         this._modelView = new Matrix4();
 
+        this._modelViewRelativeToEyeDirty = true;
+        this._modelViewRelativeToEye = new Matrix4();
+
         this._inverseModelViewDirty = true;
         this._inverseModelView = new Matrix4();
 
@@ -164,6 +167,7 @@ define([
         Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._model);
 
         this._modelViewDirty = true;
+        this._modelViewRelativeToEyeDirty = true;
         this._inverseModelViewDirty = true;
         this._modelViewProjectionDirty = true;
         this._modelViewInfiniteProjectionDirty = true;
@@ -203,6 +207,7 @@ define([
 
         this._inverseViewDirty = true;
         this._modelViewDirty = true;
+        this._modelViewRelativeToEyeDirty = true;
         this._inverseModelViewDirty = true;
         this._viewProjectionDirty = true;
         this._modelViewProjectionDirty = true;
@@ -383,6 +388,45 @@ define([
     UniformState.prototype.getModelView = function() {
         this._cleanModelView();
         return this._modelView;
+    };
+
+    UniformState.prototype._cleanModelViewRelativeToEye = function() {
+        if (this._modelViewRelativeToEyeDirty) {
+            this._modelViewRelativeToEyeDirty = false;
+
+            var mv = this.getModelView();
+            var mvRte = this._modelViewRelativeToEye;
+            mvRte[0] = mv[0];
+            mvRte[1] = mv[1];
+            mvRte[2] = mv[2];
+            mvRte[3] = mv[3];
+            mvRte[4] = mv[4];
+            mvRte[5] = mv[5];
+            mvRte[6] = mv[6];
+            mvRte[7] = mv[7];
+            mvRte[8] = mv[8];
+            mvRte[9] = mv[9];
+            mvRte[10] = mv[10];
+            mvRte[11] = mv[11];
+            mvRte[12] = 0.0;
+            mvRte[13] = 0.0;
+            mvRte[14] = 0.0;
+            mvRte[15] = mv[15];
+        }
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix4} DOC_TBA.
+     *
+     * @see czm_modelViewRelativeToEye
+     */
+    UniformState.prototype.getModelViewRelativeToEye = function() {
+        this._cleanModelViewRelativeToEye();
+        return this._modelViewRelativeToEye;
     };
 
     UniformState.prototype._cleanInverseModelView = function() {

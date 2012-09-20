@@ -505,6 +505,23 @@ define([
         },
 
         /**
+         * DOC_TBA
+         */
+        czm_modelViewRelativeToEye : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getModelViewRelativeToEye();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
          * transforms from eye coordinates to model coordinates.
          * <br /><br />
