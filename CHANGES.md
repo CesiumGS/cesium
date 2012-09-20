@@ -21,6 +21,7 @@ Beta Releases
 * Added `enableTranslate`, `enableZoom`, and `enableRotate` properties to `Camera2DController` to selectively toggle camera behavior.  All values default to `true`.
 * Added `Camera2DController.setPositionCartographic` to simplify moving the camera programmatically when in 2D mode.
 * Added Matrix4.multiplyByTranslation, Matrix4.fromScale, and Matrix3.fromScale.
+* Added `czm_modelViewRelativeToEye` and `czm_modelViewProjectionRelativeToEye` automatic GLSL uniforms.
 
 ### b8 - 09/05/2012
 
