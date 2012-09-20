@@ -7,7 +7,8 @@ define([
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        './UniformDatatype'
+        './UniformDatatype',
+        '../Shaders/BuiltinFunctions'
     ], function(
         DeveloperError,
         RuntimeError,
@@ -16,7 +17,8 @@ define([
         Matrix2,
         Matrix3,
         Matrix4,
-        UniformDatatype) {
+        UniformDatatype,
+        ShadersBuiltinFunctions) {
     "use strict";
     /*global console*/
 
@@ -553,8 +555,8 @@ define([
      * @see Context#createShaderProgram
      * @see Context#getShaderCache
      */
-    var ShaderProgram = function(gl, logShaderCompilation, builtInGlslFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        var program = createAndLinkProgram(gl, logShaderCompilation, builtInGlslFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations);
+    var ShaderProgram = function(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+        var program = createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
         var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
         var uniforms = findUniforms(gl, program);
         var automaticUniforms = findAutomaticUniforms(uniforms.allUniforms);
@@ -867,7 +869,7 @@ define([
         return automatics;
     }
 
-    var getShaderDefinitions = function(builtInGlslFunctions) {
+    var getShaderDefinitions = function() {
         // I think this should be #line 1 given what the GL ES spec says:
         //
         //   After processing this directive (including its new-line), the implementation will
@@ -878,7 +880,7 @@ define([
         // Functions after constants and uniforms because functions depend on them.
         var definitions = getBuiltinConstants() +
                           getAutomaticUniforms() +
-                          builtInGlslFunctions + '\n\n' +
+                          ShadersBuiltinFunctions + '\n\n' +
                           '#line 0 \n';
 
         getShaderDefinitions = function() {
@@ -888,15 +890,15 @@ define([
         return definitions;
     };
 
-    function createAndLinkProgram(gl, logShaderCompilation, builtInGlslFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+    function createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
         var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
 
         var vsSource = vsSourceVersioned.versionDirective +
-                       getShaderDefinitions(builtInGlslFunctions) +
+                       getShaderDefinitions() +
                        commentOutAutomaticUniforms(vsSourceVersioned.modifiedSource);
         var fsSource = fsSourceVersioned.versionDirective +
-                       getFragmentShaderPrecision(builtInGlslFunctions) +
+                       getFragmentShaderPrecision() +
                        getShaderDefinitions() +
                        commentOutAutomaticUniforms(fsSourceVersioned.modifiedSource);
 

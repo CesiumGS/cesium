@@ -10,7 +10,6 @@ define([
         '../Core/WindingOrder',
         '../Core/BoundingRectangle',
         '../Core/createGuid',
-        '../Shaders/BuiltinFunctions',
         './Buffer',
         './BufferUsage',
         './BlendEquation',
@@ -48,7 +47,6 @@ define([
         WindingOrder,
         BoundingRectangle,
         createGuid,
-        ShadersBuiltinFunctions,
         Buffer,
         BufferUsage,
         BlendEquation,
@@ -1111,7 +1109,7 @@ define([
      * sp = context.createShaderProgram(vs, fs, attributes);            *
      */
     Context.prototype.createShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        return new ShaderProgram(this._gl, this._logShaderCompilation, ShadersBuiltinFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations);
+        return new ShaderProgram(this._gl, this._logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
     };
 
     function createBuffer(gl, bufferTarget, typedArrayOrSizeInBytes, usage) {
