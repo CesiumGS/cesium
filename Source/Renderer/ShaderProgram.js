@@ -1995,10 +1995,6 @@ define([
         };
     }
 
-    ShaderProgram.prototype._getProgram = function() {
-        return this._program;
-    };
-
     /**
      * DOC_TBA
      *
@@ -2058,7 +2054,7 @@ define([
         }
     };
 
-    ShaderProgram.prototype._setUniforms = function(uniformMap, uniformState) {
+    ShaderProgram.prototype._setUniforms = function(uniformMap, uniformState, validate) {
         // TODO: Performance
 
         var len;
@@ -2095,6 +2091,16 @@ define([
         len = samplerUniforms.length;
         for (i = 0; i < len; ++i) {
             textureUnitIndex = samplerUniforms[i]._setSampler(textureUnitIndex);
+        }
+
+        if (validate) {
+            var gl = this._gl;
+            var program = this._program;
+
+            gl.validateProgram(program);
+            if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
+                throw new DeveloperError('Program validation failed.  Link log: ' + gl.getProgramInfoLog(program));
+            }
         }
     };
 
