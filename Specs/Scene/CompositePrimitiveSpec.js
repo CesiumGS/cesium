@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/CompositePrimitive',
-         '../Specs/createContext',
-         '../Specs/destroyContext',
-         '../Specs/frameState',
-         '../Specs/pick',
-         '../Specs/render',
+         'Specs/createContext',
+         'Specs/destroyContext',
+         'Specs/frameState',
+         'Specs/pick',
+         'Specs/render',
          'Core/defaultValue',
          'Core/BoundingSphere',
          'Core/Cartesian2',

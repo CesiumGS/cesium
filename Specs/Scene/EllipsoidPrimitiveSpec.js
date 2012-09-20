@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/EllipsoidPrimitive',
-         '../Specs/createContext',
-         '../Specs/destroyContext',
-         '../Specs/frameState',
-         '../Specs/pick',
-         '../Specs/render',
+         'Specs/createContext',
+         'Specs/destroyContext',
+         'Specs/frameState',
+         'Specs/pick',
+         'Specs/render',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Matrix4',

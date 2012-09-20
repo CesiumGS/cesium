@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         '../Specs/createContext',
-         '../Specs/destroyContext',
-         '../Specs/renderFragment',
+         'Specs/createContext',
+         'Specs/destroyContext',
+         'Specs/renderFragment',
          'Shaders/Ray',
          'Shaders/ConstructiveSolidGeometry'
      ], 'Renderer/ConstructiveSolidGeometry', function(

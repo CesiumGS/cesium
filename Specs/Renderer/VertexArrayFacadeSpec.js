@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
          'Renderer/VertexArrayFacade',
-         '../Specs/createContext',
-         '../Specs/destroyContext',
+         'Specs/createContext',
+         'Specs/destroyContext',
          'Core/ComponentDatatype',
          'Renderer/BufferUsage'
      ], function(
