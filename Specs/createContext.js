@@ -1,7 +1,7 @@
 /*global define*/
 define([
         'Renderer/Context',
-        '../Specs/createCanvas'
+        'Specs/createCanvas'
     ], function(
         Context,
         createCanvas) {

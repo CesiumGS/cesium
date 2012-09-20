@@ -4,8 +4,8 @@ defineSuite([
          'Scene/GeographicTilingScheme',
          'Core/Extent',
          'Core/Math',
-         '../Specs/createContext',
-         '../Specs/destroyContext'
+         'Specs/createContext',
+         'Specs/destroyContext'
      ], function(
          EllipsoidTerrainProvider,
          GeographicTilingScheme,

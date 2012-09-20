@@ -1,11 +1,12 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/CompositePrimitive',
-         '../Specs/createContext',
-         '../Specs/destroyContext',
-         '../Specs/frameState',
-         '../Specs/pick',
-         '../Specs/render',
+         'Specs/createContext',
+         'Specs/destroyContext',
+         'Specs/equals',
+         'Specs/frameState',
+         'Specs/pick',
+         'Specs/render',
          'Core/defaultValue',
          'Core/BoundingSphere',
          'Core/Cartesian2',
@@ -32,6 +33,7 @@ defineSuite([
          CompositePrimitive,
          createContext,
          destroyContext,
+         equals,
          frameState,
          pick,
          render,
@@ -478,19 +480,27 @@ defineSuite([
     });
 
     it('renders a central body', function() {
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var savedCamera;
 
-        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
-        primitives.setCentralBody(cb);
+        runs(function() {
+            context.clear();
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var savedCamera = frameState.camera;
-        frameState.camera = camera;
+            var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
+            primitives.setCentralBody(cb);
 
-        render(context, frameState, primitives);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+            savedCamera = frameState.camera;
+            frameState.camera = camera;
+        });
 
-        frameState.camera = savedCamera;
+        waitsFor(function() {
+            render(context, frameState, primitives);
+            return !equals(this.env, context.readPixels(), [0, 0, 0, 0]);
+        }, 'the central body to be rendered', 5000);
+
+        runs(function() {
+            frameState.camera = savedCamera;
+        });
     });
 
     it('is not destroyed when first constructed', function() {

@@ -1,9 +1,9 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicConeVisualizer',
-             '../Specs/createScene',
-             '../Specs/destroyScene',
-             '../Specs/MockProperty',
+             'Specs/createScene',
+             'Specs/destroyScene',
+             'Specs/MockProperty',
              'DynamicScene/DynamicCone',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
