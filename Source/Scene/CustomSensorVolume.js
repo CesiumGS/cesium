@@ -335,6 +335,7 @@ define([
      * @memberof CustomSensorVolume
      *
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
+     * @exception {DeveloperError} this.material must be defined.
      */
     CustomSensorVolume.prototype.update = function(context, frameState, commandList) {
         this._mode = frameState.mode;
@@ -344,6 +345,10 @@ define([
 
         if (this.radius < 0.0) {
             throw new DeveloperError('this.radius must be greater than or equal to zero.');
+        }
+
+        if (typeof this.material === 'undefined') {
+            throw new DeveloperError('this.material must be defined.');
         }
 
         // Initial render state creation
@@ -380,14 +385,14 @@ define([
         var pass = frameState.passes;
         this._colorCommand.modelMatrix = this._pickCommand.modelMatrix = this.modelMatrix;
         this._commandLists.removeAll();
+
         if (pass.color) {
             var materialChanged = typeof this._material === 'undefined' ||
-            this._material !== this.material ||
-            this._affectedByLighting !== this.affectedByLighting;
+                this._material !== this.material ||
+                this._affectedByLighting !== this.affectedByLighting;
 
             // Recompile shader when material changes
             if (materialChanged) {
-                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
                 this._material = this.material;
                 this._affectedByLighting = this.affectedByLighting;
 
@@ -410,6 +415,7 @@ define([
 
             this._commandLists.colorList.push(this._colorCommand);
         }
+
         if (pass.pick) {
             if (typeof this._pickId === 'undefined') {
                 // Since this ignores all other materials, if a material does discard, the sensor will still be picked.
