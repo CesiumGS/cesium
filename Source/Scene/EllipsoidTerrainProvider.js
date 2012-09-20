@@ -125,7 +125,7 @@ define([
         when(verticesPromise, function(result) {
             tile.geometry = undefined;
             tile.transformedGeometry = {
-                vertices : result.vertices,
+                vertices : result,
                 indices : TerrainProvider.getRegularGridIndices(width, height)
             };
             tile.state = TileState.TRANSFORMED;
