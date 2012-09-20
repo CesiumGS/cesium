@@ -232,9 +232,6 @@ define([
 
         var that = this;
         this._uniforms = {
-            u_model : function() {
-                return that.modelMatrix;
-            },
             u_sensorRadius : function() {
                 return isFinite(that.radius) ? that.radius : FAR;
             },

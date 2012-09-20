@@ -200,7 +200,7 @@ define([
                           ];
 
         var that = this;
-        var uniforms = {
+        this._uniforms = {
             u_atlas : function() {
                 return that._textureAtlas.getTexture();
             },
@@ -211,18 +211,6 @@ define([
                 return that.clampToPixel ? 1.0 : 0.0;
             }
         };
-
-        this._uniforms3D = combine([uniforms, {
-            u_model : function() {
-                return that.modelMatrix;
-            }
-        }], false, false);
-        this._uniforms2D = combine([uniforms, {
-            u_model : function() {
-                return Matrix4.IDENTITY;
-            }
-        }], false, false);
-        this._uniforms = undefined;
     };
 
     /**
@@ -1026,8 +1014,6 @@ define([
         if (typeof this._vaf === 'undefined' || typeof this._vaf.va === 'undefined') {
             return;
         }
-
-        this._uniforms = (frameState.mode === SceneMode.SCENE3D) ? this._uniforms3D : this._uniforms2D;
 
         var boundingVolume = updateBoundingVolumes(this, context, frameState);
         var modelMatrix = Matrix4.IDENTITY;

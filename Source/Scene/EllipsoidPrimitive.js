@@ -195,9 +195,6 @@ define([
 
         var that = this;
         this._uniforms = {
-            u_model : function() {
-                return that._computedModelMatrix;
-            },
             u_radii : function() {
                 return that.radii;
             },

@@ -10,6 +10,7 @@ define([
         '../Core/WindingOrder',
         '../Core/BoundingRectangle',
         '../Core/createGuid',
+        '../Core/Matrix4',
         './Buffer',
         './BufferUsage',
         './BlendEquation',
@@ -47,6 +48,7 @@ define([
         WindingOrder,
         BoundingRectangle,
         createGuid,
+        Matrix4,
         Buffer,
         BufferUsage,
         BlendEquation,
@@ -2355,6 +2357,7 @@ define([
         }
 
         if (count > 0) {
+            this._us.setModel(defaultValue(drawArguments.modelMatrix, Matrix4.IDENTITY));
             sp._setUniforms(drawArguments.uniformMap, this._us, this._validateSP);
 
             va._bind();
