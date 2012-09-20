@@ -212,6 +212,7 @@ define([
     function clearPasses(passes) {
         passes.color = false;
         passes.pick = false;
+        passes.overlay = false;
     }
 
     function updateFrameState(scene) {
@@ -364,8 +365,9 @@ define([
         if (undefBV) {
             near = camera.frustum.near;
             far = camera.frustum.far;
-        } else if (near < camera.frustum.near) {
-            near = camera.frustum.near;
+        } else {
+            near = Math.max(near, camera.frustum.near);
+            far = Math.min(far, camera.frustum.far);
         }
 
         scene._near = near;
@@ -404,7 +406,9 @@ define([
         var near;
         var far;
         var length;
+        var cloneCommand;
 
+        scene._useBins = false;
         if (scene._useBins) {
             var bins = scene._bins;
             near = scene._binNear;
@@ -427,7 +431,9 @@ define([
                     length = bin.length;
                     for (var j = 0; j < length; ++j) {
                         var command = bin[j];
-                        context.draw(command);
+                        cloneCommand = Command.cloneDrawArguments(command, scratchCommand);
+                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
+                        context.draw(cloneCommand);
                     }
                 }
             }
@@ -491,7 +497,7 @@ define([
                             continue;
                         }
 
-                        var cloneCommand = Command.cloneDrawArguments(renderCommand, scratchCommand);
+                        cloneCommand = Command.cloneDrawArguments(renderCommand, scratchCommand);
                         cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
                         context.draw(cloneCommand);
 
@@ -501,7 +507,9 @@ define([
                             --q;
                         }
                     } else {
-                        context.draw(renderCommand);
+                        cloneCommand = Command.cloneDrawArguments(renderCommand, scratchCommand);
+                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
+                        context.draw(cloneCommand);
                     }
                 }
             }
@@ -592,7 +600,7 @@ define([
         offCenter.bottom = yDir - pickHeight;
         offCenter.right = xDir + pickWidth;
         offCenter.left = xDir - pickWidth;
-        offCenter.near = frustum.near;
+        offCenter.near = near;
         offCenter.far = frustum.far;
 
         return offCenter.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
