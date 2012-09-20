@@ -555,9 +555,10 @@ define([
         var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
         y *= (frustum.top - frustum.bottom) * 0.5;
 
-        var position = camera.position.clone();
-        position.x += x;
-        position.y += y;
+        var position = camera.position;
+        position = new Cartesian3(position.z, position.x, position.y);
+        position.y += x;
+        position.z += y;
 
         var pixelSize = frustum.getPixelSize(new Cartesian2(canvasWidth, canvasHeight));
 
@@ -569,7 +570,7 @@ define([
         ortho.near = frustum.near;
         ortho.far = frustum.far;
 
-        return ortho.computeCullingVolume(position, camera.direction, camera.up);
+        return ortho.computeCullingVolume(position, camera.getDirectionWC(), camera.getUpWC());
     }
 
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
