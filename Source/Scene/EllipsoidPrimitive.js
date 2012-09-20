@@ -252,6 +252,8 @@ define([
 
     /**
      * @private
+     *
+     * @exception {DeveloperError} this.material must be defined.
      */
     EllipsoidPrimitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
@@ -259,6 +261,10 @@ define([
             (typeof this.center === 'undefined') ||
             (typeof this.radii === 'undefined')) {
             return;
+        }
+
+        if (typeof this.material === 'undefined') {
+            throw new DeveloperError('this.material must be defined.');
         }
 
         if (typeof this._rs === 'undefined') {
@@ -312,7 +318,6 @@ define([
                 this._material !== this.material ||
                 this._affectedByLighting !== this.affectedByLighting) {
 
-                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
                 this._material = this.material;
                 this._affectedByLighting = this.affectedByLighting;
 

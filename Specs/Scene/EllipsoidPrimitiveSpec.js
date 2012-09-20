@@ -115,17 +115,6 @@ defineSuite([
         e1 = e1 && e1.destroy();
     });
 
-    it('renders without a material', function() {
-        ellipsoid = createEllipsoid();
-        ellipsoid.material = undefined;
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, ellipsoid);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-    });
-
     it('renders without lighting', function() {
         ellipsoid = createEllipsoid();
         ellipsoid.affectedByLighting = false;
@@ -180,5 +169,14 @@ defineSuite([
         expect(p.isDestroyed()).toEqual(false);
         p.destroy();
         expect(p.isDestroyed()).toEqual(true);
+    });
+
+    it('throws when rendered without a material', function() {
+        ellipsoid = createEllipsoid();
+        ellipsoid.material = undefined;
+
+        expect(function() {
+            render(context, frameState, ellipsoid);
+        }).toThrow();
     });
 });
