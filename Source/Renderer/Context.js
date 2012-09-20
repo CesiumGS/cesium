@@ -2233,22 +2233,18 @@ define([
     };
 
     /**
-     * DOC_TBA.
-     *
+     * DOC_TBA
      * @memberof Context
      *
-     * @exception {DeveloperError} drawArguments is required.
-     * @exception {DeveloperError} drawArguments.primitiveType is required and must be valid.
-     * @exception {DeveloperError} drawArguments.shaderProgram is required.
-     * @exception {DeveloperError} drawArguments.vertexArray is required.
-     * @exception {DeveloperError} drawArguments.offset must be omitted or greater than or equal to zero.
+     * @param {Command} command The command to execute.
+     *
+     * @exception {DeveloperError} command is required.
+     * @exception {DeveloperError} command.primitiveType is required and must be valid.
+     * @exception {DeveloperError} command.shaderProgram is required.
+     * @exception {DeveloperError} command.vertexArray is required.
+     * @exception {DeveloperError} command.offset must be omitted or greater than or equal to zero.
      * @exception {DeveloperError} Program validation failed.
      * @exception {DeveloperError} Framebuffer is not complete.
-     *
-     * @see Context#createShaderProgram
-     * @see Context#createVertexArray
-     * @see Context#createFramebuffer
-     * @see Context#createRenderState
      *
      * @example
      * // Example 1.  Draw a single triangle specifying only required arguments
@@ -2270,10 +2266,15 @@ define([
      *     vertexArray   : va,
      *     renderState   : rs
      * });
+     *
+     * @see Context#createShaderProgram
+     * @see Context#createVertexArray
+     * @see Context#createFramebuffer
+     * @see Context#createRenderState
      */
-    Context.prototype.draw = function(drawArguments) {
-        this.beginDraw(drawArguments);
-        this.continueDraw(drawArguments);
+    Context.prototype.draw = function(command) {
+        this.beginDraw(command);
+        this.continueDraw(command);
         this.endDraw();
     };
 
@@ -2282,22 +2283,22 @@ define([
      *
      * @memberof Context
      */
-    Context.prototype.beginDraw = function(drawArguments) {
-        if (typeof drawArguments === 'undefined') {
-            throw new DeveloperError('drawArguments is required.');
+    Context.prototype.beginDraw = function(command) {
+        if (typeof command === 'undefined') {
+            throw new DeveloperError('command is required.');
         }
 
-        if (!drawArguments.shaderProgram) {
-            throw new DeveloperError('drawArguments.shaderProgram is required.');
+        if (!command.shaderProgram) {
+            throw new DeveloperError('command.shaderProgram is required.');
         }
 
-        var framebuffer = drawArguments.framebuffer;
-        var sp = drawArguments.shaderProgram;
-        var rs = drawArguments.renderState || this.createRenderState();
+        var framebuffer = command.framebuffer;
+        var sp = command.shaderProgram;
+        var rs = command.renderState || this.createRenderState();
 
         if (framebuffer && rs.depthTest) {
             if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
-                throw new DeveloperError('The depth test can not be enabled (drawArguments.renderState.depthTest.enabled) because the framebuffer (drawArguments.framebuffer) does not have a depth or depth-stencil renderbuffer.');
+                throw new DeveloperError('The depth test can not be enabled (command.renderState.depthTest.enabled) because the framebuffer (command.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
 
@@ -2319,30 +2320,30 @@ define([
      *
      * @memberof Context
      */
-    Context.prototype.continueDraw = function(drawArguments) {
+    Context.prototype.continueDraw = function(command) {
         var sp = this._currentSp;
         if (typeof sp === 'undefined') {
             throw new DeveloperError('beginDraw must be called before continueDraw.');
         }
 
-        if (typeof drawArguments === 'undefined') {
-            throw new DeveloperError('drawArguments is required.');
+        if (typeof command === 'undefined') {
+            throw new DeveloperError('command is required.');
         }
 
-        var primitiveType = drawArguments.primitiveType;
+        var primitiveType = command.primitiveType;
         if (!PrimitiveType.validate(primitiveType)) {
-            throw new DeveloperError('drawArguments.primitiveType is required and must be valid.');
+            throw new DeveloperError('command.primitiveType is required and must be valid.');
         }
 
-        if (!drawArguments.vertexArray) {
-            throw new DeveloperError('drawArguments.vertexArray is required.');
+        if (!command.vertexArray) {
+            throw new DeveloperError('command.vertexArray is required.');
         }
 
-        var va = drawArguments.vertexArray;
+        var va = command.vertexArray;
         var indexBuffer = va.getIndexBuffer();
 
-        var offset = drawArguments.offset;
-        var count = drawArguments.count;
+        var offset = command.offset;
+        var count = command.count;
 
         if (indexBuffer) {
             offset = (offset || 0) * indexBuffer.getBytesPerIndex(); // in bytes
@@ -2353,12 +2354,12 @@ define([
         }
 
         if (offset < 0) {
-            throw new DeveloperError('drawArguments.offset must be omitted or greater than or equal to zero.');
+            throw new DeveloperError('command.offset must be omitted or greater than or equal to zero.');
         }
 
         if (count > 0) {
-            this._us.setModel(defaultValue(drawArguments.modelMatrix, Matrix4.IDENTITY));
-            sp._setUniforms(drawArguments.uniformMap, this._us, this._validateSP);
+            this._us.setModel(defaultValue(command.modelMatrix, Matrix4.IDENTITY));
+            sp._setUniforms(command.uniformMap, this._us, this._validateSP);
 
             va._bind();
 
@@ -2377,7 +2378,7 @@ define([
      *
      * @memberof Context
      */
-    Context.prototype.endDraw = function(drawArguments) {
+    Context.prototype.endDraw = function() {
         if (this._currentFramebuffer) {
             this._currentFramebuffer._unBind();
             this._currentFramebuffer = undefined;
