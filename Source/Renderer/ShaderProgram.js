@@ -2035,6 +2035,7 @@ define([
 
     /**
      * DOC_TBA
+     * @memberof ShaderProgram
      */
     ShaderProgram.prototype.release = function() {
         if (this._cachedShader) {
