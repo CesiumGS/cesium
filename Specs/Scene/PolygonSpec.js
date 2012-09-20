@@ -234,18 +234,6 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('renders without a material', function() {
-        // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
-        polygon = createPolygon();
-        polygon.material = undefined;
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polygon);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-    });
-
     it('renders without lighting', function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
         polygon = createPolygon();
@@ -440,6 +428,15 @@ defineSuite([
 
         expect(function() {
             polygon.update(context, frameState);
+        }).toThrow();
+    });
+
+    it('throws when rendered without a material', function() {
+        polygon = createPolygon();
+        polygon.material = undefined;
+
+        expect(function() {
+            render(context, frameState, polygon);
         }).toThrow();
     });
 });
