@@ -1,9 +1,9 @@
 /*global defineSuite*/
 defineSuite([
          'Renderer/Context',
-         '../Specs/createContext',
-         '../Specs/destroyContext',
-         '../Specs/renderFragment'
+         'Specs/createContext',
+         'Specs/destroyContext',
+         'Specs/renderFragment'
      ], function(
          Context,
          createContext,

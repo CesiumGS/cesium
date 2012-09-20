@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/Polygon',
-         '../Specs/createContext',
-         '../Specs/destroyContext',
-         '../Specs/frameState',
-         '../Specs/pick',
-         '../Specs/render',
+         'Specs/createContext',
+         'Specs/destroyContext',
+         'Specs/frameState',
+         'Specs/pick',
+         'Specs/render',
          'Core/BoundingRectangle',
          'Core/BoundingSphere',
          'Core/Cartesian3',
