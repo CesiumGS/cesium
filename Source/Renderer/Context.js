@@ -10,7 +10,6 @@ define([
         '../Core/WindingOrder',
         '../Core/BoundingRectangle',
         '../Core/createGuid',
-        '../Shaders/BuiltinFunctions',
         './Buffer',
         './BufferUsage',
         './BlendEquation',
@@ -48,7 +47,6 @@ define([
         WindingOrder,
         BoundingRectangle,
         createGuid,
-        ShadersBuiltinFunctions,
         Buffer,
         BufferUsage,
         BlendEquation,
@@ -1111,7 +1109,7 @@ define([
      * sp = context.createShaderProgram(vs, fs, attributes);            *
      */
     Context.prototype.createShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        return new ShaderProgram(this._gl, this._logShaderCompilation, ShadersBuiltinFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations);
+        return new ShaderProgram(this._gl, this._logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
     };
 
     function createBuffer(gl, bufferTarget, typedArrayOrSizeInBytes, usage) {
@@ -2232,18 +2230,6 @@ define([
         }
     };
 
-    Context.prototype._validateShaderProgram = function(sp) {
-        if (this._validateSP) {
-            var gl = this._gl;
-            var program = sp._getProgram();
-            gl.validateProgram(program);
-
-            if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
-                throw new DeveloperError('Program validation failed.  Link log: ' + gl.getProgramInfoLog(program));
-            }
-        }
-    };
-
     /**
      * DOC_TBA.
      *
@@ -2369,8 +2355,7 @@ define([
         }
 
         if (count > 0) {
-            sp._setUniforms(drawArguments.uniformMap, this._us);
-            this._validateShaderProgram(sp);
+            sp._setUniforms(drawArguments.uniformMap, this._us, this._validateSP);
 
             va._bind();
 
