@@ -1,34 +1,24 @@
-/*global importScripts,require*/
-importScripts('../../ThirdParty/requirejs-1.0.8/require.js');
-
-require({
-        baseUrl : '..'
-    }, [
-        'Core/ExtentTessellator'
+/*global define*/
+define([
+        '../Core/ExtentTessellator',
+        './createTaskProcessorWorker'
     ], function(
-        ExtentTessellator) {
+        ExtentTessellator,
+        createTaskProcessorWorker) {
     "use strict";
-    /*global self*/
 
-    var postMessage = self.webkitPostMessage || self.postMessage;
-
-    self.onmessage = function(event) {
-        var data = event.data;
-        var id = data.id;
-        var parameters = data.parameters;
-
+    function createVerticesFromExtent(parameters, transferableObjects) {
         var vertices = new Float32Array(parameters.width * parameters.height * 5);
+        transferableObjects.push(vertices.buffer);
+
         parameters.vertices = vertices;
         parameters.generateTextureCoordinates = true;
         parameters.interleaveTextureCoordinates = true;
 
         ExtentTessellator.computeVertices(parameters);
 
-        postMessage({
-            id : id,
-            result : {
-                vertices : vertices
-            }
-        }, [vertices.buffer]);
-    };
+        return vertices;
+    }
+
+    return createTaskProcessorWorker(createVerticesFromExtent);
 });

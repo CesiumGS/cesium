@@ -2,10 +2,12 @@
 define([
         'require',
         './defaultValue',
+        './DeveloperError',
         '../ThirdParty/when'
     ], function(
         require,
         defaultValue,
+        DeveloperError,
         when) {
     "use strict";
 
@@ -24,17 +26,60 @@ define([
         delete deferreds[id];
     }
 
-    function createWorker(processor) {
-        var uri = require.toUrl('Workers/' + processor._workerName + '.js');
-        var worker = new Worker(uri);
+    var cesiumScriptRegex = /(.*)\/?Cesium\w*\.js(?:\W|$)/i;
+    var bootstrapperScript = 'cesiumWorkerBootstrapper.js';
+    var bootstrapperUrl;
+    function getBootstrapperUrl() {
+        /*global CESIUM_BASE_URL*/
+        if (typeof bootstrapperUrl === 'undefined') {
+            if (typeof CESIUM_BASE_URL !== 'undefined') {
+                bootstrapperUrl = CESIUM_BASE_URL + '/' + bootstrapperScript;
+            } else if (typeof require.toUrl !== 'undefined') {
+                bootstrapperUrl = require.toUrl('../Workers/' + bootstrapperScript);
+            } else {
+                var scripts = document.getElementsByTagName('script');
+                for ( var i = 0, len = scripts.length; i < len; ++i) {
+                    var src = scripts[i].getAttribute('src');
+                    var result = cesiumScriptRegex.exec(src);
+                    if (result !== null) {
+                        bootstrapperUrl = result[1] + '/' + bootstrapperScript;
+                        break;
+                    }
+                }
+                if (typeof bootstrapperUrl === 'undefined') {
+                    throw new DeveloperError('Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL.');
+                }
+            }
+        }
 
-        processor._worker = worker;
+        return bootstrapperUrl;
+    }
+
+    function createWorker(processor) {
+        var worker = new Worker(getBootstrapperUrl());
+        worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
+
+        //bootstrap
+        var bootstrapMessage = {
+            loaderConfig : {},
+            workerModule : 'Workers/' + processor._workerName
+        };
+
+        if (typeof require.toUrl !== 'undefined') {
+            bootstrapMessage.loaderConfig.baseUrl = '..';
+        } else {
+            bootstrapMessage.loaderConfig.paths = {
+                'Workers' : '.'
+            };
+        }
+
+        worker.postMessage(bootstrapMessage);
 
         worker.onmessage = function(event) {
             completeTask(processor, event);
         };
 
-        worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
+        processor._worker = worker;
     }
 
     /**

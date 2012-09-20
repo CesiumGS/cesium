@@ -35,7 +35,14 @@ defineSuite([
     it('project1', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var cartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_FOUR, 0.0);
-        var expected = new Cartesian3(Math.PI * ellipsoid.getRadii().x, 0.820329694342107 * ellipsoid.getRadii().z, 0.0);
+
+        // expected equations from Wolfram MathWorld:
+        // http://mathworld.wolfram.com/MercatorProjection.html
+        var expected = new Cartesian3(
+                ellipsoid.getMaximumRadius() * cartographic.longitude,
+                ellipsoid.getMaximumRadius() * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
+                0.0);
+
         var projection = new WebMercatorProjection(ellipsoid);
         expect(projection.project(cartographic).equalsEpsilon(expected, CesiumMath.EPSILON8)).toEqual(true);
     });
@@ -43,7 +50,14 @@ defineSuite([
     it('project2', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var cartographic = new Cartographic(-Math.PI, CesiumMath.PI_OVER_FOUR, 0.0);
-        var expected = new Cartesian3(-Math.PI, 0.820329694342107, 0.0);
+
+        // expected equations from Wolfram MathWorld:
+        // http://mathworld.wolfram.com/MercatorProjection.html
+        var expected = new Cartesian3(
+                ellipsoid.getMaximumRadius() * cartographic.longitude,
+                ellipsoid.getMaximumRadius() * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
+                0.0);
+
         var projection = new WebMercatorProjection(ellipsoid);
         expect(projection.project(cartographic).equalsEpsilon(expected, CesiumMath.EPSILON15)).toEqual(true);
     });

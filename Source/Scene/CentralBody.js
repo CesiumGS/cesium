@@ -114,7 +114,7 @@ define([
      */
     var CentralBody = function(ellipsoid, terrainProvider, imageryLayerCollection) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        terrainProvider = typeof terrainProvider !== 'undefined' ? terrainProvider : new EllipsoidTerrainProvider();
+        terrainProvider = typeof terrainProvider !== 'undefined' ? terrainProvider : new EllipsoidTerrainProvider({ellipsoid : ellipsoid});
         imageryLayerCollection = typeof imageryLayerCollection !== 'undefined' ? imageryLayerCollection : new ImageryLayerCollection();
 
         this._ellipsoid = ellipsoid;

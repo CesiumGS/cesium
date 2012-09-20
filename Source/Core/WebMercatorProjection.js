@@ -42,7 +42,8 @@ define([
         } else if (latitude < -WebMercatorProjection.MaximumLatitude) {
             latitude = -WebMercatorProjection.MaximumLatitude;
         }
-        return Math.log(Math.tan((CesiumMath.PI_OVER_TWO + latitude) * 0.5));
+        var sinLatitude = Math.sin(latitude);
+        return 0.5 * Math.log((1.0 + sinLatitude) / (1.0 - sinLatitude));
     };
 
     /**
@@ -76,7 +77,7 @@ define([
     WebMercatorProjection.prototype.project = function(cartographic) {
         var semimajorAxis = this._semimajorAxis;
         return new Cartesian3(cartographic.longitude * semimajorAxis,
-                WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographic.latitude) * semimajorAxis,
+                              WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographic.latitude) * semimajorAxis,
                               cartographic.height);
     };
 

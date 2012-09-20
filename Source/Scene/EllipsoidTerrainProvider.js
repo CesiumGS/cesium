@@ -7,6 +7,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Ellipsoid',
         '../Core/ExtentTessellator',
         '../Core/PlaneTessellator',
         '../Core/TaskProcessor',
@@ -22,6 +23,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        Ellipsoid,
         ExtentTessellator,
         PlaneTessellator,
         TaskProcessor,
@@ -38,19 +40,24 @@ define([
      * @alias EllipsoidTerrainProvider
      * @constructor
      *
-     * @param {TilingScheme} [tilingScheme] The tiling scheme indicating how the ellipsoidal
-     * surface is broken into tiles.  If this parameter is not provided, a
-     * {@link MercatorTilingScheme} on the surface of the WGS84 ellipsoid is used.
+     * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the ellipsoidal
+     * surface is broken into tiles.  If this parameter is not provided, a {@link GeographicTilingScheme}
+     * is used.
+     * @param {Ellipsoid} [description.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+     * this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+     * parameter is specified, the WGS84 ellipsoid is used.
      *
      * @see TerrainProvider
      */
-    function EllipsoidTerrainProvider(tilingScheme) {
+    function EllipsoidTerrainProvider(description) {
+        description = defaultValue(description, {});
+
         /**
          * The tiling scheme used to tile the surface.
          *
          * @type TilingScheme
          */
-        this.tilingScheme = defaultValue(tilingScheme, new GeographicTilingScheme());
+        this.tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme({ ellipsoid : defaultValue(description.ellipsoid, Ellipsoid.WGS84) }));
 
         // Note: the 64 below does NOT need to match the actual vertex dimensions.
         this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, 64, this.tilingScheme.numberOfLevelZeroTilesX);
@@ -118,7 +125,7 @@ define([
         when(verticesPromise, function(result) {
             tile.geometry = undefined;
             tile.transformedGeometry = {
-                vertices : result.vertices,
+                vertices : result,
                 indices : TerrainProvider.getRegularGridIndices(width, height)
             };
             tile.state = TileState.TRANSFORMED;
