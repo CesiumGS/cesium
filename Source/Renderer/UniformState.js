@@ -120,14 +120,14 @@ define([
         return this._viewport;
     };
 
-    UniformState.prototype._cleanViewport = function() {
-        if (this._viewportDirty) {
-            var v = this._viewport;
-            Matrix4.computeOrthographicOffCenter(v.x, v.x + v.width, v.y, v.y + v.height, 0.0, 1.0, this._viewportOrthographicMatrix);
-            Matrix4.computeViewportTransformation(v, 0.0, 1.0, this._viewportTransformation);
-            this._viewportDirty = false;
+    function cleanViewport(uniformState) {
+        if (uniformState._viewportDirty) {
+            var v = uniformState._viewport;
+            Matrix4.computeOrthographicOffCenter(v.x, v.x + v.width, v.y, v.y + v.height, 0.0, 1.0, uniformState._viewportOrthographicMatrix);
+            Matrix4.computeViewportTransformation(v, 0.0, 1.0, uniformState._viewportTransformation);
+            uniformState._viewportDirty = false;
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -137,7 +137,7 @@ define([
      * @see czm_viewportOrthographic
      */
     UniformState.prototype.getViewportOrthographic = function() {
-        this._cleanViewport();
+        cleanViewport(this);
         return this._viewportOrthographicMatrix;
     };
 
@@ -149,7 +149,7 @@ define([
      * @see czm_viewportTransformation
      */
     UniformState.prototype.getViewportTransformation = function() {
-        this._cleanViewport();
+        cleanViewport(this);
         return this._viewportTransformation;
     };
 
@@ -245,15 +245,15 @@ define([
         return this._viewRotation;
     };
 
-    UniformState.prototype._cleanInverseView = function() {
-        if (this._inverseViewDirty) {
-            this._inverseViewDirty = false;
+    function cleanInverseView(uniformState) {
+        if (uniformState._inverseViewDirty) {
+            uniformState._inverseViewDirty = false;
 
-            var v = this.getView();
-            Matrix4.inverse(v, this._inverseView);
-            Matrix4.getRotation(this._inverseView, this._inverseViewRotation);
+            var v = uniformState.getView();
+            Matrix4.inverse(v, uniformState._inverseView);
+            Matrix4.getRotation(uniformState._inverseView, uniformState._inverseViewRotation);
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -265,7 +265,7 @@ define([
      * @see czm_inverseView
      */
     UniformState.prototype.getInverseView = function() {
-        this._cleanInverseView();
+        cleanInverseView(this);
         return this._inverseView;
     };
 
@@ -315,13 +315,13 @@ define([
         return this._projection;
     };
 
-    UniformState.prototype._cleanInverseProjection = function() {
-        if (this._inverseProjectionDirty) {
-            this._inverseProjectionDirty = false;
+    function cleanInverseProjection(uniformState) {
+        if (uniformState._inverseProjectionDirty) {
+            uniformState._inverseProjectionDirty = false;
 
-            Matrix4.inverse(this._projection, this._inverseProjection);
+            Matrix4.inverse(uniformState._projection, uniformState._inverseProjection);
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -333,7 +333,7 @@ define([
      * @see czm_inverseProjection
      */
     UniformState.prototype.getInverseProjection = function() {
-        this._cleanInverseProjection();
+        cleanInverseProjection(this);
         return this._inverseProjection;
     };
 
@@ -368,13 +368,13 @@ define([
     };
 
     // Derived
-    UniformState.prototype._cleanModelView = function() {
-        if (this._modelViewDirty) {
-            this._modelViewDirty = false;
+    function cleanModelView(uniformState) {
+        if (uniformState._modelViewDirty) {
+            uniformState._modelViewDirty = false;
 
-            Matrix4.multiply(this._view, this._model, this._modelView);
+            Matrix4.multiply(uniformState._view, uniformState._model, uniformState._modelView);
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -386,16 +386,16 @@ define([
      * @see czm_modelView
      */
     UniformState.prototype.getModelView = function() {
-        this._cleanModelView();
+        cleanModelView(this);
         return this._modelView;
     };
 
-    UniformState.prototype._cleanModelViewRelativeToEye = function() {
-        if (this._modelViewRelativeToEyeDirty) {
-            this._modelViewRelativeToEyeDirty = false;
+    function cleanModelViewRelativeToEye(uniformState) {
+        if (uniformState._modelViewRelativeToEyeDirty) {
+            uniformState._modelViewRelativeToEyeDirty = false;
 
-            var mv = this.getModelView();
-            var mvRte = this._modelViewRelativeToEye;
+            var mv = uniformState.getModelView();
+            var mvRte = uniformState._modelViewRelativeToEye;
             mvRte[0] = mv[0];
             mvRte[1] = mv[1];
             mvRte[2] = mv[2];
@@ -413,7 +413,7 @@ define([
             mvRte[14] = 0.0;
             mvRte[15] = mv[15];
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -425,17 +425,17 @@ define([
      * @see czm_modelViewRelativeToEye
      */
     UniformState.prototype.getModelViewRelativeToEye = function() {
-        this._cleanModelViewRelativeToEye();
+        cleanModelViewRelativeToEye(this);
         return this._modelViewRelativeToEye;
     };
 
-    UniformState.prototype._cleanInverseModelView = function() {
-        if (this._inverseModelViewDirty) {
-            this._inverseModelViewDirty = false;
+    function cleanInverseModelView(uniformState) {
+        if (uniformState._inverseModelViewDirty) {
+            uniformState._inverseModelViewDirty = false;
 
-            Matrix4.inverse(this.getModelView(), this._inverseModelView);
+            Matrix4.inverse(uniformState.getModelView(), uniformState._inverseModelView);
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -447,17 +447,17 @@ define([
      * @see czm_inverseModelView
      */
     UniformState.prototype.getInverseModelView = function() {
-        this._cleanInverseModelView();
+        cleanInverseModelView(this);
         return this._inverseModelView;
     };
 
-    UniformState.prototype._cleanViewProjection = function() {
-        if (this._viewProjectionDirty) {
-            this._viewProjectionDirty = false;
+    function cleanViewProjection(uniformState) {
+        if (uniformState._viewProjectionDirty) {
+            uniformState._viewProjectionDirty = false;
 
-            Matrix4.multiply(this._projection, this._view, this._viewProjection);
+            Matrix4.multiply(uniformState._projection, uniformState._view, uniformState._viewProjection);
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -469,17 +469,17 @@ define([
      * @see czm_viewProjection
      */
     UniformState.prototype.getViewProjection = function() {
-        this._cleanViewProjection();
+        cleanViewProjection(this);
         return this._viewProjection;
     };
 
-    UniformState.prototype._cleanModelViewProjection = function() {
-        if (this._modelViewProjectionDirty) {
-            this._modelViewProjectionDirty = false;
+    function cleanModelViewProjection(uniformState) {
+        if (uniformState._modelViewProjectionDirty) {
+            uniformState._modelViewProjectionDirty = false;
 
-            Matrix4.multiply(this._projection, this.getModelView(), this._modelViewProjection);
+            Matrix4.multiply(uniformState._projection, uniformState.getModelView(), uniformState._modelViewProjection);
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -491,17 +491,17 @@ define([
      * @see czm_modelViewProjection
      */
     UniformState.prototype.getModelViewProjection = function() {
-        this._cleanModelViewProjection();
+        cleanModelViewProjection(this);
         return this._modelViewProjection;
     };
 
-    UniformState.prototype._cleanModelViewInfiniteProjection = function() {
-        if (this._modelViewInfiniteProjectionDirty) {
-            this._modelViewInfiniteProjectionDirty = false;
+    function cleanModelViewInfiniteProjection(uniformState) {
+        if (uniformState._modelViewInfiniteProjectionDirty) {
+            uniformState._modelViewInfiniteProjectionDirty = false;
 
-            Matrix4.multiply(this._infiniteProjection, this.getModelView(), this._modelViewInfiniteProjection);
+            Matrix4.multiply(uniformState._infiniteProjection, uniformState.getModelView(), uniformState._modelViewInfiniteProjection);
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -513,22 +513,22 @@ define([
      * @see czm_modelViewProjection
      */
     UniformState.prototype.getModelViewInfiniteProjection = function() {
-        this._cleanModelViewInfiniteProjection();
+        cleanModelViewInfiniteProjection(this);
         return this._modelViewInfiniteProjection;
     };
 
     var normalScratch = new Matrix4();
 
-    UniformState.prototype._cleanNormal = function() {
-        if (this._normalDirty) {
-            this._normalDirty = false;
+    function cleanNormal(uniformState) {
+        if (uniformState._normalDirty) {
+            uniformState._normalDirty = false;
 
             // TODO:  Inverse, transpose of the whole 4x4?  Or we can just do the 3x3?
-            Matrix4.inverse(this.getModelView(), normalScratch);
+            Matrix4.inverse(uniformState.getModelView(), normalScratch);
             Matrix4.transpose(normalScratch, normalScratch);
-            Matrix4.getRotation(normalScratch, this._normal);
+            Matrix4.getRotation(normalScratch, uniformState._normal);
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -540,21 +540,21 @@ define([
      * @see czm_normal
      */
     UniformState.prototype.getNormal = function() {
-        this._cleanNormal();
+        cleanNormal(this);
         return this._normal;
     };
 
     var inverseNormalScratch = new Matrix4();
 
-    UniformState.prototype._cleanInverseNormal = function() {
-        if (this._inverseNormalDirty) {
-            this._inverseNormalDirty = false;
+    function cleanInverseNormal(uniformState) {
+        if (uniformState._inverseNormalDirty) {
+            uniformState._inverseNormalDirty = false;
 
             // TODO:  Inverse of the whole 4x4?  Or we can just do the 3x3?
-            Matrix4.inverse(this.getModelView(), inverseNormalScratch);
-            Matrix4.getRotation(inverseNormalScratch, this._inverseNormal);
+            Matrix4.inverse(uniformState.getModelView(), inverseNormalScratch);
+            Matrix4.getRotation(inverseNormalScratch, uniformState._inverseNormal);
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -566,20 +566,20 @@ define([
      * @see czm_inverseNormal
      */
     UniformState.prototype.getInverseNormal = function() {
-        this._cleanInverseNormal();
+        cleanInverseNormal(this);
         return this._inverseNormal;
     };
 
     var sunPositionScratch = new Cartesian3();
 
-    UniformState.prototype._cleanSunDirectionEC = function() {
-        if (this._sunDirectionECDirty) {
-            this._sunDirectionECDirty = false;
+    function cleanSunDirectionEC(uniformState) {
+        if (uniformState._sunDirectionECDirty) {
+            uniformState._sunDirectionECDirty = false;
 
-            Matrix3.multiplyByVector(this.getViewRotation(), this._sunPosition, sunPositionScratch);
-            Cartesian3.normalize(sunPositionScratch, this._sunDirectionEC);
+            Matrix3.multiplyByVector(uniformState.getViewRotation(), uniformState._sunPosition, sunPositionScratch);
+            Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
         }
-    };
+    }
 
     /**
      * DOC_TBA
@@ -624,16 +624,16 @@ define([
      * @see UniformState#getSunDirectionEC
      */
     UniformState.prototype.getSunDirectionEC = function() {
-        this._cleanSunDirectionEC();
+        cleanSunDirectionEC(this);
         return this._sunDirectionEC;
     };
 
-    UniformState.prototype._cleanSunDirectionWC = function() {
-        if (this._sunDirectionWCDirty) {
-            this._sunDirectionWCDirty = false;
-            Cartesian3.normalize(this._sunPosition, this._sunDirectionWC);
+    function cleanSunDirectionWC(uniformState) {
+        if (uniformState._sunDirectionWCDirty) {
+            uniformState._sunDirectionWCDirty = false;
+            Cartesian3.normalize(uniformState._sunPosition, uniformState._sunDirectionWC);
         }
-    };
+    }
 
     /**
     * DOC_TBA
@@ -645,7 +645,7 @@ define([
     * @see czm_sunDirectionWC
     */
     UniformState.prototype.getSunDirectionWC = function() {
-        this._cleanSunDirectionWC();
+        cleanSunDirectionWC(this);
         return this._sunDirectionWC;
     };
 
