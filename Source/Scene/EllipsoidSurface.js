@@ -600,6 +600,7 @@ define([
                         tileImageryCollection.splice(i, 1);
                         imageryLayer.createTileImagerySkeletons(tile, terrainProvider, i);
                         --i;
+                        len = tileImageryCollection.length;
                     }
                 }
 
@@ -965,7 +966,7 @@ define([
         var tileCommandIndex = -1;
 
         var tilesToRenderByTextureCount = surface._tilesToRenderByTextureCount;
-        for (var tileSetIndex = 1, tileSetLength = tilesToRenderByTextureCount.length; tileSetIndex < tileSetLength; ++tileSetIndex) {
+        for (var tileSetIndex = 0, tileSetLength = tilesToRenderByTextureCount.length; tileSetIndex < tileSetLength; ++tileSetIndex) {
             var tileSet = tilesToRenderByTextureCount[tileSetIndex];
             if (typeof tileSet === 'undefined' || tileSet.length === 0) {
                 continue;
@@ -1040,7 +1041,7 @@ define([
                 var imageryIndex = 0;
                 var imageryLen = tileImageryCollection.length;
 
-                while (imageryIndex < imageryLen) {
+                do {
                     var numberOfDayTextures = 0;
 
                     ++tileCommandIndex;
@@ -1094,7 +1095,7 @@ define([
                     command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
                     command.vertexArray = tile.vertexArray;
                     command.uniformMap = uniformMap;
-                }
+                } while (imageryIndex < imageryLen);
             }
         }
 

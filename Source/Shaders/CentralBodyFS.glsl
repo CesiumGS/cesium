@@ -1,10 +1,12 @@
 //#define SHOW_TILE_BOUNDARIES
 //#define SHOW_TEXTURE_BOUNDARIES
 
+#if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
+#endif
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -60,10 +62,10 @@ void main()
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
-    vec3 initialColor = vec3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
+    vec3 initialColor = vec3(0.0, 0.0, 0.5);
     vec3 startDayColor = computeDayColor(initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
 #else
-    vec3 startDayColor = vec3(1.0);
+    vec3 startDayColor = vec3(0.0, 0.0, 0.5);
 #endif
     
 #ifdef SHOW_TILE_BOUNDARIES
