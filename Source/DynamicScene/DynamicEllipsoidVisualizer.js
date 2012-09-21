@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
@@ -8,6 +9,7 @@ define([
         '../Scene/EllipsoidPrimitive',
         '../Scene/Material'
        ], function(
+         defaultValue,
          DeveloperError,
          destroyObject,
          Color,
@@ -239,10 +241,13 @@ define([
 
         ellipsoid.radii = radiiProperty.getValue(time, ellipsoid.radii);
 
-        position = positionProperty.getValueCartesian(time, position) || ellipsoid._visualizerPosition;
-        orientation = orientationProperty.getValue(time, orientation) || ellipsoid._visualizerOrientation;
+        position = defaultValue(positionProperty.getValueCartesian(time, position), ellipsoid._visualizerPosition);
+        orientation = defaultValue(orientationProperty.getValue(time, orientation), ellipsoid._visualizerOrientation);
 
-        if (typeof position !== 'undefined' && typeof orientation !== 'undefined' && (!position.equals(ellipsoid._visualizerPosition) || !orientation.equals(ellipsoid._visualizerOrientation))) {
+        if (typeof position !== 'undefined' &&
+            typeof orientation !== 'undefined' &&
+            (!position.equals(ellipsoid._visualizerPosition) ||
+             !orientation.equals(ellipsoid._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, ellipsoid.modelMatrix);
             position.clone(ellipsoid._visualizerPosition);
             orientation.clone(ellipsoid._visualizerOrientation);
