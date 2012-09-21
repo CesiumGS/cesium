@@ -7,6 +7,7 @@ define([
         '../Core/Extent',
         '../Core/Cartesian2',
         '../Core/Cartographic',
+        '../Core/WebMercatorProjection',
         './TilingScheme'
     ], function(
         defaultValue,
@@ -16,11 +17,12 @@ define([
         Extent,
         Cartesian2,
         Cartographic,
+        WebMercatorProjection,
         TilingScheme) {
     "use strict";
 
     /**
-     * A tiling scheme for geometry referenced to a web mercator projection, EPSG:3857.  This is
+     * A tiling scheme for geometry referenced to a {@link WebMercatorProjection}, EPSG:3857.  This is
      * the tiling scheme used by Google Maps, Microsoft Bing Maps, and most of ESRI ArcGIS Online.
      *
      * @name WebMercatorTilingScheme
@@ -64,18 +66,20 @@ define([
          */
         this.extent = undefined;
 
+        this._projection = new WebMercatorProjection(this.ellipsoid);
+
         if (typeof description.extentSouthwestInMeters !== 'undefined' &&
             typeof description.extentNortheastInMeters !== 'undefined') {
             this._extentSouthwestInMeters = description.extentSouthwestInMeters;
             this._extentNortheastInMeters = description.extentNortheastInMeters;
         } else {
-            var semimajorAxisTimesPi = this.ellipsoid.getRadii().x * Math.PI;
+            var semimajorAxisTimesPi = this.ellipsoid.getMaximumRadius() * Math.PI;
             this._extentSouthwestInMeters = new Cartesian2(-semimajorAxisTimesPi, -semimajorAxisTimesPi);
             this._extentNortheastInMeters = new Cartesian2(semimajorAxisTimesPi, semimajorAxisTimesPi);
         }
 
-        var southwest = this.webMercatorToCartographic(this._extentSouthwestInMeters.x, this._extentSouthwestInMeters.y);
-        var northeast = this.webMercatorToCartographic(this._extentNortheastInMeters.x, this._extentNortheastInMeters.y);
+        var southwest = this._projection.unproject(this._extentSouthwestInMeters);
+        var northeast = this._projection.unproject(this._extentNortheastInMeters);
         this.extent = new Extent(southwest.longitude, southwest.latitude,
                                  northeast.longitude, northeast.latitude);
     }
@@ -90,40 +94,10 @@ define([
      */
     WebMercatorTilingScheme.prototype.createLevelZeroTiles = TilingScheme.prototype.createLevelZeroTiles;
 
-    /**
-     * Converts web mercator X, Y coordinates, expressed in meters, to a {@link Cartographic}
-     * containing geodetic ellipsoid coordinates.
-     *
-     * @memberof WebMercatorTilingScheme
-     *
-     * @param {Number} x The web mercator X coordinate in meters.
-     * @param {Number} y The web mercator Y coordinate in meters.
-     * @returns {Cartographic} The equivalent cartographic coordinates.
-     */
-    WebMercatorTilingScheme.prototype.webMercatorToCartographic = function(x, y) {
-        var oneOverEarthSemimajorAxis = this.ellipsoid.getOneOverRadii().x;
-        var longitude = x * oneOverEarthSemimajorAxis;
-        var latitude = CesiumMath.PI_OVER_TWO - (2.0 * Math.atan(Math.exp(-y * oneOverEarthSemimajorAxis)));
-        return new Cartographic(longitude, latitude);
-    };
-
-    /**
-     * Converts geodetic ellipsoid coordinates to the equivalent web mercator
-     * X, Y coordinates expressed in meters and returned in a {@link Cartesian2}.
-     *
-     * @param {Number} longitude The cartographic longitude coordinate in radians.
-     * @param {Number} latitude The cartographic latitude coordinate in radians.
-     * @returns {Cartesian2} The equivalent web mercator X, Y coordinates, in meters.
-     */
-    WebMercatorTilingScheme.prototype.cartographicToWebMercator = function(longitude, latitude) {
-        var semimajorAxis = this.ellipsoid.getRadii().x;
-        return new Cartesian2(longitude * semimajorAxis,
-                              Math.log(Math.tan((CesiumMath.PI_OVER_TWO + latitude) * 0.5)) * semimajorAxis);
-    };
-
     WebMercatorTilingScheme.prototype.extentToNativeExtent = function(extent) {
-        var southwest = this.cartographicToWebMercator(extent.west, extent.south);
-        var northeast = this.cartographicToWebMercator(extent.east, extent.north);
+        var projection = this._projection;
+        var southwest = projection.project(extent.getSouthwest());
+        var northeast = projection.project(extent.getNortheast());
         return {
             west : southwest.x,
             south : southwest.y,
@@ -180,8 +154,9 @@ define([
     WebMercatorTilingScheme.prototype.tileXYToExtent = function(x, y, level) {
         var nativeExtent = this.tileXYToNativeExtent(x, y, level);
 
-        var southwest = this.webMercatorToCartographic(nativeExtent.west, nativeExtent.south);
-        var northeast = this.webMercatorToCartographic(nativeExtent.east, nativeExtent.north);
+        var projection = this._projection;
+        var southwest = projection.unproject(new Cartesian2(nativeExtent.west, nativeExtent.south));
+        var northeast = projection.unproject(new Cartesian2(nativeExtent.east, nativeExtent.north));
 
         return new Extent(southwest.longitude, southwest.latitude,
                           northeast.longitude, northeast.latitude);
@@ -215,7 +190,9 @@ define([
         var overallHeight = this._extentNortheastInMeters.y - this._extentSouthwestInMeters.y;
         var yTileHeight = overallHeight / yTiles;
 
-        var webMercatorPosition = this.cartographicToWebMercator(position.longitude, position.latitude);
+        var projection = this._projection;
+
+        var webMercatorPosition = projection.project(position);
         var distanceFromWest = webMercatorPosition.x - this._extentSouthwestInMeters.x;
         var distanceFromNorth = this._extentNortheastInMeters.y - webMercatorPosition.y;
 

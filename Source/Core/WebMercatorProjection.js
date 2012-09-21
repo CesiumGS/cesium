@@ -71,8 +71,13 @@ define([
     };
 
     /**
-     * DOC_TBA
-     * @memberof MercatorProjection
+     * Converts geodetic ellipsoid coordinates to the equivalent web mercator
+     * X, Y coordinates expressed in meters and returned in a {@link Cartesian2}.
+     *
+     * @memberof WebMercatorProjection
+     *
+     * @param {Cartographic} cartographic The cartographic coordinates in radians.
+     * @returns {Cartesian2} The equivalent web mercator X, Y coordinates, in meters.
      */
     WebMercatorProjection.prototype.project = function(cartographic) {
         var semimajorAxis = this._semimajorAxis;
@@ -82,8 +87,13 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Converts web mercator X, Y coordinates, expressed in meters, to a {@link Cartographic}
+     * containing geodetic ellipsoid coordinates.
+     *
      * @memberof WebMercatorProjection
+     *
+     * @param {Cartesian2} cartesian The web mercator coordinates in meters.
+     * @returns {Cartographic} The equivalent cartographic coordinates.
      */
     WebMercatorProjection.prototype.unproject = function(cartesian) {
         var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
