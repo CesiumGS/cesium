@@ -27,7 +27,6 @@ define([
      * @internalConstructor
      */
     var UniformState = function(context) {
-        this._context = context;
         this._viewport = new BoundingRectangle();
         this._viewportDirty = false;
         this._viewportOrthographicMatrix = Matrix4.IDENTITY.clone();
@@ -82,14 +81,6 @@ define([
 
         this._sunDirectionWCDirty = true;
         this._sunDirectionWC = new Cartesian3();
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof UniformState
-     */
-    UniformState.prototype.getContext = function() {
-        return this._context;
     };
 
     /**
