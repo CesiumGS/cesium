@@ -211,7 +211,7 @@ define([
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createCommandsForTilesToRender(this, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState);
-        debugCreateCommandsForTileBoundingSphere(this, context, centralBodyUniformMap, shaderSet, renderState, colorCommandList);
+        debugCreateCommandsForTileBoundingSphere(this, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList);
         updateLogos(this, context, frameState, commandList);
     };
 
@@ -684,7 +684,7 @@ define([
 
     // This is debug code to render the bounding sphere of the tile in
     // EllipsoidSurface._debug.boundingSphereTile.
-    function debugCreateCommandsForTileBoundingSphere(surface, context, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
+    function debugCreateCommandsForTileBoundingSphere(surface, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
         if (typeof surface._debug !== 'undefined' && typeof surface._debug.boundingSphereTile !== 'undefined') {
             if (!surface._debug.boundingSphereVA) {
                 var radius = surface._debug.boundingSphereTile.boundingSphere3D.radius;
@@ -704,11 +704,11 @@ define([
             uniformMap2.center3D = rtc2;
 
             var uniformState = context.getUniformState();
-            var mv = uniformState.getModelView();
+            var viewMatrix = frameState.camera.getViewMatrix();
             var projectionMatrix = uniformState.getProjection();
 
-            var centerEye2 = mv.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
-            uniformMap2.modifiedModelView = mv.setColumn(3, centerEye2, uniformMap2.modifiedModelView);
+            var centerEye2 = viewMatrix.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
+            uniformMap2.modifiedModelView = viewMatrix.setColumn(3, centerEye2, uniformMap2.modifiedModelView);
             uniformMap2.modifiedModelViewProjection = Matrix4.multiply(projectionMatrix, uniformMap2.modifiedModelView, uniformMap2.modifiedModelViewProjection);
 
             uniformMap2.dayTextures[0] = context.getDefaultTexture();
@@ -956,7 +956,7 @@ define([
 
     function createCommandsForTilesToRender(surface, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState) {
         var uniformState = context.getUniformState();
-        var mv = uniformState.getModelView();
+        var viewMatrix = frameState.camera.getViewMatrix();
         var projectionMatrix = uniformState.getProjection();
 
         var maxTextures = context.getMaximumTextureImageUnits();
@@ -1033,8 +1033,8 @@ define([
                 centerEye.z = rtc.z;
                 centerEye.w = 1.0;
 
-                Matrix4.multiplyByVector(mv, centerEye, centerEye);
-                mv.setColumn(3, centerEye, modifiedModelViewScratch);
+                Matrix4.multiplyByVector(viewMatrix, centerEye, centerEye);
+                viewMatrix.setColumn(3, centerEye, modifiedModelViewScratch);
                 Matrix4.multiply(projectionMatrix, modifiedModelViewScratch, modifiedModelViewProjectionScratch);
 
                 var tileImageryCollection = tile.imagery;
