@@ -506,6 +506,11 @@ define([
 
         /**
          * DOC_TBA
+         *
+         * @alias czm_modelViewRelativeToEye
+         * @glslUniform
+         *
+         * @see EncodedCartesian3
          */
         czm_modelViewRelativeToEye : {
             getSize : function() {
@@ -643,6 +648,11 @@ define([
 
         /**
          * DOC_TBA
+         *
+         * @alias czm_modelViewProjectionRelativeToEye
+         * @glslUniform
+         *
+         * @see EncodedCartesian3
          */
         czm_modelViewProjectionRelativeToEye : {
             getSize : function() {
