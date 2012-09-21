@@ -45,7 +45,6 @@ require({
         'dijit/layout/TabContainer',
         'dijit/Toolbar',
         'dijit/ToolbarSeparator',
-        'dojox/mobile/ScrollableView',
         'dojo/domReady!'],
     function (
             LinkButton,
