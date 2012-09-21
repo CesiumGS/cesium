@@ -25,7 +25,7 @@ define(function() {
      * @param {Cartesian3} cartesian3 The Cartesian3 to be converted to Spherical.
      * @param {Spherical} [spherical] The object in which the result will be stored, if undefined a new instance will be created.
      *
-     * @returns The modified result parameter, or a new instance if none was provided.
+     * @returns The modified result parameter, or a new instance if one was not provided.
      */
     Spherical.fromCartesian3 = function(cartesian3, result) {
         if (typeof result === 'undefined') {

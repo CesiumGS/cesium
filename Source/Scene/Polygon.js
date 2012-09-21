@@ -241,7 +241,22 @@ define([
         this._affectedByLighting = true;
 
         /**
-         * DOC_TBA
+         * The surface appearance of the polygon.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * <p>
+         * The default material is <code>Material.ColorType</code>.
+         * </p>
+         *
+         * @type Material
+         *
+         * @example
+         * // 1. Change the color of the default material to yellow
+         * polygon.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         *
+         * // 2. Change material to horizontal stripes
+         * polygon.material = Material.fromType(scene.getContext(), Material.StripeType);
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = Material.fromType(undefined, Material.ColorType);
         this.material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
@@ -576,20 +591,21 @@ define([
 
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
-     * This must be called before calling {@link Polygon#render} in order to realize
-     * changes to polygon's positions and properties.
      *
      * @memberof Polygon
      *
      * @exception {DeveloperError} this.ellipsoid must be defined.
+     * @exception {DeveloperError} this.material must be defined.
      * @exception {DeveloperError} this.granularity must be greater than zero.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Polygon#render
      */
     Polygon.prototype.update = function(context, frameState, commandList) {
-        if (!this.ellipsoid) {
+        if (typeof this.ellipsoid === 'undefined') {
             throw new DeveloperError('this.ellipsoid must be defined.');
+        }
+
+        if (typeof this.material === 'undefined') {
+            throw new DeveloperError('this.material must be defined.');
         }
 
         var mode = frameState.mode;
@@ -678,12 +694,11 @@ define([
             }
 
             var materialChanged = typeof this._material === 'undefined' ||
-            this._material !== this.material ||
-            this._affectedByLighting !== this.affectedByLighting;
+                this._material !== this.material ||
+                this._affectedByLighting !== this.affectedByLighting;
 
             // Recompile shader when material or lighting changes
             if (materialChanged) {
-                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
                 this._material = this.material;
                 this._affectedByLighting = this.affectedByLighting;
 
@@ -719,6 +734,7 @@ define([
                 command.renderState = this._rs;
             }
         }
+
         if (pass.pick) {
             if (typeof this._pickId === 'undefined') {
                 this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);

@@ -256,8 +256,8 @@ define([
          * @example
          * //Set the view to in the inertial frame.
          * scene.setAnimation(function() {
-         *     var time = new Cesium.JulianDate();
-         *     scene.getCamera().transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(time), Cesium.Cartesian3.ZERO)});;
+         *     var time = new JulianDate();
+         *     scene.getCamera().transform = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(time), Cartesian3.ZERO)});;
          * });
          */
         computeTemeToPseudoFixedMatrix : function (date, result) {

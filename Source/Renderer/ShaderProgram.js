@@ -7,7 +7,8 @@ define([
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        './UniformDatatype'
+        './UniformDatatype',
+        '../Shaders/BuiltinFunctions'
     ], function(
         DeveloperError,
         RuntimeError,
@@ -16,9 +17,829 @@ define([
         Matrix2,
         Matrix3,
         Matrix4,
-        UniformDatatype) {
+        UniformDatatype,
+        ShadersBuiltinFunctions) {
     "use strict";
     /*global console*/
+
+    var allAutomaticUniforms = {
+        /**
+         * An automatic GLSL uniform containing the viewport's <code>x</code>, <code>y</code>, <code>width</code>,
+         * and <code>height</code> properties in an <code>vec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,
+         * and <code>w</code> components, respectively.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_viewport</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_viewport
+         * @glslUniform
+         *
+         * @see Context#getViewport
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec4 czm_viewport;
+         *
+         * // Scale the window coordinate components to [0, 1] by dividing
+         * // by the viewport's width and height.
+         * vec2 v = gl_FragCoord.xy / czm_viewport.zw;
+         */
+        czm_viewport : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR4;
+            },
+
+            getValue : function(uniformState) {
+                var v = uniformState.getViewport();
+                return {
+                    x : v.x,
+                    y : v.y,
+                    z : v.width,
+                    w : v.height
+                };
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 orthographic projection matrix that
+         * transforms window coordinates to clip coordinates.  Clip coordinates is the
+         * coordinate system for a vertex shader's <code>gl_Position</code> output.
+         * <br /><br />
+         * This transform is useful when a vertex shader inputs or manipulates window coordinates
+         * as done by {@link BillboardCollection}.
+         * <br /><br />
+         * Do not confuse {@link czm_viewportTransformation} with <code>czm_viewportOrthographic</code>.
+         * The former transforms from normalized device coordinates to window coordinates; the later transforms
+         * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_viewportOrthographic</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_viewportOrthographic
+         * @glslUniform
+         *
+         * @see UniformState#getViewportOrthographic
+         * @see czm_viewport
+         * @see czm_viewportTransformation
+         * @see BillboardCollection
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_viewportOrthographic;
+         *
+         * // Example
+         * gl_Position = czm_viewportOrthographic * vec4(windowPosition, 0.0, 1.0);
+         */
+        czm_viewportOrthographic : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getViewportOrthographic();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 transformation matrix that
+         * transforms normalized device coordinates to window coordinates.  The context's
+         * full viewport is used, and the depth range is assumed to be <code>near = 0</code>
+         * and <code>far = 1</code>.
+         * <br /><br />
+         * This transform is useful when there is a need to manipulate window coordinates
+         * in a vertex shader as done by {@link BillboardCollection}.  In many cases,
+         * this matrix will not be used directly; instead, {@link czm_modelToWindowCoordinates}
+         * will be used to transform directly from model to window coordinates.
+         * <br /><br />
+         * Do not confuse <code>czm_viewportTransformation</code> with {@link czm_viewportOrthographic}.
+         * The former transforms from normalized device coordinates to window coordinates; the later transforms
+         * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_viewportTransformation</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_viewportTransformation
+         * @glslUniform
+         *
+         * @see UniformState#getViewportTransformation
+         * @see czm_viewport
+         * @see czm_viewportOrthographic
+         * @see czm_modelToWindowCoordinates
+         * @see BillboardCollection
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_viewportTransformation;
+         *
+         * // Use czm_viewportTransformation as part of the
+         * // transform from model to window coordinates.
+         * vec4 q = czm_modelViewProjection * positionMC;               // model to clip coordinates
+         * q.xyz /= q.w;                                                // clip to normalized device coordinates (ndc)
+         * q.xyz = (czm_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // ndc to window coordinates
+         */
+        czm_viewportTransformation : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getViewportTransformation();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 model transformation matrix that
+         * transforms model coordinates to world coordinates.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_model</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_model
+         * @glslUniform
+         *
+         * @see UniformState#getModel
+         * @see czm_modelView
+         * @see czm_modelViewProjection
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_model;
+         *
+         * // Example
+         * vec4 worldPosition = czm_model * modelPosition;
+         */
+        czm_model : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getModel();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 view transformation matrix that
+         * transforms world coordinates to eye coordinates.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_view</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_view
+         * @glslUniform
+         *
+         * @see UniformState#getView
+         * @see czm_viewRotation
+         * @see czm_modelView
+         * @see czm_viewProjection
+         * @see czm_modelViewProjection
+         * @see czm_inverseView
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_view;
+         *
+         * // Example
+         * vec4 eyePosition = czm_view * worldPosition;
+         */
+        czm_view : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getView();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 3x3 view rotation matrix that
+         * transforms vectors in world coordinates to eye coordinates.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_viewRotation</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_viewRotation
+         * @glslUniform
+         *
+         * @see UniformState#getViewRotation
+         * @see czm_view
+         * @see czm_inverseView
+         * @see czm_inverseViewRotation
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat3 czm_viewRotation;
+         *
+         * // Example
+         * vec3 eyeVector = czm_viewRotation * worldVector;
+         */
+        czm_viewRotation : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getViewRotation();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 transformation matrix that
+         * transforms from eye coordinates to world coordinates.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_inverseView</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_inverseView
+         * @glslUniform
+         *
+         * @see UniformState#getInverseView
+         * @see czm_view
+         * @see czm_inverseNormal
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_inverseView;
+         *
+         * // Example
+         * vec4 worldPosition = czm_inverseView * eyePosition;
+         */
+        czm_inverseView : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseView();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 3x3 rotation matrix that
+         * transforms vectors from eye coordinates to world coordinates.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_inverseViewRotation</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_inverseViewRotation
+         * @glslUniform
+         *
+         * @see UniformState#getInverseView
+         * @see czm_view
+         * @see czm_viewRotation
+         * @see czm_inverseViewRotation
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat3 czm_inverseViewRotation;
+         *
+         * // Example
+         * vec4 worldVector = czm_inverseViewRotation * eyeVector;
+         */
+        czm_inverseViewRotation : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseViewRotation();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 projection transformation matrix that
+         * transforms eye coordinates to clip coordinates.  Clip coordinates is the
+         * coordinate system for a vertex shader's <code>gl_Position</code> output.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_projection</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_projection
+         * @glslUniform
+         *
+         * @see UniformState#getProjection
+         * @see czm_viewProjection
+         * @see czm_modelViewProjection
+         * @see czm_infiniteProjection
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_projection;
+         *
+         * // Example
+         * gl_Position = czm_projection * eyePosition;
+         */
+        czm_projection : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getProjection();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 inverse projection transformation matrix that
+         * transforms from clip coordinates to eye coordinates. Clip coordinates is the
+         * coordinate system for a vertex shader's <code>gl_Position</code> output.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_inverseProjection</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_inverseProjection
+         * @glslUniform
+         *
+         * @see UniformState#getInverseProjection
+         * @see czm_projection
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_inverseProjection;
+         *
+         * // Example
+         * vec4 eyePosition = czm_inverseProjection * clipPosition;
+         */
+        czm_inverseProjection : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseProjection();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 projection transformation matrix with the far plane at infinity,
+         * that transforms eye coordinates to clip coordinates.  Clip coordinates is the
+         * coordinate system for a vertex shader's <code>gl_Position</code> output.  An infinite far plane is used
+         * in algorithms like shadow volumes and GPU ray casting with proxy geometry to ensure that triangles
+         * are not clipped by the far plane.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_infiniteProjection</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_infiniteProjection
+         * @glslUniform
+         *
+         * @see UniformState#getInfiniteProjection
+         * @see czm_projection
+         * @see czm_modelViewInfiniteProjection
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_infiniteProjection;
+         *
+         * // Example
+         * gl_Position = czm_infiniteProjection * eyePosition;
+         */
+        czm_infiniteProjection : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInfiniteProjection();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
+         * transforms model coordinates to eye coordinates.
+         * <br /><br />
+         * Positions should be transformed to eye coordinates using <code>czm_modelView</code> and
+         * normals should be transformed using {@link czm_normal}.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_modelView</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_modelView
+         * @glslUniform
+         *
+         * @see UniformState#getModelView
+         * @see czm_model
+         * @see czm_view
+         * @see czm_modelViewProjection
+         * @see czm_normal
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_modelView;
+         *
+         * // Example
+         * vec4 eyePosition = czm_modelView * modelPosition;
+         *
+         * // The above is equivalent to, but more efficient than:
+         * vec4 eyePosition = czm_view * czm_model * modelPosition;
+         */
+        czm_modelView : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getModelView();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 transformation matrix that
+         * transforms from eye coordinates to model coordinates.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_inverseModelView</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_inverseModelView
+         * @glslUniform
+         *
+         * @see UniformState#getInverseModelView
+         * @see czm_modelView
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_inverseModelView;
+         *
+         * // Example
+         * vec4 modelPosition = czm_inverseModelView * eyePosition;
+         */
+        czm_inverseModelView : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseModelView();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 view-projection transformation matrix that
+         * transforms world coordinates to clip coordinates.  Clip coordinates is the
+         * coordinate system for a vertex shader's <code>gl_Position</code> output.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_viewProjection</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_viewProjection
+         * @glslUniform
+         *
+         * @see UniformState#getViewProjection
+         * @see czm_view
+         * @see czm_projection
+         * @see czm_modelViewProjection
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_viewProjection;
+         *
+         * // Example
+         * vec4 gl_Position = czm_viewProjection * czm_model * modelPosition;
+         *
+         * // The above is equivalent to, but more efficient than:
+         * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
+         */
+        czm_viewProjection : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getViewProjection();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
+         * transforms model coordinates to clip coordinates.  Clip coordinates is the
+         * coordinate system for a vertex shader's <code>gl_Position</code> output.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_modelViewProjection</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_modelViewProjection
+         * @glslUniform
+         *
+         * @see UniformState#getModelViewProjection
+         * @see czm_model
+         * @see czm_view
+         * @see czm_projection
+         * @see czm_modelView
+         * @see czm_viewProjection
+         * @see czm_modelViewInfiniteProjection
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_modelViewProjection;
+         *
+         * // Example
+         * vec4 gl_Position = czm_modelViewProjection * modelPosition;
+         *
+         * // The above is equivalent to, but more efficient than:
+         * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
+         */
+        czm_modelViewProjection : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getModelViewProjection();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
+         * transforms model coordinates to clip coordinates.  Clip coordinates is the
+         * coordinate system for a vertex shader's <code>gl_Position</code> output.  The projection matrix places
+         * the far plane at infinity.  This is useful in algorithms like shadow volumes and GPU ray casting with
+         * proxy geometry to ensure that triangles are not clipped by the far plane.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_modelViewInfiniteProjection</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_modelViewInfiniteProjection
+         * @glslUniform
+         *
+         * @see UniformState#getModelViewInfiniteProjection
+         * @see czm_model
+         * @see czm_view
+         * @see czm_infiniteProjection
+         * @see czm_modelViewProjection
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_modelViewInfiniteProjection;
+         *
+         * // Example
+         * vec4 gl_Position = czm_modelViewInfiniteProjection * modelPosition;
+         *
+         * // The above is equivalent to, but more efficient than:
+         * gl_Position = czm_infiniteProjection * czm_view * czm_model * modelPosition;
+         */
+        czm_modelViewInfiniteProjection : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getModelViewInfiniteProjection();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
+         * transforms normal vectors in model coordinates to eye coordinates.
+         * <br /><br />
+         * Positions should be transformed to eye coordinates using {@link czm_modelView} and
+         * normals should be transformed using <code>czm_normal</code>.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_normal</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_normal
+         * @glslUniform
+         *
+         * @see UniformState#getNormal
+         * @see czm_inverseNormal
+         * @see czm_modelView
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat3 czm_normal;
+         *
+         * // Example
+         * vec3 eyeNormal = czm_normal * normal;
+         */
+        czm_normal : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getNormal();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
+         * transforms normal vectors in eye coordinates to model coordinates.  This is
+         * in the opposite transform provided by {@link czm_normal}.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_inverseNormal</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_inverseNormal
+         * @glslUniform
+         *
+         * @see UniformState#getInverseNormal
+         * @see czm_normal
+         * @see czm_modelView
+         * @see czm_inverseView
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat3 czm_inverseNormal;
+         *
+         * // Example
+         * vec3 normalMC = czm_inverseNormal * normalEC;
+         */
+        czm_inverseNormal : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseNormal();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the direction of the sun in eye coordinates.
+         * This is commonly used for directional lighting computations.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_sunDirectionEC</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_sunDirectionEC
+         * @glslUniform
+         *
+         * @see UniformState#getSunDirectionEC
+         * @see czm_sunDirectionWC
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_sunDirectionEC;
+         *
+         * // Example
+         * float diffuse = max(dot(czm_sunDirectionEC, normalEC), 0.0);
+         */
+        czm_sunDirectionEC : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getSunDirectionEC();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a normalized vector from the origin
+         * in world coordinates to the sun.  This is commonly used for lighting computations.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_sunDirectionWC</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_sunDirectionWC
+         * @glslUniform
+         *
+         * @see UniformState#getSunDirectionWC
+         * @see czm_sunDirectionEC
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_sunDirectionWC;
+         */
+        czm_sunDirectionWC : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getSunDirectionWC();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the position of the viewer (camera) in world coordinates.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_sunDirectionWC</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_viewerPositionWC
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_viewerPositionWC;
+         */
+        czm_viewerPositionWC : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseView().getTranslation();
+            }
+        }
+    };
 
     function getUniformDatatype(gl, activeUniformType) {
         switch (activeUniformType) {
@@ -565,1601 +1386,675 @@ define([
      * @see Context#createShaderProgram
      * @see Context#getShaderCache
      */
-    var ShaderProgram = function(gl, logShaderCompilation, builtInGlslFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        var getAllAutomaticUniforms = function() {
-            var uniforms = {
-                /**
-                 * An automatic GLSL uniform containing the viewport's <code>x</code>, <code>y</code>, <code>width</code>,
-                 * and <code>height</code> properties in an <code>vec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,
-                 * and <code>w</code> components, respectively.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_viewport</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_viewport
-                 * @glslUniform
-                 *
-                 * @see Context#getViewport
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform vec4 czm_viewport;
-                 *
-                 * // Scale the window coordinate components to [0, 1] by dividing
-                 * // by the viewport's width and height.
-                 * vec2 v = gl_FragCoord.xy / czm_viewport.zw;
-                 */
-                czm_viewport : {
-                    /**
-                     * @private
-                     */
-                    getSize : function() {
-                        return 1;
-                    },
+    var ShaderProgram = function(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+        var program = createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
+        var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+        var uniforms = findUniforms(gl, program);
+        var partitionedUniforms = partitionUniforms(uniforms.allUniforms);
 
-                    /**
-                     * @private
-                     */
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_VECTOR4;
-                    },
+        this._gl = gl;
+        this._program = program;
+        this._numberOfVertexAttributes = numberOfVertexAttributes;
+        this._vertexAttributes = findVertexAttributes(gl, program, numberOfVertexAttributes);
+        this._allUniforms = uniforms.allUniforms;
+        this._uniforms = uniforms.uniforms;
+        this._samplerUniforms = uniforms.samplerUniforms;
+        this._automaticUniforms = partitionedUniforms.automaticUniforms;
+        this._manualUniforms = partitionedUniforms.manualUniforms;
+    };
 
-                    /**
-                     * @private
-                     */
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                var v = uniformState.getViewport();
-                                uniform.value = {
-                                    x : v.x,
-                                    y : v.y,
-                                    z : v.width,
-                                    w : v.height
-                                };
-                            }
-                        };
-                    }
-                },
+    function extractShaderVersion(source) {
+        // This will fail if the first #version is actually in a comment.
+        var index = source.indexOf('#version');
+        if (index !== -1) {
+            var newLineIndex = source.indexOf('\n', index);
 
-                /**
-                 * An automatic GLSL uniform representing a 4x4 orthographic projection matrix that
-                 * transforms window coordinates to clip coordinates.  Clip coordinates is the
-                 * coordinate system for a vertex shader's <code>gl_Position</code> output.
-                 * <br /><br />
-                 * This transform is useful when a vertex shader inputs or manipulates window coordinates
-                 * as done by {@link BillboardCollection}.
-                 * <br /><br />
-                 * Do not confuse {@link czm_viewportTransformation} with <code>czm_viewportOrthographic</code>.
-                 * The former transforms from normalized device coordinates to window coordinates; the later transforms
-                 * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_viewportOrthographic</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_viewportOrthographic
-                 * @glslUniform
-                 *
-                 * @see UniformState#getViewportOrthographic
-                 * @see czm_viewport
-                 * @see czm_viewportTransformation
-                 * @see BillboardCollection
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_viewportOrthographic;
-                 *
-                 * // Example
-                 * gl_Position = czm_viewportOrthographic * vec4(windowPosition, 0.0, 1.0);
-                 */
-                czm_viewportOrthographic : {
-                    /**
-                     * @private
-                     */
-                    getSize : function() {
-                        return 1;
-                    },
+            // We could throw an exception if there is not a new line after
+            // #version, but the GLSL compiler will catch it.
+            if (index !== -1) {
+                // Extract #version directive, including the new line.
+                var version = source.substring(index, newLineIndex + 1);
 
-                    /**
-                     * @private
-                     */
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
+                // Comment out original #version directive so the line numbers
+                // are not off by one.  There can be only one #version directive
+                // and it must appear at the top of the source, only preceded by
+                // whitespace and comments.
+                var modified = source.substring(0, index) + '//' + source.substring(index);
 
-                    /**
-                     * @private
-                     */
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getViewportOrthographic();
-                            }
-                        };
-                    }
-                },
+                return {
+                    versionDirective : version,
+                    modifiedSource : modified
+                };
+            }
+        }
 
-                /**
-                 * An automatic GLSL uniform representing a 4x4 transformation matrix that
-                 * transforms normalized device coordinates to window coordinates.  The context's
-                 * full viewport is used, and the depth range is assumed to be <code>near = 0</code>
-                 * and <code>far = 1</code>.
-                 * <br /><br />
-                 * This transform is useful when there is a need to manipulate window coordinates
-                 * in a vertex shader as done by {@link BillboardCollection}.  In many cases,
-                 * this matrix will not be used directly; instead, {@link czm_modelToWindowCoordinates}
-                 * will be used to transform directly from model to window coordinates.
-                 * <br /><br />
-                 * Do not confuse <code>czm_viewportTransformation</code> with {@link czm_viewportOrthographic}.
-                 * The former transforms from normalized device coordinates to window coordinates; the later transforms
-                 * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_viewportTransformation</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_viewportTransformation
-                 * @glslUniform
-                 *
-                 * @see UniformState#getViewportTransformation
-                 * @see czm_viewport
-                 * @see czm_viewportOrthographic
-                 * @see czm_modelToWindowCoordinates
-                 * @see BillboardCollection
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_viewportTransformation;
-                 *
-                 * // Use czm_viewportTransformation as part of the
-                 * // transform from model to window coordinates.
-                 * vec4 q = czm_modelViewProjection * positionMC;              // model to clip coordinates
-                 * q.xyz /= q.w;                                                // clip to normalized device coordinates (ndc)
-                 * q.xyz = (czm_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // ndc to window coordinates
-                 */
-                czm_viewportTransformation : {
-                    /**
-                     * @private
-                     */
-                    getSize : function() {
-                        return 1;
-                    },
+        return {
+            versionDirective : '', // defaults to #version 100
+            modifiedSource : source // no modifications required
+        };
+    }
 
-                    /**
-                     * @private
-                     */
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
+    function getAutomaticUniformDeclaration(uniforms, uniform) {
+        var automaticUniform = uniforms[uniform];
+        var declaration = 'uniform ' + automaticUniform.getDatatype().getGLSL() + ' ' + uniform;
 
-                    /**
-                     * @private
-                     */
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getViewportTransformation();
-                            }
-                        };
-                    }
-                },
+        var size = automaticUniform.getSize();
+        if (size === 1) {
+            declaration += ';';
+        } else {
+            declaration += '[' + size.toString() + '];';
+        }
 
-                /**
-                 * An automatic GLSL uniform representing a 4x4 model transformation matrix that
-                 * transforms model coordinates to world coordinates.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_model</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_model
-                 * @glslUniform
-                 *
-                 * @see UniformState#getModel
-                 * @see czm_modelView
-                 * @see czm_modelViewProjection
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_model;
-                 *
-                 * // Example
-                 * vec4 worldPosition = czm_model * modelPosition;
-                 */
-                czm_model : {
-                    /**
-                     * @private
-                     */
-                    getSize : function() {
-                        return 1;
-                    },
+        return declaration;
+    }
 
-                    /**
-                     * @private
-                     */
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
+    function commentOutAutomaticUniforms(source) {
+        // Comment out automatic uniforms that the user may have declared, perhaps
+        // because the shader was authored in a third-party tool like RenderMonkey.
+        // At runtime, all automatic uniforms are declared by the engine itself.
 
-                    /**
-                     * @private
-                     */
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getModel();
-                            }
-                        };
-                    }
-                },
+        // This function has problems if the automatic uniform was declared with the
+        // wrong datatype or with extra whitespace or comments in the declaration.
 
-                /**
-                 * An automatic GLSL uniform representing a 4x4 view transformation matrix that
-                 * transforms world coordinates to eye coordinates.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_view</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_view
-                 * @glslUniform
-                 *
-                 * @see UniformState#getView
-                 * @see czm_viewRotation
-                 * @see czm_modelView
-                 * @see czm_viewProjection
-                 * @see czm_modelViewProjection
-                 * @see czm_inverseView
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_view;
-                 *
-                 * // Example
-                 * vec4 eyePosition = czm_view * worldPosition;
-                 */
-                czm_view : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getView();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 3x3 view rotation matrix that
-                 * transforms vectors in world coordinates to eye coordinates.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_viewRotation</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_viewRotation
-                 * @glslUniform
-                 *
-                 * @see UniformState#getViewRotation
-                 * @see czm_view
-                 * @see czm_inverseView
-                 * @see czm_inverseViewRotation
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat3 czm_viewRotation;
-                 *
-                 * // Example
-                 * vec3 eyeVector = czm_viewRotation * worldVector;
-                 */
-                czm_viewRotation : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX3;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getViewRotation();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 4x4 transformation matrix that
-                 * transforms from eye coordinates to world coordinates.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_inverseView</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_inverseView
-                 * @glslUniform
-                 *
-                 * @see UniformState#getInverseView
-                 * @see czm_view
-                 * @see czm_inverseNormal
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_inverseView;
-                 *
-                 * // Example
-                 * vec4 worldPosition = czm_inverseView * eyePosition;
-                 */
-                czm_inverseView : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getInverseView();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 3x3 rotation matrix that
-                 * transforms vectors from eye coordinates to world coordinates.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_inverseViewRotation</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_inverseViewRotation
-                 * @glslUniform
-                 *
-                 * @see UniformState#getInverseView
-                 * @see czm_view
-                 * @see czm_viewRotation
-                 * @see czm_inverseViewRotation
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat3 czm_inverseViewRotation;
-                 *
-                 * // Example
-                 * vec4 worldVector = czm_inverseViewRotation * eyeVector;
-                 */
-                czm_inverseViewRotation : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX3;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getInverseViewRotation();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 4x4 projection transformation matrix that
-                 * transforms eye coordinates to clip coordinates.  Clip coordinates is the
-                 * coordinate system for a vertex shader's <code>gl_Position</code> output.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_projection</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_projection
-                 * @glslUniform
-                 *
-                 * @see UniformState#getProjection
-                 * @see czm_viewProjection
-                 * @see czm_modelViewProjection
-                 * @see czm_infiniteProjection
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_projection;
-                 *
-                 * // Example
-                 * gl_Position = czm_projection * eyePosition;
-                 */
-                czm_projection : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getProjection();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 4x4 inverse projection transformation matrix that
-                 * transforms from clip coordinates to eye coordinates. Clip coordinates is the
-                 * coordinate system for a vertex shader's <code>gl_Position</code> output.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_inverseProjection</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_inverseProjection
-                 * @glslUniform
-                 *
-                 * @see UniformState#getInverseProjection
-                 * @see czm_projection
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_inverseProjection;
-                 *
-                 * // Example
-                 * vec4 eyePosition = czm_inverseProjection * clipPosition;
-                 */
-                czm_inverseProjection : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getInverseProjection();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 4x4 projection transformation matrix with the far plane at infinity,
-                 * that transforms eye coordinates to clip coordinates.  Clip coordinates is the
-                 * coordinate system for a vertex shader's <code>gl_Position</code> output.  An infinite far plane is used
-                 * in algorithms like shadow volumes and GPU ray casting with proxy geometry to ensure that triangles
-                 * are not clipped by the far plane.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_infiniteProjection</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_infiniteProjection
-                 * @glslUniform
-                 *
-                 * @see UniformState#getInfiniteProjection
-                 * @see czm_projection
-                 * @see czm_modelViewInfiniteProjection
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_infiniteProjection;
-                 *
-                 * // Example
-                 * gl_Position = czm_infiniteProjection * eyePosition;
-                 */
-                czm_infiniteProjection : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getInfiniteProjection();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
-                 * transforms model coordinates to eye coordinates.
-                 * <br /><br />
-                 * Positions should be transformed to eye coordinates using <code>czm_modelView</code> and
-                 * normals should be transformed using {@link czm_normal}.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_modelView</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_modelView
-                 * @glslUniform
-                 *
-                 * @see UniformState#getModelView
-                 * @see czm_model
-                 * @see czm_view
-                 * @see czm_modelViewProjection
-                 * @see czm_normal
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_modelView;
-                 *
-                 * // Example
-                 * vec4 eyePosition = czm_modelView * modelPosition;
-                 *
-                 * // The above is equivalent to, but more efficient than:
-                 * vec4 eyePosition = czm_view * czm_model * modelPosition;
-                 */
-                czm_modelView : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getModelView();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 4x4 transformation matrix that
-                 * transforms from eye coordinates to model coordinates.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_inverseModelView</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_inverseModelView
-                 * @glslUniform
-                 *
-                 * @see UniformState#getInverseModelView
-                 * @see czm_modelView
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_inverseModelView;
-                 *
-                 * // Example
-                 * vec4 modelPosition = czm_inverseModelView * eyePosition;
-                 */
-                czm_inverseModelView : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getInverseModelView();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 4x4 view-projection transformation matrix that
-                 * transforms world coordinates to clip coordinates.  Clip coordinates is the
-                 * coordinate system for a vertex shader's <code>gl_Position</code> output.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_viewProjection</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_viewProjection
-                 * @glslUniform
-                 *
-                 * @see UniformState#getViewProjection
-                 * @see czm_view
-                 * @see czm_projection
-                 * @see czm_modelViewProjection
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_viewProjection;
-                 *
-                 * // Example
-                 * vec4 gl_Position = czm_viewProjection * czm_model * modelPosition;
-                 *
-                 * // The above is equivalent to, but more efficient than:
-                 * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
-                 */
-                czm_viewProjection : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getViewProjection();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
-                 * transforms model coordinates to clip coordinates.  Clip coordinates is the
-                 * coordinate system for a vertex shader's <code>gl_Position</code> output.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_modelViewProjection</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_modelViewProjection
-                 * @glslUniform
-                 *
-                 * @see UniformState#getModelViewProjection
-                 * @see czm_model
-                 * @see czm_view
-                 * @see czm_projection
-                 * @see czm_modelView
-                 * @see czm_viewProjection
-                 * @see czm_modelViewInfiniteProjection
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_modelViewProjection;
-                 *
-                 * // Example
-                 * vec4 gl_Position = czm_modelViewProjection * modelPosition;
-                 *
-                 * // The above is equivalent to, but more efficient than:
-                 * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
-                 */
-                czm_modelViewProjection : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getModelViewProjection();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
-                 * transforms model coordinates to clip coordinates.  Clip coordinates is the
-                 * coordinate system for a vertex shader's <code>gl_Position</code> output.  The projection matrix places
-                 * the far plane at infinity.  This is useful in algorithms like shadow volumes and GPU ray casting with
-                 * proxy geometry to ensure that triangles are not clipped by the far plane.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_modelViewInfiniteProjection</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_modelViewInfiniteProjection
-                 * @glslUniform
-                 *
-                 * @see UniformState#getModelViewInfiniteProjection
-                 * @see czm_model
-                 * @see czm_view
-                 * @see czm_infiniteProjection
-                 * @see czm_modelViewProjection
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat4 czm_modelViewInfiniteProjection;
-                 *
-                 * // Example
-                 * vec4 gl_Position = czm_modelViewInfiniteProjection * modelPosition;
-                 *
-                 * // The above is equivalent to, but more efficient than:
-                 * gl_Position = czm_infiniteProjection * czm_view * czm_model * modelPosition;
-                 */
-                czm_modelViewInfiniteProjection : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX4;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getModelViewInfiniteProjection();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
-                 * transforms normal vectors in model coordinates to eye coordinates.
-                 * <br /><br />
-                 * Positions should be transformed to eye coordinates using {@link czm_modelView} and
-                 * normals should be transformed using <code>czm_normal</code>.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_normal</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_normal
-                 * @glslUniform
-                 *
-                 * @see UniformState#getNormal
-                 * @see czm_inverseNormal
-                 * @see czm_modelView
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat3 czm_normal;
-                 *
-                 * // Example
-                 * vec3 eyeNormal = czm_normal * normal;
-                 */
-                czm_normal : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX3;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getNormal();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
-                 * transforms normal vectors in eye coordinates to model coordinates.  This is
-                 * in the opposite transform provided by {@link czm_normal}.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_inverseNormal</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_inverseNormal
-                 * @glslUniform
-                 *
-                 * @see UniformState#getInverseNormal
-                 * @see czm_normal
-                 * @see czm_modelView
-                 * @see czm_inverseView
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform mat3 czm_inverseNormal;
-                 *
-                 * // Example
-                 * vec3 normalMC = czm_inverseNormal * normalEC;
-                 */
-                czm_inverseNormal : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_MATRIX3;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getInverseNormal();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing the direction of the sun in eye coordinates.
-                 * This is commonly used for directional lighting computations.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_sunDirectionEC</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_sunDirectionEC
-                 * @glslUniform
-                 *
-                 * @see UniformState#getSunDirectionEC
-                 * @see czm_sunDirectionWC
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform vec3 czm_sunDirectionEC;
-                 *
-                 * // Example
-                 * float diffuse = max(dot(czm_sunDirectionEC, normalEC), 0.0);
-                 */
-                czm_sunDirectionEC : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_VECTOR3;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getSunDirectionEC();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing a normalized vector from the origin
-                 * in world coordinates to the sun.  This is commonly used for lighting computations.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_sunDirectionWC</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_sunDirectionWC
-                 * @glslUniform
-                 *
-                 * @see UniformState#getSunDirectionWC
-                 * @see czm_sunDirectionEC
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform vec3 czm_sunDirectionWC;
-                 */
-                czm_sunDirectionWC : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_VECTOR3;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getSunDirectionWC();
-                            }
-                        };
-                    }
-                },
-
-                /**
-                 * An automatic GLSL uniform representing the position of the viewer (camera) in world coordinates.
-                 * <br /><br />
-                 * Like all automatic uniforms, <code>czm_sunDirectionWC</code> does not need to be explicitly declared.
-                 * However, it can be explicitly declared when a shader is also used by other applications such
-                 * as a third-party authoring tool.
-                 *
-                 * @alias czm_viewerPositionWC
-                 * @glslUniform
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * uniform vec3 czm_viewerPositionWC;
-                 */
-                czm_viewerPositionWC : {
-                    getSize : function() {
-                        return 1;
-                    },
-
-                    getDatatype : function() {
-                        return UniformDatatype.FLOAT_VECTOR3;
-                    },
-
-                    create : function(uniform) {
-                        return {
-                            _set : function(uniformState) {
-                                uniform.value = uniformState.getInverseView().getTranslation();
-                            }
-                        };
-                    }
+        var modifiedSource = source;
+        var uniforms = allAutomaticUniforms;
+        for ( var uniform in uniforms) {
+            if (uniforms.hasOwnProperty(uniform)) {
+                var declaration = getAutomaticUniformDeclaration(uniforms, uniform);
+                var index = modifiedSource.indexOf(declaration);
+                if (index !== -1) {
+                    modifiedSource =
+                        modifiedSource.substring(0, index) +
+                        '/*' +
+                        modifiedSource.substring(index, declaration.length) +
+                        '*/' +
+                        modifiedSource.substring(index + declaration.length);
                 }
+            }
+        }
 
-            };
+        return modifiedSource;
+    }
 
-            getAllAutomaticUniforms = function() {
-                return uniforms;
-            };
+    function getFragmentShaderPrecision() {
+        // TODO: Performance?
+        return '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' +
+               '  precision highp float; \n' +
+               '#else \n' +
+               '  precision mediump float; \n' +
+               '#endif \n\n';
+    }
 
-            return uniforms;
+    function getBuiltinConstants() {
+        var constants = {
+            /**
+             * A built-in GLSL floating-point constant for <code>Math.PI</code>.
+             *
+             * @alias czm_pi
+             * @glslConstant
+             *
+             * @see CesiumMath.PI
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_pi = ...;
+             *
+             * // Example
+             * float twoPi = 2.0 * czm_pi;
+             */
+            czm_pi : Math.PI.toString(),
+
+            /**
+             * A built-in GLSL floating-point constant for <code>1/pi</code>.
+             *
+             * @alias czm_oneOverPi
+             * @glslConstant
+             *
+             * @see CesiumMath.ONE_OVER_PI
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_oneOverPi = ...;
+             *
+             * // Example
+             * float pi = 1.0 / czm_oneOverPi;
+             */
+            czm_oneOverPi : CesiumMath.ONE_OVER_PI.toString(),
+
+            /**
+             * A built-in GLSL floating-point constant for <code>pi/2</code>.
+             *
+             * @alias czm_piOverTwo
+             * @glslConstant
+             *
+             * @see CesiumMath.PI_OVER_TWO
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_piOverTwo = ...;
+             *
+             * // Example
+             * float pi = 2.0 * czm_piOverTwo;
+             */
+            czm_piOverTwo : CesiumMath.PI_OVER_TWO.toString(),
+
+            /**
+             * A built-in GLSL floating-point constant for <code>pi/3</code>.
+             *
+             * @alias czm_piOverThree
+             * @glslConstant
+             *
+             * @see CesiumMath.PI_OVER_THREE
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_piOverThree = ...;
+             *
+             * // Example
+             * float pi = 3.0 * czm_piOverThree;
+             */
+            czm_piOverThree : CesiumMath.PI_OVER_THREE.toString(),
+
+            /**
+             * A built-in GLSL floating-point constant for <code>pi/4</code>.
+             *
+             * @alias czm_piOverFour
+             * @glslConstant
+             *
+             * @see CesiumMath.PI_OVER_FOUR
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_piOverFour = ...;
+             *
+             * // Example
+             * float pi = 4.0 * czm_piOverFour;
+             */
+            czm_piOverFour : CesiumMath.PI_OVER_FOUR.toString(),
+
+            /**
+             * A built-in GLSL floating-point constant for <code>pi/6</code>.
+             *
+             * @alias czm_piOverSix
+             * @glslConstant
+             *
+             * @see CesiumMath.PI_OVER_SIX
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_piOverSix = ...;
+             *
+             * // Example
+             * float pi = 6.0 * czm_piOverSix;
+             */
+            czm_piOverSix : CesiumMath.PI_OVER_SIX.toString(),
+
+            /**
+             * A built-in GLSL floating-point constant for <code>3pi/2</code>.
+             *
+             * @alias czm_threePiOver2
+             * @glslConstant
+             *
+             * @see CesiumMath.THREE_PI_OVER_TWO
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_threePiOver2 = ...;
+             *
+             * // Example
+             * float pi = (2.0 / 3.0) * czm_threePiOver2;
+             */
+            czm_threePiOver2 : CesiumMath.THREE_PI_OVER_TWO.toString(),
+
+            /**
+             * A built-in GLSL floating-point constant for <code>2pi</code>.
+             *
+             * @alias czm_twoPi
+             * @glslConstant
+             *
+             * @see CesiumMath.TWO_PI
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_twoPi = ...;
+             *
+             * // Example
+             * float pi = czm_twoPi / 2.0;
+             */
+            czm_twoPi : CesiumMath.TWO_PI.toString(),
+
+            /**
+             * A built-in GLSL floating-point constant for <code>1/2pi</code>.
+             *
+             * @alias czm_oneOverTwoPi
+             * @glslConstant
+             *
+             * @see CesiumMath.ONE_OVER_TWO_PI
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_oneOverTwoPi = ...;
+             *
+             * // Example
+             * float pi = 2.0 * czm_oneOverTwoPi;
+             */
+            czm_oneOverTwoPi : CesiumMath.ONE_OVER_TWO_PI.toString(),
+
+            /**
+             * A built-in GLSL floating-point constant for converting degrees to radians.
+             *
+             * @alias czm_radiansPerDegree
+             * @glslConstant
+             *
+             * @see CesiumMath.RADIANS_PER_DEGREE
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_radiansPerDegree = ...;
+             *
+             * // Example
+             * float rad = czm_radiansPerDegree * deg;
+             */
+            czm_radiansPerDegree : CesiumMath.RADIANS_PER_DEGREE.toString(),
+
+            /**
+             * A built-in GLSL floating-point constant for converting radians to degrees.
+             *
+             * @alias czm_degreesPerRadian
+             * @glslConstant
+             *
+             * @see CesiumMath.DEGREES_PER_RADIAN
+             *
+             * @example
+             * // GLSL declaration
+             * const float czm_degreesPerRadian = ...;
+             *
+             * // Example
+             * float deg = czm_degreesPerRadian * rad;
+             */
+            czm_degreesPerRadian : CesiumMath.DEGREES_PER_RADIAN.toString()
         };
 
-        function extractShaderVersion(source) {
-            // This will fail if the first #version is actually in a comment.
-            var index = source.indexOf('#version');
-            if (index !== -1) {
-                var newLineIndex = source.indexOf('\n', index);
-
-                // We could throw an exception if there is not a new line after
-                // #version, but the GLSL compiler will catch it.
-                if (index !== -1) {
-                    // Extract #version directive, including the new line.
-                    var version = source.substring(index, newLineIndex + 1);
-
-                    // Comment out original #version directive so the line numbers
-                    // are not off by one.  There can be only one #version directive
-                    // and it must appear at the top of the source, only preceded by
-                    // whitespace and comments.
-                    var modified = source.substring(0, index) + '//' + source.substring(index);
-
-                    return {
-                        versionDirective : version,
-                        modifiedSource : modified
-                    };
-                }
+        var glslConstants = '';
+        for ( var name in constants) {
+            if (constants.hasOwnProperty(name)) {
+                glslConstants += 'const float ' + name + ' = ' + constants[name] + '; \n';
             }
-
-            return {
-                versionDirective : '', // defaults to #version 100
-                modifiedSource : source // no modifications required
-            };
         }
+        glslConstants += ' \n';
 
-        function getAutomaticUniformDeclaration(uniforms, uniform) {
-            var factory = uniforms[uniform];
-            var declaration = 'uniform ' + factory.getDatatype().getGLSL() + ' ' + uniform;
+        return glslConstants;
+    }
 
-            var size = factory.getSize();
-            if (size === 1) {
-                declaration += ';';
-            } else {
-                declaration += '[' + size.toString() + '];';
+    function getAutomaticUniforms() {
+        var automatics = '';
+
+        var uniforms = allAutomaticUniforms;
+        for ( var uniform in uniforms) {
+            if (uniforms.hasOwnProperty(uniform)) {
+                automatics += getAutomaticUniformDeclaration(uniforms, uniform) + ' \n';
             }
-
-            return declaration;
         }
+        automatics += '\n';
 
-        function commentOutAutomaticUniforms(source) {
-            // Comment out automatic uniforms that the user may have declared, perhaps
-            // because the shader was authored in a third-party tool like RenderMonkey.
-            // At runtime, all automatic uniforms are declared by the engine itself.
+        return automatics;
+    }
 
-            // This function has problems if the automatic uniform was declared with the
-            // wrong datatype or with extra whitespace or comments in the declaration.
+    var getShaderDefinitions = function() {
+        // I think this should be #line 1 given what the GL ES spec says:
+        //
+        //   After processing this directive (including its new-line), the implementation will
+        //   behave as if the following line has line number line...
+        //
+        // But this works, at least on NVIDIA hardware.
 
-            var modifiedSource = source;
-            var uniforms = getAllAutomaticUniforms();
-            for ( var uniform in uniforms) {
-                if (uniforms.hasOwnProperty(uniform)) {
-                    var declaration = getAutomaticUniformDeclaration(uniforms, uniform);
-                    var index = modifiedSource.indexOf(declaration);
-                    if (index !== -1) {
-                        modifiedSource =
-                            modifiedSource.substring(0, index) +
-                            '/*' +
-                            modifiedSource.substring(index, declaration.length) +
-                            '*/' +
-                            modifiedSource.substring(index + declaration.length);
-                    }
-                }
-            }
+        // Functions after constants and uniforms because functions depend on them.
+        var definitions = getBuiltinConstants() +
+                          getAutomaticUniforms() +
+                          ShadersBuiltinFunctions + '\n\n' +
+                          '#line 0 \n';
 
-            return modifiedSource;
-        }
-
-        function getFragmentShaderPrecision() {
-            // TODO: Performance?
-            return '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' +
-                   '  precision highp float; \n' +
-                   '#else \n' +
-                   '  precision mediump float; \n' +
-                   '#endif \n\n';
-        }
-
-        function getBuiltinConstants() {
-            var constants = {
-                /**
-                 * A built-in GLSL floating-point constant for <code>Math.PI</code>.
-                 *
-                 * @alias czm_pi
-                 * @glslConstant
-                 *
-                 * @see CesiumMath.PI
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * const float czm_pi = ...;
-                 *
-                 * // Example
-                 * float twoPi = 2.0 * czm_pi;
-                 */
-                czm_pi : Math.PI.toString(),
-
-                /**
-                 * A built-in GLSL floating-point constant for <code>1/pi</code>.
-                 *
-                 * @alias czm_oneOverPi
-                 * @glslConstant
-                 *
-                 * @see CesiumMath.ONE_OVER_PI
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * const float czm_oneOverPi = ...;
-                 *
-                 * // Example
-                 * float pi = 1.0 / czm_oneOverPi;
-                 */
-                czm_oneOverPi : CesiumMath.ONE_OVER_PI.toString(),
-
-                /**
-                 * A built-in GLSL floating-point constant for <code>pi/2</code>.
-                 *
-                 * @alias czm_piOverTwo
-                 * @glslConstant
-                 *
-                 * @see CesiumMath.PI_OVER_TWO
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * const float czm_piOverTwo = ...;
-                 *
-                 * // Example
-                 * float pi = 2.0 * czm_piOverTwo;
-                 */
-                czm_piOverTwo : CesiumMath.PI_OVER_TWO.toString(),
-
-                /**
-                 * A built-in GLSL floating-point constant for <code>pi/3</code>.
-                 *
-                 * @alias czm_piOverThree
-                 * @glslConstant
-                 *
-                 * @see CesiumMath.PI_OVER_THREE
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * const float czm_piOverThree = ...;
-                 *
-                 * // Example
-                 * float pi = 3.0 * czm_piOverThree;
-                 */
-                czm_piOverThree : CesiumMath.PI_OVER_THREE.toString(),
-
-                /**
-                 * A built-in GLSL floating-point constant for <code>pi/4</code>.
-                 *
-                 * @alias czm_piOverFour
-                 * @glslConstant
-                 *
-                 * @see CesiumMath.PI_OVER_FOUR
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * const float czm_piOverFour = ...;
-                 *
-                 * // Example
-                 * float pi = 4.0 * czm_piOverFour;
-                 */
-                czm_piOverFour : CesiumMath.PI_OVER_FOUR.toString(),
-
-                /**
-                 * A built-in GLSL floating-point constant for <code>pi/6</code>.
-                 *
-                 * @alias czm_piOverSix
-                 * @glslConstant
-                 *
-                 * @see CesiumMath.PI_OVER_SIX
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * const float czm_piOverSix = ...;
-                 *
-                 * // Example
-                 * float pi = 6.0 * czm_piOverSix;
-                 */
-                czm_piOverSix : CesiumMath.PI_OVER_SIX.toString(),
-
-                /**
-                 * A built-in GLSL floating-point constant for <code>3pi/2</code>.
-                 *
-                 * @alias czm_threePiOver2
-                 * @glslConstant
-                 *
-                 * @see CesiumMath.THREE_PI_OVER_TWO
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * const float czm_threePiOver2 = ...;
-                 *
-                 * // Example
-                 * float pi = (2.0 / 3.0) * czm_threePiOver2;
-                 */
-                czm_threePiOver2 : CesiumMath.THREE_PI_OVER_TWO.toString(),
-
-                /**
-                 * A built-in GLSL floating-point constant for <code>2pi</code>.
-                 *
-                 * @alias czm_twoPi
-                 * @glslConstant
-                 *
-                 * @see CesiumMath.TWO_PI
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * const float czm_twoPi = ...;
-                 *
-                 * // Example
-                 * float pi = czm_twoPi / 2.0;
-                 */
-                czm_twoPi : CesiumMath.TWO_PI.toString(),
-
-                /**
-                 * A built-in GLSL floating-point constant for <code>1/2pi</code>.
-                 *
-                 * @alias czm_oneOverTwoPi
-                 * @glslConstant
-                 *
-                 * @see CesiumMath.ONE_OVER_TWO_PI
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * const float czm_oneOverTwoPi = ...;
-                 *
-                 * // Example
-                 * float pi = 2.0 * czm_oneOverTwoPi;
-                 */
-                czm_oneOverTwoPi : CesiumMath.ONE_OVER_TWO_PI.toString(),
-
-                /**
-                 * A built-in GLSL floating-point constant for converting degrees to radians.
-                 *
-                 * @alias czm_radiansPerDegree
-                 * @glslConstant
-                 *
-                 * @see CesiumMath.RADIANS_PER_DEGREE
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * const float czm_radiansPerDegree = ...;
-                 *
-                 * // Example
-                 * float rad = czm_radiansPerDegree * deg;
-                 */
-                czm_radiansPerDegree : CesiumMath.RADIANS_PER_DEGREE.toString(),
-
-                /**
-                 * A built-in GLSL floating-point constant for converting radians to degrees.
-                 *
-                 * @alias czm_degreesPerRadian
-                 * @glslConstant
-                 *
-                 * @see CesiumMath.DEGREES_PER_RADIAN
-                 *
-                 * @example
-                 * // GLSL declaration
-                 * const float czm_degreesPerRadian = ...;
-                 *
-                 * // Example
-                 * float deg = czm_degreesPerRadian * rad;
-                 */
-                czm_degreesPerRadian : CesiumMath.DEGREES_PER_RADIAN.toString()
-            };
-
-            var glslConstants = '';
-            for ( var name in constants) {
-                if (constants.hasOwnProperty(name)) {
-                    glslConstants += 'const float ' + name + ' = ' + constants[name] + '; \n';
-                }
-            }
-            glslConstants += ' \n';
-
-            return glslConstants;
-        }
-
-        function getAutomaticUniforms() {
-            var automatics = '';
-
-            var uniforms = getAllAutomaticUniforms();
-            for ( var uniform in uniforms) {
-                if (uniforms.hasOwnProperty(uniform)) {
-                    automatics += getAutomaticUniformDeclaration(uniforms, uniform) + ' \n';
-                }
-            }
-            automatics += '\n';
-
-            return automatics;
-        }
-
-        var getShaderDefinitions = function() {
-            // I think this should be #line 1 given what the GL ES spec says:
-            //
-            //   After processing this directive (including its new-line), the implementation will
-            //   behave as if the following line has line number line...
-            //
-            // But this works, at least on NVIDIA hardware.
-
-            // Functions after constants and uniforms because functions depend on them.
-            var definitions = getBuiltinConstants() +
-                              getAutomaticUniforms() +
-                              builtInGlslFunctions + '\n\n' +
-                              '#line 0 \n';
-
-            getShaderDefinitions = function() {
-                return definitions;
-            };
-
+        getShaderDefinitions = function() {
             return definitions;
         };
 
-        function createAndLinkProgram() {
-            var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
-            var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
+        return definitions;
+    };
 
-            var vsSource = vsSourceVersioned.versionDirective +
-                           getShaderDefinitions() +
-                           commentOutAutomaticUniforms(vsSourceVersioned.modifiedSource);
-            var fsSource = fsSourceVersioned.versionDirective +
-                           getFragmentShaderPrecision() +
-                           getShaderDefinitions() +
-                           commentOutAutomaticUniforms(fsSourceVersioned.modifiedSource);
+    function createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+        var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
+        var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
 
-            var vertexShader = gl.createShader(gl.VERTEX_SHADER);
-            gl.shaderSource(vertexShader, vsSource);
-            gl.compileShader(vertexShader);
-            var vsLog = gl.getShaderInfoLog(vertexShader);
+        var vsSource = vsSourceVersioned.versionDirective +
+                       getShaderDefinitions() +
+                       commentOutAutomaticUniforms(vsSourceVersioned.modifiedSource);
+        var fsSource = fsSourceVersioned.versionDirective +
+                       getFragmentShaderPrecision() +
+                       getShaderDefinitions() +
+                       commentOutAutomaticUniforms(fsSourceVersioned.modifiedSource);
 
-            if (logShaderCompilation && vsLog && vsLog.length) {
-                console.log('[GL] Vertex shader compile log: ' + vsLog);
-            }
+        var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vertexShader, vsSource);
+        gl.compileShader(vertexShader);
+        var vsLog = gl.getShaderInfoLog(vertexShader);
 
-            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-                gl.deleteShader(vertexShader);
-                console.error('[GL] Vertex shader compile log: ' + vsLog);
-                throw new RuntimeError('Vertex shader failed to compile.  Compile log: ' + vsLog);
-            }
+        if (logShaderCompilation && vsLog && vsLog.length) {
+            console.log('[GL] Vertex shader compile log: ' + vsLog);
+        }
 
-            var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
-            gl.shaderSource(fragmentShader, fsSource);
-            gl.compileShader(fragmentShader);
-            var fsLog = gl.getShaderInfoLog(fragmentShader);
+        if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+            gl.deleteShader(vertexShader);
+            console.error('[GL] Vertex shader compile log: ' + vsLog);
+            throw new RuntimeError('Vertex shader failed to compile.  Compile log: ' + vsLog);
+        }
 
-            if (logShaderCompilation && fsLog && fsLog.length) {
-                console.log('[GL] Fragment shader compile log: ' + fsLog);
-            }
+        var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fragmentShader, fsSource);
+        gl.compileShader(fragmentShader);
+        var fsLog = gl.getShaderInfoLog(fragmentShader);
 
-            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-                gl.deleteShader(vertexShader);
-                gl.deleteShader(fragmentShader);
-                console.error('[GL] Fragment shader compile log: ' + fsLog);
-                throw new RuntimeError('Fragment shader failed to compile.  Compile log: ' + fsLog);
-            }
+        if (logShaderCompilation && fsLog && fsLog.length) {
+            console.log('[GL] Fragment shader compile log: ' + fsLog);
+        }
 
-            var program = gl.createProgram();
-            gl.attachShader(program, vertexShader);
-            gl.attachShader(program, fragmentShader);
-
+        if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
             gl.deleteShader(vertexShader);
             gl.deleteShader(fragmentShader);
-
-            if (attributeLocations) {
-                for ( var attribute in attributeLocations) {
-                    if (attributeLocations.hasOwnProperty(attribute)) {
-                        gl.bindAttribLocation(program, attributeLocations[attribute], attribute);
-                    }
-                }
-            }
-
-            gl.linkProgram(program);
-            var linkLog = gl.getProgramInfoLog(program);
-
-            if (logShaderCompilation && linkLog && linkLog.length) {
-                console.log('[GL] Shader program link log: ' + linkLog);
-            }
-
-            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-                gl.deleteProgram(program);
-                console.error('[GL] Shader program link log: ' + linkLog);
-                throw new RuntimeError('Program failed to link.  Link log: ' + linkLog);
-            }
-
-            return program;
+            console.error('[GL] Fragment shader compile log: ' + fsLog);
+            throw new RuntimeError('Fragment shader failed to compile.  Compile log: ' + fsLog);
         }
 
-        function findVertexAttributes(program, numberOfAttributes) {
-            var attributes = {};
-            for ( var i = 0; i < numberOfAttributes; ++i) {
-                var attr = gl.getActiveAttrib(program, i);
-                var location = gl.getAttribLocation(program, attr.name);
+        var program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
 
-                attributes[attr.name] = {
-                    name : attr.name,
-                    type : attr.type,
-                    index : location
-                };
-            }
+        gl.deleteShader(vertexShader);
+        gl.deleteShader(fragmentShader);
 
-            return attributes;
-        }
-
-        function findUniforms(program) {
-            var allUniforms = {};
-            var uniforms = [];
-            var samplerUniforms = [];
-
-            var numberOfUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
-
-            for ( var i = 0; i < numberOfUniforms; ++i) {
-                var activeUniform = gl.getActiveUniform(program, i);
-                var suffix = '[0]';
-                var uniformName =
-                    activeUniform.name.indexOf(suffix, activeUniform.name.length - suffix.length) !== -1 ? activeUniform.name.slice(0, activeUniform.name.length - 3) : activeUniform.name;
-
-                // Ignore GLSL built-in uniforms returned in Firefox.
-                if (uniformName.indexOf('gl_') !== 0) {
-                    if (activeUniform.size === 1 && activeUniform.name.indexOf('[') < 0) {
-                        // Single uniform
-                        var location = gl.getUniformLocation(program, uniformName);
-                        var uniformValue = gl.getUniform(program, location);
-                        var uniform = new Uniform(gl, activeUniform, uniformName, location, uniformValue);
-
-                        allUniforms[uniformName] = uniform;
-
-                        if (uniform._setSampler) {
-                            samplerUniforms.push(uniform);
-                        } else {
-                            uniforms.push(uniform);
-                        }
-                    } else {
-                        // Uniform array
-                        var locations = [];
-                        var value = [];
-                        for ( var j = 0; j < activeUniform.size; ++j) {
-                            var loc = gl.getUniformLocation(program, uniformName + '[' + j + ']');
-                            locations.push(loc);
-                            value.push(gl.getUniform(program, loc));
-                        }
-                        var uniformArray = new UniformArray(gl, activeUniform, uniformName, locations, value);
-
-                        allUniforms[uniformName] = uniformArray;
-
-                        if (uniformArray._setSampler) {
-                            samplerUniforms.push(uniformArray);
-                        } else {
-                            uniforms.push(uniformArray);
-                        }
-                    }
+        if (attributeLocations) {
+            for ( var attribute in attributeLocations) {
+                if (attributeLocations.hasOwnProperty(attribute)) {
+                    gl.bindAttribLocation(program, attributeLocations[attribute], attribute);
                 }
             }
+        }
 
-            return {
-                allUniforms : allUniforms,
-                uniforms : uniforms,
-                samplerUniforms : samplerUniforms
+        gl.linkProgram(program);
+        var linkLog = gl.getProgramInfoLog(program);
+
+        if (logShaderCompilation && linkLog && linkLog.length) {
+            console.log('[GL] Shader program link log: ' + linkLog);
+        }
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            gl.deleteProgram(program);
+            console.error('[GL] Shader program link log: ' + linkLog);
+            throw new RuntimeError('Program failed to link.  Link log: ' + linkLog);
+        }
+
+        return program;
+    }
+
+    function findVertexAttributes(gl, program, numberOfAttributes) {
+        var attributes = {};
+        for ( var i = 0; i < numberOfAttributes; ++i) {
+            var attr = gl.getActiveAttrib(program, i);
+            var location = gl.getAttribLocation(program, attr.name);
+
+            attributes[attr.name] = {
+                name : attr.name,
+                type : attr.type,
+                index : location
             };
         }
 
-        function findAutomaticUniforms(uniforms) {
-            var automaticUniforms = [];
-            var manualUniforms = {};
+        return attributes;
+    }
 
-            var allAutomaticUniforms = getAllAutomaticUniforms();
+    function findUniforms(gl ,program) {
+        var allUniforms = {};
+        var uniforms = [];
+        var samplerUniforms = [];
 
-            for ( var uniform in uniforms) {
-                if (uniforms.hasOwnProperty(uniform)) {
-                    var factory = allAutomaticUniforms[uniform];
-                    if (factory) {
-                        automaticUniforms.push(factory.create(uniforms[uniform]));
+        var numberOfUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+
+        for ( var i = 0; i < numberOfUniforms; ++i) {
+            var activeUniform = gl.getActiveUniform(program, i);
+            var suffix = '[0]';
+            var uniformName = activeUniform.name.indexOf(suffix, activeUniform.name.length - suffix.length) !== -1 ?
+                    activeUniform.name.slice(0, activeUniform.name.length - 3) : activeUniform.name;
+
+            // Ignore GLSL built-in uniforms returned in Firefox.
+            if (uniformName.indexOf('gl_') !== 0) {
+                if (activeUniform.size === 1 && activeUniform.name.indexOf('[') < 0) {
+                    // Single uniform
+                    var location = gl.getUniformLocation(program, uniformName);
+                    var uniformValue = gl.getUniform(program, location);
+                    var uniform = new Uniform(gl, activeUniform, uniformName, location, uniformValue);
+
+                    allUniforms[uniformName] = uniform;
+
+                    if (uniform._setSampler) {
+                        samplerUniforms.push(uniform);
                     } else {
-                        manualUniforms[uniform] = uniforms[uniform];
+                        uniforms.push(uniform);
+                    }
+                } else {
+                    // Uniform array
+                    var locations = [];
+                    var value = [];
+                    for ( var j = 0; j < activeUniform.size; ++j) {
+                        var loc = gl.getUniformLocation(program, uniformName + '[' + j + ']');
+                        locations.push(loc);
+                        value.push(gl.getUniform(program, loc));
+                    }
+                    var uniformArray = new UniformArray(gl, activeUniform, uniformName, locations, value);
+
+                    allUniforms[uniformName] = uniformArray;
+
+                    if (uniformArray._setSampler) {
+                        samplerUniforms.push(uniformArray);
+                    } else {
+                        uniforms.push(uniformArray);
                     }
                 }
             }
-
-            return {
-                automaticUniforms : automaticUniforms,
-                manualUniforms : manualUniforms
-            };
         }
 
-        var _program = createAndLinkProgram();
-        var _numberOfVertexAttributes = gl.getProgramParameter(_program, gl.ACTIVE_ATTRIBUTES);
-        var _vertexAttributes = findVertexAttributes(_program, _numberOfVertexAttributes);
-        var uniforms = findUniforms(_program);
-        var _allUniforms = uniforms.allUniforms;
-        var _uniforms = uniforms.uniforms;
-        var _samplerUniforms = uniforms.samplerUniforms;
-        var automaticUniforms = findAutomaticUniforms(_allUniforms);
-        var _automaticUniforms = automaticUniforms.automaticUniforms;
-        var _manualUniforms = automaticUniforms.manualUniforms;
-
-        this._getProgram = function() {
-            return _program;
+        return {
+            allUniforms : allUniforms,
+            uniforms : uniforms,
+            samplerUniforms : samplerUniforms
         };
+    }
 
-        /**
-        * DOC_TBA
-        *
-        * @return {Object} DOC_TBA
-        * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-        */
-        this.getVertexAttributes = function() {
-            return _vertexAttributes;
-        };
+    function partitionUniforms(uniforms) {
+        var automaticUniforms = [];
+        var manualUniforms = {};
 
-        /**
-        * DOC_TBA
-        *
-        * @return {Number} DOC_TBA
-        * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-        */
-        this.getNumberOfVertexAttributes = function() {
-            return _numberOfVertexAttributes;
-        };
-
-        /**
-        * DOC_TBA
-        *
-        * @return {Object} DOC_TBA
-        *
-        * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-        *
-        * @see ShaderProgram#getManualUniforms
-        */
-        this.getAllUniforms = function() {
-            return _allUniforms;
-        };
-
-        /**
-         * DOC_TBA
-         *
-         * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-         *
-         * @see ShaderProgram#getAllUniforms
-         */
-        this.getManualUniforms = function() {
-            return _manualUniforms;
-        };
-
-        this._bind = function() {
-            gl.useProgram(_program);
-        };
-
-        this._setUniforms = function(uniformMap, uniformState) {
-            // TODO: Performance
-
-            var len;
-            var i;
-
-            if (uniformMap) {
-                uniformState.setModel(uniformMap.u_model ? uniformMap.u_model() : Matrix4.IDENTITY);
-
-                for ( var uniform in _manualUniforms) {
-                    if (_manualUniforms.hasOwnProperty(uniform)) {
-                        _manualUniforms[uniform].value = uniformMap[uniform]();
-                    }
+        for (var uniform in uniforms) {
+            if (uniforms.hasOwnProperty(uniform)) {
+                var automaticUniform = allAutomaticUniforms[uniform];
+                if (automaticUniform) {
+                    automaticUniforms.push({
+                        uniform : uniforms[uniform],
+                        automaticUniform : automaticUniform
+                    });
+                } else {
+                    manualUniforms[uniform] = uniforms[uniform];
                 }
             }
+        }
 
-            len = _automaticUniforms.length;
-            for (i = 0; i < len; ++i) {
-                _automaticUniforms[i]._set(uniformState);
-            }
-
-            ///////////////////////////////////////////////////////////////////
-
-            len = _uniforms.length;
-            for (i = 0; i < len; ++i) {
-                _uniforms[i]._set();
-            }
-
-            var textureUnitIndex = 0;
-            len = _samplerUniforms.length;
-            for (i = 0; i < len; ++i) {
-                textureUnitIndex = _samplerUniforms[i]._setSampler(textureUnitIndex);
-            }
+        return {
+            automaticUniforms : automaticUniforms,
+            manualUniforms : manualUniforms
         };
+    }
 
-        this._unBind = function() {
-            gl.useProgram(null);
+    /**
+     * DOC_TBA
+     * @memberof ShaderProgram
+     *
+     * @return {Object} DOC_TBA
+     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
+     */
+    ShaderProgram.prototype.getVertexAttributes = function() {
+        return this._vertexAttributes;
+    };
 
-            var textureUnitIndex = 0;
-            var len = _samplerUniforms.length;
-            for ( var i = 0; i < len; ++i) {
-                textureUnitIndex = _samplerUniforms[i]._clearSampler(textureUnitIndex);
+    /**
+     * DOC_TBA
+     * @memberof ShaderProgram
+     *
+     * @return {Number} DOC_TBA
+     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
+     */
+    ShaderProgram.prototype.getNumberOfVertexAttributes = function() {
+        return this._numberOfVertexAttributes;
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof ShaderProgram
+     *
+     * @return {Object} DOC_TBA
+     *
+     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
+     *
+     * @see ShaderProgram#getManualUniforms
+     */
+    ShaderProgram.prototype.getAllUniforms = function() {
+        return this._allUniforms;
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof ShaderProgram
+     *
+     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
+     *
+     * @see ShaderProgram#getAllUniforms
+     */
+    ShaderProgram.prototype.getManualUniforms = function() {
+        return this._manualUniforms;
+    };
+
+    ShaderProgram.prototype._bind = function() {
+        this._gl.useProgram(this._program);
+    };
+
+    ShaderProgram.prototype._unBind = function() {
+        this._gl.useProgram(null);
+
+        var samplerUniforms = this._samplerUniforms;
+        var textureUnitIndex = 0;
+        var len = samplerUniforms.length;
+        for ( var i = 0; i < len; ++i) {
+            textureUnitIndex = samplerUniforms[i]._clearSampler(textureUnitIndex);
+        }
+    };
+
+    ShaderProgram.prototype._setUniforms = function(uniformMap, uniformState, validate) {
+        // TODO: Performance
+
+        var len;
+        var i;
+
+        var uniforms = this._uniforms;
+        var samplerUniforms = this._samplerUniforms;
+        var manualUniforms = this._manualUniforms;
+        var automaticUniforms = this._automaticUniforms;
+
+        if (uniformMap) {
+            uniformState.setModel(uniformMap.u_model ? uniformMap.u_model() : Matrix4.IDENTITY);
+
+            for (var uniform in manualUniforms) {
+                if (manualUniforms.hasOwnProperty(uniform)) {
+                    manualUniforms[uniform].value = uniformMap[uniform]();
+                }
             }
-        };
+        }
 
-        /**
-         * Returns true if this object was destroyed; otherwise, false.
-         * <br /><br />
-         * If this object was destroyed, it should not be used; calling any function other than
-         * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-         *
-         * @return {Boolean} True if this object was destroyed; otherwise, false.
-         *
-         * @see ShaderProgram.destroy
-         */
-        this.isDestroyed = function() {
-            return false;
-        };
+        len = automaticUniforms.length;
+        for (i = 0; i < len; ++i) {
+            automaticUniforms[i].uniform.value = automaticUniforms[i].automaticUniform.getValue(uniformState);
+        }
 
-        /**
-         * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-         * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-         * <br /><br />
-         * Once an object is destroyed, it should not be used; calling any function other than
-         * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-         * assign the return value (<code>undefined</code>) to the object as done in the example.
-         *
-         * @return {undefined}
-         *
-         * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-         *
-         * @see ShaderProgram.isDestroyed
-         * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteShader.xml'>glDeleteShader</a>
-         * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteProgram.xml'>glDeleteProgram</a>
-         *
-         * @example
-         * shaderProgram = shaderProgram && shaderProgram.destroy();
-         */
-        this.destroy = function() {
-            gl.deleteProgram(_program);
-            return destroyObject(this);
-        };
+        ///////////////////////////////////////////////////////////////////
 
-        /**
-         * DOC_TBA
-         */
-        this.release = function() {
-            if (this._cachedShader) {
-                return this._cachedShader.cache.releaseShaderProgram(this);
+        len = uniforms.length;
+        for (i = 0; i < len; ++i) {
+            uniforms[i]._set();
+        }
+
+        var textureUnitIndex = 0;
+        len = samplerUniforms.length;
+        for (i = 0; i < len; ++i) {
+            textureUnitIndex = samplerUniforms[i]._setSampler(textureUnitIndex);
+        }
+
+        if (validate) {
+            var gl = this._gl;
+            var program = this._program;
+
+            gl.validateProgram(program);
+            if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
+                throw new DeveloperError('Program validation failed.  Link log: ' + gl.getProgramInfoLog(program));
             }
+        }
+    };
 
-            return this.destroy();
-        };
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * @memberof ShaderProgram
+     *
+     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see ShaderProgram#destroy
+     */
+    ShaderProgram.prototype.isDestroyed = function() {
+        return false;
+    };
 
-        return null;
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * @memberof ShaderProgram
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
+     *
+     * @see ShaderProgram#isDestroyed
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteShader.xml'>glDeleteShader</a>
+     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteProgram.xml'>glDeleteProgram</a>
+     *
+     * @example
+     * shaderProgram = shaderProgram && shaderProgram.destroy();
+     */
+    ShaderProgram.prototype.destroy = function() {
+        this._gl.deleteProgram(this._program);
+        return destroyObject(this);
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof ShaderProgram
+     */
+    ShaderProgram.prototype.release = function() {
+        if (this._cachedShader) {
+            return this._cachedShader.cache.releaseShaderProgram(this);
+        }
+
+        return this.destroy();
     };
 
     return ShaderProgram;
