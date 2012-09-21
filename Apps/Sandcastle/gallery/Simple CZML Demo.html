@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Drag and drop CZML files onto the Cesium Viewer Widget to visualize time dynamic data.">
+    <meta name="description" content="A simple CZML example showing four satellites in orbit around the Earth, and some ground objects.">
     <title>Cesium Demo</title>
     <script>
     var Sandcastle = {};
@@ -32,8 +32,7 @@
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' },
-            { name: 'Workers', location: 'Source/Workers' }
+            { name: 'Widgets', location: 'Source/Widgets' }
         ]
     });
     </script>
@@ -83,11 +82,9 @@ require([
 {
     "use strict";
 
-    // Ask Dojo to parse URL configuration options
-    var endUserOptions = {};
-    if (window.location.search) {
-        endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
-    }
+    var endUserOptions = {
+        'source' : '../../CesiumViewer/Gallery/simple.czml'
+    };
 
     // Initialize a viewer capable of drag-and-drop
     // and user customizations.
@@ -99,7 +96,7 @@ require([
             widget.startRenderLoop();
         }
     }).placeAt(dom.byId("cesiumContainer"));
-    
+
     dom.byId('toolbar').innerHTML = '';
 });
 </script>
