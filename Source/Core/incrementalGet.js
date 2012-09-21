@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        './DeveloperError'
+        './DeveloperError',
+        './defaultValue'
     ], function(
-        DeveloperError) {
+        DeveloperError,
+        defaultValue) {
     "use strict";
     /*global EventSource*/
 
@@ -16,6 +18,7 @@ define([
      * @param {String} url The URL of the event stream.
      * @param {Function} [itemCallback] A function that will be called with each item as it arrives.
      * @param {Function} [doneCallback] A function that will be called when the event stream closes.
+     * @param {String} eventName The event name to listen to.
      * @returns A function that will close the stream.
      *
      * @exception {DeveloperError} url is required.
@@ -29,20 +32,22 @@ define([
      *
      * @see <a href="http://www.w3.org/TR/eventsource/">EventSource</a>
      */
-    var incrementalGet = function(url, itemCallback, doneCallback) {
+    var incrementalGet = function(url, itemCallback, doneCallback, eventName) {
         if (typeof url === 'undefined') {
             throw new DeveloperError('url is required.');
         }
 
         var eventSource = new EventSource(url);
+        eventName = defaultValue(eventName, 'message');
 
-        if (typeof itemCallback !== 'undefined') {
-            eventSource.onmessage = function(event) {
+        eventSource.addEventListener(eventName, function(event) {
+            if (typeof itemCallback !== 'undefined') {
                 if (event.data !== '') {
                     itemCallback(JSON.parse(event.data));
                 }
-            };
-        }
+            }
+            itemCallback(JSON.parse(event.data));
+        });
 
         function finish() {
             if (typeof doneCallback !== 'undefined') {

@@ -1,58 +1,55 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/TimeInterval',
-        '../Core/Iso8601',
         './CzmlNumber',
-        './CzmlString',
         './DynamicProperty'
     ], function(
-        defaultValue,
-        TimeInterval,
-        Iso8601,
         CzmlNumber,
-        CzmlString,
         DynamicProperty
         ) {
     "use strict";
 
     /**
-     *
-     *
+     * Represents a time-dynamic updater that is used to specify how often to request data.
      * @alias DynamicPollingUpdate
      * @constructor
      *
      * @see DynamicObject
      * @see DynamicProperty
      * @see DynamicObjectCollection
-     * @see CzmlDefaults
      */
     var DynamicPollingUpdate = function() {
         this.refreshInterval = undefined;
     };
 
     /**
-     * Processes the provided CZML interval or intervals into this property.
+     * Processes a single CZML packet and merges its data into the provided DynamicObject's external property.
+     * If the DynamicObject does not have a external property, one is created.  This method is not
+     * normally called directly, but is part of the array of CZML processing functions that is
+     * passed into the DynamicObjectCollection constructor.
      * @memberof DynamicPollingUpdate
      *
-     * @param {Object} czmlIntervals The CZML data to process.
-     * @param {TimeInterval} [constrainedInterval] Constrains the processing so that any times outside of this interval are ignored.
-     * @param {String} [sourceUri] The originating URL of the CZML being processed.
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the external data.
+     * @param {Object} packet The CZML packet to process.
+     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
+     *
+     * @see DynamicObject
+     * @see DynamicProperty
+     * @see DynamicObjectCollection
+     * @see CzmlDefaults#updaters
      */
-    DynamicPollingUpdate.prototype.processCzmlIntervals = function(pollingUpdatePacket) {
+    DynamicPollingUpdate.prototype.processCzmlPacket = function(dynamicObject, packet, interval) {
         var pollingUpdated = false;
-
-        var refreshInterval = pollingUpdatePacket.refreshInterval;
-        if (typeof refreshInterval === 'undefined') {
-            this.refreshInterval = refreshInterval = new DynamicProperty(CzmlNumber);
-            pollingUpdated = true;
+        if(typeof packet.refreshInterval !== 'undefined'){
+            var refreshInterval = dynamicObject.refreshInterval;
+            if (typeof refreshInterval === 'undefined') {
+                dynamicObject.refreshInterval = refreshInterval = new DynamicProperty(CzmlNumber);
+                pollingUpdated = true;
+            }
+            refreshInterval.processCzmlIntervals(packet.refreshInterval, interval);
         }
-        refreshInterval.processCzmlIntervals(pollingUpdatePacket.refreshInterval);
 
         return pollingUpdated;
     };
-
-
 
     return DynamicPollingUpdate;
 });

@@ -5,14 +5,16 @@ define([
         './CzmlNumber',
         './CzmlString',
         './DynamicProperty',
-        './DynamicPollingUpdate'
+        './DynamicPollingUpdate',
+        './DynamicSimulationDrivenUpdate'
     ], function(
         defaultValue,
         TimeInterval,
         CzmlNumber,
         CzmlString,
         DynamicProperty,
-        DynamicPollingUpdate
+        DynamicPollingUpdate,
+        DynamicSimulationDrivenUpdate
         ) {
     "use strict";
 
@@ -112,24 +114,16 @@ define([
                 external.pollingUpdate = pollingUpdate = new DynamicPollingUpdate();
                 externalUpdated = true;
             }
-            pollingUpdate.processCzmlIntervals(externalData.pollingUpdate);
+            pollingUpdate.processCzmlPacket(external.pollingUpdate, externalData.pollingUpdate, interval);
 
         }
         if(typeof externalData.simulationDrivenUpdate !== 'undefined'){
             var simulationDrivenUpdate = external.simulationDrivenUpdate;
-            /*if(typeof eventsource === 'undefined'){
-                external.eventsource = eventsource = new DynamicProperty(CzmlString);
+            if (typeof simulationDrivenUpdate === 'undefined') {
+                external.simulationDrivenUpdate = simulationDrivenUpdate = new DynamicSimulationDrivenUpdate();
                 externalUpdated = true;
             }
-            eventsource.processCzmlIntervals(externalData.eventsource, interval);
-            if(typeof externalData.eventname !== 'undefined'){
-                var eventname = external.eventname;
-                if(typeof eventname === 'undefined'){
-                    external.eventname = eventname = new DynamicProperty(CzmlString);
-                    eventname.processCzmlIntervals(externalData.eventname, interval);
-                    externalUpdated = true;
-                }
-            }*/
+            simulationDrivenUpdate.processCzmlPacket(external.simulationDrivenUpdate, externalData.simulationDrivenUpdate, interval);
         }
 
         return externalUpdated;
@@ -147,7 +141,7 @@ define([
      * @see CzmlDefaults
      */
     DynamicExternalDocument.mergeProperties = function(targetObject, objectToMerge) {
-        /*var externalToMerge = objectToMerge.external;
+        var externalToMerge = objectToMerge.external;
         if (typeof externalToMerge !== 'undefined') {
 
             var targetExternal = targetObject.external;
@@ -155,8 +149,12 @@ define([
                 targetObject.external = targetExternal = new DynamicExternalDocument();
             }
 
-            //targetExternal.polling = defaultValue(targetExternal.polling, externalToMerge.polling);
-        }*/
+            targetExternal.pollingUpdate = defaultValue(targetExternal.pollingUpdate, externalToMerge.pollingUpdate);
+            targetExternal.simulationDrivenUpdate = defaultValue(targetExternal.simulationDrivenUpdate, externalToMerge.simulationDrivenUpdate);
+            targetExternal.url = defaultValue(targetExternal.url, externalToMerge.url);
+            targetExternal.eventname = defaultValue(targetExternal.eventname, externalToMerge.eventname);
+            targetExternal.sourceType = defaultValue(targetExternal.sourceType, externalToMerge.sourceType);
+        }
     };
 
     /**

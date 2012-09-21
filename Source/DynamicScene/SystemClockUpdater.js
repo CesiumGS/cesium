@@ -1,51 +1,55 @@
 /*global define*/
 define(['../Core/DeveloperError',
         '../Core/defaultValue',
-        './fillIncrementally'
+        '../Core/incrementalGet'
     ], function(
          DeveloperError,
          defaultValue,
-         fillIncrementally) {
+         incrementalGet) {
     "use strict";
 
     /**
-     * A updater that retrieves data from the url at the specified refreshRate based on the system clock.
+     * A updater that retrieves data from the URL at the specified refreshRate based on the system clock.
      *
      * @alias SystemClockUpdater
      * @constructor
      *
      * @param {CzmlProcessor} czmlProcessor The document manager.
      * @param {DynamicObjectCollection} dynamicObjectCollection The dynamic object collection to update.
-     * @param {DynamicObject} url A dynamic property whose value is the URL of the event stream.
-     * @param {DynamicObject} refreshRate A dynamic property whose value is the interval to request data from the URL.
-     * @param {function} [fillFunction={@link fillIncrementally}] The function used to fill the {@link DynamicObjectCollection}.
+     * @param {DynamicExternalDocument} dynamicExternalDocument The external properties used by the SystemClockUpdater.
+     * @param {function} [fillFunction={@link incrementalGet}] The function used to fill the {@link DynamicObjectCollection}.
      *
      * @exception {DeveloperError} czmlProcessor is required.
      * @exception {DeveloperError} dynamicObjectCollection is required.
-     * @exception {DeveloperError} url is required.
+     * @exception {DeveloperError} dynamicExternalDocument is required.
      *
-     * @see fillIncrementally
+     * @see incrementalGet
      */
-    var SystemClockUpdater = function SystemClockUpdater(czmlProcessor, dynamicObjectCollection, url, refreshRate, fillFunction) {
+    var SystemClockUpdater = function SystemClockUpdater(czmlProcessor, dynamicObjectCollection, dynamicExternalDocument, fillFunction) {
         if (typeof czmlProcessor === 'undefined') {
             throw new DeveloperError('czmlProcessor is required.');
         }
         if (typeof dynamicObjectCollection === 'undefined') {
             throw new DeveloperError('dynamicObjectCollection is required.');
         }
-        if (typeof url === 'undefined') {
-            throw new DeveloperError('url is required.');
+        if (typeof dynamicExternalDocument === 'undefined') {
+            throw new DeveloperError('dynamicExternalDocument is required.');
         }
 
         if (typeof fillFunction === 'undefined') {
-            fillFunction = fillIncrementally;
+            fillFunction = incrementalGet;
         }
 
         this._czmlProcessor = czmlProcessor;
         this._dynamicObjectCollection = dynamicObjectCollection;
-        this._refreshRate = defaultValue(refreshRate, 60);//default to 60 seconds
+        var refreshInterval = {getValue:function(){return 60;}};
+        if(typeof dynamicExternalDocument.pollingUpdate === 'undefined'){
+            this._refreshInterval = refreshInterval;
+        }else{
+            this._refreshInterval = defaultValue(dynamicExternalDocument.pollingUpdate.refreshInterval, refreshInterval);//default to 60 seconds
+        }
         this._fillFunction = fillFunction;
-        this._url = url;
+        this._url = dynamicExternalDocument.url;
         this._lastUpdateTime = new Date();
     };
 
@@ -57,14 +61,15 @@ define(['../Core/DeveloperError',
      */
     SystemClockUpdater.prototype.update = function(currentTime) {
         var now = new Date();
-        if(typeof this._lastUpdateTime === 'undefined' || now.valueOf() >= this._lastUpdateTime.valueOf() + this._refreshRate.getValue(currentTime) * 1000){
+        if(typeof this._lastUpdateTime === 'undefined' || now.valueOf() >= this._lastUpdateTime.valueOf() + this._refreshInterval.getValue(currentTime) * 1000){
             this._lastUpdateTime = now;
             if (typeof this._handle === 'undefined') {
                 var self = this;
                 var storeHandle = true;
-                var handle = this._fillFunction(this._dynamicObjectCollection, this._url.getValue(currentTime),
-                        function(item, dynamicObjectCollection, url){
-                            self._czmlProcessor.process(item, dynamicObjectCollection, url);
+                var url = this._url.getValue(currentTime);
+                var handle = this._fillFunction(url,
+                        function(item){
+                            self._czmlProcessor.process(item, self._dynamicObjectCollection, url);
                         },
                         function(czmlData) {
                             storeHandle = false;

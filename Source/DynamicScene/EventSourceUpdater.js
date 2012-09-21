@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Core/DeveloperError'
+        '../Core/DeveloperError',
+        '../Core/defaultValue'
     ], function(
-        DeveloperError) {
+        DeveloperError,
+        defaultValue) {
     "use strict";
     /*global EventSource*/
 
@@ -15,33 +17,30 @@ define([
      *
      * @param {CzmlProcessor} czmlProcessor The CZML processor.
      * @param {DynamicObjectCollection} dynamicObjectCollection The dynamic object collection to update.
-     * @param {DynamicProperty} urlProperty A dynamic property whose value is the URL of the event stream.
-     * @param {DynamicProperty} [eventNameProperty] A dynamic property whose value is the name of the
-     * event in the stream to listen to.  If the property is undefined, or has a value of undefined,
-     * all messages on the stream will be interpreted as CZML packets.
+     * @param {DynamicExternalDocument} dynamicExternalDocument The external properties used by the EventSourceUpdater.
      *
      * @exception {DeveloperError} czmlProcessor is required.
      * @exception {DeveloperError} dynamicObjectCollection is required.
-     * @exception {DeveloperError} url is required.
+     * @exception {DeveloperError} dynamicExternalDocument is required.
      *
      * @see CzmlProcessor
      * @see <a href="http://www.w3.org/TR/eventsource/">EventSource</a>
      */
-    var EventSourceUpdater = function EventSourceUpdater(czmlProcessor, dynamicObjectCollection, urlProperty, eventNameProperty) {
+    var EventSourceUpdater = function EventSourceUpdater(czmlProcessor, dynamicObjectCollection, dynamicExternalDocument) {
         if (typeof czmlProcessor === 'undefined') {
             throw new DeveloperError('czmlProcessor is required.');
         }
         if (typeof dynamicObjectCollection === 'undefined') {
             throw new DeveloperError('dynamicObjectCollection is required.');
         }
-        if (typeof urlProperty === 'undefined') {
-            throw new DeveloperError('urlProperty is required.');
+        if (typeof dynamicExternalDocument === 'undefined') {
+            throw new DeveloperError('dynamicExternalDocument is required.');
         }
 
         this._czmlProcessor = czmlProcessor;
         this._dynamicObjectCollection = dynamicObjectCollection;
-        this._urlProperty = urlProperty;
-        this._eventNameProperty = eventNameProperty;
+        this._urlProperty = dynamicExternalDocument.url;
+        this._eventNameProperty = dynamicExternalDocument.eventname;
         this._currentUrl = undefined;
         this._currentEventName = undefined;
         this._eventSource = undefined;
@@ -70,7 +69,7 @@ define([
         var eventName = 'message';
         var eventNameProperty = this._eventNameProperty;
         if (typeof eventNameProperty !== 'undefined') {
-            eventName = eventNameProperty.getValue(currentTime);
+            eventName = defaultValue(eventNameProperty.getValue(currentTime), eventName);
         }
 
         if (eventName !== this._currentEventName) {

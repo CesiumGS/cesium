@@ -7,6 +7,7 @@ define([
         './CompositeDynamicObjectCollection',
         './DynamicObjectCollection',
         './IterationDrivenUpdater',
+        './TimeIntervalUpdater',
         './processCzml',
         './SystemClockUpdater',
         './EventSourceUpdater',
@@ -19,6 +20,7 @@ define([
             CompositeDynamicObjectCollection,
             DynamicObjectCollection,
             IterationDrivenUpdater,
+            TimeIntervalUpdater,
             processCzml,
             SystemClockUpdater,
             EventSourceUpdater,
@@ -161,12 +163,16 @@ define([
                         this._updaters.push(new Updater(compositeDynamicObjectCollection, new IterationDrivenUpdater(this, doc, external.url, 1)));
                     }
                     else{
-                        var pollingUpdate = external.pollingUpdate;
-                        this._updaters.push(new Updater(compositeDynamicObjectCollection, new SystemClockUpdater(this, doc, external.url, pollingUpdate.refreshInterval)));
+                        this._updaters.push(new Updater(compositeDynamicObjectCollection, new SystemClockUpdater(this, doc, external)));
                     }
                 }
                 else if(external.sourceType.getValue(Iso8601.MAXIMUM_INTERVAL) === 'eventstream'){
-                    this._updaters.push(new Updater(compositeDynamicObjectCollection, new EventSourceUpdater(this, doc, external.url, external.eventname)));
+                    if(typeof external.simulationDrivenUpdate === 'undefined'){
+                        this._updaters.push(new Updater(compositeDynamicObjectCollection, new EventSourceUpdater(this, doc, external)));
+                    }
+                    else{
+                        this._updaters.push(new Updater(compositeDynamicObjectCollection, new TimeIntervalUpdater(this, doc, external)));
+                    }
                 }
                 var scope = external.scope.getValue(Iso8601.MAXIMUM_INTERVAL);
                 if(scope && scope === "SHARED"){

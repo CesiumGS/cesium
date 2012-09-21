@@ -36,7 +36,11 @@ defineSuite([
     var processor;
 
     beforeEach(function() {
-        fakeEventSource = jasmine.createSpyObj('EventSource', ['close']);
+        fakeEventSource = jasmine.createSpyObj('EventSource', ['close','addEventListener']);
+        fakeEventSource.events = {};
+        fakeEventSource.addEventListener.andCallFake(function(eventName, f) {
+            fakeEventSource.events[eventName] = f;
+        });
         fakeEventSourceConstructor = spyOn(window, 'EventSource').andReturn(fakeEventSource);
 
         dynamicObjectCollection = new DynamicObjectCollection();
@@ -71,7 +75,8 @@ defineSuite([
         updater.update(new JulianDate());
         spyOn(processor, 'process');
 
-        fakeEventSource.onmessage({
+        var event = fakeEventSource.events.message;
+        event({
             data : '{"test":"value"}'
         });
 
@@ -106,7 +111,10 @@ defineSuite([
         var updater = new IterationDrivenUpdater(processor, dynamicObjectCollection, testObject.external.polling, 1);
 
         updater.update(new JulianDate());
-        fakeEventSource.onmessage({data:"{\"test\":\"value\"}"});
+        var event = fakeEventSource.events.message;
+        event({
+            data : '{"test":"value"}'
+        });
         updater.abort();
         expect(fakeEventSource.close).toHaveBeenCalled();
     });

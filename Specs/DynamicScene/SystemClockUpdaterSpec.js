@@ -36,7 +36,11 @@ defineSuite([
     var processor;
 
     beforeEach(function() {
-        fakeEventSource = jasmine.createSpyObj('EventSource', ['close']);
+        fakeEventSource = jasmine.createSpyObj('EventSource', ['close','addEventListener']);
+        fakeEventSource.events = {};
+        fakeEventSource.addEventListener.andCallFake(function(eventName, f) {
+            fakeEventSource.events[eventName] = f;
+        });
         fakeEventSourceConstructor = spyOn(window, 'EventSource').andReturn(fakeEventSource);
 
         dynamicObjectCollection = new DynamicObjectCollection();
@@ -49,26 +53,35 @@ defineSuite([
         }).toThrow();
     });
 
-    it('SystemClockUpdater throws with out dynamicObjectCollection and baseUrl', function() {
+    it('SystemClockUpdater throws with out dynamicObjectCollection and dynamicExternalDocument', function() {
         expect(function() {
             return new SystemClockUpdater({});
         }).toThrow();
     });
 
-    it('SystemClockUpdater throws with out baseUrl', function() {
+    it('SystemClockUpdater throws with out dynamicExternalDocument', function() {
         expect(function() {
             return new SystemClockUpdater({}, {});
         }).toThrow();
+    });
+
+    it('SystemClockUpdater sets defaults correctly', function() {
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        testObject.external = new DynamicExternalDocument();
+        var eventSourceUrl = 'localhost/eventsource';
+        testObject.external.url = new MockProperty(eventSourceUrl);
+        var updater = new SystemClockUpdater(processor, dynamicObjectCollection, testObject.external);
+        expect(updater._refreshInterval.getValue()).toEqual(60);
     });
 
     it('update calls the CzmlProcessor process function.', function() {
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
         var eventSourceUrl = 'localhost/eventsource';
-        testObject.external.polling = new MockProperty(eventSourceUrl);
-        testObject.external.refreshInterval = new MockProperty(0.0001);
+        testObject.external.url = new MockProperty(eventSourceUrl);
+        testObject.external.pollingUpdate = {refreshInterval : new MockProperty(0.0001)};
 
-        var updater = new SystemClockUpdater(processor, dynamicObjectCollection, testObject.external.polling, testObject.external.refreshInterval);
+        var updater = new SystemClockUpdater(processor, dynamicObjectCollection, testObject.external);
         var date = new Date();
         var curDate = null;
 
@@ -77,7 +90,8 @@ defineSuite([
         updater.update(new JulianDate());
         spyOn(processor, 'process');
 
-        fakeEventSource.onmessage({
+        var event = fakeEventSource.events.message;
+        event({
             data : '{"test":"value"}'
         });
 
@@ -90,10 +104,10 @@ defineSuite([
     it('abort closes handle.', function() {
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
-        testObject.external.polling = new MockProperty('localhost');
-        testObject.external.refreshInterval = new MockProperty(0.0001);
+        testObject.external.url = new MockProperty('localhost');
+        testObject.external.pollingUpdate= {refreshInterval : new MockProperty(0.0001)};
 
-        var updater = new SystemClockUpdater(processor, dynamicObjectCollection, testObject.external.polling, testObject.external.refreshInterval);
+        var updater = new SystemClockUpdater(processor, dynamicObjectCollection, testObject.external);
         var date = new Date();
         var curDate = null;
 
@@ -101,7 +115,10 @@ defineSuite([
         while(curDate-date < 20);
 
         updater.update(new JulianDate());
-        fakeEventSource.onmessage({data:"{\"test\":\"value\"}"});
+        var event = fakeEventSource.events.message;
+        event({
+            data : '{"test":"value"}'
+        });
 
         updater.abort();
         expect(fakeEventSource.close).toHaveBeenCalled();

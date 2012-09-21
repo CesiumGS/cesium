@@ -10,7 +10,11 @@ defineSuite([
     var fakeEventSourceConstructor;
 
     beforeEach(function() {
-        fakeEventSource = jasmine.createSpyObj('EventSource', ['close']);
+        fakeEventSource = jasmine.createSpyObj('EventSource', ['close','addEventListener']);
+        fakeEventSource.events = {};
+        fakeEventSource.addEventListener.andCallFake(function(eventName, f) {
+            fakeEventSource.events[eventName] = f;
+        });
         fakeEventSourceConstructor = spyOn(window, 'EventSource').andReturn(fakeEventSource);
     });
 
@@ -27,8 +31,10 @@ defineSuite([
 
         expect(fakeEventSourceConstructor).toHaveBeenCalledWith(testUrl);
         expect(itemCallback).not.toHaveBeenCalled();
+        expect(fakeEventSource.addEventListener).toHaveBeenCalledWith('message', jasmine.any(Function));
 
-        fakeEventSource.onmessage({
+        var event = fakeEventSource.events.message;
+        event({
             data : '{"test":"value"}'
         });
 

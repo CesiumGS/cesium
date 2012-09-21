@@ -15,30 +15,34 @@ defineSuite([
     it('processCzmlPacket adds polling data for infinite document.', function() {
         var documentPacket = {
             external : {
-                polling : 'http://localhost/test',
-                refreshInterval : '30'
+                url : 'http://localhost/test',
+                sourceType:"json",
+                pollingUpdate:{
+                    refreshInterval : '30'
+                }
             }
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');
         expect(DynamicExternalDocument.processCzmlPacket(dynamicObject, documentPacket)).toEqual(true);
         expect(dynamicObject.external).toBeDefined();
-        expect(dynamicObject.external.polling.getValue(Iso8601.MINIMUM_VALUE)).toEqual(documentPacket.external.polling);
-        expect(dynamicObject.external.refreshInterval.getValue(Iso8601.MINIMUM_VALUE)).toEqual(documentPacket.external.refreshInterval);
+        expect(dynamicObject.external.url.getValue(Iso8601.MINIMUM_VALUE)).toEqual(documentPacket.external.url);
+        expect(dynamicObject.external.pollingUpdate.refreshInterval.getValue(Iso8601.MINIMUM_VALUE)).toEqual(documentPacket.external.pollingUpdate.refreshInterval);
     });
 
     it('processCzmlPacket adds eventsource data for infinite document.', function() {
         var documentPacket = {
             external : {
-                eventsource : 'http://localhost/test',
-                eventname : 'access'
+                url : 'http://localhost/test',
+                eventname : 'access',
+                sourceType:"eventstream"
             }
         };
 
         var dynamicObject = new DynamicObject('dynamicObject');
         expect(DynamicExternalDocument.processCzmlPacket(dynamicObject, documentPacket)).toEqual(true);
         expect(dynamicObject.external).toBeDefined();
-        expect(dynamicObject.external.eventsource.getValue(Iso8601.MINIMUM_VALUE)).toEqual(documentPacket.external.eventsource);
+        expect(dynamicObject.external.url.getValue(Iso8601.MINIMUM_VALUE)).toEqual(documentPacket.external.url);
         expect(dynamicObject.external.eventname.getValue(Iso8601.MINIMUM_VALUE)).toEqual(documentPacket.external.eventname);
     });
 
@@ -46,8 +50,10 @@ defineSuite([
         var documentPacket = {
                 external : {
                     interval : '2000-01-01/2001-01-01',
-                    polling : 'http://localhost/test',
-                    refreshInterval : '30'
+                    url : 'http://localhost/test',
+                    pollingUpdate:{
+                        refreshInterval : '30'
+                    }
                 }
         };
 
@@ -57,19 +63,20 @@ defineSuite([
         var dynamicObject = new DynamicObject('dynamicObject');
         expect(DynamicExternalDocument.processCzmlPacket(dynamicObject, documentPacket)).toEqual(true);
         expect(dynamicObject.external).toBeDefined();
-        expect(dynamicObject.external.polling.getValue(validTime)).toEqual(documentPacket.external.polling);
-        expect(dynamicObject.external.refreshInterval.getValue(validTime)).toEqual(documentPacket.external.refreshInterval);
+        expect(dynamicObject.external.url.getValue(validTime)).toEqual(documentPacket.external.url);
+        expect(dynamicObject.external.pollingUpdate.refreshInterval.getValue(validTime)).toEqual(documentPacket.external.pollingUpdate.refreshInterval);
 
-        expect(dynamicObject.external.polling.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.external.refreshInterval.getValue(invalidTime)).toBeUndefined();
+        expect(dynamicObject.external.url.getValue(invalidTime)).toBeUndefined();
+        expect(dynamicObject.external.pollingUpdate.refreshInterval.getValue(invalidTime)).toBeUndefined();
     });
 
     it('processCzmlPacket adds data for constrained eventsource document.', function() {
         var documentPacket = {
                 external : {
                     interval : '2000-01-01/2001-01-01',
-                    eventsource : 'http://localhost/test',
-                    eventname : '30'
+                    url : 'http://localhost/test',
+                    eventname : '30',
+                    sourceType:"eventstream"
                 }
         };
 
@@ -79,10 +86,10 @@ defineSuite([
         var dynamicObject = new DynamicObject('dynamicObject');
         expect(DynamicExternalDocument.processCzmlPacket(dynamicObject, documentPacket)).toEqual(true);
         expect(dynamicObject.external).toBeDefined();
-        expect(dynamicObject.external.eventsource.getValue(validTime)).toEqual(documentPacket.external.eventsource);
+        expect(dynamicObject.external.url.getValue(validTime)).toEqual(documentPacket.external.url);
         expect(dynamicObject.external.eventname.getValue(validTime)).toEqual(documentPacket.external.eventname);
 
-        expect(dynamicObject.external.eventsource.getValue(invalidTime)).toBeUndefined();
+        expect(dynamicObject.external.url.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.external.eventname.getValue(invalidTime)).toBeUndefined();
     });
 

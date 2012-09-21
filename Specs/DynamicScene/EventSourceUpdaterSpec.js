@@ -53,13 +53,13 @@ defineSuite([
         }).toThrow();
     });
 
-    it('throws with missing dynamicObjectColleciontProperty and urlProperty', function() {
+    it('throws with missing dynamicObjectCollectionProperty and dynamicExternalDocument', function() {
         expect(function() {
             return new EventSourceUpdater({});
         }).toThrow();
     });
 
-    it('throws with missing urlProperty', function() {
+    it('throws with missing dynamicExternalDocument', function() {
         expect(function() {
             return new EventSourceUpdater({}, {});
         }).toThrow();
@@ -70,12 +70,12 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
 
         var eventSourceUrl = 'http://example.com/eventsource';
-        testObject.external.eventsource = new MockProperty(eventSourceUrl);
+        testObject.external.url = new MockProperty(eventSourceUrl);
 
         var eventName = 'access';
         testObject.external.eventname = new MockProperty(eventName);
 
-        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource, testObject.external.eventname);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external);
 
         updater.update(new JulianDate());
 
@@ -88,9 +88,9 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
 
         var eventSourceUrl = 'http://example.com/eventsource';
-        testObject.external.eventsource = new MockProperty(eventSourceUrl);
+        testObject.external.url = new MockProperty(eventSourceUrl);
 
-        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external);
 
         updater.update(new JulianDate());
 
@@ -103,10 +103,10 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
 
         var eventSourceUrl = 'http://example.com/eventsource';
-        testObject.external.eventsource = new MockProperty(eventSourceUrl);
+        testObject.external.url = new MockProperty(eventSourceUrl);
         testObject.external.eventname = new MockProperty(undefined);
 
-        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external);
 
         updater.update(new JulianDate());
 
@@ -118,13 +118,13 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
 
-        testObject.external.eventsource = new MockProperty('http://example.com/eventsource');
+        testObject.external.url = new MockProperty('http://example.com/eventsource');
 
         var firstEventName = 'access';
         var secondEventName = 'other';
         testObject.external.eventname = new MockProperty(firstEventName);
 
-        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource, testObject.external.eventname);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external);
 
         updater.update(new JulianDate());
 
@@ -144,15 +144,15 @@ defineSuite([
 
         var firstUrl = 'http://example.com/eventsource';
         var secondUrl = 'http://example.com/othereventsource';
-        testObject.external.eventsource = new MockProperty(firstUrl);
+        testObject.external.url = new MockProperty(firstUrl);
 
-        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource, testObject.external.eventname);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external);
 
         updater.update(new JulianDate());
 
         expect(fakeEventSourceConstructor).toHaveBeenCalledWith(firstUrl);
 
-        testObject.external.eventsource.value = secondUrl;
+        testObject.external.url.value = secondUrl;
 
         updater.update(new JulianDate());
 
@@ -165,12 +165,12 @@ defineSuite([
         testObject.external = new DynamicExternalDocument();
 
         var eventSourceUrl = 'http://example.com/eventsource';
-        testObject.external.eventsource = new MockProperty(eventSourceUrl);
+        testObject.external.url = new MockProperty(eventSourceUrl);
 
         var eventName = 'access';
         testObject.external.eventname = new MockProperty(eventName);
 
-        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource, testObject.external.eventname);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external);
 
         updater.update(new JulianDate());
 
@@ -189,9 +189,9 @@ defineSuite([
     it('closes the EventSource when abort is called', function() {
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.external = new DynamicExternalDocument();
-        testObject.external.eventsource = new MockProperty('http://example.com/eventsource');
+        testObject.external.url = new MockProperty('http://example.com/eventsource');
 
-        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external.eventsource, testObject.external.eventname);
+        var updater = new EventSourceUpdater(processor, dynamicObjectCollection, testObject.external);
         updater.update(new JulianDate());
 
         updater.abort();
