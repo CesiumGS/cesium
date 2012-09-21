@@ -24,7 +24,8 @@ define([
     "use strict";
 
     /**
-     * Provides tiled imagery hosted by an ArcGIS MapServer.
+     * Provides tiled imagery hosted by an ArcGIS MapServer.  The server's pre-cached tiles are
+     * used, if available.
      *
      * @alias ArcGisMapServerImageryProvider
      * @constructor
@@ -67,6 +68,7 @@ define([
         this._maximumLevel = undefined;
         this._tilingScheme = undefined;
         this._logo = undefined;
+		this._useTiles = true;
 
         this._ready = false;
 
@@ -82,29 +84,36 @@ define([
         this._isReady = when(metadata, function(data) {
             // TODO: support non-tiled MapServers.
             var tileInfo = data.tileInfo;
-
-            that._tileWidth = tileInfo.rows;
-            that._tileHeight = tileInfo.cols;
-
-            if (tileInfo.spatialReference.wkid === 102100) {
-                that._tilingScheme = new WebMercatorTilingScheme();
-            } else if (data.tileInfo.spatialReference.wkid === 4326) {
+            if (typeof tileInfo === 'undefined') {
+                that._tileWidth = 256;
+                that._tileHeight = 256;
                 that._tilingScheme = new GeographicTilingScheme();
-            }
-            that._maximumLevel = data.tileInfo.lods.length - 1;
+                that._maximumLevel = 25;
+                that._useTiles = false;
+            } else {
+                that._tileWidth = tileInfo.rows;
+                that._tileHeight = tileInfo.cols;
 
-            // Create the copyright message.
-            that._logo = writeTextToCanvas(data.copyrightText, {
-                font : '12px sans-serif'
-            });
+                if (tileInfo.spatialReference.wkid === 102100) {
+                    that._tilingScheme = new WebMercatorTilingScheme();
+                } else if (data.tileInfo.spatialReference.wkid === 4326) {
+                    that._tilingScheme = new GeographicTilingScheme();
+                }
+                that._maximumLevel = data.tileInfo.lods.length - 1;
 
-            // Install the default tile discard policy if none has been supplied.
-            if (typeof that._tileDiscardPolicy === 'undefined') {
-                that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-                    missingImageUrl : buildImageUrl(that, 0, 0, that._maximumLevel),
-                    pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)],
-                    disableCheckIfAllPixelsAreTransparent : true
+                // Create the copyright message.
+                that._logo = writeTextToCanvas(data.copyrightText, {
+                    font : '12px sans-serif'
                 });
+
+                // Install the default tile discard policy if none has been supplied.
+                if (typeof that._tileDiscardPolicy === 'undefined') {
+                    that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
+                        missingImageUrl : buildImageUrl(that, 0, 0, that._maximumLevel),
+                        pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)],
+                        disableCheckIfAllPixelsAreTransparent : true
+				    });
+                }
             }
 
             that._ready = true;
@@ -117,7 +126,17 @@ define([
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
-        var url = imageryProvider._url + '/tile/' + level + '/' + y + '/' + x;
+        var url;
+        if (imageryProvider._useTiles) {
+            url = imageryProvider._url + '/tile/' + level + '/' + y + '/' + x;
+        } else {
+            var nativeExtent = imageryProvider._tilingScheme.tileXYToNativeExtent(x, y, level);
+            var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
+
+            url = imageryProvider._url + '/export?';
+            url += 'bbox=' + bbox;
+            url += '&bboxSR=4326&layers=&layerDefs=&size=256%2C256&imageSR=4326&format=png&transparent=true&dpi=&time=&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&f=image';
+        }
 
         var proxy = imageryProvider._proxy;
         if (typeof proxy !== 'undefined') {
