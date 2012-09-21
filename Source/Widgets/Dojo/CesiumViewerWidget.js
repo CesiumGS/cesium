@@ -190,19 +190,22 @@ define([
          *     'source' : 'file.czml', // The relative URL of the CZML file to load at startup.
          *     'lookAt' : '123abc',    // The CZML ID of the object to track at startup.
          *     'stats'  : 1,           // Enable the FPS performance display.
-         *     'debug'  : 1,           // Enable extra error reporting at the expense of performance.
+         *     'debug'  : 1,           // Full WebGL error reporting at substantial performance cost.
          * };
          */
         endUserOptions : {},
         /**
-         * Enable extra error reporting at the expense of performance.
-         * This is read-only after construction.
+         * Check for WebGL errors after every WebGL API call.  Enabling this debugging feature
+         * comes at a substantial performance cost, halting and restarting the graphics
+         * pipeline hundreds of times per frame.  But it can uncover problems that are otherwise
+         * very difficult to diagnose.
+         * This property is read-only after construction.
          *
          * @type {Boolean}
          * @memberof CesiumViewerWidget.prototype
          * @default false
          */
-        enableDebugging: false,
+        enableWebGLDebugging: false,
         /**
          * Allow the user to drag-and-drop CZML files into this widget.
          * This is read-only after construction.
@@ -580,11 +583,11 @@ define([
             on(canvas, 'selectstart', event.stop);
 
             if (typeof widget.endUserOptions.debug !== 'undefined' && widget.endUserOptions.debug) {
-                this.enableDebugging = true;
+                this.enableWebGLDebugging = true;
             }
 
             var context = scene.getContext();
-            if (this.enableDebugging) {
+            if (this.enableWebGLDebugging) {
                 context.setValidateShaderProgram(true);
                 context.setValidateFramebuffer(true);
                 context.setLogShaderCompilation(true);
