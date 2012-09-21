@@ -55,7 +55,7 @@ define([
      * camera.frustum.far = 2.0;
      */
     var Camera = function(canvas) {
-        if (!canvas) {
+        if (typeof canvas === 'undefined') {
             throw new DeveloperError('canvas is required.');
         }
 

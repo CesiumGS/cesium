@@ -83,6 +83,55 @@ define([
         this._sunDirectionWC = new Cartesian3();
     };
 
+    function setView(uniformState, matrix) {
+        Matrix4.clone(matrix, uniformState._view);
+        Matrix4.getRotation(matrix, uniformState._viewRotation);
+
+        uniformState._inverseViewDirty = true;
+        uniformState._modelViewDirty = true;
+        uniformState._modelViewRelativeToEyeDirty = true;
+        uniformState._inverseModelViewDirty = true;
+        uniformState._viewProjectionDirty = true;
+        uniformState._modelViewProjectionDirty = true;
+        uniformState._modelViewProjectionRelativeToEyeDirty = true;
+        uniformState._modelViewInfiniteProjectionDirty = true;
+        uniformState._normalDirty = true;
+        uniformState._inverseNormalDirty = true;
+        uniformState._sunDirectionECDirty = true;
+    }
+
+    function setProjection(uniformState, matrix) {
+        Matrix4.clone(matrix, uniformState._projection);
+
+        uniformState._inverseProjectionDirty = true;
+        uniformState._viewProjectionDirty = true;
+        uniformState._modelViewProjectionDirty = true;
+        uniformState._modelViewProjectionRelativeToEyeDirty = true;
+    }
+
+    function setInfiniteProjection(uniformState, matrix) {
+        Matrix4.clone(matrix, uniformState._infiniteProjection);
+
+        uniformState._modelViewInfiniteProjectionDirty = true;
+    }
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @param {Camera} camera DOC_TBA
+     */
+    UniformState.prototype.update = function(camera) {
+        var frustum = camera.frustum;
+
+        setView(this, camera.getViewMatrix());
+        setProjection(this, frustum.getProjectionMatrix());
+        if (frustum.getInfiniteProjectionMatrix) {
+            setInfiniteProjection(this, frustum.getInfiniteProjectionMatrix());
+        }
+    };
+
     /**
      * DOC_TBA
      *
@@ -158,7 +207,7 @@ define([
      * @see czm_model
      */
     UniformState.prototype.setModel = function(matrix) {
-        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._model);
+        Matrix4.clone(matrix, this._model);
 
         this._modelViewDirty = true;
         this._modelViewRelativeToEyeDirty = true;
@@ -183,34 +232,6 @@ define([
      */
     UniformState.prototype.getModel = function() {
         return this._model;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @param {Matrix4} [matrix] DOC_TBA.
-     *
-     * @see UniformState#getView
-     * @see czm_view
-     */
-    UniformState.prototype.setView = function(matrix) {
-        matrix = defaultValue(matrix, Matrix4.IDENTITY);
-        Matrix4.clone(matrix, this._view);
-        Matrix4.getRotation(matrix, this._viewRotation);
-
-        this._inverseViewDirty = true;
-        this._modelViewDirty = true;
-        this._modelViewRelativeToEyeDirty = true;
-        this._inverseModelViewDirty = true;
-        this._viewProjectionDirty = true;
-        this._modelViewProjectionDirty = true;
-        this._modelViewProjectionRelativeToEyeDirty = true;
-        this._modelViewInfiniteProjectionDirty = true;
-        this._normalDirty = true;
-        this._inverseNormalDirty = true;
-        this._sunDirectionECDirty = true;
     };
 
     /**
@@ -284,25 +305,6 @@ define([
      *
      * @memberof UniformState
      *
-     * @param {Matrix4} [matrix] DOC_TBA.
-     *
-     * @see UniformState#getProjection
-     * @see czm_projection
-     */
-    UniformState.prototype.setProjection = function(matrix) {
-        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._projection);
-
-        this._inverseProjectionDirty = true;
-        this._viewProjectionDirty = true;
-        this._modelViewProjectionDirty = true;
-        this._modelViewProjectionRelativeToEyeDirty = true;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
      * @return {Matrix4} DOC_TBA.
      *
      * @see UniformState#setProjection
@@ -332,22 +334,6 @@ define([
     UniformState.prototype.getInverseProjection = function() {
         cleanInverseProjection(this);
         return this._inverseProjection;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @param {Matrix4} [matrix] DOC_TBA.
-     *
-     * @see UniformState#getInfiniteProjection
-     * @see czm_infiniteProjection
-     */
-    UniformState.prototype.setInfiniteProjection = function(matrix) {
-        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._infiniteProjection);
-
-        this._modelViewInfiniteProjectionDirty = true;
     };
 
     /**

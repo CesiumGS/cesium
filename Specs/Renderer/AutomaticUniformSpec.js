@@ -4,12 +4,14 @@ defineSuite([
          '../Specs/destroyContext',
          'Core/Matrix4',
          'Core/PrimitiveType',
+         'Core/defaultValue',
          'Renderer/BufferUsage'
      ], 'Renderer/AutomaticUniforms', function(
          createContext,
          destroyContext,
          Matrix4,
          PrimitiveType,
+         defaultValue,
          BufferUsage) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -23,6 +25,22 @@ defineSuite([
     afterAll(function() {
         destroyContext(context);
     });
+
+    function createMockCamera(view, projection, infiniteProjection) {
+        return {
+            getViewMatrix : function() {
+                return defaultValue(view, Matrix4.IDENTITY);
+            },
+            frustum : {
+                getProjectionMatrix : function() {
+                    return defaultValue(projection, Matrix4.IDENTITY);
+                },
+                getInfiniteProjectionMatrix : function() {
+                    return defaultValue(infiniteProjection, Matrix4.IDENTITY);
+                }
+            }
+        };
+    }
 
     function verifyDraw(fs, modelMatrix) {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
@@ -108,10 +126,12 @@ defineSuite([
 
     it('has czm_view', function() {
         var us = context.getUniformState();
-        us.setView(new Matrix4( 1.0,  2.0,  3.0,  4.0,
-                                5.0,  6.0,  7.0,  8.0,
-                                9.0, 10.0, 11.0, 12.0,
-                               13.0, 14.0, 15.0, 16.0));
+        us.update(createMockCamera(
+            new Matrix4(
+                1.0,  2.0,  3.0,  4.0,
+                5.0,  6.0,  7.0,  8.0,
+                9.0, 10.0, 11.0, 12.0,
+               13.0, 14.0, 15.0, 16.0)));
 
         var fs =
             'void main() { ' +
@@ -126,10 +146,12 @@ defineSuite([
 
     it('has czm_viewRotation', function() {
         var us = context.getUniformState();
-        us.setView(new Matrix4( 1.0,  2.0,  3.0,  4.0,
-                                5.0,  6.0,  7.0,  8.0,
-                                9.0, 10.0, 11.0, 12.0,
-                               13.0, 14.0, 15.0, 16.0));
+        us.update(createMockCamera(
+            new Matrix4(
+                1.0,  2.0,  3.0,  4.0,
+                5.0,  6.0,  7.0,  8.0,
+                9.0, 10.0, 11.0, 12.0,
+               13.0, 14.0, 15.0, 16.0)));
 
         var fs =
             'void main() { ' +
@@ -143,10 +165,12 @@ defineSuite([
 
     it('has czm_inverseView', function() {
         var us = context.getUniformState();
-        us.setView(new Matrix4(1.0, 0.0, 0.0, 7.0,
-                               0.0, 1.0, 0.0, 8.0,
-                               0.0, 0.0, 1.0, 9.0,
-                               0.0, 0.0, 0.0, 1.0));
+        us.update(createMockCamera(
+            new Matrix4(
+               1.0, 0.0, 0.0, 7.0,
+               0.0, 1.0, 0.0, 8.0,
+               0.0, 0.0, 1.0, 9.0,
+               0.0, 0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
@@ -161,10 +185,12 @@ defineSuite([
 
     it('has czm_inverseViewRotation', function() {
         var us = context.getUniformState();
-        us.setView(new Matrix4(1.0, 0.0, 0.0, 7.0,
-                               0.0, 1.0, 0.0, 8.0,
-                               0.0, 0.0, 1.0, 9.0,
-                               0.0, 0.0, 0.0, 1.0));
+        us.update(createMockCamera(
+            new Matrix4(
+               1.0, 0.0, 0.0, 7.0,
+               0.0, 1.0, 0.0, 8.0,
+               0.0, 0.0, 1.0, 9.0,
+               0.0, 0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
@@ -179,10 +205,13 @@ defineSuite([
 
     it('has czm_projection', function() {
         var us = context.getUniformState();
-        us.setProjection(new Matrix4( 1.0,  2.0,  3.0,  4.0,
-                                      5.0,  6.0,  7.0,  8.0,
-                                      9.0, 10.0, 11.0, 12.0,
-                                     13.0, 14.0, 15.0, 16.0));
+        us.update(createMockCamera(
+            undefined,
+            new Matrix4(
+               1.0,  2.0,  3.0,  4.0,
+               5.0,  6.0,  7.0,  8.0,
+               9.0, 10.0, 11.0, 12.0,
+              13.0, 14.0, 15.0, 16.0)));
 
         var fs =
             'void main() { ' +
@@ -197,10 +226,13 @@ defineSuite([
 
     it('has czm_inverseProjection', function() {
         var us = context.getUniformState();
-        us.setProjection(new Matrix4(1.0, 0.0, 0.0, 1.0,
-                                     0.0, 1.0, 0.0, 2.0,
-                                     0.0, 0.0, 1.0, 3.0,
-                                     0.0, 0.0, 0.0, 1.0));
+        us.update(createMockCamera(
+            undefined,
+            new Matrix4(
+               1.0, 0.0, 0.0, 1.0,
+               0.0, 1.0, 0.0, 2.0,
+               0.0, 0.0, 1.0, 3.0,
+               0.0, 0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
@@ -215,10 +247,11 @@ defineSuite([
 
     it('has czm_infiniteProjection', function() {
         var us = context.getUniformState();
-        us.setInfiniteProjection(new Matrix4( 1.0,  2.0,  3.0,  4.0,
-                                              5.0,  6.0,  7.0,  8.0,
-                                              9.0, 10.0, 11.0, 12.0,
-                                             13.0, 14.0, 15.0, 16.0));
+        us.update(createMockCamera(undefined, undefined,
+            new Matrix4(1.0,  2.0,  3.0,  4.0,
+                        5.0,  6.0,  7.0,  8.0,
+                        9.0, 10.0, 11.0, 12.0,
+                       13.0, 14.0, 15.0, 16.0)));
 
         var fs =
             'void main() { ' +
@@ -233,10 +266,12 @@ defineSuite([
 
     it('has czm_modelView', function() {
         var us = context.getUniformState();
-        us.setView(new Matrix4(1.0, 0.0, 0.0, 1.0,
-                               0.0, 1.0, 0.0, 1.0,
-                               0.0, 0.0, 1.0, 1.0,
-                               0.0, 0.0, 0.0, 1.0));
+        us.update(createMockCamera(
+            new Matrix4(
+               1.0, 0.0, 0.0, 1.0,
+               0.0, 1.0, 0.0, 1.0,
+               0.0, 0.0, 1.0, 1.0,
+               0.0, 0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
@@ -255,10 +290,12 @@ defineSuite([
 
     it('has czm_modelViewRelativeToEye', function() {
         var us = context.getUniformState();
-        us.setView(new Matrix4(1.0, 0.0, 0.0, 1.0,
-                               0.0, 1.0, 0.0, 1.0,
-                               0.0, 0.0, 1.0, 1.0,
-                               0.0, 0.0, 0.0, 1.0));
+        us.update(createMockCamera(
+            new Matrix4(
+               1.0, 0.0, 0.0, 1.0,
+               0.0, 1.0, 0.0, 1.0,
+               0.0, 0.0, 1.0, 1.0,
+               0.0, 0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
@@ -277,10 +314,12 @@ defineSuite([
 
     it('has czm_inverseModelView', function() {
         var us = context.getUniformState();
-        us.setView(new Matrix4(1.0, 0.0, 0.0, 0.0,
-                               0.0, 1.0, 0.0, 0.0,
-                               0.0, 0.0, 1.0, 0.0,
-                               0.0, 0.0, 0.0, 1.0));
+        us.update(createMockCamera(
+            new Matrix4(
+               1.0, 0.0, 0.0, 0.0,
+               0.0, 1.0, 0.0, 0.0,
+               0.0, 0.0, 1.0, 0.0,
+               0.0, 0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
@@ -299,14 +338,15 @@ defineSuite([
 
     it('has czm_viewProjection', function() {
         var us = context.getUniformState();
-        us.setView(new Matrix4(1.0, 0.0, 0.0, 0.0,
-                               0.0, 1.0, 0.0, 8.0,
-                               0.0, 0.0, 1.0, 0.0,
-                               0.0, 0.0, 0.0, 1.0));
-        us.setProjection(new Matrix4(1.0, 0.0, 0.0, 0.0,
-                                     0.0, 1.0, 0.0, 0.0,
-                                     0.0, 0.0, 1.0, 9.0,
-                                     0.0, 0.0, 0.0, 1.0));
+        us.update(createMockCamera(
+            new Matrix4(1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 8.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0),
+            new Matrix4(1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 9.0,
+                        0.0, 0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
@@ -322,14 +362,15 @@ defineSuite([
 
     it('has czm_modelViewProjection', function() {
         var us = context.getUniformState();
-        us.setView(new Matrix4(1.0, 0.0, 0.0, 0.0,
-                               0.0, 1.0, 0.0, 8.0,
-                               0.0, 0.0, 1.0, 0.0,
-                               0.0, 0.0, 0.0, 1.0));
-        us.setProjection(new Matrix4(1.0, 0.0, 0.0, 0.0,
-                                     0.0, 1.0, 0.0, 0.0,
-                                     0.0, 0.0, 1.0, 9.0,
-                                     0.0, 0.0, 0.0, 1.0));
+        us.update(createMockCamera(
+            new Matrix4(1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 8.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0),
+            new Matrix4(1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 9.0,
+                        0.0, 0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
@@ -349,14 +390,15 @@ defineSuite([
 
     it('has czm_modelViewProjectionRelativeToEye', function() {
         var us = context.getUniformState();
-        us.setView(new Matrix4(1.0, 0.0, 0.0, 0.0,
-                               0.0, 1.0, 0.0, 8.0,
-                               0.0, 0.0, 1.0, 0.0,
-                               0.0, 0.0, 0.0, 1.0));
-        us.setProjection(new Matrix4(1.0, 0.0, 0.0, 0.0,
-                                     0.0, 1.0, 0.0, 0.0,
-                                     0.0, 0.0, 1.0, 9.0,
-                                     0.0, 0.0, 0.0, 1.0));
+        us.update(createMockCamera(
+            new Matrix4(1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 8.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0),
+            new Matrix4(1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 9.0,
+                        0.0, 0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
@@ -376,14 +418,16 @@ defineSuite([
 
     it('has czm_modelViewInfiniteProjection', function() {
         var us = context.getUniformState();
-        us.setView(new Matrix4(1.0, 0.0, 0.0, 0.0,
-                               0.0, 1.0, 0.0, 8.0,
-                               0.0, 0.0, 1.0, 0.0,
-                               0.0, 0.0, 0.0, 1.0));
-        us.setInfiniteProjection(new Matrix4(1.0, 0.0, 0.0, 0.0,
-                                             0.0, 1.0, 0.0, 0.0,
-                                             0.0, 0.0, 1.0, 9.0,
-                                             0.0, 0.0, 0.0, 1.0));
+        us.update(createMockCamera(
+            new Matrix4(1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 8.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0),
+            undefined,
+            new Matrix4(1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 9.0,
+                        0.0, 0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
@@ -445,7 +489,7 @@ defineSuite([
 
     it('has czm_viewerPositionWC', function() {
         var us = context.getUniformState();
-        us.setView(Matrix4.IDENTITY);
+        us.update(createMockCamera());
 
         var fs = 'void main() { gl_FragColor = vec4(czm_viewerPositionWC == vec3(0.0)); }';
         verifyDraw(fs);
