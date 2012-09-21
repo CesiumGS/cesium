@@ -1,9 +1,9 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicBillboardVisualizer',
-             '../Specs/createScene',
-             '../Specs/destroyScene',
-             '../Specs/MockProperty',
+             'Specs/createScene',
+             'Specs/destroyScene',
+             'Specs/MockProperty',
              'DynamicScene/DynamicBillboard',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',

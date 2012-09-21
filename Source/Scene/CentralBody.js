@@ -662,7 +662,7 @@ define([
          *
          * @example
          * cb.showDay = true;
-         * cb.dayTileProvider = new Cesium.SingleTileProvider('day.jpg');
+         * cb.dayTileProvider = new SingleTileProvider('day.jpg');
          * cb.showNight = true;
          * cb.nightImageSource = 'night.jpg';
          * cb.dayNightBlendDelta = 0.0;  // Sharp transition

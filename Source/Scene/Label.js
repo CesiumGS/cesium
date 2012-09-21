@@ -633,7 +633,7 @@ define([
      *
      * @memberof Label
      *
-     * @param {UniformState} uniformState The same state object passed to {@link LabelCollection#render}.
+     * @param {UniformState} uniformState The same state object passed to {@link LabelCollection#update}.
      * @param {FrameState} frameState The same state object passed to {@link LabelCollection#update}.
      *
      * @return {Cartesian2} The screen-space position of the label.

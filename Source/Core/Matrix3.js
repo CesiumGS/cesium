@@ -29,6 +29,8 @@ define([
      *
      * @see Matrix3.fromColumnMajor
      * @see Matrix3.fromRowMajorArray
+     * @see Matrix3.fromQuaternion
+     * @see Matrix3.fromScale
      * @see Matrix2
      * @see Matrix4
      */
@@ -52,7 +54,7 @@ define([
      *
      * @param {Matrix3} matrix The matrix to duplicate.
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -84,7 +86,7 @@ define([
      *
      * @param {Array} values The column-major order array.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix3 instance if none was provided.
+     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} values is required.
      */
@@ -97,7 +99,7 @@ define([
      *
      * @param {Array} values The row-major order array.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix3 instance if none was provided.
+     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} values is required.
      */
@@ -175,13 +177,55 @@ define([
     };
 
     /**
+     * Computes a Matrix3 instance representing a non-uniform scale.
+     * @memberof Matrix3
+     *
+     * @param {Cartesian3} scale The x, y, and z scale factors.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} scale is required.
+     *
+     * @example
+     * // Creates
+     * //   [7.0, 0.0, 0.0]
+     * //   [0.0, 8.0, 0.0]
+     * //   [0.0, 0.0, 9.0]
+     * var m = Matrix3.fromScale(new Cartesian3(7.0, 8.0, 9.0));
+     */
+    Matrix3.fromScale = function(scale, result) {
+        if (typeof scale === 'undefined') {
+            throw new DeveloperError('scale is required.');
+        }
+        if (typeof result === 'undefined') {
+            return new Matrix3(scale.x, 0.0,     0.0,
+                               0.0,     scale.y, 0.0,
+                               0.0,     0.0,     scale.z);
+        }
+
+        result[0] = scale.x;
+        result[1] = 0.0;
+        result[2] = 0.0;
+
+        result[3] = 0.0;
+        result[4] = scale.y;
+        result[5] = 0.0;
+
+        result[6] = 0.0;
+        result[7] = 0.0;
+        result[8] = scale.z;
+
+        return result;
+    };
+
+    /**
      * Creates an Array from the provided Matrix3 instance.
      * The array will be in column-major order.
      * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to use..
      * @param {Array} [result] The Array onto which to store the result.
-     * @return {Array} The modified Array parameter or a new Array instance if none was provided.
+     * @return {Array} The modified Array parameter or a new Array instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -211,7 +255,7 @@ define([
      * @param {Matrix3} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to retrieve.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} index is required and must be 0, 1, or 2.
@@ -249,7 +293,7 @@ define([
      * @param {Number} index The zero-based index of the column to set.
      * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified column.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -282,7 +326,7 @@ define([
      * @param {Matrix3} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to retrieve.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} index is required and must be 0, 1, or 2.
@@ -319,7 +363,7 @@ define([
      * @param {Number} index The zero-based index of the row to set.
      * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified row.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -352,7 +396,7 @@ define([
      * @param {Matrix3} left The first matrix.
      * @param {Matrix3} right The second matrix.
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -401,7 +445,7 @@ define([
      * @param {Matrix3} matrix The matrix.
      * @param {Cartesian3} cartesian The column.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -438,7 +482,7 @@ define([
      * @param {Matrix3} matrix The matrix.
      * @param {Number} scalar The number to multiply by.
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} scalar is required and must be a number.
@@ -474,7 +518,7 @@ define([
      *
      * @param {Matrix3} matrix The matrix to negate.
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -506,7 +550,7 @@ define([
      *
      * @param {Matrix3} matrix The matrix to transpose.
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -665,7 +709,7 @@ define([
      * @memberof Matrix3
      *
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      */
     Matrix3.prototype.clone = function(result) {
         return Matrix3.clone(this, result);
@@ -676,7 +720,7 @@ define([
      * @memberof Matrix3
      *
      * @param {Array} [result] The Array onto which to store the result.
-     * @return {Array} The modified Array parameter or a new Array instance if none was provided.
+     * @return {Array} The modified Array parameter or a new Array instance if one was not provided.
      */
     Matrix3.prototype.toArray = function(result) {
         return Matrix3.toArray(this, result);
@@ -688,7 +732,7 @@ define([
      *
      * @param {Number} index The zero-based index of the column to retrieve.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
@@ -720,7 +764,7 @@ define([
      *
      * @param {Number} index The zero-based index of the row to retrieve.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} index is required and must be 0, 1, or 2.
      *
@@ -752,7 +796,7 @@ define([
      *
      * @param {Matrix3} right The right hand side matrix.
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -766,7 +810,7 @@ define([
      *
      * @param {Cartesian3} cartesian The column.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -780,7 +824,7 @@ define([
      *
      * @param {Number} scalar The number to multiply by.
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
@@ -793,7 +837,7 @@ define([
      *
      * @param {Matrix3} matrix The matrix to negate.
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -806,7 +850,7 @@ define([
      * @memberof Matrix3
      *
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      */
     Matrix3.prototype.transpose = function(result) {
         return Matrix3.transpose(this, result);
