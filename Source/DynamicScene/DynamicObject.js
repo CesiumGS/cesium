@@ -47,10 +47,14 @@ define([
         this._cachedAvailabilityDate = undefined;
         this._cachedAvailabilityValue = undefined;
 
+        if (typeof id === 'undefined') {
+            id = createGuid();
+        }
+
         /**
          * A unique id associated with this object.
          */
-        this.id = id || createGuid();
+        this.id = id;
 
         //Add standard CZML properties.  Even though they won't all be used
         //for each object, having the superset explicitly listed here will allow the
@@ -90,6 +94,12 @@ define([
          * @type DynamicCone
          */
         this.cone = undefined;
+
+        /**
+         * Gets or sets the ellipsoid.
+         * @type DynamicEllipsoid
+         */
+        this.ellipsoid = undefined;
 
         /**
          * Gets or sets the label.

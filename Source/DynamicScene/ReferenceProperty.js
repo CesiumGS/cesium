@@ -1,14 +1,16 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError'
        ], function(
+         defaultValue,
          DeveloperError) {
     "use strict";
 
     function resolve(referenceProperty) {
         var targetProperty = referenceProperty._targetProperty;
         if (typeof targetProperty === 'undefined') {
-            var resolveBuffer = referenceProperty._dynamicObjectCollection.compositeCollection || referenceProperty._dynamicObjectCollection;
+            var resolveBuffer = defaultValue(referenceProperty._dynamicObjectCollection.compositeCollection, referenceProperty._dynamicObjectCollection);
             var targetObject = resolveBuffer.getObject(referenceProperty._targetObjectId);
             if (typeof targetObject !== 'undefined') {
                 targetProperty = targetObject[referenceProperty._targetPropertyName];
