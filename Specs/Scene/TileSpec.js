@@ -28,7 +28,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('throws without description.zoom', function() {
+    it('throws without description.level', function() {
         expect(function() {
             return new Tile({
                 extent : new Extent(
@@ -48,32 +48,15 @@ defineSuite([
             return new Tile({
                 x : -1.0,
                 y : -1.0,
-                zoom : 1.0
+                level : 1.0
             });
         }).toThrow();
     });
 
     it('creates extent on construction', function() {
-        var desc = {tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, zoom : 0};
+        var desc = {tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, level : 0};
         var tile = new Tile(desc);
-        var extent = desc.tilingScheme.tileXYToExtent(desc.x, desc.y, desc.zoom);
+        var extent = desc.tilingScheme.tileXYToExtent(desc.x, desc.y, desc.level);
         expect(tile.extent).toEqual(extent);
-    });
-
-    it('creates x, y, zoom on construction', function() {
-        var desc = {
-            tilingScheme : new WebMercatorTilingScheme(),
-            extent : new Extent(
-                    -CesiumMath.PI,
-                    CesiumMath.toRadians(-85.05112878),
-                    CesiumMath.PI,
-                    CesiumMath.toRadians(85.05112878)
-            ),
-            zoom : 0
-        };
-        var tile = new Tile(desc);
-        var coords = desc.tilingScheme.extentToTileXY(desc.extent, desc.zoom);
-        expect(tile.x).toEqual(coords.x);
-        expect(tile.y).toEqual(coords.y);
     });
 });
