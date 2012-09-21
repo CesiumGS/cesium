@@ -97,9 +97,9 @@ define([
     };
 
     function update(frustum) {
-        if (typeof frustum.right === undefined || typeof frustum.left === undefined ||
-                typeof frustum.top === undefined || typeof frustum.bottom === undefined ||
-                frustum.near === undefined || frustum.far === undefined) {
+        if (typeof frustum.right === 'undefined' || typeof frustum.left === 'undefined' ||
+                typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined' ||
+                typeof frustum.near === 'undefined' || typeof frustum.far === 'undefined') {
             throw new DeveloperError('right, left, top, bottom, near, or far parameters are not set.');
         }
 
