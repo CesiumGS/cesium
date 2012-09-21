@@ -89,6 +89,19 @@ require({
             registry.byId('buttonNewWindow').set('disabled', true);
         }
 
+        function findCssStyle(selectorText) {
+            var iSheets, lenSheets = document.styleSheets.length, rules;
+            for (iSheets = 0; iSheets < lenSheets; ++iSheets) {
+                rules = document.styleSheets[iSheets].cssRules;
+                var iRules, lenRules = rules.length;
+                for (iRules = 0; iRules < lenRules; ++iRules) {
+                    if (rules[iRules].selectorText === selectorText) {
+                        return rules[iRules];
+                    }
+                }
+            }
+        }
+
         var jsEditor;
         var htmlEditor;
         var addExtraLine = false;
@@ -98,6 +111,7 @@ require({
         var docError = false;
         var galleryTooltipTimer;
         var activeGalleryTooltipDemo;
+        var demoTileHeightRule = findCssStyle('.demoTileThumbnail');
         var cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dom.byId('docPopup');
         var docMessage = dom.byId('docPopupMessage');
@@ -594,6 +608,20 @@ require({
                 domClass.remove('bucketFrame', 'makeThumbnail');
             }
         });
+
+        var galleryContainer = registry.byId('galleryContainer');
+        galleryContainer.demoTileHeightRule = demoTileHeightRule;
+        galleryContainer.originalResize = galleryContainer.resize;
+        galleryContainer.resize = function (changeSize, resultSize) {
+            var newSize = changeSize.h - 58;
+            if (newSize < 20) {
+                demoTileHeightRule.style.display = 'none';
+            } else {
+                demoTileHeightRule.style.display = 'inline';
+                demoTileHeightRule.style.height = Math.min(newSize, 150) + 'px';
+            }
+            this.originalResize(changeSize, resultSize);
+        };
 
         var queryObject = {};
         if (window.location.search) {
