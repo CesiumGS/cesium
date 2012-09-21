@@ -40,7 +40,6 @@
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro">
-
 <style>
 body {
     background: #000;
@@ -112,6 +111,9 @@ require([
     // different times.
 
     var widget1, widget2, animationController;
+    var endUserOptions = {
+        'source' : '../../CesiumViewer/Gallery/simple.czml'
+    };
 
     function updateAndRender() {
         // Get the time from the shared controller, then
@@ -132,6 +134,7 @@ require([
         // existing animationController to be shared.
         widget2 = new CesiumViewerWidget({
             animationController : animationController,
+            endUserOptions : endUserOptions,
             postSetup : function(widget) {
                 // Switch to columbus view
                 widget2.viewColumbus.onClick();
@@ -144,6 +147,7 @@ require([
 
     // First thing: Create widget1 (the top widget).
     widget1 = new CesiumViewerWidget({
+        endUserOptions : endUserOptions,
         postSetup : function(widget) {
             createWidget2();
         }
