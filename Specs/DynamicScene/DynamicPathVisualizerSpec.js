@@ -1,9 +1,9 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicPathVisualizer',
-             '../Specs/createScene',
-             '../Specs/destroyScene',
-             '../Specs/MockProperty',
+             'Specs/createScene',
+             'Specs/destroyScene',
+             'Specs/MockProperty',
              'DynamicScene/DynamicPath',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',

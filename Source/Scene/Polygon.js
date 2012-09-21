@@ -591,20 +591,21 @@ define([
 
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
-     * This must be called before calling {@link Polygon#render} in order to realize
-     * changes to polygon's positions and properties.
      *
      * @memberof Polygon
      *
      * @exception {DeveloperError} this.ellipsoid must be defined.
+     * @exception {DeveloperError} this.material must be defined.
      * @exception {DeveloperError} this.granularity must be greater than zero.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Polygon#render
      */
     Polygon.prototype.update = function(context, frameState, commandList) {
-        if (!this.ellipsoid) {
+        if (typeof this.ellipsoid === 'undefined') {
             throw new DeveloperError('this.ellipsoid must be defined.');
+        }
+
+        if (typeof this.material === 'undefined') {
+            throw new DeveloperError('this.material must be defined.');
         }
 
         var mode = frameState.mode;
@@ -693,12 +694,11 @@ define([
             }
 
             var materialChanged = typeof this._material === 'undefined' ||
-            this._material !== this.material ||
-            this._affectedByLighting !== this.affectedByLighting;
+                this._material !== this.material ||
+                this._affectedByLighting !== this.affectedByLighting;
 
             // Recompile shader when material or lighting changes
             if (materialChanged) {
-                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
                 this._material = this.material;
                 this._affectedByLighting = this.affectedByLighting;
 
@@ -734,6 +734,7 @@ define([
                 command.renderState = this._rs;
             }
         }
+
         if (pass.pick) {
             if (typeof this._pickId === 'undefined') {
                 this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
