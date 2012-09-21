@@ -6,7 +6,7 @@ define([
         './Cartesian4',
         './Cartographic',
         './Ellipsoid',
-        './EquidistantCylindricalProjection',
+        './GeographicProjection',
         './Extent',
         './Intersect',
         './Matrix4'
@@ -17,7 +17,7 @@ define([
         Cartesian4,
         Cartographic,
         Ellipsoid,
-        EquidistantCylindricalProjection,
+        GeographicProjection,
         Extent,
         Intersect,
         Matrix4) {
@@ -206,7 +206,7 @@ define([
         return result;
     };
 
-    var defaultProjection = new EquidistantCylindricalProjection();
+    var defaultProjection = new GeographicProjection();
     var fromExtent2DLowerLeft = new Cartographic();
     var fromExtent2DUpperRight = new Cartographic();
     /**
@@ -214,7 +214,7 @@ define([
      * @memberof BoundingSphere
      *
      * @param {Extent} extent The extent around which to create a bounding sphere.
-     * @param {Object} [projection=EquidistantCylindricalProjection] The projection used to project the extent into 2D.
+     * @param {Object} [projection=GeographicProjection] The projection used to project the extent into 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */

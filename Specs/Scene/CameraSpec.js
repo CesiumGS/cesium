@@ -5,7 +5,7 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
-         'Core/EquidistantCylindricalProjection',
+         'Core/GeographicProjection',
          'Core/Extent',
          'Core/Math',
          'Core/Matrix4',
@@ -18,7 +18,7 @@ defineSuite([
          Cartesian3,
          Cartographic,
          Ellipsoid,
-         EquidistantCylindricalProjection,
+         GeographicProjection,
          Extent,
          CesiumMath,
          Matrix4,
@@ -169,7 +169,7 @@ defineSuite([
                 -CesiumMath.PI_OVER_TWO,
                 CesiumMath.PI_OVER_TWO,
                 CesiumMath.PI_OVER_TWO);
-        var projection = new EquidistantCylindricalProjection();
+        var projection = new GeographicProjection();
         var edge = projection.project(new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO));
         var expected = Math.max(edge.x, edge.y);
 
@@ -200,7 +200,7 @@ defineSuite([
                 -CesiumMath.PI_OVER_TWO,
                 CesiumMath.PI_OVER_TWO,
                 CesiumMath.PI_OVER_TWO);
-        var projection = new EquidistantCylindricalProjection();
+        var projection = new GeographicProjection();
         camera.viewExtentColumbusView(extent, projection);
         expect(camera.position.equalsEpsilon(new Cartesian3(0.0, 0.0, 17352991.253398113), CesiumMath.EPSILON10)).toEqual(true);
         expect(camera.direction.equalsEpsilon(new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON2)).toEqual(true);
@@ -300,7 +300,7 @@ defineSuite([
 
     it('pick map in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
@@ -339,7 +339,7 @@ defineSuite([
 
     it('pick map in columbus view', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);

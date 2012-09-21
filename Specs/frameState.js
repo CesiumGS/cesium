@@ -1,13 +1,13 @@
 /*global define*/
 define([
         'Core/Ellipsoid',
-        'Core/EquidistantCylindricalProjection',
+        'Core/GeographicProjection',
         'Scene/Camera',
         'Scene/SceneMode',
         'Scene/FrameState'
     ], function(
         Ellipsoid,
-        EquidistantCylindricalProjection,
+        GeographicProjection,
         Camera,
         SceneMode,
         FrameState) {
@@ -18,7 +18,7 @@ define([
 
     frameState.mode = SceneMode.SCENE3D;
     frameState.scene2D = {
-        projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
+        projection : new GeographicProjection(Ellipsoid.WGS84)
     };
 
     var camera = new Camera({

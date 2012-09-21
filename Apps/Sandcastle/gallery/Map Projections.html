@@ -91,7 +91,7 @@ require([
         var geographic = new ToggleButton({
             label: "Geographic",
             onClick: function() { 
-                scene.scene2D.projection = new Cesium.EquidistantCylindricalProjection(Cesium.Ellipsoid.WGS84);
+                scene.scene2D.projection = new Cesium.GeographicProjection(Cesium.Ellipsoid.WGS84);
                 geographic.set('checked', true);
                 webMercator.set('checked', false);
             }

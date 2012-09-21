@@ -4,7 +4,7 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Ellipsoid',
-         'Core/EquidistantCylindricalProjection',
+         'Core/GeographicProjection',
          'Core/Extent',
          'Core/Intersect',
          'Core/Math',
@@ -14,7 +14,7 @@ defineSuite([
          Cartesian3,
          Cartesian4,
          Ellipsoid,
-         EquidistantCylindricalProjection,
+         GeographicProjection,
          Extent,
          Intersect,
          CesiumMath,
@@ -153,7 +153,7 @@ defineSuite([
 
     it('fromExtent2D', function() {
         var extent = Extent.MAX_VALUE;
-        var projection = new EquidistantCylindricalProjection(Ellipsoid.UNIT_SPHERE);
+        var projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);
         var expected = new BoundingSphere(Cartesian3.ZERO, Math.sqrt(extent.east * extent.east + extent.north * extent.north));
         expect(BoundingSphere.fromExtent2D(extent, projection)).toEqual(expected);
     });

@@ -13,12 +13,12 @@ define([
 
     /**
      * DOC_TBA
-     * @alias EquidistantCylindricalProjection
+     * @alias GeographicProjection
      * @constructor
      *
      * @immutable
      */
-    var EquidistantCylindricalProjection = function(ellipsoid) {
+    var GeographicProjection = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
         this._ellipsoid = ellipsoid;
@@ -28,17 +28,17 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof EquidistantCylindricalProjection
+     * @memberof GeographicProjection
      */
-    EquidistantCylindricalProjection.prototype.getEllipsoid = function() {
+    GeographicProjection.prototype.getEllipsoid = function() {
         return this._ellipsoid;
     };
 
     /**
      * DOC_TBA
-     * @memberof EquidistantCylindricalProjection
+     * @memberof GeographicProjection
      */
-    EquidistantCylindricalProjection.prototype.project = function(cartographic) {
+    GeographicProjection.prototype.project = function(cartographic) {
         // Actually this is the special case of equidistant cylindrical called the plate carree
         var semimajorAxis = this._semimajorAxis;
         return new Cartesian3(cartographic.longitude * semimajorAxis,
@@ -48,14 +48,14 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof EquidistantCylindricalProjection
+     * @memberof GeographicProjection
      */
-    EquidistantCylindricalProjection.prototype.unproject = function(cartesian) {
+    GeographicProjection.prototype.unproject = function(cartesian) {
         var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
         var longitude = cartesian.x * oneOverEarthSemimajorAxis;
         var latitude = cartesian.y * oneOverEarthSemimajorAxis;
         return new Cartographic(longitude, latitude, cartesian.z);
     };
 
-    return EquidistantCylindricalProjection;
+    return GeographicProjection;
 });
