@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
          'Renderer/TextureAtlas',
-         '../Specs/createContext',
-         '../Specs/destroyContext',
+         'Specs/createContext',
+         'Specs/destroyContext',
          'Core/PrimitiveType',
          'Core/Cartesian2',
          'Renderer/BufferUsage',

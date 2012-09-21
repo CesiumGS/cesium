@@ -154,7 +154,7 @@ define([
      * @param {JulianDate} stop The last time to retrieve values for .
      * @param {JulianDate} [currentTime] If provided, causes the algorithm to always sample the provided time, assuming it is between start and stop.
      * @param {Array} [result] The array into which to store the result.
-     * @returns The modified result array or a new instance if none was provided.
+     * @returns The modified result array or a new instance if one was not provided.
      */
     DynamicPositionProperty.prototype.getValueRangeCartesian = function(start, stop, currentTime, result) {
         if (typeof start === 'undefined') {
