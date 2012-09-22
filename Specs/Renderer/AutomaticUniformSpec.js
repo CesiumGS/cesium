@@ -2,6 +2,7 @@
 defineSuite([
          '../Specs/createContext',
          '../Specs/destroyContext',
+         'Core/Cartesian3',
          'Core/Matrix4',
          'Core/PrimitiveType',
          'Core/defaultValue',
@@ -9,6 +10,7 @@ defineSuite([
      ], 'Renderer/AutomaticUniforms', function(
          createContext,
          destroyContext,
+         Cartesian3,
          Matrix4,
          PrimitiveType,
          defaultValue,
@@ -26,19 +28,20 @@ defineSuite([
         destroyContext(context);
     });
 
-    function createMockCamera(view, projection, infiniteProjection) {
+    function createMockCamera(view, projection, infiniteProjection, position) {
         return {
             getViewMatrix : function() {
-                return defaultValue(view, Matrix4.IDENTITY);
+                return defaultValue(view, Matrix4.IDENTITY.clone());
             },
             frustum : {
                 getProjectionMatrix : function() {
-                    return defaultValue(projection, Matrix4.IDENTITY);
+                    return defaultValue(projection, Matrix4.IDENTITY.clone());
                 },
                 getInfiniteProjectionMatrix : function() {
-                    return defaultValue(infiniteProjection, Matrix4.IDENTITY);
+                    return defaultValue(infiniteProjection, Matrix4.IDENTITY.clone());
                 }
-            }
+            },
+            position : defaultValue(position, Cartesian3.ZERO.clone())
         };
     }
 
@@ -122,6 +125,22 @@ defineSuite([
             5.0,  6.0,  7.0,  8.0,
             9.0, 10.0, 11.0, 12.0,
            13.0, 14.0, 15.0, 16.0));
+    });
+
+    it('has czm_inverseModel', function() {
+        var fs =
+            'void main() { ' +
+            '  bool b0 = (czm_inverseModel[0][0] == 1.0) && (czm_inverseModel[1][0] == 0.0) && (czm_inverseModel[2][0] == 0.0) && (czm_inverseModel[3][0] == -1.0); ' +
+            '  bool b1 = (czm_inverseModel[0][1] == 0.0) && (czm_inverseModel[1][1] == 1.0) && (czm_inverseModel[2][1] == 0.0) && (czm_inverseModel[3][1] == -2.0); ' +
+            '  bool b2 = (czm_inverseModel[0][2] == 0.0) && (czm_inverseModel[1][2] == 0.0) && (czm_inverseModel[2][2] == 1.0) && (czm_inverseModel[3][2] == -3.0); ' +
+            '  bool b3 = (czm_inverseModel[0][3] == 0.0) && (czm_inverseModel[1][3] == 0.0) && (czm_inverseModel[2][3] == 0.0) && (czm_inverseModel[3][3] == 1.0); ' +
+            '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
+            '}';
+        verifyDraw(fs, new Matrix4(
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0, 2.0,
+            0.0, 0.0, 1.0, 3.0,
+            0.0, 0.0, 0.0, 1.0));
     });
 
     it('has czm_view', function() {
@@ -475,6 +494,19 @@ defineSuite([
                 0.0, 1.0, 0.0, 8.0,
                 0.0, 0.0, 1.0, 9.0,
                 0.0, 0.0, 0.0, 1.0));
+    });
+
+    it('has czm_encodedCameraPositionMCHigh and czm_encodedCameraPositionMCLow', function() {
+        var us = context.getUniformState();
+        us.update(createMockCamera(undefined, undefined, undefined, new Cartesian3(-1000.0, 0.0, 100000.0)));
+
+        var fs =
+            'void main() { ' +
+            '  bool b = (czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow == vec3(-1000.0, 0.0, 100000.0)); ' +
+            '  gl_FragColor = vec4(b); ' +
+            '}';
+
+        verifyDraw(fs);
     });
 
     it('has czm_sunDirectionEC', function() {
