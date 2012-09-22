@@ -20,9 +20,9 @@ Beta Releases
 * Add new utility class, `DynamicObjectView` for tracking a DynamicObject with the camera across scene modes; also hooked up CesiumViewerWidget to use it.
 * Added `enableTranslate`, `enableZoom`, and `enableRotate` properties to `Camera2DController` to selectively toggle camera behavior.  All values default to `true`.
 * Added `Camera2DController.setPositionCartographic` to simplify moving the camera programmatically when in 2D mode.
-* Added Matrix4.multiplyByTranslation, Matrix4.fromScale, and Matrix3.fromScale.
+* Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
 * Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
-* Added `czm_modelViewRelativeToEye` and `czm_modelViewProjectionRelativeToEye` automatic GLSL uniforms.
+* Added new automatic GLSL uniforms: `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
 
 ### b8 - 09/05/2012
 
