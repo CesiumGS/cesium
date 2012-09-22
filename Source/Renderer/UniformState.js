@@ -7,6 +7,7 @@ define([
         '../Core/Matrix4',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/EncodedCartesian3',
         '../Core/BoundingRectangle'
     ], function(
         DeveloperError,
@@ -16,6 +17,7 @@ define([
         Matrix4,
         Cartesian3,
         Cartesian4,
+        EncodedCartesian3,
         BoundingRectangle) {
     "use strict";
 
@@ -40,6 +42,9 @@ define([
         this._sunPosition = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().x, 0.0, 0.0);
 
         // Derived members
+        this._inverseModelDirty = true;
+        this._inverseModel = new Matrix4();
+
         this._viewRotation = new Matrix3();
         this._inverseViewRotation = new Matrix3();
 
@@ -75,6 +80,10 @@ define([
 
         this._inverseNormalDirty = true;
         this._inverseNormal = new Matrix3();
+
+        this._encodedCameraPositionMCDirty = true;
+        this._encodedCameraPositionMC = new EncodedCartesian3();
+        this._cameraPosition = new Cartesian3();
 
         this._sunDirectionECDirty = true;
         this._sunDirectionEC = new Cartesian3();
@@ -115,6 +124,11 @@ define([
         uniformState._modelViewInfiniteProjectionDirty = true;
     }
 
+    function setCameraPosition(uniformState, position) {
+        Cartesian3.clone(position, uniformState._cameraPosition);
+        uniformState._encodedCameraPositionMCDirty = true;
+    }
+
     /**
      * DOC_TBA
      *
@@ -130,6 +144,7 @@ define([
         if (frustum.getInfiniteProjectionMatrix) {
             setInfiniteProjection(this, frustum.getInfiniteProjectionMatrix());
         }
+        setCameraPosition(this, camera.position);
     };
 
     /**
@@ -209,6 +224,7 @@ define([
     UniformState.prototype.setModel = function(matrix) {
         Matrix4.clone(matrix, this._model);
 
+        this._inverseModelDirty = true;
         this._modelViewDirty = true;
         this._modelViewRelativeToEyeDirty = true;
         this._inverseModelViewDirty = true;
@@ -217,6 +233,7 @@ define([
         this._modelViewInfiniteProjectionDirty = true;
         this._normalDirty = true;
         this._inverseNormalDirty = true;
+        this._encodedCameraPositionMCDirty = true;
         this._sunDirectionWCDirty = true;
     };
 
@@ -233,6 +250,20 @@ define([
     UniformState.prototype.getModel = function() {
         return this._model;
     };
+
+    /**
+     * DOC_TBA
+     */
+     UniformState.prototype.getInverseModel = function() {
+         if (this._inverseModelDirty) {
+             this._inverseModelDirty = true;
+
+             // PERFORMANCE_IDEA: if the model matrix has scale, Matrix4.inverseTransformation would still work, right?
+             this._model.inverse(this._inverseModel);
+         }
+
+         return this._inverseModel;
+     };
 
     /**
      * DOC_TBA
@@ -641,17 +672,44 @@ define([
     }
 
     /**
-    * DOC_TBA
-    *
-    * @memberof UniformState
-    *
-    * @return {Cartesian3} A normalized vector from the model's origin to the sun in model coordinates.
-    *
-    * @see czm_sunDirectionWC
-    */
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @return {Cartesian3} A normalized vector from the model's origin to the sun in model coordinates.
+     *
+     * @see czm_sunDirectionWC
+     */
     UniformState.prototype.getSunDirectionWC = function() {
         cleanSunDirectionWC(this);
         return this._sunDirectionWC;
+    };
+
+    var cameraPositionMC = new Cartesian3();
+
+    function cleanEncodedCameraPositionMC(uniformState) {
+        if (uniformState._encodedCameraPositionMCDirty) {
+            uniformState._encodedCameraPositionMCDirty = false;
+
+            uniformState.getInverseModel().multiplyByPoint(uniformState._cameraPosition, cameraPositionMC);
+            EncodedCartesian3.fromCartesian(cameraPositionMC, uniformState._encodedCameraPositionMC);
+        }
+    }
+
+    /**
+     * DOC_TBA
+     */
+    UniformState.prototype.getEncodedCameraPositionMCHigh = function() {
+        cleanEncodedCameraPositionMC(this);
+        return this._encodedCameraPositionMC.high;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    UniformState.prototype.getEncodedCameraPositionMCLow = function() {
+        cleanEncodedCameraPositionMC(this);
+        return this._encodedCameraPositionMC.low;
     };
 
     UniformState.prototype.getHighResolutionSnapScale = function() {

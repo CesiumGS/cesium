@@ -3,7 +3,7 @@ define([
         './Cartesian3',
         './DeveloperError',
     ], function(
-            Cartesian3,
+        Cartesian3,
         DeveloperError) {
     "use strict";
 

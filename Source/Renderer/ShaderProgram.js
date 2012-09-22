@@ -199,6 +199,23 @@ define([
         },
 
         /**
+         * DOC_TBA
+         */
+        czm_inverseModel : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseModel();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform representing a 4x4 view transformation matrix that
          * transforms world coordinates to eye coordinates.
          * <br /><br />
@@ -853,6 +870,40 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getSunDirectionWC();
+            }
+        },
+
+        /**
+         * DOC_TBA
+         */
+        czm_encodedCameraPositionMCHigh : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getEncodedCameraPositionMCHigh();
+            }
+        },
+
+        /**
+         * DOC_TBA
+         */
+        czm_encodedCameraPositionMCLow : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getEncodedCameraPositionMCLow();
             }
         },
 

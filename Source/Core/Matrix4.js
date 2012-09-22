@@ -1127,6 +1127,20 @@ define([
         return result;
     };
 
+    var scratchPoint = new Cartesian4(0.0, 0.0, 0.0, 1.0);
+
+    /**
+     * DOC_TBA
+     */
+    Matrix4.multiplyByPoint = function(matrix, cartesian, result) {
+        scratchPoint.x = cartesian.x;
+        scratchPoint.y = cartesian.y;
+        scratchPoint.z = cartesian.z;
+        // scratchPoint.w is one.  See above.
+
+        return Matrix4.multiplyByVector(matrix, scratchPoint, result);
+    };
+
     /**
      * Computes the product of a matrix and a scalar.
      * @memberof Matrix4
@@ -1814,6 +1828,13 @@ define([
      */
     Matrix4.prototype.multiplyByVector = function(cartesian, result) {
         return Matrix4.multiplyByVector(this, cartesian, result);
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Matrix4.prototype.multiplyByPoint = function(cartesian, result) {
+        return Matrix4.multiplyByPoint(this, cartesian, result);
     };
 
     /**
