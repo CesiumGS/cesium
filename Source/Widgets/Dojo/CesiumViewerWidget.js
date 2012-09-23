@@ -597,8 +597,11 @@ define([
             var camera = scene.getCamera(), maxRadii = ellipsoid.getMaximumRadius();
 
             camera.position = camera.position.multiplyByScalar(1.5);
-            camera.frustum.near = 0.0002 * maxRadii;
-            camera.frustum.far = 50.0 * maxRadii;
+//            camera.frustum.near = 10.0;
+//            camera.frustum.far = 1.0 * maxRadii;
+
+            camera.frustum.near = 1.0;
+            camera.frustum.far = 1.0 * maxRadii;
 
             this.centralBodyCameraController = camera.getControllers().addCentralBody();
 
