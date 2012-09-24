@@ -148,8 +148,11 @@ defineSuite([
     });
 
     it('has czm_translateRelativeToEye', function() {
-        var c = new Cartesian3(1.0, 2.0, 3.0);
-        var encoded = EncodedCartesian3.fromCartesian(c);
+        var camera = createCamera(context, new Cartesian3(1.0, 2.0, 3.0));
+        context.getUniformState().update(camera);
+
+        var p = new Cartesian3(6.0, 5.0, 4.0);
+        var encoded = EncodedCartesian3.fromCartesian(p);
 
         var uniformMap = {
             u_high : function() {
@@ -165,7 +168,7 @@ defineSuite([
             'uniform vec3 u_low;' +
             'void main() { ' +
             '  vec3 p = czm_translateRelativeToEye(u_high, u_low);' +
-            '  gl_FragColor = vec4(p == vec3(1.0, 2.0, 3.0)); ' + // Camera at (0.0, 0.0, 0.0)
+            '  gl_FragColor = vec4(p == vec3(5.0, 3.0, 1.0)); ' +
             '}';
 
         verifyDraw(fs, uniformMap);
