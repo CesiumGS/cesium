@@ -5,9 +5,9 @@ defineSuite([
          'DynamicScene/DynamicObjectCollection',
          'DynamicScene/DynamicExternalDocument',
          'Core/JulianDate',
-         '../Specs/createScene',
-         '../Specs/destroyScene',
-         '../Specs/MockProperty'
+         'Specs/createScene',
+         'Specs/destroyScene',
+         'Specs/MockProperty'
      ], function(
              EventSourceUpdater,
              CzmlProcessor,
