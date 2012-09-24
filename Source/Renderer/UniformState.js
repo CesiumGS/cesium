@@ -130,11 +130,13 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * Synchronizes the camera's state with the uniform state.  This is called
+     * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
+     * are set to the right value.
      *
      * @memberof UniformState
      *
-     * @param {Camera} camera DOC_TBA
+     * @param {Camera} camera The camera to synchronize with.
      */
     UniformState.prototype.update = function(camera) {
         var frustum = camera.frustum;
@@ -252,7 +254,15 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the inverse model matrix used to define the {@link czm_inverseModel} GLSL uniform.
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix4} The inverse model matrix.
+     *
+     * @see UniformState#setModel
+     * @see UniformState#getModel
+     * @see czm_inverseModel
      */
      UniformState.prototype.getInverseModel = function() {
          if (this._inverseModelDirty) {
@@ -430,11 +440,11 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * Returns the model-view relative to eye matrix used to define the {@link czm_modelViewRelativeToEye} GLSL uniform.
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} DOC_TBA.
+     * @return {Matrix4} The model-view relative to eye matrix.
      *
      * @see czm_modelViewRelativeToEye
      */
@@ -518,11 +528,11 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * Returns the model-view-projection relative to eye matrix used to define the {@link czm_modelViewProjectionRelativeToEye} GLSL uniform.
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} DOC_TBA.
+     * @return {Matrix4} The model-view-projection relative to eye matrix.
      *
      * @see czm_modelViewProjectionRelativeToEye
      */
@@ -697,7 +707,13 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * Returns the high bits of the camera position used to define the {@link czm_encodedCameraPositionMCHigh} GLSL uniform.
+     *
+     * @memberof UniformState
+     *
+     * @return {Cartesian3} The high bits of the camera position.
+     *
+     * @see UniformState#getEncodedCameraPositionMCLow
      */
     UniformState.prototype.getEncodedCameraPositionMCHigh = function() {
         cleanEncodedCameraPositionMC(this);
@@ -705,7 +721,13 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the low bits of the camera position used to define the {@link czm_encodedCameraPositionMCLow} GLSL uniform.
+     *
+     * @memberof UniformState
+     *
+     * @return {Cartesian3} The low bits of the camera position.
+     *
+     * @see UniformState#getEncodedCameraPositionMCHigh
      */
     UniformState.prototype.getEncodedCameraPositionMCLow = function() {
         cleanEncodedCameraPositionMC(this);

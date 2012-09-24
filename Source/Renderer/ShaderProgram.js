@@ -542,11 +542,33 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
+         * transforms model coordinates relative to the eye to eye coordinates.  This is used
+         * in conjunction with {@link czm_translateRelativeToEye}.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_modelViewRelativeToEye</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
          *
          * @alias czm_modelViewRelativeToEye
          * @glslUniform
          *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_modelViewRelativeToEye;
+         *
+         * // Example
+         * attribute vec3 positionHigh;
+         * attribute vec3 positionLow;
+         *
+         * void main()
+         * {
+         *   vec3 p = czm_translateRelativeToEye(positionHigh, positionLow);
+         *   gl_Position = czm_projection * (czm_modelViewRelativeToEye * vec4(p, 1.0));
+         * }
+         *
+         * @see czm_modelViewProjectionRelativeToEye
+         * @see czm_translateRelativeToEye
          * @see EncodedCartesian3
          */
         czm_modelViewRelativeToEye : {
@@ -684,11 +706,34 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
+         * transforms model coordinates relative to the eye to clip coordinates.  Clip coordinates is the
+         * coordinate system for a vertex shader's <code>gl_Position</code> output.  This is used in
+         * conjunction with {@link czm_translateRelativeToEye}.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_modelViewProjectionRelativeToEye</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
          *
          * @alias czm_modelViewProjectionRelativeToEye
          * @glslUniform
          *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_modelViewProjectionRelativeToEye;
+         *
+         * // Example
+         * attribute vec3 positionHigh;
+         * attribute vec3 positionLow;
+         *
+         * void main()
+         * {
+         *   vec3 p = czm_translateRelativeToEye(positionHigh, positionLow);
+         *   gl_Position = czm_modelViewProjectionRelativeToEye * vec4(p, 1.0);
+         * }
+         *
+         * @see czm_modelViewRelativeToEye
+         * @see czm_translateRelativeToEye
          * @see EncodedCartesian3
          */
         czm_modelViewProjectionRelativeToEye : {
