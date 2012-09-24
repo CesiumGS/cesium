@@ -9,6 +9,7 @@ define([
         '../Core/Cartesian4',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/EllipsoidalOccluder',
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Matrix4',
@@ -41,6 +42,7 @@ define([
         Cartesian4,
         DeveloperError,
         Ellipsoid,
+        EllipsoidalOccluder,
         Intersect,
         CesiumMath,
         Matrix4,
@@ -104,6 +106,7 @@ define([
         this._tileReplacementQueue = new TileReplacementQueue();
         this._tilingScheme = undefined;
         this._occluder = undefined;
+        this._ellipsoidalOccluder = undefined;
         this._tileTraversalQueue = new Queue();
 
         this._debug = {
@@ -130,6 +133,7 @@ define([
             that._tilingScheme = tilingScheme;
             that._levelZeroTiles = tilingScheme.createLevelZeroTiles();
             that._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, that.terrainProvider.tilingScheme.ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
+            that._ellipsoidalOccluder = new EllipsoidalOccluder(that.terrainProvider.tilingScheme.ellipsoid, Cartesian3.ZERO);
         }, function(e) {
             /*global console*/
             console.error('failed to load tiling scheme: ' + e);
@@ -392,8 +396,6 @@ define([
                 return true;
             }
 
-            var cameraPosition = frameState.camera.getPositionWC();
-
             // Do simple sphere-based occlusion test
             var occluder = surface._occluder;
             var isVisible = occluder.isPointVisible(occludeePoint);
@@ -402,22 +404,7 @@ define([
             }
 
             // Do a more accurate occlusion test based on the actual ellipsoid.
-            // Based on Cozzi and Stoner's paper, "GPU Ray Casting of Virtual Globes Supplement"
-            var ellipsoid = tile.tilingScheme.ellipsoid;
-
-            var q = cameraPosition.multiplyComponents(ellipsoid.getOneOverRadii());
-            var qMagnitude = q.magnitude();
-            var wMagnitudeSquared = qMagnitude * qMagnitude - 1.0;
-            var b = occludeePoint.subtract(cameraPosition).multiplyComponents(ellipsoid.getOneOverRadii());
-            var bUnit = b.normalize();
-            var t = -bUnit.dot(q);
-            var tSquared = t * t;
-            var u = -b.dot(q.normalize());
-            if (u >= (qMagnitude - 1 / qMagnitude) &&
-                tSquared >= wMagnitudeSquared) {
-                return false;
-            }
-            return true;
+            return surface._ellipsoidalOccluder.isPointVisible(occludeePoint);
         }
 
         return true;
@@ -912,6 +899,7 @@ define([
         var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition);
 
         surface._occluder.setCameraPosition(cameraPosition);
+        surface._ellipsoidalOccluder.setCameraPosition(cameraPosition);
 
         var tile;
 

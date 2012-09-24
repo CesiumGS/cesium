@@ -124,7 +124,7 @@ define([
      * var littleSphere = new BoundingSphere(new Cartesian3(0, 0, -1), 0.25);
      * var occluder = new Occluder(littleSphere, cameraPosition);
      * var point = new Cartesian3(0, 0, -3);
-     * occluder.isPointVisible(bigSphere); //returns true
+     * occluder.isPointVisible(point); //returns true
      *
      * @see Occluder#getVisibility
      */
