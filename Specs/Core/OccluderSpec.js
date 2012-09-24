@@ -41,7 +41,7 @@ defineSuite([
         var littleSphere = new BoundingSphere(new Cartesian3(0, 0, -2.75), 0.25);
         var cameraPosition = Cartesian3.ZERO;
         var occluder = new Occluder(giantSphere, cameraPosition);
-        expect(occluder.isVisible(littleSphere)).toEqual(false);
+        expect(occluder.isBoundingSphereVisible(littleSphere)).toEqual(false);
         expect(occluder.getVisibility(littleSphere)).toEqual(Visibility.NONE);
     });
 
@@ -51,7 +51,7 @@ defineSuite([
         var cameraPosition = Cartesian3.ZERO;
         var occluder = new Occluder(littleSphere, cameraPosition);
         expect(occluder.getRadius()).toBeLessThan(bigSphere.radius);
-        expect(occluder.isVisible(bigSphere)).toEqual(true);
+        expect(occluder.isBoundingSphereVisible(bigSphere)).toEqual(true);
         expect(occluder.getVisibility(bigSphere)).toEqual(Visibility.FULL);
     });
 
@@ -60,7 +60,7 @@ defineSuite([
         var sphere2 = new BoundingSphere(new Cartesian3(0, 0, -2.5), 0.5);
         var cameraPosition = Cartesian3.ZERO;
         var occluder = new Occluder(sphere1, cameraPosition);
-        expect(occluder.isVisible(sphere2)).toEqual(false);
+        expect(occluder.isBoundingSphereVisible(sphere2)).toEqual(false);
         expect(occluder.getVisibility(sphere2)).toEqual(Visibility.NONE);
     });
 
@@ -231,7 +231,7 @@ defineSuite([
 
         var bs = new BoundingSphere(result, 0.0);
 
-        expect(occluder.isVisible(bs)).toEqual(false);
+        expect(occluder.isBoundingSphereVisible(bs)).toEqual(false);
         expect(occluder.getVisibility(bs)).toEqual(Visibility.NONE);
     });
 
@@ -243,7 +243,7 @@ defineSuite([
         var tileOccluderSphere = BoundingSphere.fromPoints(positions);
         var occludeePosition = tileOccluderSphere.center;
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
-        expect(occluder.isVisible(new BoundingSphere(result, 0.0))).toEqual(true);
+        expect(occluder.isBoundingSphereVisible(new BoundingSphere(result, 0.0))).toEqual(true);
     });
 
     it('compute occludee point from extent throws without an extent', function() {

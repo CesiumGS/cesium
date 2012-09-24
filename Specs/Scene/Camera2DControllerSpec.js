@@ -6,7 +6,7 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Ellipsoid',
-         'Core/EquidistantCylindricalProjection',
+         'Core/GeographicProjection',
          'Core/WebMercatorProjection',
          'Core/Math',
          'Core/Transforms'
@@ -17,7 +17,7 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Ellipsoid,
-         EquidistantCylindricalProjection,
+         GeographicProjection,
          WebMercatorProjection,
          CesiumMath,
          Transforms) {
@@ -72,7 +72,7 @@ defineSuite([
         camera.right = right;
         camera.frustum = frustum;
 
-        projection = new EquidistantCylindricalProjection(ellipsoid);
+        projection = new GeographicProjection(ellipsoid);
 
         controller = new Camera2DController(canvas, camera, projection);
     });

@@ -3,7 +3,7 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/EquidistantCylindricalProjection',
+        '../Core/GeographicProjection',
         '../Core/Ellipsoid',
         '../Core/DeveloperError',
         '../Core/Occluder',
@@ -25,7 +25,7 @@ define([
         Color,
         defaultValue,
         destroyObject,
-        EquidistantCylindricalProjection,
+        GeographicProjection,
         Ellipsoid,
         DeveloperError,
         Occluder,
@@ -86,7 +86,7 @@ define([
             /**
              * The projection to use in 2D mode.
              */
-            projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
+            projection : new GeographicProjection(Ellipsoid.WGS84)
         };
 
         /**

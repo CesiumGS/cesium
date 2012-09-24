@@ -17,7 +17,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/EquidistantCylindricalProjection',
+        '../Core/GeographicProjection',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/ComponentDatatype',
@@ -66,7 +66,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
-        EquidistantCylindricalProjection,
+        GeographicProjection,
         Matrix3,
         Matrix4,
         ComponentDatatype,
@@ -832,7 +832,7 @@ define([
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
             frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
-            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
+            occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint, 0.0)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
             this._drawNorthPole = !frustumCull && !occluded;
             if (this._drawNorthPole) {
@@ -879,7 +879,7 @@ define([
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
             frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
-            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
+            occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
             this._drawSouthPole = !frustumCull && !occluded;
             if (this._drawSouthPole) {
@@ -1226,7 +1226,7 @@ define([
 
             var get2DYPositionFraction;
 
-            if (projection instanceof EquidistantCylindricalProjection) {
+            if (projection instanceof GeographicProjection) {
                 get2DYPositionFraction = get2DYPositionFractionGeographicProjection;
             } else {
                 get2DYPositionFraction = get2DYPositionFractionMercatorProjection;

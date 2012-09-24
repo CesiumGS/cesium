@@ -415,7 +415,7 @@ define([
                 var transformedBV = boundingVolume.transform(modelMatrix);
 
                 if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
-                        (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
+                        (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(transformedBV))) {
                     continue;
                 }
             }

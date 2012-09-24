@@ -18,9 +18,9 @@ define([
     "use strict";
 
     /**
-     * A tiling scheme for geometry referenced to a simple projection where longitude and latitude
-     * are directly mapped to X and Y.  This projection is commonly known as geographic, equirectangular,
-     * equidistant cylindrical, or plate carrée.
+     * A tiling scheme for geometry referenced to a simple {@link GeographicProjection} where
+     * longitude and latitude are directly mapped to X and Y.  This projection is commonly
+     * known as geographic, equirectangular, equidistant cylindrical, or plate carrée.
      *
      * @name GeographicTilingScheme
      * @constructor
