@@ -25,10 +25,9 @@ void main()
 
 */
 
-
-    vec3 highDifference = position3DHigh - czm_encodedCameraPositionMCHigh;
-    vec3 lowDifference = position3DLow - czm_encodedCameraPositionMCLow;
-    gl_Position = czm_modelViewProjectionRelativeToEye * vec4(highDifference + lowDifference, 1.0) * show;
+	
+	vec3 p = czm_translateRelativeToEye(position3DHigh, position3DLow);
+    gl_Position = czm_modelViewProjectionRelativeToEye * vec4(p, 1.0) * show;
     
     v_color = color;
 }

@@ -3,7 +3,7 @@ defineSuite([
         'Core/EncodedCartesian3',
         'Core/Cartesian3'
     ], function(
-            EncodedCartesian3,
+        EncodedCartesian3,
         Cartesian3) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

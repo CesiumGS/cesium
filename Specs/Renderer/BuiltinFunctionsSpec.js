@@ -7,6 +7,8 @@ defineSuite([
          'Core/Math',
          'Core/Matrix4',
          'Core/PrimitiveType',
+         'Core/Cartesian3',
+         'Core/EncodedCartesian3',
          'Renderer/BufferUsage'
      ], 'Renderer/BuiltinFunctions', function(
          createContext,
@@ -16,6 +18,8 @@ defineSuite([
          CesiumMath,
          Matrix4,
          PrimitiveType,
+         Cartesian3,
+         EncodedCartesian3,
          BufferUsage) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -30,7 +34,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    var verifyDraw = function(fs) {
+    var verifyDraw = function(fs, uniformMap) {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var sp = context.createShaderProgram(vs, fs);
 
@@ -47,7 +51,8 @@ defineSuite([
         context.draw({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
-            vertexArray : va
+            vertexArray : va,
+            uniformMap : uniformMap
         });
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
@@ -140,5 +145,29 @@ defineSuite([
             '}';
 
         verifyDraw(fs);
+    });
+
+    it('has czm_translateRelativeToEye', function() {
+        var c = new Cartesian3(1.0, 2.0, 3.0);
+        var encoded = EncodedCartesian3.fromCartesian(c);
+
+        var uniformMap = {
+            u_high : function() {
+                return encoded.high;
+            },
+            u_low : function() {
+                return encoded.low;
+            }
+        };
+
+        var fs =
+            'uniform vec3 u_high;' +
+            'uniform vec3 u_low;' +
+            'void main() { ' +
+            '  vec3 p = czm_translateRelativeToEye(u_high, u_low);' +
+            '  gl_FragColor = vec4(p == vec3(1.0, 2.0, 3.0)); ' + // Camera at (0.0, 0.0, 0.0)
+            '}';
+
+        verifyDraw(fs, uniformMap);
     });
 });
