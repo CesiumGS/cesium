@@ -96,21 +96,21 @@ define([
             existingMaterial = Material.fromType(context, Material.ImageType);
         }
 
-        var tRepeat;
+        var xRepeat;
         var property = this.verticalRepeat;
         if (typeof property !== 'undefined') {
-            tRepeat = property.getValue(time);
-            if (typeof tRepeat !== 'undefined') {
-                existingMaterial.uniforms.repeat.x = tRepeat;
+            xRepeat = property.getValue(time);
+            if (typeof xRepeat !== 'undefined') {
+                existingMaterial.uniforms.repeat.x = xRepeat;
             }
         }
 
-        var sRepeat;
+        var yRepeat;
         property = this.horizontalRepeat;
         if (typeof property !== 'undefined') {
-            sRepeat = property.getValue(time);
-            if (typeof value !== 'undefined') {
-                existingMaterial.uniforms.repeat.y = sRepeat;
+            yRepeat = property.getValue(time);
+            if (typeof yRepeat !== 'undefined') {
+                existingMaterial.uniforms.repeat.y = yRepeat;
             }
         }
 
