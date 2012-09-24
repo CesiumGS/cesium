@@ -48,6 +48,8 @@ define([
         }
 
         this._ellipsoid = ellipsoid;
+        this._cameraPositionInScaledSpace = new Cartesian3(0.0, 0.0, 0.0);
+        this._distanceToLimbInScaledSpaceSquared = 0.0;
 
         // setCameraPosition fills in the above values
         this.setCameraPosition(cameraPosition);
@@ -72,8 +74,19 @@ define([
      * @param {Cartesian3} cameraPosition The new position of the camera.
      */
     EllipsoidalOccluder.prototype.setCameraPosition = function(cameraPosition) {
+        var ellipsoid = this._ellipsoid;
+
+        var cameraPositionInScaledSpace = cameraPosition.multiplyComponents(ellipsoid.getOneOverRadii(), this._cameraPositionInScaledSpace);
+        var magnitudeCameraPositionInScaledSpace = cameraPositionInScaledSpace.magnitude();
+        var distanceToLimbInScaledSpaceSquared = magnitudeCameraPositionInScaledSpace * magnitudeCameraPositionInScaledSpace - 1.0;
+
         this._cameraPosition = cameraPosition;
+        this._cameraPositionInScaledSpace = cameraPositionInScaledSpace;
+        this._distanceToLimbInScaledSpaceSquared = distanceToLimbInScaledSpaceSquared;
     };
+
+    var bScratch = new Cartesian3(0.0, 0.0, 0.0);
+
 
     /**
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
@@ -94,18 +107,19 @@ define([
      * @see Occluder#getVisibility
      */
     EllipsoidalOccluder.prototype.isPointVisible = function(occludee) {
+        var cameraPosition = this._cameraPosition;
+        var ellipsoid = this._ellipsoid;
+
         // Based on Cozzi and Stoner's paper, "GPU Ray Casting of Virtual Globes Supplement"
-        var q = this._cameraPosition.multiplyComponents(this._ellipsoid.getOneOverRadii());
-        var qMagnitude = q.magnitude();
-        var wMagnitudeSquared = qMagnitude * qMagnitude - 1.0;
-        var b = occludee.subtract(this._cameraPosition).multiplyComponents(this._ellipsoid.getOneOverRadii());
-        var bUnit = b.normalize();
-        var t = -bUnit.dot(q);
-        var tSquared = t * t;
-        var u = -b.dot(q.normalize());
-        if (u >= (qMagnitude - 1 / qMagnitude) &&
-            tSquared >= wMagnitudeSquared) {
-            return false;
+        var q = this._cameraPositionInScaledSpace;
+        var wMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
+        var b = occludee.subtract(cameraPosition, bScratch).multiplyComponents(ellipsoid.getOneOverRadii(), bScratch);
+        var u = -b.dot(q);
+        if (u >= wMagnitudeSquared) {
+            var bUnit = b.normalize(b);
+            var t = -bUnit.dot(q);
+            var tSquared = t * t;
+            return tSquared < wMagnitudeSquared;
         }
         return true;
     };
