@@ -18,7 +18,7 @@ define([
      * @param {String} url The URL of the event stream.
      * @param {Function} [itemCallback] A function that will be called with each item as it arrives.
      * @param {Function} [doneCallback] A function that will be called when the event stream closes.
-     * @param {String} eventName The event name to listen to.
+     * @param {String} [eventName='message'] The event name to listen to.  By default, all events will be listened to.
      * @returns A function that will close the stream.
      *
      * @exception {DeveloperError} url is required.
@@ -37,17 +37,18 @@ define([
             throw new DeveloperError('url is required.');
         }
 
-        var eventSource = new EventSource(url);
         eventName = defaultValue(eventName, 'message');
 
-        eventSource.addEventListener(eventName, function(event) {
-            if (typeof itemCallback !== 'undefined') {
-                if (event.data !== '') {
-                    itemCallback(JSON.parse(event.data));
+        var eventSource = new EventSource(url);
+
+        if (typeof itemCallback !== 'undefined') {
+            eventSource.addEventListener(eventName, function(event) {
+                var data = event.data;
+                if (data !== '') {
+                    itemCallback(JSON.parse(data));
                 }
-            }
-            itemCallback(JSON.parse(event.data));
-        });
+            });
+        }
 
         function finish() {
             if (typeof doneCallback !== 'undefined') {
