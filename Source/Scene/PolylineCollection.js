@@ -49,6 +49,16 @@ define([
         StencilOperation) {
     "use strict";
 
+    function doIt(cartesian, highArray, lowArray, index) {
+        var p = EncodedCartesian3.fromCartesian(cartesian);
+        highArray[index] = p.high.x;
+        highArray[index + 1] = p.high.y;
+        highArray[index + 2] = p.high.z;
+        lowArray[index] = p.low.x;
+        lowArray[index + 1] = p.low.y;
+        lowArray[index + 2] = p.low.z;
+    }
+
     var SHOW_INDEX = Polyline.SHOW_INDEX;
     var POSITION_INDEX = Polyline.POSITION_INDEX;
     var COLOR_INDEX = Polyline.COLOR_INDEX;
@@ -1158,14 +1168,7 @@ define([
             var positions = this._getPositions(polyline);
             var positionsLength = positions.length;
             for ( var j = 0; j < positionsLength; ++j) {
-                var p = EncodedCartesian3.fromCartesian(positions[j]);
-                positionHighArray[positionIndex] = p.high.x;
-                positionHighArray[positionIndex + 1] = p.high.y;
-                positionHighArray[positionIndex + 2] = p.high.z;
-                positionLowArray[positionIndex] = p.low.x;
-                positionLowArray[positionIndex + 1] = p.low.y;
-                positionLowArray[positionIndex + 2] = p.low.z;
-
+                doIt(positions[j], positionHighArray, positionLowArray, positionIndex);
                 outlineColorArray[colorIndex] = Color.floatToByte(outlineColor.red);
                 outlineColorArray[colorIndex + 1] = Color.floatToByte(outlineColor.green);
                 outlineColorArray[colorIndex + 2] = Color.floatToByte(outlineColor.blue);
@@ -1204,26 +1207,14 @@ define([
                     var segment = segments[j];
                     var segmentLength = segment.length;
                     for ( var n = 0; n < segmentLength; ++n) {
-                        var p = EncodedCartesian3.fromCartesian(positions[segment[n].index]);
-                        positionHighArray[positionIndex] = p.high.x;
-                        positionHighArray[positionIndex + 1] = p.high.y;
-                        positionHighArray[positionIndex + 2] = p.high.z;
-                        positionLowArray[positionIndex] = p.low.x;
-                        positionLowArray[positionIndex + 1] = p.low.y;
-                        positionLowArray[positionIndex + 2] = p.low.z;
+                        doIt(positions[segment[n].index], positionHighArray, positionLowArray, positionIndex);
                         positionIndex += 3;
                     }
                 }
             } else {
                 numberOfSegments = positions.length;
                 for ( j = 0; j < numberOfSegments; ++j) {
-                    var p = EncodedCartesian3.fromCartesian(positions[j]);
-                    positionHighArray[positionIndex] = p.high.x;
-                    positionHighArray[positionIndex + 1] = p.high.y;
-                    positionHighArray[positionIndex + 2] = p.high.z;
-                    positionLowArray[positionIndex] = p.low.x;
-                    positionLowArray[positionIndex + 1] = p.low.y;
-                    positionLowArray[positionIndex + 2] = p.low.z;
+                    doIt(positions[j], positionHighArray, positionLowArray, positionIndex);
                     positionIndex += 3;
                 }
             }
@@ -1493,13 +1484,7 @@ define([
             var index = 0;
             var positions = this._getPositions(polyline);
             for ( var i = 0; i < positionsLength; ++i) {
-                var p = EncodedCartesian3.fromCartesian(positions[i]);
-                positionHighArray[index] = p.high.x;
-                positionHighArray[index + 1] = p.high.y;
-                positionHighArray[index + 2] = p.high.z;
-                positionLowArray[index] = p.low.x;
-                positionLowArray[index + 1] = p.low.y;
-                positionLowArray[index + 2] = p.low.z;
+                doIt(positions[i], positionHighArray, positionLowArray, index);
                 index += 3;
             }
 
