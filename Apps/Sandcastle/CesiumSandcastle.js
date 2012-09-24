@@ -559,7 +559,7 @@ require({
                 galleryErrorMsg.style.display = 'inline-block';
             }
 
-            registry.byId('demosContainer').scrollTo({x:0, y:0});
+            dom.byId('demosContainer').scrollLeft = 0;
             showGallery();
             scheduleHintNoChange();
         });
