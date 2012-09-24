@@ -396,7 +396,7 @@ define([
 
             // Do simple sphere-based occlusion test
             var occluder = surface._occluder;
-            var isVisible = (!occludeePoint || occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) && occluder.isVisible(boundingVolume);
+            var isVisible = occluder.isPointVisible(occludeePoint);
             if (!isVisible) {
                 return false;
             }

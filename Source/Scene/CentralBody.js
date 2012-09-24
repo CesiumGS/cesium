@@ -832,7 +832,7 @@ define([
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
             frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
-            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
+            occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint, 0.0)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
             this._drawNorthPole = !frustumCull && !occluded;
             if (this._drawNorthPole) {
@@ -879,7 +879,7 @@ define([
             boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
             frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
             occludeePoint = Occluder.computeOccludeePointFromExtent(extent, this._ellipsoid);
-            occluded = (occludeePoint && !occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) || !occluder.isVisible(boundingVolume);
+            occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
             this._drawSouthPole = !frustumCull && !occluded;
             if (this._drawSouthPole) {

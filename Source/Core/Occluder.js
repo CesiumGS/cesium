@@ -111,11 +111,43 @@ define([
     };
 
     /**
-    * Determines whether or not an object, the <code>occludee</code>, is hidden from view by the occluder.
+     * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
+     *
+     * @memberof Occluder
+     *
+     * @param {Cartesian3} occludee The point surrounding the occludee object.
+     *
+     * @return {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+     *
+     * @example
+     * var cameraPosition = new Cartesian3(0, 0, 0);
+     * var littleSphere = new BoundingSphere(new Cartesian3(0, 0, -1), 0.25);
+     * var occluder = new Occluder(littleSphere, cameraPosition);
+     * var point = new Cartesian3(0, 0, -3);
+     * occluder.isPointVisible(bigSphere); //returns true
+     *
+     * @see Occluder#getVisibility
+     */
+     Occluder.prototype.isPointVisible = function(occludee) {
+         if (this._horizonDistance !== Number.MAX_VALUE) {
+             var tempVec = occludee.subtract(this._occluderPosition);
+             var temp = this._occluderRadius;
+             temp = tempVec.magnitudeSquared() - (temp * temp);
+             if (temp > 0.0) {
+                 temp = Math.sqrt(temp) + this._horizonDistance;
+                 tempVec = occludee.subtract(this._cameraPosition);
+                 return temp * temp > tempVec.magnitudeSquared();
+             }
+         }
+         return false;
+     };
+
+    /**
+    * Determines whether or not a sphere, the <code>occludee</code>, is hidden from view by the occluder.
     *
     * @memberof Occluder
     *
-    * @param {BoundingSphere} occludeeBS The bounding sphere surrounding the occludee object.
+    * @param {BoundingSphere} occludee The bounding sphere surrounding the occludee object.
     *
     * @return {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
     *
@@ -124,13 +156,13 @@ define([
     * var littleSphere = new BoundingSphere(new Cartesian3(0, 0, -1), 0.25);
     * var occluder = new Occluder(littleSphere, cameraPosition);
     * var bigSphere = new BoundingSphere(new Cartesian3(0, 0, -3), 1);
-    * occluder.isVisible(bigSphere); //returns true
+    * occluder.isBoundingSphereVisible(bigSphere); //returns true
     *
     * @see Occluder#getVisibility
     */
-    Occluder.prototype.isVisible = function(occludeeBS) {
-        var occludeePosition = occludeeBS.center.clone();
-        var occludeeRadius = occludeeBS.radius;
+    Occluder.prototype.isBoundingSphereVisible = function(occludee) {
+        var occludeePosition = occludee.center.clone();
+        var occludeeRadius = occludee.radius;
 
         if (this._horizonDistance !== Number.MAX_VALUE) {
             var tempVec = occludeePosition.subtract(this._occluderPosition);
