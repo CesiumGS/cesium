@@ -228,7 +228,7 @@ define([
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
         var cb = scene._primitives.getCentralBody();
-        if (scene.mode === SceneMode.SCENE3D && typeof cb !== 'undefined') {
+        if (scene.mode === SceneMode.SCENE3D && cb !== null) {
             var ellipsoid = cb.getEllipsoid();
             var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
             frameState.occluder = occluder;
@@ -285,12 +285,14 @@ define([
             var curNear = Math.pow(farToNearRatio, i) * near;
             var curFar = farToNearRatio * curNear;
 
-            if (distance.x > curFar) {
-                continue;
-            }
+            if (typeof distance !== 'undefined') {
+                if (distance.x > curFar) {
+                    continue;
+                }
 
-            if (distance.y < curNear) {
-                break;
+                if (distance.y < curNear) {
+                    break;
+                }
             }
 
             // MULTIFRUSTUM TODO: sort bins
@@ -358,6 +360,7 @@ define([
                 } else {
                     undefBV = true;
                     renderList.push(command);
+                    insertIntoBin(scene, command);
                 }
             }
         }
@@ -408,7 +411,6 @@ define([
         var length;
         var cloneCommand;
 
-        scene._useBins = false;
         if (scene._useBins) {
             var bins = scene._bins;
             near = scene._binNear;
