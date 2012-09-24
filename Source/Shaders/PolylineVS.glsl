@@ -1,7 +1,7 @@
-attribute vec3 position2D;
-//attribute vec3 position3D;
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
+attribute vec3 position2DHigh;
+attribute vec3 position2DLow;
 attribute vec4 color;
 attribute float show;
 
@@ -11,23 +11,24 @@ uniform float u_morphTime;
 
 void main() 
 {
-/*
-
-#ifdef GROUND_TRACK
-    vec4 p = czm_columbusViewMorph(vec3(0.0, position2D.xy), position3D, u_morphTime);
-#elif defined(HEIGHT_TRACK)
-    vec4 p = czm_columbusViewMorph(vec3(position2D.z, position2D.x, 10000000.0), position3D, u_morphTime);
-#else
-    vec4 p = czm_columbusViewMorph(position2D.zxy, position3D, u_morphTime);
-#endif
-
-    gl_Position = czm_modelViewProjection * p * show;                      // position in clip coordinates
-
-*/
-
+    vec4 p;
 	
-	vec3 p = czm_translateRelativeToEye(position3DHigh, position3DLow);
-    gl_Position = czm_modelViewProjectionRelativeToEye * vec4(p, 1.0) * show;
-    
+    if (u_morphTime == 1.0)
+    {
+        p = vec4(czm_translateRelativeToEye(position3DHigh, position3DLow), 1.0);
+    }
+    else if (u_morphTime == 0.0)
+    {
+        p = vec4(czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy), 1.0);
+    }
+    else
+    {
+        p = czm_columbusViewMorph(
+            czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy), 
+            czm_translateRelativeToEye(position3DHigh, position3DLow), 
+            u_morphTime);
+    }
+	
+    gl_Position = czm_modelViewProjectionRelativeToEye * p * show;  // position in clip coordinates
     v_color = color;
 }

@@ -62,14 +62,13 @@ define([
     var SIXTYFOURK = 64 * 1024;
 
     var attributeIndices = {
-//        position3D : 0,
         position3DHigh : 0,
         position3DLow : 1,
-
-        position2D : 2,
-        color : 3,
-        pickColor : 4,
-        show : 5
+        position2DHigh : 2,
+        position2DLow : 3,
+        color : 4,
+        pickColor : 5,
+        show : 6
     };
 
     /**
@@ -449,8 +448,7 @@ define([
                         if (polylineBuckets.hasOwnProperty(x)) {
                             if (polylineBuckets[x] === bucket) {
                                 if (properties[POSITION_INDEX]) {
-// TODO
-//                                  bucket.writePositionsUpdate(index, polyline, this._positionBuffer);
+                                    bucket.writePositionsUpdate(index, polyline, this._positionHighBuffer, this._positionLowBuffer);
                                 }
                                 if (properties[COLOR_INDEX]) {
                                     bucket.writeColorUpdate(index, polyline, this._colorBuffer);
@@ -699,7 +697,8 @@ define([
             var colorArray = new Uint8Array(totalLength * 4);
             var pickColorArray = new Uint8Array(totalLength * 4);
             var showArray = new Uint8Array(totalLength);
-            var position3DArray;
+            var positionHigh3DArray;
+            var positionLow3DArray;
 
             var positionIndex = 0;
             var colorIndex = 0;
@@ -709,10 +708,11 @@ define([
                     bucket = polylineBuckets[x];
                     bucket.write(positionHighArray, positionLowArray, colorArray, outlineColorArray, pickColorArray, showArray, positionIndex, showIndex, colorIndex, context);
                     if (this._mode === SceneMode.MORPHING) {
-                        if (typeof position3DArray === 'undefined') {
-                            position3DArray = new Float32Array(totalLength * 3);
+                        if (typeof positionHigh3DArray === 'undefined') {
+                            positionHigh3DArray = new Float32Array(totalLength * 3);
+                            positionLow3DArray = new Float32Array(totalLength * 3);
                         }
-                        bucket.writeForMorph(position3DArray, positionIndex);
+                        bucket.writeForMorph(positionHigh3DArray, positionLow3DArray, positionIndex);
                     }
                     var bucketLength = bucket.lengthOfPositions;
                     positionIndex += bucketLength * 3;
@@ -723,9 +723,11 @@ define([
             }
             this._positionHighBuffer = context.createVertexBuffer(positionHighArray, this._buffersUsage[POSITION_INDEX].bufferUsage);
             this._positionLowBuffer = context.createVertexBuffer(positionLowArray, this._buffersUsage[POSITION_INDEX].bufferUsage);
-            var position3DBuffer;
-            if (typeof position3DArray !== 'undefined') {
-                position3DBuffer = context.createVertexBuffer(position3DArray, this._buffersUsage[POSITION_INDEX].bufferUsage);
+            var positionHigh3DBuffer;
+            var positionLow3DBuffer;
+            if (typeof positionHigh3DArray !== 'undefined') {
+                positionHigh3DBuffer = context.createVertexBuffer(positionHigh3DArray, this._buffersUsage[POSITION_INDEX].bufferUsage);
+                positionLow3DBuffer = context.createVertexBuffer(positionLow3DArray, this._buffersUsage[POSITION_INDEX].bufferUsage);
             }
             this._outlineColorBuffer = context.createVertexBuffer(outlineColorArray, this._buffersUsage[OUTLINE_COLOR_INDEX].bufferUsage);
             this._colorBuffer = context.createVertexBuffer(colorArray, this._buffersUsage[COLOR_INDEX].bufferUsage);
@@ -746,11 +748,6 @@ define([
                     var vertexColorBufferOffset = k * (colorSizeInBytes * SIXTYFOURK) - vbo * colorSizeInBytes;
                     var vertexShowBufferOffset = k * SIXTYFOURK - vbo;
                     var attributes = [{
-//                        index : attributeIndices.position3D,
-//                        componentsPerAttribute : 3,
-//                        componentDatatype : ComponentDatatype.FLOAT,
-//                        offsetInBytes : vertexPositionBufferOffset
-//                    }, {
                         index : attributeIndices.position3DHigh,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
@@ -761,7 +758,12 @@ define([
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : vertexPositionBufferOffset
                     }, {
-                        index : attributeIndices.position2D,
+                        index : attributeIndices.position2DHigh,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : vertexPositionBufferOffset
+                    }, {
+                        index : attributeIndices.position2DLow,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : vertexPositionBufferOffset
@@ -781,11 +783,6 @@ define([
                     }];
 
                     var attributesOutlineColor = [{
-//                      index : attributeIndices.position3D,
-//                      componentsPerAttribute : 3,
-//                      componentDatatype : ComponentDatatype.FLOAT,
-//                      offsetInBytes : vertexPositionBufferOffset
-//                  }, {
                         index : attributeIndices.position3DHigh,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
@@ -796,7 +793,12 @@ define([
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : vertexPositionBufferOffset
                     }, {
-                        index : attributeIndices.position2D,
+                        index : attributeIndices.position2DHigh,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : vertexPositionBufferOffset
+                    }, {
+                        index : attributeIndices.position2DLow,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : vertexPositionBufferOffset
@@ -816,11 +818,6 @@ define([
                     }];
 
                     var attributesPickColor = [{
-//                      index : attributeIndices.position3D,
-//                      componentsPerAttribute : 3,
-//                      componentDatatype : ComponentDatatype.FLOAT,
-//                      offsetInBytes : vertexPositionBufferOffset
-//                  }, {
                         index : attributeIndices.position3DHigh,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
@@ -831,7 +828,12 @@ define([
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : vertexPositionBufferOffset
                     }, {
-                        index : attributeIndices.position2D,
+                        index : attributeIndices.position2DHigh,
+                        componentsPerAttribute : 3,
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        offsetInBytes : vertexPositionBufferOffset
+                    }, {
+                        index : attributeIndices.position2DLow,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : vertexPositionBufferOffset
@@ -853,29 +855,42 @@ define([
                     if (this._mode === SceneMode.SCENE3D) {
                         attributes[0].vertexBuffer = this._positionHighBuffer;
                         attributes[1].vertexBuffer = this._positionLowBuffer;
-                        attributes[2].value = [0.0, 0.0];
+                        attributes[2].value = [0.0, 0.0, 0.0];
+                        attributes[3].value = [0.0, 0.0, 0.0];
                         attributesOutlineColor[0].vertexBuffer = this._positionHighBuffer;
                         attributesOutlineColor[1].vertexBuffer = this._positionLowBuffer;
-                        attributesOutlineColor[2].value = [0.0, 0.0];
+                        attributesOutlineColor[2].value = [0.0, 0.0, 0.0];
+                        attributesOutlineColor[3].value = [0.0, 0.0, 0.0];
                         attributesPickColor[0].vertexBuffer = this._positionHighBuffer;
                         attributesPickColor[1].vertexBuffer = this._positionLowBuffer;
-                        attributesPickColor[2].value = [0.0, 0.0];
+                        attributesPickColor[2].value = [0.0, 0.0, 0.0];
+                        attributesPickColor[3].value = [0.0, 0.0, 0.0];
                     } else if (this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW) {
-// TODO
                         attributes[0].value = [0.0, 0.0, 0.0];
-                        attributes[1].vertexBuffer = this._positionBuffer;
+                        attributes[1].value = [0.0, 0.0, 0.0];
+                        attributes[2].vertexBuffer = this._positionHighBuffer;
+                        attributes[3].vertexBuffer = this._positionLowBuffer;
                         attributesOutlineColor[0].value = [0.0, 0.0, 0.0];
-                        attributesOutlineColor[1].vertexBuffer = this._positionBuffer;
+                        attributesOutlineColor[1].value = [0.0, 0.0, 0.0];
+                        attributesOutlineColor[2].vertexBuffer = this._positionHighBuffer;
+                        attributesOutlineColor[3].vertexBuffer = this._positionLowBuffer;
                         attributesPickColor[0].value = [0.0, 0.0, 0.0];
-                        attributesPickColor[1].vertexBuffer = this._positionBuffer;
+                        attributesPickColor[1].value = [0.0, 0.0, 0.0];
+                        attributesPickColor[2].vertexBuffer = this._positionHighBuffer;
+                        attributesPickColor[3].vertexBuffer = this._positionLowBuffer;
                     } else {
-                     // TODO
-                        attributes[0].vertexBuffer = position3DBuffer;
-                        attributes[1].vertexBuffer = this._positionBuffer;
-                        attributesOutlineColor[0].vertexBuffer = position3DBuffer;
-                        attributesOutlineColor[1].vertexBuffer = this._positionBuffer;
-                        attributesPickColor[0].vertexBuffer = position3DBuffer;
-                        attributesPickColor[1].vertexBuffer = this._positionBuffer;
+                        attributes[0].vertexBuffer = positionHigh3DBuffer;
+                        attributes[1].vertexBuffer = positionLow3DBuffer;
+                        attributes[2].vertexBuffer = this._positionHighBuffer;
+                        attributes[3].vertexBuffer = this._positionLowBuffer;
+                        attributesOutlineColor[0].vertexBuffer = positionHigh3DBuffer;
+                        attributesOutlineColor[1].vertexBuffer = positionLow3DBuffer;
+                        attributesOutlineColor[2].vertexBuffer = this._positionHighBuffer;
+                        attributesOutlineColor[3].vertexBuffer = this._positionLowBuffer;
+                        attributesPickColor[0].vertexBuffer = positionHigh3DBuffer;
+                        attributesPickColor[1].vertexBuffer = positionLow3DBuffer;
+                        attributesPickColor[2].vertexBuffer = this._positionHighBuffer;
+                        attributesPickColor[3].vertexBuffer = this._positionLowBuffer;
                     }
                     var va = context.createVertexArray(attributes, indexBuffer);
                     var vaOutlineColor = context.createVertexArray(attributesOutlineColor, indexBuffer);
@@ -1173,7 +1188,7 @@ define([
     /**
      * @private
      */
-    PolylineBucket.prototype.writeForMorph = function(positionArray, positionIndex) {
+    PolylineBucket.prototype.writeForMorph = function(positionHighArray, positionLowArray, positionIndex) {
         var polylines = this.polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
@@ -1189,18 +1204,26 @@ define([
                     var segment = segments[j];
                     var segmentLength = segment.length;
                     for ( var n = 0; n < segmentLength; ++n) {
-                        positionArray[positionIndex] = positions[segment[n].index].x;
-                        positionArray[positionIndex + 1] = positions[segment[n].index].y;
-                        positionArray[positionIndex + 2] = positions[segment[n].index].z;
+                        var p = EncodedCartesian3.fromCartesian(positions[segment[n].index]);
+                        positionHighArray[positionIndex] = p.high.x;
+                        positionHighArray[positionIndex + 1] = p.high.y;
+                        positionHighArray[positionIndex + 2] = p.high.z;
+                        positionLowArray[positionIndex] = p.low.x;
+                        positionLowArray[positionIndex + 1] = p.low.y;
+                        positionLowArray[positionIndex + 2] = p.low.z;
                         positionIndex += 3;
                     }
                 }
             } else {
                 numberOfSegments = positions.length;
                 for ( j = 0; j < numberOfSegments; ++j) {
-                    positionArray[positionIndex] = positions[j].x;
-                    positionArray[positionIndex + 1] = positions[j].y;
-                    positionArray[positionIndex + 2] = positions[j].z;
+                    var p = EncodedCartesian3.fromCartesian(positions[j]);
+                    positionHighArray[positionIndex] = p.high.x;
+                    positionHighArray[positionIndex + 1] = p.high.y;
+                    positionHighArray[positionIndex + 2] = p.high.z;
+                    positionLowArray[positionIndex] = p.low.x;
+                    positionLowArray[positionIndex + 1] = p.low.y;
+                    positionLowArray[positionIndex + 2] = p.low.z;
                     positionIndex += 3;
                 }
             }
@@ -1461,22 +1484,27 @@ define([
     /**
      * @private
      */
-    PolylineBucket.prototype.writePositionsUpdate = function(positionIndex, polyline, buffer) {
+    PolylineBucket.prototype.writePositionsUpdate = function(positionIndex, polyline, positionsHighBuffer, positionsLowBuffer) {
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
             positionIndex += this._getPolylineStartIndex(polyline);
-            var positionsArray = new Float32Array(positionsLength * 3);
+            var positionHighArray = new Float32Array(positionsLength * 3);
+            var positionLowArray = new Float32Array(positionsLength * 3);
             var index = 0;
             var positions = this._getPositions(polyline);
             for ( var i = 0; i < positionsLength; ++i) {
-                var position = positions[i];
-                positionsArray[index] = position.x;
-                positionsArray[index + 1] = position.y;
-                positionsArray[index + 2] = position.z;
+                var p = EncodedCartesian3.fromCartesian(positions[i]);
+                positionHighArray[index] = p.high.x;
+                positionHighArray[index + 1] = p.high.y;
+                positionHighArray[index + 2] = p.high.z;
+                positionLowArray[index] = p.low.x;
+                positionLowArray[index + 1] = p.low.y;
+                positionLowArray[index + 2] = p.low.z;
                 index += 3;
             }
 
-            buffer.copyFromArrayView(positionsArray, 12 * positionIndex);
+            positionsHighBuffer.copyFromArrayView(positionHighArray, 12 * positionIndex);
+            positionsLowBuffer.copyFromArrayView(positionLowArray, 12 * positionIndex);
         }
     };
 
