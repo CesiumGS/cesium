@@ -64,7 +64,7 @@ define([
          *
          * @type {Matrix4}
          */
-        this.transform = Matrix4.IDENTITY;
+        this.transform = Matrix4.IDENTITY.clone();
         this._transform = this.transform.clone();
         this._invTransform = Matrix4.IDENTITY;
 

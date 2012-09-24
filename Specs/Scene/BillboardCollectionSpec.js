@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/BillboardCollection',
-         '../Specs/createContext',
-         '../Specs/destroyContext',
+         'Specs/createContext',
+         'Specs/destroyContext',
          'Specs/createCamera',
-         '../Specs/frameState',
-         '../Specs/pick',
-         '../Specs/render',
+         'Specs/frameState',
+         'Specs/pick',
+         'Specs/render',
          'Core/BoundingSphere',
          'Core/Cartesian2',
          'Core/Cartesian3',

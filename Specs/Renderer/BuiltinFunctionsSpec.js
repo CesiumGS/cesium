@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
-         '../Specs/createContext',
-         '../Specs/destroyContext',
+         'Specs/createContext',
+         'Specs/destroyContext',
          'Specs/createCamera',
          'Core/BoundingRectangle',
          'Core/Math',

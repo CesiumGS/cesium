@@ -391,12 +391,8 @@ define([
 
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
-     * This must be called before calling {@link PolylineCollection#render} in order to realize
-     * changes to PolylineCollection positions and properties.
-     *
      *
      * @memberof PolylineCollection
-     *
      */
     PolylineCollection.prototype.update = function(context, frameState, commandList) {
         if (typeof this._sp === 'undefined') {

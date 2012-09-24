@@ -21,7 +21,10 @@ define([
      * @see CzmlDefaults#createVisualizers
      */
     var VisualizerCollection = function(visualizers, dynamicObjectCollection) {
-        this._visualizers = visualizers || [];
+        if (typeof visualizers === 'undefined') {
+            visualizers = [];
+        }
+        this._visualizers = visualizers;
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -73,7 +76,10 @@ define([
             }
         }
 
-        this._visualizers = visualizers || [];
+        if (typeof visualizers === 'undefined') {
+            visualizers = [];
+        }
+        this._visualizers = visualizers;
         var dynamicObjectCollection = this._dynamicObjectCollection;
         for (i = visualizers.length - 1; i > -1; i--) {
             visualizers[i].setDynamicObjectCollection(dynamicObjectCollection);
