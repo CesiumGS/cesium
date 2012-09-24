@@ -83,15 +83,90 @@ require([
 {
     "use strict";
 
+    var ellipsoid = Cesium.Ellipsoid.WGS84;
     var scene; 
+    var cb;
+    var mousePosition;
+
+    function ellipsoidIntersections(ellipsoid, ray) {
+        var position = ray.origin;
+        var direction = ray.direction;
+        var oneOverRadii = ellipsoid.getOneOverRadii();
+
+        var scaledPosition = position.multiplyComponents(oneOverRadii);
+        var scaledDirection = direction.multiplyComponents(oneOverRadii);
+
+        var a = scaledDirection.magnitudeSquared();
+        var b = 2.0 * scaledPosition.dot(scaledDirection);
+        var c = scaledPosition.magnitudeSquared() - 1.0;
+
+        var b2 = b * b;
+        var four_ac = 4.0 * a * c;
+        var radicand = b2 - four_ac;
+
+        if (radicand < 0.0) {
+            return undefined;
+        }
+
+        var q = -0.5 * (b + sign(b) * Math.sqrt(radicand));
+        if (b > 0.0) {
+            return [q / a, c / q];
+        }
+        return [c / q, q / a];
+    }
+
+    function sign(x) {
+        if (x < 0.0) {
+            return -1.0;
+        } else if (x > 0.0) {
+            return 1.0;
+        }
+        return 0.0;
+    }
+
+    function keydownHandler(e) {
+        switch (e.keyCode) {
+        case 'F'.charCodeAt(0):
+            cb._surface.toggleLodUpdate();
+            break;
+        case 'B'.charCodeAt(0):
+            var camera = scene.getCamera();
+            var pickRay = camera.getPickRay(mousePosition);
+            var intersectionDistance = ellipsoidIntersections(ellipsoid, pickRay)[0];
+            var intersectionPoint = pickRay.getPoint(intersectionDistance);
+            var cartographicPick = ellipsoid.cartesianToCartographic(intersectionPoint);
+            cb._surface.debugShowBoundingSphereOfTileAt(cartographicPick);
+            break;
+        case 'V'.charCodeAt(0):
+            var camera = scene.getCamera();
+            console.log('position: ' + camera.getPositionWC() + ' direction: ' + camera.getDirectionWC() + ' up: ' + camera.getUpWC());
+            break;
+        case 'L'.charCodeAt(0):
+            var position = new Cesium.Cartesian3(-2444822.7410362503, -4495391.442027786, 3800016.0770029235);
+            var direction = new Cesium.Cartesian3(0.2306406390807245, 0.8212545213405562, 0.5218677100397503);
+            var up = new Cesium.Cartesian3(-0.31881470184216937, -0.44294118336776583, 0.8379500545772692);
+            var camera = scene.getCamera();
+            camera.lookAt(position, position.add(direction), up);
+            break;
+        case 'C'.charCodeAt(0):
+            var position = new Cesium.Cartesian3(-2444319.744271441, -4490462.305656268, 3800605.179680734);
+		        var direction = new Cesium.Cartesian3(0.3079076572929976, 0.5183187255969877, 0.7978336751954334);
+		        var up = new Cesium.Cartesian3(-0.38141711164833125, -0.7009912978668698, 0.6026045031832784);
+		        var camera = scene.getCamera();
+		        camera.lookAt(position, position.add(direction), up);
+		        break;
+        }
+    }
+
     var cesiumViewerWidget = new CesiumViewerWidget({
         postSetup : function(widget) {
             scene = widget.scene;
+            cb = scene.getPrimitives().getCentralBody();
+
             scene.getCamera().frustum.near = 10.0;
-            scene.getPrimitives().getCentralBody().affectedByLighting = false;
+            cb.affectedByLighting = false;
             
-            /*var cb = scene.getPrimitives().getCentralBody();
-            var imageryLayerCollection = cb.getImageLayers();
+            /*var imageryLayerCollection = cb.getImageLayers();
             imageryLayerCollection.removeAll();
             
             var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
@@ -105,11 +180,17 @@ require([
 	              proxy : new Cesium.DefaultProxy('/proxy/')
 	          });
 	          var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);*/
+	          
+	          document.addEventListener('keydown', keydownHandler, false);
             
+	          var handler = new Cesium.EventHandler(widget.canvas);
+
+	          handler.setMouseAction(function(movement) {
+	              mousePosition = movement.endPosition;
+	              // Use movement.startPosition, movement.endPosition
+	          }, Cesium.MouseEventType.MOVE);
+
             widget.startRenderLoop();
-        },
-        onRightMouseDown : function(position) {
-            scene.getPrimitives().getCentralBody()._surface.debugShowBoundingSphereOfTileAt(new Cesium.Cartographic(0.0, 0.0, 0.0));
         }
     }).placeAt(dom.byId("cesiumContainer"));
     

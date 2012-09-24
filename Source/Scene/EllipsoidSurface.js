@@ -388,8 +388,36 @@ define([
 
         if (frameState.mode === SceneMode.SCENE3D) {
             var occludeePoint = tile.getOccludeePoint();
+            if (typeof occludeePoint === 'undefined') {
+                return true;
+            }
+
+            var cameraPosition = frameState.camera.getPositionWC();
+
+            // Do simple sphere-based occlusion test
             var occluder = surface._occluder;
-            return (!occludeePoint || occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) && occluder.isVisible(boundingVolume);
+            var isVisible = (!occludeePoint || occluder.isVisible(new BoundingSphere(occludeePoint, 0.0))) && occluder.isVisible(boundingVolume);
+            if (!isVisible) {
+                return false;
+            }
+
+            // Do a more accurate occlusion test based on the actual ellipsoid.
+            // Based on Cozzi and Stoner's paper, "GPU Ray Casting of Virtual Globes Supplement"
+            var ellipsoid = tile.tilingScheme.ellipsoid;
+
+            var q = cameraPosition.multiplyComponents(ellipsoid.getOneOverRadii());
+            var qMagnitude = q.magnitude();
+            var wMagnitudeSquared = qMagnitude * qMagnitude - 1.0;
+            var b = occludeePoint.subtract(cameraPosition).multiplyComponents(ellipsoid.getOneOverRadii());
+            var bUnit = b.normalize();
+            var t = -bUnit.dot(q);
+            var tSquared = t * t;
+            var u = -b.dot(q.normalize());
+            if (u >= (qMagnitude - 1 / qMagnitude) &&
+                tSquared >= wMagnitudeSquared) {
+                return false;
+            }
+            return true;
         }
 
         return true;
