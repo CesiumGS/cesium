@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Core/BoundingSphere',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Ellipsoid',
@@ -11,6 +12,7 @@ defineSuite([
          'Core/Matrix4'
      ], function(
          BoundingSphere,
+         Cartesian2,
          Cartesian3,
          Cartesian4,
          Ellipsoid,
@@ -216,6 +218,14 @@ defineSuite([
         expect(bs.transform(transform)).toEqual(expected);
     });
 
+    it('finds distances', function() {
+        var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
+        var position = new Cartesian3(-2.0, 1.0, 0.0);
+        var direction = Cartesian3.UNIT_X;
+        var expected = new Cartesian2(1.0, 3.0);
+        expect(bs.distance(position, direction)).toEqual(expected);
+    });
+
     it('static clone throws with no parameter', function() {
         expect(function() {
             BoundingSphere.clone();
@@ -274,6 +284,24 @@ defineSuite([
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.transform(sphere);
+        }).toThrow();
+    });
+
+    it('static distance throws without a sphere', function() {
+        expect(function() {
+            BoundingSphere.distance();
+        }).toThrow();
+    });
+
+    it('static distance throws without a position', function() {
+        expect(function() {
+            BoundingSphere.distance(new BoundingSphere());
+        }).toThrow();
+    });
+
+    it('static distance throws without a direction', function() {
+        expect(function() {
+            BoundingSphere.distance(new BoundingSphere(), new Cartesian3());
         }).toThrow();
     });
 });
