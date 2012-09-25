@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
@@ -9,6 +10,7 @@ define([
         '../Scene/ComplexConicSensorVolume',
         '../Scene/Material'
        ], function(
+         defaultValue,
          DeveloperError,
          destroyObject,
          Color,
@@ -289,8 +291,8 @@ define([
             }
         }
 
-        position = positionProperty.getValueCartesian(time, position) || cone._visualizerPosition;
-        orientation = orientationProperty.getValue(time, orientation) || cone._visualizerOrientation;
+        position = defaultValue(positionProperty.getValueCartesian(time, position), cone._visualizerPosition);
+        orientation = defaultValue(orientationProperty.getValue(time, orientation), cone._visualizerOrientation);
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&

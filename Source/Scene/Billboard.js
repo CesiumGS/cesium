@@ -624,7 +624,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @param {UniformState} uniformState The same state object passed to {@link BillboardCollection#render}.
+     * @param {UniformState} uniformState The same state object passed to {@link BillboardCollection#update}.
      *
      * @return {Cartesian2} The screen-space position of the billboard.
      *
@@ -633,7 +633,6 @@ define([
      *
      * @see Billboard#setEyeOffset
      * @see Billboard#setPixelOffset
-     * @see BillboardCollection#render
      *
      * @example
      * console.log(b.computeScreenSpacePosition(scene.getUniformState()).toString());
