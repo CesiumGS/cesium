@@ -343,7 +343,7 @@ define([
     var rectangleWidth = 3.0;
     var rectangleHeight = 3.0;
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
-    var scratchPickCommand = new Command();
+    var pickCommand = new Command();
 
     /**
      * DOC_TBA
@@ -370,9 +370,20 @@ define([
             var commandList = commandLists[i].pickList;
             var commandListLength = commandList.length;
             for (var j = 0; j < commandListLength; ++j) {
-                var command = Command.cloneDrawArguments(commandList[j], scratchPickCommand);
-                command.framebuffer = defaultValue(command.framebuffer, fb);
-                context.draw(command);
+                // Shadow copy to potentially replace framebuffer
+                var command = commandList[j];
+                pickCommand.primitiveType = command.primitiveType;
+                pickCommand.vertexArray = command.vertexArray;
+                pickCommand.count = command.count;
+                pickCommand.offset = command.offset;
+                pickCommand.shaderProgram = command.shaderProgram;
+                pickCommand.uniformMap = command.uniformMap;
+                pickCommand.renderState = command.renderState;
+                pickCommand.framebuffer = defaultValue(command.framebuffer, fb);
+                pickCommand.boundingVolume = command.boundingVolume;
+                pickCommand.modelMatrix = command.modelMatrix;
+
+                context.draw(pickCommand);
             }
         }
 
