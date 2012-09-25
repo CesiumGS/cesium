@@ -1103,6 +1103,23 @@ define([
                     command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
                     command.vertexArray = tile.vertexArray;
                     command.uniformMap = uniformMap;
+
+                    var boundingVolume = tile.boundingSphere3D;
+
+                    if (frameState.mode !== SceneMode.SCENE3D) {
+                        boundingVolume = boundingSphereScratch;
+                        // TODO: If we show terrain heights in Columbus View, the bounding sphere
+                        //       needs to be expanded to include the heights.
+                        BoundingSphere.fromExtent2D(tile.extent, frameState.scene2D.projection, boundingVolume);
+                        boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
+
+                        if (frameState.mode === SceneMode.MORPHING) {
+                            boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
+                        }
+                    }
+
+                    command.boundingVolume = boundingVolume;
+
                 } while (imageryIndex < imageryLen);
             }
         }

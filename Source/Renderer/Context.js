@@ -2128,7 +2128,7 @@ define([
 
             framebuffer : cs.framebuffer,
 
-            color : Color.clone(color),
+            color : (typeof color !== 'undefined') ? Color.clone(color) : undefined,
             depth : depth,
             stencil : stencil
         };

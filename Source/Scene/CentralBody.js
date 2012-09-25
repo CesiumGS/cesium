@@ -144,6 +144,7 @@ define([
 
         this._depthCommand = new Command();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
+        this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
 
         this._northPoleCommand = new Command();
         this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
@@ -673,60 +674,6 @@ define([
         return this._imageryLayerCollection;
     };
 
-    CentralBody.prototype._createScissorRectangle = function(description) {
-        var quad = description.quad;
-
-        var upperLeft = new Cartesian3(quad[0], quad[1], quad[2]);
-        var lowerLeft = new Cartesian3(quad[3], quad[4], quad[5]);
-        var upperRight = new Cartesian3(quad[6], quad[7], quad[8]);
-        var lowerRight = new Cartesian3(quad[9], quad[10], quad[11]);
-
-        var mvp = description.modelViewProjection;
-        var vt = description.viewportTransformation;
-
-        var diag1 = upperRight.subtract(lowerLeft);
-        var diag2 = upperLeft.subtract(lowerRight);
-
-        var diag1Length = diag1.magnitude();
-        var diag2Length = diag2.magnitude();
-
-        var halfWidth = Math.max(diag1Length, diag2Length) * 0.5;
-        var halfHeight = halfWidth;
-
-        var center = lowerLeft.add(diag1.normalize().multiplyByScalar(diag1Length * 0.5));
-
-        var camera = description.frameState.camera;
-        var nearCenter = camera.position.add(camera.direction.multiplyByScalar(camera.frustum.near));
-
-        if (camera.direction.dot(center.subtract(nearCenter)) < 0) {
-            center = center.subtract(nearCenter);
-            var centerProjN = camera.direction.multiplyByScalar(camera.direction.dot(center));
-            var centerRejN = center.subtract(centerProjN);
-            center = nearCenter.add(centerRejN);
-        }
-
-        lowerLeft = center.add(camera.up.multiplyByScalar(-halfHeight)).add(camera.right.multiplyByScalar(-halfWidth));
-        Transforms.pointToWindowCoordinates(mvp, vt, lowerLeft, lowerLeft);
-        upperRight = center.add(camera.up.multiplyByScalar(halfHeight)).add(camera.right.multiplyByScalar(halfWidth));
-        Transforms.pointToWindowCoordinates(mvp, vt, upperRight, upperRight);
-
-        lowerLeft.x = Math.max(0.0, Math.min(lowerLeft.x, description.width));
-        lowerLeft.y = Math.max(0.0, Math.min(lowerLeft.y, description.height));
-        upperRight.x = Math.max(0.0, Math.min(upperRight.x, description.width));
-        upperRight.y = Math.max(0.0, Math.min(upperRight.y, description.height));
-
-        var x = Math.floor(lowerLeft.x);
-        var y = Math.floor(lowerLeft.y);
-        var width = Math.ceil(upperRight.x) - x;
-        var height = Math.ceil(upperRight.y) - y;
-
-        if (width > 0.0 && height > 0.0) {
-            return new BoundingRectangle(x, y, width, height);
-        }
-
-        return undefined;
-    };
-
     CentralBody.prototype._computeDepthQuad = function(frameState) {
         var radii = this._ellipsoid.getRadii();
         var p = frameState.camera.getPositionWC();
@@ -845,6 +792,7 @@ define([
                 ];
 
                 if (typeof this._northPoleCommand.vertexArray === 'undefined') {
+                    this._northPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
                     mesh = {
                         attributes : {
                             position : {
@@ -892,6 +840,7 @@ define([
                  ];
 
                  if (typeof this._southPoleCommand.vertexArray === 'undefined') {
+                     this._southPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, this._ellipsoid);
                      mesh = {
                          attributes : {
                              position : {
@@ -995,6 +944,7 @@ define([
             },
             depthMask : false*/
             });
+            this._skyCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMaximumRadius() * 1.025);
         }
 
         var mode = frameState.mode;
@@ -1042,8 +992,7 @@ define([
             }
         }
 
-        // TODO: Wait until multi-frustum
-        //this._rsColor.depthTest.enabled = (mode === SceneMode.MORPHING);  // Depth test during morph
+        this._rsColor.depthTest.enabled = (mode === SceneMode.MORPHING);  // Depth test during morph
         var cull = (mode === SceneMode.SCENE3D) || (mode === SceneMode.MORPHING);
         this._rsColor.cull.enabled = cull;
         this._rsColorWithoutDepthTest.cull.enabled = cull;
