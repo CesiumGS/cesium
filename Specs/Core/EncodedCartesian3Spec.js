@@ -25,6 +25,21 @@ defineSuite([
     });
 
     it('fromCartesian encodes a cartesian with a result parameter', function() {
+        var p = new Cartesian3(-10000000.0, 0.0, 10000000.0);
+        var encoded = EncodedCartesian3.fromCartesian(p);
+
+        var positions = new Float32Array(6);
+        EncodedCartesian3.writeElements(p, positions, 0);
+
+        expect(encoded.high.x).toEqual(positions[0]);
+        expect(encoded.high.y).toEqual(positions[1]);
+        expect(encoded.high.z).toEqual(positions[2]);
+        expect(encoded.low.x).toEqual(positions[3]);
+        expect(encoded.low.y).toEqual(positions[4]);
+        expect(encoded.low.z).toEqual(positions[5]);
+    });
+
+    it('writeElements encodes a cartesian', function() {
         var c = new Cartesian3(-10000000.0, 0.0, 10000000.0);
         var encoded = new EncodedCartesian3();
         var encoded2 = EncodedCartesian3.fromCartesian(c, encoded);
@@ -40,4 +55,28 @@ defineSuite([
             EncodedCartesian3.fromCartesian();
         }).toThrow();
     });
+
+    it('writeElements throws without a cartesian', function() {
+        expect(function() {
+            EncodedCartesian3.writeElements();
+        }).toThrow();
+    });
+
+    it('writeElements throws without a cartesianArray', function() {
+      expect(function() {
+          EncodedCartesian3.writeElements(new Cartesian3());
+      }).toThrow();
+  });
+
+    it('writeElements throws without an index', function() {
+      expect(function() {
+          EncodedCartesian3.writeElements(new Cartesian3(), new Float32Array(6));
+      }).toThrow();
+  });
+
+    it('writeElements throws with a negative index', function() {
+      expect(function() {
+          EncodedCartesian3.writeElements(new Cartesian3(), new Float32Array(6), -1);
+      }).toThrow();
+  });
 });

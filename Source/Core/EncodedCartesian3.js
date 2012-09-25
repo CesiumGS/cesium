@@ -79,7 +79,7 @@ define([
      * var encoded = EncodedCartesian3.fromCartesian(c);
      */
     EncodedCartesian3.fromCartesian = function(cartesian, result) {
-        if (typeof spilt === 'undefined') {
+        if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required');
         }
 
@@ -103,6 +103,60 @@ define([
         low.z = scratchSpilt.low;
 
         return result;
+    };
+
+    var encodedP = new EncodedCartesian3();
+
+    /**
+     * Encodes the provided <code>cartesian</code>, and writes it to an array with <code>high</code>
+     * components followed by <code>low</code> components, i.e. <code>[high.x, high.y, high.z, low.x, low.y, low.z]</code>.
+     * <p>
+     * This is used to create interleaved high-precision position vertex attributes.
+     * </p>
+     *
+     * @param {Cartesian3} cartesian The cartesian to encode.
+     * @param {Array} cartesianArray The array to write to.
+     * @param {Number} index The index into the array to start writing.  Six elements will be written.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} cartesianArray is required.
+     * @exception {DeveloperError} index must be a number greater than or equal to 0.
+     *
+     * @example
+     * var positions = [
+     *    new Cartesian3(),
+     *    // ...
+     * ];
+     * var encodedPositions = new Float32Array(2 * 3 * positions.length);
+     * var j = 0;
+     * for (var i = 0; i < positions.length; ++i) {
+     *   EncodedCartesian3.writeElement(positions[i], encodedPositions, j);
+     *   j += 6;
+     * }
+     */
+    EncodedCartesian3.writeElements = function(cartesian, cartesianArray, index) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+
+        if (typeof cartesianArray === 'undefined') {
+            throw new DeveloperError('cartesianArray is required');
+        }
+
+        if (typeof index !== 'number' || index < 0) {
+            throw new DeveloperError('index must be a number greater than or equal to 0.');
+        }
+
+        EncodedCartesian3.fromCartesian(cartesian, encodedP);
+        var high = encodedP.high;
+        var low = encodedP.low;
+
+        cartesianArray[index] = high.x;
+        cartesianArray[index + 1] = high.y;
+        cartesianArray[index + 2] = high.z;
+        cartesianArray[index + 3] = low.x;
+        cartesianArray[index + 4] = low.y;
+        cartesianArray[index + 5] = low.z;
     };
 
     return EncodedCartesian3;

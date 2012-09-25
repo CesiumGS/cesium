@@ -49,16 +49,6 @@ define([
         StencilOperation) {
     "use strict";
 
-    function doIt(cartesian, cartesianArray, index) {
-        var p = EncodedCartesian3.fromCartesian(cartesian);
-        cartesianArray[index] = p.high.x;
-        cartesianArray[index + 1] = p.high.y;
-        cartesianArray[index + 2] = p.high.z;
-        cartesianArray[index + 3] = p.low.x;
-        cartesianArray[index + 4] = p.low.y;
-        cartesianArray[index + 5] = p.low.z;
-    }
-
     var SHOW_INDEX = Polyline.SHOW_INDEX;
     var POSITION_INDEX = Polyline.POSITION_INDEX;
     var COLOR_INDEX = Polyline.COLOR_INDEX;
@@ -1159,7 +1149,7 @@ define([
             var positions = this._getPositions(polyline);
             var positionsLength = positions.length;
             for ( var j = 0; j < positionsLength; ++j) {
-                doIt(positions[j], positionArray, positionIndex);
+                EncodedCartesian3.writeElements(positions[j], positionArray, positionIndex);
                 outlineColorArray[colorIndex] = Color.floatToByte(outlineColor.red);
                 outlineColorArray[colorIndex + 1] = Color.floatToByte(outlineColor.green);
                 outlineColorArray[colorIndex + 2] = Color.floatToByte(outlineColor.blue);
@@ -1198,14 +1188,14 @@ define([
                     var segment = segments[j];
                     var segmentLength = segment.length;
                     for ( var n = 0; n < segmentLength; ++n) {
-                        doIt(positions[segment[n].index], positionArray, positionIndex);
+                        EncodedCartesian3.writeElements(positions[segment[n].index], positionArray, positionIndex);
                         positionIndex += 6;
                     }
                 }
             } else {
                 numberOfSegments = positions.length;
                 for ( j = 0; j < numberOfSegments; ++j) {
-                    doIt(positions[j], positionArray, positionIndex);
+                    EncodedCartesian3.writeElements(positions[j], positionArray, positionIndex);
                     positionIndex += 6;
                 }
             }
@@ -1474,7 +1464,7 @@ define([
             var index = 0;
             var positions = this._getPositions(polyline);
             for ( var i = 0; i < positionsLength; ++i) {
-                doIt(positions[i], positionArray, index);
+                EncodedCartesian3.writeElements(positions[i], positionArray, index);
                 index += 6;
             }
 
