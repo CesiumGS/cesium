@@ -115,7 +115,8 @@ require({
         var cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dom.byId('docPopup');
         var docMessage = dom.byId('docPopupMessage');
-        var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
+        var local = { 'docTypes': [],  'headers': '<html><head></head><body>'};
+        var bucketTypes = {};
         var demoTooltips = {};
         var errorLines = [];
         var highlightLines = [];
@@ -196,14 +197,22 @@ require({
             local.docTypes = value;
         });
 
-        xhr.get({
-            url: 'templates/bucket.html',
-            handleAs: 'text'
-        }).then(function (value) {
-            var pos = value.indexOf('<body');
-            pos = value.indexOf('>', pos);
-            local.headers = value.substring(0, pos + 1) + '\n';
-        });
+        function loadBucket(bucketName) {
+            if (typeof bucketTypes[bucketName] !== 'undefined') {
+                local.headers = bucketTypes[bucketName];
+            } else {
+                local.headers = '<html><head></head><body data-sandcastle-bucket-loaded="no">';
+                xhr.get({
+                    url: 'templates/' + bucketName,
+                    handleAs: 'text'
+                }).then(function (value) {
+                    var pos = value.indexOf('<body');
+                    pos = value.indexOf('>', pos);
+                    local.headers = value.substring(0, pos + 1) + '\n';
+                    bucketTypes[bucketName] = local.headers;
+                });
+            }
+        }
 
         function highlightRun() {
             domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
@@ -467,15 +476,19 @@ require({
                 appendConsole(ele);
             } else {
                 var script = body.substring(pos + 38, pos2);
-                while (script.charCodeAt(0) < 32) {
+                while (script.length > 0 && script.charCodeAt(0) < 32) {
                     script = script.substring(1);
                 }
                 jsEditor.setValue(script);
                 script = body.substring(0, pos);
-                while (script.charCodeAt(0) < 32) {
+                while (script.length > 0 && script.charCodeAt(0) < 32) {
                     script = script.substring(1);
                 }
                 htmlEditor.setValue(script);
+                if (typeof demo.bucket === 'string') {
+                    loadBucket(demo.bucket);
+                    bucketFrame.src = 'templates/' + demo.bucket;
+                }
                 CodeMirror.commands.runCesium(jsEditor);
             }
         }
@@ -489,23 +502,27 @@ require({
 
         window.addEventListener('message', function (e) {
             var line;
-            // The iframe (bucket.html) sends this message on load.
+            // The iframe (bucket-*.html) sends this message on load.
             // This triggers the code to be injected into the iframe.
             if (e.data === 'reload') {
-                logOutput.innerHTML = "";
-                // This happens after a Run (F8) reloads bucket.html, to inject the editor code
-                // into the iframe, causing the demo to run there.
                 var bucketDoc = bucketFrame.contentDocument;
-                var bodyEle = bucketDoc.createElement('div');
-                bodyEle.innerHTML = htmlEditor.getValue();
-                bucketDoc.body.appendChild(bodyEle);
-                var jsEle = bucketDoc.createElement('script');
-                jsEle.type = 'text/javascript';
-                jsEle.textContent = (addExtraLine ? '\n' : '') + jsEditor.getValue();
-                bucketDoc.body.appendChild(jsEle);
-                if (docError) {
-                    appendConsole('consoleError', "Documentation not available.  Please run the 'generateDocumentation' build script to generate Cesium documentation.");
-                    showGallery();
+                if (bucketDoc.body.getAttribute('data-sandcastle-loaded') !== 'yes') {
+                    logOutput.innerHTML = "";
+                    // This happens after a Run (F8) reloads bucket-*.html, to inject the editor code
+                    // into the iframe, causing the demo to run there.
+                    var bodyEle = bucketDoc.createElement('div');
+                    bodyEle.innerHTML = htmlEditor.getValue();
+                    bucketDoc.body.appendChild(bodyEle);
+                    bucketDoc.body.setAttribute('data-sandcastle-loaded', 'yes');
+                    var jsEle = bucketDoc.createElement('script');
+                    jsEle.type = 'text/javascript';
+                    jsEle.textContent = (addExtraLine ? '\n' : '') + jsEditor.getValue();
+                    bucketDoc.body.appendChild(jsEle);
+                    if (docError) {
+                        appendConsole('consoleError', "Documentation not available.  Please run the " +
+                                "'generateDocumentation' build script to generate Cesium documentation.");
+                        showGallery();
+                    }
                 }
             } else if (typeof e.data.log !== 'undefined') {
                 // Console log messages from the iframe display in Sandcastle.
@@ -660,6 +677,15 @@ require({
             }).then(function (value) {
                 // Store the file contents for later searching.
                 demo.code = value;
+                demo.bucket = 'bucket-dojo.html';
+                var pos = value.indexOf('data-sandcastle-bucket="'), pos2;
+                if (pos > 0) {
+                    pos += 24;
+                    pos2 = value.indexOf('"', pos);
+                    if (pos2 > pos) {
+                        demo.bucket = value.substring(pos, pos2);
+                    }
+                }
 
                 // Select the demo to load upon opening based on the query parameter.
                 if (typeof queryObject.src !== 'undefined') {

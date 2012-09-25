@@ -6,30 +6,15 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="A starting point for creating Cesium applications (uses Bing imagery).">
     <title>Cesium Demo</title>
-    <script src="../Sandcastle-header.js"></script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-1.0.8/require.js"></script>
     <script type="text/javascript">
     require({
-        baseUrl : '../../..',
-        packages: [
-            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
-            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
-            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
-            { name: 'Source', location: 'Source' },
-            { name: 'Core', location: 'Source/Core' },
-            { name: 'DynamicScene', location: 'Source/DynamicScene' },
-            { name: 'Renderer', location: 'Source/Renderer' },
-            { name: 'Scene', location: 'Source/Scene' },
-            { name: 'Shaders', location: 'Source/Shaders' },
-            { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' }
-        ]
+        baseUrl : '../../../Source'
     });
     </script>
-    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
-<body class="claro" data-sandcastle-bucket="bucket.html">
+<body data-sandcastle-bucket="bucket-requirejs.html">
 <style>
 body {
     background: #000;
@@ -63,17 +48,9 @@ body {
 <div id="toolbar">Loading, please wait...</div>
 <script id="cesium_sandcastle_script">
 require([
-    'Source/Cesium',
-    'dojo/on',
-    'dojo/dom',
-    'dojo/parser',
-    'dijit/form/ToggleButton'
+    'Cesium'
 ], function (
-    Cesium,
-    on,
-    dom,
-    parser,
-    ToggleButton
+    Cesium
 ) {
     "use strict";
 
@@ -195,7 +172,7 @@ require([
     window.addEventListener('resize', onResize, false);
     onResize();
     
-    dom.byId("toolbar").innerHTML = '';
+    document.getElementById("toolbar").innerHTML = '';
 });
 </script>
 </body>

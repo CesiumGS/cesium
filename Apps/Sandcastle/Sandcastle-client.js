@@ -16,13 +16,13 @@
         if (typeof d1 === 'undefined') {
             window.parent.postMessage({ 'error': 'undefined' }, '*');
         } else {
-            // Look for d1.stack, "bucket.html:line:char"
+            // Look for d1.stack, "bucket-*.html:line:char"
             var lineNumber = -1, lineStart, lineEnd1, lineEnd2;
             var errorMsg = d1.toString();
             var rawErrorMsg = errorMsg;
             if (typeof d1.stack === 'string') {
                 var stack = d1.stack;
-                var pos = stack.indexOf('bucket.html');
+                var pos = stack.indexOf(Sandcastle.bucket);
                 if (pos >= 0) {
                     lineStart = stack.indexOf(':', pos);
                     if (lineStart > pos) {
@@ -52,7 +52,7 @@
     window.onerror = function (errorMsg, url, lineNumber) {
         var rawErrorMsg = errorMsg;
         if (typeof lineNumber !== 'undefined') {
-            if (typeof url !== 'undefined' && url && url.indexOf('bucket.html') < 0) {
+            if (typeof url !== 'undefined' && url && url.indexOf(Sandcastle.bucket) < 0) {
                 errorMsg += ' (on line ' + lineNumber + ' of ' + url + ')';
             } else {
                 errorMsg += ' (on line ' + lineNumber + ')';
@@ -68,9 +68,9 @@
     Sandcastle.declare = function (obj) {
         try {
             var stack = new Error().stack.toString();
-            var pos = stack.indexOf('bucket.html:');
+            var pos = stack.indexOf(Sandcastle.bucket + ':');
             if (pos >= 0) {
-                pos = stack.indexOf('bucket.html:', pos + 12);
+                pos = stack.indexOf(Sandcastle.bucket + ':', pos + 12);
             }
             var lineNumber;
             if (pos >= 0) {
