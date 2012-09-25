@@ -135,8 +135,6 @@ define([
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
         this._sp = undefined;
-        this._sp2D = undefined;
-        this._spDefault = undefined;
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
@@ -438,11 +436,8 @@ define([
      * @memberof PolylineCollection
      */
     PolylineCollection.prototype.update = function(context, frameState, commandList) {
-        if (typeof this._spDefault === 'undefined') {
-            this._spDefault = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
-        }
-        if(typeof this._sp2D === 'undefined'){
-            this._sp2D = context.getShaderCache().getShaderProgram('#define GROUND_TRACK 1\n' + PolylineVS, PolylineFS, attributeIndices);
+        if (typeof this._sp === 'undefined') {
+            this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
         }
         this._removePolylines();
         this._updateMode(frameState);
@@ -670,8 +665,7 @@ define([
      * polylines = polylines && polylines.destroy();
      */
     PolylineCollection.prototype.destroy = function() {
-        this._spDefault = this._spDefault && this._spDefault.release();
-        this._sp2D = this._sp2D && this._sp2D.release();
+        this._sp = this._sp && this._sp.release();
         this._destroyVertexArrays();
         this._destroyPolylines();
         return destroyObject(this);
@@ -939,18 +933,10 @@ define([
                 this._drawUniformsTwo = this._drawUniformsTwo3D;
                 this._drawUniformsThree = this._drawUniformsThree3D;
                 this._pickUniforms = this._pickUniforms3D;
-                this._sp = this._spDefault;
                 break;
             case SceneMode.SCENE2D:
-                this._setDrawUniforms2D();
-                this._sp = this._sp2D;
-                break;
             case SceneMode.COLUMBUS_VIEW:
                 this._setDrawUniforms2D();
-                this._sp = this._spDefault;
-                break;
-            case SceneMode.MORPHING:
-                this._sp = this._spDefault;
                 break;
             }
             this._createVertexArray = true;
@@ -1195,7 +1181,12 @@ define([
                 var position = positions[j];
                 positionArray[positionIndex] = position.x;
                 positionArray[positionIndex + 1] = position.y;
-                positionArray[positionIndex + 2] = position.z;
+                if(this.mode === SceneMode.SCENE2D){
+                    positionArray[positionIndex + 2] = 0.0;
+                }
+                else{
+                    positionArray[positionIndex + 2] = position.z;
+                }
                 outlineColorArray[colorIndex] = Color.floatToByte(outlineColor.red);
                 outlineColorArray[colorIndex + 1] = Color.floatToByte(outlineColor.green);
                 outlineColorArray[colorIndex + 2] = Color.floatToByte(outlineColor.blue);
@@ -1517,7 +1508,12 @@ define([
                 var position = positions[i];
                 positionsArray[index] = position.x;
                 positionsArray[index + 1] = position.y;
-                positionsArray[index + 2] = position.z;
+                if(this.mode === SceneMode.SCENE2D){
+                    positionsArray[index + 2] = 0.0;
+                }
+                else{
+                    positionsArray[index + 2] = position.z;
+                }
                 index += 3;
             }
 
