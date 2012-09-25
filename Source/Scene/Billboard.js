@@ -568,12 +568,7 @@ define([
             return new Cartesian3(x, y, z);
         }
 
-        tempCartesian4.x = position.x;
-        tempCartesian4.y = position.y;
-        tempCartesian4.z = position.z;
-        tempCartesian4.w = 1.0;
-
-        modelMatrix.multiplyByVector(tempCartesian4, tempCartesian4);
+        modelMatrix.multiplyByPoint(position, tempCartesian4);
 
         cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian4);
         projectedPosition = projection.project(cartographic);
@@ -590,7 +585,7 @@ define([
 
         // Model to eye coordinates
         var mv = uniformState.getView().multiply(modelMatrix);
-        var positionEC = mv.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+        var positionEC = mv.multiplyByPoint(position);
 
         // Apply eye offset, e.g., czm_eyeOffset
         var zEyeOffset = eyeOffset.multiplyComponents(positionEC.normalize());
@@ -603,7 +598,7 @@ define([
         q.x /= q.w; // normalized device coordinates
         q.y /= q.w;
         q.z /= q.w;
-        var positionWC = uniformState.getViewportTransformation().multiplyByVector(new Cartesian4(q.x, q.y, q.z, 1.0)); // window coordinates
+        var positionWC = uniformState.getViewportTransformation().multiplyByPoint(q); // window coordinates
 
         // Apply pixel offset
         var po = pixelOffset.multiplyByScalar(uniformState.getHighResolutionSnapScale());

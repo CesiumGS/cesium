@@ -1435,7 +1435,7 @@ define([
 
         for (var n = 0; n < length; ++n) {
             position = positions[n];
-            p = modelMatrix.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+            p = modelMatrix.multiplyByPoint(position);
             newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
         }
 

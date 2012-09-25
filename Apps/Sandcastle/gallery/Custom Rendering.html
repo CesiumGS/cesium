@@ -293,14 +293,14 @@ require([
                 var projectedPositions = [];
                 var projectedPositionsFlat = [];
                 for (var i = 0; i < positions.length; i += 3) {
-                    var p = new Cesium.Cartesian4(positions[i], positions[i + 1], positions[i + 2], 1.0);
-                    p = this._modelMatrix.multiplyByVector(p);
+                    var p = new Cesium.Cartesian3(positions[i], positions[i + 1], positions[i + 2]);
+                    p = this._modelMatrix.multiplyByPoint(p);
 
                     positions[i] = p.x;
                     positions[i + 1] = p.y;
                     positions[i + 2] = p.z;
 
-                    p = projection.project(this._ellipsoid.cartesianToCartographic(Cesium.Cartesian3.fromCartesian4(p)));
+                    p = projection.project(this._ellipsoid.cartesianToCartographic(p));
 
                     projectedPositions.push(p);
                     projectedPositionsFlat.push(p.z, p.x, p.y);
