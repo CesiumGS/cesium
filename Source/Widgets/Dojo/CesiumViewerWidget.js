@@ -185,10 +185,23 @@ define([
          * var endUserOptions = {
          *     'source' : 'file.czml', // The relative URL of the CZML file to load at startup.
          *     'lookAt' : '123abc',    // The CZML ID of the object to track at startup.
-         *     'stats'  : 1,           // Non-zero to enable the FPS performance display.
+         *     'stats'  : 1,           // Enable the FPS performance display.
+         *     'debug'  : 1,           // Full WebGL error reporting at substantial performance cost.
          * };
          */
         endUserOptions : {},
+        /**
+         * Check for WebGL errors after every WebGL API call.  Enabling this debugging feature
+         * comes at a substantial performance cost, halting and restarting the graphics
+         * pipeline hundreds of times per frame.  But it can uncover problems that are otherwise
+         * very difficult to diagnose.
+         * This property is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default false
+         */
+        enableWebGLDebugging: false,
         /**
          * Allow the user to drag-and-drop CZML files into this widget.
          * This is read-only after construction.
@@ -560,7 +573,19 @@ define([
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
-            var maxTextureSize = scene.getContext().getMaximumTextureSize();
+            if (typeof widget.endUserOptions.debug !== 'undefined' && widget.endUserOptions.debug) {
+                this.enableWebGLDebugging = true;
+            }
+
+            var context = scene.getContext();
+            if (this.enableWebGLDebugging) {
+                context.setValidateShaderProgram(true);
+                context.setValidateFramebuffer(true);
+                context.setLogShaderCompilation(true);
+                context.setThrowOnWebGLError(true);
+            }
+
+            var maxTextureSize = context.getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
                 this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_2048.jpg');

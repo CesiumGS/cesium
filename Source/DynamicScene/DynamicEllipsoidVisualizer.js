@@ -6,7 +6,7 @@ define([
         '../Core/Color',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Scene/CustomSensorVolume',
+        '../Scene/EllipsoidPrimitive',
         '../Scene/Material'
        ], function(
          defaultValue,
@@ -15,16 +15,16 @@ define([
          Color,
          Matrix3,
          Matrix4,
-         CustomSensorVolume,
+         EllipsoidPrimitive,
          Material) {
     "use strict";
 
     var matrix3Scratch = new Matrix3();
 
     /**
-     * A DynamicObject visualizer which maps the DynamicPyramid instance
-     * in DynamicObject.pyramid to a Pyramid primitive.
-     * @alias DynamicPyramidVisualizer
+     * A DynamicObject visualizer which maps the DynamicEllipsoid instance
+     * in DynamicObject.ellipsoid to a Ellipsoid primitive.
+     * @alias DynamicEllipsoidVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
@@ -32,7 +32,7 @@ define([
      *
      * @exception {DeveloperError} scene is required.
      *
-     * @see DynamicPyramid
+     * @see DynamicEllipsoid
      * @see Scene
      * @see DynamicObject
      * @see DynamicObjectCollection
@@ -45,16 +45,15 @@ define([
      * @see DynamicPointVisualizer
      * @see DynamicPolygonVisualizer
      * @see DynamicPolylineVisualizer
-     *
      */
-    var DynamicPyramidVisualizer = function(scene, dynamicObjectCollection) {
+    var DynamicEllipsoidVisualizer = function(scene, dynamicObjectCollection) {
         if (typeof scene === 'undefined') {
             throw new DeveloperError('scene is required.');
         }
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.getPrimitives();
-        this._pyramidCollection = [];
+        this._ellipsoidCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -64,7 +63,7 @@ define([
      *
      * @returns {Scene} The scene being used by this visualizer.
      */
-    DynamicPyramidVisualizer.prototype.getScene = function() {
+    DynamicEllipsoidVisualizer.prototype.getScene = function() {
         return this._scene;
     };
 
@@ -73,7 +72,7 @@ define([
      *
      * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
      */
-    DynamicPyramidVisualizer.prototype.getDynamicObjectCollection = function() {
+    DynamicEllipsoidVisualizer.prototype.getDynamicObjectCollection = function() {
         return this._dynamicObjectCollection;
     };
 
@@ -82,16 +81,16 @@ define([
      *
      * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
      */
-    DynamicPyramidVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
+    DynamicEllipsoidVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
             if (typeof oldCollection !== 'undefined') {
-                oldCollection.objectsRemoved.removeEventListener(DynamicPyramidVisualizer.prototype._onObjectsRemoved);
+                oldCollection.objectsRemoved.removeEventListener(DynamicEllipsoidVisualizer.prototype._onObjectsRemoved);
                 this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (typeof dynamicObjectCollection !== 'undefined') {
-                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicPyramidVisualizer.prototype._onObjectsRemoved, this);
+                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicEllipsoidVisualizer.prototype._onObjectsRemoved, this);
             }
         }
     };
@@ -104,7 +103,7 @@ define([
      *
      * @exception {DeveloperError} time is required.
      */
-    DynamicPyramidVisualizer.prototype.update = function(time) {
+    DynamicEllipsoidVisualizer.prototype.update = function(time) {
         if (typeof time === 'undefined') {
             throw new DeveloperError('time is requied.');
         }
@@ -119,21 +118,21 @@ define([
     /**
      * Removes all primitives from the scene.
      */
-    DynamicPyramidVisualizer.prototype.removeAllPrimitives = function() {
+    DynamicEllipsoidVisualizer.prototype.removeAllPrimitives = function() {
         var i, len;
-        for (i = 0, len = this._pyramidCollection.length; i < len; i++) {
-            this._primitives.remove(this._pyramidCollection[i]);
+        for (i = 0, len = this._ellipsoidCollection.length; i < len; i++) {
+            this._primitives.remove(this._ellipsoidCollection[i]);
         }
 
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for (i = dynamicObjects.length - 1; i > -1; i--) {
-                dynamicObjects[i]._pyramidVisualizerIndex = undefined;
+                dynamicObjects[i]._ellipsoidVisualizerIndex = undefined;
             }
         }
 
         this._unusedIndexes = [];
-        this._pyramidCollection = [];
+        this._ellipsoidCollection = [];
     };
 
     /**
@@ -142,13 +141,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof DynamicPyramidVisualizer
+     * @memberof DynamicEllipsoidVisualizer
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see DynamicPyramidVisualizer#destroy
+     * @see DynamicEllipsoidVisualizer#destroy
      */
-    DynamicPyramidVisualizer.prototype.isDestroyed = function() {
+    DynamicEllipsoidVisualizer.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -160,33 +159,33 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof DynamicPyramidVisualizer
+     * @memberof DynamicEllipsoidVisualizer
      *
      * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see DynamicPyramidVisualizer#isDestroyed
+     * @see DynamicEllipsoidVisualizer#isDestroyed
      *
      * @example
      * visualizer = visualizer && visualizer.destroy();
      */
-    DynamicPyramidVisualizer.prototype.destroy = function() {
+    DynamicEllipsoidVisualizer.prototype.destroy = function() {
         this.removeAllPrimitives();
         return destroyObject(this);
     };
 
     var position;
     var orientation;
-    DynamicPyramidVisualizer.prototype._updateObject = function(time, dynamicObject) {
+    DynamicEllipsoidVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var context = this._scene.getContext();
-        var dynamicPyramid = dynamicObject.pyramid;
-        if (typeof dynamicPyramid === 'undefined') {
+        var dynamicEllipsoid = dynamicObject.ellipsoid;
+        if (typeof dynamicEllipsoid === 'undefined') {
             return;
         }
 
-        var directionsProperty = dynamicPyramid.directions;
-        if (typeof directionsProperty === 'undefined') {
+        var radiiProperty = dynamicEllipsoid.radii;
+        if (typeof radiiProperty === 'undefined') {
             return;
         }
 
@@ -200,104 +199,80 @@ define([
             return;
         }
 
-        var pyramid;
-        var showProperty = dynamicPyramid.show;
-        var pyramidVisualizerIndex = dynamicObject._pyramidVisualizerIndex;
+        var ellipsoid;
+        var showProperty = dynamicEllipsoid.show;
+        var ellipsoidVisualizerIndex = dynamicObject._ellipsoidVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
-            if (typeof pyramidVisualizerIndex !== 'undefined') {
-                pyramid = this._pyramidCollection[pyramidVisualizerIndex];
-                pyramid.show = false;
-                dynamicObject._pyramidVisualizerIndex = undefined;
-                this._unusedIndexes.push(pyramidVisualizerIndex);
+            if (typeof ellipsoidVisualizerIndex !== 'undefined') {
+                ellipsoid = this._ellipsoidCollection[ellipsoidVisualizerIndex];
+                ellipsoid.show = false;
+                dynamicObject._ellipsoidVisualizerIndex = undefined;
+                this._unusedIndexes.push(ellipsoidVisualizerIndex);
             }
             return;
         }
 
-        if (typeof pyramidVisualizerIndex === 'undefined') {
+        if (typeof ellipsoidVisualizerIndex === 'undefined') {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
-                pyramidVisualizerIndex = unusedIndexes.pop();
-                pyramid = this._pyramidCollection[pyramidVisualizerIndex];
+                ellipsoidVisualizerIndex = unusedIndexes.pop();
+                ellipsoid = this._ellipsoidCollection[ellipsoidVisualizerIndex];
             } else {
-                pyramidVisualizerIndex = this._pyramidCollection.length;
-                pyramid = new CustomSensorVolume();
-                pyramid.affectedByLighting = false;
+                ellipsoidVisualizerIndex = this._ellipsoidCollection.length;
+                ellipsoid = new EllipsoidPrimitive();
+                ellipsoid.affectedByLighting = false;
 
-                this._pyramidCollection.push(pyramid);
-                this._primitives.add(pyramid);
+                this._ellipsoidCollection.push(ellipsoid);
+                this._primitives.add(ellipsoid);
             }
-            dynamicObject._pyramidVisualizerIndex = pyramidVisualizerIndex;
-            pyramid.dynamicObject = dynamicObject;
+            dynamicObject._ellipsoidVisualizerIndex = ellipsoidVisualizerIndex;
+            ellipsoid.dynamicObject = dynamicObject;
 
-            // CZML_TODO Determine official defaults
-            pyramid.radius = Number.POSITIVE_INFINITY;
-            pyramid.showIntersection = true;
-            pyramid.intersectionColor = Color.YELLOW;
-            pyramid.material = Material.fromType(context, Material.ColorType);
+            ellipsoid.material = Material.fromType(context, Material.ColorType);
         } else {
-            pyramid = this._pyramidCollection[pyramidVisualizerIndex];
+            ellipsoid = this._ellipsoidCollection[ellipsoidVisualizerIndex];
         }
 
-        pyramid.show = true;
+        ellipsoid.show = true;
 
-        var directions = directionsProperty.getValueSpherical(time);
-        if (typeof directions !== 'undefined' && pyramid._visualizerDirections !== directions) {
-            pyramid.setDirections(directions);
-            pyramid._visualizerDirections = directions;
-        }
+        ellipsoid.radii = radiiProperty.getValue(time, ellipsoid.radii);
 
-        position = defaultValue(positionProperty.getValueCartesian(time, position), pyramid._visualizerPosition);
-        orientation = defaultValue(orientationProperty.getValue(time, orientation), pyramid._visualizerOrientation);
+        position = defaultValue(positionProperty.getValueCartesian(time, position), ellipsoid._visualizerPosition);
+        orientation = defaultValue(orientationProperty.getValue(time, orientation), ellipsoid._visualizerOrientation);
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
-            (!position.equals(pyramid._visualizerPosition) ||
-             !orientation.equals(pyramid._visualizerOrientation))) {
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, pyramid.modelMatrix);
-            position.clone(pyramid._visualizerPosition);
-            orientation.clone(pyramid._visualizerOrientation);
+            (!position.equals(ellipsoid._visualizerPosition) ||
+             !orientation.equals(ellipsoid._visualizerOrientation))) {
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, ellipsoid.modelMatrix);
+            position.clone(ellipsoid._visualizerPosition);
+            orientation.clone(ellipsoid._visualizerOrientation);
         }
 
-        var material = dynamicPyramid.material;
+        var material = dynamicEllipsoid.material;
         if (typeof material !== 'undefined') {
-            pyramid.material = material.getValue(time, context, pyramid.material);
-        }
-
-        var property = dynamicPyramid.intersectionColor;
-        if (typeof property !== 'undefined') {
-            var intersectionColor = property.getValue(time, intersectionColor);
-            if (typeof intersectionColor !== 'undefined') {
-                pyramid.intersectionColor = intersectionColor;
-            }
-        }
-
-        property = dynamicPyramid.radius;
-        if (typeof property !== 'undefined') {
-            var radius = property.getValue(time, radius);
-            if (typeof radius !== 'undefined') {
-                pyramid.radius = radius;
-            }
+            ellipsoid.material = material.getValue(time, context, ellipsoid.material);
         }
     };
 
-    DynamicPyramidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
-        var thisPyramidCollection = this._pyramidCollection;
+    DynamicEllipsoidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
+        var thisEllipsoidCollection = this._ellipsoidCollection;
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
-            var pyramidVisualizerIndex = dynamicObject._pyramidVisualizerIndex;
-            if (typeof pyramidVisualizerIndex !== 'undefined') {
-                var pyramid = thisPyramidCollection[pyramidVisualizerIndex];
-                pyramid.show = false;
-                thisUnusedIndexes.push(pyramidVisualizerIndex);
-                dynamicObject._pyramidVisualizerIndex = undefined;
+            var ellipsoidVisualizerIndex = dynamicObject._ellipsoidVisualizerIndex;
+            if (typeof ellipsoidVisualizerIndex !== 'undefined') {
+                var ellipsoid = thisEllipsoidCollection[ellipsoidVisualizerIndex];
+                ellipsoid.show = false;
+                thisUnusedIndexes.push(ellipsoidVisualizerIndex);
+                dynamicObject._ellipsoidVisualizerIndex = undefined;
             }
         }
     };
 
-    return DynamicPyramidVisualizer;
+    return DynamicEllipsoidVisualizer;
 });
