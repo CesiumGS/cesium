@@ -114,11 +114,9 @@ define([
         var q = this._cameraPositionInScaledSpace;
         var wMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
         var b = occludee.subtract(cameraPosition, bScratch).multiplyComponents(ellipsoid.getOneOverRadii(), bScratch);
-        var u = -b.dot(q);
-        if (u >= wMagnitudeSquared) {
-            var bUnit = b.normalize(b);
-            var t = -bUnit.dot(q);
-            var tSquared = t * t;
+        var d = -b.dot(q);
+        if (d >= wMagnitudeSquared) {
+            var tSquared = d * d / b.magnitudeSquared();
             return tSquared < wMagnitudeSquared;
         }
         return true;
