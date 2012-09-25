@@ -389,7 +389,7 @@ define([
     var scratchNearPlane = new Cartesian4();
     var scratchFarPlane = new Cartesian4();
     var scratchRenderCartesian3 = new Cartesian3();
-    var scratchCommand = new Command();
+    var drawCommand = new Command();
     function renderPrimitives(scene, framebuffer) {
         var farToNearRatio = scene.farToNearRatio;
         var camera = scene._camera;
@@ -409,7 +409,6 @@ define([
         var near;
         var far;
         var length;
-        var cloneCommand;
 
         if (scene._useBins) {
             var bins = scene._bins;
@@ -433,9 +432,18 @@ define([
                     length = bin.length;
                     for (var j = 0; j < length; ++j) {
                         var command = bin[j];
-                        cloneCommand = Command.cloneDrawArguments(command, scratchCommand);
-                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
-                        context.draw(cloneCommand);
+                        drawCommand.primitiveType = command.primitiveType;
+                        drawCommand.vertexArray = command.vertexArray;
+                        drawCommand.count = command.count;
+                        drawCommand.offset = command.offset;
+                        drawCommand.shaderProgram = command.shaderProgram;
+                        drawCommand.uniformMap = command.uniformMap;
+                        drawCommand.renderState = command.renderState;
+                        drawCommand.framebuffer = defaultValue(command.framebuffer, framebuffer);
+                        drawCommand.boundingVolume = command.boundingVolume;
+                        drawCommand.modelMatrix = command.modelMatrix;
+
+                        context.draw(drawCommand);
                     }
                 }
             }
@@ -499,9 +507,18 @@ define([
                             continue;
                         }
 
-                        cloneCommand = Command.cloneDrawArguments(renderCommand, scratchCommand);
-                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
-                        context.draw(cloneCommand);
+                        drawCommand.primitiveType = renderCommand.primitiveType;
+                        drawCommand.vertexArray = renderCommand.vertexArray;
+                        drawCommand.count = renderCommand.count;
+                        drawCommand.offset = renderCommand.offset;
+                        drawCommand.shaderProgram = renderCommand.shaderProgram;
+                        drawCommand.uniformMap = renderCommand.uniformMap;
+                        drawCommand.renderState = renderCommand.renderState;
+                        drawCommand.framebuffer = defaultValue(renderCommand.framebuffer, framebuffer);
+                        drawCommand.boundingVolume = renderCommand.boundingVolume;
+                        drawCommand.modelMatrix = renderCommand.modelMatrix;
+
+                        context.draw(drawCommand);
 
                         if (nearIntersect === Intersect.INSIDE) {
                             renderList.splice(q, 1);
@@ -509,9 +526,18 @@ define([
                             --q;
                         }
                     } else {
-                        cloneCommand = Command.cloneDrawArguments(renderCommand, scratchCommand);
-                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
-                        context.draw(cloneCommand);
+                        drawCommand.primitiveType = renderCommand.primitiveType;
+                        drawCommand.vertexArray = renderCommand.vertexArray;
+                        drawCommand.count = renderCommand.count;
+                        drawCommand.offset = renderCommand.offset;
+                        drawCommand.shaderProgram = renderCommand.shaderProgram;
+                        drawCommand.uniformMap = renderCommand.uniformMap;
+                        drawCommand.renderState = renderCommand.renderState;
+                        drawCommand.framebuffer = defaultValue(renderCommand.framebuffer, framebuffer);
+                        drawCommand.boundingVolume = renderCommand.boundingVolume;
+                        drawCommand.modelMatrix = renderCommand.modelMatrix;
+
+                        context.draw(drawCommand);
                     }
                 }
             }
