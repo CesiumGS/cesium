@@ -174,22 +174,7 @@ define([
         this._mode = undefined;
         var that = this;
 
-        this._drawUniformsOne = {
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
-        this._drawUniformsTwo = {
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
-        this._drawUniformsThree = {
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
-        this._pickUniforms2D = {
+        this._uniforms = {
             u_morphTime : function() {
                 return that.morphTime;
             }
@@ -526,7 +511,7 @@ define([
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
                         command.shaderProgram = this._sp;
-                        command.uniformMap = this._drawUniformsOne;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsOne;
 
@@ -541,7 +526,7 @@ define([
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
                         command.shaderProgram = this._sp;
-                        command.uniformMap = this._drawUniformsTwo;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaColor.va;
                         command.renderState = bucketLocator.rsTwo;
 
@@ -556,7 +541,7 @@ define([
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
                         command.shaderProgram = this._sp;
-                        command.uniformMap = this._drawUniformsThree;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsThree;
                     }
@@ -584,7 +569,7 @@ define([
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
                         command.shaderProgram = this._sp;
-                        command.uniformMap = this._pickUniforms;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaPickColor.va;
                         command.renderState = bucketLocator.rsPick;
                     }
