@@ -1615,12 +1615,11 @@ define([
                 cull : {
                     enabled : true,
                     face : CullFace.FRONT
-                }
-                // TODO: revisit when multi-frustum/depth test is ready
-                /*depthTest : {
+                },
+                depthTest : {
                     enabled : true
                 },
-                depthMask : false*/
+                depthMask : false
             });
             this._skyCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMaximumRadius() * 1.025);
         }
@@ -1933,10 +1932,6 @@ define([
         if (pass.color) {
             commands = this._commandLists.colorList;
 
-            if (this.showSkyAtmosphere) {
-                commands.push(this._skyCommand);
-            }
-
             // render quads to fill the poles
             if (this._mode === SceneMode.SCENE3D) {
                 if (this._drawNorthPole) {
@@ -1949,11 +1944,6 @@ define([
 
             if (this._renderQueue.length !== 0) {
                 var mv = frameState.camera.getViewMatrix();
-
-                // TODO: remove once multi-frustum/depth testing is implemented
-                this._renderQueue.sort(function(a, b) {
-                    return a.zoom - b.zoom;
-                });
 
                 // render tiles to FBO
                 var tileCommands = this._tileCommandList;
@@ -1995,6 +1985,10 @@ define([
                 // render depth plane
                 if (this._mode === SceneMode.SCENE3D) {
                     commands.push(this._depthCommand);
+                }
+
+                if (this.showSkyAtmosphere) {
+                    commands.push(this._skyCommand);
                 }
 
                 if (typeof this._quadLogo !== 'undefined' && !this._quadLogo.isDestroyed()) {

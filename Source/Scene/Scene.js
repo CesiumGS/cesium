@@ -14,6 +14,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Intersect',
         '../Core/IntersectionTests',
+        '../Core/Interval',
         '../Core/Matrix4',
         '../Renderer/Context',
         '../Renderer/Command',
@@ -40,6 +41,7 @@ define([
         Cartesian4,
         Intersect,
         IntersectionTests,
+        Interval,
         Matrix4,
         Context,
         Command,
@@ -68,10 +70,6 @@ define([
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(canvas);
-        this._clearState = context.createClearState({
-            color : Color.BLACK,
-            depth : 1.0
-        });
 
         this._animate = undefined; // Animation callback
         this._animations = new AnimationCollection();
@@ -228,7 +226,7 @@ define([
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
         var cb = scene._primitives.getCentralBody();
-        if (scene.mode === SceneMode.SCENE3D && cb !== null) {
+        if (scene.mode === SceneMode.SCENE3D && typeof cb !== 'undefined') {
             var ellipsoid = cb.getEllipsoid();
             var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
             frameState.occluder = occluder;
@@ -286,16 +284,16 @@ define([
             var curFar = farToNearRatio * curNear;
 
             if (typeof distance !== 'undefined') {
-                if (distance.x > curFar) {
+                if (distance.start > curFar) {
                     continue;
                 }
 
-                if (distance.y < curNear) {
+                if (distance.stop < curNear) {
                     break;
                 }
             }
 
-            // MULTIFRUSTUM TODO: sort bins
+            // PERFORMANCE_IDEA: sort bins
             var bin = scene._bins[i];
             if (typeof bin === 'undefined') {
                 bin = scene._bins[i] = [];
@@ -305,7 +303,7 @@ define([
     }
 
     var scratchCullingVolume = new CullingVolume();
-    var distances = new Cartesian2();
+    var distances = new Interval();
     function createPotentiallyVisibleSet(scene, listName) {
         var commandLists = scene._commandList;
         var cullingVolume = scene._frameState.cullingVolume;
@@ -316,6 +314,7 @@ define([
 
         var renderList = scene._renderList;
         renderList.length = 0;
+
         var bins = scene._bins;
         bins.length = 0;
 
@@ -352,9 +351,9 @@ define([
 
                     renderList.push(command);
 
-                    distances = transformedBV.distance(position, direction, distances);
-                    near = Math.min(near, distances.x);
-                    far = Math.max(far, distances.y);
+                    distances = transformedBV.getPlaneDistances(position, direction, distances);
+                    near = Math.min(near, distances.start);
+                    far = Math.max(far, distances.stop);
 
                     insertIntoBin(scene, command, distances);
                 } else {
@@ -376,6 +375,8 @@ define([
         scene._near = near;
         scene._far = far;
 
+        // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
+        // last frame.
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(scene.farToNearRatio));
         if (near >= scene._binNear && far <= scene._binFar && numFrustums === scene._bins.length) {
             scene._useBins = true;
