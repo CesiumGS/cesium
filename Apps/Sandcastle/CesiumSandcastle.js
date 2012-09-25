@@ -463,15 +463,19 @@ require({
             if ((pos <= 0) || (pos2 <= pos)) {
                 var ele = document.createElement('span');
                 ele.className = 'consoleError';
-            ele.textContent = 'Error reading source file: ' + demo.name + '\n';
+                ele.textContent = 'Error reading source file: ' + demo.name + '\n';
                 appendConsole(ele);
             } else {
-                var script = body.substring(pos + 38, pos2 - 1);
-                while (script.charAt(0) < 32) {
+                var script = body.substring(pos + 38, pos2);
+                while (script.charCodeAt(0) < 32) {
                     script = script.substring(1);
                 }
                 jsEditor.setValue(script);
-                htmlEditor.setValue(body.substring(0, pos - 1));
+                script = body.substring(0, pos);
+                while (script.charCodeAt(0) < 32) {
+                    script = script.substring(1);
+                }
+                htmlEditor.setValue(script);
                 CodeMirror.commands.runCesium(jsEditor);
             }
         }
@@ -574,8 +578,8 @@ require({
 
         registry.byId('dropDownSaveAs').on('show', function () {
             var html = local.headers + htmlEditor.getValue() +
-                '\n<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
-                '\n</script>\n</body>\n</html>\n';
+                '<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
+                '</script>\n</body>\n</html>\n';
 
             var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
             currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
@@ -588,8 +592,8 @@ require({
 
         registry.byId('buttonNewWindow').on('click', function () {
             var html = local.headers + htmlEditor.getValue() +
-                '\n<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
-                '\n</script>\n</body>\n</html>\n';
+                '<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
+                '</script>\n</body>\n</html>\n';
             var baseHref = window.location.href;
             var pos = baseHref.lastIndexOf('/');
             baseHref = baseHref.substring(0, pos) + '/gallery/';
