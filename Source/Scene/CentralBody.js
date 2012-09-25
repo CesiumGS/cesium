@@ -992,7 +992,6 @@ define([
             }
         }
 
-        this._rsColor.depthTest.enabled = (mode === SceneMode.MORPHING);  // Depth test during morph
         var cull = (mode === SceneMode.SCENE3D) || (mode === SceneMode.MORPHING);
         this._rsColor.cull.enabled = cull;
         this._rsColorWithoutDepthTest.cull.enabled = cull;
