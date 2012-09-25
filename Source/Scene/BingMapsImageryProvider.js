@@ -270,8 +270,8 @@ define([
 
     /**
      * Gets the tile discard policy.  If not undefined, the discard policy is responsible
-     * for filtering out "missing" tiles via its shouldDiscardImage function.
-     * By default, no tiles will be filtered.
+     * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+     * returns undefined, no tiles are filtered.
      * @returns {TileDiscardPolicy} The discard policy.
      */
     BingMapsImageryProvider.prototype.getTileDiscardPolicy = function() {
@@ -366,7 +366,7 @@ define([
      */
     BingMapsImageryProvider.prototype.requestImage = function(x, y, level) {
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this._tileDiscardPolicy);
+        return ImageryProvider.loadImage(url);
     };
 
     /**

@@ -2,7 +2,7 @@
 define(function() {
     "use strict";
 
-    var canvas;
+    var context2DsByWidthAndHeight = {};
 
     /**
      * Extract a pixel array from a loaded image.  Draws the image
@@ -13,10 +13,6 @@ define(function() {
      * @returns {CanvasPixelArray} The pixels of the image.
      */
     var imageToPixels = function(image, width, height) {
-        if (typeof canvas === 'undefined') {
-            canvas = document.createElement('canvas');
-        }
-
         if (typeof width === 'undefined') {
             width = image.width;
         }
@@ -24,13 +20,23 @@ define(function() {
             height = image.height;
         }
 
-        canvas.width = width;
-        canvas.height = height;
+        var context2DsByHeight = context2DsByWidthAndHeight[width];
+        if (typeof context2DsByHeight === 'undefined') {
+            context2DsByHeight = {};
+            context2DsByWidthAndHeight[width] = context2DsByHeight;
+        }
 
-        var context2d = canvas.getContext('2d');
-        context2d.globalCompositeOperation = 'copy';
+        var context2d = context2DsByHeight[height];
+        if (typeof context2d === 'undefined') {
+            var canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            context2d = canvas.getContext('2d');
+            context2d.globalCompositeOperation = 'copy';
+            context2DsByHeight[height] = context2d;
+        }
+
         context2d.drawImage(image, 0, 0, width, height);
-
         return context2d.getImageData(0, 0, width, height).data;
     };
 

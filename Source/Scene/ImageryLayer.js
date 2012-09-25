@@ -328,6 +328,28 @@ define([
     };
 
     ImageryLayer.prototype.createTexture = function(context, imagery) {
+        var imageryProvider = this.imageryProvider;
+
+        // If this imagery provider has a discard policy, use it to check if this
+        // image should be discarded.
+        if (typeof imageryProvider.getTileDiscardPolicy !== 'undefined') {
+            var discardPolicy = imageryProvider.getTileDiscardPolicy();
+
+            // If the discard policy is not ready yet, transition back to the
+            // RECEIVED state and we'll try again next time.
+            if (!discardPolicy.isReady()) {
+                imagery.state = ImageryState.RECEIVED;
+                return;
+            }
+
+            // Mark discarded imagery tiles invalid.  Parent imagery will be used instead.
+            if (discardPolicy.shouldDiscardImage(imagery.image)) {
+                imagery.state = ImageryState.INVALID;
+                return;
+            }
+        }
+
+        // Imagery does not need to be discarded, so upload it to WebGL.
         var texture = this._texturePool.createTexture2D(context, {
             source : imagery.image
         });
