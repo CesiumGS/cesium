@@ -391,12 +391,12 @@ define([
         }
 
         if (frameState.mode === SceneMode.SCENE3D) {
-            var occludeePoint = tile.getOccludeePoint();
-            if (typeof occludeePoint === 'undefined') {
+            var occludeePointInScaledSpace = tile.getOccludeePointInScaledSpace();
+            if (typeof occludeePointInScaledSpace === 'undefined') {
                 return true;
             }
 
-            return surface._ellipsoidalOccluder.isPointVisible(occludeePoint);
+            return surface._ellipsoidalOccluder.isScaledSpacePointVisible(occludeePointInScaledSpace);
         }
 
         return true;

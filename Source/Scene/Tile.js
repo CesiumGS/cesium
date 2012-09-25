@@ -252,12 +252,17 @@ define([
      *
      * @return {Cartesian3} The occludee point or undefined.
      */
-    Tile.prototype.getOccludeePoint = function() {
-        if (!this._occludeePointComputed) {
-            this._occludeePoint = Occluder.computeOccludeePointFromExtent(this.extent, this.tilingScheme.ellipsoid);
-            this._occludeePointComputed = true;
+    Tile.prototype.getOccludeePointInScaledSpace = function() {
+        if (!this.occludeePointComputed) {
+            var ellipsoid = this.tilingScheme.ellipsoid;
+            var occludeePoint = Occluder.computeOccludeePointFromExtent(this.extent, ellipsoid);
+            if (typeof occludeePoint !== 'undefined') {
+                occludeePoint.multiplyComponents(ellipsoid.getOneOverRadii(), occludeePoint);
+            }
+            this.occludeePoint = occludeePoint;
+            this.occludeePointComputed = true;
         }
-        return this._occludeePoint;
+        return this.occludeePoint;
     };
 
     Tile.prototype.freeResources = function() {

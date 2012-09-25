@@ -85,7 +85,7 @@ define([
         this._distanceToLimbInScaledSpaceSquared = distanceToLimbInScaledSpaceSquared;
     };
 
-    var bScratch = new Cartesian3(0.0, 0.0, 0.0);
+    var scratchCartesian = new Cartesian3(0.0, 0.0, 0.0);
 
 
     /**
@@ -107,13 +107,36 @@ define([
      * @see Occluder#getVisibility
      */
     EllipsoidalOccluder.prototype.isPointVisible = function(occludee) {
-        var cameraPosition = this._cameraPosition;
-        var ellipsoid = this._ellipsoid;
+        var occludeeScaledSpacePosition = occludee.multiplyComponents(this._ellipsoid.getOneOverRadii());
+        return this.isScaledSpacePointVisible(occludeeScaledSpacePosition);
+    };
 
+    /**
+     * Determines whether or not a point expressed in the ellipsoid scaled space, is hidden from view by the
+     * occluder.  To transform a Cartesian X, Y, Z position in the coordinate system aligned with the ellipsoid
+     * into the scaled space, multiply its components by the result of <code>Ellipsoid.getOneOverRadii()</code>.
+     *
+     * @memberof EllipsoidalOccluder
+     *
+     * @param {Cartesian3} occludeeScaledSpacePosition The point surrounding the occludee object represented in the scaled space.
+     *
+     * @return {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+     *
+     * @example
+     * var cameraPosition = new Cartesian3(0, 0, 1.5);
+     * var ellipsoid = new Ellipsoid(1.0, 1.1, 0.9);
+     * var occluder = new EllipsoidalOccluder(ellipsoid, cameraPosition);
+     * var point = new Cartesian3(0, -3, -3);
+     * var scaledSpacePoint = point.multiplyComponents(ellipsoid.getOneOverRadii());
+     * occluder.isScaledSpacePointVisible(point); //returns true
+     *
+     * @see Occluder#getVisibility
+     */
+    EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
         // Based on Cozzi and Stoner's paper, "GPU Ray Casting of Virtual Globes Supplement"
         var q = this._cameraPositionInScaledSpace;
         var wMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
-        var b = occludee.subtract(cameraPosition, bScratch).multiplyComponents(ellipsoid.getOneOverRadii(), bScratch);
+        var b = occludeeScaledSpacePosition.subtract(q, scratchCartesian);
         var d = -b.dot(q);
         if (d >= wMagnitudeSquared) {
             var tSquared = d * d / b.magnitudeSquared();
