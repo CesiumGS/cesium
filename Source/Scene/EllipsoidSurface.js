@@ -396,14 +396,6 @@ define([
                 return true;
             }
 
-            // Do simple sphere-based occlusion test
-            var occluder = surface._occluder;
-            var isVisible = occluder.isPointVisible(occludeePoint);
-            if (!isVisible) {
-                return false;
-            }
-
-            // Do a more accurate occlusion test based on the actual ellipsoid.
             return surface._ellipsoidalOccluder.isPointVisible(occludeePoint);
         }
 
