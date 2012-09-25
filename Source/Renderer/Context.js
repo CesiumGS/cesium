@@ -2288,7 +2288,7 @@ define([
             throw new DeveloperError('command is required.');
         }
 
-        if (!command.shaderProgram) {
+        if (typeof command.shaderProgram === 'undefined') {
             throw new DeveloperError('command.shaderProgram is required.');
         }
 
@@ -2335,7 +2335,7 @@ define([
             throw new DeveloperError('command.primitiveType is required and must be valid.');
         }
 
-        if (!command.vertexArray) {
+        if (typeof command.vertexArray === 'undefined') {
             throw new DeveloperError('command.vertexArray is required.');
         }
 
