@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Drag and drop CZML files onto the Cesium Viewer Widget to visualize time dynamic data.">
     <title>Cesium Demo</title>
     <script>
     var Sandcastle = {};
@@ -40,7 +41,6 @@
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro">
-
 <style>
 body {
     background: #000;
@@ -75,89 +75,133 @@ body {
 
 <script id="cesium_sandcastle_script">
 require([
-    'Source/Cesium'
-], function (
-    Cesium
-) {
+    'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
+    'dojo/on', 'dojo/dom'
+], function(
+    Cesium, CesiumViewerWidget,
+    on, dom)
+{
     "use strict";
 
-    var canvas = document.createElement('canvas');
-    canvas.className = 'fullSize';
-    document.getElementById('cesiumContainer').appendChild(canvas);
     var ellipsoid = Cesium.Ellipsoid.WGS84;
-    var scene = new Cesium.Scene(canvas);
-    var primitives = scene.getPrimitives();
+    var scene; 
+    var cb;
+    var mousePosition;
 
-    var bingAerialImageryProvider = new Cesium.BingMapsImageryProvider({
-        server : 'dev.virtualearth.net',
-        mapStyle : Cesium.BingMapsStyle.AERIAL,
-        // Some versions of Safari support WebGL, but don't correctly implement
-        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-    });
-    
-    var terrainProvider;
+    function ellipsoidIntersections(ellipsoid, ray) {
+        var position = ray.origin;
+        var direction = ray.direction;
+        var oneOverRadii = ellipsoid.getOneOverRadii();
 
-    /*terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
-        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-        token : 'D8j6pWVs9k1FenI1Pw4QoOGDTVtDe8ARm7d6qOza08sephJ1SMtQOT5QxrIFsgnP2UwpB7iaaF6kYcIHxm7waw..',
-        proxy : new Cesium.DefaultProxy('/terrain/')
-    });*/
+        var scaledPosition = position.multiplyComponents(oneOverRadii);
+        var scaledDirection = direction.multiplyComponents(oneOverRadii);
 
-    terrainProvider = new Cesium.TileMapServiceTerrainProvider({
-        url : 'http://cesium.agi.com/terrain'
-    });
+        var a = scaledDirection.magnitudeSquared();
+        var b = 2.0 * scaledPosition.dot(scaledDirection);
+        var c = scaledPosition.magnitudeSquared() - 1.0;
 
-    var cb = new Cesium.CentralBody(ellipsoid, terrainProvider);
-    cb.getImageLayers().addImageryProvider(bingAerialImageryProvider);
-    cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
-    cb.specularMapSource = '../../../Images/earthspec1k.jpg';
-    cb.showSkyAtmosphere = true;
-    cb.showGroundAtmosphere = false;
-    cb.affectedByLighting = false;
-    primitives.setCentralBody(cb);
+        var b2 = b * b;
+        var four_ac = 4.0 * a * c;
+        var radicand = b2 - four_ac;
 
-    scene.getCamera().frustum.near = 10.0;
-    scene.getCamera().getControllers().addCentralBody();
-    
-    scene.setAnimation(function() {
-        scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
-
-        // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
-    });
-
-    function tick() {
-        scene.render();
-        Cesium.requestAnimationFrame(tick);
-    }
-    tick();
-
-    // Prevent right-click from opening a context menu.
-    canvas.oncontextmenu = function() {
-        return false;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Example resize handler
-
-    var onResize = function() {
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
-
-        if (canvas.width === width && canvas.height === height) {
-            return;
+        if (radicand < 0.0) {
+            return undefined;
         }
 
-        canvas.width = width;
-        canvas.height = height;
-        scene.getCamera().frustum.aspectRatio = width / height;
-    };
-    window.addEventListener('resize', onResize, false);
-    onResize();
-    
-    document.getElementById('toolbar').innerHTML = '';
-});
+        var q = -0.5 * (b + sign(b) * Math.sqrt(radicand));
+        if (b > 0.0) {
+            return [q / a, c / q];
+        }
+        return [c / q, q / a];
+    }
 
+    function sign(x) {
+        if (x < 0.0) {
+            return -1.0;
+        } else if (x > 0.0) {
+            return 1.0;
+        }
+        return 0.0;
+    }
+
+    function keydownHandler(e) {
+        switch (e.keyCode) {
+        case 'F'.charCodeAt(0):
+            cb._surface.toggleLodUpdate();
+            break;
+        case 'B'.charCodeAt(0):
+            var camera = scene.getCamera();
+            var pickRay = camera.getPickRay(mousePosition);
+            var intersectionDistance = ellipsoidIntersections(ellipsoid, pickRay)[0];
+            var intersectionPoint = pickRay.getPoint(intersectionDistance);
+            var cartographicPick = ellipsoid.cartesianToCartographic(intersectionPoint);
+            cb._surface.debugShowBoundingSphereOfTileAt(cartographicPick);
+            break;
+        case 'V'.charCodeAt(0):
+            var camera = scene.getCamera();
+            console.log('position: ' + camera.getPositionWC() + ' direction: ' + camera.getDirectionWC() + ' up: ' + camera.getUpWC());
+            break;
+        case 'L'.charCodeAt(0):
+            var position = new Cesium.Cartesian3(-2444822.7410362503, -4495391.442027786, 3800016.0770029235);
+            var direction = new Cesium.Cartesian3(0.2306406390807245, 0.8212545213405562, 0.5218677100397503);
+            var up = new Cesium.Cartesian3(-0.31881470184216937, -0.44294118336776583, 0.8379500545772692);
+            var camera = scene.getCamera();
+            camera.lookAt(position, position.add(direction), up);
+            break;
+        case 'C'.charCodeAt(0):
+            var position = new Cesium.Cartesian3(-2444319.744271441, -4490462.305656268, 3800605.179680734);
+            var direction = new Cesium.Cartesian3(0.3079076572929976, 0.5183187255969877, 0.7978336751954334);
+            var up = new Cesium.Cartesian3(-0.38141711164833125, -0.7009912978668698, 0.6026045031832784);
+            var camera = scene.getCamera();
+            camera.lookAt(position, position.add(direction), up);
+            break;
+        }
+    }
+
+    var cesiumViewerWidget = new CesiumViewerWidget({
+        postSetup : function(widget) {
+            scene = widget.scene;
+            cb = scene.getPrimitives().getCentralBody();
+
+            var terrainProvider = new Cesium.TileMapServiceTerrainProvider({
+                url : 'http://cesium.agi.com/terrain'
+            });
+
+            cb._surface.terrainProvider = terrainProvider;
+
+            scene.getCamera().frustum.near = 10.0;
+            cb.affectedByLighting = false;
+            
+            /*var imageryLayerCollection = cb.getImageLayers();
+            imageryLayerCollection.removeAll();
+            
+            var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+              url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+              proxy : new Cesium.DefaultProxy('/proxy/')
+            });
+            var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
+  
+            var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+                url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
+                proxy : new Cesium.DefaultProxy('/proxy/')
+            });
+            var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);*/
+            
+            document.addEventListener('keydown', keydownHandler, false);
+            
+            var handler = new Cesium.EventHandler(widget.canvas);
+
+            handler.setMouseAction(function(movement) {
+                mousePosition = movement.endPosition;
+                // Use movement.startPosition, movement.endPosition
+            }, Cesium.MouseEventType.MOVE);
+
+            widget.startRenderLoop();
+        }
+    }).placeAt(dom.byId("cesiumContainer"));
+    
+    dom.byId('toolbar').innerHTML = '';
+});
 </script>
 </body>
 </html>
