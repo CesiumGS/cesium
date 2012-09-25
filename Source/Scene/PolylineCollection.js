@@ -134,6 +134,9 @@ define([
          */
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
+        this._sp = undefined;
+        this._sp2D = undefined;
+        this._spDefault = undefined;
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
@@ -435,10 +438,12 @@ define([
      * @memberof PolylineCollection
      */
     PolylineCollection.prototype.update = function(context, frameState, commandList) {
-        if (typeof this._sp === 'undefined') {
-            this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
+        if (typeof this._spDefault === 'undefined') {
+            this._spDefault = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
         }
-
+        if(typeof this._sp2D === 'undefined'){
+            this._sp2D = context.getShaderCache().getShaderProgram('#define GROUND_TRACK 1\n' + PolylineVS, PolylineFS, attributeIndices);
+        }
         this._removePolylines();
         this._updateMode(frameState);
 
@@ -531,7 +536,7 @@ define([
         var commands;
         var command;
         polylineBuckets = this._polylineBuckets;
-
+        var sp = this._sp;
         this._commandLists.removeAll();
         if (typeof polylineBuckets !== 'undefined') {
             if (pass.color) {
@@ -557,7 +562,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._drawUniformsOne;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsOne;
@@ -572,7 +577,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._drawUniformsTwo;
                         command.vertexArray = vaColor.va;
                         command.renderState = bucketLocator.rsTwo;
@@ -587,7 +592,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._drawUniformsThree;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsThree;
@@ -615,7 +620,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._pickUniforms;
                         command.vertexArray = vaPickColor.va;
                         command.renderState = bucketLocator.rsPick;
@@ -665,7 +670,8 @@ define([
      * polylines = polylines && polylines.destroy();
      */
     PolylineCollection.prototype.destroy = function() {
-        this._sp = this._sp && this._sp.release();
+        this._spDefault = this._spDefault && this._spDefault.release();
+        this._sp2D = this._sp2D && this._sp2D.release();
         this._destroyVertexArrays();
         this._destroyPolylines();
         return destroyObject(this);
@@ -933,17 +939,29 @@ define([
                 this._drawUniformsTwo = this._drawUniformsTwo3D;
                 this._drawUniformsThree = this._drawUniformsThree3D;
                 this._pickUniforms = this._pickUniforms3D;
+                this._sp = this._spDefault;
                 break;
             case SceneMode.SCENE2D:
+                this._setDrawUniforms2D();
+                this._sp = this._sp2D;
+                break;
             case SceneMode.COLUMBUS_VIEW:
-                this._drawUniformsOne = this._drawUniformsOne2D;
-                this._drawUniformsTwo = this._drawUniformsTwo2D;
-                this._drawUniformsThree = this._drawUniformsThree2D;
-                this._pickUniforms = this._pickUniforms2D;
+                this._setDrawUniforms2D();
+                this._sp = this._spDefault;
+                break;
+            case SceneMode.MORPHING:
+                this._sp = this._spDefault;
                 break;
             }
             this._createVertexArray = true;
         }
+    };
+
+    PolylineCollection.prototype._setDrawUniforms2D = function(){
+        this._drawUniformsOne = this._drawUniformsOne2D;
+        this._drawUniformsTwo = this._drawUniformsTwo2D;
+        this._drawUniformsThree = this._drawUniformsThree2D;
+        this._pickUniforms = this._pickUniforms2D;
     };
 
     PolylineCollection.prototype._getModelMatrix = function(mode) {
