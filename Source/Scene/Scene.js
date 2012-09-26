@@ -81,10 +81,7 @@ define([
 
         this._commandList = [];
         this._renderList = [];
-
-        this._bins = [];
-        this._binNear = Number.MAX_VALUE;
-        this._binFar = Number.MIN_VALUE;
+        this._frustumCommands = [];
         this._useBins = false;
 
         /**
@@ -266,22 +263,15 @@ define([
     }
 
     function insertIntoBin(scene, command, distance) {
-        var near = scene._binNear;
-        var far = scene._binFar;
-        var farToNearRatio = scene.farToNearRatio;
-
-        if (far < near) {
+        var frustumCommands = scene._frustumCommands;
+        var length = frustumCommands.length;
+        if (length === 0 || frustumCommands[length - 1].far < frustumCommands.near) {
             return;
         }
 
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-        if (scene._bins.length === 0) {
-            scene._bins.length = numFrustums;
-        }
-
-        for (var i = 0; i < numFrustums; ++i) {
-            var curNear = Math.pow(farToNearRatio, i) * near;
-            var curFar = farToNearRatio * curNear;
+        for (var i = 0; i < length; ++i) {
+            var curNear = frustumCommands[i].near;
+            var curFar = frustumCommands[i].far;
 
             if (typeof distance !== 'undefined') {
                 if (distance.start > curFar) {
@@ -294,11 +284,7 @@ define([
             }
 
             // PERFORMANCE_IDEA: sort bins
-            var bin = scene._bins[i];
-            if (typeof bin === 'undefined') {
-                bin = scene._bins[i] = [];
-            }
-            bin.push(command);
+            frustumCommands[i].push(command);
         }
     }
 
@@ -315,8 +301,13 @@ define([
         var renderList = scene._renderList;
         renderList.length = 0;
 
-        var bins = scene._bins;
-        bins.length = 0;
+        var frustumCommands = scene._frustumCommands;
+        var frustumsLength = frustumCommands.length;
+        if (scene._useBins) {
+            for (var n = 0; n < frustumsLength; ++n) {
+                frustumCommands[n].length = 0;
+            }
+        }
 
         var near = Number.MAX_VALUE;
         var far = Number.MIN_VALUE;
@@ -377,13 +368,26 @@ define([
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame.
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(scene.farToNearRatio));
-        if (near >= scene._binNear && far <= scene._binFar && numFrustums === scene._bins.length) {
+        var farToNearRatio = scene.farToNearRatio;
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+        if (frustumsLength !== 0 && numFrustums === frustumsLength &&
+                near >= frustumCommands[0].near && far <= frustumCommands[frustumsLength - 1].far) {
             scene._useBins = true;
         } else {
             scene._useBins = false;
-            scene._binNear = near;
-            scene._binFar = far;
+
+            frustumCommands.length = numFrustums;
+            for (var m = 0; m < numFrustums; ++m) {
+                var frustum = frustumCommands[m];
+                if (typeof frustum === 'undefined') {
+                    frustum = frustumCommands[m] = [];
+                } else {
+                    frustum.length = 0;
+                }
+
+                frustum.near = Math.pow(farToNearRatio, m) * near;
+                frustum.far = farToNearRatio * frustum.near;
+            }
         }
     }
 
@@ -412,27 +416,26 @@ define([
         var length;
 
         if (scene._useBins) {
-            var bins = scene._bins;
-            near = scene._binNear;
-            far = scene._binFar;
+            var frustumCommands = scene._frustumCommands;
 
-            numFrustums = bins.length;
+            numFrustums = frustumCommands.length;
             for (var i = 0; i < numFrustums; ++i) {
                 context.clear(clearDepth);
-                var binIndex = numFrustums - i - 1.0;
-                frustum.near = Math.pow(farToNearRatio, binIndex) * near;
-                frustum.far = frustum.near * farToNearRatio;
+
+                var index = numFrustums - i - 1.0;
+                var commands = frustumCommands[index];
+                frustum.near = commands.near;
+                frustum.far = commands.far;
 
                 us.setProjection(frustum.getProjectionMatrix());
                 if (frustum.getInfiniteProjectionMatrix) {
                     us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
                 }
 
-                var bin = bins[binIndex];
-                if (typeof bin !== 'undefined') {
-                    length = bin.length;
+                if (typeof commands !== 'undefined') {
+                    length = commands.length;
                     for (var j = 0; j < length; ++j) {
-                        var command = bin[j];
+                        var command = commands[j];
                         drawCommand.primitiveType = command.primitiveType;
                         drawCommand.vertexArray = command.vertexArray;
                         drawCommand.count = command.count;
