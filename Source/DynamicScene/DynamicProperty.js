@@ -159,8 +159,10 @@ define([
         var values = intervalData.values;
         if (intervalData.isSampled && times.length >= 0 && values.length > 0) {
             var index = binarySearch(times, time, JulianDate.compare);
-
             if (index < 0) {
+                if(intervalData.numberOfPoints < 2){
+                    return undefined;
+                }
                 index = ~index;
 
                 if (index >= times.length) {
@@ -226,9 +228,7 @@ define([
                 // Interpolate!
                 var x = times[lastIndex].getSecondsDifference(time);
                 var interpolationResult = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
-                if(typeof interpolationResult === 'undefined'){
-                    return undefined;
-                }
+
                 var specializedGetFunction = thisValueType.getValueFromInterpolationResult;
                 if (typeof specializedGetFunction === 'undefined') {
                     return thisValueType.getValueFromArray(interpolationResult, 0, result);

@@ -64,9 +64,8 @@ define([
      * @param {Number} yStride The number of dependent variable values in yTable corresponding to
      * each independent variable value in xTable.
      *
-     * @returns An array of interpolated values or undefined.  If an array is returned, it contains at least yStride elements, each
-     * of which is an interpolated dependent variable value. If yStride is zero or the xTable's length is
-     * not two, this returns undefined.
+     * @returns An array of interpolated values.  The array contains at least yStride elements, each
+     * of which is an interpolated dependent variable value.
      *
      * @see LagrangePolynomialApproximation
      * @see HermitePolynomialApproximation
@@ -75,8 +74,10 @@ define([
      * @memberof LinearApproximation
      */
     LinearApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride) {
-        if (xTable.length !== 2 || yStride <= 0) {
-            return undefined;
+        if (xTable.length !== 2) {
+            throw new DeveloperError('The xTable provided to the linear interpolator must have exactly two elements.');
+        } else if (yStride <= 0) {
+            throw new DeveloperError('There must be at least 1 dependent variable for each independent variable.');
         }
 
         var result = new Array(yStride), x0 = xTable[0], x1 = xTable[1], i, y0, y1;

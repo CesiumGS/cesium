@@ -39,19 +39,22 @@ defineSuite([
         expect(results[0]).toEqual(30.0);
     });
 
-    it('should return undefined if length is greater than 2', function() {
+    it('should throw if length is greater than 2', function() {
         var xTable = [44.0, 99.0, 230.0];
         var yTable = [2.3, 4.5, 6.6, 3.2, 4.4, 12.23];
 
-        expect(LinearApproximation.interpolateOrderZero(2.3, xTable, yTable, 3)).toBeUndefined();
+        expect(function() {
+            LinearApproximation.interpolateOrderZero(2.3, xTable, yTable, 3);
+        }).toThrow();
     });
 
-    it('should return undefined when yStride equals zero indicating that there are no dependent variables for interpolation', function() {
+    it('should throw when yStride equals zero indicating that there are no dependent variables for interpolation', function() {
         var xTable = [4.0, 8.0];
         var yTable = [4.0, 8.0];
 
-        expect(
-            LinearApproximation.interpolateOrderZero(6.0, xTable, yTable, 0)).toBeUndefined();
+        expect(function() {
+            LinearApproximation.interpolateOrderZero(6.0, xTable, yTable, 0);
+        }).toThrow();
     });
 
     it('getRequiredDataPoints returns 2', function() {
