@@ -2,6 +2,7 @@
 define([
         './DynamicObject',
         './DynamicBillboard',
+        './DynamicEllipsoid',
         './DynamicCone',
         './DynamicExternalDocument',
         './DynamicLabel',
@@ -11,6 +12,7 @@ define([
         './DynamicPolyline',
         './DynamicPyramid',
         './DynamicBillboardVisualizer',
+        './DynamicEllipsoidVisualizer',
         './DynamicConeVisualizerUsingCustomSensor', //CZML_TODO Replace with './DynamicConeVisualizer', once ComplexConicSensor works.
         './DynamicLabelVisualizer',
         './DynamicPathVisualizer',
@@ -21,6 +23,7 @@ define([
        ], function(
         DynamicObject,
         DynamicBillboard,
+        DynamicEllipsoid,
         DynamicCone,
         DynamicExternalDocument,
         DynamicLabel,
@@ -30,6 +33,7 @@ define([
         DynamicPolyline,
         DynamicPyramid,
         DynamicBillboardVisualizer,
+        DynamicEllipsoidVisualizer,
         DynamicConeVisualizer,
         DynamicLabelVisualizer,
         DynamicPathVisualizer,
@@ -60,6 +64,7 @@ define([
          * @see DynamicObjectCollection
          */
         updaters : [DynamicBillboard.processCzmlPacket,
+                    DynamicEllipsoid.processCzmlPacket,
                     DynamicCone.processCzmlPacket,
                     DynamicLabel.processCzmlPacket,
                     DynamicPath.processCzmlPacket,
@@ -81,6 +86,7 @@ define([
          * @see CompositeDynamicObjectCollection
          */
         mergers : [DynamicBillboard.mergeProperties,
+                   DynamicEllipsoid.mergeProperties,
                    DynamicCone.mergeProperties,
                    DynamicLabel.mergeProperties,
                    DynamicPath.mergeProperties,
@@ -98,6 +104,7 @@ define([
         * @see CompositeDynamicObjectCollection
         */
         cleaners : [DynamicBillboard.undefineProperties,
+                    DynamicEllipsoid.undefineProperties,
                     DynamicCone.undefineProperties,
                     DynamicLabel.undefineProperties,
                     DynamicPath.undefineProperties,
@@ -118,6 +125,7 @@ define([
          */
         createVisualizers : function(scene) {
             return [new DynamicBillboardVisualizer(scene),
+                    new DynamicEllipsoidVisualizer(scene),
                     new DynamicConeVisualizer(scene),
                     new DynamicLabelVisualizer(scene),
                     new DynamicPointVisualizer(scene),
