@@ -497,7 +497,7 @@ define([
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
                         command.shaderProgram = sp;
-                        command.uniformMap = this._drawUniformsOne;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsOne;
 
@@ -512,7 +512,7 @@ define([
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
                         command.shaderProgram = sp;
-                        command.uniformMap = this._drawUniformsTwo;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaColor.va;
                         command.renderState = bucketLocator.rsTwo;
 
@@ -527,7 +527,7 @@ define([
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
                         command.shaderProgram = sp;
-                        command.uniformMap = this._drawUniformsThree;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsThree;
                     }
@@ -555,7 +555,7 @@ define([
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
                         command.shaderProgram = sp;
-                        command.uniformMap = this._pickUniforms;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaPickColor.va;
                         command.renderState = bucketLocator.rsPick;
                     }
