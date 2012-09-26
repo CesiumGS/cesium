@@ -64,8 +64,9 @@ define([
      * @param {Number} yStride The number of dependent variable values in yTable corresponding to
      * each independent variable value in xTable.
      *
-     * @returns An array of interpolated values.  The array contains at least yStride elements, each
-     * of which is an interpolated dependent variable value.
+     * @returns An array of interpolated values or undefined.  If an array is returned, it contains at least yStride elements, each
+     * of which is an interpolated dependent variable value. If yStride is zero or the xTable's length is
+     * not two, this returns undefined.
      *
      * @see LagrangePolynomialApproximation
      * @see HermitePolynomialApproximation
