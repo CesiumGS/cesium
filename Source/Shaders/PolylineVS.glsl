@@ -9,34 +9,26 @@ varying vec4 v_color;
 
 uniform float u_morphTime;
 
-vec3 czm_translateRelativeToEye2(vec3 high, vec3 low)
-{
-    vec3 highDifference = high - czm_encodedCameraPositionMCHigh.zxy;
-    vec3 lowDifference = low - czm_encodedCameraPositionMCLow.zxy;
-
-    return highDifference + lowDifference;
-}
-
 void main() 
 {
     vec4 p;
-	
+
     if (u_morphTime == 1.0)
     {
         p = vec4(czm_translateRelativeToEye(position3DHigh, position3DLow), 1.0);
     }
     else if (u_morphTime == 0.0)
     {
-        p = vec4(czm_translateRelativeToEye2(position2DHigh.zxy, position2DLow.zxy), 1.0);
+        p = vec4(czm_translateRelativeToEye(position2DHigh, position2DLow).zxy, 1.0);
     }
     else
     {
         p = czm_columbusViewMorph(
-        		czm_translateRelativeToEye2(position2DHigh.zxy, position2DLow.zxy), 
+        	czm_translateRelativeToEye(position2DHigh, position2DLow).zxy,
             czm_translateRelativeToEye(position3DHigh, position3DLow), 
             u_morphTime);
     }
-	
+
     gl_Position = czm_modelViewProjectionRelativeToEye * p * show;  // position in clip coordinates
     v_color = color;
 }
