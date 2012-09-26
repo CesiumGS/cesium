@@ -199,7 +199,7 @@ define([
      */
     WebMapServiceImageryProvider.prototype.requestImage = function(x, y, level) {
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImageAndCheckDiscardPolicy(url, this._tileDiscardPolicy);
+        return ImageryProvider.loadImage(url);
     };
 
     /**

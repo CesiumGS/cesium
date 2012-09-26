@@ -84,6 +84,16 @@ define([
     };
 
     /**
+     * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+     * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+     * returns undefined, no tiles are filtered.
+     * @returns {TileDiscardPolicy} The discard policy.
+     */
+    ImageryProvider.prototype.getTileDiscardPolicy = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
      * Requests the image for a given tile.
      *
      * @param {Number} x The tile X coordinate.
@@ -100,15 +110,8 @@ define([
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 
-    ImageryProvider.loadImageAndCheckDiscardPolicy = function(url, discardPolicy) {
-        var imagePromise = throttleRequestByServer(url, loadImage);
-        if (typeof imagePromise === 'undefined' || typeof discardPolicy === 'undefined') {
-            return imagePromise;
-        }
-
-        return when(discardPolicy.shouldDiscardImage(imagePromise), function(shouldDiscard) {
-            return shouldDiscard ? undefined : imagePromise;
-        });
+    ImageryProvider.loadImage = function(url) {
+        return throttleRequestByServer(url, loadImage);
     };
 
     return ImageryProvider;

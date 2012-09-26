@@ -214,7 +214,7 @@ define([
     EllipsoidSurface.prototype.update = function(context, frameState, commandList, colorCommandList, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
-        createCommandsForTilesToRender(this, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState);
+        createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState);
         debugCreateCommandsForTileBoundingSphere(this, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList);
         updateLogos(this, context, frameState, commandList);
     };
@@ -962,7 +962,7 @@ define([
         }
     }
 
-    function createCommandsForTilesToRender(surface, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState) {
+    function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState) {
         var uniformState = context.getUniformState();
         var viewMatrix = frameState.camera.getViewMatrix();
         var projectionMatrix = uniformState.getProjection();

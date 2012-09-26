@@ -39,8 +39,11 @@ define([
         }
 
         this._pixelsToCheck = description.pixelsToCheck;
+        this._missingImagePixels = undefined;
+        this._isReady = false;
 
-        this._missingImagePixels = when(loadImage(description.missingImageUrl), function(image) {
+        var that = this;
+        when(loadImage(description.missingImageUrl), function(image) {
             var pixels = getImagePixels(image);
 
             if (description.disableCheckIfAllPixelsAreTransparent) {
@@ -63,43 +66,53 @@ define([
                 }
             }
 
-            return pixels;
+            that._missingImagePixels = pixels;
+            that._isReady = true;
         });
+    };
+
+    /**
+     * Determines if the discard policy is ready to process images.
+     * @returns True if the discard policy is ready to process images; otherwise, false.
+     */
+    DiscardMissingTileImagePolicy.prototype.isReady = function() {
+        return this._isReady;
     };
 
     /**
      * Given a tile image, decide whether to discard that image.
      *
-     * @param {Image|Promise} image An image, or a promise that will resolve to an image.
+     * @param {Image} image An image to test.
      *
-     * @returns A promise that will resolve to true if the tile should be discarded.
+     * @returns True if the image should be discarded; otherwise, false.
      */
     DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function(image) {
+        if (!this._isReady) {
+            throw new DeveloperError('shouldDiscardImage must not be called before the discard policy is ready.');
+        }
+
         var pixelsToCheck = this._pixelsToCheck;
-        return when.all([this._missingImagePixels, image], function(values) {
-            var missingImagePixels = values[0];
-            var image = values[1];
+        var missingImagePixels = this._missingImagePixels;
 
-            // If missingImagePixels is undefined, it indicates that the discard check has been disabled.
-            if (typeof missingImagePixels === 'undefined') {
-                return false;
-            }
+        // If missingImagePixels is undefined, it indicates that the discard check has been disabled.
+        if (typeof missingImagePixels === 'undefined') {
+            return false;
+        }
 
-            var pixels = getImagePixels(image);
-            var width = image.width;
+        var pixels = getImagePixels(image);
+        var width = image.width;
 
-            for (var i = 0, len = pixelsToCheck.length; i < len; ++i) {
-                var pos = pixelsToCheck[i];
-                var index = pos.x * 4 + pos.y * width;
-                for (var offset = 0; offset < 4; ++offset) {
-                    var pixel = index + offset;
-                    if (pixels[pixel] !== missingImagePixels[pixel]) {
-                        return false;
-                    }
+        for (var i = 0, len = pixelsToCheck.length; i < len; ++i) {
+            var pos = pixelsToCheck[i];
+            var index = pos.x * 4 + pos.y * width;
+            for (var offset = 0; offset < 4; ++offset) {
+                var pixel = index + offset;
+                if (pixels[pixel] !== missingImagePixels[pixel]) {
+                    return false;
                 }
             }
-            return true;
-        });
+        }
+        return true;
     };
 
     return DiscardMissingTileImagePolicy;
