@@ -382,10 +382,28 @@ define([
         }
     }
 
+    var scratchCommand = new Command();
+
+    function getFinalCommand(command, framebuffer) {
+        // Shadow copy to potentially replace framebuffer
+        scratchCommand.primitiveType = command.primitiveType;
+        scratchCommand.vertexArray = command.vertexArray;
+        scratchCommand.count = command.count;
+        scratchCommand.offset = command.offset;
+        scratchCommand.shaderProgram = command.shaderProgram;
+        scratchCommand.uniformMap = command.uniformMap;
+        scratchCommand.renderState = command.renderState;
+        scratchCommand.framebuffer = defaultValue(command.framebuffer, framebuffer);
+        scratchCommand.boundingVolume = command.boundingVolume;
+        scratchCommand.modelMatrix = command.modelMatrix;
+
+        return scratchCommand;
+    }
+
     var scratchNearPlane = new Cartesian4();
     var scratchFarPlane = new Cartesian4();
     var scratchRenderCartesian3 = new Cartesian3();
-    var scratchCommand = new Command();
+
     function renderPrimitives(scene, framebuffer) {
         var farToNearRatio = scene.farToNearRatio;
         var camera = scene._camera;
@@ -405,7 +423,6 @@ define([
         var near;
         var far;
         var length;
-        var cloneCommand;
 
         if (scene._useBins) {
             var bins = scene._bins;
@@ -419,16 +436,13 @@ define([
                 frustum.near = Math.pow(farToNearRatio, binIndex) * near;
                 frustum.far = frustum.near * farToNearRatio;
 
-                us.update(camera, frustum);
+                us.updateFrustum(frustum);
 
                 var bin = bins[binIndex];
                 if (typeof bin !== 'undefined') {
                     length = bin.length;
                     for (var j = 0; j < length; ++j) {
-                        var command = bin[j];
-                        cloneCommand = Command.cloneDrawArguments(command, scratchCommand);
-                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
-                        context.draw(cloneCommand);
+                        context.draw(getFinalCommand(bin[j], framebuffer));
                     }
                 }
             }
@@ -457,7 +471,7 @@ define([
                 frustum.near = Math.pow(farToNearRatio, numFrustums - p - 1.0) * near;
                 frustum.far = frustum.near * farToNearRatio;
 
-                us.update(camera, frustum);
+                us.updateFrustum(frustum);
 
                 // compute near plane
                 var nearCenter = scratchRenderCartesian3;
@@ -489,9 +503,7 @@ define([
                             continue;
                         }
 
-                        cloneCommand = Command.cloneDrawArguments(renderCommand, scratchCommand);
-                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
-                        context.draw(cloneCommand);
+                        context.draw(getFinalCommand(renderCommand, framebuffer));
 
                         if (nearIntersect === Intersect.INSIDE) {
                             renderList.splice(q, 1);
@@ -499,9 +511,7 @@ define([
                             --q;
                         }
                     } else {
-                        cloneCommand = Command.cloneDrawArguments(renderCommand, scratchCommand);
-                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
-                        context.draw(cloneCommand);
+                        context.draw(getFinalCommand(renderCommand, framebuffer));
                     }
                 }
             }

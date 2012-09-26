@@ -130,6 +130,22 @@ define([
     }
 
     /**
+     * Synchronizes the frustum's state with the uniform state.  This is called
+     * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
+     * are set to the right value.
+     *
+     * @memberof UniformState
+     *
+     * @param {Object} frustum The frustum to synchronize with.
+     */
+    UniformState.prototype.updateFrustum = function(frustum) {
+        setProjection(this, frustum.getProjectionMatrix());
+        if (frustum.getInfiniteProjectionMatrix) {
+            setInfiniteProjection(this, frustum.getInfiniteProjectionMatrix());
+        }
+    };
+
+    /**
      * Synchronizes the camera's state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
      * are set to the right value.
@@ -139,14 +155,10 @@ define([
      * @param {Camera} camera The camera to synchronize with.
      */
     UniformState.prototype.update = function(camera) {
-        var frustum = camera.frustum;
-
         setView(this, camera.getViewMatrix());
-        setProjection(this, frustum.getProjectionMatrix());
-        if (frustum.getInfiniteProjectionMatrix) {
-            setInfiniteProjection(this, frustum.getInfiniteProjectionMatrix());
-        }
         setCameraPosition(this, camera.position);
+
+        this.updateFrustum(camera.frustum);
     };
 
     /**
