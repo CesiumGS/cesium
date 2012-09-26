@@ -1130,7 +1130,7 @@ define([
     var scratchPoint = new Cartesian4(0.0, 0.0, 0.0, 1.0);
 
     /**
-     * Computes the product of a matrix and an {@link Cartesian3}.  This is equivalent to calling {@link Matrix4.multiplyByVector}
+     * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4.multiplyByVector}
      * with a {@link Cartesian4} with a <code>w</code> component of one.
      * @memberof Matrix4
      *
@@ -1852,7 +1852,7 @@ define([
     };
 
     /**
-     * Computes the product of a matrix and an {@link Cartesian3}.  This is equivalent to calling {@link Matrix4#multiplyByVector}
+     * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4#multiplyByVector}
      * with a {@link Cartesian4} with a <code>w</code> component of one.
      * @memberof Matrix4
      *

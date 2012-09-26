@@ -543,7 +543,7 @@ define([
 
         /**
          * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
-         * transforms model coordinates relative to the eye to eye coordinates.  This is used
+         * transforms model coordinates, relative to the eye, to eye coordinates.  This is used
          * in conjunction with {@link czm_translateRelativeToEye}.
          * <br /><br />
          * Like all automatic uniforms, <code>czm_modelViewRelativeToEye</code> does not need to be explicitly declared.
@@ -707,7 +707,7 @@ define([
 
         /**
          * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
-         * transforms model coordinates relative to the eye to clip coordinates.  Clip coordinates is the
+         * transforms model coordinates, relative to the eye, to clip coordinates.  Clip coordinates is the
          * coordinate system for a vertex shader's <code>gl_Position</code> output.  This is used in
          * conjunction with {@link czm_translateRelativeToEye}.
          * <br /><br />
