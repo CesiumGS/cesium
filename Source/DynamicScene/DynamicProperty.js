@@ -226,7 +226,9 @@ define([
                 // Interpolate!
                 var x = times[lastIndex].getSecondsDifference(time);
                 var interpolationResult = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue);
-
+                if(typeof interpolationResult === 'undefined'){
+                    return undefined;
+                }
                 var specializedGetFunction = thisValueType.getValueFromInterpolationResult;
                 if (typeof specializedGetFunction === 'undefined') {
                     return thisValueType.getValueFromArray(interpolationResult, 0, result);

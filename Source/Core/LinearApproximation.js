@@ -74,10 +74,8 @@ define([
      * @memberof LinearApproximation
      */
     LinearApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride) {
-        if (xTable.length !== 2) {
-            throw new DeveloperError('The xTable provided to the linear interpolator must have exactly two elements.');
-        } else if (yStride <= 0) {
-            throw new DeveloperError('There must be at least 1 dependent variable for each independent variable.');
+        if (xTable.length !== 2 || yStride <= 0) {
+            return undefined;
         }
 
         var result = new Array(yStride), x0 = xTable[0], x1 = xTable[1], i, y0, y1;
