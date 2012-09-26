@@ -25,7 +25,8 @@ define([
         './SceneMode',
         './FrameState',
         './OrthographicFrustum',
-        './PerspectiveOffCenterFrustum'
+        './PerspectiveOffCenterFrustum',
+        './FrustumCommands'
     ], function(
         Color,
         defaultValue,
@@ -52,7 +53,8 @@ define([
         SceneMode,
         FrameState,
         OrthographicFrustum,
-        PerspectiveOffCenterFrustum) {
+        PerspectiveOffCenterFrustum,
+        FrustumCommands) {
     "use strict";
 
     /**
@@ -77,7 +79,7 @@ define([
         this._shaderFrameCount = 0;
 
         this._commandList = [];
-        this._frustumCommands = [];
+        this._frustumCommandsList = [];
 
         /**
          * The current mode of the scene.
@@ -258,15 +260,16 @@ define([
     }
 
     function insertIntoBin(scene, command, distance) {
-        var frustumCommands = scene._frustumCommands;
-        var length = frustumCommands.length;
-        if (length === 0 || frustumCommands[length - 1].far < frustumCommands.near) {
+        var frustumCommandsList = scene._frustumCommandsList;
+        var length = frustumCommandsList.length;
+        if (length === 0 || frustumCommandsList[length - 1].far <= frustumCommandsList[0].near) {
             return;
         }
 
         for (var i = 0; i < length; ++i) {
-            var curNear = frustumCommands[i].near;
-            var curFar = frustumCommands[i].far;
+            var frustumCommands = frustumCommandsList[i];
+            var curNear = frustumCommands.near;
+            var curFar = frustumCommands.far;
 
             if (typeof distance !== 'undefined') {
                 if (distance.start > curFar) {
@@ -279,7 +282,7 @@ define([
             }
 
             // PERFORMANCE_IDEA: sort bins
-            frustumCommands[i].push(command);
+            frustumCommands.commands.push(command);
         }
     }
 
@@ -293,10 +296,10 @@ define([
         var direction = camera.getDirectionWC();
         var position = camera.getPositionWC();
 
-        var frustumCommands = scene._frustumCommands;
-        var frustumsLength = frustumCommands.length;
+        var frustumCommandsList = scene._frustumCommandsList;
+        var frustumsLength = frustumCommandsList.length;
         for (var n = 0; n < frustumsLength; ++n) {
-            frustumCommands[n].length = 0;
+            frustumCommandsList[n].commands.length = 0;
         }
 
         var near = Number.MAX_VALUE;
@@ -351,20 +354,23 @@ define([
         }
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
-        // last frame.
+        // last frame, else compute the new frustums and sort them by frustum again.
         var farToNearRatio = scene.farToNearRatio;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         if (near < far && (frustumsLength === 0 || numFrustums !== frustumsLength ||
-                near < frustumCommands[0].near || far > frustumCommands[frustumsLength - 1].far)) {
-            frustumCommands.length = numFrustums;
+                near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)) {
+            frustumCommandsList.length = numFrustums;
             for (var m = 0; m < numFrustums; ++m) {
-                var frustum = frustumCommands[m];
-                if (typeof frustum === 'undefined') {
-                    frustum = frustumCommands[m] = [];
-                }
+                var curNear = Math.pow(farToNearRatio, m) * near;
+                var curFar = farToNearRatio * curNear;
 
-                frustum.near = Math.pow(farToNearRatio, m) * near;
-                frustum.far = farToNearRatio * frustum.near;
+                var frustumCommands = frustumCommandsList[m];
+                if (typeof frustumCommands === 'undefined') {
+                    frustumCommands = frustumCommandsList[m] = new FrustumCommands(curNear, curFar);
+                } else {
+                    frustumCommands.near = curNear;
+                    frustumCommands.far = curFar;
+                }
             }
 
             createPotentiallyVisibleSet(scene, listName);
@@ -403,21 +409,22 @@ define([
         });
         context.clear(clearColor);
 
-        var frustumCommands = scene._frustumCommands;
-        var numFrustums = frustumCommands.length;
+        var frustumCommandsList = scene._frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
         for (var i = 0; i < numFrustums; ++i) {
             context.clear(clearDepth);
 
             var index = numFrustums - i - 1.0;
-            var commands = frustumCommands[index];
-            frustum.near = commands.near;
-            frustum.far = commands.far;
+            var frustumCommands = frustumCommandsList[index];
+            frustum.near = frustumCommands.near;
+            frustum.far = frustumCommands.far;
 
             us.setProjection(frustum.getProjectionMatrix());
             if (frustum.getInfiniteProjectionMatrix) {
                 us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
             }
 
+            var commands = frustumCommands.commands;
             var length = commands.length;
             for (var j = 0; j < length; ++j) {
                 context.draw(getFinalCommand(commands[j], framebuffer));
