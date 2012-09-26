@@ -1955,8 +1955,6 @@ define([
         var automaticUniforms = this._automaticUniforms;
 
         if (uniformMap) {
-            uniformState.setModel(uniformMap.u_model ? uniformMap.u_model() : Matrix4.IDENTITY);
-
             for (var uniform in manualUniforms) {
                 if (manualUniforms.hasOwnProperty(uniform)) {
                     manualUniforms[uniform].value = uniformMap[uniform]();

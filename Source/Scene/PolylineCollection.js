@@ -161,73 +161,12 @@ define([
         this._mode = undefined;
         var that = this;
 
-        var drawUniformsOne = {
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
-        var drawUniformsTwo = {
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
-        var drawUniformsThree = {
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
-        var pickUniforms = {
+        this._uniforms = {
             u_morphTime : function() {
                 return that.morphTime;
             }
         };
 
-        this._drawUniformsOne3D = combine([drawUniformsOne, {
-            u_model : function() {
-                return that._getModelMatrix(that._mode);
-            }
-        }], false, false);
-
-        this._drawUniformsTwo3D = combine([drawUniformsTwo, {
-            u_model : function() {
-                return that._getModelMatrix(that._mode);
-            }
-        }], false, false);
-        this._drawUniformsThree3D = combine([drawUniformsThree, {
-            u_model : function() {
-                return that._getModelMatrix(that._mode);
-            }
-        }], false, false);
-        this._pickUniforms3D = combine([pickUniforms, {
-            u_model : function() {
-                return that._getModelMatrix(that._mode);
-            }
-        }], false, false);
-
-        this._drawUniformsOne2D = combine([drawUniformsOne, {
-            u_model : function() {
-                return Matrix4.IDENTITY;
-            }
-        }], false, false);
-        this._drawUniformsTwo2D = combine([drawUniformsTwo, {
-            u_model : function() {
-                return Matrix4.IDENTITY;
-            }
-        }], false, false);
-        this._drawUniformsThree2D = combine([drawUniformsThree, {
-            u_model : function() {
-                return Matrix4.IDENTITY;
-            }
-        }], false, false);
-        this._pickUniforms2D = combine([pickUniforms, {
-            u_model : function() {
-                return Matrix4.IDENTITY;
-            }
-        }], false, false);
-
-        this._drawUniformsOne = undefined;
-        this._drawUniformsTwo = undefined;
-        this._drawUniformsThree = undefined;
         this._polylinesToUpdate = [];
         this._colorVertexArrays = [];
         this._outlineColorVertexArrays = [];
@@ -927,40 +866,7 @@ define([
             this._mode = mode;
             this._projection = projection;
             this._modelMatrix = this.modelMatrix.clone();
-            switch (mode) {
-            case SceneMode.SCENE3D:
-                this._drawUniformsOne = this._drawUniformsOne3D;
-                this._drawUniformsTwo = this._drawUniformsTwo3D;
-                this._drawUniformsThree = this._drawUniformsThree3D;
-                this._pickUniforms = this._pickUniforms3D;
-                break;
-            case SceneMode.SCENE2D:
-            case SceneMode.COLUMBUS_VIEW:
-                this._setDrawUniforms2D();
-                break;
-            }
             this._createVertexArray = true;
-        }
-    };
-
-    PolylineCollection.prototype._setDrawUniforms2D = function(){
-        this._drawUniformsOne = this._drawUniformsOne2D;
-        this._drawUniformsTwo = this._drawUniformsTwo2D;
-        this._drawUniformsThree = this._drawUniformsThree2D;
-        this._pickUniforms = this._pickUniforms2D;
-    };
-
-    PolylineCollection.prototype._getModelMatrix = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            return this.modelMatrix;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            return this.modelMatrix;
-
-        case SceneMode.MORPHING:
-            return Matrix4.IDENTITY;
         }
     };
 
@@ -1181,10 +1087,9 @@ define([
                 var position = positions[j];
                 positionArray[positionIndex] = position.x;
                 positionArray[positionIndex + 1] = position.y;
-                if(this.mode === SceneMode.SCENE2D){
+                if (this.mode === SceneMode.SCENE2D) {
                     positionArray[positionIndex + 2] = 0.0;
-                }
-                else{
+                } else {
                     positionArray[positionIndex + 2] = position.z;
                 }
                 outlineColorArray[colorIndex] = Color.floatToByte(outlineColor.red);
@@ -1508,10 +1413,9 @@ define([
                 var position = positions[i];
                 positionsArray[index] = position.x;
                 positionsArray[index + 1] = position.y;
-                if(this.mode === SceneMode.SCENE2D){
+                if (this.mode === SceneMode.SCENE2D) {
                     positionsArray[index + 2] = 0.0;
-                }
-                else{
+                } else {
                     positionsArray[index + 2] = position.z;
                 }
                 index += 3;
