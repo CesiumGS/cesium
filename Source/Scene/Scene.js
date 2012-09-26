@@ -76,13 +76,8 @@ define([
 
         this._shaderFrameCount = 0;
 
-        this._near = this._camera.frustum.near;
-        this._far = this._camera.frustum.far;
-
         this._commandList = [];
-        this._renderList = [];
         this._frustumCommands = [];
-        this._usePreviousFrustum = false;
 
         /**
          * The current mode of the scene.
@@ -298,15 +293,10 @@ define([
         var direction = camera.getDirectionWC();
         var position = camera.getPositionWC();
 
-        var renderList = scene._renderList;
-        renderList.length = 0;
-
         var frustumCommands = scene._frustumCommands;
         var frustumsLength = frustumCommands.length;
-        if (scene._usePreviousFrustum) {
-            for (var n = 0; n < frustumsLength; ++n) {
-                frustumCommands[n].length = 0;
-            }
+        for (var n = 0; n < frustumsLength; ++n) {
+            frustumCommands[n].length = 0;
         }
 
         var near = Number.MAX_VALUE;
@@ -340,8 +330,6 @@ define([
                         continue;
                     }
 
-                    renderList.push(command);
-
                     distances = transformedBV.getPlaneDistances(position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
@@ -349,7 +337,6 @@ define([
                     insertIntoBin(scene, command, distances);
                 } else {
                     undefBV = true;
-                    renderList.push(command);
                     insertIntoBin(scene, command);
                 }
             }
@@ -363,31 +350,24 @@ define([
             far = Math.min(far, camera.frustum.far);
         }
 
-        scene._near = near;
-        scene._far = far;
-
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame.
         var farToNearRatio = scene.farToNearRatio;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-        if (frustumsLength !== 0 && numFrustums === frustumsLength &&
-                near >= frustumCommands[0].near && far <= frustumCommands[frustumsLength - 1].far) {
-            scene._usePreviousFrustum = true;
-        } else {
-            scene._usePreviousFrustum = false;
-
+        if (near < far && (frustumsLength === 0 || numFrustums !== frustumsLength ||
+                near < frustumCommands[0].near || far > frustumCommands[frustumsLength - 1].far)) {
             frustumCommands.length = numFrustums;
             for (var m = 0; m < numFrustums; ++m) {
                 var frustum = frustumCommands[m];
                 if (typeof frustum === 'undefined') {
                     frustum = frustumCommands[m] = [];
-                } else {
-                    frustum.length = 0;
                 }
 
                 frustum.near = Math.pow(farToNearRatio, m) * near;
                 frustum.far = farToNearRatio * frustum.near;
             }
+
+            createPotentiallyVisibleSet(scene, listName);
         }
     }
 
@@ -409,11 +389,7 @@ define([
         return scratchCommand;
     }
 
-    var scratchNearPlane = new Cartesian4();
-    var scratchFarPlane = new Cartesian4();
-    var scratchRenderCartesian3 = new Cartesian3();
     function executeCommands(scene, framebuffer) {
-        var farToNearRatio = scene.farToNearRatio;
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
 
@@ -427,106 +403,24 @@ define([
         });
         context.clear(clearColor);
 
-        var numFrustums;
-        var near;
-        var far;
-        var length;
+        var frustumCommands = scene._frustumCommands;
+        var numFrustums = frustumCommands.length;
+        for (var i = 0; i < numFrustums; ++i) {
+            context.clear(clearDepth);
 
-        if (scene._usePreviousFrustum) {
-            var frustumCommands = scene._frustumCommands;
+            var index = numFrustums - i - 1.0;
+            var commands = frustumCommands[index];
+            frustum.near = commands.near;
+            frustum.far = commands.far;
 
-            numFrustums = frustumCommands.length;
-            for (var i = 0; i < numFrustums; ++i) {
-                context.clear(clearDepth);
-
-                var index = numFrustums - i - 1.0;
-                var commands = frustumCommands[index];
-                frustum.near = commands.near;
-                frustum.far = commands.far;
-
-                us.setProjection(frustum.getProjectionMatrix());
-                if (frustum.getInfiniteProjectionMatrix) {
-                    us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
-                }
-
-                if (typeof commands !== 'undefined') {
-                    length = commands.length;
-                    for (var j = 0; j < length; ++j) {
-                        context.draw(getFinalCommand(commands[j], framebuffer));
-                    }
-                }
+            us.setProjection(frustum.getProjectionMatrix());
+            if (frustum.getInfiniteProjectionMatrix) {
+                us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
             }
-        } else {
-            var renderList = scene._renderList;
 
-            near = scene._near;
-            far = scene._far;
-
-            var direction = camera.getDirectionWC();
-            var position = camera.getPositionWC();
-
-            var nearPlane = scratchNearPlane;
-            nearPlane.x = direction.x;
-            nearPlane.y = direction.y;
-            nearPlane.z = direction.z;
-
-            var farPlane = scratchFarPlane;
-            farPlane.x = -direction.x;
-            farPlane.y = -direction.y;
-            farPlane.z = -direction.z;
-
-            numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-            for (var p = 0; p < numFrustums; ++p) {
-                context.clear(clearDepth);
-                frustum.near = Math.pow(farToNearRatio, numFrustums - p - 1.0) * near;
-                frustum.far = frustum.near * farToNearRatio;
-
-                us.setProjection(frustum.getProjectionMatrix());
-                if (frustum.getInfiniteProjectionMatrix) {
-                    us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
-                }
-
-                // compute near plane
-                var nearCenter = scratchRenderCartesian3;
-                Cartesian3.multiplyByScalar(direction, frustum.near, nearCenter);
-                Cartesian3.add(position, nearCenter, nearCenter);
-                nearPlane.w = -Cartesian3.dot(direction, nearCenter);
-
-                // compute far plane
-                var farCenter = scratchRenderCartesian3;
-                Cartesian3.multiplyByScalar(direction, frustum.far, farCenter);
-                Cartesian3.add(position, farCenter, farCenter);
-                farPlane.w = -Cartesian3.dot(farPlane, farCenter);
-
-                length = renderList.length;
-                for (var q = 0; q < length; ++q) {
-                    var renderCommand = renderList[q];
-
-                    var boundingVolume = renderCommand.boundingVolume;
-                    if (typeof boundingVolume !== 'undefined') {
-                        var modelMatrix = defaultValue(renderCommand.modelMatrix, Matrix4.IDENTITY);
-                        var transformedBV = boundingVolume.transform(modelMatrix); //MULTIFRUSTUM TODO: Remove this allocation.
-
-                        if (transformedBV.intersect(farPlane) === Intersect.OUTSIDE) {
-                            continue; // MULTIFURSTUM TODO: discard command
-                        }
-
-                        var nearIntersect = transformedBV.intersect(nearPlane);
-                        if (nearIntersect === Intersect.OUTSIDE) {
-                            continue;
-                        }
-
-                        context.draw(getFinalCommand(renderCommand, framebuffer));
-
-                        if (nearIntersect === Intersect.INSIDE) {
-                            renderList.splice(q, 1);
-                            length = renderList.length;
-                            --q;
-                        }
-                    } else {
-                        context.draw(getFinalCommand(renderCommand, framebuffer));
-                    }
-                }
+            var length = commands.length;
+            for (var j = 0; j < length; ++j) {
+                context.draw(getFinalCommand(commands[j], framebuffer));
             }
         }
     }
