@@ -7,9 +7,9 @@ defineSuite([
          'Core/JulianDate',
          'Core/Iso8601',
          'Core/TimeInterval',
-         '../Specs/createScene',
-         '../Specs/destroyScene',
-         '../Specs/MockProperty'
+         'Specs/createScene',
+         'Specs/destroyScene',
+         'Specs/MockProperty'
      ], function(
              CzmlProcessor,
              SystemClockUpdater,
