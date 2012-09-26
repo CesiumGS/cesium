@@ -115,7 +115,7 @@ require({
         var cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dom.byId('docPopup');
         var docMessage = dom.byId('docPopupMessage');
-        var local = { 'docTypes': [],  'headers': '<html><head></head><body>'};
+        var local = { 'docTypes': [],  'headers': '<html><head></head><body>', 'bucketName': ''};
         var bucketTypes = {};
         var demoTooltips = {};
         var errorLines = [];
@@ -198,20 +198,28 @@ require({
         });
 
         function loadBucket(bucketName) {
-            if (typeof bucketTypes[bucketName] !== 'undefined') {
-                local.headers = bucketTypes[bucketName];
-            } else {
-                local.headers = '<html><head></head><body data-sandcastle-bucket-loaded="no">';
-                xhr.get({
-                    url: 'templates/' + bucketName,
-                    handleAs: 'text'
-                }).then(function (value) {
-                    var pos = value.indexOf('<body');
-                    pos = value.indexOf('>', pos);
-                    local.headers = value.substring(0, pos + 1) + '\n';
-                    bucketTypes[bucketName] = local.headers;
-                });
+            var changeIFrameBucket = false;
+            if (local.bucketName !== bucketName) {
+                local.bucketName = bucketName;
+                changeIFrameBucket = true;
+                if (typeof bucketTypes[bucketName] !== 'undefined') {
+                    local.headers = bucketTypes[bucketName];
+                } else {
+                    local.headers = '<html><head></head><body data-sandcastle-bucket-loaded="no">';
+                    xhr.get({
+                        url: 'templates/' + bucketName,
+                        handleAs: 'text'
+                    }).then(function (value) {
+                        var pos = value.indexOf('<body');
+                        pos = value.indexOf('>', pos);
+                        bucketTypes[bucketName] = value.substring(0, pos + 1) + '\n';
+                        if (local.bucketName === bucketName) {
+                            local.headers = bucketTypes[bucketName];
+                        }
+                    });
+                }
             }
+            return changeIFrameBucket;
         }
 
         function highlightRun() {
@@ -425,10 +433,16 @@ require({
             tabs.selectChild(registry.byId('logContainer'));
         }
 
-        CodeMirror.commands.runCesium = function(cm) {
+        function runCesiumHelper() {
             clearErrorsAddHints();
             clearRun();
             cesiumContainer.selectChild(bucketPane);
+console.log('runCesiumHelper bucketFrame.src=' + bucketFrame.src);
+        }
+
+        CodeMirror.commands.runCesium = function(cm) {
+            runCesiumHelper();
+console.log('RELOAD bucketFrame.src=' + bucketFrame.src);
             bucketFrame.contentWindow.location.reload();
         };
 
@@ -485,11 +499,14 @@ require({
                     script = script.substring(1);
                 }
                 htmlEditor.setValue(script);
-                if (typeof demo.bucket === 'string') {
-                    loadBucket(demo.bucket);
+                if (typeof demo.bucket === 'string' && loadBucket(demo.bucket)) {
+                    runCesiumHelper();
+console.log('OLD bucketFrame.src=' + bucketFrame.src);
                     bucketFrame.src = 'templates/' + demo.bucket;
+console.log('NEW bucketFrame.src=' + bucketFrame.src);
+                } else {
+                    CodeMirror.commands.runCesium(jsEditor);
                 }
-                CodeMirror.commands.runCesium(jsEditor);
             }
         }
 
@@ -506,6 +523,7 @@ require({
             // This triggers the code to be injected into the iframe.
             if (e.data === 'reload') {
                 var bucketDoc = bucketFrame.contentDocument;
+console.log('reload fired. Dup? ' + bucketDoc.body.getAttribute('data-sandcastle-loaded') + ' - src=' + bucketFrame.src);
                 if (bucketDoc.body.getAttribute('data-sandcastle-loaded') !== 'yes') {
                     logOutput.innerHTML = "";
                     // This happens after a Run (F8) reloads bucket-*.html, to inject the editor code
