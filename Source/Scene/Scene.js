@@ -82,7 +82,7 @@ define([
         this._commandList = [];
         this._renderList = [];
         this._frustumCommands = [];
-        this._useBins = false;
+        this._usePreviousFrustum = false;
 
         /**
          * The current mode of the scene.
@@ -303,7 +303,7 @@ define([
 
         var frustumCommands = scene._frustumCommands;
         var frustumsLength = frustumCommands.length;
-        if (scene._useBins) {
+        if (scene._usePreviousFrustum) {
             for (var n = 0; n < frustumsLength; ++n) {
                 frustumCommands[n].length = 0;
             }
@@ -372,9 +372,9 @@ define([
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         if (frustumsLength !== 0 && numFrustums === frustumsLength &&
                 near >= frustumCommands[0].near && far <= frustumCommands[frustumsLength - 1].far) {
-            scene._useBins = true;
+            scene._usePreviousFrustum = true;
         } else {
-            scene._useBins = false;
+            scene._usePreviousFrustum = false;
 
             frustumCommands.length = numFrustums;
             for (var m = 0; m < numFrustums; ++m) {
@@ -395,7 +395,7 @@ define([
     var scratchFarPlane = new Cartesian4();
     var scratchRenderCartesian3 = new Cartesian3();
     var drawCommand = new Command();
-    function renderPrimitives(scene, framebuffer) {
+    function executeCommands(scene, framebuffer) {
         var farToNearRatio = scene.farToNearRatio;
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
@@ -415,7 +415,7 @@ define([
         var far;
         var length;
 
-        if (scene._useBins) {
+        if (scene._usePreviousFrustum) {
             var frustumCommands = scene._frustumCommands;
 
             numFrustums = frustumCommands.length;
@@ -548,7 +548,7 @@ define([
         }
     }
 
-    function renderOverlays(scene) {
+    function executeOverlayCommands(scene) {
         var context = scene._context;
         var commandLists = scene._commandList;
         var length = commandLists.length;
@@ -569,8 +569,8 @@ define([
     Scene.prototype.render = function() {
         update(this);
         createPotentiallyVisibleSet(this, 'colorList');
-        renderPrimitives(this);
-        renderOverlays(this);
+        executeCommands(this);
+        executeOverlayCommands(this);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -673,7 +673,7 @@ define([
         primitives.update(context, frameState, commandLists);
 
         createPotentiallyVisibleSet(this, 'pickList');
-        renderPrimitives(this, fb);
+        executeCommands(this, fb);
 
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
