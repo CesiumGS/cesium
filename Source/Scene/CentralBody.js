@@ -1945,7 +1945,11 @@ define([
             if (this._renderQueue.length !== 0) {
                 var mv = frameState.camera.getViewMatrix();
 
-                // render tiles to FBO
+                this._renderQueue.sort(function(a, b) {
+                    return a.zoom - b.zoom;
+                });
+                
+                // render tiles
                 var tileCommands = this._tileCommandList;
                 tileCommands.length = this._renderQueue.length;
                 var j = 0;
