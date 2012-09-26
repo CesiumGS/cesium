@@ -2,6 +2,7 @@
 define([
         './defaultValue',
         './DeveloperError',
+        './Cartesian2',
         './Cartesian3',
         './Cartesian4',
         './Cartographic',
@@ -13,6 +14,7 @@ define([
     ], function(
         defaultValue,
         DeveloperError,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
@@ -427,6 +429,47 @@ define([
         return result;
     };
 
+    var scratchCartesian3 = new Cartesian3();
+    /**
+     * Calculate the nearest and farthest distances to the bounding sphere from position in direction.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The bounding sphere to calculate the distance to.
+     * @param {Cartesian3} position The position to calculate the distance from.
+     * @param {Cartesian3} direction The direction from position.
+     * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
+     * @return {Cartesian2} The nearest and farthest distances on the bounding sphere from position in direction.
+     *
+     * @exception {DeveloperError} sphere is required.
+     * @exception {DeveloperError} position is required.
+     * @exception {DeveloperError} direction is required.
+     */
+    BoundingSphere.distance = function(sphere, position, direction, result) {
+        if (typeof sphere === 'undefined') {
+            throw new DeveloperError('sphere is required.');
+        }
+
+        if (typeof position === 'undefined') {
+            throw new DeveloperError('position is required.');
+        }
+
+        if (typeof direction === 'undefined') {
+            throw new DeveloperError('direction is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new Cartesian2();
+        }
+
+        var toCenter = Cartesian3.subtract(sphere.center, position, scratchCartesian3);
+        var proj = Cartesian3.multiplyByScalar(direction, direction.dot(toCenter), scratchCartesian3);
+        var mag = proj.magnitude();
+
+        result.x = mag - sphere.radius;
+        result.y = mag + sphere.radius;
+        return result;
+    };
+
     /**
      * Compares the provided BoundingSphere componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -512,6 +555,22 @@ define([
      */
     BoundingSphere.prototype.transform = function(transform, result) {
         return BoundingSphere.transform(this, transform, result);
+    };
+
+    /**
+     * Calculate the nearest and farthest distances to this bounding sphere from position in direction.
+     * @memberof BoundingSphere
+     *
+     * @param {Cartesian3} position The position to calculate the distance from.
+     * @param {Cartesian3} direction The direction from position.
+     * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
+     * @return {Cartesian2} The nearest and farthest distances on the bounding sphere from position in direction.
+     *
+     * @exception {DeveloperError} position is required.
+     * @exception {DeveloperError} direction is required.
+     */
+    BoundingSphere.prototype.distance = function(position, direction, result) {
+        return BoundingSphere.distance(this, position, direction, result);
     };
 
     /**
