@@ -4,13 +4,15 @@ define([
         '../Core/destroyObject',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Matrix4'
+        '../Core/Matrix4',
+        '../Scene/PerspectiveOffCenterFrustum'
     ], function(
         DeveloperError,
         destroyObject,
         Cartesian3,
         Cartesian4,
-        Matrix4) {
+        Matrix4,
+        PerspectiveOffCenterFrustum) {
     "use strict";
 
     /**
@@ -22,6 +24,8 @@ define([
      * @alias PerspectiveFrustum
      * @constructor
      *
+     * @see PerspectiveOffCenterFrustum
+     *
      * @example
      * var frustum = new PerspectiveFrustum();
      * frustum.fovy = CesiumMath.PI_OVER_THREE;
@@ -30,40 +34,35 @@ define([
      * frustum.far = 2.0;
      */
     var PerspectiveFrustum = function() {
+        this._offCenterFrustum = new PerspectiveOffCenterFrustum();
+
         /**
          * The angle of the field of view, in radians.
-         *
          * @type {Number}
          */
-        this.fovy = null;
-        this._fovy = null;
+        this.fovy = undefined;
+        this._fovy = undefined;
 
         /**
          * The aspect ratio of the frustum's width to it's height.
-         *
          * @type {Number}
          */
-        this.aspectRatio = null;
-        this._aspectRatio = null;
+        this.aspectRatio = undefined;
+        this._aspectRatio = undefined;
 
         /**
-         * The distance of the near plane from the camera's position.
-         *
+         * The distance of the near plane.
          * @type {Number}
          */
-        this.near = null;
-        this._near = null;
+        this.near = 1.0;
+        this._near = this.near;
 
         /**
-         * The The distance of the far plane from the camera's position.
-         *
+         * The distance of the far plane.
          * @type {Number}
          */
-        this.far = null;
-        this._far = null;
-
-        this._perspectiveMatrix = null;
-        this._infinitePerspective = null;
+        this.far = 500000000.0;
+        this._far = this.far;
     };
 
     /**
@@ -76,63 +75,62 @@ define([
      * @see PerspectiveFrustum#getInfiniteProjectionMatrix
      */
     PerspectiveFrustum.prototype.getProjectionMatrix = function() {
-        this._update();
-        return this._perspectiveMatrix;
+        update(this);
+        return this._offCenterFrustum.getProjectionMatrix();
     };
 
     /**
-     * DOC_TBA
+     * Returns the perspective projection matrix computed from the view frustum with an infinite far plane.
      *
      * @memberof PerspectiveFrustum
+     *
+     * @return {Matrix4} The infinite perspective projection matrix.
      *
      * @see PerspectiveFrustum#getProjectionMatrix
      */
     PerspectiveFrustum.prototype.getInfiniteProjectionMatrix = function() {
-        this._update();
-        return this._infinitePerspective;
+        update(this);
+        return this._offCenterFrustum.getInfiniteProjectionMatrix();
     };
 
-    PerspectiveFrustum.prototype._update = function() {
-        if (this.fovy === null || this.aspectRatio === null || this.near === null || this.far === null) {
+    function update(frustum) {
+        if (typeof frustum.fovy === 'undefined' || typeof frustum.aspectRatio === 'undefined' ||
+                typeof frustum.near === 'undefined' || typeof frustum.far === 'undefined') {
             throw new DeveloperError('fovy, aspectRatio, near, or far parameters are not set.');
         }
 
-        if (this.fovy !== this._fovy || this.aspectRatio !== this._aspectRatio || this.near !== this._near || this.far !== this._far) {
-            if (this.fovy < 0 || this.fovy >= Math.PI) {
+        var f = frustum._offCenterFrustum;
+
+        if (frustum.fovy !== frustum._fovy || frustum.aspectRatio !== frustum._aspectRatio ||
+                frustum.near !== frustum._near || frustum.far !== frustum._far) {
+            if (frustum.fovy < 0 || frustum.fovy >= Math.PI) {
                 throw new DeveloperError('fovy must be in the range [0, PI).');
             }
 
-            if (this.aspectRatio < 0) {
+            if (frustum.aspectRatio < 0) {
                 throw new DeveloperError('aspectRatio must be positive.');
             }
 
-            if (this.near < 0 || this.near > this.far) {
+            if (frustum.near < 0 || frustum.near > frustum.far) {
                 throw new DeveloperError('near must be greater than zero and less than far.');
             }
 
-            this._fovy = this.fovy;
-            this._aspectRatio = this.aspectRatio;
-            this._near = this.near;
-            this._far = this.far;
+            frustum._fovy = frustum.fovy;
+            frustum._aspectRatio = frustum.aspectRatio;
+            frustum._near = frustum.near;
+            frustum._far = frustum.far;
 
-            this._updateProjectionMatrices();
+            f.top = frustum.near * Math.tan(0.5 * frustum.fovy);
+            f.bottom = -f.top;
+            f.right = frustum.aspectRatio * f.top;
+            f.left = -f.right;
+            f.near = frustum.near;
+            f.far = frustum.far;
         }
-    };
-
-    PerspectiveFrustum.prototype._updateProjectionMatrices = function() {
-        var t = this.near * Math.tan(0.5 * this.fovy);
-        var b = -t;
-        var r = this.aspectRatio * t;
-        var l = -r;
-        var n = this.near;
-        var f = this.far;
-
-        this._perspectiveMatrix = Matrix4.computePerspectiveOffCenter(l, r, b, t, n, f);
-        this._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(l, r, b, t, n);
-    };
+    }
 
     /**
-     * DOC_TBA
+     * Creates a culling volume for this frustum.
      *
      * @memberof PerspectiveFrustum
      *
@@ -143,71 +141,57 @@ define([
      * @exception {DeveloperError} position is required.
      * @exception {DeveloperError} direction is required.
      * @exception {DeveloperError} up is required.
+     *
+     * @return {CullingVolume} A culling volume at the given position and orientation.
+     *
+     * @example
+     * // Check if a bounding volume intersects the frustum.
+     * var cullingVolume = frustum.computeCullingVolume(cameraPosition, cameraDirection, cameraUp);
+     * var intersect = cullingVolume.getVisibility(boundingVolume);
      */
-    PerspectiveFrustum.prototype.getPlanes = function(position, direction, up) {
-        if (!position) {
-            throw new DeveloperError('position is required.');
-        }
+    PerspectiveFrustum.prototype.computeCullingVolume = function(position, direction, up) {
+        update(this);
+        return this._offCenterFrustum.computeCullingVolume(position, direction, up);
+    };
 
-        if (!direction) {
-            throw new DeveloperError('direction is required.');
-        }
-
-        if (!up) {
-            throw new DeveloperError('up is required.');
-        }
-
-        var pos = Cartesian3.clone(position);
-        var dir = Cartesian3.clone(direction);
-        var u = Cartesian3.clone(up);
-
-        var right = dir.cross(u);
-
-        var t = this.near * Math.tan(0.5 * this.fovy);
-        var r = this.aspectRatio * t;
-        var n = this.near;
-        var f = this.far;
-
-        var planes = [];
-        planes.length = 6;
-
-        var normal, planeVec;
-        var nearCenter = pos.add(dir.multiplyByScalar(n));
-        var farCenter = pos.add(dir.multiplyByScalar(f));
-
-        //Left plane computation
-        planeVec = nearCenter.add(right.negate().multiplyByScalar(r)).subtract(pos);
-        planeVec = planeVec.normalize();
-        normal = planeVec.cross(u);
-        planes[0] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));
-
-        //Right plane computation
-        planeVec = nearCenter.add(right.multiplyByScalar(r)).subtract(pos);
-        planeVec = planeVec.normalize();
-        normal = u.cross(planeVec);
-        planes[1] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));
-
-        //Bottom plane computation
-        planeVec = nearCenter.add(u.negate().multiplyByScalar(t)).subtract(position);
-        planeVec = planeVec.normalize();
-        normal = right.cross(planeVec);
-        planes[2] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));
-
-        //Top plane computation
-        planeVec = nearCenter.add(u.multiplyByScalar(t)).subtract(pos);
-        planeVec = planeVec.normalize();
-        normal = planeVec.cross(right);
-        planes[3] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(pos));
-
-        //Near plane computation
-        normal = direction;
-        planes[4] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(nearCenter));
-
-        //Far plane computation
-        normal = direction.negate();
-        planes[5] = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(farCenter));
-
-        return planes;
+    /**
+     * Returns the pixel's width and height in meters.
+     *
+     * @memberof PerspectiveFrustum
+     *
+     * @param {Cartesian2} canvasDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
+     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
+     *
+     * @exception {DeveloperError} canvasDimensions is required.
+     * @exception {DeveloperError} canvasDimensions.x must be greater than zero.
+     * @exception {DeveloperError} canvasDimensione.y must be greater than zero.
+     *
+     * @returns {Cartesian2} A {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
+     *
+     * @example
+     * // Example 1
+     * // Get the width and height of a pixel.
+     * var pixelSize = camera.frustum.getPixelSize({
+     *     width : canvas.clientWidth,
+     *     height : canvas.clientHeight
+     * });
+     *
+     * // Example 2
+     * // Get the width and height of a pixel if the near plane was set to 'distance'.
+     * // For example, get the size of a pixel of an image on a billboard.
+     * var position = camera.position;
+     * var direction = camera.direction;
+     * var toCenter = primitive.boundingVolume.center.subtract(position);      // vector from camera to a primitive
+     * var toCenterProj = direction.multiplyByScalar(direction.dot(toCenter)); // project vector onto camera direction vector
+     * var distance = toCenterProj.magnitude();
+     * var pixelSize = camera.frustum.getPixelSize({
+     *     width : canvas.clientWidth,
+     *     height : canvas.clientHeight
+     * }, distance);
+     */
+    PerspectiveFrustum.prototype.getPixelSize = function(canvasDimensions, distance) {
+        update(this);
+        return this._offCenterFrustum.getPixelSize(canvasDimensions, distance);
     };
 
     /**
@@ -223,16 +207,32 @@ define([
         frustum.aspectRatio = this.aspectRatio;
         frustum.near = this.near;
         frustum.far = this.far;
+        frustum._offCenterFrustum = this._offCenterFrustum.clone();
         return frustum;
     };
 
     /**
-     * DOC_TBA
+     * Compares the provided PerspectiveFrustum componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
      *
      * @memberof PerspectiveFrustum
+     *
+     * @param {PerspectiveFrustum} [other] The right hand side PerspectiveFrustum.
+     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     PerspectiveFrustum.prototype.equals = function(other) {
-        return (this.fovy === other.fovy && this.aspectRatio === other.aspectRatio && this.near === other.near && this.far === other.far);
+        if (typeof other === 'undefined') {
+            return false;
+        }
+
+        update(this);
+        update(other);
+
+        return (this.fovy === other.fovy &&
+                this.aspectRatio === other.aspectRatio &&
+                this.near === other.near &&
+                this.far === other.far &&
+                this._offCenterFrustum.equals(other._offCenterFrustum));
     };
 
     return PerspectiveFrustum;

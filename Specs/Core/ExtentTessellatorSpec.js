@@ -24,7 +24,7 @@ defineSuite([
         var m = ExtentTessellator.compute({
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
-            generateTextureCoords : true
+            generateTextureCoordinates : true
         });
         expect(m.attributes.position.values.length).toEqual(9 * 3);
         expect(m.attributes.textureCoordinates.values.length).toEqual(9 * 2);
@@ -45,11 +45,11 @@ defineSuite([
         var buffers = ExtentTessellator.computeBuffers({
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
-            generateTextureCoords : true
+            generateTextureCoordinates : true
         });
 
         expect(buffers.positions.length).toEqual(9 * 3);
-        expect(buffers.textureCoords.length).toEqual(9 * 2);
+        expect(buffers.textureCoordinates.length).toEqual(9 * 2);
         expect(buffers.indices.length).toEqual(8 * 3);
     });
 
@@ -57,8 +57,8 @@ defineSuite([
         var buffers = ExtentTessellator.computeBuffers({
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
-            generateTextureCoords : true,
-            interleave : true
+            generateTextureCoordinates : true,
+            interleaveTextureCoordinates : true
         });
 
         expect(buffers.vertices.length).toEqual(9 * 3 + 9 * 2);

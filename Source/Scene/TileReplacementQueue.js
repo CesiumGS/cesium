@@ -27,7 +27,7 @@ define([
             // current frame.
             keepTrimming = tileToTrim !== this._lastBeforeStartOfFrame;
 
-            var previous = tileToTrim._replacementPrevious;
+            var previous = tileToTrim.replacementPrevious;
             if (tileToTrim.state !== TileState.TRANSITIONING) {
                 tileToTrim.freeResources();
                 this._remove(tileToTrim);
@@ -37,8 +37,8 @@ define([
     };
 
     TileReplacementQueue.prototype._remove = function(item) {
-        var previous = item._replacementPrevious;
-        var next = item._replacementNext;
+        var previous = item.replacementPrevious;
+        var next = item.replacementNext;
 
         if (item === this._lastBeforeStartOfFrame) {
             this._lastBeforeStartOfFrame = next;
@@ -47,17 +47,17 @@ define([
         if (item === this.head) {
             this.head = next;
         } else {
-            previous._replacementNext = next;
+            previous.replacementNext = next;
         }
 
         if (item === this.tail) {
             this.tail = previous;
         } else {
-            next._replacementPrevious = previous;
+            next.replacementPrevious = previous;
         }
 
-        item._replacementPrevious = undefined;
-        item._replacementNext = undefined;
+        item.replacementPrevious = undefined;
+        item.replacementNext = undefined;
 
         --this.count;
     };
@@ -66,7 +66,7 @@ define([
         var insertionPoint = this.head;
         if (insertionPoint === item) {
             if (item === this._lastBeforeStartOfFrame) {
-                this._lastBeforeStartOfFrame = item._replacementNext;
+                this._lastBeforeStartOfFrame = item.replacementNext;
             }
             return;
         }
@@ -75,41 +75,41 @@ define([
 
         if (typeof this.head === 'undefined') {
             // no other tiles in the list
-            item._replacementPrevious = undefined;
-            item._replacementNext = undefined;
+            item.replacementPrevious = undefined;
+            item.replacementNext = undefined;
             this.head = item;
             this.tail = item;
             return;
         }
 
-        if (typeof item._replacementPrevious !== 'undefined' || typeof item._replacementNext !== 'undefined') {
+        if (typeof item.replacementPrevious !== 'undefined' || typeof item.replacementNext !== 'undefined') {
             // tile already in the list, remove from its current location
             this._remove(item);
         }
 
         if (typeof insertionPoint === 'undefined') {
             if (typeof this.head === 'undefined') {
-                item._replacementPrevious = undefined;
-                item._replacementNext = undefined;
+                item.replacementPrevious = undefined;
+                item.replacementNext = undefined;
                 this.head = item;
                 this.tail = item;
             } else {
-                item._replacementPrevious = this.tail;
-                item._replacementNext = undefined;
-                this.tail._replacementNext = item;
+                item.replacementPrevious = this.tail;
+                item.replacementNext = undefined;
+                this.tail.replacementNext = item;
                 this.tail = item;
             }
             return;
         }
 
-        var insertAfter = insertionPoint._replacementPrevious;
-        item._replacementPrevious = insertAfter;
+        var insertAfter = insertionPoint.replacementPrevious;
+        item.replacementPrevious = insertAfter;
         if (typeof insertAfter !== 'undefined') {
-            insertAfter._replacementNext = item;
+            insertAfter.replacementNext = item;
         }
 
-        item._replacementNext = insertionPoint;
-        insertionPoint._replacementPrevious = item;
+        item.replacementNext = insertionPoint;
+        insertionPoint.replacementPrevious = item;
 
         if (insertionPoint === this.head) {
             this.head = item;

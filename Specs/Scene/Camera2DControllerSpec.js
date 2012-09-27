@@ -6,8 +6,8 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Ellipsoid',
-         'Core/EquidistantCylindricalProjection',
-         'Core/MercatorProjection',
+         'Core/GeographicProjection',
+         'Core/WebMercatorProjection',
          'Core/Math',
          'Core/Transforms'
      ], function(
@@ -17,8 +17,8 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Ellipsoid,
-         EquidistantCylindricalProjection,
-         MercatorProjection,
+         GeographicProjection,
+         WebMercatorProjection,
          CesiumMath,
          Transforms) {
     "use strict";
@@ -72,7 +72,7 @@ defineSuite([
         camera.right = right;
         camera.frustum = frustum;
 
-        projection = new EquidistantCylindricalProjection(ellipsoid);
+        projection = new GeographicProjection(ellipsoid);
 
         controller = new Camera2DController(canvas, camera, projection);
     });
@@ -107,7 +107,7 @@ defineSuite([
     });
 
     it('setProjection', function() {
-        var mercator = new MercatorProjection(ellipsoid);
+        var mercator = new WebMercatorProjection(ellipsoid);
         controller.setProjection(mercator);
         expect(controller.getProjection()).toEqual(mercator);
     });
@@ -156,7 +156,7 @@ defineSuite([
         expect(frustum.bottom).toEqual(-0.5, CesiumMath.EPSILON10);
     });
 
-    it('zoomIn throws with null OrthogrphicFrustum properties', function() {
+    it('zoomIn throws with undefined OrthogrphicFrustum properties', function() {
         var camera = new Camera(document);
         camera.frustum = new OrthographicFrustum();
         controller2 = new Camera2DController(document, camera, projection);

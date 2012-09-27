@@ -81,7 +81,6 @@ define([
          * @type TilingScheme
          */
         this.tilingScheme = new GeographicTilingScheme();
-        this.projection = Projections.WGS84;
         this.maxLevel = 18;
 
         this._proxy = description.proxy;
@@ -149,10 +148,11 @@ define([
         var nativeExtent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
         var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
         var srs = 'EPSG:4326';
-        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox='  + bbox + '&width=64&height=64&srs=' + srs + '&format=application%2Fbil16';
+        var url = this.url + '?service=WMS&version=1.1.0&request=GetMap&layers=' + this.layerName + '&bbox=' + bbox + '&width=64&height=64&srs=' + srs + '&format=application%2Fbil16';
         if (this.token) {
             url += '&token=' + this.token;
         }
+
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
         }
@@ -172,7 +172,9 @@ define([
             --requestsInFlight;
         }, function(e) {
             /*global console*/
-            console.error('failed to load metadata: ' + e);
+            console.error('failed to load tile geometry: ' + e);
+            tile.state = TileState.FAILED;
+            --requestsInFlight;
         });
     };
 
@@ -189,11 +191,15 @@ define([
      * @param {Tile} tile The tile to transform geometry for.
      */
     WebMapServiceTerrainProvider.prototype.transformGeometry = function(context, tile) {
+        var tilingScheme = this.tilingScheme;
+        var ellipsoid = tilingScheme.ellipsoid;
+        var extent = tile.extent;
+
         var width = 64;
         var height = 64;
 
-        var nativeExtent = this.tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
-        tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
+        var nativeExtent = tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
+        tile.center = ellipsoid.cartographicToCartesian(extent.getCenter());
 
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : tile.geometry,
@@ -204,10 +210,10 @@ define([
             height : height,
             extent : nativeExtent,
             relativeToCenter : tile.center,
-            radiiSquared : this.tilingScheme.ellipsoid.getRadiiSquared(),
-            oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x,
+            radiiSquared : ellipsoid.getRadiiSquared(),
+            oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
             isGeographic : true
-        });
+        }, [tile.geometry.buffer]);
 
         if (typeof verticesPromise === 'undefined') {
             //postponed
@@ -225,9 +231,12 @@ define([
             tile.state = TileState.TRANSFORMED;
         }, function(e) {
             /*global console*/
-            console.error('failed to load metadata: ' + e);
+            console.error('failed to transform geometry: ' + e);
+            tile.state = TileState.FAILED;
         });
     };
+
+    var scratch = new Cartesian3();
 
     /**
      * Create WebGL resources for the tile using whatever data the transformGeometry step produced.
@@ -241,17 +250,18 @@ define([
     WebMapServiceTerrainProvider.prototype.createResources = function(context, tile) {
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
+
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = buffers.statistics.maxHeight;
-        tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
+        tile.boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
 
         var ellipsoid = this.tilingScheme.ellipsoid;
-        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSouthwest());
-        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSoutheast());
-        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getNortheast());
-        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getNorthwest());
+        var extent = tile.extent;
+        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
+        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
+        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNortheast());
+        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest());
 
-        var scratch = new Cartesian3();
         tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(scratch), scratch).normalize();
         tile.eastNormal = tile.northeastCornerCartesian.negate(scratch).cross(Cartesian3.UNIT_Z, scratch).normalize();
         tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, scratch)).normalize();

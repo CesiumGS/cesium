@@ -9,7 +9,7 @@ define([
         './ImageryProvider',
         './Projections',
         './GeographicTilingScheme',
-        './TileState'
+        './ImageryState'
     ], function(
         defaultValue,
         loadImage,
@@ -20,7 +20,7 @@ define([
         ImageryProvider,
         Projections,
         GeographicTilingScheme,
-        TileState) {
+        ImageryState) {
     "use strict";
 
     /**
@@ -34,7 +34,7 @@ define([
      *
      * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
-     * @see OpenStreetMapTileProvider
+     * @see OpenStreetMapImageryProvider
      * @see CompositeTileProvider
      */
     var SolidColorImageryProvider = function(maxLevel) {
@@ -70,14 +70,6 @@ define([
          * @type {Number}
          */
         this.maxLevel = maxLevel;
-
-        /**
-         * The map projection of the image.
-         *
-         * @type {Enumeration}
-         * @see Projections
-         */
-        this.projection = Projections.WGS84;
 
         /**
          * The tiling scheme used by this provider.
@@ -167,12 +159,12 @@ define([
      * is still needed.
      *
      * @param {Context} context The context to use to create resources.
-     * @param {TileImagery} tileImagery The tile imagery to transform.
+     * @param {Imagery} imagery The imagery to transform.
      */
-    SolidColorImageryProvider.prototype.transformImagery = function(context, tileImagery) {
-        tileImagery.transformedImage = tileImagery.image;
-        tileImagery.image = undefined;
-        tileImagery.state = TileState.TRANSFORMED;
+    SolidColorImageryProvider.prototype.transformImagery = function(context, imagery) {
+        imagery.transformedImage = imagery.image;
+        imagery.image = undefined;
+        imagery.state = ImageryState.TRANSFORMED;
     };
 
     /**

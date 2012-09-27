@@ -5,7 +5,6 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
-         'Core/EllipsoidTangentPlane',
          'Core/WindingOrder'
      ], function(
          PolygonPipeline,
@@ -13,7 +12,6 @@ defineSuite([
          Cartesian3,
          Cartographic,
          Ellipsoid,
-         EllipsoidTangentPlane,
          WindingOrder) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -59,45 +57,6 @@ defineSuite([
             PolygonPipeline.cleanUp([Cartesian3.ZERO, Cartesian3.ZERO]);
         }).toThrow();
     });
-
-    ///////////////////////////////////////////////////////////////////////
-
-    it('EllipsoidTangentPlane projects a point', function() {
-        var ellipsoid = Ellipsoid.WGS84;
-        var p = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
-
-        var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
-        var projectedP = tangentPlane.projectPointsOntoPlane([p]);
-
-        expect(projectedP.length).toEqual(1);
-        expect(projectedP[0].equals(Cartesian2.ZERO)).toEqual(true);
-    });
-
-    it('EllipsoidTangentPlane throws without ellipsoid', function() {
-        expect(function() {
-            return EllipsoidTangentPlane.create();
-        }).toThrow();
-    });
-
-    it('EllipsoidTangentPlane throws without positions', function() {
-        var ellipsoid = Ellipsoid.WGS84;
-
-        expect(function() {
-            return EllipsoidTangentPlane.create(ellipsoid);
-        }).toThrow();
-    });
-
-    it('projectPointsOntoPlane throws without positions', function() {
-        var ellipsoid = Ellipsoid.WGS84;
-        var p = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
-        var tangentPlane = EllipsoidTangentPlane.create(ellipsoid, [p]);
-
-        expect(function() {
-            return tangentPlane.projectPointsOntoPlane();
-        }).toThrow();
-    });
-
-    ///////////////////////////////////////////////////////////////////////
 
     it('computeArea2D computes a positive area', function() {
         var area = PolygonPipeline.computeArea2D([
@@ -268,12 +227,6 @@ defineSuite([
         expect(subdivision.indexLists[0].values[2]).toEqual(2);
     });
 
-    it('scaleToGeodeticHeight throws without ellipsoid', function() {
-        expect(function() {
-            PolygonPipeline.scaleToGeodeticHeight();
-        }).toThrow();
-    });
-
     it('eliminateHoles throws an exception without an outerRing', function() {
         expect(function() {
             PolygonPipeline.eliminateHoles();
@@ -290,6 +243,40 @@ defineSuite([
         expect(function() {
             PolygonPipeline.eliminateHoles([new Cartesian3()]);
         }).toThrow();
+    });
+
+    it('eliminateHoles works with non-WGS84 ellipsoids', function() {
+        var outerRing = Ellipsoid.UNIT_SPHERE.cartographicArrayToCartesianArray([
+            new Cartographic.fromDegrees(-122.0, 37.0, 0.0),
+            new Cartographic.fromDegrees(-121.9, 37.0, 0.0),
+            new Cartographic.fromDegrees(-121.9, 37.1, 0.0),
+            new Cartographic.fromDegrees(-122.0, 37.1, 0.0),
+            new Cartographic.fromDegrees(-122.0, 37.0, 0.0)
+        ]);
+
+        var innerRing = Ellipsoid.UNIT_SPHERE.cartographicArrayToCartesianArray([
+            new Cartographic.fromDegrees(-121.96, 37.04, 0.0),
+            new Cartographic.fromDegrees(-121.96, 37.01, 0.0),
+            new Cartographic.fromDegrees(-121.99, 37.01, 0.0),
+            new Cartographic.fromDegrees(-121.99, 37.04, 0.0)
+        ]);
+
+        var innerRings = [innerRing];
+        var positions = PolygonPipeline.eliminateHoles(outerRing, innerRings, Ellipsoid.UNIT_SPHERE);
+
+        expect(positions[0].equals(outerRing[0])).toEqual(true);
+        expect(positions[1].equals(outerRing[1])).toEqual(true);
+
+        expect(positions[2].equals(innerRing[0])).toEqual(true);
+        expect(positions[3].equals(innerRing[1])).toEqual(true);
+        expect(positions[4].equals(innerRing[2])).toEqual(true);
+        expect(positions[5].equals(innerRing[3])).toEqual(true);
+        expect(positions[6].equals(innerRing[0])).toEqual(true);
+
+        expect(positions[7].equals(outerRing[1])).toEqual(true);
+        expect(positions[8].equals(outerRing[2])).toEqual(true);
+        expect(positions[9].equals(outerRing[3])).toEqual(true);
+        expect(positions[10].equals(outerRing[0])).toEqual(true);
     });
 
     it('eliminateHoles removes a hole from a polygon', function() {

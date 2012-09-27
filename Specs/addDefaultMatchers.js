@@ -1,27 +1,9 @@
 /*global define*/
-define(function() {
+define([
+        './equals'
+    ], function(
+        equals) {
     "use strict";
-
-    var typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array];
-
-    function isTypedArray(o) {
-        return typedArrayTypes.some(function(type) {
-            return o instanceof type;
-        });
-    }
-
-    function typedArrayToArray(array) {
-        if (array !== null && typeof array === 'object' && isTypedArray(array)) {
-            return Array.prototype.slice.call(array, 0);
-        }
-        return array;
-    }
-
-    function equals(env, a, b) {
-        a = typedArrayToArray(a);
-        b = typedArrayToArray(b);
-        return env.equals_(a, b);
-    }
 
     var defaultMatchers = {
         toBeGreaterThanOrEqualTo : function(value, epsilon) {

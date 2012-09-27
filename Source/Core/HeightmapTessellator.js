@@ -72,6 +72,7 @@ define([
         var isGeographic = description.isGeographic;
         var voidIndicator = defaultValue(description.voidIndicator, -32768);
         var voidFillValue = defaultValue(description.voidFillValue, 0);
+        var skirtHeight = defaultValue(description.skirtHeight, 0);
 
         var vertices = description.vertices;
         var textureCoordinates = description.textureCoordinates;
@@ -92,10 +93,22 @@ define([
         var piOverTwo = Math.PI / 2.0;
         var toRadians = CesiumMath.toRadians;
 
-        var geographicWest = extent.west * oneOverCentralBodySemimajorAxis;
-        var geographicSouth = piOverTwo - (2.0 * atan(exp(-extent.south * oneOverCentralBodySemimajorAxis)));
-        var geographicEast = extent.east * oneOverCentralBodySemimajorAxis;
-        var geographicNorth = piOverTwo - (2.0 * atan(exp(-extent.north * oneOverCentralBodySemimajorAxis)));
+        var geographicWest;
+        var geographicSouth;
+        var geographicEast;
+        var geographicNorth;
+
+        if (isGeographic) {
+            geographicWest = toRadians(extent.west);
+            geographicSouth = toRadians(extent.south);
+            geographicEast = toRadians(extent.east);
+            geographicNorth = toRadians(extent.north);
+        } else {
+            geographicWest = extent.west * oneOverCentralBodySemimajorAxis;
+            geographicSouth = piOverTwo - (2.0 * atan(exp(-extent.south * oneOverCentralBodySemimajorAxis)));
+            geographicEast = extent.east * oneOverCentralBodySemimajorAxis;
+            geographicNorth = piOverTwo - (2.0 * atan(exp(-extent.north * oneOverCentralBodySemimajorAxis)));
+        }
 
         var vertexArrayIndex = 0;
         var textureCoordinatesIndex = 0;
@@ -103,33 +116,52 @@ define([
         var minHeight = 65536.0;
         var maxHeight = -65536.0;
 
-        var maxVDifference = 0.0;
-        var maxUDifference = 0.0;
+        var startRow = 0;
+        var endRow = height;
+        var startCol = 0;
+        var endCol = width;
 
-        for ( var row = 0; row < height; ++row) {
+        if (skirtHeight > 0) {
+            --startRow;
+            ++endRow;
+            --startCol;
+            ++endCol;
+        }
+
+        for ( var rowIndex = startRow; rowIndex < endRow; ++rowIndex) {
+            var row = rowIndex;
+            if (row < 0) {
+                row = 0;
+            }
+            if (row >= height) {
+                row = height - 1;
+            }
+
             var latitude = extent.north - granularityY * row;
+
             if (!isGeographic) {
                 latitude = piOverTwo - (2.0 * atan(exp(-latitude * oneOverCentralBodySemimajorAxis)));
             } else {
                 latitude = toRadians(latitude);
             }
+
             var cosLatitude = cos(latitude);
             var nZ = sin(latitude);
             var kZ = radiiSquaredZ * nZ;
 
-            // texture coordinates for geographic imagery
-            var geographicV = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
+            var v = (latitude - geographicSouth) / (geographicNorth - geographicSouth);
 
-            // texture coordinates for web mercator imagery
-            var mercatorV = (height - row - 1) / (height - 1);
+            for ( var colIndex = startCol; colIndex < endCol; ++colIndex) {
+                var col = colIndex;
+                if (col < 0) {
+                    col = 0;
+                }
+                if (col >= width) {
+                    col = width - 1;
+                }
 
-            var vDifference = Math.abs(mercatorV - geographicV);
-            maxVDifference = Math.max(vDifference, maxVDifference);
-
-            var v = geographicV;
-
-            for ( var col = 0; col < width; ++col) {
                 var longitude = extent.west + granularityX * col;
+
                 if (!isGeographic) {
                     longitude = longitude * oneOverCentralBodySemimajorAxis;
                 } else {
@@ -156,6 +188,10 @@ define([
                 maxHeight = Math.max(maxHeight, heightSample);
                 minHeight = Math.min(minHeight, heightSample);
 
+                if (colIndex !== col || rowIndex !== row) {
+                    heightSample -= skirtHeight;
+                }
+
                 var nX = cosLatitude * cos(longitude);
                 var nY = cosLatitude * sin(longitude);
 
@@ -173,16 +209,7 @@ define([
                 vertices[vertexArrayIndex++] = rSurfaceZ + nZ * heightSample - relativeToCenter.z;
 
                 if (generateTextureCoordinates) {
-                    // texture coordinates for geographic imagery
-                    var geographicU = (longitude - geographicWest) / (geographicEast - geographicWest);
-
-                    // texture coordinates for web mercator imagery
-                    var mercatorU = col / (width - 1);
-
-                    var uDifference = Math.abs(mercatorU - geographicU);
-                    maxUDifference = Math.max(uDifference, maxUDifference);
-
-                    var u = geographicU;
+                    var u = (longitude - geographicWest) / (geographicEast - geographicWest);
 
                     if (interleaveTextureCoordinates) {
                         vertices[vertexArrayIndex++] = u;
@@ -196,12 +223,20 @@ define([
         }
 
         if (typeof indices !== 'undefined') {
+            var adjustedWidth = width;
+            var adjustedHeight = height;
+
+            if (skirtHeight > 0) {
+                adjustedWidth += 2;
+                adjustedHeight += 2;
+            }
+
             var index = 0;
             var indicesIndex = 0;
-            for ( var i = 0; i < height - 1; ++i) {
-                for ( var j = 0; j < width - 1; ++j) {
+            for ( var i = 0; i < adjustedWidth - 1; ++i) {
+                for ( var j = 0; j < adjustedHeight - 1; ++j) {
                     var upperLeft = index;
-                    var lowerLeft = upperLeft + width;
+                    var lowerLeft = upperLeft + adjustedWidth;
                     var lowerRight = lowerLeft + 1;
                     var upperRight = upperLeft + 1;
 
@@ -220,9 +255,7 @@ define([
 
         return {
             maxHeight : maxHeight,
-            minHeight : minHeight,
-            maxUDifference : maxUDifference,
-            maxVDifference : maxVDifference
+            minHeight : minHeight
         };
     };
 

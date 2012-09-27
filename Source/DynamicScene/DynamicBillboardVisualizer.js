@@ -223,6 +223,7 @@ define([
             if (typeof billboardVisualizerIndex !== 'undefined') {
                 billboard = this._billboardCollection.get(billboardVisualizerIndex);
                 billboard.setShow(false);
+                billboard.setImageIndex(-1);
                 billboard._visualizerUrl = undefined;
                 billboard._visualizerTextureAvailable = false;
                 dynamicObject._billboardVisualizerIndex = undefined;
@@ -270,7 +271,7 @@ define([
         }
 
         position = positionProperty.getValueCartesian(time, position);
-        if (position !== 'undefined') {
+        if (typeof position !== 'undefined') {
             billboard.setPosition(position);
         }
 
@@ -333,6 +334,7 @@ define([
             if (typeof billboardVisualizerIndex !== 'undefined') {
                 var billboard = thisBillboardCollection.get(billboardVisualizerIndex);
                 billboard.setShow(false);
+                billboard.setImageIndex(-1);
                 billboard._visualizerUrl = undefined;
                 billboard._visualizerTextureAvailable = false;
                 dynamicObject._billboardVisualizerIndex = undefined;

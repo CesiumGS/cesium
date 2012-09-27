@@ -1,28 +1,56 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/EquidistantCylindricalProjection',
+        '../Core/GeographicProjection',
         '../Core/Ellipsoid',
         '../Core/DeveloperError',
+        '../Core/Occluder',
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Intersect',
+        '../Core/IntersectionTests',
+        '../Core/Matrix4',
         '../Renderer/Context',
+        '../Renderer/Command',
         './Camera',
         './CompositePrimitive',
+        './CullingVolume',
         './AnimationCollection',
         './SceneMode',
-        './SceneState'
+        './FrameState',
+        './OrthographicFrustum',
+        './PerspectiveOffCenterFrustum'
     ], function(
         Color,
+        defaultValue,
         destroyObject,
-        EquidistantCylindricalProjection,
+        GeographicProjection,
         Ellipsoid,
         DeveloperError,
+        Occluder,
+        BoundingRectangle,
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Intersect,
+        IntersectionTests,
+        Matrix4,
         Context,
+        Command,
         Camera,
         CompositePrimitive,
+        CullingVolume,
         AnimationCollection,
         SceneMode,
-        SceneState) {
+        FrameState,
+        OrthographicFrustum,
+        PerspectiveOffCenterFrustum) {
     "use strict";
 
     /**
@@ -34,7 +62,7 @@ define([
     var Scene = function(canvas) {
         var context = new Context(canvas);
 
-        this._sceneState = new SceneState();
+        this._frameState = new FrameState();
         this._canvas = canvas;
         this._context = context;
         this._primitives = new CompositePrimitive();
@@ -50,13 +78,23 @@ define([
 
         this._shaderFrameCount = 0;
 
+        this._near = this._camera.frustum.near;
+        this._far = this._camera.frustum.far;
+
+        this._commandList = [];
+        this._renderList = [];
+
+        this._bins = [];
+        this._binNear = Number.MAX_VALUE;
+        this._binFar = Number.MIN_VALUE;
+        this._useBins = false;
+
         /**
          * The current mode of the scene.
          *
          * @type SceneMode
          */
         this.mode = SceneMode.SCENE3D;
-
         /**
          * DOC_TBA
          */
@@ -64,9 +102,8 @@ define([
             /**
              * The projection to use in 2D mode.
              */
-            projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
+            projection : new GeographicProjection(Ellipsoid.WGS84)
         };
-
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
@@ -74,6 +111,12 @@ define([
          * @type Number
          */
         this.morphTime = 1.0;
+        /**
+         * The far-to-near ratio of the multi-frustum. The default is 1,000.0.
+         *
+         * @type Number
+         */
+        this.farToNearRatio = 1000.0;
     };
 
     /**
@@ -118,6 +161,15 @@ define([
     };
 
     /**
+     * Gets state information about the current scene.
+     *
+     * @memberof Scene
+     */
+    Scene.prototype.getFrameState = function() {
+        return this._frameState;
+    };
+
+    /**
      * DOC_TBA
      * @memberof Scene
      */
@@ -157,46 +209,418 @@ define([
         return this._animate;
     };
 
-    Scene.prototype._update = function() {
-        var us = this.getUniformState();
-        var camera = this._camera;
+    function clearPasses(passes) {
+        passes.color = false;
+        passes.pick = false;
+        passes.overlay = false;
+    }
 
-        // Destroy released shaders once every 120 frames to avoid thrashing the cache
-        if (this._shaderFrameCount++ === 120) {
-            this._shaderFrameCount = 0;
-            this._context.getShaderCache().destroyReleasedShaderPrograms();
+    function updateFrameState(scene) {
+        var camera = scene._camera;
+
+        var frameState = scene._frameState;
+        frameState.mode = scene.mode;
+        frameState.scene2D = scene.scene2D;
+        frameState.camera = camera;
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+        frameState.occluder = undefined;
+
+        // TODO: The occluder is the top-level central body. When we add
+        //       support for multiple central bodies, this should be the closest one.
+        var cb = scene._primitives.getCentralBody();
+        if (scene.mode === SceneMode.SCENE3D && cb !== null) {
+            var ellipsoid = cb.getEllipsoid();
+            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
+            frameState.occluder = occluder;
         }
 
-        this._animations.update();
+        clearPasses(frameState.passes);
+    }
+
+    function update(scene) {
+        var us = scene.getUniformState();
+        var camera = scene._camera;
+
+        // Destroy released shaders once every 120 frames to avoid thrashing the cache
+        if (scene._shaderFrameCount++ === 120) {
+            scene._shaderFrameCount = 0;
+            scene._context.getShaderCache().destroyReleasedShaderPrograms();
+        }
+
+        scene._animations.update();
         camera.update();
+        us.setView(camera.getViewMatrix());
         us.setProjection(camera.frustum.getProjectionMatrix());
         if (camera.frustum.getInfiniteProjectionMatrix) {
             us.setInfiniteProjection(camera.frustum.getInfiniteProjectionMatrix());
         }
-        us.setView(camera.getViewMatrix());
 
-        if (this._animate) {
-            this._animate();
+        if (scene._animate) {
+            scene._animate();
         }
 
-        var sceneState = this._sceneState;
-        sceneState.mode = this.mode;
-        sceneState.scene2D = this.scene2D;
-        sceneState.camera = camera;
+        updateFrameState(scene);
+        scene._frameState.passes.color = true;
+        scene._frameState.passes.overlay = true;
 
-        this._primitives.update(this._context, sceneState);
-    };
+        scene._commandList.length = 0;
+        scene._primitives.update(scene._context, scene._frameState, scene._commandList);
+    }
+
+    function insertIntoBin(scene, command, distance) {
+        var near = scene._binNear;
+        var far = scene._binFar;
+        var farToNearRatio = scene.farToNearRatio;
+
+        if (far < near) {
+            return;
+        }
+
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+        if (scene._bins.length === 0) {
+            scene._bins.length = numFrustums;
+        }
+
+        for (var i = 0; i < numFrustums; ++i) {
+            var curNear = Math.pow(farToNearRatio, i) * near;
+            var curFar = farToNearRatio * curNear;
+
+            if (typeof distance !== 'undefined') {
+                if (distance.x > curFar) {
+                    continue;
+                }
+
+                if (distance.y < curNear) {
+                    break;
+                }
+            }
+
+            // MULTIFRUSTUM TODO: sort bins
+            var bin = scene._bins[i];
+            if (typeof bin === 'undefined') {
+                bin = scene._bins[i] = [];
+            }
+            bin.push(command);
+        }
+    }
+
+    var scratchCullingVolume = new CullingVolume();
+    var distances = new Cartesian2();
+    function createPotentiallyVisibleSet(scene, listName) {
+        var commandLists = scene._commandList;
+        var cullingVolume = scene._frameState.cullingVolume;
+        var camera = scene._camera;
+
+        var direction = camera.getDirectionWC();
+        var position = camera.getPositionWC();
+
+        var renderList = scene._renderList;
+        renderList.length = 0;
+        var bins = scene._bins;
+        bins.length = 0;
+
+        var near = Number.MAX_VALUE;
+        var far = Number.MIN_VALUE;
+        var undefBV = false;
+
+        var occluder;
+        if (scene._frameState.mode === SceneMode.SCENE3D) {
+            occluder = scene._frameState.occluder;
+        }
+
+        // get user culling volume minus the far plane.
+        var planes = scratchCullingVolume.planes;
+        for (var k = 0; k < 5; ++k) {
+            planes[k] = cullingVolume.planes[k];
+        }
+        cullingVolume = scratchCullingVolume;
+
+        var length = commandLists.length;
+        for (var i = 0; i < length; ++i) {
+            var commandList = commandLists[i][listName];
+            var commandListLength = commandList.length;
+            for (var j = 0; j < commandListLength; ++j) {
+                var command = commandList[j];
+                var boundingVolume = command.boundingVolume;
+                if (typeof boundingVolume !== 'undefined') {
+                    var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
+                    var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
+                    if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
+                            (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(transformedBV))) {
+                        continue;
+                    }
+
+                    renderList.push(command);
+
+                    distances = transformedBV.distance(position, direction, distances);
+                    near = Math.min(near, distances.x);
+                    far = Math.max(far, distances.y);
+
+                    insertIntoBin(scene, command, distances);
+                } else {
+                    undefBV = true;
+                    renderList.push(command);
+                    insertIntoBin(scene, command);
+                }
+            }
+        }
+
+        if (undefBV) {
+            near = camera.frustum.near;
+            far = camera.frustum.far;
+        } else {
+            near = Math.max(near, camera.frustum.near);
+            far = Math.min(far, camera.frustum.far);
+        }
+
+        scene._near = near;
+        scene._far = far;
+
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(scene.farToNearRatio));
+        if (near >= scene._binNear && far <= scene._binFar && numFrustums === scene._bins.length) {
+            scene._useBins = true;
+        } else {
+            scene._useBins = false;
+            scene._binNear = near;
+            scene._binFar = far;
+        }
+    }
+
+    var scratchNearPlane = new Cartesian4();
+    var scratchFarPlane = new Cartesian4();
+    var scratchRenderCartesian3 = new Cartesian3();
+    var scratchCommand = new Command();
+    function renderPrimitives(scene, framebuffer) {
+        var farToNearRatio = scene.farToNearRatio;
+        var camera = scene._camera;
+        var frustum = camera.frustum.clone();
+
+        var context = scene._context;
+        var us = context.getUniformState();
+        var clearColor = context.createClearState({
+            color : Color.BLACK
+        });
+        var clearDepth = context.createClearState({
+            depth : 1.0
+        });
+        context.clear(clearColor);
+
+        var numFrustums;
+        var near;
+        var far;
+        var length;
+        var cloneCommand;
+
+        if (scene._useBins) {
+            var bins = scene._bins;
+            near = scene._binNear;
+            far = scene._binFar;
+
+            numFrustums = bins.length;
+            for (var i = 0; i < numFrustums; ++i) {
+                context.clear(clearDepth);
+                var binIndex = numFrustums - i - 1.0;
+                frustum.near = Math.pow(farToNearRatio, binIndex) * near;
+                frustum.far = frustum.near * farToNearRatio;
+
+                us.setProjection(frustum.getProjectionMatrix());
+                if (frustum.getInfiniteProjectionMatrix) {
+                    us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
+                }
+
+                var bin = bins[binIndex];
+                if (typeof bin !== 'undefined') {
+                    length = bin.length;
+                    for (var j = 0; j < length; ++j) {
+                        var command = bin[j];
+                        cloneCommand = Command.cloneDrawArguments(command, scratchCommand);
+                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
+                        context.draw(cloneCommand);
+                    }
+                }
+            }
+        } else {
+            var renderList = scene._renderList;
+
+            near = scene._near;
+            far = scene._far;
+
+            var direction = camera.getDirectionWC();
+            var position = camera.getPositionWC();
+
+            var nearPlane = scratchNearPlane;
+            nearPlane.x = direction.x;
+            nearPlane.y = direction.y;
+            nearPlane.z = direction.z;
+
+            var farPlane = scratchFarPlane;
+            farPlane.x = -direction.x;
+            farPlane.y = -direction.y;
+            farPlane.z = -direction.z;
+
+            numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+            for (var p = 0; p < numFrustums; ++p) {
+                context.clear(clearDepth);
+                frustum.near = Math.pow(farToNearRatio, numFrustums - p - 1.0) * near;
+                frustum.far = frustum.near * farToNearRatio;
+
+                us.setProjection(frustum.getProjectionMatrix());
+                if (frustum.getInfiniteProjectionMatrix) {
+                    us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
+                }
+
+                // compute near plane
+                var nearCenter = scratchRenderCartesian3;
+                Cartesian3.multiplyByScalar(direction, frustum.near, nearCenter);
+                Cartesian3.add(position, nearCenter, nearCenter);
+                nearPlane.w = -Cartesian3.dot(direction, nearCenter);
+
+                // compute far plane
+                var farCenter = scratchRenderCartesian3;
+                Cartesian3.multiplyByScalar(direction, frustum.far, farCenter);
+                Cartesian3.add(position, farCenter, farCenter);
+                farPlane.w = -Cartesian3.dot(farPlane, farCenter);
+
+                length = renderList.length;
+                for (var q = 0; q < length; ++q) {
+                    var renderCommand = renderList[q];
+
+                    var boundingVolume = renderCommand.boundingVolume;
+                    if (typeof boundingVolume !== 'undefined') {
+                        var modelMatrix = defaultValue(renderCommand.modelMatrix, Matrix4.IDENTITY);
+                        var transformedBV = boundingVolume.transform(modelMatrix); //MULTIFRUSTUM TODO: Remove this allocation.
+
+                        if (transformedBV.intersect(farPlane) === Intersect.OUTSIDE) {
+                            continue; // MULTIFURSTUM TODO: discard command
+                        }
+
+                        var nearIntersect = transformedBV.intersect(nearPlane);
+                        if (nearIntersect === Intersect.OUTSIDE) {
+                            continue;
+                        }
+
+                        cloneCommand = Command.cloneDrawArguments(renderCommand, scratchCommand);
+                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
+                        context.draw(cloneCommand);
+
+                        if (nearIntersect === Intersect.INSIDE) {
+                            renderList.splice(q, 1);
+                            length = renderList.length;
+                            --q;
+                        }
+                    } else {
+                        cloneCommand = Command.cloneDrawArguments(renderCommand, scratchCommand);
+                        cloneCommand.framebuffer = defaultValue(cloneCommand.framebuffer, framebuffer);
+                        context.draw(cloneCommand);
+                    }
+                }
+            }
+        }
+    }
+
+    function renderOverlays(scene) {
+        var context = scene._context;
+        var commandLists = scene._commandList;
+        var length = commandLists.length;
+        for (var i = 0; i < length; ++i) {
+            var commandList = commandLists[i].overlayList;
+            var commandListLength = commandList.length;
+            for (var j = 0; j < commandListLength; ++j) {
+                var command = commandList[j];
+                context.draw(command);
+            }
+        }
+    }
 
     /**
      * DOC_TBA
      * @memberof Scene
      */
     Scene.prototype.render = function() {
-        this._update();
-
-        this._context.clear(this._clearState);
-        this._primitives.render(this._context);
+        update(this);
+        createPotentiallyVisibleSet(this, 'colorList');
+        renderPrimitives(this);
+        renderOverlays(this);
     };
+
+    var orthoPickingFrustum = new OrthographicFrustum();
+    function getPickOrthographicCullingVolume(scene, windowPosition, width, height) {
+        var canvas = scene._canvas;
+        var camera = scene._camera;
+        var frustum = camera.frustum;
+
+        var canvasWidth = canvas.clientWidth;
+        var canvasHeight = canvas.clientHeight;
+
+        var x = (2.0 / canvasWidth) * windowPosition.x - 1.0;
+        x *= (frustum.right - frustum.left) * 0.5;
+        var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
+        y *= (frustum.top - frustum.bottom) * 0.5;
+
+        var position = camera.position;
+        position = new Cartesian3(position.z, position.x, position.y);
+        position.y += x;
+        position.z += y;
+
+        var pixelSize = frustum.getPixelSize(new Cartesian2(canvasWidth, canvasHeight));
+
+        var ortho = orthoPickingFrustum;
+        ortho.right = pixelSize.x * 0.5;
+        ortho.left = -ortho.right;
+        ortho.top = pixelSize.y * 0.5;
+        ortho.bottom = -ortho.top;
+        ortho.near = frustum.near;
+        ortho.far = frustum.far;
+
+        return ortho.computeCullingVolume(position, camera.getDirectionWC(), camera.getUpWC());
+    }
+
+    var perspPickingFrustum = new PerspectiveOffCenterFrustum();
+    function getPickPerspectiveCullingVolume(scene, windowPosition, width, height) {
+        var canvas = scene._canvas;
+        var camera = scene._camera;
+        var frustum = camera.frustum;
+        var near = frustum.near;
+
+        var canvasWidth = canvas.clientWidth;
+        var canvasHeight = canvas.clientHeight;
+
+        var tanPhi = Math.tan(frustum.fovy * 0.5);
+        var tanTheta = frustum.aspectRatio * tanPhi;
+
+        var x = (2.0 / canvasWidth) * windowPosition.x - 1.0;
+        var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
+
+        var xDir = x * near * tanTheta;
+        var yDir = y * near * tanPhi;
+
+        var pixelSize = frustum.getPixelSize(new Cartesian2(canvasWidth, canvasHeight));
+        var pickWidth = pixelSize.x * width * 0.5;
+        var pickHeight = pixelSize.y * height * 0.5;
+
+        var offCenter = perspPickingFrustum;
+        offCenter.top = yDir + pickHeight;
+        offCenter.bottom = yDir - pickHeight;
+        offCenter.right = xDir + pickWidth;
+        offCenter.left = xDir - pickWidth;
+        offCenter.near = near;
+        offCenter.far = frustum.far;
+
+        return offCenter.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+    }
+
+    function getPickCullingVolume(scene, windowPosition, width, height) {
+        if (scene.mode === SceneMode.SCENE2D) {
+            return getPickOrthographicCullingVolume(scene, windowPosition, width, height);
+        }
+
+        return getPickPerspectiveCullingVolume(scene, windowPosition, width, height);
+    }
+
+    // pick rectangle width and height, assumed odd
+    var rectangleWidth = 3.0;
+    var rectangleHeight = 3.0;
+    var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
 
     /**
      * DOC_TBA
@@ -205,18 +629,25 @@ define([
     Scene.prototype.pick = function(windowPosition) {
         var context = this._context;
         var primitives = this._primitives;
+        var frameState = this._frameState;
 
         this._pickFramebuffer = this._pickFramebuffer || context.createPickFramebuffer();
         var fb = this._pickFramebuffer.begin();
 
-        // TODO: Should we also do a regular update?
-        primitives.updateForPick(context);
-        primitives.renderForPick(context, fb);
+        updateFrameState(this);
+        frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
+        frameState.passes.pick = true;
 
-        return this._pickFramebuffer.end({
-            x : windowPosition.x,
-            y : (this._canvas.clientHeight - windowPosition.y)
-        });
+        var commandLists = this._commandList;
+        commandLists.length = 0;
+        primitives.update(context, frameState, commandLists);
+
+        createPotentiallyVisibleSet(this, 'pickList');
+        renderPrimitives(this, fb);
+
+        scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
+        scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+        return this._pickFramebuffer.end(scratchRectangle);
     };
 
     /**

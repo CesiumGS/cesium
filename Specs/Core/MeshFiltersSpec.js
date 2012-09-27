@@ -7,7 +7,7 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/Cartesian3',
          'Core/Tipsify',
-         'Core/EquidistantCylindricalProjection'
+         'Core/GeographicProjection'
      ], function(
          MeshFilters,
          PrimitiveType,
@@ -16,7 +16,7 @@ defineSuite([
          Ellipsoid,
          Cartesian3,
          Tipsify,
-         EquidistantCylindricalProjection) {
+         GeographicProjection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -231,7 +231,7 @@ defineSuite([
     });
 
     it('can reorder indices for the post vertex cache', function() {
-        var mesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(new Cartesian3(10.0, 10.0, 10.0)), 100);
+        var mesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(10.0, 10.0, 10.0), 100);
         var indices = mesh.indexLists[0].values;
         var numIndices = indices.length;
         var maximumIndex = 0;
@@ -398,8 +398,8 @@ defineSuite([
     });
 
     it('projectTo2D', function() {
-        var p1 = new Cartesian3(1, 2, 3);
-        var p2 = new Cartesian3(4, 5, 6);
+        var p1 = new Cartesian3(100000, 200000, 300000);
+        var p2 = new Cartesian3(400000, 500000, 600000);
 
         var mesh = {};
         mesh.attributes = {};
@@ -412,7 +412,7 @@ defineSuite([
         mesh = MeshFilters.projectTo2D(mesh);
 
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection();
+        var projection = new GeographicProjection();
         var projectedP1 = projection.project(ellipsoid.cartesianToCartographic(p1));
         var projectedP2 = projection.project(ellipsoid.cartesianToCartographic(p2));
 

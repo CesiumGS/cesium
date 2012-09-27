@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/TimeInterval',
+        '../Core/defaultValue',
         './CzmlBoolean',
         './CzmlCartesian2',
         './CzmlCartesian3',
@@ -13,6 +14,7 @@ define([
         './DynamicProperty'
        ], function(
         TimeInterval,
+        defaultValue,
         CzmlBoolean,
         CzmlCartesian2,
         CzmlCartesian3,
@@ -44,46 +46,57 @@ define([
     var DynamicLabel = function() {
         /**
          * A DynamicProperty of type CzmlString which determines the label's text.
+         * @type DynamicProperty
          */
         this.text = undefined;
         /**
          * A DynamicProperty of type CzmlString which determines the label's font.
+         * @type DynamicProperty
          */
         this.font = undefined;
         /**
          * A DynamicProperty of type CzmlLabelStyle which determines the label's style.
+         * @type DynamicProperty
          */
         this.style = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the label's fill color.
+         * @type DynamicProperty
          */
         this.fillColor = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the label's outline color.
+         * @type DynamicProperty
          */
         this.outlineColor = undefined;
         /**
          * A DynamicProperty of type CzmlHorizontalOrigin which determines the label's horizontal origin.
+         * @type DynamicProperty
          */
         this.horizontalOrigin = undefined;
         /**
          * A DynamicProperty of type CzmlVerticalOrigin which determines the label's vertical origin.
+         * @type DynamicProperty
          */
         this.verticalOrigin = undefined;
         /**
          * A DynamicProperty of type CzmlCartesian3 which determines the label's eye offset.
+         * @type DynamicProperty
          */
         this.eyeOffset = undefined;
         /**
          * A DynamicProperty of type CzmlCartesian2 which determines the label's pixel offset.
+         * @type DynamicProperty
          */
         this.pixelOffset = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the label's scale.
+         * @type DynamicProperty
          */
         this.scale = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the label's visibility.
+         * @type DynamicProperty
          */
         this.show = undefined;
     };
@@ -242,17 +255,17 @@ define([
                 targetObject.label = targetLabel = new DynamicLabel();
             }
 
-            targetLabel.text = targetLabel.text || labelToMerge.text;
-            targetLabel.font = targetLabel.font || labelToMerge.font;
-            targetLabel.show = targetLabel.show || labelToMerge.show;
-            targetLabel.style = targetLabel.style || labelToMerge.style;
-            targetLabel.fillColor = targetLabel.fillColor || labelToMerge.fillColor;
-            targetLabel.outlineColor = targetLabel.outlineColor || labelToMerge.outlineColor;
-            targetLabel.scale = targetLabel.scale || labelToMerge.scale;
-            targetLabel.horizontalOrigin = targetLabel.horizontalOrigin || labelToMerge.horizontalOrigin;
-            targetLabel.verticalOrigin = targetLabel.verticalOrigin || labelToMerge.verticalOrigin;
-            targetLabel.eyeOffset = targetLabel.eyeOffset || labelToMerge.eyeOffset;
-            targetLabel.pixelOffset = targetLabel.pixelOffset || labelToMerge.pixelOffset;
+            targetLabel.text = defaultValue(targetLabel.text, labelToMerge.text);
+            targetLabel.font = defaultValue(targetLabel.font, labelToMerge.font);
+            targetLabel.show = defaultValue(targetLabel.show, labelToMerge.show);
+            targetLabel.style = defaultValue(targetLabel.style, labelToMerge.style);
+            targetLabel.fillColor = defaultValue(targetLabel.fillColor, labelToMerge.fillColor);
+            targetLabel.outlineColor = defaultValue(targetLabel.outlineColor, labelToMerge.outlineColor);
+            targetLabel.scale = defaultValue(targetLabel.scale, labelToMerge.scale);
+            targetLabel.horizontalOrigin = defaultValue(targetLabel.horizontalOrigin, labelToMerge.horizontalOrigin);
+            targetLabel.verticalOrigin = defaultValue(targetLabel.verticalOrigin, labelToMerge.verticalOrigin);
+            targetLabel.eyeOffset = defaultValue(targetLabel.eyeOffset, labelToMerge.eyeOffset);
+            targetLabel.pixelOffset = defaultValue(targetLabel.pixelOffset, labelToMerge.pixelOffset);
         }
     };
 

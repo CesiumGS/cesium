@@ -4,13 +4,17 @@ defineSuite([
          'Core/Cartesian3',
          'Core/BoundingSphere',
          'Core/Visibility',
-         'Core/Math'
+         'Core/Math',
+         'Core/Ellipsoid',
+         'Core/Extent'
      ], function(
          Occluder,
          Cartesian3,
          BoundingSphere,
          Visibility,
-         CesiumMath) {
+         CesiumMath,
+         Ellipsoid,
+         Extent) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -37,7 +41,7 @@ defineSuite([
         var littleSphere = new BoundingSphere(new Cartesian3(0, 0, -2.75), 0.25);
         var cameraPosition = Cartesian3.ZERO;
         var occluder = new Occluder(giantSphere, cameraPosition);
-        expect(occluder.isVisible(littleSphere)).toEqual(false);
+        expect(occluder.isBoundingSphereVisible(littleSphere)).toEqual(false);
         expect(occluder.getVisibility(littleSphere)).toEqual(Visibility.NONE);
     });
 
@@ -47,7 +51,7 @@ defineSuite([
         var cameraPosition = Cartesian3.ZERO;
         var occluder = new Occluder(littleSphere, cameraPosition);
         expect(occluder.getRadius()).toBeLessThan(bigSphere.radius);
-        expect(occluder.isVisible(bigSphere)).toEqual(true);
+        expect(occluder.isBoundingSphereVisible(bigSphere)).toEqual(true);
         expect(occluder.getVisibility(bigSphere)).toEqual(Visibility.FULL);
     });
 
@@ -56,7 +60,7 @@ defineSuite([
         var sphere2 = new BoundingSphere(new Cartesian3(0, 0, -2.5), 0.5);
         var cameraPosition = Cartesian3.ZERO;
         var occluder = new Occluder(sphere1, cameraPosition);
-        expect(occluder.isVisible(sphere2)).toEqual(false);
+        expect(occluder.isBoundingSphereVisible(sphere2)).toEqual(false);
         expect(occluder.getVisibility(sphere2)).toEqual(Visibility.NONE);
     });
 
@@ -144,11 +148,10 @@ defineSuite([
     it('can compute an occludee point', function() {
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
         var positions = [new Cartesian3(-1.085, 0, -6.221), new Cartesian3(1.085, 0, -6.221)];
-        var tileOccluderSphere = new BoundingSphere(positions);
+        var tileOccluderSphere = BoundingSphere.fromPoints(positions);
         var occludeePosition = tileOccluderSphere.center;
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
-        expect(result.valid).toEqual(true);
-        expect(result.occludeePoint.equalsEpsilon(new Cartesian3(0, 0, -5), CesiumMath.EPSILON1)).toEqual(true);
+        expect(result.equalsEpsilon(new Cartesian3(0, 0, -5), CesiumMath.EPSILON1)).toEqual(true);
     });
 
     it('can compute a rotation vector (major axis = 0)', function() {
@@ -222,15 +225,13 @@ defineSuite([
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
         var occluder = new Occluder(occluderBS, cameraPosition);
         var positions = [new Cartesian3(-0.25, 0, -5.3), new Cartesian3(0.25, 0, -5.3)];
-        var tileOccluderSphere = new BoundingSphere(positions);
+        var tileOccluderSphere = BoundingSphere.fromPoints(positions);
         var occludeePosition = tileOccluderSphere.center;
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
 
-        expect(result.valid).toEqual(true);
+        var bs = new BoundingSphere(result, 0.0);
 
-        var bs = new BoundingSphere(result.occludeePoint, 0.0);
-
-        expect(occluder.isVisible(bs)).toEqual(false);
+        expect(occluder.isBoundingSphereVisible(bs)).toEqual(false);
         expect(occluder.getVisibility(bs)).toEqual(Visibility.NONE);
     });
 
@@ -239,10 +240,31 @@ defineSuite([
         var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
         var occluder = new Occluder(occluderBS, cameraPosition);
         var positions = [new Cartesian3(-0.25, 0, -5.3), new Cartesian3(0.25, 0, -5.3)];
-        var tileOccluderSphere = new BoundingSphere(positions);
+        var tileOccluderSphere = BoundingSphere.fromPoints(positions);
         var occludeePosition = tileOccluderSphere.center;
         var result = Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
-        expect(result.valid).toEqual(true);
-        expect(occluder.isVisible(new BoundingSphere(result.occludeePoint, 0.0))).toEqual(true);
+        expect(occluder.isBoundingSphereVisible(new BoundingSphere(result, 0.0))).toEqual(true);
+    });
+
+    it('compute occludee point from extent throws without an extent', function() {
+        expect(function() {
+            return Occluder.computeOccludeePointFromExtent();
+        }).toThrow();
+    });
+
+    it('compute invalid occludee point from extent', function() {
+        var extent = Extent.MAX_VALUE;
+        expect(Occluder.computeOccludeePointFromExtent(extent)).toEqual(undefined);
+    });
+
+    it('compute valid occludee point from extent', function() {
+        var edge = Math.PI / 32.0;
+        var extent = new Extent(-edge, -edge, edge, edge);
+        var ellipsoid = Ellipsoid.WGS84;
+        var positions = extent.subsample(ellipsoid);
+        var bs = BoundingSphere.fromPoints(positions);
+        var point = Occluder.getOccludeePoint(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), bs.center, positions);
+        var actual = Occluder.computeOccludeePointFromExtent(extent);
+        expect(actual).toEqual(point);
     });
 });

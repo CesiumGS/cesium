@@ -24,12 +24,15 @@ public class ServerTask extends Task {
 	private String upstreamProxyHost;
 	private Integer upstreamProxyPort;
 	private String noUpstreamProxyHostList;
+	private boolean listenOnAllAddresses;
 
 	public void execute() throws BuildException {
 		try {
 			Server server = new Server();
 			SelectChannelConnector connector = new SelectChannelConnector();
-			connector.setHost("localhost");
+			if (!listenOnAllAddresses) {
+				connector.setHost("localhost");
+			}
 			connector.setPort(port);
 			server.addConnector(connector);
 
@@ -82,7 +85,7 @@ public class ServerTask extends Task {
 			server.setHandler(contexts);
 			server.start();
 
-			getProject().log("Server listening.  Connect to http://localhost:8080 to browse examples.", Project.MSG_INFO);
+			getProject().log("Server listening.  Connect to http://localhost:" + port + " to browse examples.", Project.MSG_INFO);
 
 			server.join();
 		} catch (Exception e) {
@@ -120,5 +123,9 @@ public class ServerTask extends Task {
 
 	public void setNoUpstreamProxyHostList(String value) {
 		this.noUpstreamProxyHostList = value;
+	}
+
+	public void setListenOnAllAddresses(boolean value) {
+		this.listenOnAllAddresses = value;
 	}
 }

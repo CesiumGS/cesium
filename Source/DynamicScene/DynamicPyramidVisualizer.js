@@ -1,21 +1,25 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
-        '../Scene/ColorMaterial'
+        '../Scene/Material'
        ], function(
+         defaultValue,
          DeveloperError,
          destroyObject,
          Color,
          Matrix3,
          Matrix4,
          CustomSensorVolume,
-         ColorMaterial) {
+         Material) {
     "use strict";
+
+    var matrix3Scratch = new Matrix3();
 
     /**
      * A DynamicObject visualizer which maps the DynamicPyramid instance
@@ -175,6 +179,7 @@ define([
     var position;
     var orientation;
     DynamicPyramidVisualizer.prototype._updateObject = function(time, dynamicObject) {
+        var context = this._scene.getContext();
         var dynamicPyramid = dynamicObject.pyramid;
         if (typeof dynamicPyramid === 'undefined') {
             return;
@@ -220,6 +225,8 @@ define([
             } else {
                 pyramidVisualizerIndex = this._pyramidCollection.length;
                 pyramid = new CustomSensorVolume();
+                pyramid.affectedByLighting = false;
+
                 this._pyramidCollection.push(pyramid);
                 this._primitives.add(pyramid);
             }
@@ -230,7 +237,7 @@ define([
             pyramid.radius = Number.POSITIVE_INFINITY;
             pyramid.showIntersection = true;
             pyramid.intersectionColor = Color.YELLOW;
-            pyramid.material = new ColorMaterial();
+            pyramid.material = Material.fromType(context, Material.ColorType);
         } else {
             pyramid = this._pyramidCollection[pyramidVisualizerIndex];
         }
@@ -243,21 +250,21 @@ define([
             pyramid._visualizerDirections = directions;
         }
 
-        position = positionProperty.getValueCartesian(time, position) || pyramid._visualizerPosition;
-        orientation = orientationProperty.getValue(time, orientation) || pyramid._visualizerOrientation;
+        position = defaultValue(positionProperty.getValueCartesian(time, position), pyramid._visualizerPosition);
+        orientation = defaultValue(orientationProperty.getValue(time, orientation), pyramid._visualizerOrientation);
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
             (!position.equals(pyramid._visualizerPosition) ||
              !orientation.equals(pyramid._visualizerOrientation))) {
-            pyramid.modelMatrix = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation)), position);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, pyramid.modelMatrix);
             position.clone(pyramid._visualizerPosition);
             orientation.clone(pyramid._visualizerOrientation);
         }
 
         var material = dynamicPyramid.material;
         if (typeof material !== 'undefined') {
-            pyramid.material = material.getValue(time, this._scene.getContext(), pyramid.material);
+            pyramid.material = material.getValue(time, context, pyramid.material);
         }
 
         var property = dynamicPyramid.intersectionColor;

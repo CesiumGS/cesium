@@ -7,6 +7,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Extent',
         '../Core/Math',
+        '../Renderer/MipmapHint',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
@@ -22,6 +23,7 @@ define([
         Cartesian2,
         Extent,
         CesiumMath,
+        MipmapHint,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -108,14 +110,14 @@ define([
          * @see WebMercatorTilingScheme
          * @see GeographicTilingScheme
          */
-        this.tilingScheme = new GeographicTilingScheme({
+        this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 1,
             numberOfLevelZeroTilesY : 1
         });
-        this.tilingScheme.extent = this.extent;
+        this._tilingScheme.extent = this.extent;
 
-        var ellipsoid = this.tilingScheme.ellipsoid;
-        this.tilingScheme.levelZeroMaximumGeometricError = ellipsoid.getRadii().x * (this.extent.east - this.extent.west) / 1024;
+        var ellipsoid = this._tilingScheme.ellipsoid;
+        this._tilingScheme.levelZeroMaximumGeometricError = ellipsoid.getRadii().x * (this.extent.east - this.extent.west) / 1024;
 
         this._currentTime = undefined;
         this._nextTime = undefined;
@@ -126,7 +128,7 @@ define([
          *
          * @type {Boolean}
          */
-        this.ready = true;
+        this._ready = true;
 
         this._tileUrl = this.url + '?';
         this._tileUrl += 'SERVICE=IS&VERSION=1.0.0&REQUEST=GetMap&CRS=EPSG:4326';
@@ -135,12 +137,64 @@ define([
         this._tileUrl += '&TRANSPARENT=TRUE&BGCOLOR=0xFFFFFF&FORMAT=image/png';
     };
 
-    WideAreaMotionImageryProvider.prototype.update = function(context, sceneState, tiles) {
-        if (this._replacingImage) {
-            return;
-        }
+    /**
+     * Gets a value indicating whether or not the provider is ready for use.
+     *
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
+     */
+    WideAreaMotionImageryProvider.prototype.isReady = function() {
+        return this._ready;
+    };
 
-        if (typeof this._texture === 'undefined') {
+    /**
+     * Gets the tiling scheme used by this provider.
+     *
+     * @returns {TilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     */
+    WideAreaMotionImageryProvider.prototype.getTilingScheme = function() {
+        return this._tilingScheme;
+    };
+
+    /**
+     * Gets the extent, in radians, of the imagery provided by this instance.
+     *
+     * @returns {Extent} The extent.
+     */
+    WideAreaMotionImageryProvider.prototype.getExtent = function() {
+        return this.extent;
+    };
+
+    /**
+     * Gets the width of each tile, in pixels.
+     *
+     * @returns {Number} The width.
+     */
+    WideAreaMotionImageryProvider.prototype.getTileWidth = function() {
+        return 1024;
+    };
+
+    /**
+     * Gets the height of each tile, in pixels.
+     *
+     * @returns {Number} The height.
+     */
+    WideAreaMotionImageryProvider.prototype.getTileHeight = function() {
+        return 1024;
+    };
+
+    /**
+     * Gets the maximum level-of-detail that can be requested.
+     *
+     * @returns {Number} The maximum level.
+     */
+    WideAreaMotionImageryProvider.prototype.getMaximumLevel = function() {
+        return this.maxLevel;
+    };
+
+    WideAreaMotionImageryProvider.prototype.update = function(context, sceneState, tilesToRenderByTextureCount) {
+        if (this._replacingImage) {
             return;
         }
 
@@ -148,16 +202,47 @@ define([
             return;
         }
 
-        if (tiles.length === 0) {
+        if (tilesToRenderByTextureCount.length === 0) {
             return;
         }
 
-        var tileExtent = tiles[0].extent;
-        var extent = new Extent(tileExtent.west, tileExtent.south, tileExtent.east, tileExtent.north);
-        for (var i = 1, len = tiles.length; i < len; ++i) {
-            tileExtent = tiles[i].extent;
-            extent = extent.unionWith(tileExtent);
+        var tileExtent;
+        var extent;
+        var texture;
+
+        for (var tileSetIndex = 0, tileSetLength = tilesToRenderByTextureCount.length; tileSetIndex < tileSetLength; ++tileSetIndex) {
+            var tileSet = tilesToRenderByTextureCount[tileSetIndex];
+            if (typeof tileSet === 'undefined' || tileSet.length === 0) {
+                continue;
+            }
+
+            for (var i = 0, len = tileSet.length; i < len; i++) {
+                var tile = tileSet[i];
+                tileExtent = tile.extent;
+
+                //if (typeof texture === 'undefined') {
+                    for (var imageryIndex = 0; imageryIndex < tile.imagery.length; ++imageryIndex) {
+                        if (tile.imagery[imageryIndex].imagery.imageryLayer.imageryProvider === this) {
+                            if (typeof texture !== 'undefined' && texture !== tile.imagery[imageryIndex].imagery.texture) {
+                                console.log('wtf');
+                            }
+                            texture = tile.imagery[imageryIndex].imagery.texture;
+                        }
+                    }
+                //}
+
+                if (typeof extent === 'undefined') {
+                    extent = new Extent(tileExtent.west, tileExtent.south, tileExtent.east, tileExtent.north);
+                } else {
+                    extent = extent.unionWith(tileExtent);
+                }
+            }
         }
+
+        if (typeof texture === 'undefined') {
+            return;
+        }
+
         this.nextExtent = extent.intersectWith(this.extent);
 
         if ((typeof this._currentTime !== 'undefined' && this._nextTime.equals(this._currentTime)) &&
@@ -168,8 +253,9 @@ define([
 
         var that = this;
         this._replacingImage = true;
-        this.requestImage().then(function(image) {
-            that._texture.copyFrom(image);
+        this.requestImage(0, 0, 0).then(function(image) {
+            texture.copyFrom(image);
+            texture.generateMipmap(MipmapHint.NICEST);
             that._replacingImage = false;
             that.currentExtent = that.nextExtent;
             that._currentTime = that._nextTime;
@@ -199,14 +285,19 @@ define([
     };
 
     /**
-     * Request the image for a given tile.
+     * Requests the image for a given tile.
      *
-     * @param {String} url The tile image URL.
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
      *
-     * @return A promise for the image that will resolve when the image is available.
-     *         If the image is not suitable for display, the promise can resolve to undefined.
+     * @return {Promise} A promise for the image that will resolve when the image is available, or
+     *         undefined if there are too many active requests to the server, and the request
+     *         should be retried later.  If the resulting image is not suitable for display,
+     *         the promise can resolve to undefined.  The resolved image may be either an
+     *         Image or a Canvas DOM object.
      */
-    WideAreaMotionImageryProvider.prototype.requestImage = function(url) {
+    WideAreaMotionImageryProvider.prototype.requestImage = function(x, y, level) {
         var imageUrl = this._tileUrl;
 
         if (typeof this._nextTime === 'undefined') {
@@ -225,57 +316,7 @@ define([
             imageUrl = this._proxy.getURL(imageUrl);
         }
 
-        return loadImage(imageUrl);
-    };
-
-    /**
-     * Transform the tile imagery from the format requested from the remote server
-     * into a format suitable for resource creation.  Once complete, the tile imagery
-     * state should be set to TRANSFORMED.  Alternatively, tile imagery state can be set to
-     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
-     * is still needed.
-     *
-     * @param {Context} context The context to use to create resources.
-     * @param {TileImagery} tileImagery The tile imagery to transform.
-     */
-    WideAreaMotionImageryProvider.prototype.transformImagery = function(context, tileImagery) {
-        tileImagery.transformedImage = tileImagery.image;
-        tileImagery.image = undefined;
-        tileImagery.state = TileState.TRANSFORMED;
-    };
-
-    /**
-     * Create WebGL resources for the tile imagery using whatever data the transformImagery step produced.
-     * Once complete, the tile imagery state should be set to READY.  Alternatively, tile imagery state can be set to
-     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
-     * is still needed.
-     *
-     * @param {Context} context The context to use to create resources.
-     * @param {TileImagery} tileImagery The tile imagery to create resources for.
-     * @param {TexturePool} texturePool A texture pool to use to create textures.
-     */
-    WideAreaMotionImageryProvider.prototype.createResources = function(context, tileImagery, texturePool) {
-        if (typeof this._texture === 'undefined') {
-            var texture = texturePool.createTexture2D(context, {
-                source : tileImagery.transformedImage
-            });
-
-            texture.setSampler({
-                wrapS : TextureWrap.CLAMP,
-                wrapT : TextureWrap.CLAMP,
-                minificationFilter : TextureMinificationFilter.LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR,
-
-                // TODO: Remove Chrome work around
-                maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8
-            });
-
-            this._texture = texture;
-        }
-
-        tileImagery.texture = this._texture;
-        tileImagery.transformedImage = undefined;
-        tileImagery.state = TileState.READY;
+        return ImageryProvider.loadImage(imageUrl);
     };
 
     WideAreaMotionImageryProvider.prototype.setTime = function(time) {

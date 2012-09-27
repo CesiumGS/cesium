@@ -1,23 +1,29 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
-        '../Core/shallowEquals',
         '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Math',
         './HorizontalOrigin',
-        './VerticalOrigin'
+        './VerticalOrigin',
+        './SceneMode'
     ], function(
+        defaultValue,
         DeveloperError,
-        shallowEquals,
         Color,
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        CesiumMath,
         HorizontalOrigin,
-        VerticalOrigin) {
+        VerticalOrigin,
+        SceneMode) {
     "use strict";
+
+    var EMPTY_OBJECT = {};
 
     /**
      * A viewport-aligned image positioned in the 3D scene, that is created
@@ -46,24 +52,27 @@ define([
      *
      * @internalConstructor
      */
-    var Billboard = function(billboardTemplate, collection) {
-        var b = billboardTemplate || {};
-        var position = b.position ? new Cartesian3(b.position.x, b.position.y, b.position.z) : Cartesian3.ZERO.clone();
+    var Billboard = function(description, billboardCollection) {
+        description = defaultValue(description, EMPTY_OBJECT);
 
-        this._show = (typeof b.show === 'undefined') ? true : b.show;
-        this._position = position;
-        this._actualPosition = position.clone(); // For columbus view and 2D
-        this._pixelOffset = b.pixelOffset ? new Cartesian2(b.pixelOffset.x, b.pixelOffset.y) : Cartesian2.ZERO.clone();
-        this._eyeOffset = b.eyeOffset ? new Cartesian3(b.eyeOffset.x, b.eyeOffset.y, b.eyeOffset.z) : Cartesian3.ZERO.clone();
-        this._horizontalOrigin = b.horizontalOrigin || HorizontalOrigin.CENTER;
-        this._verticalOrigin = b.verticalOrigin || VerticalOrigin.CENTER;
-        this._scale = (typeof b.scale === 'undefined') ? 1.0 : b.scale;
-        this._imageIndex = b.imageIndex || 0;
-        this._color = (typeof b.color !== 'undefined') ? Color.clone(b.color) : new Color(1.0, 1.0, 1.0, 1.0);
+        this._show = defaultValue(description.show, true);
+
+        this._position = Cartesian3.clone(defaultValue(description.position, Cartesian3.ZERO));
+        this._actualPosition = this._position.clone(); // For columbus view and 2D
+
+        this._pixelOffset = Cartesian2.clone(defaultValue(description.pixelOffset, Cartesian2.ZERO));
+        this._eyeOffset = Cartesian3.clone(defaultValue(description.eyeOffset, Cartesian3.ZERO));
+        this._verticalOrigin = defaultValue(description.verticalOrigin, VerticalOrigin.CENTER);
+        this._horizontalOrigin = defaultValue(description.horizontalOrigin, HorizontalOrigin.CENTER);
+        this._scale = defaultValue(description.scale, 1.0);
+        this._imageIndex = defaultValue(description.imageIndex, -1);
+        this._color = Color.clone(defaultValue(description.color, Color.WHITE));
+
         this._pickId = undefined;
-        this._pickIdThis = b._pickIdThis;
-        this._collection = collection;
+        this._pickIdThis = description._pickIdThis;
+        this._billboardCollection = billboardCollection;
         this._dirty = false;
+        this._index = -1; //Used only by BillboardCollection
     };
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
@@ -77,29 +86,17 @@ define([
     var COLOR_INDEX = Billboard.COLOR_INDEX = 8;
     Billboard.NUMBER_OF_PROPERTIES = 9;
 
-    Billboard.prototype._isDirty = function() {
-        return this._dirty;
-    };
-
-    Billboard.prototype._clean = function() {
-        this._dirty = false;
-    };
-
-    Billboard.prototype._makeDirty = function(propertyChanged) {
-        var c = this._collection;
-        if (c) {
-            c._updateBillboard(this, propertyChanged);
-            this._dirty = true;
+    function makeDirty(billboard, propertyChanged) {
+        var billboardCollection = billboard._billboardCollection;
+        if (typeof billboardCollection !== 'undefined') {
+            billboardCollection._updateBillboard(billboard, propertyChanged);
+            billboard._dirty = true;
         }
-    };
+    }
 
     Billboard.prototype.getPickId = function(context) {
         this._pickId = this._pickId || context.createPickId(this._pickIdThis || this);
         return this._pickId;
-    };
-
-    Billboard.prototype._getCollection = function() {
-        return this._collection;
     };
 
     /**
@@ -124,12 +121,18 @@ define([
      *
      * @param {Boolean} value Indicates if this billboard will be shown.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Billboard#getShow
      */
     Billboard.prototype.setShow = function(value) {
-        if ((typeof value !== 'undefined') && (this._show !== value)) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (value !== this._show) {
             this._show = value;
-            this._makeDirty(SHOW_INDEX);
+            makeDirty(this, SHOW_INDEX);
         }
     };
 
@@ -158,34 +161,32 @@ define([
      *
      * @param {Cartesian3} value The Cartesian position.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Billboard#getPosition
      *
      * @example
      * // Example 1. Set a billboard's position using a Cartesian3.
      * b.setPosition(new Cartesian3(1.0, 2.0, 3.0));
      *
-     * //////////////////////////////////////////////////////////////////
-     *
      * // Example 2. Set a billboard's position using an object literal.
      * b.setPosition({
      *   x : 1.0,
      *   y : 2.0,
-     *   z : 3.0});
+     *   z : 3.0
+     * });
      */
     Billboard.prototype.setPosition = function(value) {
-        var p = this._position;
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
 
-        if ((typeof value !== 'undefined') && ((p.x !== value.x) || (p.y !== value.y) || (p.z !== value.z))) {
-            p.x = value.x;
-            p.y = value.y;
-            p.z = value.z;
+        var position = this._position;
+        if (!Cartesian3.equals(position, value)) {
+            Cartesian3.clone(value, position);
+            Cartesian3.clone(value, this._actualPosition);
 
-            var actualP = this._actualPosition;
-            actualP.x = value.x;
-            actualP.y = value.y;
-            actualP.z = value.z;
-
-            this._makeDirty(POSITION_INDEX);
+            makeDirty(this, POSITION_INDEX);
         }
     };
 
@@ -194,12 +195,8 @@ define([
     };
 
     Billboard.prototype._setActualPosition = function(value) {
-        var actualP = this._actualPosition;
-        actualP.x = value.x;
-        actualP.y = value.y;
-        actualP.z = value.z;
-
-        this._makeDirty(POSITION_INDEX);
+        Cartesian3.clone(value, this._actualPosition);
+        makeDirty(this, POSITION_INDEX);
     };
 
     /**
@@ -238,16 +235,20 @@ define([
      *
      * @param {Cartesian2} value The 2D Cartesian pixel offset.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Billboard#getPixelOffset
      * @see Label#setPixelOffset
      */
     Billboard.prototype.setPixelOffset = function(value) {
-        var p = this._pixelOffset;
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
 
-        if ((typeof value !== 'undefined') && ((p.x !== value.x) || (p.y !== value.y))) {
-            p.x = value.x;
-            p.y = value.y;
-            this._makeDirty(PIXEL_OFFSET_INDEX);
+        var pixelOffset = this._pixelOffset;
+        if (!Cartesian2.equals(pixelOffset, value)) {
+            Cartesian2.clone(value, pixelOffset);
+            makeDirty(this, PIXEL_OFFSET_INDEX);
         }
     };
 
@@ -293,16 +294,19 @@ define([
      *
      * @param {Cartesian3} value The 3D Cartesian offset in eye coordinates.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Billboard#getEyeOffset
      */
     Billboard.prototype.setEyeOffset = function(value) {
-        var e = this._eyeOffset;
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
 
-        if ((typeof value !== 'undefined') && ((e.x !== value.x) || (e.y !== value.y) || (e.z !== value.z))) {
-            e.x = value.x;
-            e.y = value.y;
-            e.z = value.z;
-            this._makeDirty(EYE_OFFSET_INDEX);
+        var eyeOffset = this._eyeOffset;
+        if (!Cartesian3.equals(eyeOffset, value)) {
+            Cartesian3.clone(value, eyeOffset);
+            makeDirty(this, EYE_OFFSET_INDEX);
         }
     };
 
@@ -331,6 +335,8 @@ define([
      *
      * @param {HorizontalOrigin} value The horizontal origin.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Billboard#getHorizontalOrigin
      * @see Billboard#setVerticalOrigin
      *
@@ -340,9 +346,13 @@ define([
      * b.setVerticalOrigin(VerticalOrigin.BOTTOM);
      */
     Billboard.prototype.setHorizontalOrigin = function(value) {
-        if ((typeof value !== 'undefined') && (this._horizontalOrigin !== value)) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (this._horizontalOrigin !== value) {
             this._horizontalOrigin = value;
-            this._makeDirty(HORIZONTAL_ORIGIN_INDEX);
+            makeDirty(this, HORIZONTAL_ORIGIN_INDEX);
         }
     };
 
@@ -371,6 +381,8 @@ define([
      *
      * @param {VerticalOrigin} value The vertical origin.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Billboard#getVerticalOrigin
      * @see Billboard#setHorizontalOrigin
      *
@@ -380,9 +392,13 @@ define([
      * b.setVerticalOrigin(VerticalOrigin.BOTTOM);
      */
     Billboard.prototype.setVerticalOrigin = function(value) {
-        if ((typeof value !== 'undefined') && (this._verticalOrigin !== value)) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (this._verticalOrigin !== value) {
             this._verticalOrigin = value;
-            this._makeDirty(VERTICAL_ORIGIN_INDEX);
+            makeDirty(this, VERTICAL_ORIGIN_INDEX);
         }
     };
 
@@ -415,13 +431,19 @@ define([
      *
      * @param {Number} value The scale used to size the billboard.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Billboard#getScale
      * @see Billboard#setImageIndex
      */
     Billboard.prototype.setScale = function(value) {
-        if ((typeof value !== 'undefined') && (this._scale !== value)) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (this._scale !== value) {
             this._scale = value;
-            this._makeDirty(SCALE_INDEX);
+            makeDirty(this, SCALE_INDEX);
         }
     };
 
@@ -446,9 +468,13 @@ define([
      * @see BillboardCollection#setTextureAtlas
      */
     Billboard.prototype.setImageIndex = function(value) {
-        if ((typeof value !== 'undefined') && (this._imageIndex !== value)) {
+        if (typeof value !== 'number') {
+            throw new DeveloperError('value is required and must be a number.');
+        }
+
+        if (this._imageIndex !== value) {
             this._imageIndex = value;
-            this._makeDirty(IMAGE_INDEX_INDEX);
+            makeDirty(this, IMAGE_INDEX_INDEX);
         }
     };
 
@@ -488,49 +514,91 @@ define([
      *
      * @param {Object} value The color's red, green, blue, and alpha components.
      *
+     * @exception {DeveloperError} value is required.
+     *
      * @see Billboard#getColor
      *
      * @example
-     *
      * // Example 1. Assign yellow.
      * b.setColor({
      *   red   : 1.0,
      *   green : 1.0,
      *   blue  : 0.0,
-     *   alpha : 1.0 });
-     *
-     * //////////////////////////////////////////////////////////////////
+     *   alpha : 1.0
+     * });
      *
      * // Example 2. Make a billboard 50% translucent.
      * b.setColor({
      *   red   : 1.0,
      *   green : 1.0,
      *   blue  : 1.0,
-     *   alpha : 0.5 });
+     *   alpha : 0.5
+     * });
      */
     Billboard.prototype.setColor = function(value) {
-        var c = this._color;
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
 
-        if ((typeof value !== 'undefined') && !Color.equals(c, value)) {
-            Color.clone(value, c);
-            this._makeDirty(COLOR_INDEX);
+        var color = this._color;
+        if (!Color.equals(color, value)) {
+            Color.clone(value, color);
+            makeDirty(this, COLOR_INDEX);
         }
     };
 
-    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, uniformState) {
+    var tempCartesian4 = new Cartesian4();
+    Billboard._computeActualPosition = function(position, frameState, morphTime, modelMatrix) {
+        var mode = frameState.mode;
+
+        if (mode === SceneMode.SCENE3D) {
+            return position;
+        }
+
+        var projection = frameState.scene2D.projection;
+        var cartographic, projectedPosition;
+
+        if (mode === SceneMode.MORPHING) {
+            cartographic = projection.getEllipsoid().cartesianToCartographic(position);
+            projectedPosition = projection.project(cartographic);
+
+            var x = CesiumMath.lerp(projectedPosition.z, position.x, morphTime);
+            var y = CesiumMath.lerp(projectedPosition.x, position.y, morphTime);
+            var z = CesiumMath.lerp(projectedPosition.y, position.z, morphTime);
+            return new Cartesian3(x, y, z);
+        }
+
+        tempCartesian4.x = position.x;
+        tempCartesian4.y = position.y;
+        tempCartesian4.z = position.z;
+        tempCartesian4.w = 1.0;
+
+        modelMatrix.multiplyByVector(tempCartesian4, tempCartesian4);
+
+        cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian4);
+        projectedPosition = projection.project(cartographic);
+
+        if (mode === SceneMode.SCENE2D) {
+            return new Cartesian3(0.0, projectedPosition.x, projectedPosition.y);
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            return new Cartesian3(projectedPosition.z, projectedPosition.x, projectedPosition.y);
+        }
+    };
+
+    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, clampToPixel, uniformState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
 
         // Model to eye coordinates
         var mv = uniformState.getView().multiply(modelMatrix);
         var positionEC = mv.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
 
-        // Apply eye offset, e.g., agi_eyeOffset
+        // Apply eye offset, e.g., czm_eyeOffset
         var zEyeOffset = eyeOffset.multiplyComponents(positionEC.normalize());
         positionEC.x += eyeOffset.x + zEyeOffset.x;
         positionEC.y += eyeOffset.y + zEyeOffset.y;
         positionEC.z += zEyeOffset.z;
 
-        // Eye to window coordinates, e.g., agi_eyeToWindowCoordinates
+        // Eye to window coordinates, e.g., czm_eyeToWindowCoordinates
         var q = uniformState.getProjection().multiplyByVector(positionEC); // clip coordinates
         q.x /= q.w; // normalized device coordinates
         q.y /= q.w;
@@ -542,7 +610,11 @@ define([
         positionWC.x += po.x;
         positionWC.y += po.y;
 
-        return new Cartesian2(positionWC.x, Math.floor(positionWC.y));
+        if (clampToPixel) {
+            return new Cartesian2(Math.floor(positionWC.x), Math.floor(positionWC.y));
+        }
+
+        return new Cartesian2(positionWC.x, positionWC.y);
     };
 
     /**
@@ -552,7 +624,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @param {UniformState} uniformState The same state object passed to {@link BillboardCollection#render}.
+     * @param {UniformState} uniformState The same state object passed to {@link BillboardCollection#update}.
      *
      * @return {Cartesian2} The screen-space position of the billboard.
      *
@@ -561,13 +633,13 @@ define([
      *
      * @see Billboard#setEyeOffset
      * @see Billboard#setPixelOffset
-     * @see BillboardCollection#render
      *
      * @example
      * console.log(b.computeScreenSpacePosition(scene.getUniformState()).toString());
      */
     Billboard.prototype.computeScreenSpacePosition = function(uniformState) {
-        if (!this._collection) {
+        var billboardCollection = this._billboardCollection;
+        if (typeof billboardCollection === 'undefined') {
             throw new DeveloperError('Billboard must be in a collection.  Was it removed?');
         }
 
@@ -575,35 +647,36 @@ define([
             throw new DeveloperError('uniformState is required.');
         }
 
-        return Billboard._computeScreenSpacePosition(this._collection.modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, uniformState);
+        return Billboard._computeScreenSpacePosition(billboardCollection.modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, this.clampToPixel, uniformState);
     };
 
     /**
-    * Determines if this billboard equals another billboard.  Billboards are equal if all their properties
-    * are equal.  Billboards in different collections can be equal.
-    *
-    * @memberof Billboard
-    *
-    * @param {Billboard} other The billboard to compare for equality.
-    *
-    * @return {Boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
+     * Determines if this billboard equals another billboard.  Billboards are equal if all their properties
+     * are equal.  Billboards in different collections can be equal.
+     *
+     * @memberof Billboard
+     *
+     * @param {Billboard} other The billboard to compare for equality.
+     *
+     * @return {Boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
      */
     Billboard.prototype.equals = function(other) {
-        return other &&
-               (this._show === other._show) &&
-               (this._position.equals(other._position)) &&
-               (this._pixelOffset.equals(other._pixelOffset)) &&
-               (this._eyeOffset.equals(other._eyeOffset)) &&
-               (this._horizontalOrigin === other._horizontalOrigin) &&
-               (this._verticalOrigin === other._verticalOrigin) &&
-               (this._scale === other._scale) &&
-               (this._imageIndex === other._imageIndex) &&
-               (shallowEquals(this._color, other._color));
+        return this === other ||
+               typeof other !== 'undefined' &&
+               this._show === other._show &&
+               this._imageIndex === other._imageIndex &&
+               this._scale === other._scale &&
+               this._verticalOrigin === other._verticalOrigin &&
+               this._horizontalOrigin === other._horizontalOrigin &&
+               Cartesian3.equals(this._position, other._position) &&
+               Color.equals(this._color, other._color) &&
+               Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
+               Cartesian3.equals(this._eyeOffset, other._eyeOffset);
     };
 
     Billboard.prototype._destroy = function() {
         this._pickId = this._pickId && this._pickId.destroy();
-        this._collection = null;
+        this._billboardCollection = undefined;
     };
 
     return Billboard;

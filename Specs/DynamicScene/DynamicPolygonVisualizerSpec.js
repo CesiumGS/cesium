@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicPolygonVisualizer',
-             '../Specs/createScene',
-             '../Specs/destroyScene',
-             '../Specs/MockProperty',
+             'Specs/createScene',
+             'Specs/destroyScene',
+             'Specs/MockProperty',
              'DynamicScene/DynamicPolygon',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
              'Core/JulianDate',
-             'Scene/ColorMaterial',
+             'Scene/Material',
              'Core/Cartesian3',
              'Core/Color',
              'Scene/Scene'
@@ -21,7 +21,7 @@ defineSuite([
               DynamicObjectCollection,
               DynamicObject,
               JulianDate,
-              ColorMaterial,
+              Material,
               Cartesian3,
               Color,
               Scene) {
@@ -113,7 +113,9 @@ defineSuite([
 
         var polygon = testObject.polygon = new DynamicPolygon();
         polygon.show = new MockProperty(true);
-        polygon.material = new MockProperty(new ColorMaterial(new Color(0.7, 0.6, 0.5, 0.4)));
+        var colorMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        colorMaterial.uniforms.color = new Color(0.7, 0.6, 0.5, 0.4);
+        polygon.material = new MockProperty(colorMaterial);
 
         visualizer.update(time);
 
@@ -126,7 +128,9 @@ defineSuite([
         expect(primitive.material).toEqual(testObject.polygon.material.getValue(time));
 
         testObject.vertexPositions = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112), new Cartesian3(1234, 5678, 910111)]);
-        polygon.material = new MockProperty(new ColorMaterial(new Color(0.1, 0.2, 0.4, 0.3)));
+        colorMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+        colorMaterial.uniforms.color = new Color(0.1, 0.2, 0.4, 0.3);
+        polygon.material = new MockProperty(colorMaterial);
 
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polygon.show.getValue(time));

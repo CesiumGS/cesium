@@ -1,1 +1,0 @@
-({"close":"[zatvoriť]","title":"Nadpis","authors":"Autori","summary":"Súhrn","content":"Obsah","contributors":"Prispievatelia","updated":"Aktualizovaný","displayOptions":"[zobraziť voľby]","id":"ID"})

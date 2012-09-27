@@ -1,12 +1,12 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
+        '../Core/createGuid',
         '../Core/destroyObject',
-        '../Core/createGuid'
+        '../Core/DeveloperError'
     ], function(
-        DeveloperError,
+        createGuid,
         destroyObject,
-        createGuid) {
+        DeveloperError) {
     "use strict";
 
     // PERFORMANCE_IDEA: Add hierarchical culling and state sorting.
@@ -35,7 +35,7 @@ define([
      * parent.add(labels);      // Add regular primitive
      */
     var CompositePrimitive = function() {
-        this._centralBody = null;
+        this._centralBody = undefined;
         this._primitives = [];
         this._guid = createGuid();
 
@@ -126,7 +126,7 @@ define([
      * primitives.add(labels);
      */
     CompositePrimitive.prototype.add = function(primitive) {
-        if (!primitive) {
+        if (typeof primitive === 'undefined') {
             throw new DeveloperError('primitive is required.');
         }
 
@@ -244,7 +244,7 @@ define([
      * @see CompositePrimitive#addGround
      */
     CompositePrimitive.prototype.bringForward = function(primitive) {
-        if (primitive) {
+        if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;
 
@@ -270,7 +270,7 @@ define([
      * @see CompositePrimitive#addGround
      */
     CompositePrimitive.prototype.bringToFront = function(primitive) {
-        if (primitive) {
+        if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;
 
@@ -296,7 +296,7 @@ define([
      * @see CompositePrimitive#addGround
      */
     CompositePrimitive.prototype.sendBackward = function(primitive) {
-        if (primitive) {
+        if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;
 
@@ -322,7 +322,7 @@ define([
      * @see CompositePrimitive#addGround
      */
     CompositePrimitive.prototype.sendToBack = function(primitive) {
-        if (primitive) {
+        if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;
 
@@ -388,79 +388,20 @@ define([
     /**
      * @private
      */
-    CompositePrimitive.prototype.update = function(context, sceneState) {
-        if (this.show) {
-            if (this._centralBody) {
-                this._centralBody.update(context, sceneState);
-            }
-
-            var primitives = this._primitives;
-            var length = primitives.length;
-            for ( var i = 0; i < length; ++i) {
-                primitives[i].update(context, sceneState);
-            }
+    CompositePrimitive.prototype.update = function(context, frameState, commandList) {
+        if (!this.show) {
+            return;
         }
-    };
 
-    /**
-     * DOC_TBA
-     * @memberof CompositePrimitive
-     */
-    CompositePrimitive.prototype.render = function(context) {
-        if (this.show) {
-            var cb = this._centralBody;
-            var primitives = this._primitives;
-            var primitivesLen = primitives.length;
-
-            if (cb) {
-                cb.render(context);
-            }
-            for ( var i = 0; i < primitivesLen; ++i) {
-                var primitive = primitives[i];
-                primitive.render(context);
-            }
+        if (this._centralBody) {
+            this._centralBody.update(context, frameState, commandList);
         }
-    };
 
-    /**
-     * @private
-     */
-    CompositePrimitive.prototype.updateForPick = function(context) {
-        if (this.show) {
-            if (this._centralBody && this._centralBody.updateForPick) {
-                this._centralBody.updateForPick(context);
-            }
-
-            var primitives = this._primitives;
-            var length = primitives.length;
-            for ( var i = 0; i < length; ++i) {
-                var primitive = primitives[i];
-                if (primitive.updateForPick) {
-                    primitives[i].updateForPick(context);
-                }
-            }
-        }
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof CompositePrimitive
-     */
-    CompositePrimitive.prototype.renderForPick = function(context, framebuffer) {
-        if (this.show) {
-            var cb = this._centralBody;
-            var primitives = this._primitives;
-            var primitivesLen = primitives.length;
-
-            if (cb) {
-                cb.renderForPick(context, framebuffer);
-            }
-            for ( var i = 0; i < primitivesLen; ++i) {
-                var primitive = primitives[i];
-                if (primitive.renderForPick) {
-                    primitive.renderForPick(context, framebuffer);
-                }
-            }
+        var primitives = this._primitives;
+        var length = primitives.length;
+        for (var i = 0; i < length; ++i) {
+            var primitive = primitives[i];
+            primitive.update(context, frameState, commandList);
         }
     };
 
@@ -505,9 +446,7 @@ define([
      */
     CompositePrimitive.prototype.destroy = function() {
         this.removeAll();
-
         this._centralBody = this.destroyPrimitives && this._centralBody && this._centralBody.destroy();
-
         return destroyObject(this);
     };
 

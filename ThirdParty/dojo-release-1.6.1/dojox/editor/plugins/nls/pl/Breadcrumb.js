@@ -1,1 +1,0 @@
-({"selectContents":"Zaznacz treść","deleteElement":"Usuń element","moveEnd":"Przenieś kursor na koniec","deleteContents":"Usuń treść","nodeActions":"${nodeName} - działania","selectElement":"Zaznacz element","moveStart":"Przenieś kursor na początek"})

@@ -201,7 +201,7 @@ define([
         description = defaultValue(description, {});
 
         var extent = description.extent;
-        Extent.validate(extent);
+        extent.validate();
 
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
         description.radiiSquared = ellipsoid.getRadiiSquared();
@@ -340,7 +340,7 @@ define([
         description = defaultValue(description, {});
 
         var extent = description.extent;
-        Extent.validate(extent);
+        extent.validate();
 
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
         description.radiiSquared = ellipsoid.getRadiiSquared();

@@ -2,14 +2,14 @@
 define([
         './DeveloperError',
         './Cartesian3',
-        './EquidistantCylindricalProjection',
+        './GeographicProjection',
         './ComponentDatatype',
         './PrimitiveType',
         './Tipsify'
     ], function(
         DeveloperError,
         Cartesian3,
-        EquidistantCylindricalProjection,
+        GeographicProjection,
         ComponentDatatype,
         PrimitiveType,
         Tipsify) {
@@ -456,7 +456,7 @@ define([
      */
     MeshFilters.projectTo2D = function(mesh, projection) {
         if (mesh && mesh.attributes && mesh.attributes.position) {
-            projection = projection || new EquidistantCylindricalProjection();
+            projection = projection || new GeographicProjection();
             var ellipsoid = projection.getEllipsoid();
 
             // Project original positions to 2D.

@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/CompositePrimitive',
-         '../Specs/createContext',
-         '../Specs/destroyContext',
-         '../Specs/sceneState',
-         '../Specs/pick',
+         'Specs/createContext',
+         'Specs/destroyContext',
+         'Specs/equals',
+         'Specs/frameState',
+         'Specs/pick',
+         'Specs/render',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
@@ -19,8 +21,10 @@ defineSuite([
          CompositePrimitive,
          createContext,
          destroyContext,
-         sceneState,
+         equals,
+         frameState,
          pick,
+         render,
          Cartesian3,
          Cartographic,
          Ellipsoid,
@@ -53,7 +57,7 @@ defineSuite([
         camera = new Camera(context.getCanvas());
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.up = Cartesian3.UNIT_Z;
-        camera.direction = camera.position.negate();
+        camera.direction = camera.position.normalize().negate();
         camera.frustum.near = 0.01;
         camera.frustum.far = 10.0;
         camera.frustum.fovy = CesiumMath.toRadians(60.0);
@@ -71,14 +75,12 @@ defineSuite([
         camera = camera && camera.destroy();
     });
 
-    function createLabels() {
+    function createLabels(position) {
+        position = position || { x : -1.0, y : 0.0, z : 0.0 };
         var labels = new LabelCollection();
+        labels.clampToPixel = false;
         labels.add({
-            position : {
-                x : -1.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : position,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -86,16 +88,17 @@ defineSuite([
         return labels;
     }
 
-    function createPolygon() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+    function createPolygon(degree, ellipsoid) {
+        degree = (typeof degree !== 'undefined') ? degree : 50.0;
+        ellipsoid = ellipsoid || Ellipsoid.UNIT_SPHERE;
         var polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions([
-                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
-                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
-                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
-                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
+                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree, -degree, 0.0)),
+                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( degree, -degree, 0.0)),
+                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( degree,  degree, 0.0)),
+                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree,  degree, 0.0))
                              ]);
         return polygon;
     }
@@ -252,8 +255,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         primitives.add(createLabels());
-        primitives.update(context, sceneState);
-        primitives.render(context, us);
+        render(context, frameState, primitives);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -263,8 +265,7 @@ defineSuite([
 
         primitives.show = false;
         primitives.add(createLabels());
-        primitives.update(context, sceneState);
-        primitives.render(context, us);
+        render(context, frameState, primitives);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
@@ -279,16 +280,14 @@ defineSuite([
         otherPrimitives.add(p);
         otherPrimitives.destroyPrimitives = false;
 
-        primitives.update(context, sceneState);
-        primitives.render(context, us);
+        render(context, frameState, primitives);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         // Render using other composite
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        otherPrimitives.update(context, sceneState);
-        otherPrimitives.render(context, us);
+        render(context, frameState, otherPrimitives);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         otherPrimitives.destroy();
@@ -302,8 +301,7 @@ defineSuite([
         children.add(createLabels());
         primitives.add(children);
 
-        primitives.update(context, sceneState);
-        primitives.render(context, us);
+        render(context, frameState, primitives);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -312,9 +310,8 @@ defineSuite([
         var l = labels.get(0);
 
         primitives.add(labels);
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(l);
     });
 
@@ -323,9 +320,8 @@ defineSuite([
 
         primitives.show = false;
         primitives.add(labels);
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 
@@ -337,9 +333,7 @@ defineSuite([
         children.add(labels);
         primitives.add(children);
 
-        primitives.update(context, sceneState);
-
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(l);
     });
 
@@ -349,9 +343,8 @@ defineSuite([
 
         primitives.add(p0);
         primitives.add(p1);
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -361,9 +354,8 @@ defineSuite([
 
         primitives.add(p1);
         primitives.add(p0);
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -374,9 +366,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringForward(p1); // Already on top
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -387,9 +378,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringForward(p0); // Moved to top
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -400,9 +390,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringToFront(p1); // Already on top
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -413,9 +402,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.bringToFront(p0); // Moved to top
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -426,9 +414,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendBackward(p1); // Moved back
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -439,9 +426,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendBackward(p0); // Already on bottom
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
@@ -452,9 +438,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendToBack(p1); // Moved back
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p0);
     });
 
@@ -465,22 +450,33 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
         primitives.sendToBack(p0); // Already on bottom
-        primitives.update(context, sceneState);
 
-        var pickedObject = pick(context, primitives, 0, 0);
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
         expect(pickedObject).toEqual(p1);
     });
 
     it('renders a central body', function() {
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var savedCamera;
 
-        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
-        primitives.setCentralBody(cb);
+        runs(function() {
+            context.clear();
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        primitives.update(context, sceneState);
-        primitives.render(context, us);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+            var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
+            primitives.setCentralBody(cb);
+
+            savedCamera = frameState.camera;
+            frameState.camera = camera;
+        });
+
+        waitsFor(function() {
+            render(context, frameState, primitives);
+            return !equals(this.env, context.readPixels(), [0, 0, 0, 0]);
+        }, 'the central body to be rendered', 5000);
+
+        runs(function() {
+            frameState.camera = savedCamera;
+        });
     });
 
     it('is not destroyed when first constructed', function() {

@@ -23,7 +23,7 @@ define([
      *
      * @see SingleTileImageryProvider
      * @see ArcGisMapServerImageryProvider
-     * @see OpenStreetMapTileProvider
+     * @see OpenStreetMapImageryProvider
      * @see BingMapsImageryProvider
      *
      * @example

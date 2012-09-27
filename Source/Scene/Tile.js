@@ -7,6 +7,9 @@ define([
         '../Core/Cartesian2',
         '../Core/Ellipsoid',
         '../Core/Extent',
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
+        '../Core/Occluder',
         './TileState'
     ], function(
         defaultValue,
@@ -16,6 +19,9 @@ define([
         Cartesian2,
         Ellipsoid,
         Extent,
+        BoundingRectangle,
+        BoundingSphere,
+        Occluder,
         TileState) {
     "use strict";
 
@@ -60,42 +66,36 @@ define([
 
         /**
          * The tiling scheme used to tile the surface.
-         *
          * @type TilingScheme
          */
         this.tilingScheme = description.tilingScheme;
 
         /**
          * The x coordinate.
-         *
          * @type Number
          */
         this.x = description.x;
 
         /**
          * The y coordinate.
-         *
          * @type Number
          */
         this.y = description.y;
 
         /**
          * The level-of-detail, where zero is the coarsest, least-detailed.
-         *
          * @type Number
          */
         this.level = description.level;
 
         /**
-         * The parent of this tile in a tile tree system.
-         *
+         * The parent of this tile in a tiling scheme.
          * @type Tile
          */
         this.parent = description.parent;
 
         /**
-         * The children of this tile in a tile tree system.
-         *
+         * The children of this tile in a tiling scheme.
          * @type Array
          */
         this.children = undefined;
@@ -103,50 +103,103 @@ define([
         /**
          * The cartographic extent of the tile, with north, south, east and
          * west properties in radians.
-         *
          * @type Extent
          */
         this.extent = this.tilingScheme.tileXYToExtent(this.x, this.y, this.level);
 
         /**
-         * The {@link VertexArray} defining the geometry of this tile.
-         *
+         * The {@link VertexArray} defining the geometry of this tile.  This property
+         * is expected to be set before the tile enter's the {@link TileState.READY}
+         * {@link state}.
          * @type VertexArray
          */
         this.vertexArray = undefined;
 
-        var tilingScheme = description.tilingScheme;
-        if (typeof description.extent !== 'undefined') {
-            var coords = tilingScheme.extentToTileXY(description.extent, this.level);
-            this.x = coords.x;
-            this.y = coords.y;
-
-            this.extent = description.extent;
-        } else {
-            this.x = description.x;
-            this.y = description.y;
-
-            this.extent = tilingScheme.tileXYToExtent(this.x, this.y, this.level);
-        }
-
+        /**
+         * The center of this tile.  The {@link vertexArray} is rendered
+         * relative-to-center (RTC) using this center.  Note that the center of the
+         * {@link boundingSphere3D} is not necessarily the same as this center.
+         * This property is expected to be set before the tile enter's the
+         * {@link TileState.READY} {@link state}.
+         * @type Cartesian3
+         */
         this.center = undefined;
-        this._boundingSphere3D = undefined;
-        this._occludeePoint = undefined;
 
-        this._projection = undefined;
-        this._boundingSphere2D = undefined;
-        this._boundingRectangle = undefined;
+        /**
+         * The maximum height of terrain in this tile, in meters above the ellipsoid.
+         * @type Number
+         */
+        this.maxHeight = undefined;
 
-        this._previous = undefined;
-        this._next = undefined;
+        /**
+         * A sphere that completely contains this tile on the globe.  This property may be
+         * undefined until the tile's {@link vertexArray} is loaded.
+         * @type BoundingSphere
+         */
+        this.boundingSphere3D = undefined;
 
-        // TODO: get rid of _imagery.
-        this._imagery = {};
+        /**
+         * The current state of the tile in the tile load pipeline.
+         * @type TileState
+         */
+        this.state = TileState.UNLOADED;
+
+        /**
+         * The previous tile in the {@link TileLoadQueue}.
+         * @type Tile
+         */
+        this.loadPrevious = undefined;
+
+        /**
+         * The next tile in the {@link TileLoadQueue}.
+         * @type Tile
+         */
+        this.loadNext = undefined;
+
+        /**
+         * The previous tile in the {@link TileReplacementQueue}.
+         * @type Tile
+         */
+        this.replacementPrevious = undefined;
+
+        /**
+         * The next tile in the {@link TileReplacementQueue}.
+         * @type Tile
+         */
+        this.replacementNext = undefined;
+
+        /**
+         * The {@link TileImagery} attached to this tile.
+         * @type Array
+         */
         this.imagery = [];
 
-        this.state = TileState.UNLOADED;
-        this.geometry = undefined;
-        this.transformedGeometry = undefined;
+        /**
+         * Transient data stored during the load process.  The exact content
+         * of this property is a function of the tile's current {@link state} and
+         * the {@link TerrainProvider} that is loading the tile.
+         * @type Object
+         */
+        this.transientData = undefined;
+
+        /**
+         * The distance from the camera to this tile, updated when the tile is selected
+         * for rendering.  TODO: can we get rid of this?
+         * @type Number
+         */
+        this.distance = 0.0;
+
+        // TODO: acknowledge or remove these properties:
+        // southwestCornerCartesian
+        // northeastCornerCartesian
+        // westNormal
+        // southNormal
+        // eastNormal
+        // northNormal
+
+        // TODO: write doc for these.
+        this.occludeePoint = undefined;
+        this.occludeePointComputed = false;
     };
 
     /**
@@ -192,25 +245,6 @@ define([
         return this.children;
     };
 
-    Tile.prototype.computeMorphBounds = function(morphTime, projection) {
-        return Extent.computeMorphBoundingSphere(this.extent, this.tilingScheme.ellipsoid, morphTime, projection);
-    };
-
-    /**
-     * The bounding sphere for the geometry.
-     *
-     * @memberof Tile
-     *
-     * @return {BoundingSphere} The bounding sphere.
-     */
-    Tile.prototype.get3DBoundingSphere = function() {
-        if (typeof this._boundingSphere3D === 'undefined') {
-            this._boundingSphere3D = Extent.compute3DBoundingSphere(this.extent, this.tilingScheme.ellipsoid);
-        }
-
-        return this._boundingSphere3D;
-    };
-
     /**
      * Computes a point that when visible means the geometry for this tile is visible.
      *
@@ -218,101 +252,17 @@ define([
      *
      * @return {Cartesian3} The occludee point or undefined.
      */
-    Tile.prototype.getOccludeePoint = function() {
-        if (typeof this._occludeePoint === 'undefined') {
-            this._occludeePoint = Extent.computeOccludeePoint(this.extent, this.tilingScheme.ellipsoid);
-        }
-
-        return this._occludeePoint.valid ? this._occludeePoint.occludeePoint : undefined;
-    };
-
-    function compute2DBounds(tile, projection) {
-        if (typeof projection === 'undefined' || tile._projection === projection) {
-            return;
-        }
-
-        var extent = tile.extent;
-        tile._boundingRectangle = Extent.computeBoundingRectangle(extent, projection);
-        tile._boundingSphere2D = Extent.compute2DBoundingSphere(extent, projection);
-        tile._projection = projection;
-    }
-
-    /**
-     * The bounding sphere for the geometry when the extent is projected onto a surface that is displayed in 3D.
-     *
-     * @memberof Tile
-     *
-     * @return {BoundingSphere} The bounding sphere.
-     */
-    Tile.prototype.get2DBoundingSphere = function(projection) {
-        compute2DBounds(this, projection);
-
-        return this._boundingSphere2D;
-    };
-
-    /**
-     * The bounding rectangle for when the tile is projected onto a surface that is displayed in 2D.
-     *
-     * @memberof Tile
-     *
-     * @return {Rectangle} The bounding rectangle.
-     */
-    Tile.prototype.get2DBoundingRectangle = function(projection) {
-        compute2DBounds(this, projection);
-
-        return this._boundingRectangle;
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Tile
-     *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see Tile#destroy
-     */
-    Tile.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Tile
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Tile#isDestroyed
-     *
-     * @example
-     * tile = tile && tile.destroy();
-     */
-    Tile.prototype.destroy = function() {
-        this.vertexArray = this.vertexArray && this.vertexArray.destroy();
-        var imagery = this._imagery;
-        Object.keys(imagery).forEach(function(key) {
-            var tileImagery = imagery[key];
-            tileImagery._texture = tileImagery._texture && tileImagery._texture.destroy();
-        });
-
-        if (typeof this.children !== 'undefined') {
-            while (this.children.length > 0) {
-                this.children.pop().destroy();
+    Tile.prototype.getOccludeePointInScaledSpace = function() {
+        if (!this.occludeePointComputed) {
+            var ellipsoid = this.tilingScheme.ellipsoid;
+            var occludeePoint = Occluder.computeOccludeePointFromExtent(this.extent, ellipsoid);
+            if (typeof occludeePoint !== 'undefined') {
+                occludeePoint.multiplyComponents(ellipsoid.getOneOverRadii(), occludeePoint);
             }
+            this.occludeePoint = occludeePoint;
+            this.occludeePointComputed = true;
         }
-
-        return destroyObject(this);
+        return this.occludeePoint;
     };
 
     Tile.prototype.freeResources = function() {
@@ -323,7 +273,7 @@ define([
         if (typeof this.vertexArray !== 'undefined') {
             var indexBuffer = this.vertexArray.getIndexBuffer();
 
-            this.vertexArray = this.vertexArray && this.vertexArray.destroy();
+            this.vertexArray.destroy();
             this.vertexArray = undefined;
 
             if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
@@ -344,15 +294,16 @@ define([
         }
         this.transformedGeometry = undefined;
 
-        var imagery = this.imagery;
-        Object.keys(imagery).forEach(function(key) {
-            var tileImagery = imagery[key];
-            tileImagery.destroy();
-        });
-        this.imagery = [];
+        var i, len;
+
+        var imageryList = this.imagery;
+        for (i = 0, len = imageryList.length; i < len; ++i) {
+            imageryList[i].freeResources();
+        }
+        this.imagery.length = 0;
 
         if (typeof this.children !== 'undefined') {
-            for (var i = 0; i < this.children.length; ++i) {
+            for (i = 0, len = this.children.length; i < len; ++i) {
                 this.children[i].freeResources();
             }
         }

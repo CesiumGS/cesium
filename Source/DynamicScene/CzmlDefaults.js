@@ -2,15 +2,19 @@
 define([
         './DynamicObject',
         './DynamicBillboard',
+        './DynamicEllipsoid',
         './DynamicCone',
         './DynamicLabel',
+        './DynamicPath',
         './DynamicPoint',
         './DynamicPolygon',
         './DynamicPolyline',
         './DynamicPyramid',
         './DynamicBillboardVisualizer',
+        './DynamicEllipsoidVisualizer',
         './DynamicConeVisualizerUsingCustomSensor', //CZML_TODO Replace with './DynamicConeVisualizer', once ComplexConicSensor works.
         './DynamicLabelVisualizer',
+        './DynamicPathVisualizer',
         './DynamicPointVisualizer',
         './DynamicPolygonVisualizer',
         './DynamicPolylineVisualizer',
@@ -18,15 +22,19 @@ define([
        ], function(
         DynamicObject,
         DynamicBillboard,
+        DynamicEllipsoid,
         DynamicCone,
         DynamicLabel,
+        DynamicPath,
         DynamicPoint,
         DynamicPolygon,
         DynamicPolyline,
         DynamicPyramid,
         DynamicBillboardVisualizer,
+        DynamicEllipsoidVisualizer,
         DynamicConeVisualizer,
         DynamicLabelVisualizer,
+        DynamicPathVisualizer,
         DynamicPointVisualizer,
         DynamicPolygonVisualizer,
         DynamicPolylineVisualizer,
@@ -54,13 +62,16 @@ define([
          * @see DynamicObjectCollection
          */
         updaters : [DynamicBillboard.processCzmlPacket,
+                    DynamicEllipsoid.processCzmlPacket,
                     DynamicCone.processCzmlPacket,
                     DynamicLabel.processCzmlPacket,
+                    DynamicPath.processCzmlPacket,
                     DynamicPoint.processCzmlPacket,
                     DynamicPolygon.processCzmlPacket,
                     DynamicPolyline.processCzmlPacket,
                     DynamicPyramid.processCzmlPacket,
                     DynamicObject.processCzmlPacketPosition,
+                    DynamicObject.processCzmlPacketViewFrom,
                     DynamicObject.processCzmlPacketOrientation,
                     DynamicObject.processCzmlPacketVertexPositions,
                     DynamicObject.processCzmlPacketAvailability],
@@ -72,8 +83,10 @@ define([
          * @see CompositeDynamicObjectCollection
          */
         mergers : [DynamicBillboard.mergeProperties,
+                   DynamicEllipsoid.mergeProperties,
                    DynamicCone.mergeProperties,
                    DynamicLabel.mergeProperties,
+                   DynamicPath.mergeProperties,
                    DynamicPoint.mergeProperties,
                    DynamicPolygon.mergeProperties,
                    DynamicPolyline.mergeProperties,
@@ -87,8 +100,10 @@ define([
         * @see CompositeDynamicObjectCollection
         */
         cleaners : [DynamicBillboard.undefineProperties,
+                    DynamicEllipsoid.undefineProperties,
                     DynamicCone.undefineProperties,
                     DynamicLabel.undefineProperties,
+                    DynamicPath.undefineProperties,
                     DynamicPoint.undefineProperties,
                     DynamicPolygon.undefineProperties,
                     DynamicPolyline.undefineProperties,
@@ -105,12 +120,14 @@ define([
          */
         createVisualizers : function(scene) {
             return [new DynamicBillboardVisualizer(scene),
+                    new DynamicEllipsoidVisualizer(scene),
                     new DynamicConeVisualizer(scene),
                     new DynamicLabelVisualizer(scene),
                     new DynamicPointVisualizer(scene),
                     new DynamicPolygonVisualizer(scene),
                     new DynamicPolylineVisualizer(scene),
-                    new DynamicPyramidVisualizer(scene)];
+                    new DynamicPyramidVisualizer(scene),
+                    new DynamicPathVisualizer(scene)];
         }
     };
 

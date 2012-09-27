@@ -303,7 +303,7 @@ define([
      *
      * @private
      */
-    function eliminateHole(outerRing, innerRings) {
+    function eliminateHole(outerRing, innerRings, ellipsoid) {
         // Check that the holes are defined in the winding order opposite that of the outer ring.
         var windingOrder = PolygonPipeline.computeWindingOrder2D(outerRing);
         for ( var i = 0; i < innerRings.length; i++) {
@@ -321,7 +321,7 @@ define([
         }
 
         // Project points onto a tangent plane to find the mutually visible vertex.
-        var tangentPlane = EllipsoidTangentPlane.create(Ellipsoid.WGS84, outerRing);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
         var tangentOuterRing = tangentPlane.projectPointsOntoPlane(outerRing);
         var tangentInnerRings = [];
         for (i = 0; i < innerRings.length; i++) {
@@ -369,6 +369,9 @@ define([
 
         return newPolygonVertices;
     }
+
+    var scaleToGeodeticHeightN = new Cartesian3();
+    var scaleToGeodeticHeightP = new Cartesian3();
 
     /**
      * DOC_TBA
@@ -707,10 +710,11 @@ define([
          *
          * @exception {DeveloperError} ellipsoid is required.
          */
-        scaleToGeodeticHeight : function(ellipsoid, mesh, height) {
-            if (!ellipsoid) {
-                throw new DeveloperError('ellipsoid is required.');
-            }
+        scaleToGeodeticHeight : function(mesh, height, ellipsoid) {
+            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+            var n = scaleToGeodeticHeightN;
+            var p = scaleToGeodeticHeightP;
 
             height = height || 0.0;
 
@@ -719,14 +723,14 @@ define([
                 var length = positions.length;
 
                 for ( var i = 0; i < length; i += 3) {
-                    var p = new Cartesian3(positions[i], positions[i + 1], positions[i + 2]);
-                    p = ellipsoid.scaleToGeodeticSurface(p);
+                    p.x = positions[i];
+                    p.y = positions[i + 1];
+                    p.z = positions[i + 2];
 
-                    var n = ellipsoid.geodeticSurfaceNormal(p);
-                    n = n.multiplyByScalar(height);
-
-                    // Translate from surface to height.
-                    p = p.add(n);
+                    ellipsoid.scaleToGeodeticSurface(p, p);
+                    ellipsoid.geodeticSurfaceNormal(p, n);
+                    Cartesian3.multiplyByScalar(n, height, n);
+                    Cartesian3.add(p, n, p);
 
                     positions[i] = p.x;
                     positions[i + 1] = p.y;
@@ -755,7 +759,7 @@ define([
          * outerRing = PolygonPipeline.eliminateHoles(outerRing, innerRings);
          * polygon.setPositions(outerRing);
          */
-        eliminateHoles : function(outerRing, innerRings) {
+        eliminateHoles : function(outerRing, innerRings, ellipsoid) {
             if (typeof outerRing === 'undefined') {
                 throw new DeveloperError('outerRing is required.');
             }
@@ -765,6 +769,7 @@ define([
             if (typeof innerRings === 'undefined') {
                 throw new DeveloperError('innerRings is required.');
             }
+            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
             var innerRingsCopy = [];
             for ( var i = 0; i < innerRings.length; i++) {
@@ -777,7 +782,7 @@ define([
 
             var newPolygonVertices = outerRing;
             while (innerRingsCopy.length > 0) {
-                newPolygonVertices = eliminateHole(newPolygonVertices, innerRingsCopy);
+                newPolygonVertices = eliminateHole(newPolygonVertices, innerRingsCopy, ellipsoid);
             }
             return newPolygonVertices;
         }

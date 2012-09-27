@@ -67,6 +67,28 @@ defineSuite([
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
+    it('fromScale works without a result parameter', function() {
+        var expected = new Matrix3(
+                7.0, 0.0, 0.0,
+                0.0, 8.0, 0.0,
+                0.0, 0.0, 9.0);
+        var returnedResult = Matrix3.fromScale(new Cartesian3(7.0, 8.0, 9.0));
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromScale works with a result parameter', function() {
+        var expected = new Matrix3(
+                7.0, 0.0, 0.0,
+                0.0, 8.0, 0.0,
+                0.0, 0.0, 9.0);
+        var result = new Matrix3();
+        var returnedResult = Matrix3.fromScale(new Cartesian3(7.0, 8.0, 9.0), result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqual(expected);
+    });
+
     it('fromRowMajorArray works without a result parameter', function() {
         var expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var matrix = Matrix3.fromRowMajorArray([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
@@ -643,6 +665,12 @@ defineSuite([
     it('static fromQuaternion throws without quaternion parameter', function() {
         expect(function() {
             Matrix3.fromQuaternion(undefined);
+        }).toThrow();
+    });
+
+    it('static fromScale throws without scale parameter', function() {
+        expect(function() {
+            Matrix3.fromScale(undefined);
         }).toThrow();
     });
 

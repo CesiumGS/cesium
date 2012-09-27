@@ -7,7 +7,8 @@ define([
         '../Core/Cartesian2',
         '../Core/Math',
         '../Core/Ellipsoid',
-        '../Core/Rectangle',
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/ComponentDatatype',
@@ -17,11 +18,14 @@ define([
         '../Core/PolygonPipeline',
         '../Core/WindingOrder',
         '../Core/ExtentTessellator',
+        '../Core/Queue',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
+        '../Renderer/Command',
+        '../Renderer/CommandLists',
         '../Renderer/CullFace',
         '../Renderer/VertexLayout',
-        './ColorMaterial',
+        './Material',
         './SceneMode',
         '../Shaders/Noise',
         '../Shaders/PolygonVS',
@@ -36,7 +40,8 @@ define([
         Cartesian2,
         CesiumMath,
         Ellipsoid,
-        Rectangle,
+        BoundingRectangle,
+        BoundingSphere,
         Cartesian3,
         Cartographic,
         ComponentDatatype,
@@ -46,11 +51,14 @@ define([
         PolygonPipeline,
         WindingOrder,
         ExtentTessellator,
+        Queue,
         BlendingState,
         BufferUsage,
+        Command,
+        CommandLists,
         CullFace,
         VertexLayout,
-        ColorMaterial,
+        Material,
         SceneMode,
         Noise,
         PolygonVS,
@@ -66,7 +74,7 @@ define([
     };
 
     function PositionVertices() {
-        this._va = null;
+        this._va = undefined;
     }
 
     PositionVertices.prototype.getVertexArrays = function() {
@@ -98,8 +106,8 @@ define([
 
     PositionVertices.prototype._destroyVA = function() {
         var va = this._va;
-        if (va) {
-            this._va = null;
+        if (typeof va !== 'undefined') {
+            this._va = undefined;
 
             var length = va.length;
             for ( var i = 0; i < length; ++i) {
@@ -125,7 +133,7 @@ define([
      *
      * @example
      * var polygon = new Polygon();
-     * polygon.material.color = {
+     * polygon.material.uniforms.color = {
      *   red   : 1.0,
      *   green : 0.0,
      *   blue  : 0.0,
@@ -145,7 +153,12 @@ define([
         this._rsPick = undefined;
 
         this._vertices = new PositionVertices();
-        this._pickId = null;
+        this._pickId = undefined;
+
+        this._boundingVolume = new BoundingSphere();
+        this._boundingVolume2D = new BoundingSphere();
+
+        this._commandLists = new CommandLists();
 
         /**
          * DOC_TBA
@@ -188,6 +201,7 @@ define([
 
         this._positions = undefined;
         this._extent = undefined;
+        this._polygonHierarchy = undefined;
         this._createVertexArray = false;
 
         /**
@@ -227,11 +241,25 @@ define([
         this._affectedByLighting = true;
 
         /**
-         * DOC_TBA
+         * The surface appearance of the polygon.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * <p>
+         * The default material is <code>Material.ColorType</code>.
+         * </p>
+         *
+         * @type Material
+         *
+         * @example
+         * // 1. Change the color of the default material to yellow
+         * polygon.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         *
+         * // 2. Change material to horizontal stripes
+         * polygon.material = Material.fromType(scene.getContext(), Material.StripeType);
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = new ColorMaterial({
-            color : new Color(1.0, 1.0, 0.0, 0.5)
-        });
+        this.material = Material.fromType(undefined, Material.ColorType);
+        this.material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
         this._material = undefined;
 
         /**
@@ -308,7 +336,99 @@ define([
         }
         this.height = height || 0.0;
         this._extent = undefined;
+        this._polygonHierarchy = undefined;
         this._positions = positions;
+        this._createVertexArray = true;
+    };
+
+    /**
+     * Create a set of polygons with holes from a nested hierarchy.
+     *
+     * @memberof Polygon
+     *
+     * @param {Object} hierarchy An object defining the vertex positions of each nested polygon.
+     * For example, the following polygon has two holes, and one hole has a hole. <code>holes</code> is optional.
+     * Leaf nodes only have <code>positions</code>.
+     * <pre>
+     * <code>
+     * {
+     *  positions : [ ... ],    // The polygon's outer boundary
+     *  holes : [               // The polygon's inner holes
+     *    {
+     *      positions : [ ... ]
+     *    },
+     *    {
+     *      positions : [ ... ],
+     *      holes : [           // A polygon within a hole
+     *       {
+     *         positions : [ ... ]
+     *       }
+     *      ]
+     *    }
+     *  ]
+     * }
+     * </code>
+     * </pre>
+     * @param {double} [height=0.0] The height of the polygon.
+     *
+     * @exception {DeveloperError} At least three positions are required.
+     *
+     * @example
+     * // A triangle within a triangle
+     * var hierarchy = {
+     *     positions : [new Cartesian3(-634066.5629045101,-4608738.034138676,4348640.761750969),
+     *                  new Cartesian3(-1321523.0597310204,-5108871.981065817,3570395.2500986718),
+     *                  new Cartesian3(46839.74837473363,-5303481.972379478,3530933.5841716)],
+     *     holes : [{
+     *         positions :[new Cartesian3(-646079.44483647,-4811233.11175887,4123187.2266941597),
+     *                     new Cartesian3(-1024015.4454943262,-5072141.413164587,3716492.6173834214),
+     *                     new Cartesian3(-234678.22583880965,-5189078.820849883,3688809.059214336)]
+     *      }]
+     *  };
+     */
+    Polygon.prototype.configureFromPolygonHierarchy  = function(hierarchy, height) {
+        // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+        var polygons = [];
+        var queue = new Queue();
+        queue.enqueue(hierarchy);
+
+        while (queue.length !== 0) {
+            var outerNode = queue.dequeue();
+            var outerRing = outerNode.positions;
+
+            if (outerRing.length < 3) {
+                throw new DeveloperError('At least three positions are required.');
+            }
+
+            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
+            if (numChildren === 0) {
+                // The outer polygon is a simple polygon with no nested inner polygon.
+                polygons.push(outerNode.positions);
+            } else {
+                // The outer polygon contains inner polygons
+                var holes = [];
+                for ( var i = 0; i < numChildren; i++) {
+                    var hole = outerNode.holes[i];
+                    holes.push(hole.positions);
+
+                    var numGrandchildren = 0;
+                    if (hole.holes) {
+                        numGrandchildren = hole.holes.length;
+                    }
+
+                    for ( var j = 0; j < numGrandchildren; j++) {
+                        queue.enqueue(hole.holes[j]);
+                    }
+                }
+                var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, holes);
+                polygons.push(combinedPolygon);
+            }
+        }
+
+        this.height = height || 0.0;
+        this._positions = undefined;
+        this._extent = undefined;
+        this._polygonHierarchy = polygons;
         this._createVertexArray = true;
     };
 
@@ -333,11 +453,14 @@ define([
         this._extent = extent;
         this.height = height || 0.0;
         this._positions = undefined;
+        this._polygonHierarchy = undefined;
         this._createVertexArray = true;
     };
 
+    var _appendTextureCoordinatesCartesian2 = new Cartesian2();
+    var _appendTextureCoordinatesCartesian3 = new Cartesian3();
     Polygon._appendTextureCoordinates = function(tangentPlane, positions2D, mesh) {
-        var boundingRectangle = new Rectangle.createAxisAlignedBoundingRectangle(positions2D);
+        var boundingRectangle = new BoundingRectangle.fromPoints(positions2D);
         var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
 
         var positions = mesh.attributes.position.values;
@@ -350,9 +473,12 @@ define([
         // save memory by computing them in the fragment shader.  However, projecting
         // the point onto the plane may have precision issues.
         for ( var i = 0; i < length; i += 3) {
-            var p = new Cartesian3(positions[i], positions[i + 1], positions[i + 2]);
-            var st = tangentPlane.projectPointOntoPlane(p);
-            st = st.subtract(origin);
+            var p = _appendTextureCoordinatesCartesian3;
+            p.x = positions[i];
+            p.y = positions[i + 1];
+            p.z = positions[i + 2];
+            var st = tangentPlane.projectPointOntoPlane(p, _appendTextureCoordinatesCartesian2);
+            st.subtract(origin, st);
 
             textureCoordinates[j++] = st.x / boundingRectangle.width;
             textureCoordinates[j++] = st.y / boundingRectangle.height;
@@ -367,48 +493,92 @@ define([
         return mesh;
     };
 
+    var _createMeshFromPositionsPositions = [];
+    Polygon.prototype._createMeshFromPositions = function (positions, outerPositions2D) {
+        var cleanedPositions = PolygonPipeline.cleanUp(positions);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, this.ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, _createMeshFromPositionsPositions);
+
+        var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+        if (originalWindingOrder === WindingOrder.CLOCKWISE) {
+            positions2D.reverse();
+            cleanedPositions.reverse();
+        }
+        var indices = PolygonPipeline.earClip2D(positions2D);
+        var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
+        var boundary2D = outerPositions2D || positions2D;
+        mesh = Polygon._appendTextureCoordinates(tangentPlane, boundary2D, mesh);
+        return mesh;
+    };
+
+    var _createMeshesOuterPositions2D = [];
     Polygon.prototype._createMeshes = function() {
         // PERFORMANCE_IDEA:  Move this to a web-worker.
-        var mesh;
-        var meshes = null;
+        var i;
+        var meshes = [];
+        if (typeof this._extent !== 'undefined') {
+            meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true}));
 
-        if(typeof this._extent !== 'undefined'){
-            mesh = ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true});
-        }
-        else if(typeof this._positions !== 'undefined'){
-            var cleanedPositions = PolygonPipeline.cleanUp(this._positions);
-            var tangentPlane = EllipsoidTangentPlane.create(this.ellipsoid, cleanedPositions);
-            var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
-
-            var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (originalWindingOrder === WindingOrder.CLOCKWISE) {
-                positions2D.reverse();
-                cleanedPositions.reverse();
+            this._boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid, this._boundingVolume);
+            if (this._mode !== SceneMode.SCENE3D) {
+                this._boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection, this._boundingVolume2D);
+                var center2D = this._boundingVolume2D.center;
+                this._boundingVolume2D.center = new Cartesian3(0.0, center2D.x, center2D.y);
             }
-            var indices = PolygonPipeline.earClip2D(positions2D);
-            mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
-            // PERFORMANCE_IDEA:  Only compute texture coordinates if the material requires them.
-            mesh = Polygon._appendTextureCoordinates(tangentPlane, positions2D, mesh);
-        }
-        else {
+        } else if (typeof this._positions !== 'undefined') {
+            meshes.push(this._createMeshFromPositions(this._positions));
+            this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
+        } else if (typeof this._polygonHierarchy !== 'undefined') {
+            var outerPositions =  this._polygonHierarchy[0];
+            var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, this.ellipsoid);
+            var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions, _createMeshesOuterPositions2D);
+            for (i = 0; i < this._polygonHierarchy.length; i++) {
+                 meshes.push(this._createMeshFromPositions(this._polygonHierarchy[i], outerPositions2D));
+            }
+
+            // The bounding volume is just around the boundary points, so there could be cases for
+            // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
+            // volume doesn't cover the polygon.
+            this._boundingVolume = BoundingSphere.fromPoints(outerPositions, this._boundingVolume);
+        } else {
             return undefined;
         }
-        mesh = PolygonPipeline.scaleToGeodeticHeight(this.ellipsoid, mesh, this.height);
-        mesh = MeshFilters.reorderForPostVertexCache(mesh);
-        mesh = MeshFilters.reorderForPreVertexCache(mesh);
 
-        if (this._mode === SceneMode.SCENE3D) {
-            mesh.attributes.position2D = { // Not actually used in shader
-                    value : [0.0, 0.0]
-                };
-            mesh.attributes.position3D = mesh.attributes.position;
-            delete mesh.attributes.position;
-        } else {
-            mesh = MeshFilters.projectTo2D(mesh, this._projection);
+        var mesh;
+        var processedMeshes = [];
+        for (i = 0; i < meshes.length; i++) {
+            mesh = meshes[i];
+            mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, this.height, this.ellipsoid);
+            mesh = MeshFilters.reorderForPostVertexCache(mesh);
+            mesh = MeshFilters.reorderForPreVertexCache(mesh);
+
+            if (this._mode === SceneMode.SCENE3D) {
+                mesh.attributes.position2D = { // Not actually used in shader
+                        value : [0.0, 0.0]
+                    };
+                mesh.attributes.position3D = mesh.attributes.position;
+                delete mesh.attributes.position;
+            } else {
+                mesh = MeshFilters.projectTo2D(mesh, this._projection);
+            }
+            processedMeshes = processedMeshes.concat(MeshFilters.fitToUnsignedShortIndices(mesh));
         }
-        meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
 
-        return meshes;
+        if (this._mode !== SceneMode.SCENE3D) {
+            mesh = meshes[0];
+            var projectedPositions = mesh.attributes.position2D.values;
+            var positions = [];
+
+            for (i = 0; i < projectedPositions.length; i += 2) {
+                positions.push(new Cartesian3(projectedPositions[i], projectedPositions[i + 1], 0.0));
+            }
+
+            this._boundingVolume2D = BoundingSphere.fromPoints(positions, this._boundingVolume2D);
+            var center2DPositions = this._boundingVolume2D.center;
+            this._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
+        }
+
+        return processedMeshes;
     };
 
     Polygon.prototype._getGranularity = function(mode) {
@@ -421,23 +591,24 @@ define([
 
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
-     * This must be called before calling {@link Polygon#render} in order to realize
-     * changes to polygon's positions and properties.
      *
      * @memberof Polygon
      *
      * @exception {DeveloperError} this.ellipsoid must be defined.
+     * @exception {DeveloperError} this.material must be defined.
      * @exception {DeveloperError} this.granularity must be greater than zero.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Polygon#render
      */
-    Polygon.prototype.update = function(context, sceneState) {
-        if (!this.ellipsoid) {
+    Polygon.prototype.update = function(context, frameState, commandList) {
+        if (typeof this.ellipsoid === 'undefined') {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
 
-        var mode = sceneState.mode;
+        if (typeof this.material === 'undefined') {
+            throw new DeveloperError('this.material must be defined.');
+        }
+
+        var mode = frameState.mode;
         var granularity = this._getGranularity(mode);
 
         if (granularity < 0.0) {
@@ -468,7 +639,7 @@ define([
             this._bufferUsage = this.bufferUsage;
         }
 
-        var projection = sceneState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
         if (this._projection !== projection) {
             this._createVertexArray = true;
             this._projection = projection;
@@ -490,129 +661,128 @@ define([
             this._vertices.update(context, this._createMeshes(), this.bufferUsage);
         }
 
-        if (!this._rs) {
-            // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
-            this._rs = context.createRenderState({
-                cull : {
-                    enabled : true,
-                    face : CullFace.BACK
-                },
-                blending : BlendingState.ALPHA_BLEND
-            });
+        if (typeof this._vertices.getVertexArrays() === 'undefined') {
+            return;
         }
 
-        // Recompile shader when material or lighting changes
-        if (typeof this._material === 'undefined' ||
-            this._material !== this.material ||
-            this._affectedByLighting !== this.affectedByLighting) {
-
-            this.material = this.material || new ColorMaterial();
-            this._material = this.material;
-            this._affectedByLighting = this.affectedByLighting;
-
-            var fsSource =
-                '#line 0\n' +
-                Noise +
-                '#line 0\n' +
-                this._material._getShaderSource() +
-                (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
-                '#line 0\n' +
-                PolygonFS;
-
-            this._sp = this._sp && this._sp.release();
-            this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
-
-            this._drawUniforms = combine(this._uniforms, this._material._uniforms);
+        var boundingVolume;
+        if (mode === SceneMode.SCENE3D) {
+            boundingVolume = this._boundingVolume;
+        } else if (mode === SceneMode.COLUMBUS_VIEW || mode === SceneMode.SCENE2D) {
+            boundingVolume = this._boundingVolume2D;
+        } else {
+            boundingVolume = this._boundingVolume.union(this._boundingVolume2D);
         }
-    };
 
-    /**
-     * Renders the polygon.  In order for changes to positions and properties to be realized,
-     * {@link Polygon#update} must be called before <code>render</code>.
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Polygon#update
-     * @see Polygon#setTextureAtlas
-     */
-    Polygon.prototype.render = function(context) {
-        if (this.show) {
-            var vas = this._vertices.getVertexArrays();
-            var length = vas.length;
-            for ( var j = 0; j < length; ++j) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._sp,
-                    uniformMap : this._drawUniforms,
-                    vertexArray : vas[j],
-                    renderState : this._rs
-                });
-            }
-        }
-    };
+        var pass = frameState.passes;
+        var vas = this._vertices.getVertexArrays();
+        var length = vas.length;
+        var commands;
+        var command;
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    Polygon.prototype.updateForPick = function(context) {
-        if (this.show) {
-            this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
-
-            this._rsPick = context.createRenderState({
+        this._commandLists.removeAll();
+        if (pass.color) {
+            if (typeof this._rs === 'undefined') {
                 // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
-                cull : {
-                    enabled : true,
-                    face : CullFace.BACK
-                }
-            });
-
-            this._pickId = context.createPickId(this);
-
-            var that = this;
-            this._pickUniforms = {
-                u_pickColor : function() {
-                    return that._pickId.normalizedRgba;
-                },
-                u_morphTime : function() {
-                    return that.morphTime;
-                },
-                u_height : function() {
-                    return that.height;
-                }
-            };
-
-            this.updateForPick = function(context) {
-            };
-        }
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    Polygon.prototype.renderForPick = function(context, framebuffer) {
-        if (this.show) {
-            var vas = this._vertices.getVertexArrays();
-            var length = vas.length;
-            for ( var j = 0; j < length; ++j) {
-                context.draw({
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    shaderProgram : this._spPick,
-                    uniformMap : this._pickUniforms,
-                    vertexArray : vas[j],
-                    renderState : this._rsPick,
-                    framebuffer : framebuffer
+                this._rs = context.createRenderState({
+                    cull : {
+                        enabled : true,
+                        face : CullFace.BACK
+                    },
+                    blending : BlendingState.ALPHA_BLEND
                 });
             }
+
+            var materialChanged = typeof this._material === 'undefined' ||
+                this._material !== this.material ||
+                this._affectedByLighting !== this.affectedByLighting;
+
+            // Recompile shader when material or lighting changes
+            if (materialChanged) {
+                this._material = this.material;
+                this._affectedByLighting = this.affectedByLighting;
+
+                var fsSource =
+                    '#line 0\n' +
+                    Noise +
+                    '#line 0\n' +
+                    this._material.shaderSource +
+                    (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                    '#line 0\n' +
+                    PolygonFS;
+
+                this._sp = this._sp && this._sp.release();
+                this._sp = context.getShaderCache().getShaderProgram(PolygonVS, fsSource, attributeIndices);
+
+                this._drawUniforms = combine([this._uniforms, this._material._uniforms], false, false);
+            }
+
+            commands = this._commandLists.colorList;
+            commands.length = length;
+
+            for (var i = 0; i < length; ++i) {
+                command = commands[i];
+                if (typeof command === 'undefined') {
+                    command = commands[i] = new Command();
+                }
+
+                command.boundingVolume = boundingVolume;
+                command.primitiveType = PrimitiveType.TRIANGLES;
+                command.shaderProgram = this._sp,
+                command.uniformMap = this._drawUniforms;
+                command.vertexArray = vas[i];
+                command.renderState = this._rs;
+            }
+        }
+
+        if (pass.pick) {
+            if (typeof this._pickId === 'undefined') {
+                this._spPick = context.getShaderCache().getShaderProgram(PolygonVSPick, PolygonFSPick, attributeIndices);
+
+                this._rsPick = context.createRenderState({
+                    // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
+                    cull : {
+                        enabled : true,
+                        face : CullFace.BACK
+                    }
+                });
+
+                this._pickId = context.createPickId(this);
+
+                var that = this;
+                this._pickUniforms = {
+                    u_pickColor : function() {
+                        return that._pickId.normalizedRgba;
+                    },
+                    u_morphTime : function() {
+                        return that.morphTime;
+                    },
+                    u_height : function() {
+                        return that.height;
+                    }
+                };
+            }
+
+            commands = this._commandLists.pickList;
+            commands.length = length;
+
+            for (var j = 0; j < length; ++j) {
+                command = commands[j];
+                if (typeof command === 'undefined') {
+                    command = commands[j] = new Command();
+                }
+
+                command.boundingVolume = boundingVolume;
+                command.primitiveType = PrimitiveType.TRIANGLES;
+                command.shaderProgram = this._spPick,
+                command.uniformMap = this._pickUniforms;
+                command.vertexArray = vas[j];
+                command.renderState = this._rsPick;
+            }
+        }
+
+        if (!this._commandLists.empty()) {
+            commandList.push(this._commandLists);
         }
     };
 

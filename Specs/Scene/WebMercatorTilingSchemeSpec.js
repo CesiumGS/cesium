@@ -17,57 +17,6 @@ defineSuite([
         tilingScheme = new WebMercatorTilingScheme();
     });
 
-    describe('Conversions between Cartographic and Web Mercator coordinates', function() {
-        it('webMercatorToCartographic is correct at corners', function() {
-            var southwest = tilingScheme.webMercatorToCartographic(-20037508.342787, -20037508.342787);
-            expect(southwest.longitude).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON12);
-            expect(southwest.latitude).toEqualEpsilon(CesiumMath.toRadians(-85.05112878), CesiumMath.EPSILON11);
-
-            var southeast = tilingScheme.webMercatorToCartographic(20037508.342787, -20037508.342787);
-            expect(southeast.longitude).toEqualEpsilon(Math.PI, CesiumMath.EPSILON12);
-            expect(southeast.latitude).toEqualEpsilon(CesiumMath.toRadians(-85.05112878), CesiumMath.EPSILON11);
-
-            var northeast = tilingScheme.webMercatorToCartographic(20037508.342787, 20037508.342787);
-            expect(northeast.longitude).toEqualEpsilon(Math.PI, CesiumMath.EPSILON12);
-            expect(northeast.latitude).toEqualEpsilon(CesiumMath.toRadians(85.05112878), CesiumMath.EPSILON11);
-
-            var northwest = tilingScheme.webMercatorToCartographic(-20037508.342787, 20037508.342787);
-            expect(northwest.longitude).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON12);
-            expect(northwest.latitude).toEqualEpsilon(CesiumMath.toRadians(85.05112878), CesiumMath.EPSILON11);
-        });
-
-        it('cartographicToWebMercator is correct at corners.', function() {
-            var maxLatitude = CesiumMath.toRadians(85.05112878);
-
-            var southwest = tilingScheme.cartographicToWebMercator(-Math.PI, -maxLatitude);
-            expect(southwest.x).toEqualEpsilon(-20037508.342787, CesiumMath.EPSILON3);
-            expect(southwest.y).toEqualEpsilon(-20037508.342787, CesiumMath.EPSILON3);
-
-            var southeast = tilingScheme.cartographicToWebMercator(Math.PI, -maxLatitude);
-            expect(southeast.x).toEqualEpsilon(20037508.342787, CesiumMath.EPSILON3);
-            expect(southeast.y).toEqualEpsilon(-20037508.342787, CesiumMath.EPSILON3);
-
-            var northeast = tilingScheme.cartographicToWebMercator(Math.PI, maxLatitude);
-            expect(northeast.x).toEqualEpsilon(20037508.342787, CesiumMath.EPSILON3);
-            expect(northeast.y).toEqualEpsilon(20037508.342787, CesiumMath.EPSILON3);
-
-            var northwest = tilingScheme.cartographicToWebMercator(-Math.PI, maxLatitude);
-            expect(northwest.x).toEqualEpsilon(-20037508.342787, CesiumMath.EPSILON3);
-            expect(northwest.y).toEqualEpsilon(20037508.342787, CesiumMath.EPSILON3);
-        });
-
-        it('cartographicToWebMercator y goes to infinity at poles.', function() {
-            var southPole = tilingScheme.cartographicToWebMercator(0.0, -CesiumMath.PI_OVER_TWO);
-            expect(southPole.y).toEqual(-1 / 0);
-
-            // Well, at the north pole it doesn't actually return infinity because
-            // Math.tan(Math.PI/2) evaluates to 16331778728383844 instead of positive
-            // infinity as it should mathematically.  But it returns a big number.
-            var northPole = tilingScheme.cartographicToWebMercator(0.0, CesiumMath.PI_OVER_TWO);
-            expect(northPole.y).toBeGreaterThan(200000000.0);
-        });
-    });
-
     describe('Conversions from tile indices to cartographic extents', function() {
         it('tileXYToExtent returns full extent for single root tile.', function() {
             var extent = tilingScheme.tileXYToExtent(0, 0, 0);

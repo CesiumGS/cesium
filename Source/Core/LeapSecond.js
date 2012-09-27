@@ -42,13 +42,14 @@ define([
             throw new DeveloperError('offset is required and must be a number.');
         }
 
-        /*
+        /**
          * The Julian date at which this leap second occurs.
          *
          * @type {JulianDate}
          */
         this.julianDate = date;
-        /*
+
+        /**
          * The cumulative number of seconds between the UTC and TAI time standards at the time
          * of this leap second.
          *
@@ -68,7 +69,7 @@ define([
      * @see LeapSecond.setLeapSeconds
      *
      * @example
-     * LeapSecond.setleapSeconds([
+     * LeapSecond.setLeapSeconds([
      *                            new LeapSecond(new JulianDate(2453736, 43233.0, TimeStandard.TAI), 33), // January 1, 2006 00:00:00 UTC
      *                            new LeapSecond(new JulianDate(2454832, 43234.0, TimeStandard.TAI), 34), // January 1, 2009 00:00:00 UTC
      *                            new LeapSecond(new JulianDate(2456109, 43235.0, TimeStandard.TAI), 35)  // July 1, 2012 00:00:00 UTC

@@ -3,12 +3,12 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Scene/Polygon',
-        '../Scene/ColorMaterial'
+        '../Scene/Material'
        ], function(
          DeveloperError,
          destroyObject,
          Polygon,
-         ColorMaterial) {
+         Material) {
     "use strict";
 
     /**
@@ -167,6 +167,7 @@ define([
     };
 
     DynamicPolygonVisualizer.prototype._updateObject = function(time, dynamicObject) {
+        var context = this._scene.getContext();
         var dynamicPolygon = dynamicObject.polygon;
         if (typeof dynamicPolygon === 'undefined') {
             return;
@@ -205,6 +206,7 @@ define([
             } else {
                 polygonVisualizerIndex = this._polygonCollection.length;
                 polygon = new Polygon();
+                polygon.affectedByLighting = false;
                 this._polygonCollection.push(polygon);
                 this._primitives.add(polygon);
             }
@@ -212,7 +214,8 @@ define([
             polygon.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polygon.material = new ColorMaterial();
+            polygon.material = Material.fromType(context, Material.ColorType);
+
         } else {
             polygon = this._polygonCollection[polygonVisualizerIndex];
         }
@@ -226,7 +229,7 @@ define([
 
         var material = dynamicPolygon.material;
         if (typeof material !== 'undefined') {
-            polygon.material = material.getValue(time, this._scene.getContext(), polygon.material);
+            polygon.material = material.getValue(time, context, polygon.material);
         }
     };
 

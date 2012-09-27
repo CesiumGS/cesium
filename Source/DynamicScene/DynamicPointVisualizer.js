@@ -192,6 +192,7 @@ define([
             if (typeof pointVisualizerIndex !== 'undefined') {
                 billboard = this._billboardCollection.get(pointVisualizerIndex);
                 billboard.setShow(false);
+                billboard.setImageIndex(-1);
                 dynamicObject._pointVisualizerIndex = undefined;
                 this._unusedIndexes.push(pointVisualizerIndex);
             }
@@ -225,7 +226,7 @@ define([
         billboard.setShow(true);
 
         position = positionProperty.getValueCartesian(time, position);
-        if (position !== 'undefined') {
+        if (typeof position !== 'undefined') {
             billboard.setPosition(position);
         }
 
@@ -311,6 +312,7 @@ define([
             if (typeof pointVisualizerIndex !== 'undefined') {
                 var billboard = thisBillboardCollection.get(pointVisualizerIndex);
                 billboard.setShow(false);
+                billboard.setImageIndex(-1);
                 dynamicObject._pointVisualizerIndex = undefined;
                 thisUnusedIndexes.push(pointVisualizerIndex);
             }

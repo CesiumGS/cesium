@@ -3,28 +3,26 @@
 <head>
     <title>Cesium</title>
     <link rel="shortcut icon" href="/Images/favicon.ico" type="image/x-icon" />
+    <style>
+    body { font-family: sans-serif; }
+    li { margin-top: 5px; }
+    </style>
 </head>
 
 <body>
-<a href="http://localhost:8080/terrain/?http%3A%2F%2Felevation.arcgisonline.com%2FArcGIS%2Frest%2Fservices%2FWorldElevation%2FDTMEllipsoidal%2FImageServer%2FexportImage%3Fformat%3Dtiff%26f%3Dimage%26size%3D256%252C256%26bboxSR%3D4326%26imageSR%3D4326%26bbox%3D-180%252C-85.0511287798066%252C180%252C85.05112877980659%26token%3DEdf539842Ur_1PY_s1qSXiLA2AqMnTj6zrRhJi3xIbtbyUTSc7FF7VIkokvJvuDIzkKG_f1z3d80TdCYdWr1og..">go</a>
-
-<a href="http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer/exportImage?bbox=-20037508.34%2C-20037508.8125515%2C20037508.8125515%2C20037508.34&bboxSR=&size=&imageSR=&time=&format=png&pixelType=F32&noData=&interpolation=RSP_NearestNeighbor&compressionQuality=&bandIds=&mosaicRule=&renderingRule=&f=image&token=Edf539842Ur_1PY_s1qSXiLA2AqMnTj6zrRhJi3xIbtbyUTSc7FF7VIkokvJvuDIzkKG_f1z3d80TdCYdWr1og..">hi</a>
-<a href="http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer?token=Edf539842Ur_1PY_s1qSXiLA2AqMnTj6zrRhJi3xIbtbyUTSc7FF7VIkokvJvuDIzkKG_f1z3d80TdCYdWr1og..&f=json">Foo</a>
 <ul>
     <li>
     	<a href="Specs/SpecRunner.html">Tests</a> 
     	[with <a href="Instrumented/jscoverage.html?../Specs/SpecRunner.html%3FbaseUrl%3D..%2FInstrumented">code coverage</a>]
    	</li>
     <li>
-        Apps: <a href="Apps/CesiumViewer/index.html">Cesium Viewer</a> | <a href="Apps/TimelineDemo/index.html">Timeline Demo</a>
+        Apps:
+        <ul>
+            <li><a href="Apps/CesiumViewer/index.html">Cesium Viewer</a></li>
+            <li><a href="Apps/Sandcastle/index.html">Sandcastle</a></li>
+            <li><a href="Apps/TimelineDemo/index.html">Timeline Demo</a></li>
+        </ul>
     </li>
-    <li>
-    	Example: <a href="Examples/Sandbox/index.html">Sandbox</a>
-   	</li>
-    <li>
-    	Example: Skeleton - 
-    	<a href="Examples/Skeleton/index.html">3D</a> | <a href="Examples/Skeleton2D/index.html">2D</a>
-   	</li>
     <li>
     <a href="Build/Documentation/index.html">Documentation</a>
     </li>

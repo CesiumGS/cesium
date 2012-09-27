@@ -3,18 +3,22 @@ define([
         '../Core/createGuid',
         '../Core/DeveloperError',
         '../Core/TimeInterval',
+        '../Core/defaultValue',
         './DynamicProperty',
         './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
-        './CzmlUnitQuaternion'
+        './CzmlUnitQuaternion',
+        './CzmlCartesian3'
     ], function(
         createGuid,
         DeveloperError,
         TimeInterval,
+        defaultValue,
         DynamicProperty,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
-        CzmlUnitQuaternion) {
+        CzmlUnitQuaternion,
+        CzmlCartesian3) {
     "use strict";
 
     /**
@@ -43,10 +47,14 @@ define([
         this._cachedAvailabilityDate = undefined;
         this._cachedAvailabilityValue = undefined;
 
+        if (typeof id === 'undefined') {
+            id = createGuid();
+        }
+
         /**
          * A unique id associated with this object.
          */
-        this.id = id || createGuid();
+        this.id = id;
 
         //Add standard CZML properties.  Even though they won't all be used
         //for each object, having the superset explicitly listed here will allow the
@@ -59,58 +67,88 @@ define([
          * other properties will return valid data for any provided time.
          * If availability exists, the objects other properties will only
          * provide valid data if queried within the given interval.
+         * @type TimeInterval
          */
         this.availability = undefined;
 
         /**
-         * The DynamicPositionProperty, if any, associated with this object.
+         * Gets or sets the position.
+         * @type DynamicPositionProperty
          */
         this.position = undefined;
 
         /**
-         * The DynamicProperty with value type CzmlUnitQuaternion, if any, associated with this object.
+         * Gets or sets the orientation.
+         * @type DynamicProperty
          */
         this.orientation = undefined;
 
         /**
-         * The DynamicBillboard, if any, associated with this object.
+         * Gets or sets the billboard.
+         * @type DynamicBillboard
          */
         this.billboard = undefined;
 
         /**
-         * The DynamicCone, if any, associated with this object.
+         * Gets or sets the cone.
+         * @type DynamicCone
          */
         this.cone = undefined;
 
         /**
-         * The DynamicLabel, if any, associated with this object.
+         * Gets or sets the ellipsoid.
+         * @type DynamicEllipsoid
+         */
+        this.ellipsoid = undefined;
+
+        /**
+         * Gets or sets the label.
+         * @type DynamicLabel
          */
         this.label = undefined;
 
         /**
-         * The DynamicPoint, if any, associated with this object.
+         * Gets or sets the path.
+         * @type DynamicPath
+         */
+        this.path = undefined;
+
+        /**
+         * Gets or sets the point graphic.
+         * @type DynamicPoint
          */
         this.point = undefined;
 
         /**
-         * The DynamicPolygon, if any, associated with this object.
+         * Gets or sets the polygon.
+         * @type DynamicPolygon
          */
         this.polygon = undefined;
 
         /**
-         * The DynamicPolyline, if any, associated with this object.
+         * Gets or sets the polyline.
+         * @type DynamicPolyline
          */
         this.polyline = undefined;
 
         /**
-         * The DynamicPyramid, if any, associated with this object.
+         * Gets or sets the pyramid.
+         * @type DynamicPyramid
          */
         this.pyramid = undefined;
 
         /**
-         * The DynamicVertexPositionsProperty, if any, associated with this object.
+         * Gets or sets the vertex positions.
+         * @type DynamicVertexPositionsProperty
          */
         this.vertexPositions = undefined;
+
+        /**
+         * Gets or sets the suggested initial offset for viewing this object
+         * with the camera.  The offset is defined in the east-north-up reference frame.
+         * @type Cartesian3
+         */
+        this.viewFrom = undefined;
     };
 
     /**
@@ -158,6 +196,34 @@ define([
             dynamicObject.position = position = new DynamicPositionProperty();
         }
         position.processCzmlIntervals(positionData);
+        return propertyCreated;
+    };
+
+    /**
+     * Processes a single CZML packet and merges its data into the provided DynamicObject's viewFrom
+     * property. This method is not normally called directly, but is part of the array of CZML processing
+     * functions that is passed into the DynamicObjectCollection constructor.
+     *
+     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the viewFrom data.
+     * @param {Object} packet The CZML packet to process.
+     * @returns {Boolean} true if the property was newly created while processing the packet, false otherwise.
+     *
+     * @see DynamicProperty
+     * @see DynamicObjectCollection
+     * @see CzmlDefaults#updaters
+     */
+    DynamicObject.processCzmlPacketViewFrom = function(dynamicObject, packet) {
+        var viewFromData = packet.viewFrom;
+        if (typeof viewFromData === 'undefined') {
+            return false;
+        }
+
+        var viewFrom = dynamicObject.viewFrom;
+        var propertyCreated = typeof viewFrom === 'undefined';
+        if (propertyCreated) {
+            dynamicObject.viewFrom = viewFrom = new DynamicProperty(CzmlCartesian3);
+        }
+        viewFrom.processCzmlIntervals(viewFromData);
         return propertyCreated;
     };
 
@@ -259,10 +325,11 @@ define([
      * @see CzmlDefaults
      */
     DynamicObject.mergeProperties = function(targetObject, objectToMerge) {
-        targetObject.position = targetObject.position || objectToMerge.position;
-        targetObject.orientation = targetObject.orientation || objectToMerge.orientation;
-        targetObject.vertexPositions = targetObject.vertexPositions || objectToMerge.vertexPositions;
-        targetObject._setAvailability(targetObject.availability || objectToMerge.availability);
+        targetObject.position = defaultValue(targetObject.position, objectToMerge.position);
+        targetObject.orientation = defaultValue(targetObject.orientation, objectToMerge.orientation);
+        targetObject.vertexPositions = defaultValue(targetObject.vertexPositions, objectToMerge.vertexPositions);
+        targetObject.viewFrom = defaultValue(targetObject.viewFrom, objectToMerge.viewFrom);
+        targetObject._setAvailability(defaultValue(targetObject.availability, objectToMerge.availability));
     };
 
     /**
@@ -278,6 +345,7 @@ define([
         dynamicObject.position = undefined;
         dynamicObject.orientation = undefined;
         dynamicObject.vertexPositions = undefined;
+        dynamicObject.viewFrom = undefined;
         dynamicObject._setAvailability(undefined);
     };
 

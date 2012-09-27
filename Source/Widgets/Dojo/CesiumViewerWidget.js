@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,console*/
 define([
         'require',
         'dojo/_base/declare',
@@ -15,14 +15,16 @@ define([
         'dijit/TooltipDialog',
         './getJson',
         './TimelineWidget',
+        '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
+        '../../Core/Extent',
         '../../Core/AnimationController',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
         '../../Core/FullScreen',
-        '../../Core/SunPosition',
+        '../../Core/computeSunPosition',
         '../../Core/EventHandler',
         '../../Core/FeatureDetection',
         '../../Core/MouseEventType',
@@ -33,9 +35,10 @@ define([
         '../../Core/Transforms',
         '../../Core/requestAnimationFrame',
         '../../Core/Color',
+        '../../Core/Matrix4',
         '../../Core/Math',
-        '../../Core/Extent',
-        '../../Scene/ColorMaterial',
+        '../../Scene/PerspectiveFrustum',
+        '../../Scene/Material',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
         '../../Scene/BingMapsImageryProvider',
@@ -48,7 +51,9 @@ define([
         '../../Scene/WideAreaMotionImageryProvider',
         '../../Scene/ImageryLayerCollection',
         '../../Scene/TerrainProvider',
+        '../../Scene/SceneMode',
         '../../DynamicScene/processCzml',
+        '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
         '../../DynamicScene/CompositeDynamicObjectCollection',
         '../../DynamicScene/VisualizerCollection',
@@ -69,14 +74,16 @@ define([
         TooltipDialog,
         getJson,
         TimelineWidget,
+        BoundingRectangle,
         Clock,
         ClockStep,
         ClockRange,
+        Extent,
         AnimationController,
         Ellipsoid,
         Iso8601,
         FullScreen,
-        SunPosition,
+        computeSunPosition,
         EventHandler,
         FeatureDetection,
         MouseEventType,
@@ -87,9 +94,10 @@ define([
         Transforms,
         requestAnimationFrame,
         Color,
+        Matrix4,
         CesiumMath,
-        Extent,
-        ColorMaterial,
+        PerspectiveFrustum,
+        Material,
         Scene,
         CentralBody,
         BingMapsImageryProvider,
@@ -102,37 +110,183 @@ define([
         WideAreaMotionImageryProvider,
         ImageryLayerCollection,
         TerrainProvider,
+        SceneMode,
         processCzml,
+        DynamicObjectView,
         DynamicObjectCollection,
         CompositeDynamicObjectCollection,
         VisualizerCollection,
         template) {
     "use strict";
 
-    return declare('Cesium.CesiumViewerWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
+    /**
+     * This Dojo widget wraps the full functionality of Cesium Viewer.
+     *
+     * @class CesiumViewerWidget
+     * @param {Object} options - A list of options to pre-configure the widget.  Names matching member fields/functions will override the default values.
+     */
+    return declare('Cesium.CesiumViewerWidget', [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin],
+    /** @lends CesiumViewerWidget */
+    {
+        // for Dojo use only
         templateString : template,
-        preRender : undefined,
-        postSetup : undefined,
+
+        /**
+         * Enable streaming Imagery.  This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see CesiumViewerWidget#enableStreamingImagery
+         */
         useStreamingImagery : true,
+        /**
+         * The map style for streaming imagery.  This is read-only after construction.
+         *
+         * @type {BingMapsStyle}
+         * @memberof CesiumViewerWidget.prototype
+         * @default {@link BingMapsStyle.AERIAL}
+         * @see CesiumViewerWidget#setStreamingImageryMapStyle
+         */
         mapStyle : BingMapsStyle.AERIAL,
-        defaultCamera : undefined,
+        /**
+         * The URL for a daytime image on the globe.
+         *
+         * @type {String}
+         * @memberof CesiumViewerWidget.prototype
+         */
         dayImageUrl : undefined,
+        /**
+         * The URL for a nighttime image on the globe.
+         *
+         * @type {String}
+         * @memberof CesiumViewerWidget.prototype
+         */
         nightImageUrl : undefined,
+        /**
+         * The URL for a specular map on the globe, typically with white for oceans and black for landmass.
+         *
+         * @type {String}
+         * @memberof CesiumViewerWidget.prototype
+         */
         specularMapUrl : undefined,
+        /**
+         * The URL for the clouds image on the globe.
+         *
+         * @type {String}
+         * @memberof CesiumViewerWidget.prototype
+         */
         cloudsMapUrl : undefined,
+        /**
+         * The URL for a bump map on the globe, showing mountain ranges.
+         *
+         * @type {String}
+         * @memberof CesiumViewerWidget.prototype
+         */
         bumpMapUrl : undefined,
+        /**
+         * An object containing settings supplied by the end user, typically from the query string
+         * of the URL of the page with the widget.
+         *
+         * @type {Object}
+         * @memberof CesiumViewerWidget.prototype
+         * @example
+         * var ioQuery = require('dojo/io-query');
+         * var endUserOptions = {};
+         * if (window.location.search) {
+         *     endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
+         * }
+         *
+         * @example
+         * var endUserOptions = {
+         *     'source' : 'file.czml', // The relative URL of the CZML file to load at startup.
+         *     'lookAt' : '123abc',    // The CZML ID of the object to track at startup.
+         *     'stats'  : 1,           // Enable the FPS performance display.
+         *     'debug'  : 1,           // Full WebGL error reporting at substantial performance cost.
+         * };
+         */
         endUserOptions : {},
+        /**
+         * Check for WebGL errors after every WebGL API call.  Enabling this debugging feature
+         * comes at a substantial performance cost, halting and restarting the graphics
+         * pipeline hundreds of times per frame.  But it can uncover problems that are otherwise
+         * very difficult to diagnose.
+         * This property is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default false
+         */
+        enableWebGLDebugging: false,
+        /**
+         * Allow the user to drag-and-drop CZML files into this widget.
+         * This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default false
+         */
         enableDragDrop: false,
+        /**
+         * Register this widget's resize handler to get called every time the browser window
+         * resize event fires.  This is read-only after construction.  Generally this should
+         * be true for full-screen widgets, and true for
+         * fluid layouts where the widget is likely to change size at the same time as the
+         * window.  The exception is, if you use a Dojo layout where this widget exists inside
+         * a Dojo ContentPane or similar, you should set this to false, because Dojo will perform
+         * its own layout calculations and call this widget's resize handler automatically.
+         * This can also be false for a fixed-size widget.
+         *
+         * If unsure, test the widget with this set to false, and if window resizes cause the
+         * globe to stretch, change this to true.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see CesiumViewerWidget#resize
+         */
         resizeWidgetOnWindowResize: true,
 
+        // for Dojo use only
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
         },
 
+        // for Dojo use only
         postCreate : function() {
             ready(this, '_setupCesium');
         },
 
+        /**
+         * If supplied, this function will be called at the end of widget setup.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @see CesiumViewerWidget#startRenderLoop
+         */
+        postSetup : undefined,
+
+        /**
+         * This function will get a callback in the event of setup failure, likely indicating
+         * a problem with WebGL support or the availability of a GL context.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} widget - A reference to this widget
+         * @param {Object} error - The exception that was thrown during setup
+         */
+        onSetupError : function(widget, error) {
+            console.error(error);
+        },
+
+        /**
+         * This function must be called when the widget changes size.  It updates the canvas
+         * size, camera aspect ratio, and viewport size.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @see CesiumViewerWidget#resizeWidgetOnWindowResize
+         */
         resize : function() {
             var width = this.canvas.clientWidth, height = this.canvas.clientHeight;
 
@@ -143,38 +297,149 @@ define([
             this.canvas.width = width;
             this.canvas.height = height;
 
-            this.scene.getContext().setViewport({
-                x : 0,
-                y : 0,
-                width : width,
-                height : height
-            });
-
-            this.scene.getCamera().frustum.aspectRatio = width / height;
-        },
-
-        centerCameraOnObject : function(selectedObject) {
-            if (selectedObject && selectedObject.dynamicObject) {
-                this.cameraCenteredObjectID = selectedObject.dynamicObject.id;
+            var frustum = this.scene.getCamera().frustum;
+            if (typeof frustum.aspectRatio !== 'undefined') {
+                frustum.aspectRatio = width / height;
             } else {
-                this.cameraCenteredObjectID = undefined;
+                frustum.top = frustum.right * (height / width);
+                frustum.bottom = -frustum.top;
             }
         },
 
+        /**
+         * Have the camera track a particular object based on the result of a pick.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object to track, or <code>undefined</code> to stop tracking.
+         */
+        centerCameraOnPick : function(selectedObject) {
+            this.centerCameraOnObject(typeof selectedObject !== 'undefined' ? selectedObject.dynamicObject : undefined);
+        },
+
+        _viewFromTo : undefined,
+
+        /**
+         * Have the camera track a particular object.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object to track, or <code>undefined</code> to stop tracking.
+         */
+        centerCameraOnObject : function(selectedObject) {
+            if (typeof selectedObject !== 'undefined' && typeof selectedObject.position !== 'undefined') {
+                var viewFromTo = this._viewFromTo;
+                if (typeof viewFromTo === 'undefined') {
+                    this._viewFromTo = viewFromTo = new DynamicObjectView(selectedObject, this.scene, this.ellipsoid);
+                } else {
+                    viewFromTo.dynamicObject = selectedObject;
+                }
+            } else {
+                this._viewFromTo = undefined;
+
+                var scene = this.scene;
+                var mode = scene.mode;
+                var camera = scene.getCamera();
+                var controllers = camera.getControllers();
+                if (mode === SceneMode.SCENE2D) {
+                    controllers.removeAll();
+                    controllers.add2D(scene.scene2D.projection);
+                } else if (mode === SceneMode.SCENE3D) {
+                    //For now just rename at the last location
+                    //camera will stay in spindle/rotate mode.
+                } else if (mode === SceneMode.COLUMBUS_VIEW) {
+                    controllers.removeAll();
+                    controllers.addColumbusView();
+                }
+            }
+        },
+
+        /**
+         * Override this function to be notified when an object is selected (left-click).
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
+         */
         onObjectSelected : undefined,
+        /**
+         * Override this function to be notified when an object is right-clicked.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
+         */
         onObjectRightClickSelected : undefined,
+        /**
+         * Override this function to be notified when an object is left-double-clicked.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object that was selected, or <code>undefined</code> to de-select.
+         */
+        onObjectLeftDoubleClickSelected : undefined,
+        /**
+         * Override this function to be notified when an object hovered by the mouse.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object that was hovered, or <code>undefined</code> if the mouse moved off.
+         */
         onObjectMousedOver : undefined,
+        /**
+         * Override this function to be notified when the left mouse button is pressed down.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} The object with the position of the mouse.
+         */
         onLeftMouseDown : undefined,
+        /**
+         * Override this function to be notified when the left mouse button is released.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} The object with the position of the mouse.
+         */
         onLeftMouseUp : undefined,
+        /**
+         * Override this function to be notified when the right mouse button is pressed down.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} The object with the position of the mouse.
+         */
         onRightMouseDown : undefined,
+        /**
+         * Override this function to be notified when the right mouse button is released.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} The object with the position of the mouse.
+         */
         onRightMouseUp : undefined,
+        /**
+         * Override this function to be notified when the left mouse button is dragged.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} The object with the start and end position of the mouse.
+         */
         onLeftDrag : undefined,
+        /**
+         * Override this function to be notified when the right mouse button is dragged or mouse wheel is zoomed.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} The object with the start and end position of the mouse.
+         */
         onZoom : undefined,
-        onCameraToggled : undefined,
+
+        _camera3D : undefined,
 
         _handleLeftClick : function(e) {
             if (typeof this.onObjectSelected !== 'undefined') {
-                // If the user left-clicks, we re-send the selection event, regardless if it's a duplicate,
+                // Fire the selection event, regardless if it's a duplicate,
                 // because the client may want to react to re-selection in some way.
                 this.selectedObject = this.scene.pick(e.position);
                 this.onObjectSelected(this.selectedObject);
@@ -183,10 +448,19 @@ define([
 
         _handleRightClick : function(e) {
             if (typeof this.onObjectRightClickSelected !== 'undefined') {
-                // If the user right-clicks, we re-send the selection event, regardless if it's a duplicate,
+                // Fire the selection event, regardless if it's a duplicate,
                 // because the client may want to react to re-selection in some way.
                 this.selectedObject = this.scene.pick(e.position);
                 this.onObjectRightClickSelected(this.selectedObject);
+            }
+        },
+
+        _handleLeftDoubleClick : function(e) {
+            if (typeof this.onObjectLeftDoubleClickSelected !== 'undefined') {
+                // Fire the selection event, regardless if it's a duplicate,
+                // because the client may want to react to re-selection in some way.
+                this.selectedObject = this.scene.pick(e.position);
+                this.onObjectLeftDoubleClickSelected(this.selectedObject);
             }
         },
 
@@ -240,7 +514,7 @@ define([
             }
         },
 
-        updateSpeedIndicator : function() {
+        _updateSpeedIndicator : function() {
             if (this.animationController.isAnimating()) {
                 this.speedIndicator.innerHTML = this.clock.multiplier + 'x realtime';
             } else {
@@ -248,6 +522,11 @@ define([
             }
         },
 
+        /**
+         * Apply the animation settings from a CZML buffer.
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
         setTimeFromBuffer : function() {
             var clock = this.clock;
 //
@@ -265,15 +544,20 @@ define([
             clock.multiplier = 0.75;
             clock.currentTime = clock.startTime;
             this.timelineControl.zoomTo(clock.startTime, clock.stopTime);
-            this.updateSpeedIndicator();
-            this.animationController.play();
         },
 
-        handleDrop : function(e) {
-            e.stopPropagation(); // Stops some browsers from redirecting.
-            e.preventDefault();
+        /**
+         * This function is called when files are dropped on the widget, if drag-and-drop is enabled.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} event - The drag-and-drop event containing the dropped file(s).
+         */
+        handleDrop : function(event) {
+            event.stopPropagation(); // Stops some browsers from redirecting.
+            event.preventDefault();
 
-            var files = e.dataTransfer.files;
+            var files = event.dataTransfer.files;
             var f = files[0];
             var reader = new FileReader();
             var widget = this;
@@ -306,9 +590,19 @@ define([
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
-            //TerrainProvider.wireframe = true;
+            if (typeof widget.endUserOptions.debug !== 'undefined' && widget.endUserOptions.debug) {
+                this.enableWebGLDebugging = true;
+            }
 
-            var maxTextureSize = scene.getContext().getMaximumTextureSize();
+            var context = scene.getContext();
+            if (this.enableWebGLDebugging) {
+                context.setValidateShaderProgram(true);
+                context.setValidateFramebuffer(true);
+                context.setLogShaderCompilation(true);
+                context.setThrowOnWebGLError(true);
+            }
+
+            var maxTextureSize = context.getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
                 this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_2048.jpg');
@@ -322,12 +616,6 @@ define([
                 this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
             }
 
-            var terrainProvider = new EllipsoidTerrainProvider(new WebMercatorTilingScheme({
-                ellipsoid : ellipsoid,
-                numberOfLevelZeroTilesX : 2,
-                numberOfLevelZeroTilesY : 2
-            }));
-
             var imageryLayerCollection = new ImageryLayerCollection();
 
 //            imageryLayerCollection.addImageryProvider(new BingMapsImageryProvider({
@@ -338,8 +626,17 @@ define([
 //                proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
 //            }));
 
-            var single = new SingleTileImageryProvider(require.toUrl('Images/NE2_50M_SR_W_4096.jpg'));
-            var singleLayer = imageryLayerCollection.addImageryProvider(single);
+            //var single = new SingleTileImageryProvider({url : require.toUrl('Images/NE2_50M_SR_W_4096.jpg')});
+            //var singleLayer = imageryLayerCollection.addImageryProvider(single);
+
+            var bing = new BingMapsImageryProvider({
+                server : 'dev.virtualearth.net',
+                mapStyle : this.mapStyle,
+                // Some versions of Safari support WebGL, but don't correctly implement
+                // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
+            });
+            var bingLayer = imageryLayerCollection.addImageryProvider(bing);
 
             var extent = new Extent(
                     CesiumMath.toRadians(-78.964624075),
@@ -380,7 +677,7 @@ define([
 
             }, false);
 
-            var centralBody = this.centralBody = new CentralBody(ellipsoid, terrainProvider, imageryLayerCollection);
+            var centralBody = this.centralBody = new CentralBody(ellipsoid, undefined, imageryLayerCollection);
             centralBody.showSkyAtmosphere = true;
             centralBody.showGroundAtmosphere = true;
             centralBody.showNight = false;
@@ -396,13 +693,11 @@ define([
             centralBody.cloudsMapSource = this.cloudsMapUrl;
             centralBody.bumpMapSource = this.bumpMapUrl;
 
+
             scene.getPrimitives().setCentralBody(centralBody);
 
-            var camera = scene.getCamera(), maxRadii = ellipsoid.getRadii().getMaximumComponent();
-
+            var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
-            camera.frustum.near = 10.0;
-            camera.frustum.far = 20000000.0;
 
             scene.viewExtent(extent, ellipsoid);
 
@@ -411,6 +706,7 @@ define([
             var handler = new EventHandler(canvas);
             handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleRightClick'), MouseEventType.RIGHT_CLICK);
+            handler.setMouseAction(lang.hitch(this, '_handleLeftDoubleClick'), MouseEventType.LEFT_DOUBLE_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), MouseEventType.MOVE);
             handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), MouseEventType.LEFT_DOWN);
             handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), MouseEventType.LEFT_UP);
@@ -425,14 +721,17 @@ define([
             }
 
             if (typeof this.highlightMaterial === 'undefined') {
-                this.highlightMaterial = new ColorMaterial();
-                this.highlightMaterial.color = this.highlightColor;
+                this.highlightMaterial = Material.fromType(scene.getContext(), Material.ColorType);
+                this.highlightMaterial.uniforms.color = this.highlightColor;
             }
 
-            if (typeof this.onObjectRightClickSelected === 'undefined') {
-                this.onObjectRightClickSelected = this.centerCameraOnObject;
-            }
-
+            if (typeof this.onObjectLeftDoubleClickSelected === 'undefined') {
+                this.onObjectLeftDoubleClickSelected = function(selectedObject) {
+                    if (typeof selectedObject !== 'undefined' && typeof selectedObject.dynamicObject !== 'undefined') {
+                        this.centerCameraOnPick(selectedObject);
+                    }
+                };
+                                }
             if (this.enableDragDrop) {
                 var dropBox = this.cesiumNode;
                 on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));
@@ -476,14 +775,13 @@ define([
                 getJson(widget.endUserOptions.source).then(function(czmlData) {
                     processCzml(czmlData, widget.dynamicObjectCollection, widget.endUserOptions.source);
                     widget.setTimeFromBuffer();
+                    if (typeof widget.endUserOptions.lookAt !== 'undefined') {
+                        widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(widget.endUserOptions.lookAt));
+                    }
                 },
                 function(error) {
                     window.alert(error);
                 });
-            }
-
-            if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                widget.cameraCenteredObjectID = widget.endUserOptions.lookAt;
             }
 
             if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
@@ -495,8 +793,6 @@ define([
             this.timeLabelElement = this.timeLabel.containerNode;
             this.timeLabelElement.innerHTML = clock.currentTime.toDate().toUTCString();
 
-            this.updateSpeedIndicator();
-
             var animReverse = this.animReverse;
             var animPause = this.animPause;
             var animPlay = this.animPlay;
@@ -506,7 +802,6 @@ define([
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
-                widget.updateSpeedIndicator();
             });
 
             function onAnimPause() {
@@ -514,7 +809,6 @@ define([
                 animReverse.set('checked', false);
                 animPause.set('checked', true);
                 animPlay.set('checked', false);
-                widget.updateSpeedIndicator();
             }
 
             on(animPause, 'Click', onAnimPause);
@@ -524,7 +818,6 @@ define([
                 animReverse.set('checked', true);
                 animPause.set('checked', false);
                 animPlay.set('checked', false);
-                widget.updateSpeedIndicator();
             });
 
             on(animPlay, 'Click', function() {
@@ -532,17 +825,14 @@ define([
                 animReverse.set('checked', false);
                 animPause.set('checked', false);
                 animPlay.set('checked', true);
-                widget.updateSpeedIndicator();
             });
 
             on(widget.animSlow, 'Click', function() {
                 animationController.slower();
-                widget.updateSpeedIndicator();
             });
 
             on(widget.animFast, 'Click', function() {
                 animationController.faster();
-                widget.updateSpeedIndicator();
             });
 
             function onTimelineScrub(e) {
@@ -559,96 +849,91 @@ define([
             };
             timelineWidget.setupTimeline();
 
-//            var viewHomeButton = widget.viewHomeButton;
-//            var view2D = widget.view2D;
-//            var view3D = widget.view3D;
-//            var viewColumbus = widget.viewColumbus;
-//            var viewFullScreen = widget.viewFullScreen;
-//
-//            view2D.set('checked', false);
-//            view3D.set('checked', true);
-//            viewColumbus.set('checked', false);
-//
-//            on(viewFullScreen, 'Click', function() {
-//                if (FullScreen.isFullscreenEnabled()) {
-//                    FullScreen.exitFullscreen();
-//                } else {
-//                    FullScreen.requestFullScreen(document.body);
-//                }
-//            });
-//
-//            on(viewHomeButton, 'Click', function() {
-//                view2D.set('checked', false);
-//                view3D.set('checked', true);
-//                viewColumbus.set('checked', false);
-//                transitioner.morphTo3D();
-//                widget.viewHome();
-//                widget.showSkyAtmosphere(true);
-//                widget.showGroundAtmosphere(true);
-//            });
-//            on(view2D, 'Click', function() {
-//                widget.cameraCenteredObjectID = undefined;
-//                view2D.set('checked', true);
-//                view3D.set('checked', false);
-//                viewColumbus.set('checked', false);
-//                widget.showSkyAtmosphere(false);
-//                widget.showGroundAtmosphere(false);
-//                transitioner.morphTo2D();
-//            });
-//            on(view3D, 'Click', function() {
-//                widget.cameraCenteredObjectID = undefined;
-//                view2D.set('checked', false);
-//                view3D.set('checked', true);
-//                viewColumbus.set('checked', false);
-//                transitioner.morphTo3D();
-//                widget.showSkyAtmosphere(true);
-//                widget.showGroundAtmosphere(true);
-//            });
-//            on(viewColumbus, 'Click', function() {
-//                widget.cameraCenteredObjectID = undefined;
-//                view2D.set('checked', false);
-//                view3D.set('checked', false);
-//                viewColumbus.set('checked', true);
-//                widget.showSkyAtmosphere(false);
-//                widget.showGroundAtmosphere(false);
-//                transitioner.morphToColumbusView();
-//            });
-//
-//            var cbLighting = widget.cbLighting;
-//            on(cbLighting, 'Change', function(value) {
-//                widget.centralBody.affectedByLighting = !value;
-//            });
-//
-//            var imagery = widget.imagery;
-//            var imageryAerial = widget.imageryAerial;
-//            var imageryAerialWithLabels = widget.imageryAerialWithLabels;
-//            var imageryRoad = widget.imageryRoad;
-//            var imagerySingleTile = widget.imagerySingleTile;
-//            var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
-//            var bingHtml = imagery.containerNode.innerHTML;
-//
-//            imagery.startup();
-//
-//            function createImageryClickFunction(control, style) {
-//                return function() {
-//                    if (style) {
-//                        widget.setStreamingImageryMapStyle(style);
-//                        imagery.containerNode.innerHTML = bingHtml;
-//                    } else {
-//                        widget.enableStreamingImagery(false);
-//                        imagery.containerNode.innerHTML = 'Imagery';
-//                    }
-//
-//                    imageryOptions.forEach(function(o) {
-//                        o.set('checked', o === control);
-//                    });
-//                };
-//            }
-//
-//            on(imageryAerial, 'Click', createImageryClickFunction(imageryAerial, BingMapsStyle.AERIAL));
-//            on(imageryAerialWithLabels, 'Click', createImageryClickFunction(imageryAerialWithLabels, BingMapsStyle.AERIAL_WITH_LABELS));
-//            on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
-//            on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
+            var viewHomeButton = widget.viewHomeButton;
+            var view2D = widget.view2D;
+            var view3D = widget.view3D;
+            var viewColumbus = widget.viewColumbus;
+            var viewFullScreen = widget.viewFullScreen;
+
+            view2D.set('checked', false);
+            view3D.set('checked', true);
+            viewColumbus.set('checked', false);
+
+            on(viewFullScreen, 'Click', function() {
+                if (FullScreen.isFullscreenEnabled()) {
+                    FullScreen.exitFullscreen();
+                } else {
+                    FullScreen.requestFullScreen(document.body);
+                }
+            });
+
+            on(viewHomeButton, 'Click', function() {
+                widget.viewHome();
+            });
+            on(view2D, 'Click', function() {
+                view2D.set('checked', true);
+                view3D.set('checked', false);
+                viewColumbus.set('checked', false);
+                widget.showSkyAtmosphere(false);
+                widget.showGroundAtmosphere(false);
+                transitioner.morphTo2D();
+            });
+            on(view3D, 'Click', function() {
+                view2D.set('checked', false);
+                view3D.set('checked', true);
+                viewColumbus.set('checked', false);
+                transitioner.morphTo3D();
+                widget.showSkyAtmosphere(true);
+                widget.showGroundAtmosphere(true);
+            });
+            on(viewColumbus, 'Click', function() {
+                view2D.set('checked', false);
+                view3D.set('checked', false);
+                viewColumbus.set('checked', true);
+                widget.showSkyAtmosphere(false);
+                widget.showGroundAtmosphere(false);
+                transitioner.morphToColumbusView();
+            });
+
+            var cbLighting = widget.cbLighting;
+            on(cbLighting, 'Change', function(value) {
+                widget.centralBody.affectedByLighting = !value;
+                widget.centralBody.showSkyAtmosphere = widget._showSkyAtmosphere && !value;
+                widget.centralBody.showGroundAtmosphere = widget._showGroundAtmosphere && !value;
+            });
+
+            var imagery = widget.imagery;
+            var imageryAerial = widget.imageryAerial;
+            var imageryAerialWithLabels = widget.imageryAerialWithLabels;
+            var imageryRoad = widget.imageryRoad;
+            var imagerySingleTile = widget.imagerySingleTile;
+            var imageryOptions = [imageryAerial, imageryAerialWithLabels, imageryRoad, imagerySingleTile];
+            var bingHtml = imagery.containerNode.innerHTML;
+
+            imagery.startup();
+
+            function createImageryClickFunction(control, style) {
+                return function() {
+                    if (style) {
+                        widget.setStreamingImageryMapStyle(style);
+                        imagery.containerNode.innerHTML = bingHtml;
+                    } else {
+                        widget.enableStreamingImagery(false);
+                        imagery.containerNode.innerHTML = 'Imagery';
+                    }
+
+                    imageryOptions.forEach(function(o) {
+                        o.set('checked', o === control);
+                    });
+                };
+            }
+
+            on(imageryAerial, 'Click', createImageryClickFunction(imageryAerial, BingMapsStyle.AERIAL));
+            on(imageryAerialWithLabels, 'Click', createImageryClickFunction(imageryAerialWithLabels, BingMapsStyle.AERIAL_WITH_LABELS));
+            on(imageryRoad, 'Click', createImageryClickFunction(imageryRoad, BingMapsStyle.ROAD));
+            on(imagerySingleTile, 'Click', createImageryClickFunction(imagerySingleTile, undefined));
+
+            //////////////////////////////////////////////////////////////////////////////////////////////////
 
             if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
@@ -656,32 +941,83 @@ define([
                 });
             }
 
-            //////////////////////////////////////////////////////////////////////////////////////////////////
+            this._camera3D = this.scene.getCamera().clone();
 
             if (typeof this.postSetup !== 'undefined') {
                 this.postSetup(this);
             }
-
-            this.defaultCamera = camera.clone();
         },
 
+        /**
+         * Reset the camera to the home view for the current scene mode.
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
         viewHome : function() {
-            var camera = this.scene.getCamera();
-            camera.position = this.defaultCamera.position;
-            camera.direction = this.defaultCamera.direction;
-            camera.up = this.defaultCamera.up;
-            camera.transform = this.defaultCamera.transform;
-            camera.frustum = this.defaultCamera.frustum.clone();
+            this._viewFromTo = undefined;
 
+            var scene = this.scene;
+            var mode = scene.mode;
+            var camera = scene.getCamera();
             var controllers = camera.getControllers();
             controllers.removeAll();
-            this.centralBodyCameraController = controllers.addCentralBody();
+
+            if (mode === SceneMode.SCENE2D) {
+                controllers.add2D(scene.scene2D.projection);
+                scene.viewExtent(Extent.MAX_VALUE);
+            } else if (mode === SceneMode.SCENE3D) {
+                this.centralBodyCameraController = controllers.addCentralBody();
+                var camera3D = this._camera3D;
+                camera3D.position.clone(camera.position);
+                camera3D.direction.clone(camera.direction);
+                camera3D.up.clone(camera.up);
+                camera3D.right.clone(camera.right);
+                camera3D.transform.clone(camera.transform);
+                camera3D.frustum.clone(camera.frustum);
+            } else if (mode === SceneMode.COLUMBUS_VIEW) {
+                var transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                            1.0, 0.0, 0.0, 0.0,
+                                            0.0, 1.0, 0.0, 0.0,
+                                            0.0, 0.0, 0.0, 1.0);
+
+                var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+                var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
+                var direction = Cartesian3.ZERO.subtract(position).normalize();
+                var right = direction.cross(Cartesian3.UNIT_Z).normalize();
+                var up = right.cross(direction);
+
+                var frustum = new PerspectiveFrustum();
+                frustum.fovy = CesiumMath.toRadians(60.0);
+                frustum.aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
+
+                camera.position = position;
+                camera.direction = direction;
+                camera.up = up;
+                camera.frustum = frustum;
+                camera.transform = transform;
+
+                controllers.addColumbusView();
+            }
         },
 
+        /**
+         * Test if the clouds are configured and available for display.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @returns {Boolean} <code>true</code> if the <code>cloudsMapSource</code> is defined.
+         */
         areCloudsAvailable : function() {
             return typeof this.centralBody.cloudsMapSource !== 'undefined';
         },
 
+        /**
+         * Enable or disable the display of clouds.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Boolean} useClouds - <code>true</code> to enable clouds, if configured.
+         */
         enableClouds : function(useClouds) {
             if (this.areCloudsAvailable()) {
                 this.centralBody.showClouds = useClouds;
@@ -689,6 +1025,13 @@ define([
             }
         },
 
+        /**
+         * Enable or disable the FPS (Frames Per Second) perfomance display.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Boolean} showStatistics - <code>true</code> to enable it.
+         */
         enableStatistics : function(showStatistics) {
             if (typeof this._performanceDisplay === 'undefined' && showStatistics) {
                 this._performanceDisplay = new PerformanceDisplay();
@@ -699,28 +1042,70 @@ define([
             }
         },
 
+        /**
+         * Enable or disable the "sky atmosphere" effect, which displays the limb
+         * of the Earth (seen from space) or blue sky (seen from inside the atmosphere).
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Boolean} show - <code>true</code> to enable the effect.
+         */
         showSkyAtmosphere : function(show) {
-            this.centralBody.showSkyAtmosphere = show;
+            this._showSkyAtmosphere = show;
+            this.centralBody.showSkyAtmosphere = show && this.centralBody.affectedByLighting;
         },
 
+        /**
+         * Enable or disable the "ground atmosphere" effect, which makes the surface of
+         * the globe look pale at a distance.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Boolean} show - <code>true</code> to enable the effect.
+         */
         showGroundAtmosphere : function(show) {
-            this.centralBody.showGroundAtmosphere = show;
+            this._showGroundAtmosphere = show;
+            this.centralBody.showGroundAtmosphere = show && this.centralBody.affectedByLighting;
         },
-//
-//        enableStreamingImagery : function(value) {
-//            this.useStreamingImagery = value;
-//            this._configureCentralBodyImagery();
-//        },
-//
-//        setStreamingImageryMapStyle : function(value) {
-//            this.useStreamingImagery = true;
-//
-//            if (this.mapStyle !== value) {
-//                this.mapStyle = value;
-//                this._configureCentralBodyImagery();
-//            }
-//        },
 
+        /**
+         * Enable or disable streaming imagery, and update the globe.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Boolean} value - <code>true</code> to enable streaming imagery.
+         * @see CesiumViewerWidget#useStreamingImagery
+         */
+        enableStreamingImagery : function(value) {
+            this.useStreamingImagery = value;
+            this._configureCentralBodyImagery();
+        },
+
+        /**
+         * Change the streaming imagery type, and update the globe.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {BingMapsStyle} value - the new map style to use.
+         * @see CesiumViewerWidget#mapStyle
+         */
+        setStreamingImageryMapStyle : function(value) {
+            this.useStreamingImagery = true;
+
+            if (this.mapStyle !== value) {
+                this.mapStyle = value;
+                this._configureCentralBodyImagery();
+            }
+        },
+
+        /**
+         * Set the positional offset of the logo of the streaming imagery provider.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Integer} logoOffsetX - The horizontal offset in screen space
+         * @param {Integer} logoOffsetY - The vertical offset in screen space
+         */
         setLogoOffset : function(logoOffsetX, logoOffsetY) {
             var logoOffset = this.centralBody.logoOffset;
             if ((logoOffsetX !== logoOffset.x) || (logoOffsetY !== logoOffset.y)) {
@@ -728,13 +1113,22 @@ define([
             }
         },
 
+        /**
+         * Highlight an object in the scene, usually in response to a click or hover.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {Object} selectedObject - The object to highlight, or <code>undefined</code> to un-highlight.
+         */
         highlightObject : function(selectedObject) {
             if (this.highlightedObject !== selectedObject) {
                 if (typeof this.highlightedObject !== 'undefined') {
                     if (typeof this.highlightedObject.material !== 'undefined') {
                         this.highlightedObject.material = this._originalMaterial;
+                    } else if (typeof this.highlightedObject.outerMaterial !== 'undefined') {
+                        this.highlightedObject.outerMaterial = this._originalMaterial;
                     } else {
-                        this.highlightedObject.color = this._originalColor;
+                        this.highlightedObject.setColor(this._originalColor);
                     }
                 }
                 this.highlightedObject = selectedObject;
@@ -742,24 +1136,36 @@ define([
                     if (typeof selectedObject.material !== 'undefined') {
                         this._originalMaterial = selectedObject.material;
                         selectedObject.material = this.highlightMaterial;
+                    } else if (typeof selectedObject.outerMaterial !== 'undefined') {
+                        this._originalMaterial = selectedObject.outerMaterial;
+                        selectedObject.outerMaterial = this.highlightMaterial;
                     } else {
-                        this._originalColor = selectedObject.color;
-                        selectedObject.color = this.highlightColor;
+                        this._originalColor = Color.clone(selectedObject.getColor(), this._originalColor);
+                        selectedObject.setColor(this.highlightColor);
                     }
                 }
             }
         },
 
-        _cameraCenteredObjectIDPosition : new Cartesian3(),
+        _sunPosition : new Cartesian3(),
 
+        /**
+         * Call this function prior to rendering each animation frame, to prepare
+         * all CZML objects and other settings for the next frame.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
+         */
         update : function(currentTime) {
-            var cameraCenteredObjectID = this.cameraCenteredObjectID;
-            var cameraCenteredObjectIDPosition = this._cameraCenteredObjectIDPosition;
 
-            this.wamiImageryProvider.setTime(currentTime);
+            if (typeof this.wamiImageryProvider !== 'undefined') {
+                this.wamiImageryProvider.setTime(currentTime);
+            }
 
+            this._updateSpeedIndicator();
             this.timelineControl.updateFromClock();
-            this.scene.setSunPosition(SunPosition.compute(currentTime).position);
+            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
             this.visualizers.update(currentTime);
 
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||
@@ -770,63 +1176,92 @@ define([
             }
 
             // Update the camera to stay centered on the selected object, if any.
-            if (cameraCenteredObjectID) {
-                var dynamicObject = this.compositeCollection.getObject(cameraCenteredObjectID);
-                if (dynamicObject && dynamicObject.position) {
-                    cameraCenteredObjectIDPosition = dynamicObject.position.getValueCartesian(currentTime, cameraCenteredObjectIDPosition);
-                    if (typeof cameraCenteredObjectIDPosition !== 'undefined') {
-                        // If we're centering on an object for the first time, zoom to within 2km of it.
-                        if (this._lastCameraCenteredObjectID !== cameraCenteredObjectID) {
-                            var camera = this.scene.getCamera();
-                            camera.position = camera.position.normalize().multiplyByScalar(5000.0);
-
-                            var controllers = camera.getControllers();
-                            controllers.removeAll();
-                            this.objectSpindleController = controllers.addSpindle();
-                            this.objectSpindleController.constrainedAxis = Cartesian3.UNIT_Z;
-                        }
-
-                        if (typeof spindleController !== 'undefined' && !this.objectSpindleController.isDestroyed()) {
-                            var transform = Transforms.eastNorthUpToFixedFrame(cameraCenteredObjectIDPosition, this.ellipsoid);
-                            this.objectSpindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
-                        }
-                    }
-                }
+            var viewFromTo = this._viewFromTo;
+            if (typeof viewFromTo !== 'undefined') {
+                viewFromTo.update(currentTime);
             }
-            this._lastCameraCenteredObjectID = cameraCenteredObjectID;
         },
 
+        /**
+         * Render the widget's scene.
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
         render : function() {
             this.scene.render();
         },
-//
-//        _configureCentralBodyImagery : function() {
-//            var centralBody = this.centralBody;
-//
-//            if (this.useStreamingImagery) {
-//                centralBody.getImageLayers().addImageryProvider(new BingMapsImageryProvider({
-//                    server : 'dev.virtualearth.net',
-//                    mapStyle : this.mapStyle,
-//                    // Some versions of Safari support WebGL, but don't correctly implement
-//                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-//                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-//                }));
-//            } else {
-//                centralBody.getImageLayers().addImageryProvider(new SingleTileImageryProvider(this.dayImageUrl));
-//            }
-//
-//            centralBody.nightImageSource = this.nightImageUrl;
-//            centralBody.specularMapSource = this.specularMapUrl;
-//            centralBody.cloudsMapSource = this.cloudsMapUrl;
-//            centralBody.bumpMapSource = this.bumpMapUrl;
-//        },
 
+        _configureCentralBodyImagery : function() {
+            var centralBody = this.centralBody;
+
+            if (this.useStreamingImagery) {
+                centralBody.getImageLayers().addImageryProvider(new BingMapsImageryProvider({
+                    server : 'dev.virtualearth.net',
+                    mapStyle : this.mapStyle,
+                    // Some versions of Safari support WebGL, but don't correctly implement
+                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
+                }));
+            } else {
+                centralBody.getImageLayers().addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
+            }
+
+            centralBody.nightImageSource = this.nightImageUrl;
+            centralBody.specularMapSource = this.specularMapUrl;
+            centralBody.cloudsMapSource = this.cloudsMapUrl;
+            centralBody.bumpMapSource = this.bumpMapUrl;
+        },
+
+        /**
+         * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
+         * on your page.  Typically it is started from {@link CesiumViewerWidget.postSetup}.  If you wish to
+         * customize your render loop, avoid this function and instead use code similar to the following example.
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @see requestAnimationFrame
+         * @example
+         * // This takes the place of startRenderLoop for a single widget.
+         *
+         * var animationController = widget.animationController;
+         * function updateAndRender() {
+         *     var currentTime = animationController.update();
+         *     widget.update(currentTime);
+         *     widget.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
+         * @example
+         * // This example requires widget1 and widget2 to share an animationController
+         * // (for example, widget2's constructor was called with a copy of widget1's
+         * // animationController).
+         *
+         * function updateAndRender() {
+         *     var currentTime = animationController.update();
+         *     widget1.update(currentTime);
+         *     widget2.update(currentTime);
+         *     widget1.render();
+         *     widget2.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
+         * @example
+         * // This example uses separate animationControllers for widget1 and widget2.
+         * // These widgets can animate at different rates and pause individually.
+         *
+         * function updateAndRender() {
+         *     var currentTime = widget1.animationController.update();
+         *     widget1.update(currentTime);
+         *     widget1.render();
+         *     currentTime = widget2.animationController.update();
+         *     widget2.update(currentTime);
+         *     widget2.render();
+         *     requestAnimationFrame(updateAndRender);
+         * }
+         * updateAndRender();
+         */
         startRenderLoop : function() {
             var widget = this;
             var animationController = widget.animationController;
-
-            // Note that clients are permitted to use their own custom render loop.
-            // At a minimum it should include lines similar to the following:
 
             function updateAndRender() {
                 var currentTime = animationController.update();

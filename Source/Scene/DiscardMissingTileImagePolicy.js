@@ -1,11 +1,15 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/loadImage',
         '../Core/getImagePixels',
+        '../Core/DeveloperError',
         '../ThirdParty/when'
     ], function(
+        defaultValue,
         loadImage,
         getImagePixels,
+        DeveloperError,
         when) {
     "use strict";
 
@@ -16,44 +20,99 @@ define([
      * @alias DiscardMissingTileImagePolicy
      * @constructor
      *
-     * @param {String|Object} missingImageUrl The URL of the known missing image, or a
-     *        promise for the URL.
-     * @param {Array} pixelsToCheck An array of Cartesian2 pixel positions to
+     * @param {String} description.missingImageUrl The URL of the known missing image.
+     * @param {Array} description.pixelsToCheck An array of Cartesian2 pixel positions to
      *        compare against the missing image.
+     * @param {Boolean} [description.disableCheckIfAllPixelsAreTransparent] If true, the discard check will be disabled
+     *                  if all of the pixelsToCheck in the missingImageUrl have an alpha value of 0.  If false, the
+     *                  discard check will proceed no matter the values of the pixelsToCheck.
      */
-    var DiscardMissingTileImagePolicy = function(missingImageUrl, pixelsToCheck) {
-        this._missingImagePixels = when(loadImage(missingImageUrl), getImagePixels);
-        this._pixelsToCheck = pixelsToCheck;
+    var DiscardMissingTileImagePolicy = function(description) {
+        description = defaultValue(description, {});
+
+        if (typeof description.missingImageUrl === 'undefined') {
+            throw new DeveloperError('description.missingImageUrl is required.');
+        }
+
+        if (typeof description.pixelsToCheck === 'undefined') {
+            throw new DeveloperError('description.pixelsToCheck is required.');
+        }
+
+        this._pixelsToCheck = description.pixelsToCheck;
+        this._missingImagePixels = undefined;
+        this._isReady = false;
+
+        var that = this;
+        when(loadImage(description.missingImageUrl), function(image) {
+            var pixels = getImagePixels(image);
+
+            if (description.disableCheckIfAllPixelsAreTransparent) {
+                var allAreTransparent = true;
+                var width = image.width;
+
+                var pixelsToCheck = description.pixelsToCheck;
+                for (var i = 0, len = pixelsToCheck.length; allAreTransparent && i < len; ++i) {
+                    var pos = pixelsToCheck[i];
+                    var index = pos.x * 4 + pos.y * width;
+                    var alpha = pixels[index + 3];
+
+                    if (alpha > 0) {
+                        allAreTransparent = false;
+                    }
+                }
+
+                if (allAreTransparent) {
+                    pixels = undefined;
+                }
+            }
+
+            that._missingImagePixels = pixels;
+            that._isReady = true;
+        });
     };
 
     /**
-     * Given a tile image, decide whether to discard that image.  This policy
-     * compares the image to the known "missing" image.
+     * Determines if the discard policy is ready to process images.
+     * @returns True if the discard policy is ready to process images; otherwise, false.
+     */
+    DiscardMissingTileImagePolicy.prototype.isReady = function() {
+        return this._isReady;
+    };
+
+    /**
+     * Given a tile image, decide whether to discard that image.
      *
-     * @param {Image|Promise} image an image, or a promise that will resolve to an image.
+     * @param {Image} image An image to test.
      *
-     * @returns a promise that will resolve to true if the tile should be discarded.
+     * @returns True if the image should be discarded; otherwise, false.
      */
     DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function(image) {
-        var pixelsToCheck = this._pixelsToCheck;
-        return when.all([this._missingImagePixels, image], function(values) {
-            var missingImagePixels = values[0];
-            var image = values[1];
-            var pixels = getImagePixels(image);
-            var width = image.width;
+        if (!this._isReady) {
+            throw new DeveloperError('shouldDiscardImage must not be called before the discard policy is ready.');
+        }
 
-            for ( var i = 0, len = pixelsToCheck.length; i < len; i++) {
-                var pos = pixelsToCheck[i];
-                var index = pos.x * 4 + pos.y * width;
-                for ( var offset = 0; offset < 4; offset++) {
-                    var pixel = index + offset;
-                    if (pixels[pixel] !== missingImagePixels[pixel]) {
-                        return false;
-                    }
+        var pixelsToCheck = this._pixelsToCheck;
+        var missingImagePixels = this._missingImagePixels;
+
+        // If missingImagePixels is undefined, it indicates that the discard check has been disabled.
+        if (typeof missingImagePixels === 'undefined') {
+            return false;
+        }
+
+        var pixels = getImagePixels(image);
+        var width = image.width;
+
+        for (var i = 0, len = pixelsToCheck.length; i < len; ++i) {
+            var pos = pixelsToCheck[i];
+            var index = pos.x * 4 + pos.y * width;
+            for (var offset = 0; offset < 4; ++offset) {
+                var pixel = index + offset;
+                if (pixels[pixel] !== missingImagePixels[pixel]) {
+                    return false;
                 }
             }
-            return true;
-        });
+        }
+        return true;
     };
 
     return DiscardMissingTileImagePolicy;

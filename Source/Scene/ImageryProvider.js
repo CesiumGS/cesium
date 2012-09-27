@@ -2,20 +2,12 @@
 define([
         '../Core/loadImage',
         '../Core/DeveloperError',
-        '../Renderer/MipmapHint',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        './TileState',
+        '../Core/throttleRequestByServer',
         '../ThirdParty/when'
     ], function(
         loadImage,
         DeveloperError,
-        MipmapHint,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        TileState,
+        throttleRequestByServer,
         when) {
     "use strict";
 
@@ -25,105 +17,101 @@ define([
      *
      * @alias ImageryProvider
      * @constructor
+     *
+     * @see ArcGisMapServerImageryProvider
+     * @see BingMapsImageryProvider
+     * @see SingleTileImageryProvider
+     * @see WebMapServiceImageryProvider
      */
     function ImageryProvider() {
         throw new DeveloperError('This type should not be instantiated directly.');
     }
 
     /**
-     * Build a URL to retrieve the image for a tile.
+     * Gets a value indicating whether or not the provider is ready for use.
      *
-     * @param {Number} x The x coordinate of the tile.
-     * @param {Number} y The y coordinate of the tile.
-     * @param {Number} level The level-of-detail of the tile.
-     *
-     * @return {String|Promise} Either a string containing the URL, or a Promise for a string
-     *                          if the URL needs to be built asynchronously.
+     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
      */
-    ImageryProvider.prototype.buildImageUrl = function(x, y, level) {
+    ImageryProvider.prototype.isReady = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 
     /**
-     * Request the image for a given tile.
+     * Gets the extent, in radians, of the imagery provided by this instance.
      *
-     * @param {String} url The tile image URL.
-     *
-     * @return A promise for the image that will resolve when the image is available.
-     *         If the image is not suitable for display, the promise can resolve to undefined.
+     * @returns {Extent} The extent.
      */
-    ImageryProvider.prototype.requestImage = function(url) {
+    ImageryProvider.prototype.getExtent = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 
     /**
-     * Transform the tile imagery from the format requested from the remote server
-     * into a format suitable for resource creation.  Once complete, the tile imagery
-     * state should be set to TRANSFORMED.  Alternatively, tile imagery state can be set to
-     * RECEIVED to indicate that the transformation should be attempted again next update, if the tile
-     * is still needed.
+     * Gets the width of each tile, in pixels.
      *
-     * This default implementation of createResources uses a projection property to
-     * transform the image property on the tile imagery to WGS84 and stores it in
-     * the transformedImage property.
-     *
-     * @param {Context} context The context to use to create resources.
-     * @param {TileImagery} tileImagery The tile imagery to transform.
+     * @returns {Number} The width.
      */
-    ImageryProvider.prototype.transformImagery = function(context, tileImagery) {
-        tileImagery.transformedImage = this.projection.toWgs84(tileImagery.extent, tileImagery.image);
-        tileImagery.image = undefined;
-        tileImagery.state = TileState.TRANSFORMED;
+    ImageryProvider.prototype.getTileWidth = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
     };
 
     /**
-     * Create WebGL resources for the tile imagery using whatever data the transformImagery step produced.
-     * Once complete, the tile imagery state should be set to READY.  Alternatively, tile imagery state can be set to
-     * TRANSFORMED to indicate that resource creation should be attempted again next update, if the tile
-     * is still needed.
+     * Gets the height of each tile, in pixels.
      *
-     * This default implementation of createResources creates a texture from the transformedImage
-     * property on the tile imagery.
-     *
-     * @param {Context} context The context to use to create resources.
-     * @param {TileImagery} tileImagery The tile imagery to create resources for.
-     * @param {TexturePool} texturePool A texture pool to use to create textures.
+     * @returns {Number} The height.
      */
-    ImageryProvider.prototype.createResources = function(context, tileImagery, texturePool) {
-        tileImagery.texture = ImageryProvider.createTextureFromTransformedImage(context, tileImagery.transformedImage, texturePool);
-        tileImagery.transformedImage = undefined;
-        tileImagery.state = TileState.READY;
+    ImageryProvider.prototype.getTileHeight = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
     };
 
-    ImageryProvider.loadImageAndCheckDiscardPolicy = function(url, discardPolicy) {
-        var image = loadImage(url);
-
-        if (typeof discardPolicy === 'undefined') {
-            return image;
-        }
-
-        return when(discardPolicy.shouldDiscardImage(image), function(shouldDiscard) {
-            return shouldDiscard ? undefined : image;
-        });
+    /**
+     * Gets the maximum level-of-detail that can be requested.
+     *
+     * @returns {Number} The maximum level.
+     */
+    ImageryProvider.prototype.getMaximumLevel = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
     };
 
-    ImageryProvider.createTextureFromTransformedImage = function(context, transformedImage, texturePool) {
-        var texture = texturePool.createTexture2D(context, {
-            source : transformedImage
-        });
+    /**
+     * Gets the tiling scheme used by this provider.
+     *
+     * @returns {TilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     */
+    ImageryProvider.prototype.getTilingScheme = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
 
-        texture.generateMipmap(MipmapHint.NICEST);
-        texture.setSampler({
-            wrapS : TextureWrap.CLAMP,
-            wrapT : TextureWrap.CLAMP,
-            minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-            magnificationFilter : TextureMagnificationFilter.LINEAR,
+    /**
+     * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+     * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+     * returns undefined, no tiles are filtered.
+     * @returns {TileDiscardPolicy} The discard policy.
+     */
+    ImageryProvider.prototype.getTileDiscardPolicy = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
 
-            // TODO: Remove Chrome work around
-            maximumAnisotropy : context.getMaximumTextureFilterAnisotropy() || 8
-        });
+    /**
+     * Requests the image for a given tile.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     *
+     * @return {Promise} A promise for the image that will resolve when the image is available, or
+     *         undefined if there are too many active requests to the server, and the request
+     *         should be retried later.  If the resulting image is not suitable for display,
+     *         the promise can resolve to undefined.  The resolved image may be either an
+     *         Image or a Canvas DOM object.
+     */
+    ImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
 
-        return texture;
+    ImageryProvider.loadImage = function(url) {
+        return throttleRequestByServer(url, loadImage);
     };
 
     return ImageryProvider;

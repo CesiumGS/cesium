@@ -1,5 +1,8 @@
 /*global define*/
-define(['../Shaders/DistanceIntervalMaterial'], function(ShadersDistanceIntervalMaterial) {
+define([
+        '../Shaders/Materials/DistanceIntervalMaterial'
+    ], function(
+        ShadersDistanceIntervalMaterial) {
     "use strict";
 
     /**
@@ -33,11 +36,10 @@ define(['../Shaders/DistanceIntervalMaterial'], function(ShadersDistanceInterval
                 return colors;
             }
         };
-    };
 
-    DistanceIntervalMaterial.prototype._getShaderSource = function() {
-        return '#define NUMBER_OF_DISTANCES ' + this.intervals.length.toString() + '\n' +
-               '#line 0\n' + ShadersDistanceIntervalMaterial;
+        this.shaderSource = '#define NUMBER_OF_DISTANCES ' + this.intervals.length.toString() + '\n' +
+                            '#line 0\n' +
+                            ShadersDistanceIntervalMaterial;
     };
 
     return DistanceIntervalMaterial;

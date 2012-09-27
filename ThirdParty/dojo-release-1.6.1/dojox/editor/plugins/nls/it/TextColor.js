@@ -1,1 +1,0 @@
-({"setButtonText":"Imposta","cancelButtonText":"Annulla"})

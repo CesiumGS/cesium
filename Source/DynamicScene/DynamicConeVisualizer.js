@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
@@ -7,8 +8,9 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/ComplexConicSensorVolume',
-        '../Scene/ColorMaterial'
+        '../Scene/Material'
        ], function(
+         defaultValue,
          DeveloperError,
          destroyObject,
          Color,
@@ -16,8 +18,10 @@ define([
          Matrix3,
          Matrix4,
          ComplexConicSensorVolume,
-         ColorMaterial) {
+         Material) {
     "use strict";
+
+    var matrix3Scratch = new Matrix3();
 
     /**
      * A DynamicObject visualizer which maps the DynamicCone instance
@@ -178,6 +182,7 @@ define([
     var orientation;
     var intersectionColor;
     DynamicConeVisualizer.prototype._updateObject = function(time, dynamicObject) {
+        var context = this._scene.getContext();
         var dynamicCone = dynamicObject.cone;
         if (typeof dynamicCone === 'undefined') {
             return;
@@ -218,6 +223,7 @@ define([
             } else {
                 coneVisualizerIndex = this._coneCollection.length;
                 cone = new ComplexConicSensorVolume();
+                cone.affectedByLighting = false;
                 this._coneCollection.push(cone);
                 this._primitives.add(cone);
             }
@@ -225,17 +231,17 @@ define([
             cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            cone.capMaterial = new ColorMaterial();
+            cone.capMaterial = Material.fromType(context, Material.ColorType);
             cone.innerHalfAngle = 0;
             cone.outerHalfAngle = Math.PI;
-            cone.innerMaterial = new ColorMaterial();
+            cone.innerMaterial = Material.fromType(context, Material.ColorType);
             cone.intersectionColor = Color.YELLOW;
             cone.maximumClockAngle =  CesiumMath.TWO_PI;
-            cone.minimumClockAngle = -CesiumMath.TWO_PI;
-            cone.outerMaterial = new ColorMaterial();
+            cone.minimumClockAngle = 0;
+            cone.outerMaterial = Material.fromType(context, Material.ColorType);
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
-            cone.silhouetteMaterial = new ColorMaterial();
+            cone.silhouetteMaterial = Material.fromType(context, Material.ColorType);
         } else {
             cone = this._coneCollection[coneVisualizerIndex];
         }
@@ -255,7 +261,7 @@ define([
             if (typeof maximumClockAngle !== 'undefined') {
                 cone.maximumClockAngle = maximumClockAngle;
             } else {
-                cone.maximumClockAngle = Math.pi;
+                cone.maximumClockAngle = CesiumMath.TWO_PI;
             }
         }
 
@@ -273,7 +279,7 @@ define([
             if (typeof outerHalfAngle !== 'undefined') {
                 cone.outerHalfAngle = outerHalfAngle;
             } else {
-                cone.outerHalfAngle = Math.pi;
+                cone.outerHalfAngle = Math.PI;
             }
         }
 
@@ -285,19 +291,18 @@ define([
             }
         }
 
-        position = positionProperty.getValueCartesian(time, position) || cone._visualizerPosition;
-        orientation = orientationProperty.getValue(time, orientation) || cone._visualizerOrientation;
+        position = defaultValue(positionProperty.getValueCartesian(time, position), cone._visualizerPosition);
+        orientation = defaultValue(orientationProperty.getValue(time, orientation), cone._visualizerOrientation);
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
-            cone.modelMatrix = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation)), position);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, cone.modelMatrix);
             position.clone(cone._visualizerPosition);
             orientation.clone(cone._visualizerOrientation);
         }
 
-        var context = this._scene.getContext();
         var material = dynamicCone.capMaterial;
         if (typeof material !== 'undefined') {
             cone.capMaterial = material.getValue(time, context, cone.capMaterial);

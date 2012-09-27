@@ -79,9 +79,13 @@ define([
          *
          * @type TilingScheme
          */
-        this.tilingScheme = new WebMercatorTilingScheme();
-        this.projection = Projections.MERCATOR;
+        this.tilingScheme = new WebMercatorTilingScheme({
+            numberOfLevelZeroTilesX : 2,
+            numberOfLevelZeroTilesY : 2
+        });
         this.maxLevel = 25;
+        this.heightmapWidth = 64;
+        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, this.heightmapWidth, this.tilingScheme.numberOfLevelZeroTilesX);
 
         this._proxy = description.proxy;
 
@@ -101,7 +105,6 @@ define([
             /*var extentData = data.extent;
 
             if (extentData.spatialReference.wkid === 102100) {
-                that.projection = Projections.MERCATOR;
                 that._extentSouthwestInMeters = new Cartesian2(extentData.xmin, extentData.ymin);
                 that._extentNortheastInMeters = new Cartesian2(extentData.xmax, extentData.ymax);
                 that.tilingScheme = new WebMercatorTilingScheme({
@@ -109,7 +112,6 @@ define([
                     extentNortheastInMeters: that._extentNortheastInMeters
                 });
             } if (extentData.spatialReference.wkid === 4326) {
-                that.projection = Projections.WGS84;
                 var extent = new Extent(CesiumMath.toRadians(extentData.xmin),
                                         CesiumMath.toRadians(extentData.ymin),
                                         CesiumMath.toRadians(extentData.xmax),
@@ -134,23 +136,16 @@ define([
         });
     }
 
-    function computeDesiredGranularity(tilingScheme, tile) {
-        var ellipsoid = tilingScheme.ellipsoid;
-        var level = tile.level;
-
-        // The more vertices we use to tessellate the extent, the less geometric error
-        // in the tile.  We only need to use enough vertices to be at or below the
-        // geometric error expected for this level.
-        var maxErrorMeters = tilingScheme.getLevelMaximumGeometricError(level);
-
-        // Convert the max error in meters to radians at the equator.
-        // TODO: we should take the latitude into account to avoid over-tessellation near the poles.
-        var maxErrorRadians = maxErrorMeters / ellipsoid.getRadii().x;
-
-        return maxErrorRadians;
-    }
+    /**
+     * Gets the maximum geometric error allowed in a tile at a given level.
+     *
+     * @param {Number} level The tile level for which to get the maximum geometric error.
+     * @returns {Number} The maximum geometric error.
+     */
+    ArcGisImageServerTerrainProvider.prototype.getLevelMaximumGeometricError = TerrainProvider.prototype.getLevelMaximumGeometricError;
 
     var requestsInFlight = 0;
+
     // Creating the geometry will require a request to the ImageServer, which will complete
     // asynchronously.  The question is, what do we do in the meantime?  The best thing to do is
     // to use terrain associated with the parent tile.  Ideally, we would be able to render
@@ -184,11 +179,25 @@ define([
         ++requestsInFlight;
 
         var extent = this.tilingScheme.tileXYToExtent(tile.x, tile.y, tile.level);
+
+        // Each pixel in the heightmap represents the height at the center of that
+        // pixel.  So expand the extent by half a sample spacing in each direction
+        // so that the first height is on the edge of the extent we need rather than
+        // half a sample spacing into the extent.
+        var xSpacing = (extent.east - extent.west) / (this.heightmapWidth - 1);
+        var ySpacing = (extent.north - extent.south) / (this.heightmapWidth - 1);
+
+        extent.west -= xSpacing * 0.5;
+        extent.east += xSpacing * 0.5;
+        extent.south -= ySpacing * 0.5;
+        extent.north += ySpacing * 0.5;
+
         var bbox = CesiumMath.toDegrees(extent.west) + '%2C' + CesiumMath.toDegrees(extent.south) + '%2C' + CesiumMath.toDegrees(extent.east) + '%2C' + CesiumMath.toDegrees(extent.north);
-        var url = this.url + '/exportImage?format=tiff&f=image&size=128%2C128&bboxSR=4326&imageSR=3857&bbox=' + bbox;
+        var url = this.url + '/exportImage?interpolation=RSP_BilinearInterpolation&format=tiff&f=image&size=' + this.heightmapWidth + '%2C' + this.heightmapWidth + '&bboxSR=4326&imageSR=3857&bbox=' + bbox;
         if (this.token) {
             url += '&token=' + this.token;
         }
+
         if (typeof this._proxy !== 'undefined') {
             url = this._proxy.getURL(url);
         }
@@ -200,6 +209,8 @@ define([
         }, function(e) {
             /*global console*/
             console.error('failed to load tile geometry: ' + e);
+            tile.state = TileState.FAILED;
+            --requestsInFlight;
         });
     };
 
@@ -222,8 +233,12 @@ define([
         var height = image.height;
         var pixels = getImagePixels(image);
 
-        var southwest = this.tilingScheme.cartographicToWebMercator(tile.extent.west, tile.extent.south);
-        var northeast = this.tilingScheme.cartographicToWebMercator(tile.extent.east, tile.extent.north);
+        var tilingScheme = this.tilingScheme;
+        var ellipsoid = tilingScheme.ellipsoid;
+        var extent = tile.extent;
+
+        var southwest = tilingScheme.cartographicToWebMercator(extent.west, extent.south);
+        var northeast = tilingScheme.cartographicToWebMercator(extent.east, extent.north);
         var webMercatorExtent = {
             west : southwest.x,
             south : southwest.y,
@@ -231,7 +246,7 @@ define([
             north : northeast.y
         };
 
-        tile.center = this.tilingScheme.ellipsoid.cartographicToCartesian(tile.extent.getCenter());
+        tile.center = ellipsoid.cartographicToCartesian(extent.getCenter());
 
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : pixels,
@@ -243,9 +258,10 @@ define([
             height : height,
             extent : webMercatorExtent,
             relativeToCenter : tile.center,
-            radiiSquared : this.tilingScheme.ellipsoid.getRadiiSquared(),
-            oneOverCentralBodySemimajorAxis : this.tilingScheme.ellipsoid.getOneOverRadii().x
-        });
+            radiiSquared : ellipsoid.getRadiiSquared(),
+            oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
+            skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0)
+        }, [pixels.buffer]);
 
         if (typeof verticesPromise === 'undefined') {
             //postponed
@@ -254,19 +270,21 @@ define([
         }
 
         when(verticesPromise, function(result) {
-            console.log('Tile ' + tile.x + ', ' + tile.y + ', ' + tile.level + ' UDiff: ' + result.statistics.maxUDifference + ' VDiff: ' + result.statistics.maxVDifference);
             tile.geometry = undefined;
             tile.transformedGeometry = {
                 vertices : result.vertices,
                 statistics : result.statistics,
-                indices : TerrainProvider.getRegularGridIndices(width, height)
+                indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
             };
             tile.state = TileState.TRANSFORMED;
         }, function(e) {
             /*global console*/
-            console.error('failed to load transform geometry: ' + e);
+            console.error('failed to transform geometry: ' + e);
+            tile.state = TileState.FAILED;
         });
     };
+
+    var scratch = new Cartesian3();
 
     /**
      * Create WebGL resources for the tile using whatever data the transformGeometry step produced.
@@ -280,17 +298,18 @@ define([
     ArcGisImageServerTerrainProvider.prototype.createResources = function(context, tile) {
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
+
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = buffers.statistics.maxHeight;
-        tile._boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
+        tile.boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
 
         var ellipsoid = this.tilingScheme.ellipsoid;
-        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSouthwest());
-        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getSoutheast());
-        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getNortheast());
-        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(tile.extent.getNorthwest());
+        var extent = tile.extent;
+        tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
+        tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
+        tile.northeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNortheast());
+        tile.northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest());
 
-        var scratch = new Cartesian3();
         tile.westNormal = Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(scratch), scratch).normalize();
         tile.eastNormal = tile.northeastCornerCartesian.negate(scratch).cross(Cartesian3.UNIT_Z, scratch).normalize();
         tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, scratch)).normalize();
