@@ -1124,12 +1124,12 @@ define([
          */
         highlightObject : function(selectedObject) {
             if (this.highlightedObject !== selectedObject) {
-                if (typeof this.highlightedObject !== 'undefined') {
+                if (typeof this.highlightedObject !== 'undefined' && !this.highlightedObject.isDestroyed()) {
                     if (typeof this.highlightedObject.material !== 'undefined') {
                         this.highlightedObject.material = this._originalMaterial;
                     } else if (typeof this.highlightedObject.outerMaterial !== 'undefined') {
                         this.highlightedObject.outerMaterial = this._originalMaterial;
-                    } else {
+                    } else if (typeof this.highlightedObject.setColor !== 'undefined') {
                         this.highlightedObject.setColor(this._originalColor);
                     }
                 }
@@ -1141,7 +1141,7 @@ define([
                     } else if (typeof selectedObject.outerMaterial !== 'undefined') {
                         this._originalMaterial = selectedObject.outerMaterial;
                         selectedObject.outerMaterial = this.highlightMaterial;
-                    } else {
+                    } else if (typeof this.highlightedObject.setColor !== 'undefined') {
                         this._originalColor = Color.clone(selectedObject.getColor(), this._originalColor);
                         selectedObject.setColor(this.highlightColor);
                     }

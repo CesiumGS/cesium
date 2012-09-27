@@ -8,6 +8,7 @@ defineSuite([
          'Core/GeographicProjection',
          'Core/Extent',
          'Core/Intersect',
+         'Core/Interval',
          'Core/Math',
          'Core/Matrix4'
      ], function(
@@ -19,6 +20,7 @@ defineSuite([
          GeographicProjection,
          Extent,
          Intersect,
+         Interval,
          CesiumMath,
          Matrix4) {
     "use strict";
@@ -222,8 +224,8 @@ defineSuite([
         var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
         var position = new Cartesian3(-2.0, 1.0, 0.0);
         var direction = Cartesian3.UNIT_X;
-        var expected = new Cartesian2(1.0, 3.0);
-        expect(bs.distance(position, direction)).toEqual(expected);
+        var expected = new Interval(1.0, 3.0);
+        expect(bs.getPlaneDistances(position, direction)).toEqual(expected);
     });
 
     it('static clone throws with no parameter', function() {
@@ -287,21 +289,21 @@ defineSuite([
         }).toThrow();
     });
 
-    it('static distance throws without a sphere', function() {
+    it('static getPlaneDistances throws without a sphere', function() {
         expect(function() {
-            BoundingSphere.distance();
+            BoundingSphere.getPlaneDistances();
         }).toThrow();
     });
 
-    it('static distance throws without a position', function() {
+    it('static getPlaneDistances throws without a position', function() {
         expect(function() {
-            BoundingSphere.distance(new BoundingSphere());
+            BoundingSphere.getPlaneDistances(new BoundingSphere());
         }).toThrow();
     });
 
-    it('static distance throws without a direction', function() {
+    it('static getPlaneDistances throws without a direction', function() {
         expect(function() {
-            BoundingSphere.distance(new BoundingSphere(), new Cartesian3());
+            BoundingSphere.getPlaneDistances(new BoundingSphere(), new Cartesian3());
         }).toThrow();
     });
 });

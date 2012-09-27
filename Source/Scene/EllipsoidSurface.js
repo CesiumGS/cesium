@@ -718,13 +718,10 @@ define([
 
             uniformMap2.center3D = rtc2;
 
-            var uniformState = context.getUniformState();
             var viewMatrix = frameState.camera.getViewMatrix();
-            var projectionMatrix = uniformState.getProjection();
 
             var centerEye2 = viewMatrix.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
             uniformMap2.modifiedModelView = viewMatrix.setColumn(3, centerEye2, uniformMap2.modifiedModelView);
-            uniformMap2.modifiedModelViewProjection = Matrix4.multiply(projectionMatrix, uniformMap2.modifiedModelView, uniformMap2.modifiedModelViewProjection);
 
             uniformMap2.dayTextures[0] = context.getDefaultTexture();
             uniformMap2.dayTextureTranslationAndScale[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
@@ -793,9 +790,6 @@ define([
             u_modifiedModelView : function() {
                 return this.modifiedModelView;
             },
-            u_modifiedModelViewProjection : function() {
-                return this.modifiedModelViewProjection;
-            },
             u_dayTextures : function() {
                 return this.dayTextures;
             },
@@ -829,7 +823,6 @@ define([
 
             center3D : undefined,
             modifiedModelView : new Matrix4(),
-            modifiedModelViewProjection : new Matrix4(),
             tileExtent : new Cartesian4(),
 
             dayTextures : [],
@@ -855,7 +848,6 @@ define([
 
     var float32ArrayScratch = new Float32Array(1);
     var modifiedModelViewScratch = new Matrix4();
-    var modifiedModelViewProjectionScratch = new Matrix4();
     var tileExtentScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian4();
@@ -971,9 +963,7 @@ define([
     }
 
     function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState) {
-        var uniformState = context.getUniformState();
         var viewMatrix = frameState.camera.getViewMatrix();
-        var projectionMatrix = uniformState.getProjection();
 
         var maxTextures = context.getMaximumTextureImageUnits();
 
@@ -1051,7 +1041,6 @@ define([
 
                 Matrix4.multiplyByVector(viewMatrix, centerEye, centerEye);
                 viewMatrix.setColumn(3, centerEye, modifiedModelViewScratch);
-                Matrix4.multiply(projectionMatrix, modifiedModelViewScratch, modifiedModelViewProjectionScratch);
 
                 var tileImageryCollection = tile.imagery;
                 var imageryIndex = 0;
@@ -1080,7 +1069,6 @@ define([
                     uniformMap.southMercatorYLow = southMercatorYLow;
                     uniformMap.oneOverMercatorHeight = oneOverMercatorHeight;
                     Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
-                    Matrix4.clone(modifiedModelViewProjectionScratch, uniformMap.modifiedModelViewProjection);
 
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                         var tileImagery = tileImageryCollection[imageryIndex];
@@ -1115,11 +1103,10 @@ define([
                     var boundingVolume = tile.boundingSphere3D;
 
                     if (frameState.mode !== SceneMode.SCENE3D) {
-                        boundingVolume = boundingSphereScratch;
                         // TODO: If we show terrain heights in Columbus View, the bounding sphere
                         //       needs to be expanded to include the heights.
-                        BoundingSphere.fromExtent2D(tile.extent, frameState.scene2D.projection, boundingVolume);
-                        boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
+                        boundingVolume = BoundingSphere.fromExtent2D(tile.extent, frameState.scene2D.projection);
+                        boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
 
                         if (frameState.mode === SceneMode.MORPHING) {
                             boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
