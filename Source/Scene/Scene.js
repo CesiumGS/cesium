@@ -361,8 +361,9 @@ define([
                 near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)) {
             frustumCommandsList.length = numFrustums;
             for (var m = 0; m < numFrustums; ++m) {
-                var curNear = Math.pow(farToNearRatio, m) * near;
-                var curFar = farToNearRatio * curNear;
+                var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
+                var curFar = Math.min(far, farToNearRatio * curNear);
+                curNear *= 0.99;
 
                 var frustumCommands = frustumCommandsList[m];
                 if (typeof frustumCommands === 'undefined') {
@@ -405,7 +406,8 @@ define([
             color : Color.BLACK
         });
         var clearDepth = context.createClearState({
-            depth : 1.0
+            depth : 1.0,
+            stencil : 0.0
         });
         context.clear(clearColor);
 
