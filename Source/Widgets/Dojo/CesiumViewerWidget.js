@@ -657,6 +657,8 @@ define([
                 case 'W'.charCodeAt(0):
                     if (imageryLayerCollection.contains(wamiLayer)) {
                         imageryLayerCollection.remove(wamiLayer, false);
+                    } else {
+                        imageryLayerCollection.add(wamiLayer);
                     }
                     break;
                 case 'T'.charCodeAt(0):
