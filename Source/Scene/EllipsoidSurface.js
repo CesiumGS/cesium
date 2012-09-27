@@ -712,11 +712,11 @@ define([
 
             var uniformState = context.getUniformState();
             var viewMatrix = frameState.camera.getViewMatrix();
-            var projectionMatrix = uniformState.getProjection();
+            //var projectionMatrix = uniformState.getProjection();
 
             var centerEye2 = viewMatrix.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
             uniformMap2.modifiedModelView = viewMatrix.setColumn(3, centerEye2, uniformMap2.modifiedModelView);
-            uniformMap2.modifiedModelViewProjection = Matrix4.multiply(projectionMatrix, uniformMap2.modifiedModelView, uniformMap2.modifiedModelViewProjection);
+            //uniformMap2.modifiedModelViewProjection = Matrix4.multiply(projectionMatrix, uniformMap2.modifiedModelView, uniformMap2.modifiedModelViewProjection);
 
             uniformMap2.dayTextures[0] = context.getDefaultTexture();
             uniformMap2.dayTextureTranslationAndScale[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
@@ -785,9 +785,9 @@ define([
             u_modifiedModelView : function() {
                 return this.modifiedModelView;
             },
-            u_modifiedModelViewProjection : function() {
-                return this.modifiedModelViewProjection;
-            },
+//            u_modifiedModelViewProjection : function() {
+//                return this.modifiedModelViewProjection;
+//            },
             u_dayTextures : function() {
                 return this.dayTextures;
             },
@@ -821,7 +821,7 @@ define([
 
             center3D : undefined,
             modifiedModelView : new Matrix4(),
-            modifiedModelViewProjection : new Matrix4(),
+//            modifiedModelViewProjection : new Matrix4(),
             tileExtent : new Cartesian4(),
 
             dayTextures : [],
@@ -965,7 +965,7 @@ define([
     function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState) {
         var uniformState = context.getUniformState();
         var viewMatrix = frameState.camera.getViewMatrix();
-        var projectionMatrix = uniformState.getProjection();
+        //var projectionMatrix = uniformState.getProjection();
 
         var maxTextures = context.getMaximumTextureImageUnits();
 
@@ -1043,7 +1043,7 @@ define([
 
                 Matrix4.multiplyByVector(viewMatrix, centerEye, centerEye);
                 viewMatrix.setColumn(3, centerEye, modifiedModelViewScratch);
-                Matrix4.multiply(projectionMatrix, modifiedModelViewScratch, modifiedModelViewProjectionScratch);
+                //Matrix4.multiply(projectionMatrix, modifiedModelViewScratch, modifiedModelViewProjectionScratch);
 
                 var tileImageryCollection = tile.imagery;
                 var imageryIndex = 0;
@@ -1072,7 +1072,7 @@ define([
                     uniformMap.southMercatorYLow = southMercatorYLow;
                     uniformMap.oneOverMercatorHeight = oneOverMercatorHeight;
                     Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
-                    Matrix4.clone(modifiedModelViewProjectionScratch, uniformMap.modifiedModelViewProjection);
+                    //Matrix4.clone(modifiedModelViewProjectionScratch, uniformMap.modifiedModelViewProjection);
 
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                         var tileImagery = tileImageryCollection[imageryIndex];
