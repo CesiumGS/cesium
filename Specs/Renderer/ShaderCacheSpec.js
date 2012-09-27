@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
          'Renderer/ShaderCache',
-         '../Specs/createContext',
-         '../Specs/destroyContext'
+         'Specs/createContext',
+         'Specs/destroyContext'
      ], function(
          ShaderCache,
          createContext,

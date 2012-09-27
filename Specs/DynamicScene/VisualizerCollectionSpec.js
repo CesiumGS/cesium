@@ -4,8 +4,8 @@ defineSuite([
              'Core/JulianDate',
              'DynamicScene/CzmlDefaults',
              'Scene/Scene',
-             '../Specs/createScene',
-             '../Specs/destroyScene'
+             'Specs/createScene',
+             'Specs/destroyScene'
             ], function(
               VisualizerCollection,
               JulianDate,

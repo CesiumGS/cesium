@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
-         '../Specs/createContext',
-         '../Specs/destroyContext',
+         'Specs/createContext',
+         'Specs/destroyContext',
          'Core/Cartesian2',
          'Core/PrimitiveType',
          'Renderer/BufferUsage',

@@ -1882,6 +1882,7 @@ define([
 
     /**
      * DOC_TBA
+     * @memberof ShaderProgram
      *
      * @return {Object} DOC_TBA
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
@@ -1892,6 +1893,7 @@ define([
 
     /**
      * DOC_TBA
+     * @memberof ShaderProgram
      *
      * @return {Number} DOC_TBA
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
@@ -1902,6 +1904,7 @@ define([
 
     /**
      * DOC_TBA
+     * @memberof ShaderProgram
      *
      * @return {Object} DOC_TBA
      *
@@ -1915,6 +1918,7 @@ define([
 
     /**
      * DOC_TBA
+     * @memberof ShaderProgram
      *
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      *
@@ -1951,8 +1955,6 @@ define([
         var automaticUniforms = this._automaticUniforms;
 
         if (uniformMap) {
-            uniformState.setModel(uniformMap.u_model ? uniformMap.u_model() : Matrix4.IDENTITY);
-
             for (var uniform in manualUniforms) {
                 if (manualUniforms.hasOwnProperty(uniform)) {
                     manualUniforms[uniform].value = uniformMap[uniform]();
@@ -1994,6 +1996,7 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * @memberof ShaderProgram
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
@@ -2010,6 +2013,7 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * @memberof ShaderProgram
      *
      * @return {undefined}
      *
@@ -2029,6 +2033,7 @@ define([
 
     /**
      * DOC_TBA
+     * @memberof ShaderProgram
      */
     ShaderProgram.prototype.release = function() {
         if (this._cachedShader) {

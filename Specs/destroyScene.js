@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../Specs/destroyCanvas'
+        'Specs/destroyCanvas'
     ], function(
         destroyCanvas) {
     "use strict";

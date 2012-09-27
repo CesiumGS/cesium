@@ -1,7 +1,7 @@
 /*global define*/
 define([
         'Scene/Scene',
-        '../Specs/createCanvas'
+        'Specs/createCanvas'
     ], function(
         Scene,
         createCanvas) {
