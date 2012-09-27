@@ -77,7 +77,7 @@ vec4 getPositionColumbusViewMode(vec3 position3DWC)
     // TODO: RTC in Columbus View
     float yPositionFraction = get2DYPositionFraction();
     vec4 position2DWC = vec4(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
-    return czm_projection * u_modifiedModelView * position2DWC;
+    return czm_modelViewProjection * position2DWC;
 }
 
 vec4 getPositionMorphingMode(vec3 position3DWC)
@@ -86,7 +86,7 @@ vec4 getPositionMorphingMode(vec3 position3DWC)
     float yPositionFraction = get2DYPositionFraction();
     vec3 position2DWC = vec3(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)));
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, position3DWC, u_morphTime);
-    return czm_projection * u_modifiedModelView * morphPosition;
+    return czm_modelViewProjection * morphPosition;
 }
 
 void main() 
