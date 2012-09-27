@@ -119,24 +119,17 @@ defineSuite(['ThirdParty/when'], function(when) {
         expect(capturedError).toEqual('importanterror');
     });
 
-    it('throws when resolving or rejecting after resolving', function() {
+    // previous versions of when.js would throw when resolving or rejecting multiple times.
+    it('ignores when resolving or rejecting after resolving', function() {
         resolver.resolve(1);
-        expect(function() {
-            resolver.resolve(5);
-        }).toThrow();
-        expect(function() {
-            resolver.reject('e');
-        }).toThrow();
+        resolver.resolve(5);
+        resolver.reject('e');
     });
 
-    it('throws when resolving or rejecting after rejecting', function() {
+    it('ignores when resolving or rejecting after rejecting', function() {
         resolver.reject('2');
-        expect(function() {
-            resolver.resolve(5);
-        }).toThrow();
-        expect(function() {
-            resolver.reject('e');
-        }).toThrow();
+        resolver.resolve(5);
+        resolver.reject('e');
     });
 
     it('can handle resolving to another promise that resolves', function() {
