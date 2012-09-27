@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Construct and apply materials to rectangular, complex conic, and custom sensors.">
+    <meta name="description" content="Construct and apply materials to rectangular and custom sensors.">
     <title>Cesium Demo</title>
     <script>
     var Sandcastle = {};
@@ -40,6 +40,7 @@
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
 <body class="claro">
+
 <style>
 body {
     background: #000;
@@ -122,70 +123,6 @@ require([
         customSensor.setDirections(directions);
     }
     
-    function addComplexConicSensor(sensors, ellipsoid, scene) {
-        var complexConicSensor = sensors.addComplexConic();
-        Sandcastle.declare(complexConicSensor);  // For highlighting in Sandcastle.
-
-        // Complex conic sensor - Works with ANGLE turned off.
-        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
-        modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
-        complexConicSensor.modelMatrix = modelMatrix;
-        complexConicSensor.radius = 20000000.0;
-        complexConicSensor.outerHalfAngle = Cesium.Math.toRadians(30.0);
-        complexConicSensor.innerHalfAngle = Cesium.Math.toRadians(20.0);
-
-        // Apply a distance interval material to the conic sensor
-        var distanceMaterial = new Cesium.DistanceIntervalMaterial({
-            intervals : [
-                {
-                    distance : 1500000.0,
-                    color : {
-                        red : 1.0,
-                        green : 0.0,
-                        blue : 0.0,
-                        alpha : 0.5
-                    }
-                }, {
-                    distance : 2500000.0,
-                    color : {
-                        red : 0.0,
-                        green : 1.0,
-                        blue : 0.0,
-                        alpha : 0.5
-                    }
-                }, {
-                    distance : 30000000.0,
-                    color : {
-                        red : 0.0,
-                        green : 0.0,
-                        blue : 1.0,
-                        alpha : 0.5
-                    }
-                }
-            ]
-        });
-        
-        complexConicSensor.outerMaterial = distanceMaterial;
-        complexConicSensor.innerMaterial = distanceMaterial;
-        complexConicSensor.capMaterial = distanceMaterial;
-    }
-    
-    function addComplexConicWithClockAngles(sensors, ellipsoid, scene) {
-        var complexConicSensor2 = sensors.addComplexConic();
-        Sandcastle.declare(complexConicSensor2); // For highlighting in Sandcastle.
-        
-        // Draw a complex conic sensor with clock angles
-        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
-        modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
-        
-        complexConicSensor2.modelMatrix = modelMatrix;
-        complexConicSensor2.outerHalfAngle = Cesium.Math.toRadians(30.0);
-        complexConicSensor2.innerHalfAngle = Cesium.Math.toRadians(20.0);
-        complexConicSensor2.maximumClockAngle = Cesium.Math.toRadians(45.0);
-        complexConicSensor2.minimumClockAngle = Cesium.Math.toRadians(-45.0);
-        complexConicSensor2.radius = 20000000.0;
-    }
-    
     function createButtons(widget, sensors) {
         var ellipsoid = widget.ellipsoid;
         var scene = widget.scene;
@@ -209,25 +146,10 @@ require([
                 addCustomSensor(sensors, ellipsoid, scene); 
             }
         }));
-       
-        sensorMenu.addChild(new MenuItem({
-            label: 'Complex Conic',
-            onClick: function() {
-                sensors.removeAll();
-                addComplexConicSensor(sensors, ellipsoid, scene); 
-            }
-        }));
-        
-        sensorMenu.addChild(new MenuItem({
-            label: 'Complex Conic with clock angles',
-            onClick: function() {
-                sensors.removeAll();
-                addComplexConicWithClockAngles(sensors, ellipsoid, scene); 
-            }
-        }));
+
        
         new DropDownButton({
-            label : 'Add a sensor',
+            label : 'Select a sensor',
             dropDown: sensorMenu
         }).placeAt('toolbar');
     }

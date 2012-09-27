@@ -134,6 +134,7 @@ define([
          */
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
+        this._sp = undefined;
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
@@ -377,7 +378,6 @@ define([
         if (typeof this._sp === 'undefined') {
             this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
         }
-
         this._removePolylines();
         this._updateMode(frameState);
 
@@ -470,7 +470,7 @@ define([
         var commands;
         var command;
         polylineBuckets = this._polylineBuckets;
-
+        var sp = this._sp;
         this._commandLists.removeAll();
         if (typeof polylineBuckets !== 'undefined') {
             if (pass.color) {
@@ -496,7 +496,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._uniforms;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsOne;
@@ -511,7 +511,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._uniforms;
                         command.vertexArray = vaColor.va;
                         command.renderState = bucketLocator.rsTwo;
@@ -526,7 +526,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._uniforms;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsThree;
@@ -554,7 +554,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._uniforms;
                         command.vertexArray = vaPickColor.va;
                         command.renderState = bucketLocator.rsPick;
@@ -1087,7 +1087,11 @@ define([
                 var position = positions[j];
                 positionArray[positionIndex] = position.x;
                 positionArray[positionIndex + 1] = position.y;
-                positionArray[positionIndex + 2] = position.z;
+                if (this.mode === SceneMode.SCENE2D) {
+                    positionArray[positionIndex + 2] = 0.0;
+                } else {
+                    positionArray[positionIndex + 2] = position.z;
+                }
                 outlineColorArray[colorIndex] = Color.floatToByte(outlineColor.red);
                 outlineColorArray[colorIndex + 1] = Color.floatToByte(outlineColor.green);
                 outlineColorArray[colorIndex + 2] = Color.floatToByte(outlineColor.blue);
@@ -1409,7 +1413,11 @@ define([
                 var position = positions[i];
                 positionsArray[index] = position.x;
                 positionsArray[index + 1] = position.y;
-                positionsArray[index + 2] = position.z;
+                if (this.mode === SceneMode.SCENE2D) {
+                    positionsArray[index + 2] = 0.0;
+                } else {
+                    positionsArray[index + 2] = position.z;
+                }
                 index += 3;
             }
 
