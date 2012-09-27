@@ -1,5 +1,5 @@
-#ifndef AGI_NOISE
-#define AGI_NOISE 1
+#ifndef czm_NOISE
+#define czm_NOISE 1
 
 /*!
  * Description : Array and textureless GLSL 2D/3D/4D simplex 
@@ -12,52 +12,52 @@
  *               https://github.com/ashima/webgl-noise
  */ 
 
-vec4 _agi_mod289(vec4 x)
+vec4 _czm_mod289(vec4 x)
 {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
-vec3 _agi_mod289(vec3 x)
+vec3 _czm_mod289(vec3 x)
 {
     return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
-vec2 _agi_mod289(vec2 x) 
+vec2 _czm_mod289(vec2 x) 
 {
     return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
-float _agi_mod289(float x)
+float _czm_mod289(float x)
 {
     return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
   
-vec4 _agi_permute(vec4 x)
+vec4 _czm_permute(vec4 x)
 {
-    return _agi_mod289(((x*34.0)+1.0)*x);
+    return _czm_mod289(((x*34.0)+1.0)*x);
 }
 
-vec3 _agi_permute(vec3 x)
+vec3 _czm_permute(vec3 x)
 {
-    return _agi_mod289(((x*34.0)+1.0)*x);
+    return _czm_mod289(((x*34.0)+1.0)*x);
 }
 
-float _agi_permute(float x) 
+float _czm_permute(float x) 
 {
-    return _agi_mod289(((x*34.0)+1.0)*x);
+    return _czm_mod289(((x*34.0)+1.0)*x);
 }
 
-vec4 _agi_taylorInvSqrt(vec4 r)
-{
-    return 1.79284291400159 - 0.85373472095314 * r;
-}
-
-float _agi_taylorInvSqrt(float r)
+vec4 _czm_taylorInvSqrt(vec4 r)
 {
     return 1.79284291400159 - 0.85373472095314 * r;
 }
 
-vec4 _agi_grad4(float j, vec4 ip)
+float _czm_taylorInvSqrt(float r)
+{
+    return 1.79284291400159 - 0.85373472095314 * r;
+}
+
+vec4 _czm_grad4(float j, vec4 ip)
 {
     const vec4 ones = vec4(1.0, 1.0, 1.0, -1.0);
     vec4 p,s;
@@ -81,7 +81,7 @@ vec4 _agi_grad4(float j, vec4 ip)
  * @see <a href="https://github.com/ashima/webgl-noise">https://github.com/ashima/webgl-noise</a>
  * @see Stefan Gustavson's paper <a href="http://www.itn.liu.se/~stegu/simplexnoise/simplexnoise.pdf">Simplex noise demystified</a>
  */  
-float agi_snoise(vec2 v)
+float czm_snoise(vec2 v)
 {
     const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
                         0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
@@ -103,8 +103,8 @@ float agi_snoise(vec2 v)
     x12.xy -= i1;
 
     // Permutations
-    i = _agi_mod289(i); // Avoid truncation effects in permutation
-    vec3 p = _agi_permute( _agi_permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+    i = _czm_mod289(i); // Avoid truncation effects in permutation
+    vec3 p = _czm_permute( _czm_permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
 
     vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
     m = m*m ;
@@ -128,7 +128,7 @@ float agi_snoise(vec2 v)
     return 130.0 * dot(m, g);
 }
 
-float agi_snoise(vec3 v)
+float czm_snoise(vec3 v)
 { 
     const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
     const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
@@ -152,8 +152,8 @@ float agi_snoise(vec3 v)
     vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
 
     // Permutations
-    i = _agi_mod289(i); 
-    vec4 p = _agi_permute( _agi_permute( _agi_permute( 
+    i = _czm_mod289(i); 
+    vec4 p = _czm_permute( _czm_permute( _czm_permute( 
                 i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
               + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
               + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
@@ -190,7 +190,7 @@ float agi_snoise(vec3 v)
     vec3 p3 = vec3(a1.zw,h.w);
 
     //Normalise gradients
-    vec4 norm = _agi_taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+    vec4 norm = _czm_taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
     p0 *= norm.x;
     p1 *= norm.y;
     p2 *= norm.z;
@@ -203,7 +203,7 @@ float agi_snoise(vec3 v)
                                 dot(p2,x2), dot(p3,x3) ) );
 }
 
-float agi_snoise(vec4 v)
+float czm_snoise(vec4 v)
 {
     const vec4  C = vec4( 0.138196601125011,  // (5 - sqrt(5))/20  G4
                           0.276393202250021,  // 2 * G4
@@ -248,9 +248,9 @@ float agi_snoise(vec4 v)
     vec4 x4 = x0 + C.wwww;
 
     // Permutations
-    i = _agi_mod289(i); 
-    float j0 = _agi_permute( _agi_permute( _agi_permute( _agi_permute(i.w) + i.z) + i.y) + i.x);
-    vec4 j1 = _agi_permute( _agi_permute( _agi_permute( _agi_permute (
+    i = _czm_mod289(i); 
+    float j0 = _czm_permute( _czm_permute( _czm_permute( _czm_permute(i.w) + i.z) + i.y) + i.x);
+    vec4 j1 = _czm_permute( _czm_permute( _czm_permute( _czm_permute (
                i.w + vec4(i1.w, i2.w, i3.w, 1.0 ))
              + i.z + vec4(i1.z, i2.z, i3.z, 1.0 ))
              + i.y + vec4(i1.y, i2.y, i3.y, 1.0 ))
@@ -260,19 +260,19 @@ float agi_snoise(vec4 v)
     // 7*7*6 = 294, which is close to the ring size 17*17 = 289.
     vec4 ip = vec4(1.0/294.0, 1.0/49.0, 1.0/7.0, 0.0) ;
 
-    vec4 p0 = _agi_grad4(j0,   ip);
-    vec4 p1 = _agi_grad4(j1.x, ip);
-    vec4 p2 = _agi_grad4(j1.y, ip);
-    vec4 p3 = _agi_grad4(j1.z, ip);
-    vec4 p4 = _agi_grad4(j1.w, ip);
+    vec4 p0 = _czm_grad4(j0,   ip);
+    vec4 p1 = _czm_grad4(j1.x, ip);
+    vec4 p2 = _czm_grad4(j1.y, ip);
+    vec4 p3 = _czm_grad4(j1.z, ip);
+    vec4 p4 = _czm_grad4(j1.w, ip);
 
     // Normalise gradients
-    vec4 norm = _agi_taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+    vec4 norm = _czm_taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
     p0 *= norm.x;
     p1 *= norm.y;
     p2 *= norm.z;
     p3 *= norm.w;
-    p4 *= _agi_taylorInvSqrt(dot(p4,p4));
+    p4 *= _czm_taylorInvSqrt(dot(p4,p4));
 
     // Mix contributions from the five corners
     vec3 m0 = max(0.6 - vec3(dot(x0,x0), dot(x1,x1), dot(x2,x2)), 0.0);
@@ -303,7 +303,7 @@ float agi_snoise(vec4 v)
 //}
 
 // Permutation polynomial: (34x^2 + x) mod 289
-vec3 _agi_permute289(vec3 x)
+vec3 _czm_permute289(vec3 x)
 {
     return mod((34.0 * x + 1.0) * x, 289.0);
 }
@@ -313,12 +313,12 @@ vec3 _agi_permute289(vec3 x)
  *
  * Implemented by Stefan Gustavson, and distributed under the MIT License.  {@link http://openglinsights.git.sourceforge.net/git/gitweb.cgi?p=openglinsights/openglinsights;a=tree;f=proceduraltextures}
  *
- * @name agi_cellular
+ * @name czm_cellular
  * @glslFunction
  *
  * @see Stefan Gustavson's chapter, <i>Procedural Textures in GLSL</i>, in <a href="http://www.openglinsights.com/">OpenGL Insights</a>.
  */  
-vec2 agi_cellular(vec2 P)
+vec2 czm_cellular(vec2 P)
 // Cellular noise, returning F1 and F2 in a vec2.
 // Standard 3x3 search window for good F1 and F2 values
 {
@@ -329,20 +329,20 @@ vec2 agi_cellular(vec2 P)
     vec2 Pf = fract(P);
     vec3 oi = vec3(-1.0, 0.0, 1.0);
     vec3 of = vec3(-0.5, 0.5, 1.5);
-    vec3 px = _agi_permute289(Pi.x + oi);
-    vec3 p = _agi_permute289(px.x + Pi.y + oi); // p11, p12, p13
+    vec3 px = _czm_permute289(Pi.x + oi);
+    vec3 p = _czm_permute289(px.x + Pi.y + oi); // p11, p12, p13
     vec3 ox = fract(p*K) - Ko;
     vec3 oy = mod(floor(p*K),7.0)*K - Ko;
     vec3 dx = Pf.x + 0.5 + jitter*ox;
     vec3 dy = Pf.y - of + jitter*oy;
     vec3 d1 = dx * dx + dy * dy; // d11, d12 and d13, squared
-    p = _agi_permute289(px.y + Pi.y + oi); // p21, p22, p23
+    p = _czm_permute289(px.y + Pi.y + oi); // p21, p22, p23
     ox = fract(p*K) - Ko;
     oy = mod(floor(p*K),7.0)*K - Ko;
     dx = Pf.x - 0.5 + jitter*ox;
     dy = Pf.y - of + jitter*oy;
     vec3 d2 = dx * dx + dy * dy; // d21, d22 and d23, squared
-    p = _agi_permute289(px.z + Pi.y + oi); // p31, p32, p33
+    p = _czm_permute289(px.z + Pi.y + oi); // p31, p32, p33
     ox = fract(p*K) - Ko;
     oy = mod(floor(p*K),7.0)*K - Ko;
     dx = Pf.x - 1.5 + jitter*ox;
@@ -367,7 +367,7 @@ vec2 agi_cellular(vec2 P)
 // Cellular noise, returning F1 and F2 in a vec2 and the
 // 2D vectors to each of the two closest points in a vec4.
 // Standard 3x3 search window for good F1 and F2 values.
-void agi_cellular(in vec2 P, out vec2 F, out vec4 d1d2)
+void czm_cellular(in vec2 P, out vec2 F, out vec4 d1d2)
 {
 #define K 0.142857142857 // 1/7
 #define Ko 0.428571428571 // 3/7
@@ -376,20 +376,20 @@ void agi_cellular(in vec2 P, out vec2 F, out vec4 d1d2)
     vec2 Pf = fract(P);
     vec3 oi = vec3(-1.0, 0.0, 1.0);
     vec3 of = vec3(-0.5, 0.5, 1.5);
-    vec3 px = _agi_permute289(Pi.x + oi);
-    vec3 p = _agi_permute289(px.x + Pi.y + oi); // p11, p12, p13
+    vec3 px = _czm_permute289(Pi.x + oi);
+    vec3 p = _czm_permute289(px.x + Pi.y + oi); // p11, p12, p13
     vec3 ox = fract(p*K) - Ko;
     vec3 oy = mod(floor(p*K),7.0)*K - Ko;
     vec3 d1x = Pf.x + 0.5 + jitter*ox;
     vec3 d1y = Pf.y - of + jitter*oy;
     vec3 d1 = d1x * d1x + d1y * d1y; // d11, d12 and d13, squared
-    p = _agi_permute289(px.y + Pi.y + oi); // p21, p22, p23
+    p = _czm_permute289(px.y + Pi.y + oi); // p21, p22, p23
     ox = fract(p*K) - Ko;
     oy = mod(floor(p*K),7.0)*K - Ko;
     vec3 d2x = Pf.x - 0.5 + jitter*ox;
     vec3 d2y = Pf.y - of + jitter*oy;
     vec3 d2 = d2x * d2x + d2y * d2y; // d21, d22 and d23, squared
-    p = _agi_permute289(px.z + Pi.y + oi); // p31, p32, p33
+    p = _czm_permute289(px.z + Pi.y + oi); // p31, p32, p33
     ox = fract(p*K) - Ko;
     oy = mod(floor(p*K),7.0)*K - Ko;
     vec3 d3x = Pf.x - 1.5 + jitter*ox;

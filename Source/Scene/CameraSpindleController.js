@@ -90,7 +90,7 @@ define([
          */
         this.mode = CameraSpindleControllerMode.AUTO;
 
-        var radius = this._ellipsoid.getRadii().getMaximumComponent();
+        var radius = this._ellipsoid.getMaximumRadius();
         this._zoomFactor = 5.0;
         this._minimumZoomRate = 20.0;
         this._maximumZoomRate = FAR;
@@ -159,7 +159,7 @@ define([
     CameraSpindleController.prototype.setEllipsoid = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
-        var radius = ellipsoid.getRadii().getMaximumComponent();
+        var radius = ellipsoid.getMaximumRadius();
         this._ellipsoid = ellipsoid;
         this._rotateFactor = 1.0 / radius;
         this._rotateRateRangeAdjustment = radius;

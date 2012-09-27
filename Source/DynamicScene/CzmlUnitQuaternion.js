@@ -86,7 +86,7 @@ define([
                 tmpQuaternion.multiply(quaternion0Conjugate, tmpQuaternion);
 
                 if (tmpQuaternion.w < 0) {
-                    tmpQuaternion = tmpQuaternion.negate();
+                    tmpQuaternion.negate(tmpQuaternion);
                 }
 
                 tmpQuaternion.getAxis(axis);
@@ -164,7 +164,7 @@ define([
                 Quaternion.fromAxisAngle(rotationVector, magnitude, tmpQuaternion);
             }
 
-            return result.normalize(tmpQuaternion.multiply(quaternion0, result));
+            return result.normalize(tmpQuaternion.multiply(quaternion0, result), result);
         }
     };
 

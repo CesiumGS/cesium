@@ -67,26 +67,26 @@ void main(void)
 {
     // Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)
     vec3 v3Pos = position.xyz;
-    vec3 v3Ray = v3Pos - agi_viewerPositionWC;
+    vec3 v3Ray = v3Pos - czm_viewerPositionWC;
     float fFar = length(v3Ray);
     v3Ray /= fFar;
 
 #ifdef SKY_FROM_SPACE
     // Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)
-    float B = 2.0 * dot(agi_viewerPositionWC, v3Ray);
+    float B = 2.0 * dot(czm_viewerPositionWC, v3Ray);
     float C = fCameraHeight2 - fOuterRadius2;
     float fDet = max(0.0, B*B - 4.0 * C);
     float fNear = 0.5 * (-B - sqrt(fDet));
 
     // Calculate the ray's starting position, then calculate its scattering offset
-    vec3 v3Start = agi_viewerPositionWC + v3Ray * fNear;
+    vec3 v3Start = czm_viewerPositionWC + v3Ray * fNear;
     fFar -= fNear;
     float fStartAngle = dot(v3Ray, v3Start) / fOuterRadius;
     float fStartDepth = exp(-1.0 / fScaleDepth);
     float fStartOffset = fStartDepth*scale(fStartAngle);
 #else // SKY_FROM_ATMOSPHERE
     // Calculate the ray's starting position, then calculate its scattering offset
-    vec3 v3Start = agi_viewerPositionWC;
+    vec3 v3Start = czm_viewerPositionWC;
     float fHeight = length(v3Start);
     float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fCameraHeight));
     float fStartAngle = dot(v3Ray, v3Start) / fHeight;
@@ -105,7 +105,7 @@ void main(void)
     {
         float fHeight = length(v3SamplePoint);
         float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));
-        float fLightAngle = dot(agi_sunDirectionWC, v3SamplePoint) / fHeight;
+        float fLightAngle = dot(czm_sunDirectionWC, v3SamplePoint) / fHeight;
         float fCameraAngle = dot(v3Ray, v3SamplePoint) / fHeight;
         float fScatter = (fStartOffset + fDepth*(scale(fLightAngle) - scale(fCameraAngle)));
         vec3 v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));
@@ -116,7 +116,7 @@ void main(void)
     // Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader
     v_mieColor = v3FrontColor * fKmESun;
     v_rayleighColor = v3FrontColor * (v3InvWavelength * fKrESun);
-    v_toCamera = agi_viewerPositionWC - v3Pos;
-    v_positionEC = (agi_modelView * position).xyz;
-    gl_Position = agi_modelViewProjection * position;
+    v_toCamera = czm_viewerPositionWC - v3Pos;
+    v_positionEC = (czm_modelView * position).xyz;
+    gl_Position = czm_modelViewProjection * position;
 }

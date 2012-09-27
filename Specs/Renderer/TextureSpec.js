@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
-         '../Specs/createContext',
-         '../Specs/destroyContext',
+         'Specs/createContext',
+         'Specs/destroyContext',
          'Core/Cartesian2',
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
@@ -443,7 +443,7 @@ defineSuite([
         expect(function() {
             texture = context.createTexture2D({
                 source : blueImage,
-                pixelFormat :'invalid PixelFormat'
+                pixelFormat : 'invalid PixelFormat'
             });
         }).toThrow();
     });
@@ -452,15 +452,62 @@ defineSuite([
         expect(function() {
             texture = context.createTexture2D({
                 source : blueImage,
-                pixelFormat :PixelFormat.RGBA,
+                pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : 'invalid pixelDatatype'
             });
         }).toThrow();
     });
 
+    it('throws when creating if pixelFormat is DEPTH_COMPONENT and pixelDatatype is not UNSIGNED_SHORT or UNSIGNED_INT', function() {
+        expect(function() {
+            texture = context.createTexture2D({
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+            });
+        }).toThrow();
+    });
+
+    it('throws when creating if pixelFormat is DEPTH_STENCIL and pixelDatatype is not UNSIGNED_INT_24_8_WEBGL', function() {
+        expect(function() {
+            texture = context.createTexture2D({
+                pixelFormat : PixelFormat.DEPTH_STENCIL,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+            });
+        }).toThrow();
+    });
+
+    it('throws when creating if pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, and source is provided', function() {
+        expect(function() {
+            texture = context.createTexture2D({
+                source : blueImage,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+        }).toThrow();
+    });
+
+    it('throws when creating if pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, and WEBGL_depth_texture is not supported', function() {
+        if (!context.getDepthTexture()) {
+            expect(function() {
+                texture = context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                });
+            }).toThrow();
+        }
+    });
+
     it('fails to create from the framebuffer (PixelFormat)', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer('invalid PixelFormat');
+        }).toThrow();
+    });
+
+    it('throws when creating from the framebuffer if PixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL', function() {
+        expect(function() {
+            texture = context.createTexture2DFromFramebuffer(PixelFormat.DEPTH_COMPONENT);
         }).toThrow();
     });
 
@@ -486,6 +533,21 @@ defineSuite([
         expect(function() {
             texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, 1, context.getCanvas().clientHeight + 1);
         }).toThrow();
+    });
+
+    it('throws when copying to a texture from a framebuffer with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
+        if (context.getDepthTexture()) {
+            texture = context.createTexture2D({
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+
+            expect(function() {
+                texture.copyFromFramebuffer();
+            }).toThrow();
+        }
     });
 
     it('fails to copy from the frame buffer (xOffset)', function() {
@@ -588,6 +650,25 @@ defineSuite([
         }).toThrow();
     });
 
+    it('throws when copying to a texture with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
+        if (context.getDepthTexture()) {
+            texture = context.createTexture2D({
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+
+            expect(function() {
+                texture.copyFrom({
+                    arrayBufferView : new Uint16Array([0]),
+                    width : 1,
+                    height : 1
+                });
+            }).toThrow();
+        }
+    });
+
     it('fails to copy from an image (source)', function() {
         texture = context.createTexture2D({
             source : blueImage
@@ -642,6 +723,21 @@ defineSuite([
         expect(function() {
             texture.copyFrom(image);
         }).toThrow();
+    });
+
+    it('throws when generating mipmaps with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
+        if (context.getDepthTexture()) {
+            texture = context.createTexture2D({
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            });
+
+            expect(function() {
+                texture.generateMipmap();
+            }).toThrow();
+        }
     });
 
     it('fails to generate mipmaps (width)', function() {

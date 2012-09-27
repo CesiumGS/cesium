@@ -1,9 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         '../Specs/createContext',
-         '../Specs/destroyContext',
+         'Specs/createContext',
+         'Specs/destroyContext',
          'Core/Cartesian3',
          'Core/PrimitiveType',
+         'Core/Color',
          'Renderer/BufferUsage',
          'Renderer/PixelDatatype',
          'Renderer/PixelFormat',
@@ -15,6 +16,7 @@ defineSuite([
          destroyContext,
          Cartesian3,
          PrimitiveType,
+         Color,
          BufferUsage,
          PixelDatatype,
          PixelFormat,
@@ -66,18 +68,29 @@ defineSuite([
         }, 'Load .png file(s) for texture test.', 3000);
     });
 
-    it('creates with defaults', function() {
+    it('gets the pixel format', function() {
         cubeMap = context.createCubeMap({
             width : 16,
             height : 16
         });
 
         expect(cubeMap.getPixelFormat()).toEqual(PixelFormat.RGBA);
-        expect(cubeMap.getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
+        expect(cubeMap.getPositiveX().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getNegativeX().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getPositiveY().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getNegativeY().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getPositiveZ().getPixelFormat()).toEqual(PixelFormat.RGBA);
+        expect(cubeMap.getNegativeZ().getPixelFormat()).toEqual(PixelFormat.RGBA);
     });
 
-    // TODO:  creates from the framebuffer
-    // TODO:  copies from the framebuffer
+    it('gets the pixel datatype', function() {
+        cubeMap = context.createCubeMap({
+            width : 16,
+            height : 16
+        });
+
+        expect(cubeMap.getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
+    });
 
     it('gets the default sampler', function() {
         cubeMap = context.createCubeMap({
@@ -253,6 +266,54 @@ defineSuite([
         sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, -1);
         context.draw(da);
         expect(context.readPixels()).toEqual([0, 0, 127, 127]);
+    });
+
+    it('draws the context default cube map', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'uniform samplerCube u_texture;' +
+            'uniform mediump vec3 u_direction;' +
+            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+        sp = context.createShaderProgram(vs, fs, {
+            position : 0
+        });
+        sp.getAllUniforms().u_texture.value = context.getDefaultCubeMap();
+
+        va = context.createVertexArray();
+        va.addAttribute({
+            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 4
+        });
+
+        var da = {
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va
+        };
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(1, 0, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(-1, 0, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, 1, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, -1, 0);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, 1);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp.getAllUniforms().u_direction.value = new Cartesian3(0, 0, -1);
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
     it('creates a cube map with typed arrays', function() {
@@ -561,6 +622,53 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 0, 0]);
     });
 
+    it('copies from the framebuffer', function() {
+        cubeMap = context.createCubeMap({
+            width : 1,
+            height : 1
+        });
+        cubeMap.getPositiveX().copyFrom(blueImage);
+
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'uniform samplerCube u_cubeMap;' +
+            'void main() { gl_FragColor = textureCube(u_cubeMap, vec3(1.0, 0.0, 0.0)); }';
+        sp = context.createShaderProgram(vs, fs, {
+            position : 0
+        });
+        sp.getAllUniforms().u_cubeMap.value = cubeMap;
+
+        va = context.createVertexArray();
+        va.addAttribute({
+            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 4
+        });
+
+        var da = {
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va
+        };
+
+        // +X is blue
+        context.draw(da);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+
+        // Clear framebuffer to red and copy to +X face
+        context.clear(context.createClearState({
+            color : new Color (1.0, 0.0, 0.0, 1.0)
+        }));
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+        cubeMap.getPositiveX().copyFromFramebuffer();
+
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        // +X is red now
+        context.draw(da);
+        expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+    });
+
     it('draws with a cube map and a texture', function() {
         cubeMap = context.createCubeMap({
             source : {
@@ -709,6 +817,16 @@ defineSuite([
                 width : 16,
                 height : 16,
                 pixelFormat : 'invalid PixelFormat'
+            });
+        }).toThrow();
+    });
+
+    it('throws during creation if pixel format is depth or depth-stencil', function() {
+        expect(function() {
+            cubeMap = context.createCubeMap({
+                width : 16,
+                height : 16,
+                pixelFormat : PixelFormat.DEPTH_COMPONENT
             });
         }).toThrow();
     });

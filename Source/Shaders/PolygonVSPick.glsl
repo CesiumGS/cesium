@@ -6,7 +6,7 @@ uniform float u_height;     // in meters
 
 void main() 
 {
-    vec4 p = agi_columbusViewMorph(vec3(u_height, position2D), position3D, u_morphTime);
+    vec4 p = czm_columbusViewMorph(vec3(u_height, position2D), position3D, u_morphTime);
 
-    gl_Position = agi_modelViewProjection * p;                      // position in clip coordinates
+    gl_Position = czm_modelViewProjection * p;                      // position in clip coordinates
 }

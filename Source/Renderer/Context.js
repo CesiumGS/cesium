@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
@@ -7,7 +8,9 @@ define([
         '../Core/RuntimeError',
         '../Core/PrimitiveType',
         '../Core/WindingOrder',
-        '../Shaders/BuiltinFunctions',
+        '../Core/BoundingRectangle',
+        '../Core/createGuid',
+        '../Core/Matrix4',
         './Buffer',
         './BufferUsage',
         './BlendEquation',
@@ -35,6 +38,7 @@ define([
         './VertexArray',
         './VertexLayout'
     ], function(
+        defaultValue,
         DeveloperError,
         destroyObject,
         Color,
@@ -42,7 +46,9 @@ define([
         RuntimeError,
         PrimitiveType,
         WindingOrder,
-        ShadersBuiltinFunctions,
+        BoundingRectangle,
+        createGuid,
+        Matrix4,
         Buffer,
         BufferUsage,
         BlendEquation,
@@ -70,6 +76,7 @@ define([
         VertexArray,
         VertexLayout) {
     "use strict";
+    /*global Uint8Array*/
 
     function _errorToString(gl, error) {
         var message = 'OpenGL Error:  ';
@@ -188,6 +195,8 @@ define([
             throw new RuntimeError('The browser supports WebGL, but initialization failed.');
         }
 
+        this._id = createGuid();
+
         // Validation and logging disabled by default for speed.
         this._validateFB = false;
         this._validateSP = false;
@@ -223,12 +232,11 @@ define([
         this._aliasedLineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE); // must include 1
         this._aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
         this._maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
-        this._viewport = gl.getParameter(gl.VIEWPORT);
 
         // Query and initialize extensions
-        var textureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
-
         this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
+        this._depthTexture = gl.getExtension('WEBKIT_WEBGL_depth_texture') || gl.getExtension('MOZ_WEBGL_depth_texture');
+        var textureFilterAnisotropic = gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._maximumTextureFilterAnisotropy = textureFilterAnisotropic ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
@@ -243,6 +251,9 @@ define([
         this._us = new UniformState(this);
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
+
+        this._defaultTexture = undefined;
+        this._defaultCubeMap = undefined;
     };
 
     Context.prototype._enableOrDisable = function(glEnum, enable) {
@@ -395,6 +406,18 @@ define([
         this._enableOrDisable(this._gl.DITHER, dither);
     };
 
+    var scratchViewport = new BoundingRectangle();
+    Context.prototype._applyViewport = function(viewport) {
+        if (typeof viewport === 'undefined') {
+            viewport = scratchViewport;
+            viewport.width = this._canvas.clientWidth;
+            viewport.height = this._canvas.clientHeight;
+        }
+
+        this._us.setViewport(viewport);
+        this._gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+    };
+
     Context.prototype._applyRenderState = function(state) {
         this._applyFrontFace(state.frontFace);
         this._applyCull(state.cull);
@@ -410,6 +433,18 @@ define([
         this._applyStencilTest(state.stencilTest);
         this._applySampleCoverage(state.sampleCoverage);
         this._applyDither(state.dither);
+        this._applyViewport(state.viewport);
+    };
+
+    /**
+     * Returns a unique ID for this context.
+     *
+     * @memberof Context
+     *
+     * @returns {String} A unique ID for this context.
+     */
+    Context.prototype.getId = function() {
+        return this._id;
     };
 
     /**
@@ -440,106 +475,6 @@ define([
      */
     Context.prototype.getUniformState = function() {
         return this._us;
-    };
-
-    /**
-     * Returns the viewport, which determines the rectangular region of the canvas that is rendered to.  The viewport contains four
-     * properties: <code>x</code> and <code>y</code>, which define the lower left corner of the viewport in window coordinates
-     * (relative to the canvas), and its <code>width</code> and <code>height</code> in pixels.
-     *
-     * @memberof Context
-     *
-     * @returns The viewport defined by its <code>x</code> and <code>y</code> window coordinates and its <code>width</code> and <code>height</code>.
-     *
-     * @see Context#setViewport
-     * @see Context#getCanvas
-     * @see agi_viewport
-     *
-     * @example
-     * var viewport = context.getViewport();
-     * console.log(viewport.x);
-     * console.log(viewport.y);
-     * console.log(viewport.width);
-     * console.log(viewport.height);
-     */
-    Context.prototype.getViewport = function() {
-        var v = this._viewport;
-        return {
-            x : v[0],
-            y : v[1],
-            width : v[2],
-            height : v[3]
-        };
-    };
-
-    /**
-     * Sets the viewport, which determines the rectangular region of the canvas that is rendered to.  The viewport contains four
-     * properties: <code>x</code> and <code>y</code>, which define the lower left corner of the viewport in window coordinates
-     * (relative to the canvas), and its <code>width</code> and <code>height</code> in pixels.
-     *
-     * @memberof Context
-     *
-     * @param {Object} viewport The new viewport defined by its <code>x</code> and <code>y</code> window coordinates and its <code>width</code> and <code>height</code>.
-     *
-     * @exception {RuntimeError} viewport.width must be less than or equal to the maximum viewport width.
-     * @exception {RuntimeError} viewport.height must be less than or equal to the maximum viewport height.
-     *
-     * @exception {DeveloperError} A viewport with x, y, width, and height properties is required.
-     * @exception {DeveloperError} viewport.width must be greater than or equal to zero.
-     * @exception {DeveloperError} viewport.height must be greater than or equal to zero.
-     *
-     * @see Context#getViewport
-     * @see Context#getMaximumViewportWidth
-     * @see Context#getMaximumViewportHeight
-     * @see Context#getCanvas
-     * @see agi_viewport
-     *
-     * @example
-     * context.setViewport({
-     *     x      : 0,
-     *     y      : 0,
-     *     width  : 640,
-     *     height : 480
-     * });
-     */
-    Context.prototype.setViewport = function(viewport) {
-        if ((typeof viewport === 'undefined') ||
-            (typeof viewport.x === 'undefined') ||
-            (typeof viewport.y === 'undefined') ||
-            (typeof viewport.width === 'undefined') ||
-            (typeof viewport.height === 'undefined')) {
-            throw new DeveloperError('A viewport with x, y, width, and height properties is required.');
-        }
-
-        var x = viewport.x;
-        var y = viewport.y;
-        var w = viewport.width;
-        var h = viewport.height;
-
-        if (w < 0) {
-            throw new DeveloperError('viewport.width must be greater than or equal to zero.');
-        }
-
-        if (w > this.getMaximumViewportWidth()) {
-            throw new RuntimeError('viewport.width must be less than or equal to the maximum viewport width (' + this.getMaximumViewportWidth().toString() + ').  Check getMaximumViewportWidth().');
-        }
-
-        if (h < 0) {
-            throw new DeveloperError('viewport.height must be greater than or equal to zero.');
-        }
-
-        if (h > this.getMaximumViewportHeight()) {
-            throw new RuntimeError('viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
-        }
-
-        var v = this._viewport;
-        if ((x !== v[0]) || (y !== v[1]) || (w !== v[2]) || (h !== v[3])) {
-            v[0] = x;
-            v[1] = y;
-            v[2] = w;
-            v[3] = h;
-            this._gl.viewport(viewport.x, viewport.y, w, h);
-        }
     };
 
     /**
@@ -924,6 +859,20 @@ define([
     };
 
     /**
+     * Returns <code>true</code> if WEBGL_depth_texture is supported.  This extension provides
+     * access to depth textures that, for example, can be attached to framebuffers for shadow mapping.
+     *
+     * @memberof Context
+     *
+     * @returns {Boolean} <code>true</code> if WEBGL_depth_texture is supported; otherwise, <code>false</code>.
+     *
+     * @see <a href='http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/'>WEBGL_depth_texture</a>
+     */
+    Context.prototype.getDepthTexture = function() {
+        return !!this._depthTexture;
+    };
+
+    /**
      * DOC_TBA
      *
      * @memberof Context
@@ -1047,6 +996,60 @@ define([
     };
 
     /**
+     * Returns a 1x1 RGBA texture initialized to [255, 255, 255, 255].  This can
+     * be used as a placeholder texture while other textures are downloaded.
+     *
+     * @return {Texture}
+     *
+     * @memberof Context
+     */
+    Context.prototype.getDefaultTexture = function() {
+        if (this._defaultTexture === undefined) {
+            this._defaultTexture = this.createTexture2D({
+                source : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint8Array([255, 255, 255, 255])
+                }
+            });
+        }
+
+        return this._defaultTexture;
+    };
+
+    /**
+     * Returns a cube map, where each face is a 1x1 RGBA texture initialized to
+     * [255, 255, 255, 255].  This can be used as a placeholder cube map while
+     * other cube maps are downloaded.
+     *
+     * @return {CubeMap}
+     *
+     * @memberof Context
+     */
+    Context.prototype.getDefaultCubeMap = function() {
+        if (this._defaultCubeMap === undefined) {
+            var face = {
+                width : 1,
+                height : 1,
+                arrayBufferView : new Uint8Array([255, 255, 255, 255])
+            };
+
+            this._defaultCubeMap = this.createCubeMap({
+                source : {
+                    positiveX : face,
+                    negativeX : face,
+                    positiveY : face,
+                    negativeY : face,
+                    positiveZ : face,
+                    negativeZ : face
+                }
+            });
+        }
+
+        return this._defaultCubeMap;
+    };
+
+    /**
      * Creates a shader program given the GLSL source for a vertex and fragment shader.
      * <br /><br />
      * The vertex and fragment shader are individually compiled, and then linked together
@@ -1108,7 +1111,7 @@ define([
      * sp = context.createShaderProgram(vs, fs, attributes);            *
      */
     Context.prototype.createShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        return new ShaderProgram(this._gl, this._logShaderCompilation, ShadersBuiltinFunctions, vertexShaderSource, fragmentShaderSource, attributeLocations);
+        return new ShaderProgram(this._gl, this._logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
     };
 
     function createBuffer(gl, bufferTarget, typedArrayOrSizeInBytes, usage) {
@@ -1344,6 +1347,7 @@ define([
      *
      * @return {Texture} DOC_TBA.
      *
+     * @exception {RuntimeError} When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
      * @exception {DeveloperError} description is required.
      * @exception {DeveloperError} description requires a source field to create an initialized texture or width and height fields to create a blank texture.
      * @exception {DeveloperError} Width must be greater than zero.
@@ -1352,6 +1356,9 @@ define([
      * @exception {DeveloperError} Height must be less than or equal to the maximum texture size.
      * @exception {DeveloperError} Invalid description.pixelFormat.
      * @exception {DeveloperError} Invalid description.pixelDatatype.
+     * @exception {DeveloperError} When description.pixelFormat is DEPTH_COMPONENT, description.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.
+     * @exception {DeveloperError} When description.pixelFormat is DEPTH_STENCIL, description.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.
+     * @exception {DeveloperError} When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.
      *
      * @see Context#createTexture2DFromFramebuffer
      * @see Context#createCubeMap
@@ -1396,6 +1403,25 @@ define([
             throw new DeveloperError('Invalid description.pixelDatatype.');
         }
 
+        if ((pixelFormat === PixelFormat.DEPTH_COMPONENT) &&
+            ((pixelDatatype !== PixelDatatype.UNSIGNED_SHORT) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT))) {
+            throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT, description.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.');
+        }
+
+        if ((pixelFormat === PixelFormat.DEPTH_STENCIL) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8_WEBGL)) {
+            throw new DeveloperError('When description.pixelFormat is DEPTH_STENCIL, description.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
+        }
+
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+            if (source) {
+                throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
+            }
+
+            if (!this.getDepthTexture()) {
+                throw new RuntimeError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check getDepthTexture().');
+            }
+        }
+
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
         var preMultiplyAlpha = description.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
@@ -1404,13 +1430,14 @@ define([
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
 
-        // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
         if (source) {
+            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
             if (source.arrayBufferView) {
                 // Source: typed array
                 gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
@@ -1427,19 +1454,21 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
+     * the texture is the same width and height as the framebuffer and contains its contents.
      *
      * @memberof Context
      *
-     * @param {PixelFormat} pixelFormat optional.
-     * @param {PixelFormat} framebufferXOffset optional.
-     * @param {PixelFormat} framebufferYOffset optional.
-     * @param {PixelFormat} width optional.
-     * @param {PixelFormat} height optional.
+     * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
+     * @param {PixelFormat} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
+     * @param {PixelFormat} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
+     * @param {PixelFormat} [width=canvas.clientWidth] The width of the texture in texels.
+     * @param {PixelFormat} [height=canvas.clientHeight] The height of the texture in texels.
      *
-     * @return {Texture} DOC_TBA.
+     * @return {Texture} A texture with contents from the framebuffer.
      *
      * @exception {DeveloperError} Invalid pixelFormat.
+     * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to getCanvas().clientWidth.
@@ -1448,11 +1477,24 @@ define([
      * @see Context#createTexture2D
      * @see Context#createCubeMap
      * @see Context#createSampler
+     *
+     * @example
+     * // Create a texture with the contents of the framebuffer.
+     * var t = context.createTexture2DFromFramebuffer();
      */
     Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height) {
         pixelFormat = pixelFormat || PixelFormat.RGB;
+        framebufferXOffset = defaultValue(framebufferXOffset, 0);
+        framebufferYOffset = defaultValue(framebufferYOffset, 0);
+        width = defaultValue(width, this._canvas.clientWidth);
+        height = defaultValue(height, this._canvas.clientHeight);
+
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
+        }
+
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+            throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
         if (framebufferXOffset < 0) {
@@ -1471,11 +1513,6 @@ define([
             throw new DeveloperError('framebufferYOffset + height must be less than or equal to getCanvas().clientHeight.');
         }
 
-        framebufferXOffset = framebufferXOffset || 0;
-        framebufferYOffset = framebufferYOffset || 0;
-        width = width || this._canvas.clientWidth;
-        height = height || this._canvas.clientHeight;
-
         var gl = this._gl;
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
@@ -1493,12 +1530,11 @@ define([
      *
      * @memberof Context
      *
-     * @param {Context} description.context The context in which the texture gets created.
      * @param {PixelFormat} [description.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
      * @param {Number} [description.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
      * @param {Cartesian2} [description.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Array} description.images Optional array of {@link Image} to be added to the atlas. Same as calling addImages(images).
-     * @param {Image} description.image Optional single image to be added to the atlas. Same as calling addImage(image).
+     * @param {Array} [description.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * @param {Image} [description.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
      *
      * @returns {TextureAtlas} The new texture atlas.
      *
@@ -1527,6 +1563,7 @@ define([
      * @exception {DeveloperError} Width and height must be greater than zero.
      * @exception {DeveloperError} Width and height must be less than or equal to the maximum cube map size.
      * @exception {DeveloperError} Invalid description.pixelFormat.
+     * @exception {DeveloperError} description.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} Invalid description.pixelDatatype.
      *
      * @see Context#createTexture2D
@@ -1585,6 +1622,10 @@ define([
             throw new DeveloperError('Invalid description.pixelFormat.');
         }
 
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+            throw new DeveloperError('description.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
+
         var pixelDatatype = description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE;
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid description.pixelDatatype.');
@@ -1598,9 +1639,6 @@ define([
         var textureTarget = gl.TEXTURE_CUBE_MAP;
         var texture = gl.createTexture();
 
-        // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
@@ -1613,6 +1651,10 @@ define([
         }
 
         if (source) {
+            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
             createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_X, source.positiveX);
             createFace(gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source.negativeX);
             createFace(gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source.positiveY);
@@ -1633,36 +1675,59 @@ define([
     };
 
     /**
-     * DOC_TBA.
+     * Creates a framebuffer with optional initial color, depth, and stencil attachments.
+     * Framebuffers are used for render-to-texture effects; they allow us to render to
+     * a texture in one pass, and read from it in a later pass.
      *
      * @memberof Context
      *
-     * @param {Object} description optional.
+     * @param {Object} [description] The initial framebuffer attachments as shown in Example 2.  The possible properties are <code>colorTexture</code>, <code>colorRenderbuffer</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
      *
-     * @return {Framebuffer} DOC_TBA.
+     * @return {Framebuffer} The created framebuffer.
      *
+     * @exception {DeveloperError} Cannot have both a color texture and color renderbuffer attachment.
+     * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.
+     * @exception {DeveloperError} Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.
      * @exception {DeveloperError} Cannot have both a depth and depth-stencil renderbuffer.
      * @exception {DeveloperError} Cannot have both a stencil and depth-stencil renderbuffer.
      * @exception {DeveloperError} Cannot have both a depth and stencil renderbuffer.
+     * @exception {DeveloperError} The color-texture pixel-format must be a color format.
+     * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
+     * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
      *
      * @see Context#createTexture2D
      * @see Context#createCubeMap
      * @see Context#createRenderbuffer
+     *
+     * @example
+     * // Example 1. Create a framebuffer with no initial attachments,
+     * // and then add a color-texture attachment.
+     * var framebuffer = context.createFramebuffer();
+     * framebuffer.setColorTexture(context.createTexture2D({
+     *     width : 256,
+     *     height : 256,
+     * }));
+     *
+     * //////////////////////////////////////////////////////////////////
+     *
+     * // Example 2. Create a framebuffer with color and depth texture attachments.
+     * var width = context.getCanvas().clientWidth;
+     * var height = context.getCanvas().clientHeight;
+     * var framebuffer = context.createFramebuffer({
+     *   colorTexture : context.createTexture2D({
+     *     width : width,
+     *     height : height,
+     *     pixelFormat : PixelFormat.RGBA
+     *   }),
+     *   depthTexture : context.createTexture2D({
+     *     width : width,
+     *     height : height,
+     *     pixelFormat : PixelFormat.DEPTH_COMPONENT,
+     *     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+     *   })
+     * });
      */
     Context.prototype.createFramebuffer = function(description) {
-        if (description) {
-            if (description.depthRenderbuffer && description.depthStencilRenderbuffer) {
-                throw new DeveloperError('Cannot have both a depth and depth-stencil attachment.');
-            }
-
-            if (description.stencilRenderbuffer && description.depthStencilRenderbuffer) {
-                throw new DeveloperError('Cannot have both a stencil and depth-stencil attachment.');
-            }
-
-            if (description.depthRenderbuffer && description.stencilRenderbuffer) {
-                throw new DeveloperError('Cannot have both a depth and stencil attachment.');
-            }
-        }
         return new Framebuffer(this._gl, description);
     };
 
@@ -1671,7 +1736,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Object} description optional.
+     * @param {Object} [description] DOC_TBA.
      *
      * @return {createRenderbuffer} DOC_TBA.
      *
@@ -1744,6 +1809,10 @@ define([
      * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.fail.
      * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.zFail.
      * @exception {DeveloperError} Invalid renderState.stencilTest.backOperation.zPass.
+     * @exception {DeveloperError} renderState.viewport.width must be greater than or equal to zero.
+     * @exception {DeveloperError} renderState.viewport.width must be less than or equal to the maximum viewport width.
+     * @exception {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
+     * @exception {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
      */
     Context.prototype.createRenderState = function(renderState) {
         var rs = renderState || {};
@@ -1760,6 +1829,7 @@ define([
         var stencilTestFrontOperation = stencilTest.frontOperation || {};
         var stencilTestBackOperation = stencilTest.backOperation || {};
         var sampleCoverage = rs.sampleCoverage || {};
+        var viewport = rs.viewport;
 
         var r = {
             frontFace : (typeof rs.frontFace === 'undefined') ? WindingOrder.COUNTER_CLOCKWISE : rs.frontFace,
@@ -1775,12 +1845,7 @@ define([
             },
             scissorTest : {
                 enabled : (typeof scissorTest.enabled === 'undefined') ? false : scissorTest.enabled,
-                rectangle : {
-                    x : (typeof scissorTestRectangle.x === 'undefined') ? 0 : scissorTestRectangle.x,
-                    y : (typeof scissorTestRectangle.y === 'undefined') ? 0 : scissorTestRectangle.y,
-                    width : (typeof scissorTestRectangle.width === 'undefined') ? 0 : scissorTestRectangle.width,
-                    height : (typeof scissorTestRectangle.height === 'undefined') ? 0 : scissorTestRectangle.height
-                }
+                rectangle : BoundingRectangle.clone(scissorTestRectangle)
             },
             depthRange : {
                 near : (typeof depthRange.near === 'undefined') ? 0 : depthRange.near,
@@ -1838,6 +1903,7 @@ define([
                 invert : (typeof sampleCoverage.invert === 'undefined') ? false : sampleCoverage.invert
             },
             dither : (typeof rs.dither === 'undefined') ? true : rs.dither
+            // viewport is set below because it is allowed to be undefined - meaning always the canvas size.
         };
 
         // Validate
@@ -1942,6 +2008,28 @@ define([
 
         if (!StencilOperation.validate(r.stencilTest.backOperation.zPass)) {
             throw new DeveloperError('Invalid renderState.stencilTest.backOperation.zPass.');
+        }
+
+        if (typeof vieport !== 'undefined') {
+            if (viewport.width < 0) {
+                throw new DeveloperError('renderState.viewport.width must be greater than or equal to zero.');
+            }
+
+            if (viewport.width > this.getMaximumViewportWidth()) {
+                throw new RuntimeError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.getMaximumViewportWidth().toString() + ').  Check getMaximumViewportWidth().');
+            }
+
+            if (viewport.height < 0) {
+                throw new DeveloperError('renderState.viewport.height must be greater than or equal to zero.');
+            }
+
+            if (viewport.height > this.getMaximumViewportHeight()) {
+                throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
+            }
+
+            r.viewport = new BoundingRectangle(viewport.x, viewport.y,
+                    (typeof viewport.width === 'undefined') ? this._canvas.clientWidth : viewport.width,
+                    (typeof viewport.height === 'undefined') ? this._canvas.clientHeight : viewport.height);
         }
 
         return r;
@@ -2144,35 +2232,19 @@ define([
         }
     };
 
-    Context.prototype._validateShaderProgram = function(sp) {
-        if (this._validateSP) {
-            var gl = this._gl;
-            var program = sp._getProgram();
-            gl.validateProgram(program);
-
-            if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS)) {
-                throw new DeveloperError('Program validation failed.  Link log: ' + gl.getProgramInfoLog(program));
-            }
-        }
-    };
-
     /**
-     * DOC_TBA.
-     *
+     * DOC_TBA
      * @memberof Context
      *
-     * @exception {DeveloperError} drawArguments is required.
-     * @exception {DeveloperError} drawArguments.primitiveType is required and must be valid.
-     * @exception {DeveloperError} drawArguments.shaderProgram is required.
-     * @exception {DeveloperError} drawArguments.vertexArray is required.
-     * @exception {DeveloperError} drawArguments.offset must be omitted or greater than or equal to zero.
+     * @param {Command} command The command to execute.
+     *
+     * @exception {DeveloperError} command is required.
+     * @exception {DeveloperError} command.primitiveType is required and must be valid.
+     * @exception {DeveloperError} command.shaderProgram is required.
+     * @exception {DeveloperError} command.vertexArray is required.
+     * @exception {DeveloperError} command.offset must be omitted or greater than or equal to zero.
      * @exception {DeveloperError} Program validation failed.
      * @exception {DeveloperError} Framebuffer is not complete.
-     *
-     * @see Context#createShaderProgram
-     * @see Context#createVertexArray
-     * @see Context#createFramebuffer
-     * @see Context#createRenderState
      *
      * @example
      * // Example 1.  Draw a single triangle specifying only required arguments
@@ -2194,10 +2266,15 @@ define([
      *     vertexArray   : va,
      *     renderState   : rs
      * });
+     *
+     * @see Context#createShaderProgram
+     * @see Context#createVertexArray
+     * @see Context#createFramebuffer
+     * @see Context#createRenderState
      */
-    Context.prototype.draw = function(drawArguments) {
-        this.beginDraw(drawArguments);
-        this.continueDraw(drawArguments);
+    Context.prototype.draw = function(command) {
+        this.beginDraw(command);
+        this.continueDraw(command);
         this.endDraw();
     };
 
@@ -2206,24 +2283,22 @@ define([
      *
      * @memberof Context
      */
-    Context.prototype.beginDraw = function(drawArguments) {
-        if (typeof drawArguments === 'undefined') {
-            throw new DeveloperError('drawArguments is required.');
+    Context.prototype.beginDraw = function(command) {
+        if (typeof command === 'undefined') {
+            throw new DeveloperError('command is required.');
         }
 
-        if (!drawArguments.shaderProgram) {
-            throw new DeveloperError('drawArguments.shaderProgram is required.');
+        if (typeof command.shaderProgram === 'undefined') {
+            throw new DeveloperError('command.shaderProgram is required.');
         }
 
-        var framebuffer = drawArguments.framebuffer;
-        var sp = drawArguments.shaderProgram;
-        var rs = drawArguments.renderState || this.createRenderState();
+        var framebuffer = command.framebuffer;
+        var sp = command.shaderProgram;
+        var rs = command.renderState || this.createRenderState();
 
         if (framebuffer && rs.depthTest) {
-            if (rs.depthTest.enabled &&
-                !framebuffer.getDepthRenderbuffer() &&
-                !framebuffer.getDepthStencilRenderbuffer()) {
-                throw new DeveloperError('The depth test can not be enabled (drawArguments.renderState.depthTest.enabled) because the framebuffer (drawArguments.framebuffer) does not have a depth or depth-stencil renderbuffer.');
+            if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
+                throw new DeveloperError('The depth test can not be enabled (command.renderState.depthTest.enabled) because the framebuffer (command.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
 
@@ -2245,30 +2320,30 @@ define([
      *
      * @memberof Context
      */
-    Context.prototype.continueDraw = function(drawArguments) {
+    Context.prototype.continueDraw = function(command) {
         var sp = this._currentSp;
         if (typeof sp === 'undefined') {
             throw new DeveloperError('beginDraw must be called before continueDraw.');
         }
 
-        if (typeof drawArguments === 'undefined') {
-            throw new DeveloperError('drawArguments is required.');
+        if (typeof command === 'undefined') {
+            throw new DeveloperError('command is required.');
         }
 
-        var primitiveType = drawArguments.primitiveType;
+        var primitiveType = command.primitiveType;
         if (!PrimitiveType.validate(primitiveType)) {
-            throw new DeveloperError('drawArguments.primitiveType is required and must be valid.');
+            throw new DeveloperError('command.primitiveType is required and must be valid.');
         }
 
-        if (!drawArguments.vertexArray) {
-            throw new DeveloperError('drawArguments.vertexArray is required.');
+        if (typeof command.vertexArray === 'undefined') {
+            throw new DeveloperError('command.vertexArray is required.');
         }
 
-        var va = drawArguments.vertexArray;
+        var va = command.vertexArray;
         var indexBuffer = va.getIndexBuffer();
 
-        var offset = drawArguments.offset;
-        var count = drawArguments.count;
+        var offset = command.offset;
+        var count = command.count;
 
         if (indexBuffer) {
             offset = (offset || 0) * indexBuffer.getBytesPerIndex(); // in bytes
@@ -2279,12 +2354,12 @@ define([
         }
 
         if (offset < 0) {
-            throw new DeveloperError('drawArguments.offset must be omitted or greater than or equal to zero.');
+            throw new DeveloperError('command.offset must be omitted or greater than or equal to zero.');
         }
 
         if (count > 0) {
-            sp._setUniforms(drawArguments.uniformMap, this._us);
-            this._validateShaderProgram(sp);
+            this._us.setModel(defaultValue(command.modelMatrix, Matrix4.IDENTITY));
+            sp._setUniforms(command.uniformMap, this._us, this._validateSP);
 
             va._bind();
 
@@ -2303,7 +2378,7 @@ define([
      *
      * @memberof Context
      */
-    Context.prototype.endDraw = function(drawArguments) {
+    Context.prototype.endDraw = function() {
         if (this._currentFramebuffer) {
             this._currentFramebuffer._unBind();
             this._currentFramebuffer = undefined;
@@ -2620,7 +2695,7 @@ define([
         return va;
     };
 
-    /*
+    /**
      * DOC_TBA
      *
      * @memberof Context
@@ -2703,6 +2778,9 @@ define([
 
     Context.prototype.destroy = function() {
         this._shaderCache = this._shaderCache.destroy();
+        this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
+        this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
+
         return destroyObject(this);
     };
 

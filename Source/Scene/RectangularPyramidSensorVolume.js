@@ -6,7 +6,7 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Renderer/BufferUsage',
-        './ColorMaterial',
+        './Material',
         './CustomSensorVolume'
     ], function(
         DeveloperError,
@@ -15,7 +15,7 @@ define([
         CesiumMath,
         Matrix4,
         BufferUsage,
-        ColorMaterial,
+        Material,
         CustomSensorVolume) {
     "use strict";
 
@@ -38,9 +38,11 @@ define([
         this.show = (typeof t.show === 'undefined') ? true : t.show;
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.  The default is <code>true</code>.
          *
          * @type Boolean
+         *
+         * @see RectangularPyramidSensorVolume#intersectionColor
          */
         this.showIntersection = (typeof t.showIntersection === 'undefined') ? true : t.showIntersection;
 
@@ -62,7 +64,7 @@ define([
          * coordinates, the sensor's principal direction is along the positive z-axis.  Half angles measured from the
          * principal direction and in the direction of the x-axis and y-axis define the extent of the rectangular
          * cross section.  This matrix is available to GLSL vertex and fragment shaders via
-         * {@link agi_model} and derived uniforms.
+         * {@link czm_model} and derived uniforms.
          * <br /><br />
          * <div align='center'>
          * <img src='images/RectangularPyramidSensorVolume.setModelMatrix.png' /><br />
@@ -71,7 +73,7 @@ define([
          *
          * @type Matrix4
          *
-         * @see agi_model
+         * @see czm_model
          *
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
@@ -79,7 +81,7 @@ define([
          * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
-        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY;
+        this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY.clone();
 
         /**
          * DOC_TBA
@@ -116,14 +118,46 @@ define([
         this._yHalfAngle = undefined;
 
         /**
-         * DOC_TBA
+         * <p>
+         * Determines if the sensor is affected by lighting, i.e., if the sensor is bright on the
+         * day side of the globe, and dark on the night side.  When <code>true</code>, the sensor
+         * is affected by lighting; when <code>false</code>, the sensor is uniformly shaded regardless
+         * of the sun position.
+         * </p>
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
          */
-        this.material = t.material || new ColorMaterial();
+        this.affectedByLighting = this._affectedByLighting = (typeof t.affectedByLighting !== 'undefined') ? t.affectedByLighting : true;
 
         /**
-         * DOC_TBA
+         * The surface appearance of the sensor.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * <p>
+         * The default material is <code>Material.ColorType</code>.
+         * </p>
+         *
+         * @type Material
+         *
+         * @example
+         * // 1. Change the color of the default material to yellow
+         * sensor.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         *
+         * // 2. Change material to horizontal stripes
+         * sensor.material = Material.fromType(scene.getContext(), Material.StripeType);
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : new Color(1.0, 1.0, 0.0, 1.0);
+        this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromType(undefined, Material.ColorType);
+
+        /**
+         * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
+         *
+         * @type Color
+         *
+         * @see RectangularPyramidSensorVolume#showIntersection
+         */
+        this.intersectionColor = (typeof t.intersectionColor !== 'undefined') ? Color.clone(t.intersectionColor) : Color.clone(Color.WHITE);
 
         /**
          * DOC_TBA
@@ -144,7 +178,7 @@ define([
      * @exception {DeveloperError} this.xHalfAngle and this.yHalfAngle must each be less than 90 degrees.
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
-    RectangularPyramidSensorVolume.prototype.update = function(context, sceneState) {
+    RectangularPyramidSensorVolume.prototype.update = function(context, frameState, commandList) {
         if ((this.xHalfAngle > CesiumMath.PI_OVER_TWO) || (this.yHalfAngle > CesiumMath.PI_OVER_TWO)) {
             throw new DeveloperError('this.xHalfAngle and this.yHalfAngle must each be less than or equal to 90 degrees.');
         }
@@ -160,6 +194,7 @@ define([
         s.material = this.material;
         s.intersectionColor = this.intersectionColor;
         s.erosion = this.erosion;
+        s.affectedByLighting = this.affectedByLighting;
 
         if ((this._xHalfAngle !== this.xHalfAngle) || (this._yHalfAngle !== this.yHalfAngle)) {
 
@@ -187,31 +222,7 @@ define([
             }]);
         }
 
-        s.update(context, sceneState);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
-     */
-    RectangularPyramidSensorVolume.prototype.render = function(context) {
-        this._customSensor.render(context);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
-     */
-    RectangularPyramidSensorVolume.prototype.updateForPick = function(context) {
-        this._customSensor.updateForPick(context);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
-     */
-    RectangularPyramidSensorVolume.prototype.renderForPick = function(context, framebuffer) {
-        this._customSensor.renderForPick(context, framebuffer);
+        s.update(context, frameState, commandList);
     };
 
     /**

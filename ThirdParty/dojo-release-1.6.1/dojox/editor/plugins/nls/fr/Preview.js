@@ -1,1 +1,0 @@
-({"preview":"Aperçu"})

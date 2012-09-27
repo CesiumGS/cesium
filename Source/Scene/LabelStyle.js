@@ -3,7 +3,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * An enumeration describing how to draw a label.
      *
      * @exports LabelStyle
      *
@@ -11,21 +11,23 @@ define(['../Core/Enumeration'], function(Enumeration) {
      */
     var LabelStyle = {
         /**
-         * DOC_TBA
+         * Fill the text of the label, but do not outline.
          *
          * @constant
          * @type {Enumeration}
          */
         FILL : new Enumeration(0, 'FILL'),
+
         /**
-         * DOC_TBA
+         * Outline the text of the label, but do not fill.
          *
          * @constant
          * @type {Enumeration}
          */
         OUTLINE : new Enumeration(1, 'OUTLINE'),
+
         /**
-         * DOC_TBA
+         * Fill and outline the text of the label.
          *
          * @constant
          * @type {Enumeration}

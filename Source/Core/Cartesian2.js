@@ -1,8 +1,12 @@
 /*global define*/
 define([
-        './DeveloperError'
-       ],function(
-         DeveloperError) {
+        './defaultValue',
+        './DeveloperError',
+        './freezeObject'
+    ], function(
+        defaultValue,
+        DeveloperError,
+        freezeObject) {
     "use strict";
 
     /**
@@ -17,18 +21,17 @@ define([
      * @see Cartesian4
      */
     var Cartesian2 = function(x, y) {
-
         /**
          * The Y component.
          * @type Number
          */
-        this.x = (typeof x !== 'undefined') ? x : 0.0;
+        this.x = defaultValue(x, 0.0);
 
         /**
          * The X component.
          * @type Number
          */
-        this.y = (typeof y !== 'undefined') ? y : 0.0;
+        this.y = defaultValue(y, 0.0);
     };
 
     /**
@@ -37,7 +40,7 @@ define([
      *
      * @param {Cartesian2} cartesian The Cartesian to duplicate.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -63,7 +66,7 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian3 instance to create a Cartesian2 instance from.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -76,7 +79,7 @@ define([
      *
      * @param {Cartesian4} cartesian The Cartesian4 instance to create a Cartesian2 instance from.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -149,7 +152,7 @@ define([
      *
      * @param {Cartesian2} cartesian The Cartesian to be normalized.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -194,7 +197,7 @@ define([
      * @param {Cartesian2} left The first Cartesian.
      * @param {Cartesian2} right The second Cartesian.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -221,7 +224,7 @@ define([
      * @param {Cartesian2} left The first Cartesian.
      * @param {Cartesian2} right The second Cartesian.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -248,7 +251,7 @@ define([
      * @param {Cartesian2} left The first Cartesian.
      * @param {Cartesian2} right The second Cartesian.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -275,7 +278,7 @@ define([
      * @param {Cartesian2} cartesian The Cartesian to be scaled.
      * @param {Number} scalar The scalar to multiply with.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      * @exception {DeveloperError} scalar is required and must be a number.
@@ -288,7 +291,7 @@ define([
             throw new DeveloperError('scalar is required and must be a number.');
         }
         if (typeof result === 'undefined') {
-            return new Cartesian2(cartesian.x * scalar,  cartesian.y * scalar);
+            return new Cartesian2(cartesian.x * scalar, cartesian.y * scalar);
         }
         result.x = cartesian.x * scalar;
         result.y = cartesian.y * scalar;
@@ -302,7 +305,7 @@ define([
      * @param {Cartesian2} cartesian The Cartesian to be divided.
      * @param {Number} scalar The scalar to divide by.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      * @exception {DeveloperError} scalar is required and must be a number.
@@ -328,7 +331,7 @@ define([
      *
      * @param {Cartesian2} cartesian The Cartesian to be negated.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -350,7 +353,7 @@ define([
      *
      * @param {Cartesian2} cartesian The Cartesian whose absolute value is to be computed.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -375,7 +378,7 @@ define([
      * @param end The value corresponding to t at 1.0.
      * @param t The point along t at which to interpolate.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} start is required.
      * @exception {DeveloperError} end is required.
@@ -466,19 +469,19 @@ define([
      * An immutable Cartesian2 instance initialized to (0.0, 0.0).
      * @memberof Cartesian2
      */
-    Cartesian2.ZERO = Object.freeze(new Cartesian2(0.0, 0.0));
+    Cartesian2.ZERO = freezeObject(new Cartesian2(0.0, 0.0));
 
     /**
      * An immutable Cartesian2 instance initialized to (1.0, 0.0).
      * @memberof Cartesian2
      */
-    Cartesian2.UNIT_X = Object.freeze(new Cartesian2(1.0, 0.0));
+    Cartesian2.UNIT_X = freezeObject(new Cartesian2(1.0, 0.0));
 
     /**
      * An immutable Cartesian2 instance initialized to (0.0, 1.0).
      * @memberof Cartesian2
      */
-    Cartesian2.UNIT_Y = Object.freeze(new Cartesian2(0.0, 1.0));
+    Cartesian2.UNIT_Y = freezeObject(new Cartesian2(0.0, 1.0));
 
     /**
      * Computes the value of the maximum component for this Cartesian.
@@ -505,7 +508,7 @@ define([
      * @memberof Cartesian2
      *
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      */
     Cartesian2.prototype.clone = function(result) {
         return Cartesian2.clone(this, result);
@@ -536,7 +539,7 @@ define([
      * @memberof Cartesian2
      *
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      */
     Cartesian2.prototype.normalize = function(result) {
         return Cartesian2.normalize(this, result);
@@ -561,7 +564,7 @@ define([
      *
      * @param {Cartesian2} right The right hand side Cartesian.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -575,7 +578,7 @@ define([
      *
      * @param {Cartesian2} right The right hand side Cartesian.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -589,7 +592,7 @@ define([
      *
      * @param {Cartesian2} right The right hand side Cartesian.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -603,7 +606,7 @@ define([
      *
      * @param {Number} scalar The scalar to multiply with.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
@@ -617,7 +620,7 @@ define([
      *
      * @param {Number} scalar The scalar to divide by.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
@@ -630,7 +633,7 @@ define([
      * @memberof Cartesian2
      *
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      */
     Cartesian2.prototype.negate = function(result) {
         return Cartesian2.negate(this, result);
@@ -641,7 +644,7 @@ define([
      * @memberof Cartesian2
      *
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      */
     Cartesian2.prototype.abs = function(result) {
         return Cartesian2.abs(this, result);
@@ -655,7 +658,7 @@ define([
      * @param end The value corresponding to t at 1.0.
      * @param t The point along t at which to interpolate.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} end is required.
      * @exception {DeveloperError} t is required and must be a number.

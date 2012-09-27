@@ -2,21 +2,26 @@
 define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Math',
         './MipmapHint',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
-        './TextureWrap'
+        './TextureWrap',
+        './CubeMapFace'
     ], function(
         DeveloperError,
         destroyObject,
+        CesiumMath,
         MipmapHint,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap) {
+        TextureWrap,
+        CubeMapFace) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * A cube map with faces +x, -x, +y, -y, +z, and -z.  Cube maps are used for environment techniques like
+     * approximate reflection and refraction as used in the Reflection and Refraction {@link Material}s.
      *
      * @alias CubeMap
      * @internalConstructor
@@ -34,292 +39,116 @@ define([
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._sampler = undefined;
 
+        this._positiveX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        this._negativeX = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_X, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        this._positiveY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        this._negativeY = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        this._positiveZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+        this._negativeZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha);
+
         this.setSampler();
     };
 
     /**
-     * DOC_TBA
+     * Returns the +x face of this cube map for modification, rendering to, etc.
      *
-     * @param {Object} source The source {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, or {HTMLVideoElement}.
-     * @param {Number} xOffset optional
-     * @param {Number} yOffset optional
-     *
-     * @exception {DeveloperError} source is required.
-     * @exception {DeveloperError} xOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} yOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} xOffset + source.width must be less than or equal to getWidth().
-     * @exception {DeveloperError} yOffset + source.height must be less than or equal to getHeight().
-     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
-     */
-    CubeMap.prototype._copyFrom = function(targetFace, source, xOffset, yOffset) {
-        if (!source) {
-            throw new DeveloperError('source is required.');
-        }
-
-        xOffset = xOffset || 0;
-        yOffset = yOffset || 0;
-
-        var width = source.width;
-        var height = source.height;
-
-        if (xOffset < 0) {
-            throw new DeveloperError('xOffset must be greater than or equal to zero.');
-        }
-
-        if (yOffset < 0) {
-            throw new DeveloperError('yOffset must be greater than or equal to zero.');
-        }
-
-        if (xOffset + width > this._size) {
-            throw new DeveloperError('xOffset + source.width must be less than or equal to getWidth().');
-        }
-
-        if (yOffset + height > this._size) {
-            throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
-        }
-
-        var gl = this._gl;
-        var target = this._textureTarget;
-
-        // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(target, this._texture);
-
-        //Firefox bug: texSubImage2D has overloads and can't resolve our enums, so we use + to explicitly convert to a number.
-        if (source.arrayBufferView) {
-            gl.texSubImage2D(targetFace, 0, xOffset, yOffset, width, height, +this._pixelFormat, +this._pixelDatatype, source.arrayBufferView);
-        } else {
-            gl.texSubImage2D(targetFace, 0, xOffset, yOffset, +this._pixelFormat, +this._pixelDatatype, source);
-        }
-
-        gl.bindTexture(target, null);
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @param {Number} xOffset optional
-     * @param {Number} yOffset optional
-     * @param {Number} framebufferXOffset optional
-     * @param {Number} framebufferYOffset optional
-     * @param {Number} width optional
-     * @param {Number} height optional
-     *
-     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
-     * @exception {DeveloperError} xOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} yOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} xOffset + source.width must be less than or equal to getWidth().
-     * @exception {DeveloperError} yOffset + source.height must be less than or equal to getHeight().
-     */
-    CubeMap.prototype._copyFromFramebuffer = function(targetFace, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-        xOffset = xOffset || 0;
-        yOffset = yOffset || 0;
-        framebufferXOffset = framebufferXOffset || 0;
-        framebufferYOffset = framebufferYOffset || 0;
-        width = width || this._size;
-        height = height || this._size;
-
-        if (xOffset < 0) {
-            throw new DeveloperError('xOffset must be greater than or equal to zero.');
-        }
-
-        if (yOffset < 0) {
-            throw new DeveloperError('yOffset must be greater than or equal to zero.');
-        }
-
-        if (framebufferXOffset < 0) {
-            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
-        }
-
-        if (framebufferYOffset < 0) {
-            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
-        }
-
-        if (xOffset + width > this._size) {
-            throw new DeveloperError('xOffset + source.width must be less than or equal to getWidth().');
-        }
-
-        if (yOffset + height > this._size) {
-            throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
-        }
-
-        var gl = this._gl;
-        var target = this._textureTarget;
-
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(target, this._texture);
-        gl.copyTexSubImage2D(targetFace, 0, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-        gl.bindTexture(target, null);
-    };
-
-    /**
-     * DOC_TBA
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The +x face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getPositiveX = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_POSITIVE_X, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_POSITIVE_X, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_POSITIVE_X;
-            }
-        };
+        return this._positiveX;
     };
 
     /**
-     * DOC_TBA
+     * Returns the -x face of this cube map for modification, rendering to, etc.
+     *
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The -x face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getNegativeX = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_X, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_X, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_NEGATIVE_X;
-            }
-        };
+        return this._negativeX;
     };
 
     /**
-     * DOC_TBA
+     * Returns the +y face of this cube map for modification, rendering to, etc.
+     *
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The +y face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getPositiveY = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_POSITIVE_Y, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_POSITIVE_Y, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_POSITIVE_Y;
-            }
-        };
+        return this._positiveY;
     };
 
     /**
-     * DOC_TBA
+     * Returns the -y face of this cube map for modification, rendering to, etc.
+     *
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The -y face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getNegativeY = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Y;
-            }
-        };
+        return this._negativeY;
     };
 
     /**
-     * DOC_TBA
+     * Returns the +z face of this cube map for modification, rendering to, etc.
+     *
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The +z face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getPositiveZ = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_POSITIVE_Z, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_POSITIVE_Z, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_POSITIVE_Z;
-            }
-        };
+        return this._positiveZ;
     };
 
     /**
-     * DOC_TBA
+     * Returns the -z face of this cube map for modification, rendering to, etc.
+     *
      * @memberof CubeMap
+     *
+     * @returns {CubeMapFace} The -z face of this cube map.
+     *
+     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.getNegativeZ = function() {
-        var that = this;
-        return {
-            copyFrom : function(source, xOffset, yOffset) {
-                that._copyFrom(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, source, xOffset, yOffset);
-            },
-
-            copyFromFramebuffer : function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
-                that._copyFromFramebuffer(that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
-            },
-
-            _getTexture : function() {
-                return that._texture;
-            },
-
-            _getTarget : function() {
-                return that._gl.TEXTURE_CUBE_MAP_NEGATIVE_Z;
-            }
-        };
+        return this._negativeZ;
     };
 
     /**
-     * DOC_TBA
+     * Generates a complete mipmap chain for each cubemap face.
      *
      * @memberof CubeMap
      *
-     * @param {MipmapHint} hint optional.
+     * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] A performance vs. quality hint.
      *
      * @exception {DeveloperError} hint is invalid.
      * @exception {DeveloperError} This CubeMap's width must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This CubeMap's height must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
+     *
+     * @example
+     * // Generate mipmaps, and then set the sampler so mipmaps are used for
+     * // minification when the cube map is sampled.
+     * cubeMap.generateMipmap();
+     * cubeMap.setSampler(context.createSampler({
+     *   minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
+     * }));
      */
     CubeMap.prototype.generateMipmap = function(hint) {
-        if ((this._size > 1) && (this._size % 2 !== 0)) {
+        if ((this._size > 1) && !CesiumMath.isPowerOfTwo(this._size)) {
             throw new DeveloperError('width and height must be a power of two to call generateMipmap().');
         }
 
@@ -343,7 +172,7 @@ define([
      *
      * @memberof CubeMap
      *
-     * @param sampler optional.
+     * @param [sampler] DOC_TBA
      *
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
@@ -391,9 +220,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the pixel format of this cube map.  All faces in the same cube map have the same pixel format.
      *
      * @memberof CubeMap
+     *
+     * @returns {PixelFormat} The pixel format of this cubemap.
      *
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
@@ -402,9 +233,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the pixel datatype of this cube map.  All faces in the same cube map have the same pixel datatype.
      *
      * @memberof CubeMap
+     *
+     * @returns {PixelDatatype} The pixel datatype of this cubemap.
      *
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
@@ -413,9 +246,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the width, in texels, of faces in this cube map.  All faces in the same cube map have the same width and height, and the width equals the height.
      *
      * @memberof CubeMap
+     *
+     * @returns {Number} The width, in texels, of faces in this cube map.
      *
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
@@ -424,9 +259,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the height, in texels, of faces in this cube map.  All faces in the same cube map have the same width and height, and the width equals the height.
      *
      * @memberof CubeMap
+     *
+     * @returns {Number} The height, in texels, of faces in this cube map.
      *
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
@@ -435,9 +272,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns true if the cubemap was created with premultiplied alpha (UNPACK_PREMULTIPLY_ALPHA_WEBGL).
      *
      * @memberof CubeMap
+     *
+     * @returns {Boolean} true if the cubemap was created with premultiplied alpha; otherwise, false.
      *
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      */
@@ -463,7 +302,7 @@ define([
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see CubeMap.destroy
+     * @see CubeMap#destroy
      */
     CubeMap.prototype.isDestroyed = function() {
         return false;
@@ -483,7 +322,7 @@ define([
      *
      * @exception {DeveloperError} This cube map was destroyed, i.e., destroy() was called.
      *
-     * @see CubeMap.isDestroyed
+     * @see CubeMap#isDestroyed
      * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
      *
      * @example
@@ -491,6 +330,12 @@ define([
      */
     CubeMap.prototype.destroy = function() {
         this._gl.deleteTexture(this._texture);
+        this._positiveX = destroyObject(this._positiveX);
+        this._negativeX = destroyObject(this._negativeX);
+        this._positiveY = destroyObject(this._positiveY);
+        this._negativeY = destroyObject(this._negativeY);
+        this._positiveZ = destroyObject(this._positiveZ);
+        this._negativeZ = destroyObject(this._negativeZ);
         return destroyObject(this);
     };
 

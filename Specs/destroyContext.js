@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Specs/destroyCanvas'], function(destroyCanvas) {
+define(['Specs/destroyCanvas'], function(destroyCanvas) {
     "use strict";
 
     function destroyContext(context) {

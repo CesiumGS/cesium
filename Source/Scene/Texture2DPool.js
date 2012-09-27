@@ -13,28 +13,37 @@ define([
         Texture) {
     "use strict";
 
-    function PooledTexture(texture, textureTypeKey, pool) {
-        this._texture = texture;
-        this._textureTypeKey = textureTypeKey;
-        this._pool = pool;
-    }
+    var PooledTexture;
+    function createPooledTexture(texture, textureTypeKey, pool) {
+        if (typeof PooledTexture === 'undefined') {
+            // define the class only when needed, so we can use modern
+            // language features without breaking legacy browsers at setup time.
+            PooledTexture = function(texture, textureTypeKey, pool) {
+                this._texture = texture;
+                this._textureTypeKey = textureTypeKey;
+                this._pool = pool;
+            };
 
-    //pass through all methods to the underlying texture
-    Object.keys(Texture.prototype).forEach(function(methodName) {
-        PooledTexture.prototype[methodName] = function() {
-            var texture = this._texture;
-            return texture[methodName].apply(texture, arguments);
-        };
-    });
+            // pass through all methods to the underlying texture
+            Object.keys(Texture.prototype).forEach(function(methodName) {
+                PooledTexture.prototype[methodName] = function() {
+                    var texture = this._texture;
+                    return texture[methodName].apply(texture, arguments);
+                };
+            });
 
-    //except for destroy, which releases back into the pool
-    PooledTexture.prototype.destroy = function() {
-        var freeList = this._pool._free[this._textureTypeKey];
-        if (typeof freeList === 'undefined') {
-            freeList = this._pool._free[this._textureTypeKey] = [];
+            // except for destroy, which releases back into the pool
+            PooledTexture.prototype.destroy = function() {
+                var freeList = this._pool._free[this._textureTypeKey];
+                if (typeof freeList === 'undefined') {
+                    freeList = this._pool._free[this._textureTypeKey] = [];
+                }
+                freeList.push(this);
+            };
         }
-        freeList.push(this);
-    };
+
+        return new PooledTexture(texture, textureTypeKey, pool);
+    }
 
     /**
      * A pool of textures.  Textures created from the pool will be released back into the pool
@@ -93,7 +102,7 @@ define([
             return texture;
         }
 
-        return new PooledTexture(this._context.createTexture2D(description), textureTypeKey, this);
+        return createPooledTexture(this._context.createTexture2D(description), textureTypeKey, this);
     };
 
     /**

@@ -60,10 +60,10 @@ define([
 
         var properties = [];
 
-        for ( var property in material) {
-            if (material.hasOwnProperty(property) &&
-                typeof material[property] !== 'undefined' &&
-                typeof material[property].alpha !== 'undefined') {
+        for ( var property in material.uniforms) {
+            if (material.uniforms.hasOwnProperty(property) &&
+                typeof material.uniforms[property] !== 'undefined' &&
+                typeof material.uniforms[property].alpha !== 'undefined') {
                 properties.push(property);
             }
         }
@@ -93,7 +93,7 @@ define([
         tween.onUpdate(function() {
             var length = properties.length;
             for ( var i = 0; i < length; ++i) {
-                material[properties[i]].alpha = value.alpha;
+                material.uniforms[properties[i]].alpha = value.alpha;
             }
         });
         tween.onComplete(t.onComplete || null);
@@ -158,7 +158,7 @@ define([
             throw new DeveloperError('material is required.');
         }
 
-        if (typeof material.offset === 'undefined') {
+        if (typeof material.uniforms.offset === 'undefined') {
             throw new DeveloperError('material must have an offset property.');
         }
 
@@ -168,21 +168,21 @@ define([
         t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.EaseNone : t.easingFunction;
 
         var value = {
-            offset : material.offset
+            offset : material.uniforms.offset
         };
         var tween = new Tween.Tween(value);
         tween.to({
-            offset : material.offset + 1.0
+            offset : material.uniforms.offset + 1.0
         }, t.duration);
         tween.delay(t.delayDuration);
         tween.easing(t.easingFunction);
         tween.onUpdate(function() {
-            material.offset = value.offset;
+            material.uniforms.offset = value.offset;
         });
         // t.onComplete is ignored.
         tween.onComplete(function() {
             tween.to({
-                offset : material.offset + 1.0
+                offset : material.uniforms.offset + 1.0
             }, t.duration);
             tween.start();
         });

@@ -515,10 +515,10 @@ codeview.classFilter = ( function() {
                 currentLink.href = prefix;
             }
             else if(anchorIndex !== -1) {
-                currentLink.href = prefix.slice(0, anchorIndex) + "?classFilter=" + search + currentLink.href.slice(anchorIndex);
+                currentLink.href = prefix.slice(0, anchorIndex) + "?classFilter=" + search + "&show=" + document.getElementById("filterType").value + currentLink.href.slice(anchorIndex);
             }
             else {
-                currentLink.href = prefix + "?classFilter=" + search;
+                currentLink.href = prefix + "?classFilter=" + search + "&show=" + document.getElementById("filterType").value;
             }
         }
 

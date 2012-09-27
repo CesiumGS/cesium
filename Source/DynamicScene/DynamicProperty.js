@@ -21,6 +21,7 @@ define([
         LagrangePolynomialApproximation) {
     "use strict";
 
+
     //CZML_TODO This is more of an idea than a to-do, but currently DynamicProperty requires
     //you know the type of data being loaded up-front by passing valueType.  We could take
     //a similar approach to DynamicMaterialProperty and have a list of potential valueTypes
@@ -33,10 +34,10 @@ define([
 
     //Map CZML interval types to their implementation.
     var interpolators = {
-            HERMITE : HermitePolynomialApproximation,
-            LAGRANGE : LagrangePolynomialApproximation,
-            LINEAR : LinearApproximation
-        };
+        HERMITE : HermitePolynomialApproximation,
+        LAGRANGE : LagrangePolynomialApproximation,
+        LINEAR : LinearApproximation
+    };
 
     //The data associated with each DynamicProperty interval.
     function IntervalData() {
@@ -159,8 +160,10 @@ define([
         var values = intervalData.values;
         if (intervalData.isSampled && times.length >= 0 && values.length > 0) {
             var index = binarySearch(times, time, JulianDate.compare);
-
             if (index < 0) {
+                if (intervalData.numberOfPoints < 2) {
+                    return undefined;
+                }
                 index = ~index;
 
                 if (index >= times.length) {
@@ -321,7 +324,7 @@ define([
                 interpolationAlgorithm = interpolators[interpolationAlgorithmType];
                 intervalData.interpolationAlgorithm = interpolationAlgorithm;
             }
-            if (typeof interpolationAlgorithm !== 'undefined '&& typeof interpolationDegree !== 'undefined') {
+            if (typeof interpolationAlgorithm !== 'undefined' && typeof interpolationDegree !== 'undefined') {
                 intervalData.interpolationDegree = interpolationDegree;
                 intervalData.xTable = undefined;
                 intervalData.yTable = undefined;

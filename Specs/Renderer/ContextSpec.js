@@ -1,9 +1,9 @@
 /*global defineSuite*/
 defineSuite([
          'Renderer/Context',
-         '../Specs/createContext',
-         '../Specs/destroyContext',
-         '../Specs/renderFragment'
+         'Specs/createContext',
+         'Specs/destroyContext',
+         'Specs/renderFragment'
      ], function(
          Context,
          createContext,
@@ -22,38 +22,15 @@ defineSuite([
         destroyContext(context);
     });
 
-    it('getCanvas', function() {
-        expect(context.getCanvas()).not.toBeNull();
+    it('has a unique ID', function() {
+        var c = createContext();
+        expect(c.getId()).toBeDefined();
+        expect(c.getId()).not.toEqual(context.getId());
+        destroyContext(c);
     });
 
-    it('gets and sets its viewport', function() {
-        var canvas = context.getCanvas();
-        var viewport = context.getViewport();
-        expect(viewport.x).toEqual(0);
-        expect(viewport.y).toEqual(0);
-        expect(viewport.width).toEqual(canvas.clientWidth);
-        expect(viewport.height).toEqual(canvas.clientHeight);
-
-        context.setViewport({
-            x : 1,
-            y : 2,
-            width : 3,
-            height : 4
-        });
-
-        var v = context.getViewport();
-        expect(v.x).toEqual(1);
-        expect(v.y).toEqual(2);
-        expect(v.width).toEqual(3);
-        expect(v.height).toEqual(4);
-
-        // Restore for later specs in this suite.
-        context.setViewport({
-            x : 0,
-            y : 0,
-            width : canvas.clientWidth,
-            height : canvas.clientHeight
-        });
+    it('getCanvas', function() {
+        expect(context.getCanvas()).not.toBeNull();
     });
 
     it('getVersion', function() {
@@ -183,6 +160,10 @@ defineSuite([
         }
     });
 
+    it('gets the depth texture extension', function() {
+        expect(context.getDepthTexture()).toBeDefined();
+    });
+
     it('gets texture filter anisotropic', function() {
         expect(context.getTextureFilterAnisotropic()).toBeDefined();
     });
@@ -225,59 +206,6 @@ defineSuite([
 
         context.setThrowOnWebGLError(true);
         expect(context.getThrowOnWebGLError()).toEqual(true);
-    });
-
-    it('fails to set the viewport (undefined viewport properties)', function() {
-        expect(function() {
-            context.setViewport({
-                x : 0,
-                y : 0
-            });
-        }).toThrow();
-    });
-
-    it('fails to set the viewport (negative width)', function() {
-        expect(function() {
-            context.setViewport({
-                x : 0,
-                y : 0,
-                width : -1,
-                height : 0
-            });
-        }).toThrow();
-    });
-
-    it('fails to set the viewport (negative height)', function() {
-        expect(function() {
-            context.setViewport({
-                x : 0,
-                y : 0,
-                width : 0,
-                height : -1
-            });
-        }).toThrow();
-    });
-
-    it('fails to set the viewport (large width)', function() {
-        expect(function() {
-            context.setViewport({
-                x : 0,
-                y : 0,
-                width : context.getMaximumViewportWidth() + 1,
-                height : 0
-            });
-        }).toThrow();
-    });
-
-    it('fails to set the viewport (large height)', function() {
-        expect(function() {
-            context.setViewport({
-                x : 0,
-                y : 0,
-                width : 0,
-                height : context.getMaximumViewportHeight() + 1
-            });
-        }).toThrow();
     });
 
     it('fails to construct (null canvas)', function() {

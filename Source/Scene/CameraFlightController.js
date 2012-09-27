@@ -34,7 +34,7 @@ define([
      */
     var CameraFlightController = function(canvas, camera, ellipsoid, destination, duration, complete) {
         // get minimum altitude from which the whole ellipsoid is visible
-        var radius = ellipsoid.getRadii().getMaximumComponent();
+        var radius = ellipsoid.getMaximumRadius();
 
         var frustum = camera.frustum;
         var near = frustum.near;

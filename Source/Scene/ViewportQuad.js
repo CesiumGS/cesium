@@ -1,20 +1,28 @@
 /*global define*/
 define([
         '../Core/destroyObject',
-        '../Core/Rectangle',
+        '../Core/defaultValue',
+        '../Core/BoundingRectangle',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
-        '../Renderer/BlendingState',
+        '../Renderer/BlendEquation',
+        '../Renderer/BlendFunction',
+        '../Renderer/Command',
+        '../Renderer/CommandLists',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
         destroyObject,
-        Rectangle,
+        defaultValue,
+        BoundingRectangle,
         ComponentDatatype,
         PrimitiveType,
         BufferUsage,
-        BlendingState,
+        BlendEquation,
+        BlendFunction,
+        Command,
+        CommandLists,
         ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
@@ -25,27 +33,35 @@ define([
      * @alias ViewportQuad
      * @constructor
      */
-    var ViewportQuad = function(rectangle) {
-        this.renderState = null;
-        this._sp = null;
-        this._va = null;
+    var ViewportQuad = function(rectangle, vertexShaderSource, fragmentShaderSource) {
+        /**
+         * DOC_TBA
+         */
+        this.renderState = undefined;
 
-        this.vertexShader = ViewportQuadVS;
-        this.fragmentShader = ViewportQuadFS;
-
-        this._texture = null;
-        this._destroyTexture = true;
-
-        this._framebuffer = null;
-        this._destroyFramebuffer = false;
-
-        this._rectangle = rectangle; // TODO: copy?
-        this._dirtyRectangle = true;
-
+        /**
+         * DOC_TBA
+         */
         this.enableBlending = false;
 
+        this._va = undefined;
+        this._colorCommand = new Command();
+        this._colorCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._commandLists = new CommandLists();
+
+        this._vertexShaderSource = defaultValue(vertexShaderSource, ViewportQuadVS);
+        this._fragmentShaderSource = defaultValue(fragmentShaderSource, ViewportQuadFS);
+
+        this._texture = undefined;
+        this._destroyTexture = true;
+
+        this._framebuffer = undefined;
+        this._destroyFramebuffer = false;
+
+        this._rectangle = BoundingRectangle.clone(rectangle);
+
         var that = this;
-        this.uniforms = {
+        this._colorCommand.uniformMap = this.uniforms = {
             u_texture : function() {
                 return that._texture;
             }
@@ -65,13 +81,10 @@ define([
      *
      * @memberof ViewportQuad
      *
-     * @param {Rectangle} value DOC_TBA
+     * @param {BoundingRectangle} value DOC_TBA
      */
     ViewportQuad.prototype.setRectangle = function(value) {
-        if (value && !this._rectangle.equals(value)) {
-            this._rectangle = new Rectangle(value.x, value.y, value.width, value.height);
-            this._dirtyRectangle = true;
-        }
+        BoundingRectangle.clone(value, this._rectangle);
     };
 
     /**
@@ -144,70 +157,112 @@ define([
         this._destroyFramebuffer = value;
     };
 
-    /**
-     * DOC_TBA
-     * @memberof ViewportQuad
-     */
-    ViewportQuad.prototype.render = function(context) {
-        if (this._texture) {
-            context.draw({
-                primitiveType : PrimitiveType.TRIANGLE_FAN,
-                shaderProgram : this._sp,
-                uniformMap : this.uniforms,
-                vertexArray : this._va,
-                renderState : this.renderState,
-                framebuffer : this._framebuffer
-            });
+    var attributeIndices = {
+        position : 0,
+        textureCoordinates : 1
+    };
+
+    var vertexArrayCache = {};
+
+    function getVertexArray(context) {
+        // Per-context cache for viewport quads
+        var c = vertexArrayCache[context.getId()];
+
+        if (typeof c !== 'undefined' &&
+            typeof c.vertexArray !== 'undefined') {
+
+            ++c.referenceCount;
+            return c;
         }
-    };
 
-    ViewportQuad._getAttributeIndices = function() {
-        return {
-            position : 0,
-            textureCoordinates : 1
-        };
-    };
+        var mesh = {
+            attributes : {
+                position : {
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : [
+                       -1.0, -1.0,
+                        1.0, -1.0,
+                        1.0,  1.0,
+                       -1.0,  1.0
+                    ]
+                },
 
-    ViewportQuad.prototype._update = function(context, sceneState) {
-        if (this._dirtyRectangle) {
-            this._dirtyRectangle = false;
-
-            var rectangle = this._rectangle;
-            var mesh = {
-                attributes : {
-                    position : {
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : [rectangle.x, rectangle.y, rectangle.x + rectangle.width, rectangle.y, rectangle.x + rectangle.width, rectangle.y + rectangle.height, rectangle.x,
-                                rectangle.y + rectangle.height]
-                    },
-
-                    textureCoordinates : {
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0]
-                    }
+                textureCoordinates : {
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : [
+                        0.0, 0.0,
+                        1.0, 0.0,
+                        1.0, 1.0,
+                        0.0, 1.0
+                    ]
                 }
-            };
+            }
+        };
 
-            this.renderState.blending.enabled = this.enableBlending;
-            this._va = context.createVertexArrayFromMesh({
-                mesh : mesh,
-                attributeIndices : ViewportQuad._getAttributeIndices(),
-                bufferUsage : BufferUsage.STATIC_DRAW
-            });
-        }
-    };
+        var va = context.createVertexArrayFromMesh({
+            mesh : mesh,
+            attributeIndices : attributeIndices,
+            bufferUsage : BufferUsage.STATIC_DRAW
+        });
+
+        var cachedVA = {
+            vertexArray : va,
+            referenceCount : 1,
+
+            release : function() {
+                if (typeof this.vertexArray !== 'undefined' &&
+                    --this.referenceCount === 0) {
+
+                    // TODO: Schedule this for a few hundred frames later so we don't thrash the cache
+                    this.vertexArray = this.vertexArray.destroy();
+                }
+
+                return undefined;
+            }
+        };
+
+        vertexArrayCache[context.getId()] = cachedVA;
+        return cachedVA;
+    }
 
     /**
      * @private
      */
-    ViewportQuad.prototype.update = function(context, sceneState) {
-        this._sp = context.getShaderCache().getShaderProgram(this.vertexShader, this.fragmentShader, ViewportQuad._getAttributeIndices());
-        this.renderState = context.createRenderState({ blending : BlendingState.ALPHA_BLEND });
+    ViewportQuad.prototype.update = function(context, frameState, commandList) {
+        if (typeof this._texture === 'undefined') {
+            return;
+        }
 
-        this._update(context, sceneState);
-        this.update = this._update;
+        if (typeof this._colorCommand.shaderProgram === 'undefined') {
+            this._colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(this._vertexShaderSource, this._fragmentShaderSource, attributeIndices);
+            this._va = getVertexArray(context);
+            this._colorCommand.vertexArray = this._va.vertexArray;
+            this.renderState = context.createRenderState({
+                blending : {
+                    enabled : true,
+                    equationRgb : BlendEquation.ADD,
+                    equationAlpha : BlendEquation.ADD,
+                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
+                    functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
+                    functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
+                }
+            });
+        }
+
+        this.renderState.blending.enabled = this.enableBlending;
+        this.renderState.viewport = this._rectangle;
+        this._colorCommand.renderState = this.renderState;
+        this._colorCommand.framebuffer = this._framebuffer;
+
+        this._commandLists.removeAll();
+        if (frameState.passes.color) {
+            this._commandLists.colorList.push(this._colorCommand);
+        }
+
+        commandList.push(this._commandLists);
     };
 
     /**
@@ -246,8 +301,8 @@ define([
      * quad = quad && quad.destroy();
      */
     ViewportQuad.prototype.destroy = function() {
-        this._va = this._va && this._va.destroy();
-        this._sp = this._sp && this._sp.release();
+        this._va = this._va && this._va.release();
+        this._colorCommand.shaderProgram = this._colorCommand.shaderProgram && this._colorCommand.shaderProgram.release();
         this._texture = this._destroyTexture && this._texture && this._texture.destroy();
         this._framebuffer = this._destroyFramebuffer && this._framebuffer && this._framebuffer.destroy();
 

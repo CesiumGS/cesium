@@ -1,0 +1,3 @@
+{
+	"source" : "czm_material czm_getMaterial(czm_materialInput m) { return czm_getDefaultMaterial(m); }"
+}

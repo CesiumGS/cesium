@@ -32,7 +32,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1336749948404</id>
+			<id>1348681628761</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -41,7 +41,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1336749948413</id>
+			<id>1348681628764</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -50,16 +50,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1336749948416</id>
-			<name></name>
-			<type>10</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-Tools</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1336749948422</id>
+			<id>1348681628769</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
@@ -86,30 +77,30 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1335301712065</id>
-			<name>Examples/Sandbox</name>
-			<type>6</type>
+			<id>1348694184349</id>
+			<name>Tools</name>
+			<type>9</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-CodeSnippetsConcatenated.js</arguments>
+				<arguments>1.0-name-matches-false-false-buildTasks</arguments>
 			</matcher>
 		</filter>
 		<filter>
-			<id>1335301712070</id>
-			<name>Examples/Sandbox</name>
-			<type>10</type>
-			<matcher>
-				<id>org.eclipse.ui.ide.multiFilter</id>
-				<arguments>1.0-name-matches-false-false-Images</arguments>
-			</matcher>
-		</filter>
-		<filter>
-			<id>1334962574946</id>
+			<id>1338843689105</id>
 			<name>Source/Shaders</name>
-			<type>6</type>
+			<type>22</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-*.js</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1347662523547</id>
+			<name>Apps/Sandcastle/gallery</name>
+			<type>6</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-gallery-index.js</arguments>
 			</matcher>
 		</filter>
 	</filteredResources>

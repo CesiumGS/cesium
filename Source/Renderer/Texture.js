@@ -3,6 +3,8 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian2',
+        '../Core/Math',
+        './PixelFormat',
         './MipmapHint',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
@@ -11,6 +13,8 @@ define([
         DeveloperError,
         destroyObject,
         Cartesian2,
+        CesiumMath,
+        PixelFormat,
         MipmapHint,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -51,6 +55,7 @@ define([
      * @param {Number} xOffset optional
      * @param {Number} yOffset optional
      *
+     * @exception {DeveloperError} Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} source is required.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
@@ -68,6 +73,10 @@ define([
 
         var width = source.width;
         var height = source.height;
+
+        if (PixelFormat.isDepthFormat(this._pixelFormat)) {
+            throw new DeveloperError('Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
 
         if (xOffset < 0) {
             throw new DeveloperError('xOffset must be greater than or equal to zero.');
@@ -116,6 +125,7 @@ define([
      * @param {Number} width optional
      * @param {Number} height optional
      *
+     * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
@@ -131,6 +141,10 @@ define([
         framebufferYOffset = framebufferYOffset || 0;
         width = width || this._width;
         height = height || this._height;
+
+        if (PixelFormat.isDepthFormat(this._pixelFormat)) {
+            throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
 
         if (xOffset < 0) {
             throw new DeveloperError('xOffset must be greater than or equal to zero.');
@@ -172,15 +186,20 @@ define([
      *
      * @param {MipmapHint} hint optional.
      *
+     * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} hint is invalid.
      * @exception {DeveloperError} This texture's width must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This texture's height must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      */
     Texture.prototype.generateMipmap = function(hint) {
-        if ((this._width > 1) && (this._width % 2 !== 0)) {
+        if (PixelFormat.isDepthFormat(this._pixelFormat)) {
+            throw new DeveloperError('Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
+
+        if ((this._width > 1) && !CesiumMath.isPowerOfTwo(this._width)) {
             throw new DeveloperError('width must be a power of two to call generateMipmap().');
-        } else if ((this._height > 1) && (this._height % 2 !== 0)) {
+        } else if ((this._height > 1) && !CesiumMath.isPowerOfTwo(this._height)) {
             throw new DeveloperError('height must be a power of two to call generateMipmap().');
         }
 
@@ -321,7 +340,7 @@ define([
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see Texture.destroy
+     * @see Texture#destroy
      */
     Texture.prototype.isDestroyed = function() {
         return false;
@@ -341,7 +360,7 @@ define([
      *
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      *
-     * @see Texture.isDestroyed
+     * @see Texture#isDestroyed
      * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
      *
      * @example
