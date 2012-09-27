@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/Command',
+         'Renderer/Command'
      ], function(
          Command) {
     "use strict";
