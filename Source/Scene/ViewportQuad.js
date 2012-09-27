@@ -48,6 +48,7 @@ define([
         this._overlayCommand = new Command();
         this._overlayCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
         this._commandLists = new CommandLists();
+        this._commandLists.overlayList.push(this._overlayCommand);
 
         this._vertexShaderSource = defaultValue(vertexShaderSource, ViewportQuadVS);
         this._fragmentShaderSource = defaultValue(fragmentShaderSource, ViewportQuadFS);
@@ -257,12 +258,7 @@ define([
         this._overlayCommand.renderState = this.renderState;
         this._overlayCommand.framebuffer = this._framebuffer;
 
-        this._commandLists.removeAll();
         if (frameState.passes.overlay) {
-            this._commandLists.overlayList.push(this._overlayCommand);
-        }
-
-        if (!this._commandLists.empty()) {
             commandList.push(this._commandLists);
         }
     };

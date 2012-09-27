@@ -173,6 +173,21 @@ defineSuite([
         expect(result.w).toEqual(0);
     });
 
+    it('Returns undefined if trying to interpolate with less than two samples.', function() {
+        var iso8601Epoch = '2012-04-18T15:59:00Z';
+        var epoch = JulianDate.fromIso8601(iso8601Epoch);
+
+        var property = new DynamicProperty(CzmlNumber);
+        var czmlInterval = {
+            epoch : iso8601Epoch,
+            number : [0, 0]
+        };
+        property.processCzmlIntervals(czmlInterval);
+
+        expect(property.getValue(epoch)).toEqual(0);
+        expect(property.getValue(epoch.addSeconds(4))).toBeUndefined();
+    });
+
     it('_mergeNewSamples works for sorted non-intersecting data.', function() {
         var times = [];
         var values = [];
