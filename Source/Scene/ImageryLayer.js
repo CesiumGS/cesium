@@ -334,18 +334,19 @@ define([
         // image should be discarded.
         if (typeof imageryProvider.getTileDiscardPolicy !== 'undefined') {
             var discardPolicy = imageryProvider.getTileDiscardPolicy();
+            if (typeof discardPolicy !== 'undefined') {
+                // If the discard policy is not ready yet, transition back to the
+                // RECEIVED state and we'll try again next time.
+                if (!discardPolicy.isReady()) {
+                    imagery.state = ImageryState.RECEIVED;
+                    return;
+                }
 
-            // If the discard policy is not ready yet, transition back to the
-            // RECEIVED state and we'll try again next time.
-            if (!discardPolicy.isReady()) {
-                imagery.state = ImageryState.RECEIVED;
-                return;
-            }
-
-            // Mark discarded imagery tiles invalid.  Parent imagery will be used instead.
-            if (discardPolicy.shouldDiscardImage(imagery.image)) {
-                imagery.state = ImageryState.INVALID;
-                return;
+                // Mark discarded imagery tiles invalid.  Parent imagery will be used instead.
+                if (discardPolicy.shouldDiscardImage(imagery.image)) {
+                    imagery.state = ImageryState.INVALID;
+                    return;
+                }
             }
         }
 
