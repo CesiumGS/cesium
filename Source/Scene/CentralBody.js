@@ -50,8 +50,6 @@ define([
         '../Shaders/CentralBodyFSCommon',
         '../Shaders/CentralBodyVSDepth',
         '../Shaders/CentralBodyFSDepth',
-        '../Shaders/CentralBodyVSFilter',
-        '../Shaders/CentralBodyFSFilter',
         '../Shaders/CentralBodyVSPole',
         '../Shaders/CentralBodyFSPole',
         '../Shaders/GroundAtmosphere',
@@ -108,8 +106,6 @@ define([
         CentralBodyFSCommon,
         CentralBodyVSDepth,
         CentralBodyFSDepth,
-        CentralBodyVSFilter,
-        CentralBodyFSFilter,
         CentralBodyVSPole,
         CentralBodyFSPole,
         GroundAtmosphere,
@@ -1948,7 +1944,7 @@ define([
                 this._renderQueue.sort(function(a, b) {
                     return a.zoom - b.zoom;
                 });
-                
+
                 // render tiles
                 var tileCommands = this._tileCommandList;
                 tileCommands.length = this._renderQueue.length;
