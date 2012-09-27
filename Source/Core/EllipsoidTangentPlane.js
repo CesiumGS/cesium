@@ -109,6 +109,7 @@ define([
         ray.origin = cartesian;
         Cartesian3.normalize(cartesian, ray.direction);
 
+// TODO: Don't allocate plane here
         var intersectionPoint = IntersectionTests.rayPlane(ray, new Plane(this._normal, this._distance), projectPointOntoPlaneCartesian3);
 
         if (typeof intersectionPoint !== 'undefined') {

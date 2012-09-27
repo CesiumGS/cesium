@@ -20,6 +20,7 @@ define(['./Cartographic',
          *
          * @returns An array of polyline segment objects containing the Cartesian and {@link Cartographic} positions and indices.
          *
+         * @see PolygonPipeline.wrapLongitude
          * @see Polyline
          * @see PolylineCollection
          *

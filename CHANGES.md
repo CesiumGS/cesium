@@ -91,7 +91,11 @@ Beta Releases
 * CZML `Polygon`, `Cone`, and `Pyramid` objects are no longer affected by lighting.
 * Added `czm_viewRotation` and `czm_viewInverseRotation` automatic GLSL uniforms.
 * Added a `clampToPixel` property to `BillboardCollection` and `LabelCollection`.  When true, it aligns all billboards and text to a pixel in screen space, providing a crisper image at the cost of jumpier motion.
+<<<<<<< HEAD
 * `Ellipsoid` functions now take optional result parameters.
+=======
+* `Ellipsoid` operations now take optional result parameters.
+>>>>>>> 2046355f04b5dbc95243a80e2d97dce00dd989c8
 
 ### b7 - 08/01/2012
 
