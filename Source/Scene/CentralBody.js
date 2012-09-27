@@ -964,9 +964,6 @@ define([
                 this._rsColorWithoutDepthTest = context.createRenderState({ // Write color, not depth
                     cull : {
                         enabled : true
-                    },
-                    depthTest : {
-                        enabled : false
                     }
                 });
                 this._depthCommand.renderState = context.createRenderState({ // Write depth, not color
@@ -1316,10 +1313,10 @@ define([
             // render depth plane
             if (mode === SceneMode.SCENE3D) {
                 colorCommandList.push(this._depthCommand);
+            }
 
-                if (this.showSkyAtmosphere) {
-                    colorCommandList.push(this._skyCommand);
-                }
+            if (this.showSkyAtmosphere) {
+                colorCommandList.push(this._skyCommand);
             }
         }
 
