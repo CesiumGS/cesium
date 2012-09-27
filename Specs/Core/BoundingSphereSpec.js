@@ -1,22 +1,26 @@
 /*global defineSuite*/
 defineSuite([
          'Core/BoundingSphere',
+         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Ellipsoid',
          'Core/EquidistantCylindricalProjection',
          'Core/Extent',
          'Core/Intersect',
+         'Core/Interval',
          'Core/Math',
          'Core/Matrix4'
      ], function(
          BoundingSphere,
+         Cartesian2,
          Cartesian3,
          Cartesian4,
          Ellipsoid,
          EquidistantCylindricalProjection,
          Extent,
          Intersect,
+         Interval,
          CesiumMath,
          Matrix4) {
     "use strict";
@@ -216,6 +220,14 @@ defineSuite([
         expect(bs.transform(transform)).toEqual(expected);
     });
 
+    it('finds distances', function() {
+        var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
+        var position = new Cartesian3(-2.0, 1.0, 0.0);
+        var direction = Cartesian3.UNIT_X;
+        var expected = new Interval(1.0, 3.0);
+        expect(bs.getPlaneDistances(position, direction)).toEqual(expected);
+    });
+
     it('static clone throws with no parameter', function() {
         expect(function() {
             BoundingSphere.clone();
@@ -274,6 +286,24 @@ defineSuite([
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.transform(sphere);
+        }).toThrow();
+    });
+
+    it('static getPlaneDistances throws without a sphere', function() {
+        expect(function() {
+            BoundingSphere.getPlaneDistances();
+        }).toThrow();
+    });
+
+    it('static getPlaneDistances throws without a position', function() {
+        expect(function() {
+            BoundingSphere.getPlaneDistances(new BoundingSphere());
+        }).toThrow();
+    });
+
+    it('static getPlaneDistances throws without a direction', function() {
+        expect(function() {
+            BoundingSphere.getPlaneDistances(new BoundingSphere(), new Cartesian3());
         }).toThrow();
     });
 });
