@@ -14,6 +14,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Intersect',
         '../Core/IntersectionTests',
+        '../Core/Interval',
         '../Core/Matrix4',
         '../Renderer/Context',
         '../Renderer/Command',
@@ -24,7 +25,8 @@ define([
         './SceneMode',
         './FrameState',
         './OrthographicFrustum',
-        './PerspectiveOffCenterFrustum'
+        './PerspectiveOffCenterFrustum',
+        './FrustumCommands'
     ], function(
         Color,
         defaultValue,
@@ -40,6 +42,7 @@ define([
         Cartesian4,
         Intersect,
         IntersectionTests,
+        Interval,
         Matrix4,
         Context,
         Command,
@@ -50,7 +53,8 @@ define([
         SceneMode,
         FrameState,
         OrthographicFrustum,
-        PerspectiveOffCenterFrustum) {
+        PerspectiveOffCenterFrustum,
+        FrustumCommands) {
     "use strict";
 
     /**
@@ -68,26 +72,14 @@ define([
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(canvas);
-        this._clearState = context.createClearState({
-            color : Color.BLACK,
-            depth : 1.0
-        });
 
         this._animate = undefined; // Animation callback
         this._animations = new AnimationCollection();
 
         this._shaderFrameCount = 0;
 
-        this._near = this._camera.frustum.near;
-        this._far = this._camera.frustum.far;
-
         this._commandList = [];
-        this._renderList = [];
-
-        this._bins = [];
-        this._binNear = Number.MAX_VALUE;
-        this._binFar = Number.MIN_VALUE;
-        this._useBins = false;
+        this._frustumCommandsList = [];
 
         /**
          * The current mode of the scene.
@@ -228,7 +220,7 @@ define([
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
         var cb = scene._primitives.getCentralBody();
-        if (scene.mode === SceneMode.SCENE3D && cb !== null) {
+        if (scene.mode === SceneMode.SCENE3D && typeof cb !== 'undefined') {
             var ellipsoid = cb.getEllipsoid();
             var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
             frameState.occluder = occluder;
@@ -264,44 +256,34 @@ define([
     }
 
     function insertIntoBin(scene, command, distance) {
-        var near = scene._binNear;
-        var far = scene._binFar;
-        var farToNearRatio = scene.farToNearRatio;
-
-        if (far < near) {
+        var frustumCommandsList = scene._frustumCommandsList;
+        var length = frustumCommandsList.length;
+        if (length === 0 || frustumCommandsList[length - 1].far <= frustumCommandsList[0].near) {
             return;
         }
 
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-        if (scene._bins.length === 0) {
-            scene._bins.length = numFrustums;
-        }
-
-        for (var i = 0; i < numFrustums; ++i) {
-            var curNear = Math.pow(farToNearRatio, i) * near;
-            var curFar = farToNearRatio * curNear;
+        for (var i = 0; i < length; ++i) {
+            var frustumCommands = frustumCommandsList[i];
+            var curNear = frustumCommands.near;
+            var curFar = frustumCommands.far;
 
             if (typeof distance !== 'undefined') {
-                if (distance.x > curFar) {
+                if (distance.start > curFar) {
                     continue;
                 }
 
-                if (distance.y < curNear) {
+                if (distance.stop < curNear) {
                     break;
                 }
             }
 
-            // MULTIFRUSTUM TODO: sort bins
-            var bin = scene._bins[i];
-            if (typeof bin === 'undefined') {
-                bin = scene._bins[i] = [];
-            }
-            bin.push(command);
+            // PERFORMANCE_IDEA: sort bins
+            frustumCommands.commands.push(command);
         }
     }
 
     var scratchCullingVolume = new CullingVolume();
-    var distances = new Cartesian2();
+    var distances = new Interval();
     function createPotentiallyVisibleSet(scene, listName) {
         var commandLists = scene._commandList;
         var cullingVolume = scene._frameState.cullingVolume;
@@ -310,10 +292,11 @@ define([
         var direction = camera.getDirectionWC();
         var position = camera.getPositionWC();
 
-        var renderList = scene._renderList;
-        renderList.length = 0;
-        var bins = scene._bins;
-        bins.length = 0;
+        var frustumCommandsList = scene._frustumCommandsList;
+        var frustumsLength = frustumCommandsList.length;
+        for (var n = 0; n < frustumsLength; ++n) {
+            frustumCommandsList[n].commands.length = 0;
+        }
 
         var near = Number.MAX_VALUE;
         var far = Number.MIN_VALUE;
@@ -346,16 +329,13 @@ define([
                         continue;
                     }
 
-                    renderList.push(command);
-
-                    distances = transformedBV.distance(position, direction, distances);
-                    near = Math.min(near, distances.x);
-                    far = Math.max(far, distances.y);
+                    distances = transformedBV.getPlaneDistances(position, direction, distances);
+                    near = Math.min(near, distances.start);
+                    far = Math.max(far, distances.stop);
 
                     insertIntoBin(scene, command, distances);
                 } else {
                     undefBV = true;
-                    renderList.push(command);
                     insertIntoBin(scene, command);
                 }
             }
@@ -369,16 +349,28 @@ define([
             far = Math.min(far, camera.frustum.far);
         }
 
-        scene._near = near;
-        scene._far = far;
+        // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
+        // last frame, else compute the new frustums and sort them by frustum again.
+        var farToNearRatio = scene.farToNearRatio;
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+        if (near < far && (frustumsLength === 0 || numFrustums !== frustumsLength ||
+                near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)) {
+            frustumCommandsList.length = numFrustums;
+            for (var m = 0; m < numFrustums; ++m) {
+                var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
+                var curFar = Math.min(far, farToNearRatio * curNear);
+                curNear *= 0.99;
 
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(scene.farToNearRatio));
-        if (near >= scene._binNear && far <= scene._binFar && numFrustums === scene._bins.length) {
-            scene._useBins = true;
-        } else {
-            scene._useBins = false;
-            scene._binNear = near;
-            scene._binFar = far;
+                var frustumCommands = frustumCommandsList[m];
+                if (typeof frustumCommands === 'undefined') {
+                    frustumCommands = frustumCommandsList[m] = new FrustumCommands(curNear, curFar);
+                } else {
+                    frustumCommands.near = curNear;
+                    frustumCommands.far = curFar;
+                }
+            }
+
+            createPotentiallyVisibleSet(scene, listName);
         }
     }
 
@@ -400,12 +392,7 @@ define([
         return scratchCommand;
     }
 
-    var scratchNearPlane = new Cartesian4();
-    var scratchFarPlane = new Cartesian4();
-    var scratchRenderCartesian3 = new Cartesian3();
-
-    function renderPrimitives(scene, framebuffer) {
-        var farToNearRatio = scene.farToNearRatio;
+    function executeCommands(scene, framebuffer) {
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
 
@@ -415,110 +402,32 @@ define([
             color : Color.BLACK
         });
         var clearDepth = context.createClearState({
-            depth : 1.0
+            depth : 1.0,
+            stencil : 0.0
         });
         context.clear(clearColor);
 
-        var numFrustums;
-        var near;
-        var far;
-        var length;
+        var frustumCommandsList = scene._frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
+        for (var i = 0; i < numFrustums; ++i) {
+            context.clear(clearDepth);
 
-        if (scene._useBins) {
-            var bins = scene._bins;
-            near = scene._binNear;
-            far = scene._binFar;
+            var index = numFrustums - i - 1.0;
+            var frustumCommands = frustumCommandsList[index];
+            frustum.near = frustumCommands.near;
+            frustum.far = frustumCommands.far;
 
-            numFrustums = bins.length;
-            for (var i = 0; i < numFrustums; ++i) {
-                context.clear(clearDepth);
-                var binIndex = numFrustums - i - 1.0;
-                frustum.near = Math.pow(farToNearRatio, binIndex) * near;
-                frustum.far = frustum.near * farToNearRatio;
+            us.updateFrustum(frustum);
 
-                us.updateFrustum(frustum);
-
-                var bin = bins[binIndex];
-                if (typeof bin !== 'undefined') {
-                    length = bin.length;
-                    for (var j = 0; j < length; ++j) {
-                        context.draw(getFinalCommand(bin[j], framebuffer));
-                    }
-                }
-            }
-        } else {
-            var renderList = scene._renderList;
-
-            near = scene._near;
-            far = scene._far;
-
-            var direction = camera.getDirectionWC();
-            var position = camera.getPositionWC();
-
-            var nearPlane = scratchNearPlane;
-            nearPlane.x = direction.x;
-            nearPlane.y = direction.y;
-            nearPlane.z = direction.z;
-
-            var farPlane = scratchFarPlane;
-            farPlane.x = -direction.x;
-            farPlane.y = -direction.y;
-            farPlane.z = -direction.z;
-
-            numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-            for (var p = 0; p < numFrustums; ++p) {
-                context.clear(clearDepth);
-                frustum.near = Math.pow(farToNearRatio, numFrustums - p - 1.0) * near;
-                frustum.far = frustum.near * farToNearRatio;
-
-                us.updateFrustum(frustum);
-
-                // compute near plane
-                var nearCenter = scratchRenderCartesian3;
-                Cartesian3.multiplyByScalar(direction, frustum.near, nearCenter);
-                Cartesian3.add(position, nearCenter, nearCenter);
-                nearPlane.w = -Cartesian3.dot(direction, nearCenter);
-
-                // compute far plane
-                var farCenter = scratchRenderCartesian3;
-                Cartesian3.multiplyByScalar(direction, frustum.far, farCenter);
-                Cartesian3.add(position, farCenter, farCenter);
-                farPlane.w = -Cartesian3.dot(farPlane, farCenter);
-
-                length = renderList.length;
-                for (var q = 0; q < length; ++q) {
-                    var renderCommand = renderList[q];
-
-                    var boundingVolume = renderCommand.boundingVolume;
-                    if (typeof boundingVolume !== 'undefined') {
-                        var modelMatrix = defaultValue(renderCommand.modelMatrix, Matrix4.IDENTITY);
-                        var transformedBV = boundingVolume.transform(modelMatrix); //MULTIFRUSTUM TODO: Remove this allocation.
-
-                        if (transformedBV.intersect(farPlane) === Intersect.OUTSIDE) {
-                            continue; // MULTIFURSTUM TODO: discard command
-                        }
-
-                        var nearIntersect = transformedBV.intersect(nearPlane);
-                        if (nearIntersect === Intersect.OUTSIDE) {
-                            continue;
-                        }
-
-                        context.draw(getFinalCommand(renderCommand, framebuffer));
-
-                        if (nearIntersect === Intersect.INSIDE) {
-                            renderList.splice(q, 1);
-                            length = renderList.length;
-                            --q;
-                        }
-                    } else {
-                        context.draw(getFinalCommand(renderCommand, framebuffer));
-                    }
-                }
+            var commands = frustumCommands.commands;
+            var length = commands.length;
+            for (var j = 0; j < length; ++j) {
+                context.draw(getFinalCommand(commands[j], framebuffer));
             }
         }
     }
 
-    function renderOverlays(scene) {
+    function executeOverlayCommands(scene) {
         var context = scene._context;
         var commandLists = scene._commandList;
         var length = commandLists.length;
@@ -539,8 +448,8 @@ define([
     Scene.prototype.render = function() {
         update(this);
         createPotentiallyVisibleSet(this, 'colorList');
-        renderPrimitives(this);
-        renderOverlays(this);
+        executeCommands(this);
+        executeOverlayCommands(this);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -643,7 +552,7 @@ define([
         primitives.update(context, frameState, commandLists);
 
         createPotentiallyVisibleSet(this, 'pickList');
-        renderPrimitives(this, fb);
+        executeCommands(this, fb);
 
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);

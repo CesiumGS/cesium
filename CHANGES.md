@@ -25,6 +25,7 @@ Beta Releases
 * Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
 * Added new automatic GLSL uniforms: `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
 * Added `czm_translateRelativeToEye` GLSL function.
+* Improved near/far plane distances and eliminated z-fighting.
 
 ### b8 - 09/05/2012
 

@@ -359,8 +359,6 @@ define([
         var startFOVy = camera.frustum.fovy;
         var endFOVy = CesiumMath.RADIANS_PER_DEGREE * 0.5;
         var d = startPos.magnitude() * Math.tan(startFOVy * 0.5);
-
-        // TODO: remove this when multi-frustum is implemented.
         camera.frustum.far = d / Math.tan(endFOVy * 0.5) + 10000000.0;
 
         var update = function(value) {

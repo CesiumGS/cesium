@@ -138,6 +138,7 @@ define([
          */
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
+        this._sp = undefined;
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
@@ -381,7 +382,6 @@ define([
         if (typeof this._sp === 'undefined') {
             this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
         }
-
         this._removePolylines();
         this._updateMode(frameState);
 
@@ -474,7 +474,7 @@ define([
         var commands;
         var command;
         polylineBuckets = this._polylineBuckets;
-
+        var sp = this._sp;
         this._commandLists.removeAll();
         if (typeof polylineBuckets !== 'undefined') {
             if (pass.color) {
@@ -500,7 +500,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._uniforms;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsOne;
@@ -515,7 +515,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._uniforms;
                         command.vertexArray = vaColor.va;
                         command.renderState = bucketLocator.rsTwo;
@@ -530,7 +530,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._uniforms;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsThree;
@@ -558,7 +558,7 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
+                        command.shaderProgram = sp;
                         command.uniformMap = this._uniforms;
                         command.vertexArray = vaPickColor.va;
                         command.renderState = bucketLocator.rsPick;
@@ -1134,6 +1134,8 @@ define([
         return polyline._setSegments(segments);
     };
 
+    var scratchWritePosition = new Cartesian3();
+
     /**
      * @private
      */
@@ -1149,7 +1151,11 @@ define([
             var positions = this._getPositions(polyline);
             var positionsLength = positions.length;
             for ( var j = 0; j < positionsLength; ++j) {
-                EncodedCartesian3.writeElements(positions[j], positionArray, positionIndex);
+                var position = positions[j];
+                scratchWritePosition.x = position.x;
+                scratchWritePosition.y = position.y;
+                scratchWritePosition.z = (this.mode !== SceneMode.SCENE2D) ? position.z : 0.0;
+                EncodedCartesian3.writeElements(scratchWritePosition, positionArray, positionIndex);
                 outlineColorArray[colorIndex] = Color.floatToByte(outlineColor.red);
                 outlineColorArray[colorIndex + 1] = Color.floatToByte(outlineColor.green);
                 outlineColorArray[colorIndex + 2] = Color.floatToByte(outlineColor.blue);
@@ -1464,7 +1470,11 @@ define([
             var index = 0;
             var positions = this._getPositions(polyline);
             for ( var i = 0; i < positionsLength; ++i) {
-                EncodedCartesian3.writeElements(positions[i], positionArray, index);
+                var position = positions[i];
+                scratchWritePosition.x = position.x;
+                scratchWritePosition.y = position.y;
+                scratchWritePosition.z = (this.mode !== SceneMode.SCENE2D) ? position.z : 0.0;
+                EncodedCartesian3.writeElements(scratchWritePosition, positionArray, index);
                 index += 6;
             }
 
