@@ -105,9 +105,6 @@ require([
     
         var that = this;
         this._colorCommand.uniformMap = {
-            u_model: function() {
-                return that._colorCommand.modelMatrix;
-            },
             u_color: function() {
                 return {
                     red: 1.0,
@@ -118,9 +115,6 @@ require([
             }
         };
         this._pickCommand.uniformMap = {
-            u_model: function() {
-                return that._pickCommand.modelMatrix;
-            },
             u_color: function() {
                 return that._pickId.normalizedRgba;
             }
@@ -236,12 +230,6 @@ require([
 
         var that = this;
         this._colorCommand.uniformMap = {
-            u_model : function() {
-                if (that._mode === Cesium.SceneMode.SCENE3D) {
-                    return that._modelMatrix;
-                }
-                return Cesium.Matrix4.IDENTITY;
-            },
             u_color : function() {
                 return { red : 0.0, green : 1.0, blue : 0.0, alpha : 1.0 };
             },
@@ -250,12 +238,6 @@ require([
             }
         };
         this._pickCommand.uniformMap = {
-            u_model : function() {
-                if (that._mode === Cesium.SceneMode.SCENE3D) {
-                    return that._modelMatrix;
-                }
-                return Cesium.Matrix4.IDENTITY;
-            },
             u_color : function() {
                 return that._pickId.normalizedRgba;
             },

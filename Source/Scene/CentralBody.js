@@ -937,12 +937,11 @@ define([
                 cull : {
                     enabled : true,
                     face : CullFace.FRONT
-                }
-            // TODO: revisit when multi-frustum/depth test is ready
-            /*depthTest : {
-                enabled : true
-            },
-            depthMask : false*/
+                },
+                depthTest : {
+                    enabled : true
+                },
+                depthMask : false
             });
             this._skyCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMaximumRadius() * 1.025);
         }
@@ -965,9 +964,6 @@ define([
                 this._rsColorWithoutDepthTest = context.createRenderState({ // Write color, not depth
                     cull : {
                         enabled : true
-                    },
-                    depthTest : {
-                        enabled : false
                     }
                 });
                 this._depthCommand.renderState = context.createRenderState({ // Write depth, not color
@@ -1292,9 +1288,6 @@ define([
 
         if (pass.color) {
             var colorCommandList = commandLists.colorList;
-            if (this.showSkyAtmosphere) {
-                colorCommandList.push(this._skyCommand);
-            }
 
             // render quads to fill the poles
             if (mode === SceneMode.SCENE3D) {
@@ -1320,6 +1313,10 @@ define([
             // render depth plane
             if (mode === SceneMode.SCENE3D) {
                 colorCommandList.push(this._depthCommand);
+            }
+
+            if (this.showSkyAtmosphere) {
+                colorCommandList.push(this._skyCommand);
             }
         }
 

@@ -559,7 +559,6 @@ require({
                 galleryErrorMsg.style.display = 'inline-block';
             }
 
-            registry.byId('demosContainer').scrollTo({x:0, y:0});
             showGallery();
             scheduleHintNoChange();
         });
@@ -608,6 +607,21 @@ require({
                 domClass.remove('bucketFrame', 'makeThumbnail');
             }
         });
+
+        var demosContainer = dom.byId('demosContainer');
+        if (typeof document.onmousewheel !== 'undefined') {
+            demosContainer.addEventListener('mousewheel', function (e) {
+                if (typeof e.wheelDelta !== 'undefined' && e.wheelDelta) {
+                    demosContainer.scrollLeft -= e.wheelDelta * 70/120;
+                }
+            }, false);
+        } else {
+            demosContainer.addEventListener('DOMMouseScroll', function (e) {
+                if (typeof e.detail !== 'undefined' && e.detail) {
+                    demosContainer.scrollLeft += e.detail * 70/3;
+                }
+            }, false);
+        }
 
         var galleryContainer = registry.byId('galleryContainer');
         galleryContainer.demoTileHeightRule = demoTileHeightRule;
