@@ -1039,7 +1039,8 @@ define([
          */
         highlightObject : function(selectedObject) {
             if (this.highlightedObject !== selectedObject) {
-                if (typeof this.highlightedObject !== 'undefined' && !this.highlightedObject.isDestroyed()) {
+                if (typeof this.highlightedObject !== 'undefined' &&
+                        (typeof this.highlightedObject.isDestroyed !== 'function' || !this.highlightedObject.isDestroyed())) {
                     if (typeof this.highlightedObject.material !== 'undefined') {
                         this.highlightedObject.material = this._originalMaterial;
                     } else if (typeof this.highlightedObject.outerMaterial !== 'undefined') {
