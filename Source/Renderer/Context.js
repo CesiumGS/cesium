@@ -160,6 +160,8 @@ define([
         return glWrapper;
     }
 
+    var webGLContextID;
+
     /**
      * DOC_TBA
      *
@@ -174,18 +176,8 @@ define([
             throw new DeveloperError('canvas is required.');
         }
 
-        var webGLSupport = FeatureDetection.detectWebGLSupport();
-
-        if (!webGLSupport.success) {
-            var message;
-
-            if (webGLSupport.browserNotSupported) {
-                message = 'The browser does not support WebGL.  Visit http://get.webgl.org/.';
-            } else if (webGLSupport.couldNotCreateContext) {
-                message = 'The browser supports WebGL, but initialization failed.  Visit http://get.webgl.org/troubleshooting for troubleshooting options.';
-            }
-
-            throw new RuntimeError(message);
+        if (!FeatureDetection.supportsWebGL()) {
+            throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org/.');
         }
 
         this._canvas = canvas;
@@ -194,7 +186,21 @@ define([
         options.stencil = defaultValue(options.stencil, true);
         options.alpha = defaultValue(options.alpha, false);
 
-        this._originalGLContext = canvas.getContext(webGLSupport.contextID, options);
+        var gl;
+        if (typeof webGLContextID === 'undefined') {
+            webGLContextID = 'webgl';
+            gl = canvas.getContext(webGLContextID, options);
+            if (!gl) {
+                webGLContextID = 'experimental-webgl';
+                gl = canvas.getContext(webGLContextID, options);
+            }
+        } else {
+            gl = canvas.getContext(webGLContextID, options);
+        }
+
+        if (!gl) {
+            throw new RuntimeError('The browser supports WebGL, but initialization failed.  Visit http://get.webgl.org/troubleshooting for troubleshooting options.');
+        }
 
         this._id = createGuid();
 
@@ -208,7 +214,8 @@ define([
         // TODO:  Also need sample_alpha_to_coverage_enable for ColladaFX
         this._shaderCache = new ShaderCache(this);
 
-        var gl = this._gl = this._originalGLContext;
+        this._gl = gl;
+        this._originalGLContext = gl;
 
         this._version = gl.getParameter(gl.VERSION);
         this._shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);

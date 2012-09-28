@@ -15,6 +15,6 @@ defineSuite(['Core/FeatureDetection'], function(FeatureDetection) {
 
     it('detects WebGL support', function() {
         //just make sure the function runs, the test can't expect a particular result
-        expect(FeatureDetection.detectWebGLSupport()).toBeDefined();
+        expect(FeatureDetection.supportsWebGL()).toBeDefined();
     });
 });
