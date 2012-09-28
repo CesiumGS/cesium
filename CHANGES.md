@@ -21,6 +21,7 @@ Beta Releases
 * Add new utility class, `DynamicObjectView` for tracking a DynamicObject with the camera across scene modes; also hooked up CesiumViewerWidget to use it.
 * Added `enableTranslate`, `enableZoom`, and `enableRotate` properties to `Camera2DController` to selectively toggle camera behavior.  All values default to `true`.
 * Added `Camera2DController.setPositionCartographic` to simplify moving the camera programmatically when in 2D mode.
+* Improved near/far plane distances and eliminated z-fighting.
 * Added `Matrix4.multiplyByTranslation`, `Matrix4.fromScale`, and `Matrix3.fromScale`.
 
 ### b8 - 09/05/2012

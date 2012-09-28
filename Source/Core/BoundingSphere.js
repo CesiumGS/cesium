@@ -2,6 +2,7 @@
 define([
         './defaultValue',
         './DeveloperError',
+        './Cartesian2',
         './Cartesian3',
         './Cartesian4',
         './Cartographic',
@@ -9,10 +10,12 @@ define([
         './EquidistantCylindricalProjection',
         './Extent',
         './Intersect',
+        './Interval',
         './Matrix4'
     ], function(
         defaultValue,
         DeveloperError,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
@@ -20,6 +23,7 @@ define([
         EquidistantCylindricalProjection,
         Extent,
         Intersect,
+        Interval,
         Matrix4) {
     "use strict";
 
@@ -435,6 +439,51 @@ define([
         return result;
     };
 
+    var scratchCartesian3 = new Cartesian3();
+    /**
+     * The distances calculated by the vector from the center of the bounding sphere to position projected onto direction
+     * plus/minus the radius of the bounding sphere.
+     * <br>
+     * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
+     * closest and farthest planes from position that intersect the bounding sphere.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The bounding sphere to calculate the distance to.
+     * @param {Cartesian3} position The position to calculate the distance from.
+     * @param {Cartesian3} direction The direction from position.
+     * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
+     * @return {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
+     *
+     * @exception {DeveloperError} sphere is required.
+     * @exception {DeveloperError} position is required.
+     * @exception {DeveloperError} direction is required.
+     */
+    BoundingSphere.getPlaneDistances = function(sphere, position, direction, result) {
+        if (typeof sphere === 'undefined') {
+            throw new DeveloperError('sphere is required.');
+        }
+
+        if (typeof position === 'undefined') {
+            throw new DeveloperError('position is required.');
+        }
+
+        if (typeof direction === 'undefined') {
+            throw new DeveloperError('direction is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new Interval();
+        }
+
+        var toCenter = Cartesian3.subtract(sphere.center, position, scratchCartesian3);
+        var proj = Cartesian3.multiplyByScalar(direction, direction.dot(toCenter), scratchCartesian3);
+        var mag = proj.magnitude();
+
+        result.start = mag - sphere.radius;
+        result.stop = mag + sphere.radius;
+        return result;
+    };
+
     /**
      * Compares the provided BoundingSphere componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -520,6 +569,26 @@ define([
      */
     BoundingSphere.prototype.transform = function(transform, result) {
         return BoundingSphere.transform(this, transform, result);
+    };
+
+    /**
+     * The distances calculated by the vector from the center of the bounding sphere to position projected onto direction
+     * plus/minus the radius of the bounding sphere.
+     * <br>
+     * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
+     * closest and farthest planes from position that intersect the bounding sphere.
+     * @memberof BoundingSphere
+     *
+     * @param {Cartesian3} position The position to calculate the distance from.
+     * @param {Cartesian3} direction The direction from position.
+     * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
+     * @return {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
+     *
+     * @exception {DeveloperError} position is required.
+     * @exception {DeveloperError} direction is required.
+     */
+    BoundingSphere.prototype.getPlaneDistances = function(position, direction, result) {
+        return BoundingSphere.getPlaneDistances(this, position, direction, result);
     };
 
     /**

@@ -151,7 +151,7 @@ defineSuite([
         expect(clone.equals(frustum)).toEqual(true);
     });
 
-    it('throws with null plane(s)', function() {
+    it('throws with undefined frustum parameters', function() {
         var frustum = new OrthographicFrustum();
         expect(function() {
             frustum.getProjectionMatrix();
