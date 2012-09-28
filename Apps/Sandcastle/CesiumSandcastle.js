@@ -115,7 +115,7 @@ require({
         var cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dom.byId('docPopup');
         var docMessage = dom.byId('docPopupMessage');
-        var local = { 'docTypes': [],  'headers': '<html><head></head><body>', 'bucketName': ''};
+        var local = { 'docTypes': [],  'headers': '<html><head></head><body>', 'bucketName': '', 'emptyBucket': ''};
         var bucketTypes = {};
         var demoTooltips = {};
         var errorLines = [];
@@ -187,6 +187,10 @@ require({
             addExtraLine = true;
         }
 
+        var bucketFrame = document.getElementById('bucketFrame');
+        var bucketPane = registry.byId('bucketPane');
+        var bucketWaiting = false;
+
         xhr.get({
             url: '../../Build/Documentation/types.txt',
             handleAs: 'json',
@@ -196,31 +200,6 @@ require({
         }).then(function (value) {
             local.docTypes = value;
         });
-
-        function loadBucket(bucketName) {
-            var changeIFrameBucket = false;
-            if (local.bucketName !== bucketName) {
-                local.bucketName = bucketName;
-                changeIFrameBucket = true;
-                if (typeof bucketTypes[bucketName] !== 'undefined') {
-                    local.headers = bucketTypes[bucketName];
-                } else {
-                    local.headers = '<html><head></head><body data-sandcastle-bucket-loaded="no">';
-                    xhr.get({
-                        url: 'templates/' + bucketName,
-                        handleAs: 'text'
-                    }).then(function (value) {
-                        var pos = value.indexOf('<body');
-                        pos = value.indexOf('>', pos);
-                        bucketTypes[bucketName] = value.substring(0, pos + 1) + '\n';
-                        if (local.bucketName === bucketName) {
-                            local.headers = bucketTypes[bucketName];
-                        }
-                    });
-                }
-            }
-            return changeIFrameBucket;
-        }
 
         function highlightRun() {
             domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
@@ -301,9 +280,6 @@ require({
             }
             docTimer = window.setTimeout(showDocPopup, 500);
         }
-
-        var bucketFrame = document.getElementById('bucketFrame');
-        var bucketPane = registry.byId('bucketPane');
 
         var abbrDiv = document.createElement('div');
         var abbrEle = document.createElement('abbr');
@@ -433,15 +409,10 @@ require({
             tabs.selectChild(registry.byId('logContainer'));
         }
 
-        function runCesiumHelper() {
+        CodeMirror.commands.runCesium = function(cm) {
             clearErrorsAddHints();
             clearRun();
             cesiumContainer.selectChild(bucketPane);
-console.log('runCesiumHelper bucketFrame.src=' + bucketFrame.src);
-        }
-
-        CodeMirror.commands.runCesium = function(cm) {
-            runCesiumHelper();
 console.log('RELOAD bucketFrame.src=' + bucketFrame.src);
             bucketFrame.contentWindow.location.reload();
         };
@@ -477,6 +448,79 @@ console.log('RELOAD bucketFrame.src=' + bucketFrame.src);
             }
         });
 
+        function applyBucket() {
+            if (local.emptyBucket && local.bucketName && typeof bucketTypes[local.bucketName] === 'string') {
+                bucketWaiting = false;
+console.log('Apply bucket');
+                var bucketDoc = bucketFrame.contentDocument;
+                if (local.headers.substring(0, local.emptyBucket.length) !== local.emptyBucket) {
+                    var ele = document.createElement('span');
+                    ele.className = 'consoleError';
+                    ele.textContent = 'Error, empty bucket.html must match first part of ' + local.bucketName + ' exactly.\n';
+                    appendConsole(ele);
+                } else {
+                    var pos = local.headers.indexOf('</head>');
+                    var extraHeaders = local.headers.substring(local.emptyBucket.length, pos);
+                    bucketDoc.head.innerHTML += extraHeaders;
+                    window.setTimeout(function () {
+                        console.log('Apply body');
+                        debugger;
+                        bucketDoc = bucketFrame.contentDocument;
+                        var bodyEle = bucketDoc.createElement('div');
+                        bodyEle.innerHTML = htmlEditor.getValue();
+                        bucketDoc.body.appendChild(bodyEle);
+                        var jsEle = bucketDoc.createElement('script');
+                        jsEle.type = 'text/javascript';
+                        jsEle.textContent = (addExtraLine ? '\n' : '') + jsEditor.getValue();
+                        bucketDoc.body.appendChild(jsEle);
+                    }, 500);
+                }
+            } else {
+console.log('Wait for bucket');
+                bucketWaiting = true;
+            }
+        }
+
+        function applyBucketIfWaiting() {
+            if (bucketWaiting) {
+                applyBucket();
+            }
+        }
+
+        xhr.get({
+            url: 'templates/bucket.html',
+            handleAs: 'text'
+        }).then(function (value) {
+            var pos = value.indexOf('</head>');
+            local.emptyBucket = value.substring(0, pos);
+console.log('Empty bucket loaded');
+            applyBucketIfWaiting();
+        });
+
+        function loadBucket(bucketName) {
+console.log('loadBucket ' + bucketName);
+            if (local.bucketName !== bucketName) {
+                local.bucketName = bucketName;
+                if (typeof bucketTypes[bucketName] !== 'undefined') {
+                    local.headers = bucketTypes[bucketName];
+                } else {
+                    local.headers = '<html><head></head><body data-sandcastle-bucket-loaded="no">';
+                    xhr.get({
+                        url: 'templates/' + bucketName,
+                        handleAs: 'text'
+                    }).then(function (value) {
+                        var pos = value.indexOf('<body');
+                        pos = value.indexOf('>', pos);
+                        bucketTypes[bucketName] = value.substring(0, pos + 1) + '\n';
+                        if (local.bucketName === bucketName) {
+                            local.headers = bucketTypes[bucketName];
+                        }
+                        applyBucketIfWaiting();
+                    });
+                }
+            }
+        }
+
         function loadFromGallery(demo) {
             var pos = demo.code.indexOf('<body');
             pos = demo.code.indexOf('>', pos);
@@ -499,14 +543,10 @@ console.log('RELOAD bucketFrame.src=' + bucketFrame.src);
                     script = script.substring(1);
                 }
                 htmlEditor.setValue(script);
-                if (typeof demo.bucket === 'string' && loadBucket(demo.bucket)) {
-                    runCesiumHelper();
-console.log('OLD bucketFrame.src=' + bucketFrame.src);
-                    bucketFrame.src = 'templates/' + demo.bucket;
-console.log('NEW bucketFrame.src=' + bucketFrame.src);
-                } else {
-                    CodeMirror.commands.runCesium(jsEditor);
+                if (typeof demo.bucket === 'string') {
+                    loadBucket(demo.bucket);
                 }
+                CodeMirror.commands.runCesium(jsEditor);
             }
         }
 
@@ -519,23 +559,21 @@ console.log('NEW bucketFrame.src=' + bucketFrame.src);
 
         window.addEventListener('message', function (e) {
             var line;
-            // The iframe (bucket-*.html) sends this message on load.
+            // The iframe (bucket.html) sends this message on load.
             // This triggers the code to be injected into the iframe.
             if (e.data === 'reload') {
                 var bucketDoc = bucketFrame.contentDocument;
-console.log('reload fired. Dup? ' + bucketDoc.body.getAttribute('data-sandcastle-loaded') + ' - src=' + bucketFrame.src);
+                if (!local.bucketName) {
+console.log('reload fired, bucket not specified yet.');
+                    return;
+                }
+console.log('reload fired. Dup? ' + bucketDoc.body.getAttribute('data-sandcastle-loaded') + ' - name=' + local.bucketName);
                 if (bucketDoc.body.getAttribute('data-sandcastle-loaded') !== 'yes') {
-                    logOutput.innerHTML = "";
-                    // This happens after a Run (F8) reloads bucket-*.html, to inject the editor code
-                    // into the iframe, causing the demo to run there.
-                    var bodyEle = bucketDoc.createElement('div');
-                    bodyEle.innerHTML = htmlEditor.getValue();
-                    bucketDoc.body.appendChild(bodyEle);
                     bucketDoc.body.setAttribute('data-sandcastle-loaded', 'yes');
-                    var jsEle = bucketDoc.createElement('script');
-                    jsEle.type = 'text/javascript';
-                    jsEle.textContent = (addExtraLine ? '\n' : '') + jsEditor.getValue();
-                    bucketDoc.body.appendChild(jsEle);
+                    logOutput.innerHTML = "";
+                    // This happens after a Run (F8) reloads bucket.html, to inject the editor code
+                    // into the iframe, causing the demo to run there.
+                    applyBucket();
                     if (docError) {
                         appendConsole('consoleError', "Documentation not available.  Please run the " +
                                 "'generateDocumentation' build script to generate Cesium documentation.");
