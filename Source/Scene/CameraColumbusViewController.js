@@ -32,6 +32,7 @@ define([
     "use strict";
 
     var maintainInertia = CameraHelpers.maintainInertia;
+    var handleZoom = CameraHelpers.handleZoom;
 
     /**
      * DOC_TBD
@@ -112,11 +113,11 @@ define([
         }
 
         if (zoomimg) {
-            this._spindleController._zoom(zoom.getMovement());
+            this._zoom(zoom.getMovement());
         }
 
         if (zoom && !zoomimg && this.inertiaZoom < 1.0) {
-            maintainInertia(zoom, this.inertiaZoom, this._spindleController._zoom, this._spindleController, '_lastInertiaZoomMovement');
+            maintainInertia(zoom, this.inertiaZoom, this._zoom, this, '_lastInertiaZoomMovement');
         }
 
         this._freeLookController.update();
@@ -275,6 +276,10 @@ define([
         camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
         camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+    };
+
+    CameraColumbusViewController.prototype._zoom = function(movement) {
+        handleZoom(this._spindleController, movement, this._camera.position.z);
     };
 
     /**
