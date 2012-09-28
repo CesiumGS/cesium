@@ -100,6 +100,12 @@ define([
         this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
 
         this._isBaseLayer = false;
+
+        // delay construction of scratch Float32Array since the setup function needs to run
+        // regardless of whether WebGL is supported.
+        if (typeof float32ArrayScratch === 'undefined') {
+            float32ArrayScratch = new Float32Array(1);
+        }
     }
 
     /**
@@ -419,7 +425,7 @@ define([
         oneOverMercatorHeight : 0
     };
 
-    var float32ArrayScratch = new Float32Array(1);
+    var float32ArrayScratch;
 
     function reprojectToGeographic(imageryLayer, context, texture, extent) {
         if (typeof imageryLayer._fbReproject === 'undefined') {
@@ -477,6 +483,7 @@ define([
 
         var sinLatitude = Math.sin(extent.south);
         var southMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
+
         float32ArrayScratch[0] = southMercatorY;
         uniformMap.southMercatorYHigh = float32ArrayScratch[0];
         uniformMap.southMercatorYLow = southMercatorY - float32ArrayScratch[0];
