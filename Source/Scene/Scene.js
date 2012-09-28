@@ -109,6 +109,12 @@ define([
          * @type Number
          */
         this.farToNearRatio = 1000.0;
+
+        // initial guess at frustums.
+        var near = this._camera.frustum.near;
+        var far = this._camera.frustum.far;
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
+        updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList);
     };
 
     /**
@@ -259,13 +265,26 @@ define([
         scene._primitives.update(scene._context, scene._frameState, scene._commandList);
     }
 
+    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList) {
+        frustumCommandsList.length = numFrustums;
+        for (var m = 0; m < numFrustums; ++m) {
+            var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
+            var curFar = Math.min(far, farToNearRatio * curNear);
+            curNear *= 0.99;
+
+            var frustumCommands = frustumCommandsList[m];
+            if (typeof frustumCommands === 'undefined') {
+                frustumCommands = frustumCommandsList[m] = new FrustumCommands(curNear, curFar);
+            } else {
+                frustumCommands.near = curNear;
+                frustumCommands.far = curFar;
+            }
+        }
+    }
+
     function insertIntoBin(scene, command, distance) {
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
-        if (length === 0 || frustumCommandsList[length - 1].far <= frustumCommandsList[0].near) {
-            return;
-        }
-
         for (var i = 0; i < length; ++i) {
             var frustumCommands = frustumCommandsList[i];
             var curNear = frustumCommands.near;
@@ -357,23 +376,8 @@ define([
         // last frame, else compute the new frustums and sort them by frustum again.
         var farToNearRatio = scene.farToNearRatio;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-        if (near < far && (frustumsLength === 0 || numFrustums !== frustumsLength ||
-                near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)) {
-            frustumCommandsList.length = numFrustums;
-            for (var m = 0; m < numFrustums; ++m) {
-                var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
-                var curFar = Math.min(far, farToNearRatio * curNear);
-                curNear *= 0.99;
-
-                var frustumCommands = frustumCommandsList[m];
-                if (typeof frustumCommands === 'undefined') {
-                    frustumCommands = frustumCommandsList[m] = new FrustumCommands(curNear, curFar);
-                } else {
-                    frustumCommands.near = curNear;
-                    frustumCommands.far = curFar;
-                }
-            }
-
+        if (numFrustums !== frustumsLength || near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far) {
+            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
             createPotentiallyVisibleSet(scene, listName);
         }
     }
@@ -405,7 +409,7 @@ define([
         var clearColor = context.createClearState({
             color : Color.BLACK
         });
-        var clearDepth = context.createClearState({
+        var clearDepthStencil = context.createClearState({
             depth : 1.0,
             stencil : 0.0
         });
@@ -414,7 +418,7 @@ define([
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
         for (var i = 0; i < numFrustums; ++i) {
-            context.clear(clearDepth);
+            context.clear(clearDepthStencil);
 
             var index = numFrustums - i - 1.0;
             var frustumCommands = frustumCommandsList[index];
@@ -442,8 +446,7 @@ define([
             var commandList = commandLists[i].overlayList;
             var commandListLength = commandList.length;
             for (var j = 0; j < commandListLength; ++j) {
-                var command = commandList[j];
-                context.draw(command);
+                context.draw(commandList[j]);
             }
         }
     }
