@@ -484,18 +484,48 @@ console.log('RELOAD bucketFrame.src=' + bucketFrame.src);
             for (i = 0; i < len; ++i) {
                 bucketDoc.head.removeChild(nodes[i]);
             }
-            // Need to break up this for loop into scriptEle.onload events I think.
-            for (i = 0; i < len; ++i) {
-                node = nodes[i];
-                scriptEle = bucketDoc.createElement('script');
-                numAttrs = node.attributes.length;
-                for (j = 0; j < numAttrs; ++j) {
-                    scriptEle.setAttribute(node.attributes[j].name, node.attributes[j].value);
+            // Load each script after the previous one has loaded.
+            var loadScript = function () {
+                if (bucketFrame.contentDocument !== bucketDoc) {
+console.log('obsolete bucketDoc');
+                    return;
                 }
-                scriptEle.innerHTML = node.innerHTML;
-                bucketDoc.head.appendChild(scriptEle);
-            }
+                if (nodes.length > 0) {
+                    node = nodes.shift();
+                    scriptEle = bucketDoc.createElement('script');
+                    numAttrs = node.attributes.length;
+                    var hasSrc = false, name, val;
+                    for (j = 0; j < numAttrs; ++j) {
+                        name = node.attributes[j].name;
+                        val = node.attributes[j].value;
+                        scriptEle.setAttribute(name, val);
+                        if (name === 'src' && val) {
+                            hasSrc = true;
+                        }
+                    }
+                    scriptEle.innerHTML = node.innerHTML;
+                    if (hasSrc) {
+                        scriptEle.onload = loadScript;
+                        bucketDoc.head.appendChild(scriptEle);
+                    } else {
+                        bucketDoc.head.appendChild(scriptEle);
+                        loadScript();
+                    }
+                } else {
+console.log('Apply body');
+                    // Apply user code to bucket.
+                    var bodyEle = bucketDoc.createElement('div');
+                    bodyEle.innerHTML = htmlEditor.getValue();
+                    bucketDoc.body.appendChild(bodyEle);
+                    var jsEle = bucketDoc.createElement('script');
+                    jsEle.type = 'text/javascript';
+                    jsEle.textContent = (addExtraLine ? '\n' : '') + jsEditor.getValue();
+                    bucketDoc.body.appendChild(jsEle);
+                }
+            };
+            loadScript();
         }
+window.bDocs = [];
 
         function applyBucket() {
             if (local.emptyBucket && local.bucketName && typeof bucketTypes[local.bucketName] === 'string') {
@@ -508,23 +538,11 @@ console.log('Apply bucket');
                     ele.textContent = 'Error, empty bucket.html must match first part of ' + local.bucketName + ' exactly.\n';
                     appendConsole(ele);
                 } else {
+window.bDocs.push(bucketDoc);
                     var pos = local.headers.indexOf('</head>');
                     var extraHeaders = local.headers.substring(local.emptyBucket.length, pos);
                     bucketDoc.head.innerHTML += extraHeaders;
-                    debugger;
                     activateBucketScripts(bucketDoc);
-                    debugger;
-                    window.setTimeout(function () {
-                        console.log('Apply body');
-                        debugger;
-                        var bodyEle = bucketDoc.createElement('div');
-                        bodyEle.innerHTML = htmlEditor.getValue();
-                        bucketDoc.body.appendChild(bodyEle);
-                        var jsEle = bucketDoc.createElement('script');
-                        jsEle.type = 'text/javascript';
-                        jsEle.textContent = (addExtraLine ? '\n' : '') + jsEditor.getValue();
-                        bucketDoc.body.appendChild(jsEle);
-                    }, 500);
                 }
             } else {
 console.log('Wait for bucket');
