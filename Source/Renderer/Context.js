@@ -4,6 +4,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
+        '../Core/FeatureDetection',
         '../Core/IndexDatatype',
         '../Core/RuntimeError',
         '../Core/PrimitiveType',
@@ -42,6 +43,7 @@ define([
         DeveloperError,
         destroyObject,
         Color,
+        FeatureDetection,
         IndexDatatype,
         RuntimeError,
         PrimitiveType,
@@ -164,36 +166,35 @@ define([
      * @alias Context
      * @constructor
      *
-     * @exception {RuntimeError} The browser does not support WebGL.  Visit http://get.webgl.org.
-     * @exception {RuntimeError} The browser supports WebGL, but initialization failed.
      * @exception {DeveloperError} canvas is required.
+     * @exception {RuntimeError} The browser does not support WebGL, or initialization failed.
      */
     var Context = function(canvas, options) {
-        if (!window.WebGLRenderingContext) {
-            throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
+        if (typeof canvas === 'undefined') {
+            throw new DeveloperError('canvas is required.');
         }
 
-        if (!canvas) {
-            throw new DeveloperError('canvas is required.');
+        var webGLSupport = FeatureDetection.detectWebGLSupport();
+
+        if (!webGLSupport.success) {
+            var message;
+
+            if (webGLSupport.browserNotSupported) {
+                message = 'The browser does not support WebGL.  Visit http://get.webgl.org/.';
+            } else if (webGLSupport.couldNotCreateContext) {
+                message = 'The browser supports WebGL, but initialization failed.  Visit http://get.webgl.org/troubleshooting for troubleshooting options.';
+            }
+
+            throw new RuntimeError(message);
         }
 
         this._canvas = canvas;
 
-        if (typeof options === 'undefined') {
-            options = {};
-        }
-        if (typeof options.stencil === 'undefined') {
-            options.stencil = true;
-        }
-        if (typeof options.alpha === 'undefined') {
-            options.alpha = false;
-        }
+        options = defaultValue(options, {});
+        options.stencil = defaultValue(options.stencil, true);
+        options.alpha = defaultValue(options.alpha, false);
 
-        this._originalGLContext = canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options);
-
-        if (!this._originalGLContext) {
-            throw new RuntimeError('The browser supports WebGL, but initialization failed.');
-        }
+        this._originalGLContext = canvas.getContext(webGLSupport.contextID, options);
 
         this._id = createGuid();
 

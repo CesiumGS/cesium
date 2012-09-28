@@ -113,13 +113,82 @@ define([
     /**
      * Detects whether the current browser supports the full screen standard.
      *
-     * @returns true if the supports the full screen standard, false if not.
+     * @returns true if the current browser supports the full screen standard, false if not.
      *
      * @see FullScreen
      * @see <a href='http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html'>W3C Fullscreen Living Specification</a>
      */
     FeatureDetection.supportsFullScreen = function() {
         return FullScreen.supportsFullScreen();
+    };
+
+    var _webGLSupport;
+
+    /**
+     * Detects whether the current browser supports WebGL.
+     *
+     * @returns A result object containing the following properties.
+     * success: true if WebGL is supported.
+     * contextID: If WebGL is supported, the contextID that is supported for WebGL.
+     * browserNotSupported: true if the browser doesn't support the WebGL API at all.
+     * couldNotCreateContext: true if the browser supports the API, but context creation failed.
+     * createContextError: Any error that was thrown when creating a context.
+     *
+     * @example
+     * var webGLSupport = FeatureDetection.getWebGLSupport();
+     * if (!webGLSupport.success) {
+     *   if (webGLSupport.browserNotSupported) {
+     *     // get a better browser
+     *   } else if (webGLSupport.couldNotCreateContext) {
+     *     // browser should work, but drivers might be blacklisted
+     *   }
+     * }
+     */
+    FeatureDetection.detectWebGLSupport = function() {
+        if (typeof _webGLSupport === 'undefined') {
+            _webGLSupport = {
+                success : false,
+                contextID : undefined,
+                browserNotSupported : false,
+                couldNotCreateContext : false,
+                createContextError : undefined
+            };
+
+            if (typeof window.WebGLRenderingContext === 'undefined') {
+                _webGLSupport.browserNotSupported = true;
+                return _webGLSupport;
+            }
+
+            var canvas = document.createElement('canvas');
+
+            if (!canvas.getContext) {
+                _webGLSupport.browserNotSupported = true;
+                return _webGLSupport;
+            }
+
+            var contextID = 'webgl';
+            try {
+                var context = canvas.getContext(contextID);
+
+                if (!context) {
+                    contextID = 'experimental-webgl';
+                    context = canvas.getContext(contextID);
+
+                    if (!context) {
+                        _webGLSupport.couldNotCreateContext = true;
+                        return _webGLSupport;
+                    }
+                }
+            } catch (e) {
+                _webGLSupport.couldNotCreateContext = true;
+                _webGLSupport.createContextError = e;
+                return _webGLSupport;
+            }
+
+            _webGLSupport.success = true;
+            _webGLSupport.contextID = contextID;
+        }
+        return _webGLSupport;
     };
 
     return FeatureDetection;
