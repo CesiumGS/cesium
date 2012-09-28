@@ -52,7 +52,7 @@ define([
      *     url: 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      */
-    var ArcGisMapServerImageryProvider = function(description) {
+    var ArcGisMapServerImageryProvider = function ArcGisMapServerImageryProvider(description) {
         description = defaultValue(description, {});
 
         if (typeof description.url === 'undefined') {
@@ -81,8 +81,7 @@ define([
         });
 
         var that = this;
-        this._isReady = when(metadata, function(data) {
-            // TODO: support non-tiled MapServers.
+        when(metadata, function(data) {
             var tileInfo = data.tileInfo;
             if (typeof tileInfo === 'undefined') {
                 that._tileWidth = 256;
@@ -112,13 +111,11 @@ define([
                         missingImageUrl : buildImageUrl(that, 0, 0, that._maximumLevel),
                         pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(200, 20), new Cartesian2(20, 200), new Cartesian2(80, 110), new Cartesian2(160, 130)],
                         disableCheckIfAllPixelsAreTransparent : true
-				    });
+                    });
                 }
             }
 
             that._ready = true;
-
-            return true;
         }, function(e) {
             /*global console*/
             console.error('failed to load metadata: ' + e);
@@ -148,6 +145,9 @@ define([
 
     /**
      * Gets the URL of the ArcGIS MapServer.
+     *
+     * @memberof ArcGisMapServerImageryProvider
+     *
      * @returns {String} The URL.
      */
     ArcGisMapServerImageryProvider.prototype.getUrl = function() {
@@ -156,6 +156,8 @@ define([
 
     /**
      * Gets the width of each tile, in pixels.
+     *
+     * @memberof ArcGisMapServerImageryProvider
      *
      * @returns {Number} The width.
      */
@@ -166,6 +168,8 @@ define([
     /**
      * Gets the height of each tile, in pixels.
      *
+     * @memberof ArcGisMapServerImageryProvider
+     *
      * @returns {Number} The height.
      */
     ArcGisMapServerImageryProvider.prototype.getTileHeight = function() {
@@ -175,6 +179,8 @@ define([
     /**
      * Gets the maximum level-of-detail that can be requested.
      *
+     * @memberof ArcGisMapServerImageryProvider
+     *
      * @returns {Number} The maximum level.
      */
     ArcGisMapServerImageryProvider.prototype.getMaximumLevel = function() {
@@ -183,6 +189,8 @@ define([
 
     /**
      * Gets the tiling scheme used by this provider.
+     *
+     * @memberof ArcGisMapServerImageryProvider
      *
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
@@ -195,6 +203,8 @@ define([
     /**
      * Gets the extent, in radians, of the imagery provided by this instance.
      *
+     * @memberof ArcGisMapServerImageryProvider
+     *
      * @returns {Extent} The extent.
      */
     ArcGisMapServerImageryProvider.prototype.getExtent = function() {
@@ -205,6 +215,9 @@ define([
      * Gets the tile discard policy.  If not undefined, the discard policy is responsible
      * for filtering out "missing" tiles via its shouldDiscardImage function.
      * By default, no tiles will be filtered.
+     *
+     * @memberof ArcGisMapServerImageryProvider
+     *
      * @returns {TileDiscardPolicy} The discard policy.
      */
     ArcGisMapServerImageryProvider.prototype.getTileDiscardPolicy = function() {
@@ -214,6 +227,8 @@ define([
     /**
      * Gets a value indicating whether or not the provider is ready for use.
      *
+     * @memberof ArcGisMapServerImageryProvider
+     *
      * @returns {Boolean} True if the provider is ready to use; otherwise, false.
      */
     ArcGisMapServerImageryProvider.prototype.isReady = function() {
@@ -222,6 +237,8 @@ define([
 
     /**
      * Requests the image for a given tile.
+     *
+     * @memberof ArcGisMapServerImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.

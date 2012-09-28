@@ -52,27 +52,34 @@ define([
                 crossOrigin = false;
             }
 
-            var image = new Image();
-
             var deferred = when.defer();
 
-            image.onload = function(e) {
-                deferred.resolve(image);
-            };
-
-            image.onerror = function(e) {
-                deferred.reject(e);
-            };
-
-            if (crossOrigin) {
-                image.crossOrigin = '';
-            }
-
-            image.src = url;
+            loadImage.createImage(url, crossOrigin, deferred);
 
             return deferred.promise;
         });
     };
+
+    // This is broken out into a separate function so that it can be mocked for testing purposes.
+    loadImage.createImage = function(url, crossOrigin, deferred) {
+        var image = new Image();
+
+        image.onload = function(e) {
+            deferred.resolve(image);
+        };
+
+        image.onerror = function(e) {
+            deferred.reject(e);
+        };
+
+        if (crossOrigin) {
+            image.crossOrigin = '';
+        }
+
+        image.src = url;
+    };
+
+    loadImage.defaultCreateImage = loadImage.createImage;
 
     return loadImage;
 });
