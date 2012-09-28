@@ -376,7 +376,8 @@ define([
         // last frame, else compute the new frustums and sort them by frustum again.
         var farToNearRatio = scene.farToNearRatio;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-        if (numFrustums !== frustumsLength || near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far) {
+        if (near !== Number.MAX_VALUE && (numFrustums !== frustumsLength ||
+                near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
             createPotentiallyVisibleSet(scene, listName);
         }
