@@ -1,13 +1,13 @@
 /*global define*/
 define([
         './DynamicProperty',
-        './CzmlImage',
+        './CzmlVideo',
         './CzmlNumber',
         '../Scene/Material',
         '../Core/JulianDate'
     ], function(
          DynamicProperty,
-         CzmlImage,
+         CzmlVideo,
          CzmlNumber,
          Material,
          JulianDate) {
@@ -61,11 +61,11 @@ define([
         }
 
         if (typeof materialData.video !== 'undefined') {
-            var image = this.video;
-            if (typeof image === 'undefined') {
-                this.video = image = new DynamicProperty(CzmlImage);
+            var video = this.video;
+            if (typeof video === 'undefined') {
+                this.video = video = new DynamicProperty(CzmlVideo);
             }
-            image.processCzmlIntervals(materialData.video, undefined, sourceUri);
+            video.processCzmlIntervals(materialData.video, undefined, sourceUri);
         }
 
         if (typeof materialData.verticalRepeat !== 'undefined') {
@@ -120,26 +120,22 @@ define([
             }
         }
 
-        existingMaterial.uniforms.repeat.x = 4;
-        existingMaterial.uniforms.repeat.y = 4;
-
-        //property = this.video;
-        //if (typeof property !== 'undefined') {
         var video;
-        var url = 'http://localhost:8080/Apps/CesiumViewer/Gallery/bkaovAYt-1287469.webm';
-        if (typeof url !== 'undefined' && existingMaterial.currentUrl !== url) {
-            existingMaterial.currentUrl = url;
-            video = existingMaterial.video = document.createElement('video');
-            video.preload = 'auto';
-            video.src = url;
-            //existingMaterial.uniforms.video = url;
+        property = this.video;
+        if (typeof property !== 'undefined') {
+            var url = property.getValue(time);
+            if (typeof url !== 'undefined' && existingMaterial.currentUrl !== url) {
+                existingMaterial.currentUrl = url;
+                video = existingMaterial.video = document.createElement('video');
+                video.preload = 'auto';
+                video.src = url;
+            }
         }
-        //}
 
         video = existingMaterial.video;
-        if (!isNaN(video.duration)) {
+        var duration = video.duration;
+        if (!isNaN(duration)) {
             if (typeof existingMaterial.texture === 'undefined') {
-                //video.play();
                 existingMaterial.texture = context.createTexture2D({
                     source : video
                 });
@@ -147,14 +143,20 @@ define([
             } else {
                 if (!video.seeking) {
                     existingMaterial.texture.copyFrom(video);
-                    if (video.seekable.length > 0) {
-                        var a = video.seekable.start(0); // Returns the starting time (in seconds)
-                        var b = video.seekable.end(0); // Returns the ending time (in seconds)
 
-                        var frameTime = Math.max(startTime.getSecondsDifference(time), a);
-                        frameTime = Math.min(startTime.getSecondsDifference(time), b);
-                        video.currentTime = frameTime;
-                    }
+                    var videoTime = startTime.getSecondsDifference(time);
+                    video.currentTime = videoTime % duration;//Math.min(Math.max(videoTime, 0), duration);
+                    //                    var seekableSegments = video.seekable.length;
+//                    if (seekableSegments > 0) {
+//                        for ( var i = 0; i < seekableSegments; i++) {
+//                            var a = video.seekable.start(0); // Returns the starting time (in seconds)
+//                            var b = video.seekable.end(0); // Returns the ending time (in seconds)
+//
+//                            var frameTime = Math.max(videoTime, a);
+//                            frameTime = Math.min(startTime.getSecondsDifference(time), b);
+//                        }
+//                        video.currentTime = videoTime;
+//                    }
                 }
             }
         }
