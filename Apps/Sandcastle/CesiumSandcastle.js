@@ -523,6 +523,13 @@ console.log('Apply bucket');
                             bucketDoc.body.className = local.headers.substring(pos + 13, pos2);
                         }
                     }
+                    pos = local.headers.indexOf('data-sandcastle-title="');
+                    if (pos > 0) {
+                        pos2 = local.headers.indexOf('"', pos + 23);
+                        if (pos2 > pos) {
+                            bucketPane.set('title', local.headers.substring(pos + 23, pos2));
+                        }
+                    }
                     pos = local.headers.indexOf('</head>');
                     var extraHeaders = local.headers.substring(local.emptyBucket.length, pos);
                     bucketDoc.head.innerHTML += extraHeaders;

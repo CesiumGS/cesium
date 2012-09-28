@@ -16,7 +16,7 @@
         if (typeof d1 === 'undefined') {
             window.parent.postMessage({ 'error': 'undefined' }, '*');
         } else {
-            // Look for d1.stack, "bucket-*.html:line:char"
+            // Look for d1.stack, "bucket.html:line:char"
             var lineNumber = -1, lineStart, lineEnd1, lineEnd2;
             var errorMsg = d1.toString();
             var rawErrorMsg = errorMsg;
