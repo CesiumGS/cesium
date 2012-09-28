@@ -448,6 +448,55 @@ console.log('RELOAD bucketFrame.src=' + bucketFrame.src);
             }
         });
 
+/*        function applyBucketScripts(bucketDoc, extraHeaders) {
+            var pos, pos2, scriptText, scriptAttrs, scriptEle;
+            while ((pos = extraHeaders.indexOf('<script')) >= 0) {
+                pos2 = extraHeaders.indexOf('</script>', pos);
+                if (pos2 < 7) {
+                    extraHeaders = extraHeaders.substring(0, pos) + extraHeaders.substring(pos + 1);
+                } else {
+                    scriptText = extraHeaders.substring(pos + 7, pos2);
+                    extraHeaders = extraHeaders.substring(0, pos) + extraHeaders.substring(pos2 + 8);
+                    pos = scriptText.indexOf('>');
+                    if (pos >= 0) {
+                        scriptAttrs = scriptText.substring(0, pos);
+                        scriptText = scriptText.substring(pos + 1);
+                        scriptEle = bucketDoc.createElement('script');
+                        scriptEle.textContent = scriptText;
+                        bucketDoc.head.appendChild(scriptEle);
+                    }
+                }
+            }
+            return extraHeaders;
+        }*/
+
+        function activateBucketScripts(bucketDoc) {
+            var headNodes = bucketDoc.head.childNodes, i, len = headNodes.length, node, nodes = [];
+            var scriptEle, j, numAttrs;
+            for (i = 0; i < len; ++i) {
+                node = headNodes[i];
+                if (typeof node.tagName === 'string' && node.tagName === 'SCRIPT' &&
+                        node.src.indexOf('Sandcastle') < 0) {
+                    nodes.push(node);
+                }
+            }
+            len = nodes.length;
+            for (i = 0; i < len; ++i) {
+                bucketDoc.head.removeChild(nodes[i]);
+            }
+            // Need to break up this for loop into scriptEle.onload events I think.
+            for (i = 0; i < len; ++i) {
+                node = nodes[i];
+                scriptEle = bucketDoc.createElement('script');
+                numAttrs = node.attributes.length;
+                for (j = 0; j < numAttrs; ++j) {
+                    scriptEle.setAttribute(node.attributes[j].name, node.attributes[j].value);
+                }
+                scriptEle.innerHTML = node.innerHTML;
+                bucketDoc.head.appendChild(scriptEle);
+            }
+        }
+
         function applyBucket() {
             if (local.emptyBucket && local.bucketName && typeof bucketTypes[local.bucketName] === 'string') {
                 bucketWaiting = false;
@@ -462,10 +511,12 @@ console.log('Apply bucket');
                     var pos = local.headers.indexOf('</head>');
                     var extraHeaders = local.headers.substring(local.emptyBucket.length, pos);
                     bucketDoc.head.innerHTML += extraHeaders;
+                    debugger;
+                    activateBucketScripts(bucketDoc);
+                    debugger;
                     window.setTimeout(function () {
                         console.log('Apply body');
                         debugger;
-                        bucketDoc = bucketFrame.contentDocument;
                         var bodyEle = bucketDoc.createElement('div');
                         bodyEle.innerHTML = htmlEditor.getValue();
                         bucketDoc.body.appendChild(bodyEle);
