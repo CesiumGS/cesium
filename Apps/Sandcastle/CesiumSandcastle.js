@@ -448,28 +448,6 @@ console.log('RELOAD bucketFrame.src=' + bucketFrame.src);
             }
         });
 
-/*        function applyBucketScripts(bucketDoc, extraHeaders) {
-            var pos, pos2, scriptText, scriptAttrs, scriptEle;
-            while ((pos = extraHeaders.indexOf('<script')) >= 0) {
-                pos2 = extraHeaders.indexOf('</script>', pos);
-                if (pos2 < 7) {
-                    extraHeaders = extraHeaders.substring(0, pos) + extraHeaders.substring(pos + 1);
-                } else {
-                    scriptText = extraHeaders.substring(pos + 7, pos2);
-                    extraHeaders = extraHeaders.substring(0, pos) + extraHeaders.substring(pos2 + 8);
-                    pos = scriptText.indexOf('>');
-                    if (pos >= 0) {
-                        scriptAttrs = scriptText.substring(0, pos);
-                        scriptText = scriptText.substring(pos + 1);
-                        scriptEle = bucketDoc.createElement('script');
-                        scriptEle.textContent = scriptText;
-                        bucketDoc.head.appendChild(scriptEle);
-                    }
-                }
-            }
-            return extraHeaders;
-        }*/
-
         function activateBucketScripts(bucketDoc) {
             var headNodes = bucketDoc.head.childNodes, i, len = headNodes.length, node, nodes = [];
             var scriptEle, j, numAttrs;
@@ -525,7 +503,6 @@ console.log('Apply body');
             };
             loadScript();
         }
-window.bDocs = [];
 
         function applyBucket() {
             if (local.emptyBucket && local.bucketName && typeof bucketTypes[local.bucketName] === 'string') {
@@ -538,8 +515,14 @@ console.log('Apply bucket');
                     ele.textContent = 'Error, empty bucket.html must match first part of ' + local.bucketName + ' exactly.\n';
                     appendConsole(ele);
                 } else {
-window.bDocs.push(bucketDoc);
-                    var pos = local.headers.indexOf('</head>');
+                    var pos = local.headers.indexOf('<body class="'), pos2;
+                    if (pos > 0) {
+                        pos2 = local.headers.indexOf('"', pos + 13);
+                        if (pos2 > pos) {
+                            bucketDoc.body.className = local.headers.substring(pos + 13, pos2);
+                        }
+                    }
+                    pos = local.headers.indexOf('</head>');
                     var extraHeaders = local.headers.substring(local.emptyBucket.length, pos);
                     bucketDoc.head.innerHTML += extraHeaders;
                     activateBucketScripts(bucketDoc);
