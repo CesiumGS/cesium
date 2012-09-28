@@ -127,7 +127,8 @@ require({
             'document',
             'window',
             'console',
-            'Sandcastle'
+            'Sandcastle',
+            'Cesium'
         ];
         var hintOptions = {
             predef: hintGlobals,
