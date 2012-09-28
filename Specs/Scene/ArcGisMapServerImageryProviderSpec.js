@@ -75,6 +75,8 @@ defineSuite([
             url : baseUrl
         });
 
+        expect(provider.getUrl()).toEqual(baseUrl);
+
         waitsFor(function() {
             return provider.isReady();
         }, 'imagery provider to become ready');
@@ -88,6 +90,7 @@ defineSuite([
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.getLogo()).not.toBeUndefined();
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().extent);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url).toEqual(baseUrl + '/tile/0/0/0');

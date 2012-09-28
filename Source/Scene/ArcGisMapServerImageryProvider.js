@@ -31,18 +31,27 @@ define([
      * @constructor
      *
      * @param {String} description.url The URL of the ArcGIS MapServer service.
-     * @param {TileDiscardPolicy} [description.tileDiscardPolicy] If the service returns "missing" tiles,
-     *        these can be filtered out by providing an object which is expected to have a
-     *        shouldDiscardImage function.  By default, no tiles will be filtered.
+     * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
+     *        is invalid and should be discarded.  If this value is not specified, a default
+     *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
+     *        {@link NeverTileDiscardPolicy} is used for non-tiled map servers.  In the former case,
+     *        we request tile 0,0 at the maximum tile level and check pixels (0,0), (200,20), (20,200),
+     *        (80,110), and (160, 130).  If all of these pixels are transparent, the discard check is
+     *        disabled and no tiles are discarded.  If any of them have a non-transparent color, any
+     *        tile that has the same values in these pixel locations is discarded.  The end result of
+     *        these defaults should be correct tile discarding for a standard ArcGIS Server.
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Boolean} [description.usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
+     *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
+     *        'export' service is used.
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
      * @see OpenStreetMapImageryProvider
-     * @see CompositeTileProvider
+     * @see WebMapServiceImageryProvider
      *
      * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
@@ -68,7 +77,7 @@ define([
         this._maximumLevel = undefined;
         this._tilingScheme = undefined;
         this._logo = undefined;
-		this._useTiles = true;
+		this._useTiles = defaultValue(description.usePreCachedTilesIfAvailable, true);
 
         this._ready = false;
 
@@ -83,7 +92,7 @@ define([
         var that = this;
         when(metadata, function(data) {
             var tileInfo = data.tileInfo;
-            if (typeof tileInfo === 'undefined') {
+            if (!that._useTiles || typeof tileInfo === 'undefined') {
                 that._tileWidth = 256;
                 that._tileHeight = 256;
                 that._tilingScheme = new GeographicTilingScheme();
@@ -92,6 +101,8 @@ define([
             } else {
                 that._tileWidth = tileInfo.rows;
                 that._tileHeight = tileInfo.cols;
+
+                // TODO: support non-default tiling schemes, because ArcGIS does: http://webhelp.esri.com/arcgisserver/9.3/java/index.htm#what_is_map_caching.htm
 
                 if (tileInfo.spatialReference.wkid === 102100) {
                     that._tilingScheme = new WebMercatorTilingScheme();
@@ -113,6 +124,8 @@ define([
                         disableCheckIfAllPixelsAreTransparent : true
                     });
                 }
+
+                that._useTiles = true;
             }
 
             that._ready = true;
@@ -142,6 +155,21 @@ define([
 
         return url;
     }
+
+    /**
+     * Gets a value indicating whether this imagery provider is using pre-cached tiles from the
+     * ArcGIS MapServer.  If the imagery provider is not yet ready ({@link isReady}), this function
+     * will return the value of `description.usePreCachedTilesIfAvailable`, even if the MapServer does
+     * not have pre-cached tiles.
+     *
+     * @memberof ArcGisMapServerImageryProvider
+     *
+     * @returns {Boolean} true if this imagery provider is using pre-cached tiles from the ArcGIS MapServer;
+     *          otherwise, false.
+     */
+    ArcGisMapServerImageryProvider.prototype.isUsingPrecachedTiles = function() {
+        return this._useTiles;
+    };
 
     /**
      * Gets the URL of the ArcGIS MapServer.
