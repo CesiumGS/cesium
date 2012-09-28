@@ -241,4 +241,10 @@ defineSuite([
         scene.render();
         expect(context.readPixels()).toEqual([255, 255, 0, 255]);
     });
+
+    it('render without a central body or any primitives', function() {
+        expect(function() {
+            scene.render();
+        }).not.toThrow();
+    });
 });

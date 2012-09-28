@@ -425,6 +425,7 @@ define([
     };
 
     var unionScratch = new Cartesian3();
+    var unionScratchCenter = new Cartesian3();
     /**
      * Computes a bounding sphere that contains both the left and right bounding spheres.
      * @memberof BoundingSphere
@@ -453,12 +454,15 @@ define([
         var leftCenter = left.center;
         var rightCenter = right.center;
 
-        var center = Cartesian3.add(leftCenter, rightCenter, result.center);
-        result.center = Cartesian3.multiplyByScalar(center, 0.5, center);
+        Cartesian3.add(leftCenter, rightCenter, unionScratchCenter);
+        var center = Cartesian3.multiplyByScalar(unionScratchCenter, 0.5, unionScratchCenter);
 
         var radius1 = Cartesian3.subtract(leftCenter, center, unionScratch).magnitude() + left.radius;
         var radius2 = Cartesian3.subtract(rightCenter, center, unionScratch).magnitude() + right.radius;
+
         result.radius = Math.max(radius1, radius2);
+        Cartesian3.clone(center, result.center);
+
         return result;
     };
 
