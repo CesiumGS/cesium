@@ -45,9 +45,10 @@ define([
         this.enableBlending = false;
 
         this._va = undefined;
-        this._colorCommand = new Command();
-        this._colorCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._overlayCommand = new Command();
+        this._overlayCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
         this._commandLists = new CommandLists();
+        this._commandLists.overlayList.push(this._overlayCommand);
 
         this._vertexShaderSource = defaultValue(vertexShaderSource, ViewportQuadVS);
         this._fragmentShaderSource = defaultValue(fragmentShaderSource, ViewportQuadFS);
@@ -61,7 +62,7 @@ define([
         this._rectangle = BoundingRectangle.clone(rectangle);
 
         var that = this;
-        this._colorCommand.uniformMap = this.uniforms = {
+        this._overlayCommand.uniformMap = this.uniforms = {
             u_texture : function() {
                 return that._texture;
             }
@@ -235,10 +236,10 @@ define([
             return;
         }
 
-        if (typeof this._colorCommand.shaderProgram === 'undefined') {
-            this._colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(this._vertexShaderSource, this._fragmentShaderSource, attributeIndices);
+        if (typeof this._overlayCommand.shaderProgram === 'undefined') {
+            this._overlayCommand.shaderProgram = context.getShaderCache().getShaderProgram(this._vertexShaderSource, this._fragmentShaderSource, attributeIndices);
             this._va = getVertexArray(context);
-            this._colorCommand.vertexArray = this._va.vertexArray;
+            this._overlayCommand.vertexArray = this._va.vertexArray;
             this.renderState = context.createRenderState({
                 blending : {
                     enabled : true,
@@ -254,15 +255,12 @@ define([
 
         this.renderState.blending.enabled = this.enableBlending;
         this.renderState.viewport = this._rectangle;
-        this._colorCommand.renderState = this.renderState;
-        this._colorCommand.framebuffer = this._framebuffer;
+        this._overlayCommand.renderState = this.renderState;
+        this._overlayCommand.framebuffer = this._framebuffer;
 
-        this._commandLists.removeAll();
-        if (frameState.passes.color) {
-            this._commandLists.colorList.push(this._colorCommand);
+        if (frameState.passes.overlay) {
+            commandList.push(this._commandLists);
         }
-
-        commandList.push(this._commandLists);
     };
 
     /**
@@ -302,7 +300,7 @@ define([
      */
     ViewportQuad.prototype.destroy = function() {
         this._va = this._va && this._va.release();
-        this._colorCommand.shaderProgram = this._colorCommand.shaderProgram && this._colorCommand.shaderProgram.release();
+        this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
         this._texture = this._destroyTexture && this._texture && this._texture.destroy();
         this._framebuffer = this._destroyFramebuffer && this._framebuffer && this._framebuffer.destroy();
 
