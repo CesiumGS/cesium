@@ -13,6 +13,7 @@ Beta Releases
    * Passing `undefined` to any of the set functions on `Billboard` now throws an exception.
    * Passing `undefined` to any of the set functions on `Polyline` now throws an exception.
    * `PolygonPipeline.scaleToGeodeticHeight` now takes ellipsoid as the last parameter, instead of the first.  It also now defaults to `Ellipsoid.WGS84` if no parameter is provided.
+   * `Texture2DPool` is renamed to `TexturePool`.
 * The new Sandcastle live editor and demo gallery replace the Sandbox and Skeleton examples.
 * Improved picking performance and accuracy.
 * Added EllipsoidPrimitive for visualizing ellipsoids and spheres.  Currently, this is only supported in 3D, not 2D or Columbus view.
@@ -21,7 +22,7 @@ Beta Releases
 * Add new utility class, `DynamicObjectView` for tracking a DynamicObject with the camera across scene modes; also hooked up CesiumViewerWidget to use it.
 * Added `enableTranslate`, `enableZoom`, and `enableRotate` properties to `Camera2DController` to selectively toggle camera behavior.  All values default to `true`.
 * Added `Camera2DController.setPositionCartographic` to simplify moving the camera programmatically when in 2D mode.
-* Added Matrix4.multiplyByTranslation, Matrix4.fromScale, and Matrix3.fromScale.
+* Added `Matrix4.multiplyByTranslation`, `Matrix4.fromScale`, and `Matrix3.fromScale`.
 * Improved near/far plane distances and eliminated z-fighting.
 
 ### b8 - 09/05/2012
@@ -191,7 +192,6 @@ Beta Releases
 * Breaking changes:
     * Changed `Tipsify.tipsify` and `Tipsify.calculateACMR` to accept an object literal instead of three separate arguments. Supplying a maximum index and cache size is now optional.
     * `CentralBody` no longer requires a camera as the first parameter.
-    * `Texture2DPool` is renamed to `TexturePool`.
 * Added `CentralBody.northPoleColor` and `CentralBody.southPoleColor` to fill in the poles if they are not covered by a texture.
 * Added `Polygon.configureExtent` to create a polygon defined by west, south, east, and north values.
 * Added functions to `Camera` to provide position and directions in world coordinates.
