@@ -138,6 +138,12 @@ define([
             /*global console*/
             console.error('failed to load tiling scheme: ' + e);
         });
+
+        // delay construction of scratch Float32Array since the setup function needs to run
+        // regardless of whether WebGL is supported.
+        if (typeof float32ArrayScratch === 'undefined') {
+            float32ArrayScratch = new Float32Array(1);
+        }
     };
 
     EllipsoidSurface.prototype._onLayerAdded = function(layer, index) {
@@ -838,7 +844,7 @@ define([
         }
     }
 
-    var float32ArrayScratch = new Float32Array(1);
+    var float32ArrayScratch;
     var modifiedModelViewScratch = new Matrix4();
     var tileExtentScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
