@@ -63,7 +63,7 @@ define([
         if (typeof existingMaterial === 'undefined' || (existingMaterial.type !== Material.ColorType)) {
             existingMaterial = Material.fromType(context, Material.ColorType);
         }
-        existingMaterial.uniforms.color = this.color.getValue(time, existingMaterial.uniforms.color);
+        this.color.getValue(time, existingMaterial.uniforms.color);
         return existingMaterial;
     };
 
