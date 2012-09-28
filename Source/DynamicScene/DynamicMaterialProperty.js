@@ -5,17 +5,19 @@ define([
         '../Core/TimeIntervalCollection',
         '../Core/Iso8601',
         './DynamicColorMaterial',
-        './DynamicImageMaterial'
+        './DynamicImageMaterial',
+        './DynamicVideoMaterial'
     ], function(
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
         Iso8601,
         DynamicColorMaterial,
-        DynamicImageMaterial) {
+        DynamicImageMaterial,
+        DynamicVideoMaterial) {
     "use strict";
 
-    var potentialMaterials = [DynamicColorMaterial, DynamicImageMaterial];
+    var potentialMaterials = [DynamicColorMaterial, DynamicImageMaterial, DynamicVideoMaterial];
 
     /**
      * A dynamic property which stores data for multiple types of materials

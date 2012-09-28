@@ -1370,8 +1370,11 @@ define([
         }
 
         var source = description.source;
-        var width = typeof source !== 'undefined' ? source.width : description.width;
-        var height = typeof source !== 'undefined' ? source.height : description.height;
+        var width = typeof source !== 'undefined' ? source.videoWidth : description.width;
+        var height = typeof source !== 'undefined' ? source.videoHeight : description.height;
+
+        width = typeof width !== 'undefined' ? width : source.width;
+        height = typeof height !== 'undefined' ? height : source.height;
 
         if (typeof width === 'undefined' || typeof height === 'undefined') {
             throw new DeveloperError('description requires a source field to create an initialized texture or width and height fields to create a blank texture.');
