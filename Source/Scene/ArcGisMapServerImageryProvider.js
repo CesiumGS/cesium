@@ -24,7 +24,7 @@ define([
     "use strict";
 
     /**
-     * Provides tiled imagery hosted by an ArcGIS MapServer.  The server's pre-cached tiles are
+     * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
      * used, if available.
      *
      * @alias ArcGisMapServerImageryProvider
@@ -39,7 +39,9 @@ define([
      *        (80,110), and (160, 130).  If all of these pixels are transparent, the discard check is
      *        disabled and no tiles are discarded.  If any of them have a non-transparent color, any
      *        tile that has the same values in these pixel locations is discarded.  The end result of
-     *        these defaults should be correct tile discarding for a standard ArcGIS Server.
+     *        these defaults should be correct tile discarding for a standard ArcGIS Server.  To ensure
+     *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
+     *        parameter.
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Boolean} [description.usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
@@ -93,10 +95,10 @@ define([
         when(metadata, function(data) {
             var tileInfo = data.tileInfo;
             if (!that._useTiles || typeof tileInfo === 'undefined') {
+                // TODO: read the extent and maybe tiling scheme from the service.
                 that._tileWidth = 256;
                 that._tileHeight = 256;
                 that._tilingScheme = new GeographicTilingScheme();
-                that._maximumLevel = 25;
                 that._useTiles = false;
             } else {
                 that._tileWidth = tileInfo.rows;
@@ -111,11 +113,6 @@ define([
                 }
                 that._maximumLevel = data.tileInfo.lods.length - 1;
 
-                // Create the copyright message.
-                that._logo = writeTextToCanvas(data.copyrightText, {
-                    font : '12px sans-serif'
-                });
-
                 // Install the default tile discard policy if none has been supplied.
                 if (typeof that._tileDiscardPolicy === 'undefined') {
                     that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
@@ -126,6 +123,13 @@ define([
                 }
 
                 that._useTiles = true;
+            }
+
+            // Create the copyright message.
+            if (typeof data.copyrightText !== 'undefined' && data.copyrightText.length > 0) {
+                that._logo = writeTextToCanvas(data.copyrightText, {
+                    font : '12px sans-serif'
+                });
             }
 
             that._ready = true;
@@ -145,7 +149,7 @@ define([
 
             url = imageryProvider._url + '/export?';
             url += 'bbox=' + bbox;
-            url += '&bboxSR=4326&layers=&layerDefs=&size=256%2C256&imageSR=4326&format=png&transparent=true&dpi=&time=&layerTimeOptions=&dynamicLayers=&gdbVersion=&mapScale=&f=image';
+            url += '&bboxSR=4326&size=256%2C256&imageSR=4326&format=png&transparent=true&f=image';
         }
 
         var proxy = imageryProvider._proxy;
@@ -158,7 +162,7 @@ define([
 
     /**
      * Gets a value indicating whether this imagery provider is using pre-cached tiles from the
-     * ArcGIS MapServer.  If the imagery provider is not yet ready ({@link isReady}), this function
+     * ArcGIS MapServer.  If the imagery provider is not yet ready ({@link ArcGisMapServerImageryProvider#isReady}), this function
      * will return the value of `description.usePreCachedTilesIfAvailable`, even if the MapServer does
      * not have pre-cached tiles.
      *
@@ -183,7 +187,8 @@ define([
     };
 
     /**
-     * Gets the width of each tile, in pixels.
+     * Gets the width of each tile, in pixels. This function should
+     * not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
      *
      * @memberof ArcGisMapServerImageryProvider
      *
@@ -194,7 +199,8 @@ define([
     };
 
     /**
-     * Gets the height of each tile, in pixels.
+     * Gets the height of each tile, in pixels.  This function should
+     * not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
      *
      * @memberof ArcGisMapServerImageryProvider
      *
@@ -205,18 +211,20 @@ define([
     };
 
     /**
-     * Gets the maximum level-of-detail that can be requested.
+     * Gets the maximum level-of-detail that can be requested.  This function should
+     * not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
      *
      * @memberof ArcGisMapServerImageryProvider
      *
-     * @returns {Number} The maximum level.
+     * @returns {Number} The maximum level, or undefined if there is no maximum level.
      */
     ArcGisMapServerImageryProvider.prototype.getMaximumLevel = function() {
         return this._maximumLevel;
     };
 
     /**
-     * Gets the tiling scheme used by this provider.
+     * Gets the tiling scheme used by this provider.  This function should
+     * not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
      *
      * @memberof ArcGisMapServerImageryProvider
      *
@@ -229,7 +237,8 @@ define([
     };
 
     /**
-     * Gets the extent, in radians, of the imagery provided by this instance.
+     * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+     * not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
      *
      * @memberof ArcGisMapServerImageryProvider
      *
@@ -241,12 +250,16 @@ define([
 
     /**
      * Gets the tile discard policy.  If not undefined, the discard policy is responsible
-     * for filtering out "missing" tiles via its shouldDiscardImage function.
-     * By default, no tiles will be filtered.
+     * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+     * returns undefined, no tiles are filtered.  This function should
+     * not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
      *
      * @memberof ArcGisMapServerImageryProvider
      *
      * @returns {TileDiscardPolicy} The discard policy.
+     *
+     * @see DiscardMissingTileImagePolicy
+     * @see NeverTileDiscardPolicy
      */
     ArcGisMapServerImageryProvider.prototype.getTileDiscardPolicy = function() {
         return this._tileDiscardPolicy;
@@ -264,7 +277,8 @@ define([
     };
 
     /**
-     * Requests the image for a given tile.
+     * Requests the image for a given tile.  This function should
+     * not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
      *
      * @memberof ArcGisMapServerImageryProvider
      *
@@ -272,11 +286,10 @@ define([
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
      *
-     * @return {Promise} A promise for the image that will resolve when the image is available, or
-     *         undefined if there are too many active requests to the server, and the request
-     *         should be retried later.  If the resulting image is not suitable for display,
-     *         the promise can resolve to undefined.  The resolved image may be either an
-     *         Image or a Canvas DOM object.
+     * @returns {Promise} A promise for the image that will resolve when the image is available, or
+     *          undefined if there are too many active requests to the server, and the request
+     *          should be retried later.  The resolved image may be either an
+     *          Image or a Canvas DOM object.
      */
     ArcGisMapServerImageryProvider.prototype.requestImage = function(x, y, level) {
         var url = buildImageUrl(this, x, y, level);
@@ -284,8 +297,12 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Gets the logo to display when this imagery provider is active.  Typically this is used to credit
+     * the source of the imagery.  This function should not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
+     *
      * @memberof ArcGisMapServerImageryProvider
+     *
+     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
      */
     ArcGisMapServerImageryProvider.prototype.getLogo = function() {
         return this._logo;

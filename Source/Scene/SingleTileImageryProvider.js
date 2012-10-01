@@ -14,21 +14,23 @@ define([
     "use strict";
 
     /**
-     * Provides a single, top-level imagery tile.
+     * Provides a single, top-level imagery tile.  The single image is assumed to use a
+     * {@link GeographicTilingScheme}.
      *
      * @alias SingleTileImageryProvider
      * @constructor
      *
      * @param {String} description.url The url for the tile.
-     * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent covered by the image.
+     * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent, in radians, covered by the image.
+     * @param {String} [description.credit] A string crediting the data source, which is displayed on the canvas.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
-     * @exception {DeveloperError} url is required.
+     * @exception {DeveloperError} description.url is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see OpenStreetMapImageryProvider
-     * @see CompositeTileProvider
+     * @see WebMapServiceImageryProvider
      */
     var SingleTileImageryProvider = function(description) {
         description = defaultValue(description, {});
@@ -63,10 +65,16 @@ define([
             imageUrl = proxy.getURL(imageUrl);
         }
 
-        var that = this;
-        this._image = loadImage(imageUrl).then(function(image) {
-            tilingScheme.levelZeroMaximumGeometricError = tilingScheme.ellipsoid.getRadii().x * (extent.east - extent.west) / image.width;
+        // Create the credit message.
+        if (typeof description.credit !== 'undefined') {
+            // Create the copyright message.
+            this._logo = writeTextToCanvas(description.credit, {
+                font : '12px sans-serif'
+            });
+        }
 
+        var that = this;
+        loadImage(imageUrl).then(function(image) {
             that._image = image;
             that._ready = true;
         });
@@ -75,6 +83,8 @@ define([
     /**
      * Gets the URL of the single, top-level imagery tile.
      *
+     * @memberof SingleTileImageryProvider
+     *
      * @returns {String} The URL.
      */
     SingleTileImageryProvider.prototype.getUrl = function() {
@@ -82,7 +92,10 @@ define([
     };
 
     /**
-     * Gets the width of each tile, in pixels.
+     * Gets the width of each tile, in pixels.  This function should
+     * not be called before {@link SingleTileImageryProvider#isReady} returns true.
+     *
+     * @memberof SingleTileImageryProvider
      *
      * @returns {Number} The width.
      */
@@ -91,7 +104,10 @@ define([
     };
 
     /**
-     * Gets the height of each tile, in pixels.
+     * Gets the height of each tile, in pixels.  This function should
+     * not be called before {@link SingleTileImageryProvider#isReady} returns true.
+     *
+     * @memberof SingleTileImageryProvider
      *
      * @returns {Number} The height.
      */
@@ -100,7 +116,10 @@ define([
     };
 
     /**
-     * Gets the maximum level-of-detail that can be requested.
+     * Gets the maximum level-of-detail that can be requested.  This function should
+     * not be called before {@link SingleTileImageryProvider#isReady} returns true.
+     *
+     * @memberof SingleTileImageryProvider
      *
      * @returns {Number} The maximum level.
      */
@@ -109,7 +128,10 @@ define([
     };
 
     /**
-     * Gets the tiling scheme used by this provider.
+     * Gets the tiling scheme used by this provider.  This function should
+     * not be called before {@link SingleTileImageryProvider#isReady} returns true.
+     *
+     * @memberof SingleTileImageryProvider
      *
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
@@ -120,7 +142,10 @@ define([
     };
 
     /**
-     * Gets the extent, in radians, of the imagery provided by this instance.
+     * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+     * not be called before {@link SingleTileImageryProvider#isReady} returns true.
+     *
+     * @memberof SingleTileImageryProvider
      *
      * @returns {Extent} The extent.
      */
@@ -130,10 +155,16 @@ define([
 
     /**
      * Gets the tile discard policy.  If not undefined, the discard policy is responsible
-     * for filtering out "missing" tiles via its shouldDiscardImage function.
-     * By default, no tiles will be filtered.
+     * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+     * returns undefined, no tiles are filtered.  This function should
+     * not be called before {@link SingleTileImageryProvider#isReady} returns true.
+     *
+     * @memberof SingleTileImageryProvider
      *
      * @returns {TileDiscardPolicy} The discard policy.
+     *
+     * @see DiscardMissingTileImagePolicy
+     * @see NeverTileDiscardPolicy
      */
     SingleTileImageryProvider.prototype.getTileDiscardPolicy = function() {
         return this._tileDiscardPolicy;
@@ -142,6 +173,8 @@ define([
     /**
      * Gets a value indicating whether or not the provider is ready for use.
      *
+     * @memberof SingleTileImageryProvider
+     *
      * @returns {Boolean} True if the provider is ready to use; otherwise, false.
      */
     SingleTileImageryProvider.prototype.isReady = function() {
@@ -149,20 +182,34 @@ define([
     };
 
     /**
-     * Requests the image for a given tile.
+     * Requests the image for a given tile.  This function should
+     * not be called before {@link SingleTileImageryProvider#isReady} returns true.
+     *
+     * @memberof SingleTileImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
      *
-     * @return {Promise} A promise for the image that will resolve when the image is available, or
-     *         undefined if there are too many active requests to the server, and the request
-     *         should be retried later.  If the resulting image is not suitable for display,
-     *         the promise can resolve to undefined.  The resolved image may be either an
-     *         Image or a Canvas DOM object.
+     * @returns {Promise} A promise for the image that will resolve when the image is available, or
+     *          undefined if there are too many active requests to the server, and the request
+     *          should be retried later.  The resolved image may be either an
+     *          Image or a Canvas DOM object.
      */
     SingleTileImageryProvider.prototype.requestImage = function(x, y, level) {
         return this._image;
+    };
+
+    /**
+     * Gets the logo to display when this imagery provider is active.  Typically this is used to credit
+     * the source of the imagery.  This function should not be called before {@link SingleTileImageryProvider#isReady} returns true.
+     *
+     * @memberof SingleTileImageryProvider
+     *
+     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     */
+    SingleTileImageryProvider.prototype.getLogo = function() {
+        return this._logo;
     };
 
     return SingleTileImageryProvider;

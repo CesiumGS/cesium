@@ -16,7 +16,10 @@ define([
     var trailingSlashRegex = /\/$/;
 
     /**
-     * Provides tile images hosted by OpenStreetMap.
+     * Provides tiled imagery hosted by OpenStreetMap or another provider of Slippy tiles.  Please be aware
+     * that a default-constructed instance of this class will connect to OpenStreetMap's volunteer-run
+     * servers, so you must conform to their
+     * <a href='http://wiki.openstreetmap.org/wiki/Tile_usage_policy'>Tile Usage Policy</a>.
      *
      * @alias OpenStreetMapImageryProvider
      * @constructor
@@ -25,11 +28,12 @@ define([
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A string crediting the data source, which is displayed on the canvas.
+     * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
      *
-     * @see SingleTileImageryProvider
-     * @see BingMapsImageryProvider
      * @see ArcGisMapServerImageryProvider
-     * @see CompositeTileProvider
+     * @see BingMapsImageryProvider
+     * @see SingleTileImageryProvider
+     * @see WebMapServiceImageryProvider
      *
      * @see <a href='http://wiki.openstreetmap.org/wiki/Main_Page'>OpenStreetMap Wiki</a>
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
@@ -40,7 +44,7 @@ define([
      *     url : 'http://tile.openstreetmap.org/'
      * });
      */
-    var OpenStreetMapImageryProvider = function(description) {
+    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(description) {
         description = defaultValue(description, {});
 
         var url = defaultValue(description.url, 'http://tile.openstreetmap.org/');
@@ -59,7 +63,7 @@ define([
         this._tileWidth = 256;
         this._tileHeight = 256;
 
-        this._maximumLevel = 18;
+        this._maximumLevel = defaultValue(description.maximumLevel, 18);
 
         this._ready = true;
 
@@ -83,6 +87,9 @@ define([
 
     /**
      * Gets the URL of the service hosting the imagery.
+     *
+     * @memberof OpenStreetMapImageryProvider
+     *
      * @returns {String} The URL.
      */
     OpenStreetMapImageryProvider.prototype.getUrl = function() {
@@ -90,7 +97,10 @@ define([
     };
 
     /**
-     * Gets the width of each tile, in pixels.
+     * Gets the width of each tile, in pixels.  This function should
+     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
+     *
+     * @memberof OpenStreetMapImageryProvider
      *
      * @returns {Number} The width.
      */
@@ -99,7 +109,10 @@ define([
     };
 
     /**
-     * Gets the height of each tile, in pixels.
+     * Gets the height of each tile, in pixels.  This function should
+     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
+     *
+     * @memberof OpenStreetMapImageryProvider
      *
      * @returns {Number} The height.
      */
@@ -108,7 +121,10 @@ define([
     };
 
     /**
-     * Gets the maximum level-of-detail that can be requested.
+     * Gets the maximum level-of-detail that can be requested.  This function should
+     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
+     *
+     * @memberof OpenStreetMapImageryProvider
      *
      * @returns {Number} The maximum level.
      */
@@ -117,7 +133,10 @@ define([
     };
 
     /**
-     * Gets the tiling scheme used by this provider.
+     * Gets the tiling scheme used by this provider.  This function should
+     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
+     *
+     * @memberof OpenStreetMapImageryProvider
      *
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
@@ -128,7 +147,10 @@ define([
     };
 
     /**
-     * Gets the extent, in radians, of the imagery provided by this instance.
+     * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
+     *
+     * @memberof OpenStreetMapImageryProvider
      *
      * @returns {Extent} The extent.
      */
@@ -138,9 +160,16 @@ define([
 
     /**
      * Gets the tile discard policy.  If not undefined, the discard policy is responsible
-     * for filtering out "missing" tiles via its shouldDiscardImage function.
-     * By default, no tiles will be filtered.
+     * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+     * returns undefined, no tiles are filtered.  This function should
+     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
+     *
+     * @memberof OpenStreetMapImageryProvider
+     *
      * @returns {TileDiscardPolicy} The discard policy.
+     *
+     * @see DiscardMissingTileImagePolicy
+     * @see NeverTileDiscardPolicy
      */
     OpenStreetMapImageryProvider.prototype.getTileDiscardPolicy = function() {
         return this._tileDiscardPolicy;
@@ -149,6 +178,8 @@ define([
     /**
      * Gets a value indicating whether or not the provider is ready for use.
      *
+     * @memberof OpenStreetMapImageryProvider
+     *
      * @returns {Boolean} True if the provider is ready to use; otherwise, false.
      */
     OpenStreetMapImageryProvider.prototype.isReady = function() {
@@ -156,17 +187,19 @@ define([
     };
 
     /**
-     * Requests the image for a given tile.
+     * Requests the image for a given tile.  This function should
+     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
+     *
+     * @memberof OpenStreetMapImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
      *
-     * @return {Promise} A promise for the image that will resolve when the image is available, or
-     *         undefined if there are too many active requests to the server, and the request
-     *         should be retried later.  If the resulting image is not suitable for display,
-     *         the promise can resolve to undefined.  The resolved image may be either an
-     *         Image or a Canvas DOM object.
+     * @returns {Promise} A promise for the image that will resolve when the image is available, or
+     *          undefined if there are too many active requests to the server, and the request
+     *          should be retried later.  The resolved image may be either an
+     *          Image or a Canvas DOM object.
      */
     OpenStreetMapImageryProvider.prototype.requestImage = function(x, y, level) {
         var url = buildImageUrl(this, x, y, level);
@@ -174,8 +207,12 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Gets the logo to display when this imagery provider is active.  Typically this is used to credit
+     * the source of the imagery.  This function should not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
+     *
      * @memberof OpenStreetMapImageryProvider
+     *
+     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
      */
     OpenStreetMapImageryProvider.prototype.getLogo = function() {
         return this._logo;
