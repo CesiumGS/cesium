@@ -801,7 +801,7 @@ define([
                 return this.dayTextureAlpha;
             },
             u_dayIntensity : function() {
-                return 0.2;
+                return this.dayIntensity;
             },
             u_southLatitude : function() {
                 return this.southLatitude;
@@ -827,6 +827,7 @@ define([
             dayTextureTranslationAndScale : [],
             dayTextureTexCoordsExtent : [],
             dayTextureAlpha : [],
+            dayIntensity : 0.0,
 
             southLatitude : 0.0,
             northLatitude : 0.0,
@@ -1067,6 +1068,13 @@ define([
                     uniformMap.southMercatorYLow = southMercatorYLow;
                     uniformMap.oneOverMercatorHeight = oneOverMercatorHeight;
                     Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
+
+                    var intensity = 0.0;
+                    var baseLayer = surface._imageryLayerCollection.getLength() > 0 ? surface._imageryLayerCollection.get(0) : undefined;
+                    if (typeof baseLayer !== 'undefined' && typeof baseLayer.imageryProvider !== 'undefined' && typeof baseLayer.imageryProvider.getIntensity !== 'undefined') {
+                        intensity = baseLayer.imageryProvider.getIntensity(tile);
+                    }
+                    uniformMap.dayIntensity = intensity;
 
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                         var tileImagery = tileImageryCollection[imageryIndex];
