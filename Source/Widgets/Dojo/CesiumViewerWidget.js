@@ -1103,16 +1103,37 @@ define([
         _configureCentralBodyImagery : function() {
             var centralBody = this.centralBody;
 
+            var imageLayers = centralBody.getImageLayers();
+
+            var existingImagery;
+            if (imageLayers.getLength() !== 0) {
+                existingImagery = imageLayers.get(0).imageryProvider;
+            }
+
             if (this.useStreamingImagery) {
-                centralBody.getImageLayers().addImageryProvider(new BingMapsImageryProvider({
-                    server : 'dev.virtualearth.net',
-                    mapStyle : this.mapStyle,
-                    // Some versions of Safari support WebGL, but don't correctly implement
-                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                }));
+                if (!(existingImagery instanceof BingMapsImageryProvider) ||
+                    existingImagery.getMapStyle() !== this.mapStyle) {
+
+                    imageLayers.addImageryProvider(new BingMapsImageryProvider({
+                        server : 'dev.virtualearth.net',
+                        mapStyle : this.mapStyle,
+                        // Some versions of Safari support WebGL, but don't correctly implement
+                        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                        proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
+                    }));
+                    if (imageLayers.getLength() > 1) {
+                        imageLayers.remove(imageLayers.get(0));
+                    }
+                }
             } else {
-                centralBody.getImageLayers().addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
+                if (!(existingImagery instanceof SingleTileImageryProvider) ||
+                    existingImagery.getUrl() !== this.dayImageUrl) {
+
+                    imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
+                    if (imageLayers.getLength() > 1) {
+                        imageLayers.remove(imageLayers.get(0));
+                    }
+                }
             }
 
             centralBody.nightImageSource = this.nightImageUrl;

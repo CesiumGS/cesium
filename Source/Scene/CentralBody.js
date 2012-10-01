@@ -860,13 +860,19 @@ define([
             }
         }
 
-        var that = this;
+        var poleIntensity = 0.0;
+        var baseLayer = this._imageryLayerCollection.getLength() > 0 ? this._imageryLayerCollection.get(0) : undefined;
+        if (typeof baseLayer !== 'undefined' && typeof baseLayer.imageryProvider !== 'undefined' && typeof baseLayer.imageryProvider.getPoleIntensity !== 'undefined') {
+            poleIntensity = baseLayer.imageryProvider.getPoleIntensity();
+        }
+
         var drawUniforms = {
             u_dayIntensity : function() {
-                return 0.2;
+                return poleIntensity;
             }
         };
 
+        var that = this;
         if (typeof this._northPoleCommand.uniformMap === 'undefined') {
             var northPoleUniforms = combine([drawUniforms, {
                 u_color : function() {
