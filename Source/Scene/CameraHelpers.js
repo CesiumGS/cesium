@@ -7,12 +7,6 @@ define([
         Cartesian2) {
     "use strict";
 
-    function move(camera, direction, rate) {
-        var position = camera.position;
-        var newPosition = position.add(direction.multiplyByScalar(rate));
-        camera.position = newPosition;
-    }
-
     function decay(time, coefficient) {
         if (time < 0) {
             return 0.0;
@@ -114,15 +108,9 @@ define([
         }
     }
 
-    function zoom(camera, rate) {
-        move(camera, camera.direction, rate);
-    }
-
     return {
-        move : move,
         maxHeight : maxHeight,
         handleZoom : handleZoom,
-        maintainInertia : maintainInertia,
-        zoom : zoom
+        maintainInertia : maintainInertia
     };
 });

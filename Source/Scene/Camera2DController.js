@@ -29,7 +29,6 @@ define([
         Tween) {
     "use strict";
 
-    var move = CameraHelpers.move;
     var maintainInertia = CameraHelpers.maintainInertia;
     var handleZoom = CameraHelpers.handleZoom;
 
@@ -85,7 +84,6 @@ define([
         this._camera = camera;
         this._projection = projection;
         this._zoomRate = 100000.0;
-        this._moveRate = 100000.0;
 
         /**
          * A parameter in the range <code>[0, 1)</code> used to determine how long
@@ -169,60 +167,6 @@ define([
 
         this._projection = projection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
-    };
-
-    /**
-     * Translates the camera's position by <code>rate</code> along the camera's up vector.
-     *
-     * @memberof Camera2DController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see Camera2DController#moveDown
-     */
-    Camera2DController.prototype.moveUp = function(rate) {
-        move(this._camera, this._camera.up, rate || this._moveRate);
-    };
-
-    /**
-     * Translates the camera's position by <code>rate</code> along the opposite direction
-     * of the camera's up vector.
-     *
-     * @memberof Camera2DController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see Camera2DController#moveUp
-     */
-    Camera2DController.prototype.moveDown = function(rate) {
-        move(this._camera, this._camera.up, -rate || -this._moveRate);
-    };
-
-    /**
-     * Translates the camera's position by <code>rate</code> along the camera's right vector.
-     *
-     * @memberof Camera2DController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see Camera2DController#moveLeft
-     */
-    Camera2DController.prototype.moveRight = function(rate) {
-        move(this._camera, this._camera.right, rate || this._moveRate);
-    };
-
-    /**
-     * Translates the camera's position by <code>rate</code> along the opposite direction
-     * of the camera's right vector.
-     *
-     * @memberof Camera2DController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see Camera2DController#moveRight
-     */
-    Camera2DController.prototype.moveLeft = function(rate) {
-        move(this._camera, this._camera.right, -rate || -this._moveRate);
     };
 
     /**

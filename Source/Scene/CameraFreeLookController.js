@@ -23,8 +23,6 @@ define([
         CameraHelpers) {
     "use strict";
 
-    var move = CameraHelpers.move;
-
     /**
      * A type that defines camera behavior: movement of the position in the direction
      * of the camera's axes and rotation of the axes keeping the position stationary.
@@ -42,194 +40,13 @@ define([
         this._camera = camera;
         this._handler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG, EventModifier.SHIFT);
 
-        this._maximumMoveRate = 2000000.0;
-        this._minimumMoveRate = 1.0 / 5000.0;
-        this._maximumTurnRate = Math.PI / 8.0;
-        this._minimumTurnRate = Math.PI / 120.0;
-
-        this._moveRate = 100000.0;
-        this._turnRate = Math.PI / 60.0;
-
         /**
          * DOC_TBD
          */
         this.horizontalRotationAxis = undefined;
     };
 
-    /**
-     * Translates the camera's position by <code>rate</code> along the camera's view vector.
-     *
-     * @memberof CameraFreeLookController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see CameraFreeLookController#moveBackward
-     */
-    CameraFreeLookController.prototype.moveForward = function(rate) {
-        move(this._camera, this._camera.direction, rate || this._moveRate);
-    };
 
-    /**
-     * Translates the camera's position by <code>rate</code> along the opposite direction
-     * of the camera's view vector.
-     *
-     * @memberof CameraFreeLookController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see CameraFreeLookController#moveForward
-     */
-    CameraFreeLookController.prototype.moveBackward = function(rate) {
-        move(this._camera, this._camera.direction, -rate || -this._moveRate);
-    };
-
-    /**
-     * Translates the camera's position by <code>rate</code> along the camera's up vector.
-     *
-     * @memberof CameraFreeLookController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see CameraFreeLookController#moveDown
-     */
-    CameraFreeLookController.prototype.moveUp = function(rate) {
-        move(this._camera, this._camera.up, rate || this._moveRate);
-    };
-
-    /**
-     * Translates the camera's position by <code>rate</code> along the opposite direction
-     * of the camera's up vector.
-     *
-     * @memberof CameraFreeLookController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see CameraFreeLookController#moveUp
-     */
-    CameraFreeLookController.prototype.moveDown = function(rate) {
-        move(this._camera, this._camera.up, -rate || -this._moveRate);
-    };
-
-    /**
-     * Translates the camera's position by <code>rate</code> along the camera's right vector.
-     *
-     * @memberof CameraFreeLookController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see CameraFreeLookController#moveLeft
-     */
-    CameraFreeLookController.prototype.moveRight = function(rate) {
-        move(this._camera, this._camera.right, rate || this._moveRate);
-    };
-
-    /**
-     * Translates the camera's position by <code>rate</code> along the opposite direction
-     * of the camera's right vector.
-     *
-     * @memberof CameraFreeLookController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see CameraFreeLookController#moveRight
-     */
-    CameraFreeLookController.prototype.moveLeft = function(rate) {
-        move(this._camera, this._camera.right, -rate || -this._moveRate);
-    };
-
-    /**
-     * Rotates the camera around its up vector by rate, in radians, in the opposite direction
-     * of its right vector.
-     *
-     * @memberof CameraFreeLookController
-     *
-     * @param {Number} rate The rate, in radians, to rotate by.
-     *
-     * @see CameraFreeLookController#lookRight
-     */
-    CameraFreeLookController.prototype.lookLeft = function(rate) {
-        var turnRate = rate || this._turnRate;
-        var rotated = this._rotateTwoAxes(this._camera.direction, this._camera.right, this._camera.up, turnRate);
-        this._camera.direction = rotated[0];
-        this._camera.right = rotated[1];
-    };
-
-    /**
-     * Rotates the camera around its up vector by rate, in radians, in the direction
-     * of its right vector.
-     *
-     * @memberof CameraFreeLookController
-     *
-     * @param {Number} rate The rate, in radians, to rotate by.
-     *
-     * @see CameraFreeLookController#lookLeft
-     */
-    CameraFreeLookController.prototype.lookRight = function(rate) {
-        this.lookLeft(-rate || -this._turnRate);
-    };
-
-    /**
-     * Rotates the camera around its right vector by rate, in radians, in the direction
-     * of its up vector.
-     *
-     * @memberof CameraFreeLookController
-     *
-     * @param {Number} rate The rate, in radians, to rotate by.
-     *
-     * @see CameraFreeLookController#lookDown
-     */
-    CameraFreeLookController.prototype.lookUp = function(rate) {
-        var turnRate = rate || this._turnRate;
-        var rotated = this._rotateTwoAxes(this._camera.direction, this._camera.up, this._camera.right, turnRate);
-        this._camera.direction = rotated[0];
-        this._camera.up = rotated[1];
-    };
-
-    /**
-     * Rotates the camera around its right vector by rate, in radians, in the opposite direction
-     * of its up vector.
-     *
-     * @memberof CameraFreeLookController
-     *
-     * @param {Number} rate The rate, in radians, to rotate by.
-     *
-     * @see CameraFreeLookController#lookUp
-     */
-    CameraFreeLookController.prototype.lookDown = function(rate) {
-        this.lookUp(-rate || -this._turnRate);
-    };
-
-    CameraFreeLookController.prototype._rotateTwoAxes = function(v0, v1, axis, angle) {
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle));
-        var u0 = rotation.multiplyByVector(v0);
-        var u1 = rotation.multiplyByVector(v1);
-        return [u0, u1];
-    };
-
-    /**
-     * Rotate each of the camera's orientation vectors around <code>axis</code> by <code>angle</code>
-     *
-     * @memberof CameraFreeLookController
-     *
-     * @param {Cartesian3} axis The axis to rotate around.
-     * @param {Number} angle The angle, in radians, to rotate by.
-     *
-     * @see CameraFreeLookController#lookUp
-     * @see CameraFreeLookController#lookDown
-     * @see CameraFreeLookController#lookLeft
-     * @see CameraFreeLookController#lookRight
-     */
-    CameraFreeLookController.prototype.rotate = function(axis, angle) {
-        var a = Cartesian3.clone(axis);
-        var turnAngle = angle || this._moveRate;
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(a, turnAngle));
-        var direction = rotation.multiplyByVector(this._camera.direction);
-        var up = rotation.multiplyByVector(this._camera.up);
-        var right = rotation.multiplyByVector(this._camera.right);
-        this._camera.direction = direction;
-        this._camera.up = up;
-        this._camera.right = right;
-    };
 
     /**
      * @private

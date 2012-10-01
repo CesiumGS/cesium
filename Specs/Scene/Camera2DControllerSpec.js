@@ -112,26 +112,6 @@ defineSuite([
         expect(controller.getProjection()).toEqual(mercator);
     });
 
-    it('moveUp', function() {
-        controller.moveUp(moverate);
-        expect(camera.position.equalsEpsilon(new Cartesian3(0.0, moverate, 0.0), CesiumMath.EPSILON10)).toEqual(true);
-    });
-
-    it('moveDown', function() {
-        controller.moveDown(moverate);
-        expect(camera.position.equalsEpsilon(new Cartesian3(0.0, -moverate, 0.0), CesiumMath.EPSILON10)).toEqual(true);
-    });
-
-    it('moveRight', function() {
-        controller.moveRight(moverate);
-        expect(camera.position.equalsEpsilon(new Cartesian3(moverate, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
-    });
-
-    it('moveLeft', function() {
-        controller.moveLeft(moverate);
-        expect(camera.position.equalsEpsilon(new Cartesian3(-moverate, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
-    });
-
     it('translate', function() {
         controller._translate({
             startPosition : new Cartesian2(0.0, 0.0),

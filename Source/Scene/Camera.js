@@ -10,6 +10,7 @@ define([
         '../Core/Cartographic',
         '../Core/Matrix4',
         '../Core/Ray',
+        './CameraController',
         './CameraControllerCollection',
         './PerspectiveFrustum'
     ], function(
@@ -23,6 +24,7 @@ define([
         Cartographic,
         Matrix4,
         Ray,
+        CameraController,
         CameraControllerCollection,
         PerspectiveFrustum) {
     "use strict";
@@ -121,6 +123,13 @@ define([
         this.frustum = new PerspectiveFrustum();
         this.frustum.fovy = CesiumMath.toRadians(60.0);
         this.frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+
+        /**
+         * DOC_TBA
+         *
+         * @type {CameraController}
+         */
+        this.controller = new CameraController(this);
 
         this._viewMatrix = undefined;
         this._invViewMatrix = undefined;

@@ -29,7 +29,6 @@ define([
 
     var handleZoom = CameraHelpers.handleZoom;
     var maintainInertia = CameraHelpers.maintainInertia;
-    var zoom = CameraHelpers.zoom;
 
     /**
      * A type that defines camera behavior: the camera's position and axes will be rotated around the center
@@ -51,7 +50,6 @@ define([
         this._camera = camera;
         this._ellipsoid = ellipsoid;
         this._zoomRate = 100000.0;
-        this._moveRate = Math.PI / 3600.0;
 
         /**
          * A parameter in the range <code>[0, 1]</code> used to determine how long
@@ -166,123 +164,6 @@ define([
     };
 
     /**
-     * Rotates the camera around <code>axis</code> by <code>angle</code>. The distance
-     * of the camera's position to the center of the camera's reference frame remains the same.
-     *
-     * @memberof CameraSpindleController
-     *
-     * @param {Cartesian3} axis The axis to rotate around given in world coordinates.
-     * @param {Number} angle The angle, in radians, to rotate by. The direction of rotation is
-     * determined by the sign of the angle.
-     *
-     * @see CameraSpindleController#moveUp
-     * @see CameraSpindleController#moveDown
-     * @see CameraSpindleController#moveLeft
-     * @see CameraSpindleController#moveRight
-    */
-    CameraSpindleController.prototype.rotate = function(axis, angle) {
-        var a = Cartesian3.clone(axis);
-        var turnAngle = (typeof angle !== 'undefined') ? angle : this._moveRate;
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(a, turnAngle));
-
-        var camera = this._camera;
-        camera.position = rotation.multiplyByVector(camera.position);
-        camera.direction = rotation.multiplyByVector(camera.direction);
-        camera.up = rotation.multiplyByVector(camera.up);
-        camera.right = camera.direction.cross(camera.up);
-    };
-
-    /**
-     * Rotates the camera around the center of the camera's reference frame by angle downwards.
-     *
-     * @memberof CameraSpindleController
-     *
-     * @param {Number} angle The angle to rotate in radians.
-     *
-     * @see CameraSpindleController#moveUp
-     * @see CameraSpindleController#rotate
-     */
-    CameraSpindleController.prototype.moveDown = function(angle) {
-        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
-        this._moveVertical(angle);
-    };
-
-    /**
-     * Rotates the camera around the center of the camera's reference frame by angle upwards.
-     *
-     * @memberof CameraSpindleController
-     *
-     * @param {Number} angle The angle to rotate in radians.
-     *
-     * @see CameraSpindleController#moveDown
-     * @see CameraSpindleController#rotate
-     */
-    CameraSpindleController.prototype.moveUp = function(angle) {
-        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
-        this._moveVertical(angle);
-    };
-
-    CameraSpindleController.prototype._moveVertical = function(angle) {
-        var p = this._camera.position.normalize();
-        if (typeof this.constrainedAxis !== 'undefined' && !p.equalsEpsilon(this.constrainedAxis, CesiumMath.EPSILON2)) {
-            var dot = p.dot(this.constrainedAxis.normalize());
-            if (CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0) {
-                return;
-            }
-
-            var angleToAxis = Math.acos(dot);
-            if (Math.abs(angle) > Math.abs(angleToAxis)) {
-                angle = angleToAxis;
-            }
-
-            var tangent = this.constrainedAxis.cross(p).normalize();
-            var bitangent = this._camera.up.cross(tangent);
-            tangent = bitangent.cross(this._camera.up);
-            this.rotate(tangent, angle);
-        } else {
-            this.rotate(this._camera.right, angle);
-        }
-    };
-
-    /**
-     * Rotates the camera around the center of the camera's reference frame by angle to the right.
-     *
-     * @memberof CameraSpindleController
-     *
-     * @param {Number} angle The angle to rotate in radians.
-     *
-     * @see CameraSpindleController#moveLeft
-     * @see CameraSpindleController#rotate
-     */
-    CameraSpindleController.prototype.moveRight = function(angle) {
-        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
-        this._moveHorizontal(angle);
-    };
-
-    /**
-     * Rotates the camera around the center of the camera's reference frame by angle to the left.
-     *
-     * @memberof CameraSpindleController
-     *
-     * @param {Number} angle The angle to rotate in radians.
-     *
-     * @see CameraSpindleController#moveRight
-     * @see CameraSpindleController#rotate
-     */
-    CameraSpindleController.prototype.moveLeft = function(angle) {
-        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
-        this._moveHorizontal(angle);
-    };
-
-    CameraSpindleController.prototype._moveHorizontal = function(angle) {
-        if (typeof this.constrainedAxis !== 'undefined') {
-            this.rotate(this.constrainedAxis.normalize(), angle);
-        } else {
-            this.rotate(this._camera.up, angle);
-        }
-    };
-
-    /**
      * Translates the camera's position by <code>rate</code> along the camera's view vector.
      *
      * @memberof CameraSpindleController
@@ -292,7 +173,7 @@ define([
      * @see CameraSpindleController#zoomOut
      */
     CameraSpindleController.prototype.zoomIn = function(rate) {
-        zoom(this._camera, (typeof rate !== 'undefined') ? rate : this._zoomRate);
+        this._camera.controller.move(this._camera.direction, (typeof rate !== 'undefined') ? rate : this._zoomRate);
     };
 
     /**
@@ -306,7 +187,7 @@ define([
      * @see CameraSpindleController#zoomIn
      */
     CameraSpindleController.prototype.zoomOut = function(rate) {
-        zoom(this._camera, (typeof rate !== 'undefined') ? -rate : -this._zoomRate);
+        this._camera.controller.move(this._camera.direction, (typeof rate !== 'undefined') ? -rate : -this._zoomRate);
     };
 
     /**
@@ -360,6 +241,7 @@ define([
     };
 
     CameraSpindleController.prototype._rotate = function(movement) {
+        this._camera.controller.constrainedAxis = this.constrainedAxis;
         var position = this._camera.position;
         var rho = position.magnitude();
         var rotateRate = this._rotateFactor * (rho - this._rotateRateRangeAdjustment);
@@ -378,12 +260,13 @@ define([
         var deltaPhi = -rotateRate * phiWindowRatio * Math.PI * 2.0;
         var deltaTheta = -rotateRate * thetaWindowRatio * Math.PI;
 
-        this._moveHorizontal(deltaPhi);
-        this._moveVertical(deltaTheta);
+        this._camera.controller.rotateRight(deltaPhi);
+        this._camera.controller.rotateUp(deltaTheta);
     };
 
     CameraSpindleController.prototype._pan = function(movement) {
         var camera = this._camera;
+        camera.controller.constrainedAxis = this.constrainedAxis;
         var p0 = camera.pickEllipsoid(movement.startPosition, this._ellipsoid);
         var p1 = camera.pickEllipsoid(movement.endPosition, this._ellipsoid);
 
@@ -403,7 +286,7 @@ define([
 
             if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
                 var angle = -Math.acos(dot);
-                this.rotate(axis, angle);
+                camera.controller.rotate(axis, angle);
             }
         } else {
             var startRho = p0.magnitude();
@@ -422,8 +305,8 @@ define([
                 deltaTheta = 0;
             }
 
-            this._moveHorizontal(deltaPhi);
-            this._moveVertical(deltaTheta);
+            camera.controller.rotateRight(deltaPhi);
+            camera.controller.rotateUp(deltaTheta);
         }
     };
 
