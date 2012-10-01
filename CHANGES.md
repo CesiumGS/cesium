@@ -4,7 +4,7 @@ Change Log
 Beta Releases
 -------------
 
-### b9 - xx/xx/2012
+### b9 - 10/01/2012
 
 * Breaking changes:
    * Removed the `render` and `renderForPick` functions of primitives. The primitive `update` function updates a list of commands for the renderer. For more details, see the [Data Driven Renderer](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Data-Driven-Renderer-Details).
