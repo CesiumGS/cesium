@@ -49,10 +49,6 @@ define([
         //We are assigning the position of the camera, not of the object, so modify the height appropriately.
         cartographic.height = viewDistance;
         if (objectChanged || controllerChanged) {
-            //TODO This is a hack around near plane issues until multi-frustum is in place.
-            camera.frustum.near = 1.0;
-            //END HACK
-
             controller.setPositionCartographic(cartographic);
 
             //Set rotation to match offset.
@@ -154,12 +150,6 @@ define([
             camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
         }
 
-        //TODO This is a hack around near plane issues until multi-frustum is in place.
-        if (controllerChanged || objectChanged) {
-            var viewDistance = that._lastDistance;
-            camera.frustum.near = Math.min(viewDistance * 0.1, camera.frustum.near, 0.0002 * that.ellipsoid.getRadii().getMaximumComponent());
-        }
-        //END HACK
         return controller;
     }
 

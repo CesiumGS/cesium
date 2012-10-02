@@ -139,6 +139,7 @@ define([
 
         this._baseVolume = new BoundingSphere();
         this._baseVolume2D = new BoundingSphere();
+        this._boundingVolume = new BoundingSphere();
 
         this._commandLists = new CommandLists();
 
@@ -844,27 +845,18 @@ define([
     }
 
     var scratchCanvasDimensions = new Cartesian2();
-    var scratchBV = new BoundingSphere();
     var scratchToCenter = new Cartesian3();
     var scratchProj = new Cartesian3();
-    function updateBoundingVolumes(collection, context, frameState) {
+    function updateBoundingVolume(collection, context, frameState, boundingVolume) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
-        var mode = frameState.mode;
 
         var textureDimensions = collection._textureAtlas.getTexture().getDimensions();
         var textureSize = Math.max(textureDimensions.x, textureDimensions.y);
 
-        var boundingVolume = scratchBV;
         var pixelScale;
         var size;
         var offset;
-
-        if (mode === SceneMode.SCENE3D) {
-            boundingVolume = BoundingSphere.clone(collection._baseVolume, boundingVolume);
-        } else if (typeof collection._baseVolume2D !== 'undefined') {
-            boundingVolume = BoundingSphere.clone(collection._baseVolume2D, boundingVolume);
-        }
 
         var toCenter = camera.getPositionWC().subtract(boundingVolume.center, scratchToCenter);
         var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()), scratchProj);
@@ -883,8 +875,6 @@ define([
 
         offset = pixelScale * collection._maxPixelOffset + collection._maxEyeOffset;
         boundingVolume.radius += size + offset;
-
-        return boundingVolume;
     }
 
     /**
@@ -1015,11 +1005,15 @@ define([
             return;
         }
 
-        var boundingVolume = updateBoundingVolumes(this, context, frameState);
+        var boundingVolume;
         var modelMatrix = Matrix4.IDENTITY;
         if (frameState.mode === SceneMode.SCENE3D) {
             modelMatrix = this.modelMatrix;
+            boundingVolume = BoundingSphere.clone(this._baseVolume, this._boundingVolume);
+        } else if (typeof this._baseVolume2D !== 'undefined') {
+            boundingVolume = BoundingSphere.clone(this._baseVolume2D, this._boundingVolume);
         }
+        updateBoundingVolume(this, context, frameState, boundingVolume);
 
         var pass = frameState.passes;
         var va = this._vaf.va;

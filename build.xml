@@ -1,25 +1,27 @@
 <project name="Cesium" default="combine">
 	<target name="build" description="A developer build that runs in-place.">
 		<glslToJavascript stripcomments="${build.minification}">
-			<fileset dir="${shadersDirectory}" includes="**/*.glsl" />
+			<glslfiles dir="${shadersDirectory}" includes="**/*.glsl" />
+			<existingjsfiles dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
 		</glslToJavascript>
+
 		<parallel>
 			<createCesiumJs output="${sourceDirectory}/Cesium.js">
-				<fileset dir="${sourceDirectory}">
+				<sourcefiles dir="${sourceDirectory}">
 					<include name="**/*.js" />
 					<exclude name="Widgets/**" />
 					<exclude name="Cesium.js" />
 					<exclude name="main.js" />
 					<exclude name="**/*.profile.js" />
-				</fileset>
+				</sourcefiles>
 			</createCesiumJs>
 
 			<createSpecList output="${specsDirectory}/SpecList.js">
-				<fileset dir="${specsDirectory}" includes="**/*.js" excludes="*.js" />
+				<specs dir="${specsDirectory}" includes="**/*.js" excludes="*.js" />
 			</createSpecList>
 
 			<createGalleryList output="${galleryDirectory}/gallery-index.js">
-				<fileset dir="${galleryDirectory}" includes="**/*.html" />
+				<demos dir="${galleryDirectory}" includes="**/*.html" />
 			</createGalleryList>
 		</parallel>
 	</target>
@@ -27,6 +29,9 @@
 	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build, combineJavaScript" />
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
+		<delete includeEmptyDirs="true" failonerror="false">
+			<fileset dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
+		</delete>
 		<antcall target="combine">
 			<param name="build.minification" value="true" />
 		</antcall>
@@ -78,7 +83,7 @@
 	<property name="build.minification" value="false" />
 
 	<!-- Inputs -->
-	<property name="version" value="b8" />
+	<property name="version" value="b9" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -86,6 +91,7 @@
 	<property name="specsDirectory" location="Specs" />
 	<property name="imagesDirectory" location="Images" />
 	<property name="toolsDirectory" location="Tools" />
+	<property name="tasksDirectory" location="${toolsDirectory}/buildTasks" />
 	<property name="thirdPartyDirectory" location="ThirdParty" />
 	<property name="rjsPath" location="${thirdPartyDirectory}/requirejs-1.0.8/r.js" />
 	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.0.3/almond.js" />
@@ -103,252 +109,29 @@
 	<property name="buildDocumentationImagesDirectory" location="${buildDocumentationDirectory}/images" />
 	<property name="builtCesiumFile" location="${buildDirectory}/Cesium.js" />
 
-	<!-- ********************************************************************** -->
-
-	<scriptdef name="glslToJavascript" language="javascript">
-		<!-- Scott Hunter is my hero. - Cozzi -->
+	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js">
 		<attribute name="stripcomments" />
-		<element name="fileset" type="fileset" />
-		<![CDATA[
-importClass(java.io.File);
-importClass(java.io.FileReader);
-importClass(java.io.FileWriter);
-importClass(java.io.StringReader);
-importClass(Packages.org.apache.tools.ant.util.FileUtils);
-importClass(Packages.org.apache.tools.ant.filters.StripJavaComments);
-
-var stripComments = attributes.get("stripcomments");
-var filesets = elements.get("fileset");
-for (var i = 0; i < filesets.size(); i++) {
-  var fileset = filesets.get(i);
-  var basedir  = fileset.getDir(project);
-  var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
-
-  for (var j = 0; j < filenames.length; j++) {
-    var filename = filenames[j];
-
-    var file = new File(basedir, filename);
-    var targetFile = new File(basedir, filename.replace('.glsl', '.js'));
-    if (file.lastModified() < targetFile.lastModified()) {
-      continue;
-    }
-
-    var reader = new FileReader(file);
-    var contents = String(FileUtils.readFully(reader));
-    reader.close();
-
-    contents = contents.replace(/\r\n/gm, '\n');
-
-    var copyrightComments = contents.match(/\/\*\!(?:.|\n)*?\*\//gm) || [];
-
-    if (stripComments) {
-      contents = String(FileUtils.readFully(new StripJavaComments(new StringReader(contents))));
-      contents = contents.replace(/\s+$/gm, '').replace(/^\s+/gm, '').replace(/\n+/gm, '\n');
-      contents += '\n';
-    }
-
-    contents = contents.split('"').join('\\"').replace(/\n/gm, '\\n" +\n"');
-    contents = copyrightComments.join('\n') + '\n' +
-               '/*global define*/\n' +
-               'define(function() {\n' +
-               '  "use strict";\n' +
-               '  return "' + contents + '";\n' +
-               '});'
-
-    var writer = new FileWriter(targetFile);
-    writer.write(contents);
-    writer.close();
-  }
-}
-]]>
+		<element name="glslfiles" type="fileset" />
+		<element name="existingjsfiles" type="fileset" />
 	</scriptdef>
 
-	<scriptdef name="extractShaderComments" language="javascript">
-		<element name="fileset" type="fileset" />
-		<![CDATA[
-importClass(java.io.File);
-importClass(java.io.FileReader);
-importClass(java.io.FileWriter);
-importClass(Packages.org.apache.tools.ant.util.FileUtils);
-
-var filesets = elements.get("fileset");
-for (var i = 0; i < filesets.size(); i++) {
-  var fileset = filesets.get(i);
-  var basedir  = fileset.getDir(project);
-  var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
-
-  var glslDoc = "";
-
-  for (var j = 0; j < filenames.length; j++) {
-    var filename = filenames[j];
-
-    var file = new File(basedir, filename);
-    var reader = new FileReader(file);
-    var contents = String(FileUtils.readFully(reader));
-    reader.close();
-
-    contents = contents.replace(/\r\n/gm, '\n');
-
-    var docComments = contents.match(/\/\*\*[\s\S]*?\*\//gm) || [];
-    if (docComments.length > 0) {
-        glslDoc = glslDoc + docComments.join('\n');
-    }
-  }
-
-  var glslDocFile = new File(basedir, 'glslComments.js');
-  var glslDocWriter = new FileWriter(glslDocFile);
-  glslDocWriter.write(glslDoc);
-  glslDocWriter.close();
-}
-]]>
+	<scriptdef name="extractShaderComments" language="javascript" src="${tasksDirectory}/extractShaderComments.js">
+		<element name="glslfiles" type="fileset" />
 	</scriptdef>
 
-	<scriptdef name="createCesiumJs" language="javascript">
+	<scriptdef name="createCesiumJs" language="javascript" src="${tasksDirectory}/createCesiumJs.js">
 		<attribute name="output" />
-		<element name="fileset" type="fileset" />
-		<![CDATA[
-importClass(java.io.File);
-importClass(java.io.FileReader);
-importClass(java.io.FileWriter);
-importClass(Packages.org.apache.tools.ant.util.FileUtils);
-
-var moduleIds = [];
-var parameters = [];
-var assignments = [];
-
-var filesets = elements.get("fileset");
-for (var i = 0, len = filesets.size(); i < len; i++) {
-  var fileset = filesets.get(i);
-  var basedir = fileset.getDir(project);
-  var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
-
-  for (var j = 0, len2 = filenames.length; j < len2; j++) {
-    var relativePath = filenames[j];
-    var file = new File(basedir, relativePath);
-
-    var moduleId = relativePath.replace('\\', '/');
-    moduleId = moduleId.substring(0, moduleId.lastIndexOf('.'));
-
-    var baseName = file.getName();
-	var assignmentName = baseName.substring(0, baseName.lastIndexOf('.'));
-    if (/Shaders\//.test(moduleId)) {
-      assignmentName = '_shaders.' + assignmentName;
-    }
-
-    var parameterName = moduleId.replace('/', '_');
-
-    moduleIds.push("'" + moduleId + "'");
-    parameters.push(parameterName);
-    assignments.push('Cesium.' + assignmentName + ' = ' + parameterName + ';');
-  }
-}
-
-var output = attributes.get("output");
-if (new File(output).exists()) {
-  var reader = new FileReader(output);
-  var oldContents = String(FileUtils.readFully(reader));
-  reader.close();
-}
-
-var contents = '/*global define*/\n' +
-               'define([' + moduleIds.join(', ') + '], function (' + parameters.join(', ') + ') {\n' +
-               '  "use strict";\n' +
-               '  var Cesium = { _shaders : {} };\n  ' +
-               assignments.join('\n  ') + '\n' +
-               '  return Cesium;\n' +
-               '});';
-
-if (oldContents !== contents) {
-  var writer = new FileWriter(output);
-  writer.write(contents);
-  writer.close();
-}
-]]>
+		<element name="sourcefiles" type="fileset" />
 	</scriptdef>
 
-	<scriptdef name="createSpecList" language="javascript">
+	<scriptdef name="createSpecList" language="javascript" src="${tasksDirectory}/createSpecList.js">
 		<attribute name="output" />
-		<element name="fileset" type="fileset" />
-		<![CDATA[
-importClass(java.io.File);
-importClass(java.io.FileReader);
-importClass(java.io.FileWriter);
-importClass(Packages.org.apache.tools.ant.util.FileUtils);
-
-var specs = [];
-
-var filesets = elements.get("fileset");
-for (var i = 0, len = filesets.size(); i < len; i++) {
-  var fileset = filesets.get(i);
-  var basedir  = fileset.getDir(project);
-  var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
-
-  for (var j = 0, len2 = filenames.length; j < len2; j++) {
-    var relativePath = filenames[j];
-    var spec = relativePath.substring(0, relativePath.lastIndexOf('.')).replace('\\', '/');
-    specs.push("'Specs/" + spec + "'");
-  }
-}
-
-var output = attributes.get("output");
-if (new File(output).exists()) {
-  var reader = new FileReader(output);
-  var oldContents = String(FileUtils.readFully(reader));
-  reader.close();
-}
-
-var contents = 'var specs = [' + specs.join(',') + '];';
-
-if (oldContents !== contents) {
-  var writer = new FileWriter(output);
-  writer.write(contents);
-  writer.close();
-}
-]]>
+		<element name="specs" type="fileset" />
 	</scriptdef>
 
-	<scriptdef name="createGalleryList" language="javascript">
+	<scriptdef name="createGalleryList" language="javascript" src="${tasksDirectory}/createGalleryList.js">
 		<attribute name="output" />
-		<element name="fileset" type="fileset" />
-		<![CDATA[
-importClass(java.io.File);
-importClass(java.io.FileReader);
-importClass(java.io.FileWriter);
-importClass(Packages.org.apache.tools.ant.util.FileUtils);
-
-var demos = [];
-
-var filesets = elements.get("fileset");
-for (var i = 0, len = filesets.size(); i < len; i++) {
-  var fileset = filesets.get(i);
-  var basedir  = fileset.getDir(project);
-  var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
-
-  for (var j = 0, len2 = filenames.length; j < len2; j++) {
-    var relativePath = filenames[j];
-    var demo = relativePath.substring(0, relativePath.lastIndexOf('.')).replace('\\', '/');
-    var thumbnail = new File(basedir, demo + '.jpg').exists() ? (", 'img':'" + demo + ".jpg'") : '';
-    var fileDate = new File(basedir, demo + '.html').lastModified().toString();
-    demos.push("\n\t{'name':'" + demo + "'" + thumbnail + ", 'date':" + fileDate + '}');
-  }
-}
-
-var output = attributes.get("output");
-if (new File(output).exists()) {
-  var reader = new FileReader(output);
-  var oldContents = String(FileUtils.readFully(reader));
-  reader.close();
-}
-
-var contents = '// This file is automatically rebuilt by the Cesium build process.\n' +
-    'var gallery_demos = [' + demos.join(',') + '\n];';
-
-if (oldContents !== contents) {
-  var writer = new FileWriter(output);
-  writer.write(contents);
-  writer.close();
-}
-]]>
+		<element name="demos" type="fileset" />
 	</scriptdef>
 
 	<target name="combineJavaScript.setNodePathValue">
@@ -432,7 +215,7 @@ if (oldContents !== contents) {
 
 	<target name="generateDocumentation">
 		<extractShaderComments>
-			<fileset dir="${shadersDirectory}" includes="**/*.glsl" />
+			<glslfiles dir="${shadersDirectory}" includes="**/*.glsl" />
 		</extractShaderComments>
 
 		<!--
