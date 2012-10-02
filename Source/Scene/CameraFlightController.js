@@ -149,7 +149,7 @@ define([
         normal = Cartesian3.UNIT_Z.cross(position).normalize();
         tangent = position.cross(normal).normalize();
         target = Cartesian3.ZERO;
-        this._camera.lookAt(position, target, tangent);
+        this._camera.controller.lookAt(position, target, tangent);
 
         var isComplete = (now === this._end) || this._canceled;
         if(isComplete && !this._canceled && (typeof this._complete !== 'undefined')){

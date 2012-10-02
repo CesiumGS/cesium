@@ -571,64 +571,6 @@ define([
     };
 
     /**
-     * Pick an ellipsoid or map.
-     *
-     * @memberof Scene
-     *
-     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
-     *
-     * @exception {DeveloperError} windowPosition is required.
-     *
-     * @return {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
-     * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
-     */
-    Scene.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
-        if (typeof windowPosition === 'undefined') {
-            throw new DeveloperError('windowPosition is required.');
-        }
-
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
-
-        var p;
-        if (this.mode === SceneMode.SCENE3D) {
-            p = this._camera.pickEllipsoid(windowPosition, ellipsoid);
-        } else if (this.mode === SceneMode.SCENE2D) {
-            p = this._camera.pickMap2D(windowPosition, this.scene2D.projection);
-        } else if (this.mode === SceneMode.COLUMBUS_VIEW) {
-            p = this._camera.pickMapColumbusView(windowPosition, this.scene2D.projection);
-        }
-
-        return p;
-    };
-
-    /**
-     * View an extent on an ellipsoid or map.
-     *
-     * @memberof Scene
-     *
-     * @param {Extent} extent The extent to view.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
-     *
-     * @exception {DeveloperError} extent is required.
-     */
-    Scene.prototype.viewExtent = function(extent, ellipsoid) {
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
-
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
-
-        if (this.mode === SceneMode.SCENE3D) {
-            this._camera.viewExtent(extent, ellipsoid);
-        } else if (this.mode === SceneMode.SCENE2D) {
-            this._camera.viewExtent2D(extent, this.scene2D.projection);
-        } else if (this.mode === SceneMode.COLUMBUS_VIEW) {
-            this._camera.viewExtentColumbusView(extent, this.scene2D.projection);
-        }
-    };
-
-    /**
      * DOC_TBA
      * @memberof Scene
      */

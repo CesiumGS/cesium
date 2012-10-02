@@ -3,7 +3,11 @@ define([
         '../Core/defaultValue',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/DeveloperError',
+        '../Core/Ellipsoid',
+        '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Quaternion',
@@ -12,7 +16,11 @@ define([
         defaultValue,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
+        Cartographic,
         DeveloperError,
+        Ellipsoid,
+        IntersectionTests,
         CesiumMath,
         Matrix3,
         Quaternion,
@@ -452,6 +460,261 @@ define([
             setPositionCartographic2D(cartographic);
         }
         // TODO: add for other modes
+    };
+
+    function lookAt3D(camera, eye, target, up) {
+        camera.position = Cartesian3.clone(eye, camera.position);
+        camera.direction = Cartesian3.subtract(target, eye, camera.direction).normalize(camera.direction);
+        camera.right = Cartesian3.cross(camera.direction, up, camera.right).normalize(camera.right);
+        camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
+    }
+
+    /**
+     * Sets the camera position and orientation with an eye position, target, and up vector.
+     *
+     * @memberof CameraController
+     *
+     * @param {Cartesian3} eye The position of the camera.
+     * @param {Cartesian3} target The position to look at.
+     * @param {Cartesian3} up The up vector.
+     *
+     * @exception {DeveloperError} eye is required.
+     * @exception {DeveloperError} target is required.
+     * @exception {DeveloperError} up is required.
+     */
+    CameraController.prototype.lookAt = function(eye, target, up) {
+        if (typeof eye === 'undefined') {
+            throw new DeveloperError('eye is required');
+        }
+        if (typeof target === 'undefined') {
+            throw new DeveloperError('target is required');
+        }
+        if (typeof up === 'undefined') {
+            throw new DeveloperError('up is required');
+        }
+
+        if (this._mode === SceneMode.SCENE3D) {
+            lookAt3D(this._camera, eye, target, up);
+        }
+    };
+
+    function viewExtent3D(camera, extent, ellipsoid) {
+        var north = extent.north;
+        var south = extent.south;
+        var east = extent.east;
+        var west = extent.west;
+
+        // If we go across the International Date Line
+        if (west > east) {
+            east += CesiumMath.TWO_PI;
+        }
+
+        var northEast = ellipsoid.cartographicToCartesian(new Cartographic(east, north));
+        var southWest = ellipsoid.cartographicToCartesian(new Cartographic(west, south));
+        var diagonal = northEast.subtract(southWest);
+        var center = southWest.add(diagonal.normalize().multiplyByScalar(diagonal.magnitude() * 0.5));
+
+        var northWest = ellipsoid.cartographicToCartesian(new Cartographic(west, north)).subtract(center);
+        var southEast = ellipsoid.cartographicToCartesian(new Cartographic(east, south)).subtract(center);
+        northEast = northEast.subtract(center);
+        southWest = southWest.subtract(center);
+
+        camera.direction = center.negate().normalize();
+        camera.right = camera.direction.cross(Cartesian3.UNIT_Z).normalize();
+        camera.up = camera.right.cross(camera.direction);
+
+        var height = Math.max(Math.abs(camera.up.dot(northWest)), Math.abs(camera.up.dot(southEast)), Math.abs(camera.up.dot(northEast)), Math.abs(camera.up.dot(southWest)));
+        var width = Math.max(Math.abs(camera.right.dot(northWest)), Math.abs(camera.right.dot(southEast)), Math.abs(camera.right.dot(northEast)), Math.abs(camera.right.dot(southWest)));
+
+        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+        var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        var d = Math.max(width / tanTheta, height / tanPhi);
+
+        camera.position = center.normalize().multiplyByScalar(center.magnitude() + d);
+    }
+
+    function viewExtentColumbusView(camera, extent, projection) {
+        var north = extent.north;
+        var south = extent.south;
+        var east = extent.east;
+        var west = extent.west;
+
+        var transform = camera.transform.setColumn(3, Cartesian4.UNIT_W);
+
+        var northEast = projection.project(new Cartographic(east, north));
+        northEast = transform.multiplyByVector(new Cartesian4(northEast.x, northEast.y, northEast.z, 1.0));
+        northEast = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(northEast));
+
+        var southWest = projection.project(new Cartographic(west, south));
+        southWest = transform.multiplyByVector(new Cartesian4(southWest.x, southWest.y, southWest.z, 1.0));
+        southWest = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(southWest));
+
+        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+        var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        var d = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
+
+        var position = projection.project(new Cartographic(0.5 * (west + east), 0.5 * (north + south), d));
+        position = transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
+        camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(position));
+
+        // Not exactly -z direction because that would lock the camera in place with a constrained z axis.
+        camera.direction = new Cartesian3(0.0, 0.0001, -0.999);
+        Cartesian3.UNIT_X.clone(camera.right);
+        camera.up = camera.right.cross(camera.direction);
+    }
+
+    function viewExtent2D(camera, extent, projection) {
+        var north = extent.north;
+        var south = extent.south;
+        var east = extent.east;
+        var west = extent.west;
+        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south));
+
+        var northEast = projection.project(new Cartographic(east, north));
+        var southWest = projection.project(new Cartographic(west, south));
+
+        var width = Math.abs(northEast.x - southWest.x) * 0.5;
+        var height = Math.abs(northEast.y - southWest.y) * 0.5;
+
+        var position = projection.project(lla);
+        camera.position.x = position.x;
+        camera.position.y = position.y;
+
+        var right, top;
+        var ratio = camera.frustum.right / camera.frustum.top;
+        var heightRatio = height * ratio;
+        if (width > heightRatio) {
+            right = width;
+            top = right / ratio;
+        } else {
+            top = height;
+            right = heightRatio;
+        }
+
+        camera.frustum.right = right;
+        camera.frustum.left = -right;
+        camera.frustum.top = top;
+        camera.frustum.bottom = -top;
+
+        //Orient the camera north.
+        Cartesian3.UNIT_X.clone(camera.right);
+        camera.up = camera.right.cross(camera.direction);
+    }
+
+    /**
+     * View an extent on an ellipsoid or map.
+     * @memberof CameraController
+     *
+     * @param {Extent} extent The extent to view.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
+     *
+     * @exception {DeveloperError} extent is required.
+     */
+    CameraController.prototype.viewExtent = function(extent, ellipsoid) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+        ellipsoid = (typeof ellipsoid === 'undefined') ? Ellipsoid.WGS84 : ellipsoid;
+
+        if (this._mode === SceneMode.SCENE3D) {
+            viewExtent3D(this._camera, extent, ellipsoid);
+        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+            viewExtentColumbusView(this._camera, extent, this._projection);
+        } else if (this._mode === SceneMode.SCENE2D) {
+            viewExtent2D(this._camera, extent, this._projection);
+        }
+    };
+
+    function pickEllipsoid3D(camera, windowPosition, ellipsoid) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+        var ray = camera.getPickRay(windowPosition);
+        var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
+        if (!intersection) {
+            return undefined;
+        }
+
+        var iPt = ray.getPoint(intersection.start);
+        return iPt;
+    }
+
+    function pickMap2D(camera, windowPosition, projection) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        var ray = camera.getPickRay(windowPosition);
+        var position = ray.origin;
+        position.z = 0.0;
+        var cart = projection.unproject(position);
+
+        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
+                cart.longitude < - Math.PI || cart.longitude > Math.PI) {
+            return undefined;
+        }
+
+        return projection.getEllipsoid().cartographicToCartesian(cart);
+    }
+
+    function pickMapColumbusView(camera, windowPosition, projection) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
+        if (typeof projection === 'undefined') {
+            throw new DeveloperError('projection is required.');
+        }
+
+        var ray = camera.getPickRay(windowPosition);
+        var scalar = -ray.origin.x / ray.direction.x;
+        var position = ray.getPoint(scalar);
+
+        var cart = projection.unproject(new Cartesian3(position.y, position.z, 0.0));
+
+        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
+                cart.longitude < - Math.PI || cart.longitude > Math.PI) {
+            return undefined;
+        }
+
+        position = projection.getEllipsoid().cartographicToCartesian(cart);
+        return position;
+    }
+
+    /**
+     * Pick an ellipsoid or map.
+     * @memberof CameraController
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
+     *
+     * @exception {DeveloperError} windowPosition is required.
+     *
+     * @return {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
+     * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
+     */
+    CameraController.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+
+        var p;
+        if (this._mode === SceneMode.SCENE3D) {
+            p = pickEllipsoid3D(this._camera, windowPosition, ellipsoid);
+        } else if (this._mode === SceneMode.SCENE2D) {
+            p = pickMap2D(this._camera, windowPosition, this._projection);
+        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+            p = pickMapColumbusView(this._camera, windowPosition, this._projection);
+        }
+
+        return p;
     };
 
     return CameraController;
