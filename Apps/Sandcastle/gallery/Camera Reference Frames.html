@@ -92,14 +92,13 @@ require([
         var camera = scene.getCamera();
         camera.transform = transform;
         
-        // CAMERA TODO:
         // View in east-north-up frame
-        //var controller = scene.getCameraMouseController();
-        //controller.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
-        //controller._ellipsoid = Cesium.Ellipsoid.UNIT_SPHERE;
+        var controller = scene.getCameraMouseController();
+        controller.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+        controller.setEllipsoid(Cesium.Ellipsoid.UNIT_SPHERE);
 
         // Zoom in
-        camera.lookAt(
+        camera.controller.lookAt(
             new Cesium.Cartesian3(120000.0, 120000.0, 120000.0),
             Cesium.Cartesian3.ZERO,
             Cesium.Cartesian3.UNIT_Z);

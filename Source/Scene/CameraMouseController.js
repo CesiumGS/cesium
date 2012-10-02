@@ -43,6 +43,17 @@ define([
         Tween) {
     "use strict";
 
+    /**
+     * DOC_TBA
+     * @alias CameraMouseController
+     * @constructor
+     *
+     * @param {HTMLCanvasElement} canvas DOC_TBA
+     * @param {Camera} camera DOC_TBA
+     *
+     * @exception {DeveloperError} canvas is required.
+     * @exception {DeveloperError} camera is required.
+     */
     var CameraMouseController = function(canvas, camera) {
         if (typeof canvas === 'undefined') {
             throw new DeveloperError('canvas is required.');
@@ -57,58 +68,63 @@ define([
          * @type Boolean
          */
         this.enableTranslate = true;
-
         /**
          * If true, allows the user to zoom in and out.  If false, the camera is locked to the current distance from the ellipsoid.
          * @type Boolean
          */
         this.enableZoom = true;
-
         /**
          * If true, allows the user to rotate the camera.  If false, the camera is locked to the current heading.
          * @type Boolean
          */
         this.enableRotate = true;
-
+        /**
+         * A parameter in the range <code>[0, 1]</code> used to determine how long
+         * the camera will continue to spin because of inertia.
+         * With a value of one, the camera will spin forever and
+         * with value of zero, the camera will have no inertia.
+         * @type Number
+         */
+        this.inertiaSpin = 0.9;
         /**
          * A parameter in the range <code>[0, 1)</code> used to determine how long
          * the camera will continue to translate because of inertia.
          * With value of zero, the camera will have no inertia.
-         *
          * @type Number
          */
         this.inertiaTranslate = 0.9;
-
         /**
          * A parameter in the range <code>[0, 1)</code> used to determine how long
          * the camera will continue to zoom because of inertia.
          * With value of zero, the camera will have no inertia.
-         *
          * @type Number
          */
         this.inertiaZoom = 0.8;
+        /**
+         * If set, the camera will not be able to rotate past this axis in either direction.
+         * If this is set while in pan mode, the position clicked on the ellipsoid
+         * will not always map directly to the cursor.
+         * @type Cartesian3
+         */
+        this.constrainedAxis = undefined;
 
         this._canvas = canvas;
         this._camera = camera;
-        this._ellipsoid = Ellipsoid.WGS84; // CAMERA TODO: need ellipsoid?
+        this._ellipsoid = Ellipsoid.WGS84;
         this._projection = undefined;
 
-        // 2D
-        this._zoomFactor = 1.5;
-        this._translateFactor = 1.0;
-        this._minimumZoomRate = 20.0;
-        this._maximumZoomRate = FAR;
-
+        this._spinHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
         this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
+        this._lookHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG, EventModifier.SHIFT);
+        this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
         this._zoomHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
         this._zoomWheel = new CameraEventHandler(canvas, CameraEventType.WHEEL);
-        this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
+        this._lastInertiaSpinMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
         this._lastInertiaTranslateMovement = undefined;
         this._lastInertiaWheelZoomMovement = undefined;
 
-        this._frustum = this._camera.frustum.clone();
         this._animationCollection = new AnimationCollection();
         this._zoomAnimation = undefined;
         this._translateAnimation = undefined;
@@ -116,49 +132,42 @@ define([
         this._frustum = undefined;
         this._maxCoord = undefined;
 
-        this._maxZoomFactor = 2.5;
-        this._maxTranslateFactor = 1.5;
-
-        // added for Columbus View
         this._transform = this._camera.transform.clone();
+        this._horizontalRotationAxis = undefined;
 
-        this._mapWidth = this._ellipsoid.getRadii().x * Math.PI;
-        this._mapHeight = this._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
-
-        // added for spindle
-        /**
-         * A parameter in the range <code>[0, 1]</code> used to determine how long
-         * the camera will continue to spin because of inertia.
-         * With a value of one, the camera will spin forever and
-         * with value of zero, the camera will have no inertia.
-         *
-         * @type Number
-         */
-        this.inertiaSpin = 0.9;
-
-        /**
-         * If set, the camera will not be able to rotate past this axis in either direction.
-         * If this is set while in pan mode, the position clicked on the ellipsoid
-         * will not always map directly to the cursor.
-         *
-         * @type Cartesian3
-         */
-        this.constrainedAxis = undefined;
-
+        // Constants, Make public?
         var radius = this._ellipsoid.getMaximumRadius();
-        this._zoomFactor = 5.0; // Camera TODO: What about 2D?
+        this._zoomFactor = 5.0;
         this._rotateFactor = 1.0 / radius;
         this._rotateRateRangeAdjustment = radius;
         this._maximumRotateRate = 1.77;
         this._minimumRotateRate = 1.0 / 5000.0;
+        this._zoomFactor2D = 1.5;
+        this._translateFactor = 1.0;
+        this._minimumZoomRate = 20.0;
+        this._maximumZoomRate = FAR;
+        this._maxZoomFactor = 2.5;
+        this._maxTranslateFactor = 1.5;
+    };
 
-        this._spinHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
+    /**
+     * DOC_TBA
+     * @returns {Ellipsoid} DOC_TBA
+     */
+    CameraMouseController.prototype.getEllipsoid = function() {
+        return this._ellipsoid;
+    };
 
-        this._lastInertiaSpinMovement = undefined;
-
-        // add for free look
-        this._lookHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG, EventModifier.SHIFT);
-        this.horizontalRotationAxis = undefined;
+    /**
+     * DOC_TBA
+     * @param {Ellipsoid} [ellipsoid=WGS84] DOC_TBA
+     */
+    CameraMouseController.prototype.setEllipsoid = function(ellipsoid) {
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+        var radius = ellipsoid.getMaximumRadius();
+        this._ellipsoid = ellipsoid;
+        this._rotateFactor = 1.0 / radius;
+        this._rotateRateRangeAdjustment = radius;
     };
 
     function decay(time, coefficient) {
@@ -230,10 +239,10 @@ define([
 
     var maxHeight = 20.0;
 
-    function handleZoom(object, movement, distanceMeasure) {
+    function handleZoom(object, movement, zoomFactor, distanceMeasure) {
         // distanceMeasure should be the height above the ellipsoid.
         // The zoomRate slows as it approaches the surface and stops maxHeight above it.
-        var zoomRate = object._zoomFactor * (distanceMeasure - maxHeight);
+        var zoomRate = zoomFactor * (distanceMeasure - maxHeight);
 
         if (zoomRate > object._maximumZoomRate) {
             zoomRate = object._maximumZoomRate;
@@ -383,7 +392,7 @@ define([
     function zoom2D(controller, movement) {
         var camera = controller._camera;
         var mag = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
-        handleZoom(controller, movement, mag);
+        handleZoom(controller, movement, controller._zoomFactor2D, mag);
 
         var maxRight = controller._maxCoord.x * controller._maxZoomFactor;
         if (camera.frustum.right > maxRight) {
@@ -573,8 +582,11 @@ define([
         var dWidth = tanTheta * distToC;
         var dHeight = tanPhi * distToC;
 
-        var maxX = Math.max(dWidth - controller._mapWidth, controller._mapWidth);
-        var maxY = Math.max(dHeight - controller._mapHeight, controller._mapHeight);
+        var mapWidth = controller._ellipsoid.getRadii().x * Math.PI;
+        var mapHeight = controller._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
+
+        var maxX = Math.max(dWidth - mapWidth, mapWidth);
+        var maxY = Math.max(dHeight - mapHeight, mapHeight);
 
         if (positionWC.x < -maxX || positionWC.x > maxX || positionWC.y < -maxY || positionWC.y > maxY) {
             if (!controller._translateHandler.isButtonDown()) {
@@ -586,14 +598,14 @@ define([
                 }
             }
 
-            maxX = maxX + controller._mapWidth * 0.5;
+            maxX = maxX + mapWidth * 0.5;
             if (centerWC.y > maxX) {
                 positionWC.y -= centerWC.y - maxX;
             } else if (centerWC.y < -maxX) {
                 positionWC.y += -maxX - centerWC.y;
             }
 
-            maxY = maxY + controller._mapHeight * 0.5;
+            maxY = maxY + mapHeight * 0.5;
             if (centerWC.z > maxY) {
                 positionWC.z -= centerWC.z - maxY;
             } else if (centerWC.z < -maxY) {
@@ -613,6 +625,12 @@ define([
         var direction = camera.getDirectionWC();
 
         var oldTransform = camera.transform;
+        var oldEllipsoid = controller._ellipsoid;
+        var oldAxis = controller.constrainedAxis;
+
+        controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+        controller.constrainedAxis = Cartesian3.UNIT_X;
+
         camera.transform = controller._transform;
 
         var invTransform = camera.getInverseTransform();
@@ -628,6 +646,8 @@ define([
         right = camera.getRightWC();
         direction = camera.getDirectionWC();
 
+        controller.constrainedAxis = oldAxis;
+        controller.setEllipsoid(oldEllipsoid);
         camera.transform = oldTransform;
         var transform = camera.getInverseTransform();
 
@@ -638,7 +658,7 @@ define([
     }
 
     function zoomCV(controller, movement) {
-        handleZoom(controller, movement, controller._camera.position.z);
+        handleZoom(controller, movement, controller._zoomFactor, controller._camera.position.z);
     }
 
     function updateCV(controller) {
@@ -767,7 +787,8 @@ define([
     }
 
     function zoom3D(controller, movement) {
-        handleZoom(controller, movement, controller._ellipsoid.cartesianToCartographic(controller._camera.position).height);
+        var distance = controller._ellipsoid.cartesianToCartographic(controller._camera.position).height;
+        handleZoom(controller, movement, controller._zoomFactor, distance);
     }
 
     function tilt3D(controller, movement) {
@@ -785,7 +806,7 @@ define([
         var direction = camera.direction;
 
         var oldTransform = camera.transform;
-        var oldConstrainedZ = controller._spindleController.constrainedAxis;
+        var oldConstrainedZ = controller.constrainedAxis;
 
         var ray = new Ray(controller._camera.getPositionWC(), controller._camera.getDirectionWC());
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
@@ -800,7 +821,7 @@ define([
 
         controller.constrainedAxis = Cartesian3.UNIT_Z;
         controller._camera.transform = transform;
-        controller._ellipsoid = Ellipsoid.UNIT_SPHERE;
+        controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
         var invTransform = camera.getInverseTransform();
         camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
@@ -820,7 +841,7 @@ define([
 
         controller.constrainedAxis = oldConstrainedZ;
         controller._camera.transform = oldTransform;
-        controller._ellipsoid = ellipsoid;
+        controller.setEllipsoid(ellipsoid);
 
         camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
         camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
@@ -859,7 +880,7 @@ define([
 
         var dot = startX.dot(endX);
         var angle = 0.0;
-        var axis = (typeof controller.horizontalRotationAxis !== 'undefined') ? controller.horizontalRotationAxis : camera.up;
+        var axis = (typeof controller._horizontalRotationAxis !== 'undefined') ? controller._horizontalRotationAxis : camera.up;
         axis = (movement.startPosition.x > movement.endPosition.x) ? axis : axis.negate();
         axis = axis.normalize();
         if (dot < 1.0) { // dot is in [0, 1]
@@ -964,14 +985,10 @@ define([
 
             update2D(this);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            this._ellipsoid = Ellipsoid.UNIT_SPHERE;
-            this.constrainedAxis = Cartesian3.UNIT_X;
-            this.horizontalRotationAxis = Cartesian3.UNIT_Z;
+            this._horizontalRotationAxis = Cartesian3.UNIT_Z;
             updateCV(this);
         } else if (mode === SceneMode.SCENE3D) {
-            this._ellipsoid = Ellipsoid.WGS84;
-            this.constrainedAxis = undefined;
-            this.horizontalRotationAxis = undefined;
+            this._horizontalRotationAxis = undefined;
             update3D(this);
         }
     };

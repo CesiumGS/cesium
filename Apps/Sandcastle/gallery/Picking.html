@@ -118,7 +118,7 @@ require([
         // Mouse over the globe to see the cartographic position
         handler = new Cesium.EventHandler(scene.getCanvas());
         handler.setMouseAction(function(movement) {
-            var cartesian = scene.pickEllipsoid(movement.endPosition, ellipsoid);
+            var cartesian = scene.getCamera().controller.pickEllipsoid(movement.endPosition, ellipsoid);
             if (cartesian) {
                 var cartographic = ellipsoid.cartesianToCartographic(cartesian);
                 label.setShow(true);

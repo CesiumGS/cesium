@@ -114,7 +114,7 @@ require([
         var north = Cesium.Math.toRadians(42.0);
         
         var extent = new Cesium.Extent(west, south, east, north);
-        scene.viewExtent(extent, Cesium.Ellipsoid.WGS84);
+        scene.getCamera().controller.viewExtent(extent, Cesium.Ellipsoid.WGS84);
         
         // Show the extent.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
