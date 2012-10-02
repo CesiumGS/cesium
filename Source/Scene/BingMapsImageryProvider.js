@@ -447,12 +447,12 @@ define([
         var result = {
             x : 0,
             y : 0,
-            level : quadkey.length - 1
+            level : quadkey.length
         };
 
         for ( var i = result.level; i > 0; --i) {
             var mask = 1 << (i - 1);
-            var c = quadkey[result.lod - i];
+            var c = quadkey[result.level - i];
             if (c === '1') {
                 result.x |= mask;
             } else if (c === '2') {
@@ -462,6 +462,8 @@ define([
                 result.y |= mask;
             }
         }
+
+        --result.level;
 
         return result;
     };
