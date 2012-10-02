@@ -7,6 +7,7 @@ define([
         '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/EventModifier',
         '../Core/FAR',
         '../Core/IntersectionTests',
         '../Core/Math',
@@ -17,7 +18,6 @@ define([
         './AnimationCollection',
         './CameraEventHandler',
         './CameraEventType',
-        './CameraFreeLookController',
         './SceneMode',
         '../ThirdParty/Tween'
     ], function(
@@ -28,6 +28,7 @@ define([
         Cartographic,
         DeveloperError,
         Ellipsoid,
+        EventModifier,
         FAR,
         IntersectionTests,
         CesiumMath,
@@ -38,7 +39,6 @@ define([
         AnimationCollection,
         CameraEventHandler,
         CameraEventType,
-        CameraFreeLookController,
         SceneMode,
         Tween) {
     "use strict";
@@ -120,8 +120,6 @@ define([
         this._maxTranslateFactor = 1.5;
 
         // added for Columbus View
-        this._freeLookController = new CameraFreeLookController(canvas, camera);
-
         this._transform = this._camera.transform.clone();
 
         this._mapWidth = this._ellipsoid.getRadii().x * Math.PI;
@@ -157,6 +155,10 @@ define([
         this._spinHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
 
         this._lastInertiaSpinMovement = undefined;
+
+        // add for free look
+        this._lookHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG, EventModifier.SHIFT);
+        this.horizontalRotationAxis = undefined;
     };
 
     function decay(time, coefficient) {
@@ -652,7 +654,7 @@ define([
         }
 
         var buttonDown = translate.isButtonDown() || rotate.isButtonDown() ||
-            rotate.isButtonDown() || controller._freeLookController._handler.isButtonDown();
+            rotate.isButtonDown() || controller._lookHandler.isButtonDown();
         if (buttonDown) {
             controller._animationCollection.removeAll();
         }
@@ -673,7 +675,9 @@ define([
             maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
         }
 
-        controller._freeLookController.update();
+        if (controller._lookHandler.isMoving()) {
+            look3D(controller, controller._lookHandler.getMovement());
+        }
 
         if (!buttonDown) {
             correctPositionCV(controller);
@@ -833,6 +837,70 @@ define([
         }
     }
 
+    function look3D(controller, movement) {
+        var camera = controller._camera;
+
+        var width = controller._canvas.clientWidth;
+        var height = controller._canvas.clientHeight;
+
+        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+        var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        var near = camera.frustum.near;
+
+        var startNDC = new Cartesian2((2.0 / width) * movement.startPosition.x - 1.0, (2.0 / height) * (height - movement.startPosition.y) - 1.0);
+        var endNDC = new Cartesian2((2.0 / width) * movement.endPosition.x - 1.0, (2.0 / height) * (height - movement.endPosition.y) - 1.0);
+
+        var nearCenter = camera.position.add(camera.direction.multiplyByScalar(near));
+
+        var startX = camera.right.multiplyByScalar(startNDC.x * near * tanTheta);
+        startX = nearCenter.add(startX).subtract(camera.position).normalize();
+        var endX = camera.right.multiplyByScalar(endNDC.x * near * tanTheta);
+        endX = nearCenter.add(endX).subtract(camera.position).normalize();
+
+        var dot = startX.dot(endX);
+        var angle = 0.0;
+        var axis = (typeof controller.horizontalRotationAxis !== 'undefined') ? controller.horizontalRotationAxis : camera.up;
+        axis = (movement.startPosition.x > movement.endPosition.x) ? axis : axis.negate();
+        axis = axis.normalize();
+        if (dot < 1.0) { // dot is in [0, 1]
+            angle = -Math.acos(dot);
+        }
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle));
+
+        if (1.0 - Math.abs(camera.direction.dot(axis)) > CesiumMath.EPSILON6) {
+            camera.direction = rotation.multiplyByVector(camera.direction);
+        }
+
+        if (1.0 - Math.abs(camera.up.dot(axis)) > CesiumMath.EPSILON6) {
+            camera.up = rotation.multiplyByVector(camera.up);
+        }
+
+        var startY = camera.up.multiplyByScalar(startNDC.y * near * tanPhi);
+        startY = nearCenter.add(startY).subtract(camera.position).normalize();
+        var endY = camera.up.multiplyByScalar(endNDC.y * near * tanPhi);
+        endY = nearCenter.add(endY).subtract(camera.position).normalize();
+
+        dot = startY.dot(endY);
+        angle = 0.0;
+        axis = startY.cross(endY);
+        if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
+            angle = -Math.acos(dot);
+        } else { // no rotation
+            axis = Cartesian3.UNIT_X;
+        }
+        rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle));
+
+        if (1.0 - Math.abs(camera.direction.dot(axis)) > CesiumMath.EPSILON6) {
+            camera.direction = rotation.multiplyByVector(camera.direction);
+        }
+
+        if (1.0 - Math.abs(camera.up.dot(axis)) > CesiumMath.EPSILON6) {
+            camera.up = rotation.multiplyByVector(camera.up);
+        }
+
+        camera.right = camera.direction.cross(camera.up);
+    }
+
     function update3D(controller) {
         var spin = controller._spinHandler;
         var rightZoom = controller._zoomHandler;
@@ -869,7 +937,9 @@ define([
             maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
         }
 
-        controller._freeLookController.update();
+        if (controller._lookHandler.isMoving()) {
+            look3D(controller, controller._lookHandler.getMovement());
+        }
 
         return true;
     }
@@ -896,12 +966,12 @@ define([
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             this._ellipsoid = Ellipsoid.UNIT_SPHERE;
             this.constrainedAxis = Cartesian3.UNIT_X;
-            this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
+            this.horizontalRotationAxis = Cartesian3.UNIT_Z;
             updateCV(this);
         } else if (mode === SceneMode.SCENE3D) {
             this._ellipsoid = Ellipsoid.WGS84;
             this.constrainedAxis = undefined;
-            this._freeLookController.horizontalRotationAxis = undefined;
+            this.horizontalRotationAxis = undefined;
             update3D(this);
         }
     };

@@ -324,19 +324,6 @@ define([
                 }
             } else {
                 this._viewFromTo = undefined;
-
-                var scene = this.scene;
-                var mode = scene.mode;
-                var camera = scene.getCamera();
-                var controllers = camera.getControllers();
-                if (mode === SceneMode.SCENE2D) {
-                    controllers.removeAll();
-                } else if (mode === SceneMode.SCENE3D) {
-                    //For now just rename at the last location
-                    //camera will stay in spindle/rotate mode.
-                } else if (mode === SceneMode.COLUMBUS_VIEW) {
-                    controllers.removeAll();
-                }
             }
         },
 
@@ -867,8 +854,6 @@ define([
             var scene = this.scene;
             var mode = scene.mode;
             var camera = scene.getCamera();
-            var controllers = camera.getControllers();
-            controllers.removeAll();
 
             if (mode === SceneMode.SCENE2D) {
                 camera.controller.viewExtent(Extent.MAX_VALUE);

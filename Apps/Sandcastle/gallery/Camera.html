@@ -84,21 +84,23 @@ require([
 
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego);    // For highlighting in Sandcastle.
-        scene.getCamera().getControllers().addFlight({
-            destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-                Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0)),
-            duration: 3.0
-        });        
+        // CAMERA TODO:
+        //scene.getCamera().getControllers().addFlight({
+        //    destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
+        //        Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0)),
+        //    duration: 3.0
+        //});        
     }
     
     function flyToMyLocation(scene) {
         Sandcastle.declare(flyToMyLocation);    // For highlighting in Sandcastle.
         function fly(position) {
-            scene.getCamera().getControllers().addFlight({
-                destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-                    Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 100000.0)),
-                duration: 3.0
-            });        
+            // CAMERA TODO:
+            //scene.getCamera().getControllers().addFlight({
+            //    destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
+            //        Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 100000.0)),
+            //    duration: 3.0
+            //});        
         }
         
         navigator.geolocation.getCurrentPosition(fly);

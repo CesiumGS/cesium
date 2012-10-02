@@ -29,8 +29,6 @@ define([
      * @param {Ellipsoid} ellipsoid The ellipsoid to move the camera around.
      * @param {Cartesian} destination The Cartesian point that is the end of the path.
      * @param {Number} duration The time, in seconds, to travel along the path.
-     *
-     * @see CameraControllerCollection#addFlight
      */
     var CameraFlightController = function(canvas, camera, ellipsoid, destination, duration, complete) {
         // get minimum altitude from which the whole ellipsoid is visible

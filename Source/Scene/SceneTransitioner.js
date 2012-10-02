@@ -223,9 +223,6 @@ define([
             var camera = scene.getCamera();
             camera.transform = this._camera2D.transform.clone();
 
-            var controllers = camera.getControllers();
-            controllers.removeAll();
-
             // TODO: Match incoming columbus-view or 3D position
             camera.position = this._camera2D.position.clone();
             camera.direction = this._camera2D.direction.clone();
@@ -250,9 +247,6 @@ define([
             updateFrustums(this);
             var camera = scene.getCamera();
             camera.transform = this._cameraCV.transform.clone();
-
-            var controllers = camera.getControllers();
-            controllers.removeAll();
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
                 this._morphCancelled = false;
@@ -280,11 +274,8 @@ define([
 
             this._destroyMorphHandler();
 
-            var camera = scene.getCamera();
-            var controllers = camera.getControllers();
-            controllers.removeAll();
-
             updateFrustums(this);
+            var camera = scene.getCamera();
             camera.transform = Matrix4.IDENTITY;
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
@@ -300,9 +291,6 @@ define([
 
     SceneTransitioner.prototype._createMorphHandler = function(endMorphFunction) {
         var that = this;
-
-        var controllers = this._scene.getCamera().getControllers();
-        controllers.removeAll();
 
         if (this.endMorphOnMouseInput) {
             this._morphHandler = new EventHandler(this._scene.getCanvas());

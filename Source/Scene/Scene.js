@@ -262,7 +262,7 @@ define([
         scene._frameState.passes.overlay = true;
 
         scene._animations.update();
-        camera.update(scene._frameState);
+        camera.controller.update(scene._frameState);
         cameraController.update(scene._frameState);
         us.setView(camera.getViewMatrix());
         us.setProjection(camera.frustum.getProjectionMatrix());

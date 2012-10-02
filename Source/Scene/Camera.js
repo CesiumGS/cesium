@@ -9,7 +9,6 @@ define([
         '../Core/Matrix4',
         '../Core/Ray',
         './CameraController',
-        './CameraControllerCollection',
         './PerspectiveFrustum'
     ], function(
         DeveloperError,
@@ -21,7 +20,6 @@ define([
         Matrix4,
         Ray,
         CameraController,
-        CameraControllerCollection,
         PerspectiveFrustum) {
     "use strict";
 
@@ -132,27 +130,7 @@ define([
         updateViewMatrix(this);
 
         this._canvas = canvas;
-        this._controllers = new CameraControllerCollection(this, canvas);
     };
-
-    /**
-     * DOC_TBA
-     * @memberof Camera
-     */
-    Camera.prototype.getControllers = function() {
-        return this._controllers;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Camera
-     */
-    Camera.prototype.update = function(frameState) {
-        this.controller.update(frameState);
-        this._controllers.update();
-    };
-
-
 
     function updateViewMatrix(camera) {
         var r = camera._right;
@@ -165,7 +143,6 @@ define([
                                      -d.x, -d.y, -d.z,  d.dot(e),
                                       0.0,  0.0,  0.0,      1.0);
         camera._viewMatrix = viewMatrix.multiply(camera._invTransform);
-
         camera._invViewMatrix = camera._viewMatrix.inverseTransformation();
     }
 
@@ -432,7 +409,6 @@ define([
      * camera = camera && camera.destroy();
      */
     Camera.prototype.destroy = function() {
-        this._controllers.destroy();
         return destroyObject(this);
     };
 

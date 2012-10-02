@@ -9,7 +9,6 @@ defineSuite([
          'Core/Extent',
          'Core/Math',
          'Core/Matrix4',
-         'Scene/CameraControllerCollection',
          'Scene/OrthographicFrustum',
          'Scene/PerspectiveFrustum'
      ], function(
@@ -22,7 +21,6 @@ defineSuite([
          Extent,
          CesiumMath,
          Matrix4,
-         CameraControllerCollection,
          OrthographicFrustum,
          PerspectiveFrustum) {
     "use strict";
@@ -49,13 +47,6 @@ defineSuite([
         expect(function() {
             return new Camera();
         }).toThrow();
-    });
-
-    it('getControllers', function() {
-        // can't pass fake canvas for this test
-        camera = new Camera(document);
-        var controllers = camera.getControllers();
-        expect(controllers).toEqual(new CameraControllerCollection(camera, document));
     });
 
     it('get view matrix', function() {
