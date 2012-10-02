@@ -336,7 +336,6 @@ define([
                     //camera will stay in spindle/rotate mode.
                 } else if (mode === SceneMode.COLUMBUS_VIEW) {
                     controllers.removeAll();
-                    controllers.addColumbusView();
                 }
             }
         },
@@ -905,8 +904,6 @@ define([
                 camera.up = up;
                 camera.frustum = frustum;
                 camera.transform = transform;
-
-                controllers.addColumbusView();
             }
         },
 

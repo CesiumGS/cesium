@@ -7,7 +7,6 @@ define([
         './CameraFlightController',
         './CameraSpindleController',
         './CameraFreeLookController',
-        './CameraColumbusViewController',
         './CameraCentralBodyController'
     ], function(
         DeveloperError,
@@ -17,7 +16,6 @@ define([
         CameraFlightController,
         CameraSpindleController,
         CameraFreeLookController,
-        CameraColumbusViewController,
         CameraCentralBodyController) {
     "use strict";
 
@@ -42,7 +40,6 @@ define([
      *
      * @see CameraControllerCollection#addFreeLook
      * @see CameraControllerCollection#addFlight
-     * @see CameraControllerCollection#addColumbusView
      */
     CameraControllerCollection.prototype.addSpindle = function(ellipsoid) {
         var spindle = new CameraSpindleController(this._canvas, this._camera, ellipsoid);
@@ -57,7 +54,6 @@ define([
      *
      * @see CameraControllerCollection#addSpindle
      * @see CameraControllerCollection#addFlight
-     * @see CameraControllerCollection#addColumbusView
      */
     CameraControllerCollection.prototype.addFreeLook = function(ellipsoid) {
         var freeLook = new CameraFreeLookController(this._canvas, this._camera);
@@ -71,23 +67,7 @@ define([
      * @memberof CameraControllerCollection
      *
      * @see CameraControllerCollection#addSpindle
-     * @see CameraControllerCollection#addFlight
      * @see CameraControllerCollection#addFreeLook
-     */
-    CameraControllerCollection.prototype.addColumbusView = function() {
-        var cv = new CameraColumbusViewController(this._canvas, this._camera);
-        this._controllers.push(cv);
-        return cv;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof CameraControllerCollection
-     *
-     * @see CameraControllerCollection#addSpindle
-     * @see CameraControllerCollection#addFreeLook
-     * @see CameraControllerCollection#addColumbusView
      */
     CameraControllerCollection.prototype.addFlight = function(template) {
         var t = template || {};

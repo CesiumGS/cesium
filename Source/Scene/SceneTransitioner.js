@@ -253,7 +253,6 @@ define([
 
             var controllers = camera.getControllers();
             controllers.removeAll();
-            controllers.addColumbusView();
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
                 this._morphCancelled = false;

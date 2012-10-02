@@ -2,8 +2,11 @@
 define([
         '../Core/destroyObject',
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/DeveloperError',
+        '../Core/Ellipsoid',
         '../Core/FAR',
         '../Core/Math',
         '../Core/Matrix3',
@@ -11,14 +14,19 @@ define([
         './AnimationCollection',
         './CameraEventHandler',
         './CameraEventType',
+        './CameraFreeLookController',
         './CameraHelpers',
+        './CameraSpindleController',
         './SceneMode',
         '../ThirdParty/Tween'
     ], function(
         destroyObject,
         Cartesian2,
+        Cartesian3,
+        Cartesian4,
         Cartographic,
         DeveloperError,
+        Ellipsoid,
         FAR,
         CesiumMath,
         Matrix3,
@@ -26,7 +34,9 @@ define([
         AnimationCollection,
         CameraEventHandler,
         CameraEventType,
+        CameraFreeLookController,
         CameraHelpers,
+        CameraSpindleController,
         SceneMode,
         Tween) {
     "use strict";
@@ -78,8 +88,10 @@ define([
 
         this._canvas = canvas;
         this._camera = camera;
+        this._ellipsoid = Ellipsoid.WGS84; // CAMERA TODO: need ellipsoid?
         this._projection = undefined;
 
+        // 2D
         this._zoomFactor = 1.5;
         this._translateFactor = 1.0;
         this._minimumZoomRate = 20.0;
@@ -88,7 +100,7 @@ define([
         this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
         this._zoomHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
         this._zoomWheel = new CameraEventHandler(canvas, CameraEventType.WHEEL);
-        this._twistHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
+        this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
 
         this._lastInertiaZoomMovement = undefined;
         this._lastInertiaTranslateMovement = undefined;
@@ -104,6 +116,18 @@ define([
 
         this._maxZoomFactor = 2.5;
         this._maxTranslateFactor = 1.5;
+
+        // added for Columbus View
+        this._spindleController = new CameraSpindleController(canvas, camera, Ellipsoid.UNIT_SPHERE);
+        this._spindleController.constrainedAxis = Cartesian3.UNIT_X;
+
+        this._freeLookController = new CameraFreeLookController(canvas, camera);
+        this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
+
+        this._transform = this._camera.transform.clone();
+
+        this._mapWidth = this._ellipsoid.getRadii().x * Math.PI;
+        this._mapHeight = this._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
     };
 
     function decay(time, coefficient) {
@@ -410,8 +434,8 @@ define([
         }
 
         if (controller.enableRotate) {
-            if (controller._twistHandler.isMoving()) {
-                twist2D(controller, controller._twistHandler.getMovement());
+            if (controller._rotateHandler.isMoving()) {
+                twist2D(controller, controller._rotateHandler.getMovement());
             }
         }
 
@@ -428,6 +452,202 @@ define([
                  !controller._animationCollection.contains(controller._translateAnimation)) {
                 addCorrectTranslateAnimation2D(controller);
             }
+        }
+
+        controller._animationCollection.update();
+
+        return true;
+    }
+
+    function addCorrectTranslateAnimationCV(controller, position, center, maxX, maxY) {
+        var newPosition = position.clone();
+
+        if (center.y > maxX) {
+            newPosition.y -= center.y - maxX;
+        } else if (center.y < -maxX) {
+            newPosition.y += -maxX - center.y;
+        }
+
+        if (center.z > maxY) {
+            newPosition.z -= center.z - maxY;
+        } else if (center.z < -maxY) {
+            newPosition.z += -maxY - center.z;
+        }
+
+        var camera = controller._camera;
+        var updateCV = function(value) {
+            var interp = position.lerp(newPosition, value.time);
+            var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
+            camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(pos));
+        };
+
+        controller._translateAnimation = controller._animationCollection.add({
+            easingFunction : Tween.Easing.Exponential.EaseOut,
+            startValue : {
+                time : 0.0
+            },
+            stopValue : {
+                time : 1.0
+            },
+            onUpdate : updateCV
+        });
+    }
+
+    function translateCV(controller, movement) {
+        var camera = controller._camera;
+        var sign = (camera.direction.dot(Cartesian3.UNIT_Z) >= 0) ? 1.0 : -1.0;
+
+        var startRay = camera.getPickRay(movement.startPosition);
+        var endRay = camera.getPickRay(movement.endPosition);
+
+        var normal = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(Cartesian4.UNIT_X));
+
+        var position = new Cartesian4(startRay.origin.x, startRay.origin.y, startRay.origin.z, 1.0);
+        position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(position));
+        var direction = new Cartesian4(startRay.direction.x, startRay.direction.y, startRay.direction.z, 0.0);
+        direction = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(direction));
+        var scalar = sign * normal.dot(position) / normal.dot(direction);
+        var startPlanePos = position.add(direction.multiplyByScalar(scalar));
+
+        position = new Cartesian4(endRay.origin.x, endRay.origin.y, endRay.origin.z, 1.0);
+        position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(position));
+        direction = new Cartesian4(endRay.direction.x, endRay.direction.y, endRay.direction.z, 0.0);
+        direction = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(direction));
+        scalar = sign * normal.dot(position) / normal.dot(direction);
+        var endPlanePos = position.add(direction.multiplyByScalar(scalar));
+
+        var diff = startPlanePos.subtract(endPlanePos);
+        camera.position = camera.position.add(diff);
+    }
+
+    function correctPositionCV(controller)
+    {
+        var camera = controller._camera;
+        var position = camera.position;
+        var direction = camera.direction;
+
+        var normal = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(Cartesian4.UNIT_X));
+        var scalar = -normal.dot(position) / normal.dot(direction);
+        var center = position.add(direction.multiplyByScalar(scalar));
+        center = new Cartesian4(center.x, center.y, center.z, 1.0);
+        var centerWC = camera.transform.multiplyByVector(center);
+        controller._transform.setColumn(3, centerWC, controller._transform);
+
+        var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
+        var positionWC = camera.transform.multiplyByVector(cameraPosition);
+
+        var tanPhi = Math.tan(controller._camera.frustum.fovy * 0.5);
+        var tanTheta = controller._camera.frustum.aspectRatio * tanPhi;
+        var distToC = positionWC.subtract(centerWC).magnitude();
+        var dWidth = tanTheta * distToC;
+        var dHeight = tanPhi * distToC;
+
+        var maxX = Math.max(dWidth - controller._mapWidth, controller._mapWidth);
+        var maxY = Math.max(dHeight - controller._mapHeight, controller._mapHeight);
+
+        if (positionWC.x < -maxX || positionWC.x > maxX || positionWC.y < -maxY || positionWC.y > maxY) {
+            if (!controller._translateHandler.isButtonDown()) {
+                var translateX = centerWC.y < -maxX || centerWC.y > maxX;
+                var translateY = centerWC.z < -maxY || centerWC.z > maxY;
+                if ((translateX || translateY) && !controller._lastInertiaTranslateMovement &&
+                        !controller._animationCollection.contains(controller._translateAnimation)) {
+                    addCorrectTranslateAnimationCV(controller, Cartesian3.fromCartesian4(positionWC), Cartesian3.fromCartesian4(centerWC), maxX, maxY);
+                }
+            }
+
+            maxX = maxX + controller._mapWidth * 0.5;
+            if (centerWC.y > maxX) {
+                positionWC.y -= centerWC.y - maxX;
+            } else if (centerWC.y < -maxX) {
+                positionWC.y += -maxX - centerWC.y;
+            }
+
+            maxY = maxY + controller._mapHeight * 0.5;
+            if (centerWC.z > maxY) {
+                positionWC.z -= centerWC.z - maxY;
+            } else if (centerWC.z < -maxY) {
+                positionWC.z += -maxY - centerWC.z;
+            }
+        }
+
+        camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(positionWC));
+    }
+
+    function rotateCV(controller, movement) {
+        var camera = controller._camera;
+
+        var position = camera.getPositionWC();
+        var up = camera.getUpWC();
+        var right = camera.getRightWC();
+        var direction = camera.getDirectionWC();
+
+        var oldTransform = camera.transform;
+        camera.transform = controller._transform;
+
+        var invTransform = camera.getInverseTransform();
+        camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+        camera.up = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+        camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+        camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+
+        controller._spindleController._rotate(movement);
+
+        position = camera.getPositionWC();
+        up = camera.getUpWC();
+        right = camera.getRightWC();
+        direction = camera.getDirectionWC();
+
+        camera.transform = oldTransform;
+        var transform = camera.getInverseTransform();
+
+        camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+        camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+        camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+        camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+    }
+
+    function zoomCV(controller, movement) {
+        handleZoom(controller._spindleController, movement, controller._camera.position.z);
+    }
+
+    function updateCV(controller) {
+        var translate = controller._translateHandler;
+        var translating = translate.isMoving() && translate.getMovement();
+        var rotate = controller._rotateHandler;
+        var rotating = rotate.isMoving() && rotate.getMovement();
+        var zoom = controller._zoomHandler;
+        var zoomimg = zoom && zoom.isMoving();
+
+        if (rotating) {
+            rotateCV(controller, rotate.getMovement());
+        }
+
+        var buttonDown = translate.isButtonDown() || rotate.isButtonDown() ||
+            rotate.isButtonDown() || controller._freeLookController._handler.isButtonDown();
+        if (buttonDown) {
+            controller._animationCollection.removeAll();
+        }
+
+        if (translating) {
+            translateCV(controller, translate.getMovement());
+        }
+
+        if (!translating && controller.inertiaTranslate < 1.0) {
+            maintainInertia(translate, controller.inertiaTranslate, translateCV, controller, '_lastInertiaTranslateMovement');
+        }
+
+        if (zoomimg) {
+            zoomCV(controller, zoom.getMovement());
+        }
+
+        if (zoom && !zoomimg && controller.inertiaZoom < 1.0) {
+            maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
+        }
+
+        controller._freeLookController.update();
+
+        if (!buttonDown) {
+            correctPositionCV(controller);
         }
 
         controller._animationCollection.update();
@@ -454,6 +674,8 @@ define([
             this._frustum.bottom = -this._frustum.top;
 
             update2D(this);
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            updateCV(this);
         }
     };
 
