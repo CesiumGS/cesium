@@ -245,7 +245,7 @@ define([
      * @returns {Extent} The extent.
      */
     ArcGisMapServerImageryProvider.prototype.getExtent = function() {
-        return this._tilingScheme.extent;
+        return this._tilingScheme.getExtent();
     };
 
     /**

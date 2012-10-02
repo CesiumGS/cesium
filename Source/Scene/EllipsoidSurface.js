@@ -130,10 +130,11 @@ define([
 
         var that = this;
         when(this.terrainProvider.tilingScheme, function(tilingScheme) {
+            var ellipsoid = tilingScheme.getEllipsoid();
             that._tilingScheme = tilingScheme;
             that._levelZeroTiles = tilingScheme.createLevelZeroTiles();
-            that._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, that.terrainProvider.tilingScheme.ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
-            that._ellipsoidalOccluder = new EllipsoidalOccluder(that.terrainProvider.tilingScheme.ellipsoid, Cartesian3.ZERO);
+            that._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
+            that._ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid, Cartesian3.ZERO);
         }, function(e) {
             /*global console*/
             console.error('failed to load tiling scheme: ' + e);
@@ -886,7 +887,7 @@ define([
 
         var cameraPosition = frameState.camera.getPositionWC();
 
-        var ellipsoid = surface.terrainProvider.tilingScheme.ellipsoid;
+        var ellipsoid = surface.terrainProvider.tilingScheme.getEllipsoid();
         var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition);
 
         surface._occluder.setCameraPosition(cameraPosition);

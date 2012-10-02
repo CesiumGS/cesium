@@ -184,7 +184,7 @@ define([
      * @returns {Extent} The extent.
      */
     WebMapServiceImageryProvider.prototype.getExtent = function() {
-        return this._tilingScheme.extent;
+        return this._tilingScheme.getExtent();
     };
 
     /**

@@ -86,7 +86,7 @@ defineSuite([
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.getLogo()).not.toBeUndefined();
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
             expect(provider.isUsingPrecachedTiles()).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -143,10 +143,11 @@ defineSuite([
             expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.getLogo()).not.toBeUndefined();
             expect(provider.getTileDiscardPolicy()).toBeUndefined();
-            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().extent);
+            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
             expect(provider.isUsingPrecachedTiles()).toEqual(false);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
+                expect(url).toMatch(baseUrl);
                 expect(url).toMatch('f=image');
                 expect(url).toMatch('bboxSR=4326');
                 expect(url).toMatch('imageSR=4326');
