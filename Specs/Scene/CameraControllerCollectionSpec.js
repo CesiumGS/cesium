@@ -28,14 +28,6 @@ defineSuite([
         collection = collection && !collection.isDestroyed() && collection.destroy();
     });
 
-    it('add2D', function() {
-        expect(function() {
-            var mercator = new MercatorProjection();
-            collection.add2D(mercator);
-        }).not.toThrow();
-        expect(collection.getLength()).toEqual(1);
-    });
-
     it('addSpindle', function() {
         expect(function() {
             collection.addSpindle();
@@ -46,13 +38,6 @@ defineSuite([
     it('addFreeLook', function() {
         expect(function() {
             collection.addFreeLook();
-        }).not.toThrow();
-        expect(collection.getLength()).toEqual(1);
-    });
-
-    it('addColumbusView', function() {
-        expect(function() {
-            collection.addColumbusView();
         }).not.toThrow();
         expect(collection.getLength()).toEqual(1);
     });
