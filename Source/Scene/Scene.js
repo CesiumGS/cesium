@@ -19,6 +19,7 @@ define([
         '../Renderer/Context',
         '../Renderer/Command',
         './Camera',
+        './CameraMouseController',
         './CompositePrimitive',
         './CullingVolume',
         './AnimationCollection',
@@ -47,6 +48,7 @@ define([
         Context,
         Command,
         Camera,
+        CameraMouseController,
         CompositePrimitive,
         CullingVolume,
         AnimationCollection,
@@ -72,6 +74,7 @@ define([
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(canvas);
+        this._cameraMouseController = new CameraMouseController(canvas, this._camera);
 
         this._animate = undefined; // Animation callback
         this._animations = new AnimationCollection();
@@ -149,6 +152,14 @@ define([
         return this._camera;
     };
     // TODO: setCamera
+
+    /**
+     * DOC_TBA
+     * @memberof Scene
+     */
+    Scene.prototype.getCameraMouseController = function() {
+        return this._cameraMouseController;
+    };
 
     /**
      * DOC_TBA
@@ -238,6 +249,7 @@ define([
     function update(scene) {
         var us = scene.getUniformState();
         var camera = scene._camera;
+        var cameraController = scene._cameraMouseController;
 
         // Destroy released shaders once every 120 frames to avoid thrashing the cache
         if (scene._shaderFrameCount++ === 120) {
@@ -251,6 +263,7 @@ define([
 
         scene._animations.update();
         camera.update(scene._frameState);
+        cameraController.update(scene._frameState);
         us.setView(camera.getViewMatrix());
         us.setProjection(camera.frustum.getProjectionMatrix());
         if (camera.frustum.getInfiniteProjectionMatrix) {

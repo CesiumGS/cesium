@@ -457,7 +457,7 @@ define([
         }
 
         if (this._mode === SceneMode.SCENE2D) {
-            setPositionCartographic2D(cartographic);
+            setPositionCartographic2D(this, cartographic);
         }
         // TODO: add for other modes
     };

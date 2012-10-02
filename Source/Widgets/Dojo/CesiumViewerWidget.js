@@ -331,7 +331,6 @@ define([
                 var controllers = camera.getControllers();
                 if (mode === SceneMode.SCENE2D) {
                     controllers.removeAll();
-                    controllers.add2D(scene.scene2D.projection);
                 } else if (mode === SceneMode.SCENE3D) {
                     //For now just rename at the last location
                     //camera will stay in spindle/rotate mode.
@@ -875,8 +874,7 @@ define([
             controllers.removeAll();
 
             if (mode === SceneMode.SCENE2D) {
-                controllers.add2D(scene.scene2D.projection);
-                scene.viewExtent(Extent.MAX_VALUE);
+                camera.controller.viewExtent(Extent.MAX_VALUE);
             } else if (mode === SceneMode.SCENE3D) {
                 this.centralBodyCameraController = controllers.addCentralBody();
                 var camera3D = this._camera3D;

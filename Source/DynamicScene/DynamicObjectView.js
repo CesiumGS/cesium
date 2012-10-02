@@ -36,8 +36,8 @@ define([
         if (controllerChanged) {
             var controllers = camera.getControllers();
             controllers.removeAll();
-            that._lastController = that._controller2d = controller = controllers.add2D(projection);
-            controller.enableTranslate = false;
+            // CAMERA TODO: disable translate in 2D
+            //controller.enableTranslate = false;
             viewDistance = offset.magnitude();
         } else if (objectChanged) {
             viewDistance = offset.magnitude();
@@ -49,7 +49,7 @@ define([
         //We are assigning the position of the camera, not of the object, so modify the height appropriately.
         cartographic.height = viewDistance;
         if (objectChanged || controllerChanged) {
-            controller.setPositionCartographic(cartographic);
+            camera.controller.setPositionCartographic(cartographic);
 
             //Set rotation to match offset.
             Cartesian3.normalize(offset, camera.up);
@@ -122,7 +122,7 @@ define([
         }
 
         if (objectChanged) {
-            camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
+            camera.controller.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
         } else if (controllerChanged) {
             //If we're switching from 2D and any rotation was applied to the camera,
             //apply that same rotation to the last offset used in 3D or Columbus view.
@@ -147,7 +147,7 @@ define([
                 Matrix3.fromQuaternion(rotation, update3DControllerMatrix3).multiplyByVector(offset, offset);
             }
             offset.normalize(offset).multiplyByScalar(that._lastDistance, offset);
-            camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
+            camera.controller.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
         }
 
         return controller;

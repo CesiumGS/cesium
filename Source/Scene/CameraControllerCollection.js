@@ -4,7 +4,6 @@ define([
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Core/Cartographic',
-        './Camera2DController',
         './CameraFlightController',
         './CameraSpindleController',
         './CameraFreeLookController',
@@ -15,7 +14,6 @@ define([
         destroyObject,
         Ellipsoid,
         Cartographic,
-        Camera2DController,
         CameraFlightController,
         CameraSpindleController,
         CameraFreeLookController,
@@ -44,23 +42,6 @@ define([
      *
      * @see CameraControllerCollection#addFreeLook
      * @see CameraControllerCollection#addFlight
-     * @see CameraControllerCollection#addSpindle
-     * @see CameraControllerCollection#addColumbusView
-     */
-    CameraControllerCollection.prototype.add2D = function(projection) {
-        var twoD = new Camera2DController(this._canvas, this._camera, projection);
-        this._controllers.push(twoD);
-        return twoD;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof CameraControllerCollection
-     *
-     * @see CameraControllerCollection#addFreeLook
-     * @see CameraControllerCollection#addFlight
-     * @see CameraControllerCollection#add2D
      * @see CameraControllerCollection#addColumbusView
      */
     CameraControllerCollection.prototype.addSpindle = function(ellipsoid) {
@@ -76,7 +57,6 @@ define([
      *
      * @see CameraControllerCollection#addSpindle
      * @see CameraControllerCollection#addFlight
-     * @see CameraControllerCollection#add2D
      * @see CameraControllerCollection#addColumbusView
      */
     CameraControllerCollection.prototype.addFreeLook = function(ellipsoid) {
@@ -92,7 +72,6 @@ define([
      *
      * @see CameraControllerCollection#addSpindle
      * @see CameraControllerCollection#addFlight
-     * @see CameraControllerCollection#add2D
      * @see CameraControllerCollection#addFreeLook
      */
     CameraControllerCollection.prototype.addColumbusView = function() {
@@ -108,7 +87,6 @@ define([
      *
      * @see CameraControllerCollection#addSpindle
      * @see CameraControllerCollection#addFreeLook
-     * @see CameraControllerCollection#add2D
      * @see CameraControllerCollection#addColumbusView
      */
     CameraControllerCollection.prototype.addFlight = function(template) {

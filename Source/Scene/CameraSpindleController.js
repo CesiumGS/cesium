@@ -200,7 +200,7 @@ define([
 
     CameraSpindleController.prototype._spin = function(movement) {
         if (this.mode === CameraSpindleControllerMode.AUTO) {
-            if (typeof this._camera.pickEllipsoid(movement.startPosition, this._ellipsoid) !== 'undefined') {
+            if (typeof this._camera.controller.pickEllipsoid(movement.startPosition, this._ellipsoid) !== 'undefined') {
                 this._pan(movement);
             } else {
                 this._rotate(movement);
@@ -239,8 +239,8 @@ define([
     CameraSpindleController.prototype._pan = function(movement) {
         var camera = this._camera;
         camera.controller.constrainedAxis = this.constrainedAxis;
-        var p0 = camera.pickEllipsoid(movement.startPosition, this._ellipsoid);
-        var p1 = camera.pickEllipsoid(movement.endPosition, this._ellipsoid);
+        var p0 = camera.controller.pickEllipsoid(movement.startPosition, this._ellipsoid);
+        var p1 = camera.controller.pickEllipsoid(movement.endPosition, this._ellipsoid);
 
         if (typeof p0 === 'undefined' || typeof p1 === 'undefined') {
             return;

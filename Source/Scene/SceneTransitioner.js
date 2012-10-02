@@ -225,7 +225,6 @@ define([
 
             var controllers = camera.getControllers();
             controllers.removeAll();
-            controllers.add2D(scene.scene2D.projection);
 
             // TODO: Match incoming columbus-view or 3D position
             camera.position = this._camera2D.position.clone();
