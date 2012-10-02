@@ -283,7 +283,6 @@ define([
             var camera = scene.getCamera();
             var controllers = camera.getControllers();
             controllers.removeAll();
-            controllers.addCentralBody();
 
             updateFrustums(this);
             camera.transform = Matrix4.IDENTITY;

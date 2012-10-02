@@ -215,8 +215,6 @@ define([
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
 
-            this.centralBodyCameraController = camera.getControllers().addCentralBody();
-
             var handler = new EventHandler(canvas);
             handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleRightClick'), MouseEventType.RIGHT_CLICK);
@@ -250,7 +248,6 @@ define([
 
             var controllers = camera.getControllers();
             controllers.removeAll();
-            this.centralBodyCameraController = controllers.addCentralBody();
         },
 
         areCloudsAvailable : function() {

@@ -8,9 +8,12 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/FAR',
+        '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Quaternion',
+        '../Core/Ray',
+        '../Core/Transforms',
         './AnimationCollection',
         './CameraEventHandler',
         './CameraEventType',
@@ -28,9 +31,12 @@ define([
         DeveloperError,
         Ellipsoid,
         FAR,
+        IntersectionTests,
         CesiumMath,
         Matrix3,
         Quaternion,
+        Ray,
+        Transforms,
         AnimationCollection,
         CameraEventHandler,
         CameraEventType,
@@ -118,11 +124,8 @@ define([
         this._maxTranslateFactor = 1.5;
 
         // added for Columbus View
-        this._spindleController = new CameraSpindleController(canvas, camera, Ellipsoid.UNIT_SPHERE);
-        this._spindleController.constrainedAxis = Cartesian3.UNIT_X;
-
+        this._spindleController = new CameraSpindleController(canvas, camera, this._ellipsoid);
         this._freeLookController = new CameraFreeLookController(canvas, camera);
-        this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
 
         this._transform = this._camera.transform.clone();
 
@@ -655,6 +658,86 @@ define([
         return true;
     }
 
+    function rotate3D(controller, movement) {
+        var camera = controller._camera;
+
+        var ellipsoid = controller._spindleController.getEllipsoid();
+        var position = camera.position;
+        if (ellipsoid.cartesianToCartographic(position).height - maxHeight - 1.0 < CesiumMath.EPSILON3 &&
+                movement.endPosition.y - movement.startPosition.y < 0) {
+            return;
+        }
+
+        var up = camera.up;
+        var right = camera.right;
+        var direction = camera.direction;
+
+        var oldTransform = camera.transform;
+        var oldEllipsoid = controller._spindleController.getEllipsoid();
+        var oldConstrainedZ = controller._spindleController.constrainedAxis;
+
+        var ray = new Ray(controller._camera.getPositionWC(), controller._camera.getDirectionWC());
+        var intersection = IntersectionTests.rayEllipsoid(ray, oldEllipsoid);
+        if (typeof intersection === 'undefined') {
+            return;
+        }
+
+        var center = ray.getPoint(intersection.start);
+        center = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(new Cartesian4(center.x, center.y, center.z, 1.0)));
+        var localTransform = Transforms.eastNorthUpToFixedFrame(center);
+        var transform = localTransform.multiply(oldTransform);
+
+        controller._spindleController.constrainedAxis = Cartesian3.UNIT_Z;
+        controller._spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+
+        var invTransform = camera.getInverseTransform();
+        camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+        camera.up = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+        camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+        camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+
+        var yDiff = movement.startPosition.y - movement.endPosition.y;
+        if (!camera.position.normalize().equalsEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON2) || yDiff > 0) {
+            controller._spindleController._rotate(movement);
+        }
+
+        position = camera.position;
+        up = camera.up;
+        right = camera.right;
+        direction = camera.direction;
+
+        controller._spindleController.constrainedAxis = oldConstrainedZ;
+        controller._spindleController.setReferenceFrame(oldTransform, oldEllipsoid);
+
+        camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+        camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+        camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+        camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+
+        position = ellipsoid.cartesianToCartographic(camera.position);
+        if (position.height < maxHeight + 1.0) {
+            position.height = maxHeight + 1.0;
+            camera.position = ellipsoid.cartographicToCartesian(position);
+            camera.direction = Cartesian3.fromCartesian4(transform.getColumn(3).subtract(camera.position)).normalize();
+            camera.right = camera.position.negate().cross(camera.direction).normalize();
+            camera.up = camera.right.cross(camera.direction);
+        }
+    }
+
+    function update3D(controller) {
+        var rotate = controller._rotateHandler;
+        var rotating = rotate.isMoving() && rotate.getMovement();
+
+        if (rotating) {
+            rotate3D(controller, rotate.getMovement());
+        }
+
+        controller._spindleController.update();
+        controller._freeLookController.update();
+
+        return true;
+    }
+
     CameraMouseController.prototype.update = function(frameState) {
         var mode = frameState.mode;
         if (mode === SceneMode.SCENE2D) {
@@ -675,7 +758,15 @@ define([
 
             update2D(this);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            this._spindleController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+            this._spindleController.constrainedAxis = Cartesian3.UNIT_X;
+            this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
             updateCV(this);
+        } else if (mode === SceneMode.SCENE3D) {
+            this._spindleController.setEllipsoid(this._ellipsoid);
+            this._spindleController.constrainedAxis = undefined;
+            this._freeLookController.horizontalRotationAxis = undefined;
+            update3D(this);
         }
     };
 

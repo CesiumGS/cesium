@@ -6,8 +6,7 @@ define([
         '../Core/Cartographic',
         './CameraFlightController',
         './CameraSpindleController',
-        './CameraFreeLookController',
-        './CameraCentralBodyController'
+        './CameraFreeLookController'
     ], function(
         DeveloperError,
         destroyObject,
@@ -15,8 +14,7 @@ define([
         Cartographic,
         CameraFlightController,
         CameraSpindleController,
-        CameraFreeLookController,
-        CameraCentralBodyController) {
+        CameraFreeLookController) {
     "use strict";
 
     /**
@@ -78,12 +76,6 @@ define([
 		var flightController = new CameraFlightController(this._canvas, this._camera, ellipsoid, destination, duration, complete);
 		this._controllers.push(flightController);
 		return flightController;
-    };
-
-    CameraControllerCollection.prototype.addCentralBody = function() {
-        var cb = new CameraCentralBodyController(this._canvas, this._camera);
-        this._controllers.push(cb);
-        return cb;
     };
 
     /**

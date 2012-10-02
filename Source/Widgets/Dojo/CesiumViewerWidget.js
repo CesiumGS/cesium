@@ -620,8 +620,6 @@ define([
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
 
-            this.centralBodyCameraController = camera.getControllers().addCentralBody();
-
             var handler = new EventHandler(canvas);
             handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleRightClick'), MouseEventType.RIGHT_CLICK);
@@ -875,7 +873,6 @@ define([
             if (mode === SceneMode.SCENE2D) {
                 camera.controller.viewExtent(Extent.MAX_VALUE);
             } else if (mode === SceneMode.SCENE3D) {
-                this.centralBodyCameraController = controllers.addCentralBody();
                 var camera3D = this._camera3D;
                 camera3D.position.clone(camera.position);
                 camera3D.direction.clone(camera.direction);

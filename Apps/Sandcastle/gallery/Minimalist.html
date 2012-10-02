@@ -96,8 +96,6 @@ require([
     cb.showGroundAtmosphere = false;
     primitives.setCentralBody(cb);
 
-    scene.getCamera().getControllers().addCentralBody();
-
     scene.setAnimation(function () {
         scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
     });
