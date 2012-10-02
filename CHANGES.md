@@ -4,6 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b10 - xx/xx/2012
+
+* Breaking changes:
+   * xxx
+* Improved middle mouse click behavior to always tilt in the same direction.
+
 ### b9 - 10/01/2012
 
 * Breaking changes:
@@ -23,7 +29,6 @@ Beta Releases
 * Added `Camera2DController.setPositionCartographic` to simplify moving the camera programmatically when in 2D mode.
 * Improved near/far plane distances and eliminated z-fighting.
 * Added `Matrix4.multiplyByTranslation`, `Matrix4.fromScale`, and `Matrix3.fromScale`.
-* Improved middle mouse click behavior to always tilt in the same direction.
 
 ### b8 - 09/05/2012
 
