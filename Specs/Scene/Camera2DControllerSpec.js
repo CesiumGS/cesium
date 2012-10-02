@@ -30,12 +30,9 @@ defineSuite([
     var right;
     var camera;
     var frustum;
-    var moverate;
-    var zoomrate;
     var ellipsoid;
     var projection;
     var controller;
-    var controller2;
     var canvas;
 
     var FakeCanvas = function() {
@@ -50,8 +47,6 @@ defineSuite([
         canvas = new FakeCanvas();
         ellipsoid = Ellipsoid.WGS84;
 
-        moverate = 3.0;
-        zoomrate = 1.0;
         position = new Cartesian3();
         up = Cartesian3.UNIT_Y;
         dir = Cartesian3.UNIT_Z.negate();
@@ -79,7 +74,6 @@ defineSuite([
 
     afterEach(function() {
         controller = controller && !controller.isDestroyed() && controller.destroy();
-        controller2 = controller2 && !controller2.isDestroyed() && controller2.destroy();
     });
 
     it('constructor throws without a canvas', function() {
@@ -118,31 +112,6 @@ defineSuite([
             endPosition : new Cartesian2(1000.0, 1000.0)
         });
         expect(camera.position.equalsEpsilon(new Cartesian3(-3.9, 2.6, 0.0), CesiumMath.EPSILON2)).toEqual(true);
-    });
-
-    it('zoomOut', function() {
-        controller.zoomOut(zoomrate);
-        expect(frustum.right).toEqualEpsilon(3.0, CesiumMath.EPSILON10);
-        expect(frustum.left).toEqual(-3.0, CesiumMath.EPSILON10);
-        expect(frustum.top).toEqual(1.5, CesiumMath.EPSILON10);
-        expect(frustum.bottom).toEqual(-1.5, CesiumMath.EPSILON10);
-    });
-
-    it('zoomIn', function() {
-        controller.zoomIn(zoomrate);
-        expect(frustum.right).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
-        expect(frustum.left).toEqual(-1.0, CesiumMath.EPSILON10);
-        expect(frustum.top).toEqual(0.5, CesiumMath.EPSILON10);
-        expect(frustum.bottom).toEqual(-0.5, CesiumMath.EPSILON10);
-    });
-
-    it('zoomIn throws with undefined OrthogrphicFrustum properties', function() {
-        var camera = new Camera(document);
-        camera.frustum = new OrthographicFrustum();
-        controller2 = new Camera2DController(document, camera, projection);
-        expect(function () {
-            controller2.zoomIn(moverate);
-        }).toThrow();
     });
 
     it('isDestroyed', function() {

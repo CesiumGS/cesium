@@ -4,17 +4,22 @@ defineSuite([
          'Scene/CameraController',
          'Scene/Camera',
          'Core/Cartesian3',
-         'Core/Math'
+         'Core/Math',
+         'Scene/OrthographicFrustum',
+         'Scene/SceneMode'
      ], function(
          CameraController,
          Camera,
          Cartesian3,
-         CesiumMath) {
+         CesiumMath,
+         OrthographicFrustum,
+         SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var canvas;
     var camera;
+    var frustum2D;
     var controller;
 
     var position;
@@ -25,6 +30,7 @@ defineSuite([
     var moveAmount = 3.0;
     var turnAmount = CesiumMath.PI_OVER_TWO;
     var rotateAmount = CesiumMath.PI_OVER_TWO;
+    var zoomAmount = 1.0;
 
     var FakeCanvas = function() {
         this.addEventListener = function() {};
@@ -49,6 +55,14 @@ defineSuite([
         camera.right = right;
 
         controller = camera.controller;
+
+        frustum2D = new OrthographicFrustum();
+        frustum2D.near = 1.0;
+        frustum2D.far = 2.0;
+        frustum2D.left = -2.0;
+        frustum2D.right = 2.0;
+        frustum2D.top = 1.0;
+        frustum2D.bottom = -1.0;
     });
 
     it('moves', function() {
@@ -261,6 +275,34 @@ defineSuite([
         expect(camera.direction.equalsEpsilon(camera2.direction, CesiumMath.EPSILON15));
         expect(camera.up.equalsEpsilon(camera2.up, CesiumMath.EPSILON15));
         expect(camera.right.equalsEpsilon(camera2.right, CesiumMath.EPSILON15));
+    });
+
+    it('zooms out 2D', function() {
+        controller._mode = SceneMode.SCENE2D;
+        camera.frustum = frustum2D;
+        controller.zoomOut(zoomAmount);
+        expect(camera.frustum.right).toEqualEpsilon(3.0, CesiumMath.EPSILON10);
+        expect(camera.frustum.left).toEqual(-3.0, CesiumMath.EPSILON10);
+        expect(camera.frustum.top).toEqual(1.5, CesiumMath.EPSILON10);
+        expect(camera.frustum.bottom).toEqual(-1.5, CesiumMath.EPSILON10);
+    });
+
+    it('zooms in 2D', function() {
+        controller._mode = SceneMode.SCENE2D;
+        camera.frustum = frustum2D;
+        controller.zoomIn(zoomAmount);
+        expect(camera.frustum.right).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
+        expect(camera.frustum.left).toEqual(-1.0, CesiumMath.EPSILON10);
+        expect(camera.frustum.top).toEqual(0.5, CesiumMath.EPSILON10);
+        expect(camera.frustum.bottom).toEqual(-0.5, CesiumMath.EPSILON10);
+    });
+
+    it('zooms in throws with undefined OrthogrphicFrustum properties 2D', function() {
+        controller._mode = SceneMode.SCENE2D;
+        camera.frustum = new OrthographicFrustum();
+        expect(function () {
+            controller.zoomIn(zoomAmount);
+        }).toThrow();
     });
 
 });

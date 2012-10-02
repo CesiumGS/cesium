@@ -1,5 +1,7 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -7,6 +9,8 @@ define([
         '../Core/Quaternion',
         './SceneMode'
     ], function(
+        defaultValue,
+        Cartesian2,
         Cartesian3,
         DeveloperError,
         CesiumMath,
@@ -27,11 +31,22 @@ define([
         }
 
         this._camera = camera;
+        this._mode = SceneMode.SCENE3D;
+        this._projection = undefined;
 
         this.defaultMoveAmount = 100000.0;
         this.defaultLookAmount = Math.PI / 60.0;
         this.defaultRotateAmount = Math.PI / 3600.0;
+        this.defaultZoomAmount = 100000.0;
         this.constrainedAxis = undefined;
+    };
+
+    /**
+     * @private
+     */
+    CameraController.prototype.update = function(frameState) {
+        this._mode = frameState.mode;
+        this._projection = frameState.scene2D.projection;
     };
 
     /**
@@ -63,7 +78,8 @@ define([
      * @see CameraController#moveBackward
      */
     CameraController.prototype.moveForward = function(amount) {
-        this.move(this._camera.direction, amount || this.defaultMoveAmount);
+        amount = defaultValue(amount, this.defaultMoveAmount);
+        this.move(this._camera.direction, amount);
     };
 
     /**
@@ -77,7 +93,8 @@ define([
      * @see CameraController#moveForward
      */
     CameraController.prototype.moveBackward = function(amount) {
-        this.move(this._camera.direction, -amount || -this.defaultMoveAmount);
+        amount = defaultValue(amount, this.defaultMoveAmount);
+        this.move(this._camera.direction, -amount);
     };
 
     /**
@@ -90,7 +107,8 @@ define([
      * @see CameraController#moveDown
      */
     CameraController.prototype.moveUp = function(amount) {
-        this.move(this._camera.up, amount || this.defaultMoveAmount);
+        amount = defaultValue(amount, this.defaultMoveAmount);
+        this.move(this._camera.up, amount);
     };
 
     /**
@@ -104,7 +122,8 @@ define([
      * @see CameraController#moveUp
      */
     CameraController.prototype.moveDown = function(amount) {
-        this.move(this._camera.up, -amount || -this.defaultMoveAmount);
+        amount = defaultValue(amount, this.defaultMoveAmount);
+        this.move(this._camera.up, -amount);
     };
 
     /**
@@ -117,7 +136,8 @@ define([
      * @see CameraController#moveLeft
      */
     CameraController.prototype.moveRight = function(amount) {
-        this.move(this._camera.right, amount || this.defaultMoveAmount);
+        amount = defaultValue(amount, this.defaultMoveAmount);
+        this.move(this._camera.right, amount);
     };
 
     /**
@@ -131,7 +151,8 @@ define([
      * @see CameraController#moveRight
      */
     CameraController.prototype.moveLeft = function(amount) {
-        this.move(this._camera.right, -amount || -this.defaultMoveAmount);
+        amount = defaultValue(amount, this.defaultMoveAmount);
+        this.move(this._camera.right, -amount);
     };
 
     /**
@@ -145,7 +166,8 @@ define([
      * @see CameraController#lookRight
      */
     CameraController.prototype.lookLeft = function(amount) {
-        this.look(this._camera.up, amount || this.defaultLookAmount);
+        amount = defaultValue(amount, this.defaultLookAmount);
+        this.look(this._camera.up, amount);
     };
 
     /**
@@ -159,7 +181,8 @@ define([
      * @see CameraController#lookLeft
      */
     CameraController.prototype.lookRight = function(amount) {
-        this.look(this._camera.up, -amount || -this.defaultLookAmount);
+        amount = defaultValue(amount, this.defaultLookAmount);
+        this.look(this._camera.up, -amount);
     };
 
     /**
@@ -173,7 +196,8 @@ define([
      * @see CameraController#lookDown
      */
     CameraController.prototype.lookUp = function(amount) {
-        this.look(this._camera.right, amount || this.defaultLookAmount);
+        amount = defaultValue(amount, this.defaultLookAmount);
+        this.look(this._camera.right, amount);
     };
 
     /**
@@ -187,7 +211,8 @@ define([
      * @see CameraController#lookUp
      */
     CameraController.prototype.lookDown = function(amount) {
-        this.look(this._camera.right, -amount || -this.defaultLookAmount);
+        amount = defaultValue(amount, this.defaultLookAmount);
+        this.look(this._camera.right, -amount);
     };
 
     /**
@@ -205,7 +230,7 @@ define([
      */
     CameraController.prototype.look = function(axis, angle) {
         var a = Cartesian3.clone(axis);
-        var turnAngle = angle || this.defaultLookAmount;
+        var turnAngle = defaultValue(angle, this.defaultLookAmount);
         var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(a, turnAngle));
         var direction = rotation.multiplyByVector(this._camera.direction);
         var up = rotation.multiplyByVector(this._camera.up);
@@ -232,7 +257,7 @@ define([
     */
     CameraController.prototype.rotate = function(axis, angle) {
         var a = Cartesian3.clone(axis);
-        var turnAngle = (typeof angle !== 'undefined') ? angle : this.defaultRotateAmount;
+        var turnAngle = defaultValue(angle, this.defaultRotateAmount);
         var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(a, turnAngle));
 
         var camera = this._camera;
@@ -253,8 +278,8 @@ define([
      * @see CameraController#rotate
      */
     CameraController.prototype.rotateDown = function(angle) {
-        angle = (typeof angle !== 'undefined') ? -angle : -this.defaultRotateAmount;
-        moveVertical(this, angle);
+        angle = defaultValue(angle, this.defaultRotateAmount);
+        moveVertical(this, -angle);
     };
 
     /**
@@ -268,7 +293,7 @@ define([
      * @see CameraController#rotate
      */
     CameraController.prototype.rotateUp = function(angle) {
-        angle = (typeof angle !== 'undefined') ? angle : this.defaultRotateAmount;
+        angle = defaultValue(angle, this.defaultRotateAmount);
         moveVertical(this, angle);
     };
 
@@ -305,7 +330,7 @@ define([
      * @see CameraController#rotate
      */
     CameraController.prototype.rotateRight = function(angle) {
-        angle = (typeof angle !== 'undefined') ? angle : this.defaultRotateAmount;
+        angle = defaultValue(angle, this.defaultRotateAmount);
         moveHorizontal(this, angle);
     };
 
@@ -320,8 +345,8 @@ define([
      * @see CameraController#rotate
      */
     CameraController.prototype.rotateLeft = function(angle) {
-        angle = (typeof angle !== 'undefined') ? -angle : -this.defaultRotateAmount;
-        moveHorizontal(this, angle);
+        angle = defaultValue(angle, this.defaultRotateAmount);
+        moveHorizontal(this, -angle);
     };
 
     function moveHorizontal(controller, angle) {
@@ -331,6 +356,103 @@ define([
             controller.rotate(controller._camera.up, angle);
         }
     }
+
+    function zoom2D(controller, amount) {
+        var frustum = controller._camera.frustum;
+
+        if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' ||
+            typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
+            throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
+        }
+
+        var newRight = frustum.right - amount;
+        var newLeft = frustum.left + amount;
+
+        if (newRight > newLeft) {
+            var ratio = frustum.top / frustum.right;
+            frustum.right = newRight;
+            frustum.left = newLeft;
+            frustum.top = frustum.right * ratio;
+            frustum.bottom = -frustum.top;
+        }
+    }
+
+    function zoom3D(controller, amount) {
+        controller.move(controller._camera.direction, amount);
+    }
+
+    /**
+     * Zooms <code>amount</code> along the camera's view vector.
+     *
+     * @memberof CameraController
+     *
+     * @param {Number} amount The amount to move.
+     *
+     * @see CameraController#zoomOut
+     */
+    CameraController.prototype.zoomIn = function(amount) {
+        amount = defaultValue(amount, this.defaultZoomAmount);
+        if (this._mode === SceneMode.SCENE2D) {
+            zoom2D(this, amount);
+        } else {
+            zoom3D(this, amount);
+        }
+    };
+
+    /**
+     * Zooms <code>amount</code> along the opposite direction of
+     * the camera's view vector.
+     *
+     * @memberof CameraController
+     *
+     * @param {Number} amount The amount to move.
+     *
+     * @see CameraController#zoomIn
+     */
+    CameraController.prototype.zoomOut = function(amount) {
+        amount = defaultValue(amount, this.defaultZoomAmount);
+        if (this._mode === SceneMode.SCENE2D) {
+            zoom2D(this, -amount);
+        } else {
+            zoom3D(this, -amount);
+        }
+    };
+
+    function setPositionCartographic2D(controller, cartographic) {
+        var newLeft = -cartographic.height * 0.5;
+        var newRight = -newLeft;
+
+        var frustum = controller._camera.frustum;
+        if (newRight > newLeft) {
+            var ratio = frustum.top / frustum.right;
+            frustum.right = newRight;
+            frustum.left = newLeft;
+            frustum.top = frustum.right * ratio;
+            frustum.bottom = -frustum.top;
+        }
+
+        //We use Cartesian2 instead of 3 here because Z must be constant in 2D mode.
+        Cartesian2.clone(controller._projection.project(cartographic), controller._camera.position);
+    }
+
+    /**
+     * Moves the camera to the provided cartographic position.
+     * @memberof CameraController
+     *
+     * @param {Cartographic} cartographic The new camera position.
+     *
+     * @exception {DeveloperError} cartographic is required.
+     */
+    CameraController.prototype.setPositionCartographic = function(cartographic) {
+        if (typeof cartographic === 'undefined') {
+            throw new DeveloperError('cartographic is required.');
+        }
+
+        if (this._mode === SceneMode.SCENE2D) {
+            setPositionCartographic2D(cartographic);
+        }
+        // TODO: add for other modes
+    };
 
     return CameraController;
 });

@@ -102,9 +102,9 @@ define([
         }
 
         if (dist > 0.0) {
-            object.zoomIn(dist);
+            object._camera.controller.zoomIn(dist);
         } else {
-            object.zoomOut(-dist);
+            object._camera.controller.zoomOut(-dist);
         }
     }
 

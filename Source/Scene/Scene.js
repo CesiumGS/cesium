@@ -245,8 +245,12 @@ define([
             scene._context.getShaderCache().destroyReleasedShaderPrograms();
         }
 
+        updateFrameState(scene);
+        scene._frameState.passes.color = true;
+        scene._frameState.passes.overlay = true;
+
         scene._animations.update();
-        camera.update();
+        camera.update(scene._frameState);
         us.setView(camera.getViewMatrix());
         us.setProjection(camera.frustum.getProjectionMatrix());
         if (camera.frustum.getInfiniteProjectionMatrix) {
@@ -256,10 +260,6 @@ define([
         if (scene._animate) {
             scene._animate();
         }
-
-        updateFrameState(scene);
-        scene._frameState.passes.color = true;
-        scene._frameState.passes.overlay = true;
 
         scene._commandList.length = 0;
         scene._primitives.update(scene._context, scene._frameState, scene._commandList);

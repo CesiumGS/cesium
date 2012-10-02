@@ -49,7 +49,6 @@ define([
         this._canvas = canvas;
         this._camera = camera;
         this._ellipsoid = ellipsoid;
-        this._zoomRate = 100000.0;
 
         /**
          * A parameter in the range <code>[0, 1]</code> used to determine how long
@@ -161,33 +160,6 @@ define([
         this._ellipsoid = ellipsoid;
         this._rotateFactor = 1.0 / radius;
         this._rotateRateRangeAdjustment = radius;
-    };
-
-    /**
-     * Translates the camera's position by <code>rate</code> along the camera's view vector.
-     *
-     * @memberof CameraSpindleController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see CameraSpindleController#zoomOut
-     */
-    CameraSpindleController.prototype.zoomIn = function(rate) {
-        this._camera.controller.move(this._camera.direction, (typeof rate !== 'undefined') ? rate : this._zoomRate);
-    };
-
-    /**
-     * Translates the camera's position by <code>rate</code> along the opposite direction of
-     * the camera's view vector.
-     *
-     * @memberof CameraSpindleController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see CameraSpindleController#zoomIn
-     */
-    CameraSpindleController.prototype.zoomOut = function(rate) {
-        this._camera.controller.move(this._camera.direction, (typeof rate !== 'undefined') ? -rate : -this._zoomRate);
     };
 
     /**

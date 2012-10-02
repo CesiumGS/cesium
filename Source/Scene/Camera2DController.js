@@ -83,7 +83,6 @@ define([
         this._canvas = canvas;
         this._camera = camera;
         this._projection = projection;
-        this._zoomRate = 100000.0;
 
         /**
          * A parameter in the range <code>[0, 1)</code> used to determine how long
@@ -167,84 +166,6 @@ define([
 
         this._projection = projection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Camera2DController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see Camera2DController#zoomOut
-     */
-    Camera2DController.prototype.zoomIn = function(rate) {
-        var moveRate = rate || this._zoomRate;
-        var frustum = this._camera.frustum;
-
-        if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' ||
-            typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
-            throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
-        }
-
-        var newRight = frustum.right - moveRate;
-        var newLeft = frustum.left + moveRate;
-
-        var maxRight = this._maxCoord.x * this._maxZoomFactor;
-        if (newRight > maxRight) {
-            newRight = maxRight;
-            newLeft = -newRight;
-        }
-
-        if (newRight > newLeft) {
-            var ratio = frustum.top / frustum.right;
-            frustum.right = newRight;
-            frustum.left = newLeft;
-            frustum.top = frustum.right * ratio;
-            frustum.bottom = -frustum.top;
-        }
-    };
-
-    /**
-     * Moves the camera to the provided cartographic position.
-     * @memberof Camera2DController
-     *
-     * @param {Cartographic} cartographic The new camera position.
-     *
-     * @exception {DeveloperError} cartographic is required.
-     */
-    Camera2DController.prototype.setPositionCartographic = function(cartographic) {
-        if (typeof cartographic === 'undefined') {
-            throw new DeveloperError('cartographic is required.');
-        }
-
-        var newLeft = -cartographic.height * 0.5;
-        var newRight = -newLeft;
-
-        var frustum = this._camera.frustum;
-        if (newRight > newLeft) {
-            var ratio = frustum.top / frustum.right;
-            frustum.right = newRight;
-            frustum.left = newLeft;
-            frustum.top = frustum.right * ratio;
-            frustum.bottom = -frustum.top;
-        }
-
-        //We use Cartesian2 instead of 3 here because Z must be constant in 2D mode.
-        Cartesian2.clone(this._projection.project(cartographic), this._camera.position);
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Camera2DController
-     *
-     * @param {Number} rate The rate to move.
-     *
-     * @see Camera2DController#zoomIn
-     */
-    Camera2DController.prototype.zoomOut = function(rate) {
-        this.zoomIn(-rate || -this._zoomRate);
     };
 
     Camera2DController.prototype._addCorrectZoomAnimation = function() {
@@ -436,6 +357,16 @@ define([
         var camera = this._camera;
         var mag = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
         handleZoom(this, movement, mag);
+
+        var maxRight = this._maxCoord.x * this._maxZoomFactor;
+        if (camera.frustum.right > maxRight) {
+            var frustum = camera.frustum;
+            var ratio = frustum.top / frustum.right;
+            frustum.right = maxRight;
+            frustum.left = -maxRight;
+            frustum.top = frustum.right * ratio;
+            frustum.bottom = -frustum.top;
+        }
     };
 
     Camera2DController.prototype._twist = function(movement) {

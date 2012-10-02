@@ -151,7 +151,8 @@ define([
      * DOC_TBA
      * @memberof Camera
      */
-    Camera.prototype.update = function() {
+    Camera.prototype.update = function(frameState) {
+        this.controller.update(frameState);
         this._controllers.update();
     };
 
