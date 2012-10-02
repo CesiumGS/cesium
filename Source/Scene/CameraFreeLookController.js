@@ -8,8 +8,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Matrix3',
         './CameraEventHandler',
-        './CameraEventType',
-        './CameraHelpers'
+        './CameraEventType'
     ], function(
         destroyObject,
         CesiumMath,
@@ -19,8 +18,7 @@ define([
         Cartesian3,
         Matrix3,
         CameraEventHandler,
-        CameraEventType,
-        CameraHelpers) {
+        CameraEventType) {
     "use strict";
 
     /**
@@ -45,8 +43,6 @@ define([
          */
         this.horizontalRotationAxis = undefined;
     };
-
-
 
     /**
      * @private

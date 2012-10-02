@@ -28,13 +28,6 @@ defineSuite([
         collection = collection && !collection.isDestroyed() && collection.destroy();
     });
 
-    it('addSpindle', function() {
-        expect(function() {
-            collection.addSpindle();
-        }).not.toThrow();
-        expect(collection.getLength()).toEqual(1);
-    });
-
     it('addFreeLook', function() {
         expect(function() {
             collection.addFreeLook();
@@ -59,11 +52,11 @@ defineSuite([
     });
 
     it('get', function() {
-        expect(collection.addSpindle()).toBe(collection.get(0));
+        expect(collection.addFlight()).toBe(collection.get(0));
     });
 
     it('contains', function() {
-        var spindle = collection.addSpindle();
+        var spindle = collection.addFlight();
         expect(collection.contains(spindle)).toEqual(true);
         collection.remove(spindle);
         expect(collection.contains(spindle)).toEqual(false);
@@ -75,7 +68,7 @@ defineSuite([
     });
 
     it('update', function() {
-        collection.addSpindle();
+        collection.addFlight();
         collection.addFreeLook();
         expect(function() {
             collection.update();
@@ -95,7 +88,7 @@ defineSuite([
     });
 
     it('remove', function() {
-        expect(collection.remove(collection.addSpindle())).toEqual(true);
+        expect(collection.remove(collection.addFlight())).toEqual(true);
     });
 
     it('remove returns false without controller', function() {
@@ -103,9 +96,8 @@ defineSuite([
     });
 
     it('removeAll', function() {
-        collection.addSpindle();
         collection.addFreeLook();
-        expect(collection.getLength()).toEqual(2);
+        expect(collection.getLength()).toEqual(1);
         collection.removeAll();
         expect(collection.getLength()).toEqual(0);
     });

@@ -5,7 +5,6 @@ define([
         '../Core/Ellipsoid',
         '../Core/Cartographic',
         './CameraFlightController',
-        './CameraSpindleController',
         './CameraFreeLookController'
     ], function(
         DeveloperError,
@@ -13,7 +12,6 @@ define([
         Ellipsoid,
         Cartographic,
         CameraFlightController,
-        CameraSpindleController,
         CameraFreeLookController) {
     "use strict";
 
@@ -36,21 +34,6 @@ define([
      *
      * @memberof CameraControllerCollection
      *
-     * @see CameraControllerCollection#addFreeLook
-     * @see CameraControllerCollection#addFlight
-     */
-    CameraControllerCollection.prototype.addSpindle = function(ellipsoid) {
-        var spindle = new CameraSpindleController(this._canvas, this._camera, ellipsoid);
-        this._controllers.push(spindle);
-        return spindle;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof CameraControllerCollection
-     *
-     * @see CameraControllerCollection#addSpindle
      * @see CameraControllerCollection#addFlight
      */
     CameraControllerCollection.prototype.addFreeLook = function(ellipsoid) {
@@ -64,7 +47,6 @@ define([
      *
      * @memberof CameraControllerCollection
      *
-     * @see CameraControllerCollection#addSpindle
      * @see CameraControllerCollection#addFreeLook
      */
     CameraControllerCollection.prototype.addFlight = function(template) {

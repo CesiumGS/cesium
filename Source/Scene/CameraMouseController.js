@@ -18,8 +18,6 @@ define([
         './CameraEventHandler',
         './CameraEventType',
         './CameraFreeLookController',
-        './CameraHelpers',
-        './CameraSpindleController',
         './SceneMode',
         '../ThirdParty/Tween'
     ], function(
@@ -41,8 +39,6 @@ define([
         CameraEventHandler,
         CameraEventType,
         CameraFreeLookController,
-        CameraHelpers,
-        CameraSpindleController,
         SceneMode,
         Tween) {
     "use strict";
@@ -124,13 +120,43 @@ define([
         this._maxTranslateFactor = 1.5;
 
         // added for Columbus View
-        this._spindleController = new CameraSpindleController(canvas, camera, this._ellipsoid);
         this._freeLookController = new CameraFreeLookController(canvas, camera);
 
         this._transform = this._camera.transform.clone();
 
         this._mapWidth = this._ellipsoid.getRadii().x * Math.PI;
         this._mapHeight = this._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
+
+        // added for spindle
+        /**
+         * A parameter in the range <code>[0, 1]</code> used to determine how long
+         * the camera will continue to spin because of inertia.
+         * With a value of one, the camera will spin forever and
+         * with value of zero, the camera will have no inertia.
+         *
+         * @type Number
+         */
+        this.inertiaSpin = 0.9;
+
+        /**
+         * If set, the camera will not be able to rotate past this axis in either direction.
+         * If this is set while in pan mode, the position clicked on the ellipsoid
+         * will not always map directly to the cursor.
+         *
+         * @type Cartesian3
+         */
+        this.constrainedAxis = undefined;
+
+        var radius = this._ellipsoid.getMaximumRadius();
+        this._zoomFactor = 5.0; // Camera TODO: What about 2D?
+        this._rotateFactor = 1.0 / radius;
+        this._rotateRateRangeAdjustment = radius;
+        this._maximumRotateRate = 1.77;
+        this._minimumRotateRate = 1.0 / 5000.0;
+
+        this._spinHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
+
+        this._lastInertiaSpinMovement = undefined;
     };
 
     function decay(time, coefficient) {
@@ -593,7 +619,7 @@ define([
         camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
 
-        controller._spindleController._rotate(movement);
+        rotate3D(controller, movement);
 
         position = camera.getPositionWC();
         up = camera.getUpWC();
@@ -610,7 +636,7 @@ define([
     }
 
     function zoomCV(controller, movement) {
-        handleZoom(controller._spindleController, movement, controller._camera.position.z);
+        handleZoom(controller, movement, controller._camera.position.z);
     }
 
     function updateCV(controller) {
@@ -658,10 +684,92 @@ define([
         return true;
     }
 
+    function spin3D(controller, movement) {
+        if (typeof controller._camera.controller.pickEllipsoid(movement.startPosition, controller._ellipsoid) !== 'undefined') {
+            pan3D(controller, movement);
+        } else {
+            rotate3D(controller, movement);
+        }
+    }
+
     function rotate3D(controller, movement) {
+        controller._camera.controller.constrainedAxis = controller.constrainedAxis;
+        var position = controller._camera.position;
+        var rho = position.magnitude();
+        var rotateRate = controller._rotateFactor * (rho - controller._rotateRateRangeAdjustment);
+
+        if (rotateRate > controller._maximumRotateRate) {
+            rotateRate = controller._maximumRotateRate;
+        }
+
+        if (rotateRate < controller._minimumRotateRate) {
+            rotateRate = controller._minimumRotateRate;
+        }
+
+        var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / controller._canvas.clientWidth;
+        var thetaWindowRatio = (movement.endPosition.y - movement.startPosition.y) / controller._canvas.clientHeight;
+
+        var deltaPhi = -rotateRate * phiWindowRatio * Math.PI * 2.0;
+        var deltaTheta = -rotateRate * thetaWindowRatio * Math.PI;
+
+        controller._camera.controller.rotateRight(deltaPhi);
+        controller._camera.controller.rotateUp(deltaTheta);
+    }
+
+    function pan3D(controller, movement) {
+        var camera = controller._camera;
+        camera.controller.constrainedAxis = controller.constrainedAxis;
+        var p0 = camera.controller.pickEllipsoid(movement.startPosition, controller._ellipsoid);
+        var p1 = camera.controller.pickEllipsoid(movement.endPosition, controller._ellipsoid);
+
+        if (typeof p0 === 'undefined' || typeof p1 === 'undefined') {
+            return;
+        }
+
+        var transform = camera.getInverseTransform();
+        p0 = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(p0.x, p0.y, p0.z, 1.0)));
+        p1 = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(p1.x, p1.y, p1.z, 1.0)));
+
+        if (typeof controller.constrainedAxis === 'undefined') {
+            p0 = p0.normalize();
+            p1 = p1.normalize();
+            var dot = p0.dot(p1);
+            var axis = p0.cross(p1);
+
+            if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
+                var angle = -Math.acos(dot);
+                camera.controller.rotate(axis, angle);
+            }
+        } else {
+            var startRho = p0.magnitude();
+            var startPhi = Math.atan2(p0.y, p0.x);
+            var startTheta = Math.acos(p0.z / startRho);
+
+            var endRho = p1.magnitude();
+            var endPhi = Math.atan2(p1.y, p1.x);
+            var endTheta = Math.acos(p1.z / endRho);
+
+            var deltaPhi = startPhi - endPhi;
+            var deltaTheta = startTheta - endTheta;
+
+            var theta = Math.acos(camera.position.z / camera.position.magnitude()) + deltaTheta;
+            if (theta < 0 || theta > Math.PI) {
+                deltaTheta = 0;
+            }
+
+            camera.controller.rotateRight(deltaPhi);
+            camera.controller.rotateUp(deltaTheta);
+        }
+    }
+
+    function zoom3D(controller, movement) {
+        handleZoom(controller, movement, controller._ellipsoid.cartesianToCartographic(controller._camera.position).height);
+    }
+
+    function tilt3D(controller, movement) {
         var camera = controller._camera;
 
-        var ellipsoid = controller._spindleController.getEllipsoid();
+        var ellipsoid = controller._ellipsoid;
         var position = camera.position;
         if (ellipsoid.cartesianToCartographic(position).height - maxHeight - 1.0 < CesiumMath.EPSILON3 &&
                 movement.endPosition.y - movement.startPosition.y < 0) {
@@ -673,11 +781,10 @@ define([
         var direction = camera.direction;
 
         var oldTransform = camera.transform;
-        var oldEllipsoid = controller._spindleController.getEllipsoid();
         var oldConstrainedZ = controller._spindleController.constrainedAxis;
 
         var ray = new Ray(controller._camera.getPositionWC(), controller._camera.getDirectionWC());
-        var intersection = IntersectionTests.rayEllipsoid(ray, oldEllipsoid);
+        var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
         if (typeof intersection === 'undefined') {
             return;
         }
@@ -687,8 +794,9 @@ define([
         var localTransform = Transforms.eastNorthUpToFixedFrame(center);
         var transform = localTransform.multiply(oldTransform);
 
-        controller._spindleController.constrainedAxis = Cartesian3.UNIT_Z;
-        controller._spindleController.setReferenceFrame(transform, Ellipsoid.UNIT_SPHERE);
+        controller.constrainedAxis = Cartesian3.UNIT_Z;
+        controller._camera.transform = transform;
+        controller._ellipsoid = Ellipsoid.UNIT_SPHERE;
 
         var invTransform = camera.getInverseTransform();
         camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
@@ -698,7 +806,7 @@ define([
 
         var yDiff = movement.startPosition.y - movement.endPosition.y;
         if (!camera.position.normalize().equalsEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON2) || yDiff > 0) {
-            controller._spindleController._rotate(movement);
+            rotate3D(controller, movement);
         }
 
         position = camera.position;
@@ -706,8 +814,9 @@ define([
         right = camera.right;
         direction = camera.direction;
 
-        controller._spindleController.constrainedAxis = oldConstrainedZ;
-        controller._spindleController.setReferenceFrame(oldTransform, oldEllipsoid);
+        controller.constrainedAxis = oldConstrainedZ;
+        controller._camera.transform = oldTransform;
+        controller._ellipsoid = ellipsoid;
 
         camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
         camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
@@ -725,14 +834,41 @@ define([
     }
 
     function update3D(controller) {
+        var spin = controller._spinHandler;
+        var rightZoom = controller._zoomHandler;
+        var wheelZoom = controller._zoomWheel;
+        var spinning = spin && spin.isMoving() && spin.getMovement();
+        var rightZooming = rightZoom && rightZoom.isMoving();
+        var wheelZooming = wheelZoom && wheelZoom.isMoving();
         var rotate = controller._rotateHandler;
         var rotating = rotate.isMoving() && rotate.getMovement();
 
-        if (rotating) {
-            rotate3D(controller, rotate.getMovement());
+        if (spinning) {
+            spin3D(controller, spin.getMovement());
         }
 
-        controller._spindleController.update();
+        if (spin && !spinning && controller.inertiaSpin < 1.0) {
+            maintainInertia(spin, controller.inertiaSpin, spin3D, controller, '_lastInertiaSpinMovement');
+        }
+
+        if (rotating) {
+            tilt3D(controller, rotate.getMovement());
+        }
+
+        if (rightZooming) {
+            zoom3D(controller, rightZoom.getMovement());
+        } else if (wheelZooming) {
+            zoom3D(controller, wheelZoom.getMovement());
+        }
+
+        if (rightZoom && !rightZooming && controller.inertiaZoom < 1.0) {
+            maintainInertia(rightZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
+        }
+
+        if (wheelZoom && !wheelZooming && controller.inertiaZoom < 1.0) {
+            maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
+        }
+
         controller._freeLookController.update();
 
         return true;
@@ -758,13 +894,13 @@ define([
 
             update2D(this);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            this._spindleController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-            this._spindleController.constrainedAxis = Cartesian3.UNIT_X;
+            this._ellipsoid = Ellipsoid.UNIT_SPHERE;
+            this.constrainedAxis = Cartesian3.UNIT_X;
             this._freeLookController.horizontalRotationAxis = Cartesian3.UNIT_Z;
             updateCV(this);
         } else if (mode === SceneMode.SCENE3D) {
-            this._spindleController.setEllipsoid(this._ellipsoid);
-            this._spindleController.constrainedAxis = undefined;
+            this._ellipsoid = Ellipsoid.WGS84;
+            this.constrainedAxis = undefined;
             this._freeLookController.horizontalRotationAxis = undefined;
             update3D(this);
         }
