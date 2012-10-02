@@ -4,6 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b10 - xx/xx/2012
+
+* Breaking changes:
+   * xxx
+* Improved middle mouse click behavior to always tilt in the same direction.
+
 ### b9 - 10/01/2012
 
 * Breaking changes:
