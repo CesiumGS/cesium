@@ -115,7 +115,7 @@ define([
 
         this._ellipsoid = ellipsoid;
         this._imageryLayerCollection = imageryLayerCollection;
-        this._surface = new EllipsoidSurface({
+        this._surface = new CentralBodySurface({
             terrainProvider : terrainProvider,
             imageryLayerCollection : imageryLayerCollection
         });
