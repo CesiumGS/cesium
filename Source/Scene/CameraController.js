@@ -28,10 +28,12 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Provides methods for common camera manipulations.
      *
      * @alias CameraController
      * @constructor
+     *
+     * @exception {DeveloperError} camera is required.
      */
     var CameraController = function(camera) {
         if (typeof camera === 'undefined') {
@@ -42,10 +44,34 @@ define([
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
+        /**
+         * The default amount to move the camera when an argument is not
+         * provided to the move methods.
+         * @type {Number}
+         */
         this.defaultMoveAmount = 100000.0;
+        /**
+         * The default amount to rotate the camera when an argument is not
+         * provided to the look methods.
+         * @type {Number}
+         */
         this.defaultLookAmount = Math.PI / 60.0;
+        /**
+         * The default amount to rotate the camera when an argument is not
+         * provided to the rotate methods.
+         * @type {Number}
+         */
         this.defaultRotateAmount = Math.PI / 3600.0;
+        /**
+         * The default amount to move the camera when an argument is not
+         * provided to the zoom methods.
+         * @type {Number}
+         */
         this.defaultZoomAmount = 100000.0;
+        /**
+         * If set, the camera will not be able to rotate past this axis in either direction.
+         * @type Cartesian3
+         */
         this.constrainedAxis = undefined;
     };
 
@@ -427,10 +453,11 @@ define([
     };
 
     function setPositionCartographic2D(controller, cartographic) {
+        var camera = controller._camera;
         var newLeft = -cartographic.height * 0.5;
         var newRight = -newLeft;
 
-        var frustum = controller._camera.frustum;
+        var frustum = camera.frustum;
         if (newRight > newLeft) {
             var ratio = frustum.top / frustum.right;
             frustum.right = newRight;
@@ -440,7 +467,29 @@ define([
         }
 
         //We use Cartesian2 instead of 3 here because Z must be constant in 2D mode.
-        Cartesian2.clone(controller._projection.project(cartographic), controller._camera.position);
+        Cartesian2.clone(controller._projection.project(cartographic), camera.position);
+        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.up = Cartesian3.UNIT_Y;
+        camera.right = Cartesian3.UNIT_X;
+    }
+
+    function setPositionCartographicCV(controller, cartographic) {
+        var camera = controller._camera;
+        var projection = controller._projection;
+        camera.position = projection.project(cartographic);
+        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.up = Cartesian3.UNIT_Y;
+        camera.right = Cartesian3.UNIT_X;
+    }
+
+    function setPositionCartographic3D(controller, cartographic) {
+        var camera = controller._camera;
+        var ellipsoid = controller._projection.getEllipsoid();
+        camera.position = ellipsoid.cartographicToCartesian(cartographic);
+        camera.direction = camera.position.negate().normalize();
+        camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
+        camera.up = camera.right.cross(camera.direction);
+        camera.right = camera.direction.cross(camera.up);
     }
 
     /**
@@ -458,19 +507,16 @@ define([
 
         if (this._mode === SceneMode.SCENE2D) {
             setPositionCartographic2D(this, cartographic);
+        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+            setPositionCartographicCV(this, cartographic);
+        } else if (this._mode === SceneMode.SCENE3D) {
+            setPositionCartographic3D(this, cartographic);
         }
-        // TODO: add for other modes
     };
-
-    function lookAt3D(camera, eye, target, up) {
-        camera.position = Cartesian3.clone(eye, camera.position);
-        camera.direction = Cartesian3.subtract(target, eye, camera.direction).normalize(camera.direction);
-        camera.right = Cartesian3.cross(camera.direction, up, camera.right).normalize(camera.right);
-        camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
-    }
 
     /**
      * Sets the camera position and orientation with an eye position, target, and up vector.
+     * This method is not supported in 2D mode because there is only one direction to look.
      *
      * @memberof CameraController
      *
@@ -493,9 +539,14 @@ define([
             throw new DeveloperError('up is required');
         }
 
-        if (this._mode === SceneMode.SCENE3D) {
-            lookAt3D(this._camera, eye, target, up);
+        if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
+            var camera = this._camera;
+            camera.position = Cartesian3.clone(eye, camera.position);
+            camera.direction = Cartesian3.subtract(target, eye, camera.direction).normalize(camera.direction);
+            camera.right = Cartesian3.cross(camera.direction, up, camera.right).normalize(camera.right);
+            camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
         }
+        // lookAt is not supported in 2D because there is only one direction to look
     };
 
     function viewExtent3D(camera, extent, ellipsoid) {
@@ -626,10 +677,6 @@ define([
     };
 
     function pickEllipsoid3D(camera, windowPosition, ellipsoid) {
-        if (typeof windowPosition === 'undefined') {
-            throw new DeveloperError('windowPosition is required.');
-        }
-
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var ray = camera.getPickRay(windowPosition);
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
@@ -642,14 +689,6 @@ define([
     }
 
     function pickMap2D(camera, windowPosition, projection) {
-        if (typeof windowPosition === 'undefined') {
-            throw new DeveloperError('windowPosition is required.');
-        }
-
-        if (typeof projection === 'undefined') {
-            throw new DeveloperError('projection is required.');
-        }
-
         var ray = camera.getPickRay(windowPosition);
         var position = ray.origin;
         position.z = 0.0;
@@ -664,14 +703,6 @@ define([
     }
 
     function pickMapColumbusView(camera, windowPosition, projection) {
-        if (typeof windowPosition === 'undefined') {
-            throw new DeveloperError('windowPosition is required.');
-        }
-
-        if (typeof projection === 'undefined') {
-            throw new DeveloperError('projection is required.');
-        }
-
         var ray = camera.getPickRay(windowPosition);
         var scalar = -ray.origin.x / ray.direction.x;
         var position = ray.getPoint(scalar);
