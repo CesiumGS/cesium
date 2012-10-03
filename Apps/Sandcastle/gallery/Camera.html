@@ -81,30 +81,6 @@ require([
     on, dom, ToggleButton)
 {
     "use strict";
-
-    function flyToSanDiego(scene) {
-        Sandcastle.declare(flyToSanDiego);    // For highlighting in Sandcastle.
-        // CAMERA TODO:
-        //scene.getCamera().getControllers().addFlight({
-        //    destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-        //        Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0)),
-        //    duration: 3.0
-        //});        
-    }
-    
-    function flyToMyLocation(scene) {
-        Sandcastle.declare(flyToMyLocation);    // For highlighting in Sandcastle.
-        function fly(position) {
-            // CAMERA TODO:
-            //scene.getCamera().getControllers().addFlight({
-            //    destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-            //        Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 100000.0)),
-            //    duration: 3.0
-            //});        
-        }
-        
-        navigator.geolocation.getCurrentPosition(fly);
-    }
     
     function viewAnExtent(scene) {
         Sandcastle.declare(viewAnExtent);   // For highlighting in Sandcastle.
@@ -130,22 +106,6 @@ require([
     }
     
     function createButtons(scene) {
-        new ToggleButton({
-            label: "Fly to San Diego",
-            onClick: function() { 
-                flyToSanDiego(scene);
-                Sandcastle.highlight(flyToSanDiego);
-            }
-        }).placeAt('toolbar');
-        
-        new ToggleButton({
-            label: "Fly to My Location",
-            onClick: function() { 
-                flyToMyLocation(scene);
-                Sandcastle.highlight(flyToMyLocation);
-            }
-        }).placeAt('toolbar');
-
         new ToggleButton({
             label: "View an Extent",
             onClick: function() { 
