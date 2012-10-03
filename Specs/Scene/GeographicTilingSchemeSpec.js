@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/GeographicTilingScheme',
+         'Core/Cartesian2',
          'Core/Cartographic',
          'Core/Extent',
          'Core/GeographicProjection',
@@ -8,6 +9,7 @@ defineSuite([
          'Scene/TilingScheme'
      ], function(
          GeographicTilingScheme,
+         Cartesian2,
          Cartographic,
          Extent,
          GeographicProjection,
@@ -141,6 +143,40 @@ defineSuite([
             expect(tilingScheme.positionToTileXY(tooFarEast, 0)).toBeUndefined();
             var tooFarNorth = new Cartographic(0.2, 0.5);
             expect(tilingScheme.positionToTileXY(tooFarNorth, 0)).toBeUndefined();
+        });
+
+        it('returns correct tile for position in center of tile', function() {
+            var tilingScheme = new GeographicTilingScheme();
+
+            var centerOfWesternRootTile = new Cartographic(-Math.PI / 2.0, 0.0);
+            expect(tilingScheme.positionToTileXY(centerOfWesternRootTile, 0)).toEqual(new Cartesian2(0, 0));
+
+            var centerOfNortheastChildOfEasternRootTile = new Cartographic(3.0 * Math.PI / 4.0, Math.PI / 2.0);
+            expect(tilingScheme.positionToTileXY(centerOfNortheastChildOfEasternRootTile, 1)).toEqual(new Cartesian2(3, 0));
+        });
+
+        it('returns Southeast tile when on the boundary between tiles', function() {
+            var tilingScheme = new GeographicTilingScheme();
+
+            var centerOfMap = new Cartographic(0.0, 0.0);
+            expect(tilingScheme.positionToTileXY(centerOfMap, 1)).toEqual(new Cartesian2(2, 1));
+        });
+
+        it('does not return tile outside valid range', function() {
+            var tilingScheme = new GeographicTilingScheme();
+
+            var southeastCorner = new Cartographic(Math.PI, -Math.PI / 2.0);
+            expect(tilingScheme.positionToTileXY(southeastCorner, 0)).toEqual(new Cartesian2(1, 0));
+        });
+
+        it('uses result parameter if supplied', function() {
+            var tilingScheme = new GeographicTilingScheme();
+
+            var centerOfNortheastChildOfEasternRootTile = new Cartographic(3.0 * Math.PI / 4.0, Math.PI / 2.0);
+            var resultParameter = new Cartesian2(0, 0);
+            var returnedResult = tilingScheme.positionToTileXY(centerOfNortheastChildOfEasternRootTile, 1, resultParameter);
+            expect(resultParameter).toEqual(returnedResult);
+            expect(resultParameter).toEqual(new Cartesian2(3, 0));
         });
     });
 });

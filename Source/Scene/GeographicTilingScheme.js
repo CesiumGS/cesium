@@ -159,21 +159,12 @@ define([
      *          if 'result' is undefined.
      */
     GeographicTilingScheme.prototype.tileXYToNativeExtent = function(x, y, level, result) {
-        var extentRadians = this.tileXYToExtent(x, y, level);
-        var west = CesiumMath.toDegrees(extentRadians.west);
-        var south = CesiumMath.toDegrees(extentRadians.south);
-        var east = CesiumMath.toDegrees(extentRadians.east);
-        var north = CesiumMath.toDegrees(extentRadians.north);
-
-        if (typeof result === 'undefined') {
-            return new Extent(west, south, east, north);
-        }
-
-        result.west = west;
-        result.south = south;
-        result.east = east;
-        result.north = north;
-        return result;
+        var extentRadians = this.tileXYToExtent(x, y, level, result);
+        extentRadians.west = CesiumMath.toDegrees(extentRadians.west);
+        extentRadians.south = CesiumMath.toDegrees(extentRadians.south);
+        extentRadians.east = CesiumMath.toDegrees(extentRadians.east);
+        extentRadians.north = CesiumMath.toDegrees(extentRadians.north);
+        return extentRadians;
     };
 
     /**
