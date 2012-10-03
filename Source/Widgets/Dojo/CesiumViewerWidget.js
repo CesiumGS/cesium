@@ -1103,7 +1103,7 @@ define([
         _configureCentralBodyImagery : function() {
             var centralBody = this.centralBody;
 
-            var imageLayers = centralBody.getImageLayers();
+            var imageLayers = centralBody.getImageryLayers();
 
             var existingImagery;
             if (imageLayers.getLength() !== 0) {

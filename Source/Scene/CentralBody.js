@@ -666,7 +666,7 @@ define([
      *
      * @returns {ImageryLayerCollection}
      */
-    CentralBody.prototype.getImageLayers = function() {
+    CentralBody.prototype.getImageryLayers = function() {
         return this._imageryLayerCollection;
     };
 
