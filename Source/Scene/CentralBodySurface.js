@@ -72,7 +72,7 @@ define([
      * @param {ImageryLayerCollection} description.imageryLayerCollection
      * @param {Number} [description.maxScreenSpaceError=2]
      */
-    var EllipsoidSurface = function(description) {
+    var CentralBodySurface = function(description) {
         if (typeof description.terrainProvider === 'undefined') {
             throw new DeveloperError('description.terrainProvider is required.');
         }
@@ -84,9 +84,9 @@ define([
         this._imageryLayerCollection = description.imageryLayerCollection;
         this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 2);
 
-        this._imageryLayerCollection.layerAdded.addEventListener(EllipsoidSurface.prototype._onLayerAdded, this);
-        this._imageryLayerCollection.layerRemoved.addEventListener(EllipsoidSurface.prototype._onLayerRemoved, this);
-        this._imageryLayerCollection.layerMoved.addEventListener(EllipsoidSurface.prototype._onLayerMoved, this);
+        this._imageryLayerCollection.layerAdded.addEventListener(CentralBodySurface.prototype._onLayerAdded, this);
+        this._imageryLayerCollection.layerRemoved.addEventListener(CentralBodySurface.prototype._onLayerRemoved, this);
+        this._imageryLayerCollection.layerMoved.addEventListener(CentralBodySurface.prototype._onLayerMoved, this);
 
         /**
          * The offset, relative to the bottom left corner of the viewport,
@@ -147,7 +147,7 @@ define([
         }
     };
 
-    EllipsoidSurface.prototype._onLayerAdded = function(layer, index) {
+    CentralBodySurface.prototype._onLayerAdded = function(layer, index) {
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
@@ -168,7 +168,7 @@ define([
         }
     };
 
-    EllipsoidSurface.prototype._onLayerRemoved = function(layer, index) {
+    CentralBodySurface.prototype._onLayerRemoved = function(layer, index) {
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
@@ -205,7 +205,7 @@ define([
         }
     };
 
-    EllipsoidSurface.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
+    CentralBodySurface.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
@@ -218,7 +218,7 @@ define([
         }
     };
 
-    EllipsoidSurface.prototype.update = function(context, frameState, commandList, colorCommandList, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
+    CentralBodySurface.prototype.update = function(context, frameState, commandList, colorCommandList, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState);
@@ -232,13 +232,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof EllipsoidSurface
+     * @memberof CentralBodySurface
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see EllipsoidSurface#destroy
+     * @see CentralBodySurface#destroy
      */
-    EllipsoidSurface.prototype.isDestroyed = function() {
+    CentralBodySurface.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -250,15 +250,15 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof EllipsoidSurface
+     * @memberof CentralBodySurface
      *
      * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see EllipsoidSurface#isDestroyed
+     * @see CentralBodySurface#isDestroyed
      */
-    EllipsoidSurface.prototype.destroy = function() {
+    CentralBodySurface.prototype.destroy = function() {
         when(this.levelZeroTiles, function(levelZeroTiles) {
             for (var i = 0; i < levelZeroTiles.length; ++i) {
                 levelZeroTiles[i].destroy();
@@ -669,7 +669,7 @@ define([
         }
     }
 
-    EllipsoidSurface.prototype.debugShowBoundingSphereOfTileAt = function(cartographicPick) {
+    CentralBodySurface.prototype.debugShowBoundingSphereOfTileAt = function(cartographicPick) {
         // Find the tile in the render list that overlaps this extent
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         var result;
@@ -697,7 +697,7 @@ define([
     };
 
     // This is debug code to render the bounding sphere of the tile in
-    // EllipsoidSurface._debug.boundingSphereTile.
+    // CentralBodySurface._debug.boundingSphereTile.
     function debugCreateCommandsForTileBoundingSphere(surface, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
         if (typeof surface._debug !== 'undefined' && typeof surface._debug.boundingSphereTile !== 'undefined') {
             if (!surface._debug.boundingSphereVA) {
@@ -738,7 +738,7 @@ define([
         }
     }
 
-    EllipsoidSurface.prototype.toggleLodUpdate = function(frameState) {
+    CentralBodySurface.prototype.toggleLodUpdate = function(frameState) {
         this._debug.suspendLodUpdate = !this._debug.suspendLodUpdate;
     };
 
@@ -1136,5 +1136,5 @@ define([
         tileCommands.length = Math.max(0, tileCommandIndex);
     }
 
-    return EllipsoidSurface;
+    return CentralBodySurface;
 });
