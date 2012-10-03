@@ -20,7 +20,7 @@ defineSuite([
 
     it('conforms to TilingScheme interface.', function() {
         expect(GeographicTilingScheme).toConformToInterface(TilingScheme);
-     });
+    });
 
     describe('Conversions from tile indices to cartographic extents.', function() {
         it('tileXYToExtent returns full extent for single root tile.', function() {

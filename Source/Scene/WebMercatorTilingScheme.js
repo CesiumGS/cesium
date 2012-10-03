@@ -218,21 +218,17 @@ define([
      *          if 'result' is undefined.
      */
     WebMercatorTilingScheme.prototype.tileXYToExtent = function(x, y, level, result) {
-        var nativeExtent = this.tileXYToNativeExtent(x, y, level);
+        var nativeExtent = this.tileXYToNativeExtent(x, y, level, result);
 
         var projection = this._projection;
         var southwest = projection.unproject(new Cartesian2(nativeExtent.west, nativeExtent.south));
         var northeast = projection.unproject(new Cartesian2(nativeExtent.east, nativeExtent.north));
 
-        if (typeof result === 'undefined') {
-            result = new Extent(southwest.longitude, southwest.latitude, northeast.longitude, northeast.latitude);
-        }
-
-        result.west = southwest.longitude;
-        result.south = southwest.latitude;
-        result.east = northeast.longitude;
-        result.north = northeast.latitude;
-        return result;
+        nativeExtent.west = southwest.longitude;
+        nativeExtent.south = southwest.latitude;
+        nativeExtent.east = northeast.longitude;
+        nativeExtent.north = northeast.latitude;
+        return nativeExtent;
     };
 
     /**
