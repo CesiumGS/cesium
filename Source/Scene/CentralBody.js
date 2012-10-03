@@ -33,9 +33,11 @@ define([
         '../Renderer/PixelFormat',
         '../Renderer/RenderbufferFormat',
         './CentralBodySurface',
+        './CentralBodySurfaceShaderSet',
         './ImageryLayerCollection',
         './SceneMode',
         './EllipsoidTerrainProvider',
+        './ViewportQuad',
         '../Shaders/CentralBodyVS',
         '../Shaders/CentralBodyFS',
         '../Shaders/CentralBodyFSCommon',
@@ -80,9 +82,11 @@ define([
         PixelFormat,
         RenderbufferFormat,
         CentralBodySurface,
+        CentralBodySurfaceShaderSet,
         ImageryLayerCollection,
         SceneMode,
         EllipsoidTerrainProvider,
+        ViewportQuad,
         CentralBodyVS,
         CentralBodyFS,
         CentralBodyFSCommon,
@@ -124,9 +128,9 @@ define([
 
         this._activeSurfaceShaderSet = undefined;
 
-        this._surfaceShaderSetWithoutAtmosphere = new SurfaceShaderSet();
-        this._surfaceShaderSetGroundFromSpace = new SurfaceShaderSet();
-        this._surfaceShaderSetGroundFromAtmosphere = new SurfaceShaderSet();
+        this._surfaceShaderSetWithoutAtmosphere = new CentralBodySurfaceShaderSet(attributeIndices);
+        this._surfaceShaderSetGroundFromSpace = new CentralBodySurfaceShaderSet(attributeIndices);
+        this._surfaceShaderSetGroundFromAtmosphere = new CentralBodySurfaceShaderSet(attributeIndices);
 
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
@@ -173,6 +177,17 @@ define([
          * @type {Cartesian3}
          */
         this.southPoleColor = new Cartesian3(1.0, 1.0, 1.0);
+
+        /**
+         * The offset, relative to the bottom left corner of the viewport,
+         * where the logo for terrain and imagery providers will be drawn.
+         *
+         * @type {Cartesian2}
+         */
+        this.logoOffset = Cartesian2.ZERO;
+        this._logoOffset = this.logoOffset;
+        this._logos = [];
+        this._logoQuad = undefined;
 
         /**
          * Determines if the central body will be shown.
@@ -1304,13 +1319,14 @@ define([
 
             this._surface.update(context,
                     frameState,
-                    commandList,
                     colorCommandList,
                     this._drawUniforms,
                     this._activeSurfaceShaderSet,
                     this._rsColor,
                     this._mode,
                     this._projection);
+
+            updateLogos(this, context, frameState, commandList);
 
             // render depth plane
             if (mode === SceneMode.SCENE3D) {
@@ -1399,68 +1415,90 @@ define([
         return destroyObject(this);
     };
 
-    function SurfaceShaderSet() {
-        this.shadersByTextureCount = [];
-        this.baseVertexShaderString = undefined;
-        this.baseFragmentShaderString = undefined;
+    var logoData = {
+        logos : undefined,
+        logoIndex : 0,
+        rebuildLogo : false,
+        totalLogoWidth : 0,
+        totalLogoHeight : 0
+    };
+
+    function updateLogos(centralBody, context, frameState, commandList) {
+        logoData.logos = centralBody._logos;
+        logoData.logoIndex = 0;
+        logoData.rebuildLogo = false;
+        logoData.totalLogoWidth = 0;
+        logoData.totalLogoHeight = 0;
+
+        checkLogo(logoData, centralBody._surface._terrainProvider);
+
+        var imageryLayerCollection = centralBody._imageryLayerCollection;
+        for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+            var layer = imageryLayerCollection.get(i);
+            checkLogo(logoData, layer.imageryProvider);
+        }
+
+        if (logoData.rebuildLogo) {
+            var width = logoData.totalLogoWidth;
+            var height = logoData.totalLogoHeight;
+            var logoRectangle = new BoundingRectangle(centralBody.logoOffset.x, centralBody.logoOffset.y, width, height);
+            if (typeof centralBody._logoQuad === 'undefined') {
+                centralBody._logoQuad = new ViewportQuad(logoRectangle);
+                centralBody._logoQuad.enableBlending = true;
+            } else {
+                centralBody._logoQuad.setRectangle(logoRectangle);
+            }
+
+            var texture = centralBody._logoQuad.getTexture();
+            if (typeof texture === 'undefined' || texture.getWidth() !== width || texture.getHeight() !== height) {
+                if (width === 0 || height === 0) {
+                    if (typeof texture !== 'undefined') {
+                        centralBody._logoQuad.destroy();
+                        centralBody._logoQuad = undefined;
+                    }
+                } else {
+                    texture = context.createTexture2D({
+                        width : width,
+                        height : height
+                    });
+                    centralBody._logoQuad.setTexture(texture);
+                }
+            }
+
+            var heightOffset = 0;
+            for (i = 0, len = logoData.logos.length; i < len; i++) {
+                var logo = logoData.logos[i];
+                if (typeof logo !== 'undefined') {
+                    texture.copyFrom(logo, 0, heightOffset);
+                    heightOffset += logo.height + 2;
+                }
+            }
+        }
+
+        if (typeof centralBody._logoQuad !== 'undefined') {
+            centralBody._logoQuad.update(context, frameState, commandList);
+        }
     }
 
-    SurfaceShaderSet.prototype.invalidateShaders = function() {
-        var shadersByTextureCount = this.shadersByTextureCount;
-        for (var i = 0, len = shadersByTextureCount.length; i < len; ++i) {
-            var shader = shadersByTextureCount[i];
-            if (typeof shader !== 'undefined') {
-                shader.release();
-            }
+    function checkLogo(logoData, logoSource) {
+        var logo;
+        if (typeof logoSource.getLogo === 'function') {
+            logo = logoSource.getLogo();
+        } else {
+            logo = undefined;
         }
-        this.shadersByTextureCount = [];
-    };
 
-    SurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount) {
-        var shader = this.shadersByTextureCount[textureCount];
-        if (typeof shader === 'undefined') {
-            var vs = this.baseVertexShaderString;
-            var fs =
-                '#define TEXTURE_UNITS ' + textureCount + '\n' +
-                this.baseFragmentShaderString +
-                'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
-                '{\n' +
-                '    vec3 color = initialColor;\n';
-
-            for (var i = 0; i < textureCount; ++i) {
-                fs +=
-                    'color = sampleAndBlend(\n' +
-                    '   color,\n' +
-                    '   u_dayTextures[' + i + '],\n' +
-                    '   textureCoordinates,\n' +
-                    '   u_dayTextureTexCoordsExtent[' + i + '],\n' +
-                    '   u_dayTextureTranslationAndScale[' + i + '],\n' +
-                    '   u_dayTextureAlpha[' + i + ']);\n';
-            }
-
-            fs +=
-                '    return color;\n' +
-                '}';
-
-            shader = context.getShaderCache().getShaderProgram(
-                vs,
-                fs,
-                attributeIndices);
-            this.shadersByTextureCount[textureCount] = shader;
+        if (logoData.logos[logoData.logoIndex] !== logo) {
+            logoData.rebuildLogo = true;
+            logoData.logos[logoData.logoIndex] = logo;
         }
-        return shader;
-    };
+        logoData.logoIndex++;
 
-    SurfaceShaderSet.prototype.destroy = function() {
-        var shadersByTextureCount = this.shadersByTextureCount;
-        for (var i = 0, len = shadersByTextureCount.length; i < len; ++i) {
-            var shader = shadersByTextureCount[i];
-            if (typeof shader !== 'undefined') {
-                shader.release();
-            }
+        if (typeof logo !== 'undefined') {
+            logoData.totalLogoWidth = Math.max(logoData.totalLogoWidth, logo.width);
+            logoData.totalLogoHeight += logo.height + 2;
         }
-        return destroyObject(this);
-    };
+    }
 
     return CentralBody;
 });
