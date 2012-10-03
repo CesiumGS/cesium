@@ -596,7 +596,7 @@ define([
      * @memberof Scene
      */
     Scene.prototype.destroy = function() {
-        this._camera = this._camera && this._camera.destroy();
+        this._cameraMouseController = this._cameraMouseController && this._cameraMouseController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
         this._context = this._context && this._context.destroy();

@@ -54,7 +54,7 @@ defineSuite([
         var position = camera.position;
         var up = camera.up;
         var dir = camera.direction;
-        var right = dir.cross(up);
+        var right = camera.right;
         var rotation = new Matrix4(right.x, right.y, right.z, 0.0,
                                       up.x,    up.y,    up.z, 0.0,
                                     -dir.x,  -dir.y,  -dir.z, 0.0,
@@ -69,7 +69,7 @@ defineSuite([
 
     it('get inverse view matrix', function() {
         var expected = camera.getViewMatrix().inverse();
-        expect(expected).toEqual(camera.getInverseViewMatrix());
+        expect(expected.equalsEpsilon(camera.getInverseViewMatrix(), CesiumMath.EPSILON15)).toEqual(true);
     });
 
     it('get inverse transform', function() {
@@ -112,12 +112,6 @@ defineSuite([
         var expectedPosition = new Cartesian3(cameraPosition.x + 2.0, cameraPosition.y + 2, cameraPosition.z);
         expect(ray.origin.equalsEpsilon(expectedPosition, CesiumMath.EPSILON14)).toEqual(true);
         expect(ray.direction.equals(camera.direction)).toEqual(true);
-    });
-
-    it('isDestroyed', function() {
-        expect(camera.isDestroyed()).toEqual(false);
-        camera.destroy();
-        expect(camera.isDestroyed()).toEqual(true);
     });
 
 });

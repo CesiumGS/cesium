@@ -88,16 +88,6 @@ define([
         this._directionWC = direction;
 
         var right = direction.cross(Cartesian3.UNIT_Z).normalize();
-
-        /**
-         * The right direction of the camera.
-         *
-         * @type {Cartesian3}
-         */
-        this.right = right.clone();
-        this._right = right;
-        this._rightWC = right;
-
         var up = right.cross(direction);
 
         /**
@@ -108,6 +98,17 @@ define([
         this.up = up.clone();
         this._up = up;
         this._upWC = up;
+
+        right = direction.cross(up);
+
+        /**
+         * The right direction of the camera.
+         *
+         * @type {Cartesian3}
+         */
+        this.right = right.clone();
+        this._right = right;
+        this._rightWC = right;
 
         /**
          * DOC_TBA
@@ -372,44 +373,6 @@ define([
         camera.transform = this.transform.clone();
         camera.frustum = this.frustum.clone();
         return camera;
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Camera
-     *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see Camera#destroy
-     */
-    Camera.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Removes keyboard listeners held by this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Camera
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Camera#isDestroyed
-     *
-     * @example
-     * camera = camera && camera.destroy();
-     */
-    Camera.prototype.destroy = function() {
-        return destroyObject(this);
     };
 
     return Camera;

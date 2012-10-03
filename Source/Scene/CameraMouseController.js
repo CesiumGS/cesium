@@ -44,12 +44,12 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Modifies the camera position and orientation based on mouse input to a canvas.
      * @alias CameraMouseController
      * @constructor
      *
-     * @param {HTMLCanvasElement} canvas DOC_TBA
-     * @param {Camera} camera DOC_TBA
+     * @param {HTMLCanvasElement} canvas The canvas to listen for events.
+     * @param {Camera} camera The camera to modify.
      *
      * @exception {DeveloperError} canvas is required.
      * @exception {DeveloperError} camera is required.
@@ -65,6 +65,7 @@ define([
 
         /**
          * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
+         * This flag is only valid in 2D and Columbus view modes.
          * @type Boolean
          */
         this.enableTranslate = true;
@@ -78,6 +79,11 @@ define([
          * @type Boolean
          */
         this.enableRotate = true;
+        /**
+         * If true, allows the user to use free-look. If false, the camera view direction can only be changed through translating
+         * or rotating. This flag is only valid in 3D and Columbus view modes.
+         */
+        this.enableLook = true;
         /**
          * A parameter in the range <code>[0, 1]</code> used to determine how long
          * the camera will continue to spin because of inertia.
@@ -135,7 +141,7 @@ define([
         this._transform = this._camera.transform.clone();
         this._horizontalRotationAxis = undefined;
 
-        // Constants, Make public?
+        // Constants, Make any of these public?
         var radius = this._ellipsoid.getMaximumRadius();
         this._zoomFactor = 5.0;
         this._rotateFactor = 1.0 / radius;
@@ -151,16 +157,18 @@ define([
     };
 
     /**
-     * DOC_TBA
-     * @returns {Ellipsoid} DOC_TBA
+     * Returns the ellipsoid. The ellipsoid is used to determine the size of the map in 2D and Columbus view
+     * as well as how fast to rotate the camera based on the distance to its surface.
+     * @returns {Ellipsoid} The ellipsoid.
      */
     CameraMouseController.prototype.getEllipsoid = function() {
         return this._ellipsoid;
     };
 
     /**
-     * DOC_TBA
-     * @param {Ellipsoid} [ellipsoid=WGS84] DOC_TBA
+     * Returns the ellipsoid. The ellipsoid is used to determine the size of the map in 2D and Columbus view
+     * as well as how fast to rotate the camera based on the distance to its surface.
+     * @param {Ellipsoid} [ellipsoid=WGS84] The ellipsoid.
      */
     CameraMouseController.prototype.setEllipsoid = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
@@ -335,11 +343,6 @@ define([
 
     function translate2D(controller, movement) {
         var frustum = controller._camera.frustum;
-
-        if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' ||
-           typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
-            throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
-        }
 
         var width = controller._canvas.clientWidth;
         var height = controller._canvas.clientHeight;
@@ -669,34 +672,42 @@ define([
         var zoom = controller._zoomHandler;
         var zoomimg = zoom && zoom.isMoving();
 
-        if (rotating) {
-            rotateCV(controller, rotate.getMovement());
-        }
-
         var buttonDown = translate.isButtonDown() || rotate.isButtonDown() ||
             rotate.isButtonDown() || controller._lookHandler.isButtonDown();
         if (buttonDown) {
             controller._animationCollection.removeAll();
         }
 
-        if (translating) {
-            translateCV(controller, translate.getMovement());
+        if (controller.enableRotate) {
+            if (rotating) {
+                rotateCV(controller, rotate.getMovement());
+            }
         }
 
-        if (!translating && controller.inertiaTranslate < 1.0) {
-            maintainInertia(translate, controller.inertiaTranslate, translateCV, controller, '_lastInertiaTranslateMovement');
+        if (controller.enableTranslate) {
+            if (translating) {
+                translateCV(controller, translate.getMovement());
+            }
+
+            if (!translating && controller.inertiaTranslate < 1.0) {
+                maintainInertia(translate, controller.inertiaTranslate, translateCV, controller, '_lastInertiaTranslateMovement');
+            }
         }
 
-        if (zoomimg) {
-            zoomCV(controller, zoom.getMovement());
+        if (controller.enableZoom) {
+            if (zoomimg) {
+                zoomCV(controller, zoom.getMovement());
+            }
+
+            if (zoom && !zoomimg && controller.inertiaZoom < 1.0) {
+                maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
+            }
         }
 
-        if (zoom && !zoomimg && controller.inertiaZoom < 1.0) {
-            maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
-        }
-
-        if (controller._lookHandler.isMoving()) {
-            look3D(controller, controller._lookHandler.getMovement());
+        if (controller.enableLook) {
+            if (controller._lookHandler.isMoving()) {
+                look3D(controller, controller._lookHandler.getMovement());
+            }
         }
 
         if (!buttonDown) {
@@ -932,39 +943,48 @@ define([
         var rotate = controller._rotateHandler;
         var rotating = rotate.isMoving() && rotate.getMovement();
 
-        if (spinning) {
-            spin3D(controller, spin.getMovement());
+        if (controller.enableRotate) {
+            if (spinning) {
+                spin3D(controller, spin.getMovement());
+            }
+
+            if (spin && !spinning && controller.inertiaSpin < 1.0) {
+                maintainInertia(spin, controller.inertiaSpin, spin3D, controller, '_lastInertiaSpinMovement');
+            }
+
+            if (rotating) {
+                tilt3D(controller, rotate.getMovement());
+            }
         }
 
-        if (spin && !spinning && controller.inertiaSpin < 1.0) {
-            maintainInertia(spin, controller.inertiaSpin, spin3D, controller, '_lastInertiaSpinMovement');
+        if (controller.enableZoom) {
+            if (rightZooming) {
+                zoom3D(controller, rightZoom.getMovement());
+            } else if (wheelZooming) {
+                zoom3D(controller, wheelZoom.getMovement());
+            }
+
+            if (rightZoom && !rightZooming && controller.inertiaZoom < 1.0) {
+                maintainInertia(rightZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
+            }
+
+            if (wheelZoom && !wheelZooming && controller.inertiaZoom < 1.0) {
+                maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
+            }
         }
 
-        if (rotating) {
-            tilt3D(controller, rotate.getMovement());
-        }
-
-        if (rightZooming) {
-            zoom3D(controller, rightZoom.getMovement());
-        } else if (wheelZooming) {
-            zoom3D(controller, wheelZoom.getMovement());
-        }
-
-        if (rightZoom && !rightZooming && controller.inertiaZoom < 1.0) {
-            maintainInertia(rightZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
-        }
-
-        if (wheelZoom && !wheelZooming && controller.inertiaZoom < 1.0) {
-            maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
-        }
-
-        if (controller._lookHandler.isMoving()) {
-            look3D(controller, controller._lookHandler.getMovement());
+        if (controller.enableLook) {
+            if (controller._lookHandler.isMoving()) {
+                look3D(controller, controller._lookHandler.getMovement());
+            }
         }
 
         return true;
     }
 
+    /**
+     * @private
+     */
     CameraMouseController.prototype.update = function(frameState) {
         var mode = frameState.mode;
         if (mode === SceneMode.SCENE2D) {
@@ -974,14 +994,18 @@ define([
                 this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
             }
 
-            this._frustum = this._camera.frustum.clone();
+            var frustum = this._frustum = this._camera.frustum.clone();
+            if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' ||
+               typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
+                throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
+            }
 
             var maxZoomOut = 2.0;
-            var ratio = this._frustum.top / this._frustum.right;
-            this._frustum.right = this._maxCoord.x * maxZoomOut;
-            this._frustum.left = -this._frustum.right;
-            this._frustum.top = ratio * this._frustum.right;
-            this._frustum.bottom = -this._frustum.top;
+            var ratio = frustum.top / frustum.right;
+            frustum.right = this._maxCoord.x * maxZoomOut;
+            frustum.left = -frustum.right;
+            frustum.top = ratio * frustum.right;
+            frustum.bottom = -frustum.top;
 
             update2D(this);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
@@ -991,6 +1015,50 @@ define([
             this._horizontalRotationAxis = undefined;
             update3D(this);
         }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof CameraMouseController
+     *
+     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see CameraMouseController#destroy
+     */
+    CameraMouseController.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Removes mouse listeners held by this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof CameraMouseController
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see CameraMouseController#isDestroyed
+     *
+     * @example
+     * controller = controller && controller.destroy();
+     */
+    CameraMouseController.prototype.destroy = function() {
+        this._spinHandler = this._spinHandler && this._spinHandler.destroy();
+        this._translateHandler = this._translateHandler && this._translateHandler.destroy();
+        this._lookHandler = this._lookHandler && this._lookHandler.destroy();
+        this._rotateHandler = this._rotateHandler && this._rotateHandler.destroy();
+        this._zoomHandler = this._zoomHandler && this._zoomHandler.destroy();
+        this._zoomWheel = this._zoomWheel && this._zoomWheel.destroy();
+        return destroyObject(this);
     };
 
     return CameraMouseController;
