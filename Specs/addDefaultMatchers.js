@@ -5,9 +5,9 @@ define([
         equals) {
     "use strict";
 
-    function createMissingPropertyMessageFunction(item, actualPrototype, expectedInterfacePrototype) {
+    function createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype) {
         return function() {
-            return 'Expected property \'' + item + '\' to exist on ' + actualPrototype.constructor.name + ' because it should implement interface ' + expectedInterfacePrototype.constructor.name + '.';
+            return 'Expected function \'' + item + '\' to exist on ' + actualPrototype.constructor.name + ' because it should implement interface ' + expectedInterfacePrototype.constructor.name + '.';
         };
     }
 
@@ -69,7 +69,7 @@ define([
                 if (expectedInterfacePrototype.hasOwnProperty(item) &&
                     typeof expectedInterfacePrototype[item] === 'function' &&
                     !actualPrototype.hasOwnProperty(item)) {
-                        this.message = createMissingPropertyMessageFunction(item, actualPrototype, expectedInterfacePrototype);
+                        this.message = createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype);
                         return false;
                 }
             }

@@ -130,15 +130,13 @@ define([
      */
     ImageryLayer.prototype._getLevelWithMaximumTexelSpacing = function(texelSpacing, latitudeClosestToEquator) {
         var levelZeroMaximumTexelSpacing = this._levelZeroMaximumTexelSpacing;
-        //if (typeof levelZeroMaximumTexelSpacing === 'undefined') {
-            var imageryProvider = this.imageryProvider;
-            var tilingScheme = imageryProvider.getTilingScheme();
-            var ellipsoid = tilingScheme.ellipsoid;
-            var latitudeFactor = Math.cos(latitudeClosestToEquator);
-            //var latitudeFactor = 1.0;
-            levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * (tilingScheme.extent.east - tilingScheme.extent.west) * latitudeFactor / (imageryProvider.getTileWidth() * tilingScheme.numberOfLevelZeroTilesX);
-            this._levelZeroMaximumTexelSpacing = levelZeroMaximumTexelSpacing;
-        //}
+        var imageryProvider = this.imageryProvider;
+        var tilingScheme = imageryProvider.getTilingScheme();
+        var ellipsoid = tilingScheme.getEllipsoid();
+        var latitudeFactor = Math.cos(latitudeClosestToEquator);
+        var tilingSchemeExtent = tilingScheme.getExtent();
+        levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * (tilingSchemeExtent.east - tilingSchemeExtent.west) * latitudeFactor / (imageryProvider.getTileWidth() * tilingScheme.getNumberOfXTilesAtLevel(0));
+        this._levelZeroMaximumTexelSpacing = levelZeroMaximumTexelSpacing;
 
         var twoToTheLevelPower = this._levelZeroMaximumTexelSpacing / texelSpacing;
         var level = Math.log(twoToTheLevelPower) / Math.log(2);
@@ -224,8 +222,8 @@ define([
             --southeastTileCoordinates.x;
         }
 
-        var imageryMaxX = imageryTilingScheme.numberOfLevelZeroTilesX << imageryLevel;
-        var imageryMaxY = imageryTilingScheme.numberOfLevelZeroTilesY << imageryLevel;
+        var imageryMaxX = imageryTilingScheme.getNumberOfXTilesAtLevel(imageryLevel);
+        var imageryMaxY = imageryTilingScheme.getNumberOfYTilesAtLevel(imageryLevel);
 
         // Create TileImagery instances for each imagery tile overlapping this terrain tile.
         // We need to do all texture coordinate computations in the imagery tile's tiling scheme.

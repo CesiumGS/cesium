@@ -167,7 +167,7 @@ require([
                 url : 'http://cesium.agi.com/terrain'
             });
 
-            cb._surface.terrainProvider = terrainProvider;
+            cb._surface._terrainProvider = terrainProvider;
 
             scene.getCamera().frustum.near = 10.0;
             cb.affectedByLighting = false;

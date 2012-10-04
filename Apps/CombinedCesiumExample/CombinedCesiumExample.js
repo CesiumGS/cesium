@@ -10,7 +10,7 @@ function startCesium() {
     var scene = new Cesium.Scene(canvas);
 
     var cb = new Cesium.CentralBody();
-    cb.getImageLayers().addImageryProvider(new Cesium.SingleTileImageryProvider({
+    cb.getImageryLayers().addImageryProvider(new Cesium.SingleTileImageryProvider({
         url : '../../Images/NE2_50M_SR_W_4096.jpg'
     }));
 

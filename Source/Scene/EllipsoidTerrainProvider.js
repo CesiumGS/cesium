@@ -60,7 +60,7 @@ define([
         this.tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme({ ellipsoid : defaultValue(description.ellipsoid, Ellipsoid.WGS84) }));
 
         // Note: the 64 below does NOT need to match the actual vertex dimensions.
-        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, 64, this.tilingScheme.numberOfLevelZeroTilesX);
+        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.getEllipsoid(), 64, this.tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this.ready = true;
     }
@@ -99,7 +99,7 @@ define([
      */
     EllipsoidTerrainProvider.prototype.transformGeometry = function(context, tile) {
         var tilingScheme = this.tilingScheme;
-        var ellipsoid = tilingScheme.ellipsoid;
+        var ellipsoid = tilingScheme.getEllipsoid();
         var extent = tile.extent;
 
         tile.center = ellipsoid.cartographicToCartesian(extent.getCenter());
@@ -155,7 +155,7 @@ define([
         tile.maxHeight = 0;
         tile.boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
 
-        var ellipsoid = this.tilingScheme.ellipsoid;
+        var ellipsoid = this.tilingScheme.getEllipsoid();
         var extent = tile.extent;
         tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
         tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
