@@ -5,6 +5,12 @@ define([
         equals) {
     "use strict";
 
+    function createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype) {
+        return function() {
+            return 'Expected function \'' + item + '\' to exist on ' + actualPrototype.constructor.name + ' because it should implement interface ' + expectedInterfacePrototype.constructor.name + '.';
+        };
+    }
+
     var defaultMatchers = {
         toBeGreaterThanOrEqualTo : function(value, epsilon) {
             return this.actual >= value;
@@ -52,6 +58,27 @@ define([
             this.env.equalityTesters_ = origTesters;
 
             return result;
+        },
+
+        toConformToInterface : function(expectedInterface) {
+            // All function properties on the prototype should also exist on the actual's prototype.
+            var actualPrototype = this.actual.prototype;
+            var expectedInterfacePrototype = expectedInterface.prototype;
+
+            for (var item in expectedInterfacePrototype) {
+                if (expectedInterfacePrototype.hasOwnProperty(item) &&
+                    typeof expectedInterfacePrototype[item] === 'function' &&
+                    !actualPrototype.hasOwnProperty(item)) {
+                        this.message = createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype);
+                        return false;
+                }
+            }
+
+            return true;
+        },
+
+        toBeInstanceOf : function(expectedConstructor) {
+            return this.actual instanceof expectedConstructor;
         }
     };
 

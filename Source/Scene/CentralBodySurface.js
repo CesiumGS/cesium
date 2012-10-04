@@ -1,78 +1,62 @@
 /*global define*/
 define([
-        '../Core/combine',
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/BoundingSphere',
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/CubeMapEllipsoidTessellator',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
         '../Core/Intersect',
-        '../Core/Math',
         '../Core/Matrix4',
-        '../Core/Occluder',
-        '../Core/PrimitiveType',
-        '../Core/BoundingRectangle',
-        '../Core/CubeMapEllipsoidTessellator',
-        '../Core/WebMercatorProjection',
         '../Core/MeshFilters',
+        '../Core/PrimitiveType',
         '../Core/Queue',
+        '../Core/WebMercatorProjection',
         '../Renderer/Command',
-        './GeographicTilingScheme',
-        './ImageryLayerCollection',
         './ImageryState',
         './SceneMode',
         './TerrainProvider',
-        './TileState',
-        './TileImagery',
         './TileLoadQueue',
         './TileReplacementQueue',
-        './ViewportQuad',
-        '../ThirdParty/when'
+        './TileState'
     ], function(
-        combine,
         defaultValue,
         destroyObject,
         BoundingSphere,
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        CubeMapEllipsoidTessellator,
         DeveloperError,
         Ellipsoid,
         EllipsoidalOccluder,
         Intersect,
-        CesiumMath,
         Matrix4,
-        Occluder,
-        PrimitiveType,
-        BoundingRectangle,
-        CubeMapEllipsoidTessellator,
-        WebMercatorProjection,
         MeshFilters,
+        PrimitiveType,
         Queue,
+        WebMercatorProjection,
         Command,
-        GeographicTilingScheme,
-        ImageryLayerCollection,
         ImageryState,
         SceneMode,
         TerrainProvider,
-        TileState,
-        TileImagery,
         TileLoadQueue,
         TileReplacementQueue,
-        ViewportQuad,
-        when) {
+        TileState) {
     "use strict";
 
     /**
-     * @param {TerrainProvider} description.terrainProvider
-     * @param {ImageryLayerCollection} description.imageryLayerCollection
-     * @param {Number} [description.maxScreenSpaceError=2]
+     * Manages and renders the terrain and imagery on the surface of a {@link CentralBody}.
+     * This class should be considered an implementation detail of {@link CentralBody} and not
+     * used directly.
      */
-    var EllipsoidSurface = function(description) {
+    var CentralBodySurface = function(description) {
         if (typeof description.terrainProvider === 'undefined') {
             throw new DeveloperError('description.terrainProvider is required.');
         }
@@ -80,36 +64,29 @@ define([
             throw new DeveloperError('description.imageryLayerCollection is required.');
         }
 
-        this.terrainProvider = description.terrainProvider;
+        this._terrainProvider = description.terrainProvider;
         this._imageryLayerCollection = description.imageryLayerCollection;
-        this.maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 2);
+        this._maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 2);
 
-        this._imageryLayerCollection.layerAdded.addEventListener(EllipsoidSurface.prototype._onLayerAdded, this);
-        this._imageryLayerCollection.layerRemoved.addEventListener(EllipsoidSurface.prototype._onLayerRemoved, this);
-        this._imageryLayerCollection.layerMoved.addEventListener(EllipsoidSurface.prototype._onLayerMoved, this);
+        this._imageryLayerCollection.layerAdded.addEventListener(CentralBodySurface.prototype._onLayerAdded, this);
+        this._imageryLayerCollection.layerRemoved.addEventListener(CentralBodySurface.prototype._onLayerRemoved, this);
+        this._imageryLayerCollection.layerMoved.addEventListener(CentralBodySurface.prototype._onLayerMoved, this);
 
-        /**
-         * The offset, relative to the bottom left corner of the viewport,
-         * where the logo for terrain and imagery providers will be drawn.
-         *
-         * @type {Cartesian2}
-         */
-        this.logoOffset = Cartesian2.ZERO;
-        this._logos = [];
-        this._logoQuad = undefined;
+        var terrainTilingScheme = this._terrainProvider.tilingScheme;
+        this._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
 
-        this._levelZeroTiles = undefined;
         this._tilesToRenderByTextureCount = [];
         this._tileCommands = [];
         this._tileCommandUniformMaps = [];
+        this._tileTraversalQueue = new Queue();
         this._tileLoadQueue = new TileLoadQueue();
         this._tileReplacementQueue = new TileReplacementQueue();
-        this._tilingScheme = undefined;
-        this._occluder = undefined;
-        this._ellipsoidalOccluder = undefined;
-        this._tileTraversalQueue = new Queue();
+
+        var ellipsoid = terrainTilingScheme.getEllipsoid();
+        this._ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid, Cartesian3.ZERO);
 
         this._debug = {
+            enableDebugOutput : false,
             boundingSphereTile : undefined,
             boundingSphereVA : undefined,
 
@@ -127,20 +104,24 @@ define([
 
             suspendLodUpdate : false
         };
-
-        var that = this;
-        when(this.terrainProvider.tilingScheme, function(tilingScheme) {
-            that._tilingScheme = tilingScheme;
-            that._levelZeroTiles = tilingScheme.createLevelZeroTiles();
-            that._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, that.terrainProvider.tilingScheme.ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
-            that._ellipsoidalOccluder = new EllipsoidalOccluder(that.terrainProvider.tilingScheme.ellipsoid, Cartesian3.ZERO);
-        }, function(e) {
-            /*global console*/
-            console.error('failed to load tiling scheme: ' + e);
-        });
     };
 
-    EllipsoidSurface.prototype._onLayerAdded = function(layer, index) {
+    CentralBodySurface.prototype.update = function(context, frameState, colorCommandList, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
+        selectTilesForRendering(this, context, frameState);
+        processTileLoadQueue(this, context, frameState);
+
+        if (!this._debug.suspendLodUpdate) {
+            var imageryLayerCollection = this._imageryLayerCollection;
+            for (var i = 0, len = imageryLayerCollection.getLength(); i < len; i++) {
+                imageryLayerCollection.get(i).updateTiles(context, frameState, this._tilesToRenderByTextureCount);
+            }
+        }
+
+        createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState);
+        debugCreateRenderCommandsForTileBoundingSphere(this, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList);
+    };
+
+    CentralBodySurface.prototype._onLayerAdded = function(layer, index) {
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
@@ -150,7 +131,7 @@ define([
         // create TileImagerys for this layer for all previously loaded tiles
         var tile = this._tileReplacementQueue.head;
         while (typeof tile !== 'undefined') {
-            if (layer.createTileImagerySkeletons(tile, this.terrainProvider)) {
+            if (layer.createTileImagerySkeletons(tile, this._terrainProvider)) {
                 tile.doneLoading = false;
             }
 
@@ -161,7 +142,7 @@ define([
         }
     };
 
-    EllipsoidSurface.prototype._onLayerRemoved = function(layer, index) {
+    CentralBodySurface.prototype._onLayerRemoved = function(layer, index) {
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
@@ -198,7 +179,7 @@ define([
         }
     };
 
-    EllipsoidSurface.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
+    CentralBodySurface.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
         if (typeof this._levelZeroTiles === 'undefined') {
             return;
         }
@@ -211,35 +192,19 @@ define([
         }
     };
 
-    EllipsoidSurface.prototype.update = function(context, frameState, commandList, colorCommandList, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
-        selectTilesForRendering(this, context, frameState);
-        processTileLoadQueue(this, context, frameState);
-
-        if (!this._debug.suspendLodUpdate) {
-            var imageryLayerCollection = this._imageryLayerCollection;
-            for (var i = 0, len = imageryLayerCollection.getLength(); i < len; i++) {
-                imageryLayerCollection.get(i).updateTiles(context, frameState, this._tilesToRenderByTextureCount);
-            }
-        }
-
-        createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState);
-        debugCreateCommandsForTileBoundingSphere(this, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList);
-        updateLogos(this, context, frameState, commandList);
-    };
-
     /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof EllipsoidSurface
+     * @memberof CentralBodySurface
      *
      * @return {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see EllipsoidSurface#destroy
+     * @see CentralBodySurface#destroy
      */
-    EllipsoidSurface.prototype.isDestroyed = function() {
+    CentralBodySurface.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -251,107 +216,195 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof EllipsoidSurface
+     * @memberof CentralBodySurface
      *
      * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see EllipsoidSurface#isDestroyed
+     * @see CentralBodySurface#isDestroyed
      */
-    EllipsoidSurface.prototype.destroy = function() {
-        when(this.levelZeroTiles, function(levelZeroTiles) {
-            for (var i = 0; i < levelZeroTiles.length; ++i) {
-                levelZeroTiles[i].destroy();
+    CentralBodySurface.prototype.destroy = function() {
+        var levelZeroTiles = this.levelZeroTiles;
+        for (var i = 0; i < levelZeroTiles.length; ++i) {
+            levelZeroTiles[i].destroy();
+        }
+
+        this._terrainProvider.destroy();
+        this._imageryLayerCollection.destroy();
+
+        var debug = this._debug;
+        if (typeof debug !== 'undefined') {
+            if (typeof debug.boundingSphereVA !== 'undefined') {
+                debug.boundingSphereVA.destroy();
             }
-        });
+        }
+
         return destroyObject(this);
     };
 
-    var logoData = {
-        logos : undefined,
-        logoIndex : 0,
-        rebuildLogo : false,
-        totalLogoWidth : 0,
-        totalLogoHeight : 0
-    };
+    function selectTilesForRendering(surface, context, frameState) {
+        var debug = surface._debug;
 
-    function updateLogos(surface, context, frameState, commandList) {
-        logoData.logos = surface._logos;
-        logoData.logoIndex = 0;
-        logoData.rebuildLogo = false;
-        logoData.totalLogoWidth = 0;
-        logoData.totalLogoHeight = 0;
-
-        checkLogo(logoData, surface.terrainProvider);
-
-        var imageryLayerCollection = surface._imageryLayerCollection;
-        for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-            var layer = imageryLayerCollection.get(i);
-            checkLogo(logoData, layer.imageryProvider);
+        if (debug.suspendLodUpdate) {
+            return;
         }
 
-        if (logoData.rebuildLogo) {
-            var width = logoData.totalLogoWidth;
-            var height = logoData.totalLogoHeight;
-            var logoRectangle = new BoundingRectangle(surface.logoOffset.x, surface.logoOffset.y, width, height);
-            if (typeof surface._logoQuad === 'undefined') {
-                surface._logoQuad = new ViewportQuad(logoRectangle);
-                surface._logoQuad.enableBlending = true;
+        var i, len;
+
+        // Clear the render list.
+        var tilesToRenderByTextureCount = surface._tilesToRenderByTextureCount;
+        for (i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
+            var tiles = tilesToRenderByTextureCount[i];
+            if (typeof tiles !== 'undefined') {
+                tiles.length = 0;
+            }
+        }
+
+        // We can't render anything before the level zero tiles exist.
+        if (typeof surface._levelZeroTiles === 'undefined') {
+            return;
+        }
+
+        var traversalQueue = surface._tileTraversalQueue;
+        traversalQueue.clear();
+
+        debug.maxDepth = 0;
+        debug.tilesVisited = 0;
+        debug.tilesCulled = 0;
+        debug.tilesRendered = 0;
+        debug.texturesRendered = 0;
+
+        surface._tileLoadQueue.markInsertionPoint();
+        surface._tileReplacementQueue.markStartOfRenderFrame();
+
+        var cameraPosition = frameState.camera.getPositionWC();
+
+        var ellipsoid = surface._terrainProvider.tilingScheme.getEllipsoid();
+        var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition);
+
+        surface._ellipsoidalOccluder.setCameraPosition(cameraPosition);
+
+        var tile;
+
+        // Enqueue the root tiles that are renderable and visible.
+        var levelZeroTiles = surface._levelZeroTiles;
+        for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
+            tile = levelZeroTiles[i];
+            if (!tile.doneLoading) {
+                queueTileLoad(surface, tile);
+            }
+            if (tile.renderable && isTileVisible(surface, frameState, tile)) {
+                traversalQueue.enqueue(tile);
             } else {
-                surface._logoQuad.setRectangle(logoRectangle);
-            }
-
-            var texture = surface._logoQuad.getTexture();
-            if (typeof texture === 'undefined' || texture.getWidth() !== width || texture.getHeight() !== height) {
-
-                if (width === 0 || height === 0) {
-                    if (typeof texture !== 'undefined') {
-                        surface._logoQuad.destroy();
-                        surface._logoQuad = undefined;
-                    }
-                } else {
-                    texture = context.createTexture2D({
-                        width : width,
-                        height : height
-                    });
-                    surface._logoQuad.setTexture(texture);
-                }
-            }
-
-            var heightOffset = 0;
-            for (i = 0, len = logoData.logos.length; i < len; i++) {
-                var logo = logoData.logos[i];
-                if (typeof logo !== 'undefined') {
-                    texture.copyFrom(logo, 0, heightOffset);
-                    heightOffset += logo.height + 2;
-                }
+                ++debug.tilesCulled;
             }
         }
 
-        if (typeof surface._logoQuad !== 'undefined') {
-            surface._logoQuad.update(context, frameState, commandList);
+        // Traverse the tiles in breadth-first order.
+        // This ordering allows us to load bigger, lower-detail tiles before smaller, higher-detail ones.
+        // This maximizes the average detail across the scene and results in fewer sharp transitions
+        // between very different LODs.
+        while (typeof (tile = traversalQueue.dequeue()) !== 'undefined') {
+            ++debug.tilesVisited;
+
+            surface._tileReplacementQueue.markTileRendered(tile);
+
+            if (tile.level > debug.maxDepth) {
+                debug.maxDepth = tile.level;
+            }
+
+            // There are a few different algorithms we could use here.
+            // This one doesn't load children unless we refine to them.
+            // We may want to revisit this in the future.
+
+            if (screenSpaceError(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) < surface._maxScreenSpaceError) {
+                // This tile meets SSE requirements, so render it.
+                addTileToRenderList(surface, tile);
+            } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile)) {
+                // SSE is not good enough and children are loaded, so refine.
+                var children = tile.children;
+                // PERFORMANCE_IDEA: traverse children front-to-back so we can avoid sorting by distance later.
+                for (i = 0, len = children.length; i < len; ++i) {
+                    if (isTileVisible(surface, frameState, children[i])) {
+                        traversalQueue.enqueue(children[i]);
+                    } else {
+                        ++debug.tilesCulled;
+                    }
+                }
+            } else {
+                // SSE is not good enough but not all children are loaded, so render this tile anyway.
+                addTileToRenderList(surface, tile);
+            }
+        }
+
+        if (debug.tilesVisited !== surface._debug.lastTilesVisited ||
+            debug.tilesRendered !== surface._debug.lastTilesRendered ||
+            debug.texturesRendered !== surface._debug.lastTexturesRendered ||
+            debug.tilesCulled !== surface._debug.lastTilesCulled ||
+            debug.maxDepth !== surface._debug.lastMaxDepth) {
+
+            if (debug.enableDebugOutput) {
+                /*global console*/
+                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Textures: ' + debug.texturesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth);
+            }
+
+            debug.lastTilesVisited = debug.tilesVisited;
+            debug.lastTilesRendered = debug.tilesRendered;
+            debug.lastTexturesRendered = debug.texturesRendered;
+            debug.lastTilesCulled = debug.tilesCulled;
+            debug.lastMaxDepth = debug.maxDepth;
         }
     }
 
-    function checkLogo(logoData, logoSource) {
-        var logo;
-        if (typeof logoSource.getLogo === 'function') {
-            logo = logoSource.getLogo();
-        } else {
-            logo = undefined;
+    function screenSpaceError(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
+        if (frameState.mode === SceneMode.SCENE2D) {
+            return screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile);
         }
 
-        if (logoData.logos[logoData.logoIndex] !== logo) {
-            logoData.rebuildLogo = true;
-            logoData.logos[logoData.logoIndex] = logo;
-        }
-        logoData.logoIndex++;
+        var extent = tile.extent;
 
-        if (typeof logo !== 'undefined') {
-            logoData.totalLogoWidth = Math.max(logoData.totalLogoWidth, logo.width);
-            logoData.totalLogoHeight += logo.height + 2;
+        var latitudeFactor = 1.0;
+
+        // Adjust by latitude in 3D only.
+        if (frameState.mode === SceneMode.SCENE3D) {
+            var latitudeClosestToEquator = 0.0;
+            if (extent.south > 0.0) {
+                latitudeClosestToEquator = extent.south;
+            } else if (extent.north < 0.0) {
+                latitudeClosestToEquator = extent.north;
+            }
+
+            latitudeFactor = Math.cos(latitudeClosestToEquator);
         }
+
+        var maxGeometricError = latitudeFactor * surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
+
+
+        var distance = Math.sqrt(distanceSquaredToTile(frameState, cameraPosition, cameraPositionCartographic, tile));
+        tile.distance = distance;
+
+        var canvas = context.getCanvas();
+        var height = canvas.clientHeight;
+
+        var camera = frameState.camera;
+        var frustum = camera.frustum;
+        var fovy = frustum.fovy;
+
+        // PERFORMANCE_TODO: factor out stuff that's constant across tiles.
+        return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+    }
+
+    function screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
+        var camera = frameState.camera;
+        var frustum = camera.frustum;
+        var canvas = context.getCanvas();
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+
+        var maxGeometricError = surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
+        var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
+        return maxGeometricError / pixelSize;
     }
 
     function addTileToRenderList(surface, tile) {
@@ -371,8 +424,9 @@ define([
 
         tileSet.push(tile);
 
-        ++surface._debug.tilesRendered;
-        surface._debug.texturesRendered += readyTextureCount;
+        var debug = surface._debug;
+        ++debug.tilesRendered;
+        debug.texturesRendered += readyTextureCount;
     }
 
     var boundingSphereScratch = new BoundingSphere();
@@ -384,8 +438,6 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            // TODO: If we show terrain heights in Columbus View, the bounding sphere
-            //       needs to be expanded to include the heights.
             BoundingSphere.fromExtent2D(tile.extent, frameState.scene2D.projection, boundingVolume);
             boundingVolume.center = new Cartesian3(0.0, boundingVolume.center.x, boundingVolume.center.y);
 
@@ -410,6 +462,12 @@ define([
         return true;
     }
 
+    var southwestCornerScratch = new Cartesian3(0.0, 0.0, 0.0);
+    var northeastCornerScratch = new Cartesian3(0.0, 0.0, 0.0);
+    var negativeUnitY = Cartesian3.UNIT_Y.negate();
+    var negativeUnitZ = Cartesian3.UNIT_Z.negate();
+    var vectorScratch = new Cartesian3(0.0, 0.0, 0.0);
+
     function distanceSquaredToTile(frameState, cameraCartesianPosition, cameraCartographicPosition, tile) {
         var southwestCornerCartesian = tile.southwestCornerCartesian;
         var northeastCornerCartesian = tile.northeastCornerCartesian;
@@ -420,26 +478,26 @@ define([
         var maxHeight = tile.maxHeight;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
-            southwestCornerCartesian = frameState.scene2D.projection.project(tile.extent.getSouthwest());
+            southwestCornerCartesian = frameState.scene2D.projection.project(tile.extent.getSouthwest(), southwestCornerScratch);
             southwestCornerCartesian.z = southwestCornerCartesian.y;
             southwestCornerCartesian.y = southwestCornerCartesian.x;
             southwestCornerCartesian.x = 0.0;
-            northeastCornerCartesian = frameState.scene2D.projection.project(tile.extent.getNortheast());
+            northeastCornerCartesian = frameState.scene2D.projection.project(tile.extent.getNortheast(), northeastCornerScratch);
             northeastCornerCartesian.z = northeastCornerCartesian.y;
             northeastCornerCartesian.y = northeastCornerCartesian.x;
             northeastCornerCartesian.x = 0.0;
-            westNormal = Cartesian3.UNIT_Y.negate();
+            westNormal = negativeUnitY;
             eastNormal = Cartesian3.UNIT_Y;
-            southNormal = Cartesian3.UNIT_Z.negate();
+            southNormal = negativeUnitZ;
             northNormal = Cartesian3.UNIT_Z;
             maxHeight = 0.0;
         }
 
-        var vectorFromSouthwestCorner = cameraCartesianPosition.subtract(southwestCornerCartesian);
+        var vectorFromSouthwestCorner = cameraCartesianPosition.subtract(southwestCornerCartesian, vectorScratch);
         var distanceToWestPlane = vectorFromSouthwestCorner.dot(westNormal);
         var distanceToSouthPlane = vectorFromSouthwestCorner.dot(southNormal);
 
-        var vectorFromNortheastCorner = cameraCartesianPosition.subtract(northeastCornerCartesian);
+        var vectorFromNortheastCorner = cameraCartesianPosition.subtract(northeastCornerCartesian, vectorScratch);
         var distanceToEastPlane = vectorFromNortheastCorner.dot(eastNormal);
         var distanceToNorthPlane = vectorFromNortheastCorner.dot(northNormal);
 
@@ -472,58 +530,8 @@ define([
         return result;
     }
 
-    function screenSpaceError(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
-        if (frameState.mode === SceneMode.SCENE2D) {
-            return screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile);
-        }
-
-        var extent = tile.extent;
-
-        var latitudeFactor = 1.0;
-
-        // Adjust by latitude in 3D only.
-        if (frameState.mode === SceneMode.SCENE3D) {
-            var latitudeClosestToEquator = 0.0;
-            if (extent.south > 0.0) {
-                latitudeClosestToEquator = extent.south;
-            } else if (extent.north < 0.0) {
-                latitudeClosestToEquator = extent.north;
-            }
-
-            latitudeFactor = Math.cos(latitudeClosestToEquator);
-        }
-
-        var maxGeometricError = latitudeFactor * surface.terrainProvider.getLevelMaximumGeometricError(tile.level);
-
-
-        var distance = Math.sqrt(distanceSquaredToTile(frameState, cameraPosition, cameraPositionCartographic, tile));
-        tile.distance = distance;
-
-        var canvas = context.getCanvas();
-        var height = canvas.clientHeight;
-
-        var camera = frameState.camera;
-        var frustum = camera.frustum;
-        var fovy = frustum.fovy;
-
-        // PERFORMANCE_TODO: factor out stuff that's constant across tiles.
-        return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
-    }
-
-    function screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
-        var camera = frameState.camera;
-        var frustum = camera.frustum;
-        var canvas = context.getCanvas();
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
-
-        var maxGeometricError = surface.terrainProvider.getLevelMaximumGeometricError(tile.level);
-        var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
-        return maxGeometricError / pixelSize;
-    }
-
     function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile) {
-        if (tile.level === surface.terrainProvider.maxLevel) {
+        if (tile.level === surface._terrainProvider.maxLevel) {
             return false;
         }
 
@@ -533,11 +541,6 @@ define([
         for (var i = 0, len = children.length; i < len; ++i) {
             var child = children[i];
             surface._tileReplacementQueue.markTileRendered(child);
-            // TODO: should we be culling here?  Technically, we don't know the
-            // bounding volume accurately until the tile geometry is loaded.
-//            if (!isTileVisible(surface, frameState, child)) {
-//                continue;
-//            }
             if (!child.doneLoading) {
                 queueTileLoad(surface, child);
             }
@@ -555,7 +558,7 @@ define([
 
     function processTileLoadQueue(surface, context, frameState) {
         var tileLoadQueue = surface._tileLoadQueue;
-        var terrainProvider = surface.terrainProvider;
+        var terrainProvider = surface._terrainProvider;
 
         var tile = tileLoadQueue.head;
 
@@ -576,8 +579,8 @@ define([
                 if (tile.state !== TileState.UNLOADED) {
                     surface._tileReplacementQueue.markTileRendered(tile);
 
-                    // TODO: Base this value on the minimum number of tiles needed,
-                    // the amount of memory available, or something else?
+                    // Arbitrarily limit the number of loaded tiles to 100, or however
+                    // many tiles were traversed this frame, whichever is greater.
                     surface._tileReplacementQueue.trimTiles(100);
 
                     var imageryLayerCollection = surface._imageryLayerCollection;
@@ -596,7 +599,8 @@ define([
                 tile.state = TileState.TRANSITIONING;
                 terrainProvider.createResources(context, tile);
             }
-            // TODO: what about the FAILED and INVALID states?
+            // TODO: we should handle failed terrain.  But it doesn't matter for now
+            //       because EllipsoidTerrainProvider won't fail.
 
             var doneLoading = tile.state === TileState.READY;
 
@@ -637,7 +641,7 @@ define([
                 if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
                     // re-associate TileImagery with a parent Imagery that is not failed or invalid.
                     var parent = imagery.parent;
-                    while (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID) {
+                    while (typeof parent !== 'undefined' && (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID)) {
                         parent = parent.parent;
                     }
 
@@ -670,7 +674,7 @@ define([
         }
     }
 
-    EllipsoidSurface.prototype.debugShowBoundingSphereOfTileAt = function(cartographicPick) {
+    CentralBodySurface.prototype.debugShowBoundingSphereOfTileAt = function(cartographicPick) {
         // Find the tile in the render list that overlaps this extent
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         var result;
@@ -698,8 +702,8 @@ define([
     };
 
     // This is debug code to render the bounding sphere of the tile in
-    // EllipsoidSurface._debug.boundingSphereTile.
-    function debugCreateCommandsForTileBoundingSphere(surface, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
+    // CentralBodySurface._debug.boundingSphereTile.
+    function debugCreateRenderCommandsForTileBoundingSphere(surface, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
         if (typeof surface._debug !== 'undefined' && typeof surface._debug.boundingSphereTile !== 'undefined') {
             if (!surface._debug.boundingSphereVA) {
                 var radius = surface._debug.boundingSphereTile.boundingSphere3D.radius;
@@ -739,7 +743,7 @@ define([
         }
     }
 
-    EllipsoidSurface.prototype.toggleLodUpdate = function(frameState) {
+    CentralBodySurface.prototype.toggleLodUpdate = function(frameState) {
         this._debug.suspendLodUpdate = !this._debug.suspendLodUpdate;
     };
 
@@ -803,7 +807,7 @@ define([
                 return this.dayTextureAlpha;
             },
             u_dayIntensity : function() {
-                return 0.2;
+                return this.dayIntensity;
             },
             u_southLatitude : function() {
                 return this.southLatitude;
@@ -829,6 +833,7 @@ define([
             dayTextureTranslationAndScale : [],
             dayTextureTexCoordsExtent : [],
             dayTextureAlpha : [],
+            dayIntensity : 0.0,
 
             southLatitude : 0.0,
             northLatitude : 0.0,
@@ -846,121 +851,11 @@ define([
         }
     }
 
-    var float32ArrayScratch = new Float32Array(1);
+    var float32ArrayScratch = typeof Float32Array !== 'undefined' ? new Float32Array(1) : undefined;
     var modifiedModelViewScratch = new Matrix4();
     var tileExtentScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian4();
-
-    function selectTilesForRendering(surface, context, frameState) {
-        if (surface._debug.suspendLodUpdate) {
-            return;
-        }
-
-        var i, len;
-
-        // Clear the render list.
-        var tilesToRenderByTextureCount = surface._tilesToRenderByTextureCount;
-        for (i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
-            var tiles = tilesToRenderByTextureCount[i];
-            if (typeof tiles !== 'undefined') {
-                tiles.length = 0;
-            }
-        }
-
-        // We can't render anything before the level zero tiles exist.
-        if (typeof surface._levelZeroTiles === 'undefined') {
-            return;
-        }
-
-        var traversalQueue = surface._tileTraversalQueue;
-        traversalQueue.clear();
-
-        surface._debug.maxDepth = 0;
-        surface._debug.tilesVisited = 0;
-        surface._debug.tilesCulled = 0;
-        surface._debug.tilesRendered = 0;
-        surface._debug.texturesRendered = 0;
-
-        surface._tileLoadQueue.markInsertionPoint();
-        surface._tileReplacementQueue.markStartOfRenderFrame();
-
-        var cameraPosition = frameState.camera.getPositionWC();
-
-        var ellipsoid = surface.terrainProvider.tilingScheme.ellipsoid;
-        var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition);
-
-        surface._occluder.setCameraPosition(cameraPosition);
-        surface._ellipsoidalOccluder.setCameraPosition(cameraPosition);
-
-        var tile;
-
-        // Enqueue the root tiles that are renderable and visible.
-        var levelZeroTiles = surface._levelZeroTiles;
-        for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
-            tile = levelZeroTiles[i];
-            if (!tile.doneLoading) {
-                queueTileLoad(surface, tile);
-            }
-            if (tile.renderable && isTileVisible(surface, frameState, tile)) {
-                traversalQueue.enqueue(tile);
-            } else {
-                ++surface._debug.tilesCulled;
-            }
-        }
-
-        // Traverse the tiles in breadth-first order.
-        // This ordering allows us to load bigger, lower-detail tiles before smaller, higher-detail ones.
-        // This maximizes the average detail across the scene and results in fewer sharp transitions
-        // between very different LODs.
-        while (typeof (tile = traversalQueue.dequeue()) !== 'undefined') {
-            ++surface._debug.tilesVisited;
-
-            surface._tileReplacementQueue.markTileRendered(tile);
-
-            if (tile.level > surface._debug.maxDepth) {
-                surface._debug.maxDepth = tile.level;
-            }
-
-            // There are a few different algorithms we could use here.
-            // This one doesn't load children unless we refine to them.
-            // We may want to revisit this in the future.
-
-            if (screenSpaceError(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) < surface.maxScreenSpaceError) {
-                // This tile meets SSE requirements, so render it.
-                addTileToRenderList(surface, tile);
-            } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile)) {
-                // SSE is not good enough and children are loaded, so refine.
-                var children = tile.children;
-                // PERFORMANCE_TODO: traverse children front-to-back so we can avoid sorting by distance later.
-                for (i = 0, len = children.length; i < len; ++i) {
-                    if (isTileVisible(surface, frameState, children[i])) {
-                        traversalQueue.enqueue(children[i]);
-                    } else {
-                        ++surface._debug.tilesCulled;
-                    }
-                }
-            } else {
-                // SSE is not good enough but not all children are loaded, so render this tile anyway.
-                addTileToRenderList(surface, tile);
-            }
-        }
-
-        if (surface._debug.tilesVisited !== surface._debug.lastTilesVisited ||
-            surface._debug.tilesRendered !== surface._debug.lastTilesRendered ||
-            surface._debug.texturesRendered !== surface._debug.lastTexturesRendered ||
-            surface._debug.tilesCulled !== surface._debug.lastTilesCulled ||
-            surface._debug.maxDepth !== surface._debug.lastMaxDepth) {
-
-            console.log('Visited ' + surface._debug.tilesVisited + ', Rendered: ' + surface._debug.tilesRendered + ', Textures: ' + surface._debug.texturesRendered + ', Culled: ' + surface._debug.tilesCulled + ', Max Depth: ' + surface._debug.maxDepth);
-
-            surface._debug.lastTilesVisited = surface._debug.tilesVisited;
-            surface._debug.lastTilesRendered = surface._debug.tilesRendered;
-            surface._debug.lastTexturesRendered = surface._debug.texturesRendered;
-            surface._debug.lastTilesCulled = surface._debug.tilesCulled;
-            surface._debug.lastMaxDepth = surface._debug.maxDepth;
-        }
-    }
 
     function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState) {
         var viewMatrix = frameState.camera.getViewMatrix();
@@ -1070,6 +965,19 @@ define([
                     uniformMap.oneOverMercatorHeight = oneOverMercatorHeight;
                     Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
+                    // The first TileImagery's provider select the itensity for the entire tile.
+                    // This needs improvement, but that's part of a bigger lighting overhaul.
+                    var intensity = 0.0;
+                    if (tileImageryCollection.length > 0) {
+                        var firstImagery = tileImageryCollection[0].imagery;
+                        var firstImageryProvider = firstImagery.imageryLayer.imageryProvider;
+                        if (typeof firstImageryProvider.getIntensity !== 'undefined') {
+                            intensity = firstImageryProvider.getIntensity(firstImagery.x, firstImagery.y, firstImagery.level);
+                        }
+
+                    }
+                    uniformMap.dayIntensity = intensity;
+
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                         var tileImagery = tileImageryCollection[imageryIndex];
                         var imagery = tileImagery.imagery;
@@ -1123,5 +1031,5 @@ define([
         tileCommands.length = Math.max(0, tileCommandIndex);
     }
 
-    return EllipsoidSurface;
+    return CentralBodySurface;
 });

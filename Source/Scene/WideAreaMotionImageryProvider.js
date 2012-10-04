@@ -116,7 +116,7 @@ define([
         });
         this._tilingScheme.extent = this.extent;
 
-        var ellipsoid = this._tilingScheme.ellipsoid;
+        var ellipsoid = this._tilingScheme.getEllipsoid();
         this._tilingScheme.levelZeroMaximumGeometricError = ellipsoid.getRadii().x * (this.extent.east - this.extent.west) / 1024;
 
         this._currentTime = undefined;

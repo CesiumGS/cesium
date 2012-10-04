@@ -122,7 +122,7 @@ require([
         });
 
         var cb = new Cesium.CentralBody(ellipsoid);
-        cb.getImageLayers().addImageryProvider(imagery);
+        cb.getImageryLayers().addImageryProvider(imagery);
         cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
         cb.specularMapSource = '../../../Images/earthspec1k.jpg';
         cb.showSkyAtmosphere = true;

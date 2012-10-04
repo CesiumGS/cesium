@@ -94,8 +94,8 @@ require([
             proxy: Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
         });
         
-        primitives.getCentralBody().getImageLayers().removeAll();
-        primitives.getCentralBody().getImageLayers().addImageryProvider(provider);        
+        primitives.getCentralBody().getImageryLayers().removeAll();
+        primitives.getCentralBody().getImageryLayers().addImageryProvider(provider);        
     }
 
     function arcGisWorldStreetMaps(primitives) {
@@ -105,8 +105,8 @@ require([
             proxy: new Cesium.DefaultProxy('/proxy/')
         });
         
-        primitives.getCentralBody().getImageLayers().removeAll();
-        primitives.getCentralBody().getImageLayers().addImageryProvider(provider);        
+        primitives.getCentralBody().getImageryLayers().removeAll();
+        primitives.getCentralBody().getImageryLayers().addImageryProvider(provider);        
     }
     
     function openStreetMaps(primitives) {
@@ -115,8 +115,8 @@ require([
             proxy: new Cesium.DefaultProxy('/proxy/')
         });
         
-        primitives.getCentralBody().getImageLayers().removeAll();
-        primitives.getCentralBody().getImageLayers().addImageryProvider(provider);        
+        primitives.getCentralBody().getImageryLayers().removeAll();
+        primitives.getCentralBody().getImageryLayers().addImageryProvider(provider);        
     }
     
     function mapQuestOpenStreetMaps(primitives) {
@@ -128,8 +128,8 @@ require([
             proxy: new Cesium.DefaultProxy('/proxy/')
         });
         
-        primitives.getCentralBody().getImageLayers().removeAll();
-        primitives.getCentralBody().getImageLayers().addImageryProvider(provider);        
+        primitives.getCentralBody().getImageryLayers().removeAll();
+        primitives.getCentralBody().getImageryLayers().addImageryProvider(provider);        
     }
     
     function stamenMaps(primitives) {
@@ -145,16 +145,16 @@ require([
             credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
         });
         
-        primitives.getCentralBody().getImageLayers().removeAll();
-        primitives.getCentralBody().getImageLayers().addImageryProvider(provider);        
+        primitives.getCentralBody().getImageryLayers().removeAll();
+        primitives.getCentralBody().getImageryLayers().addImageryProvider(provider);        
     }
     
     function singleImage(primitives) {
         Sandcastle.declare(singleImage);    // For highlighting in Sandcastle.
         var provider = new Cesium.SingleTileImageryProvider({url : '../../../Images/NE2_50M_SR_W_4096.jpg'});
 
-        primitives.getCentralBody().getImageLayers().removeAll();
-        primitives.getCentralBody().getImageLayers().addImageryProvider(provider);        
+        primitives.getCentralBody().getImageryLayers().removeAll();
+        primitives.getCentralBody().getImageryLayers().addImageryProvider(provider);        
     }
 
     function createButtons(primitives) {

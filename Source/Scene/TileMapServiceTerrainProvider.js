@@ -77,7 +77,7 @@ define([
         });
         this.maxLevel = 11;
         this.heightmapWidth = 64;
-        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, this.heightmapWidth, this.tilingScheme.numberOfLevelZeroTilesX);
+        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.getEllipsoid(), this.heightmapWidth, this.tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._proxy = description.proxy;
 
@@ -125,7 +125,7 @@ define([
 
         ++requestsInFlight;
 
-        var yTiles = this.tilingScheme.numberOfLevelZeroTilesY << tile.level;
+        var yTiles = this.tilingScheme.getNumberOfYTilesAtLevel(tile.level);
 
         var url = this.url + '/' + tile.level + '/' + tile.x + '/' + (yTiles - tile.y - 1) + '.png';
 
@@ -165,7 +165,7 @@ define([
         var pixels = getImagePixels(image);
 
         var tilingScheme = this.tilingScheme;
-        var ellipsoid = tilingScheme.ellipsoid;
+        var ellipsoid = tilingScheme.getEllipsoid();
         var extent = tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
 
         tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
@@ -226,7 +226,7 @@ define([
         tile.maxHeight = buffers.statistics.maxHeight;
         tile.boundingSphere3D = BoundingSphere.fromFlatArray(buffers.vertices, tile.center, 5);
 
-        var ellipsoid = this.tilingScheme.ellipsoid;
+        var ellipsoid = this.tilingScheme.getEllipsoid();
         var extent = tile.extent;
         tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
         tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());

@@ -317,7 +317,7 @@ define([
             var centralBody = this.centralBody;
 
             if (this.useStreamingImagery) {
-                centralBody.getImageLayers().addImageryProvider(new BingMapsImageryProvider({
+                centralBody.getImageryLayers().addImageryProvider(new BingMapsImageryProvider({
                     server : 'dev.virtualearth.net',
                     mapStyle : this.mapStyle,
                     // Some versions of Safari support WebGL, but don't correctly implement
@@ -325,7 +325,7 @@ define([
                     proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
                 }));
             } else {
-                centralBody.getImageLayers().addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
+                centralBody.getImageryLayers().addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
             }
 
             centralBody.nightImageSource = this.nightImageUrl;

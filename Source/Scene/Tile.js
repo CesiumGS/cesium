@@ -254,7 +254,7 @@ define([
      */
     Tile.prototype.getOccludeePointInScaledSpace = function() {
         if (!this.occludeePointComputed) {
-            var ellipsoid = this.tilingScheme.ellipsoid;
+            var ellipsoid = this.tilingScheme.getEllipsoid();
             var occludeePoint = Occluder.computeOccludeePointFromExtent(this.extent, ellipsoid);
             if (typeof occludeePoint !== 'undefined') {
                 occludeePoint.multiplyComponents(ellipsoid.getOneOverRadii(), occludeePoint);
