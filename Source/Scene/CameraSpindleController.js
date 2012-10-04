@@ -223,8 +223,8 @@ define([
     };
 
     CameraSpindleController.prototype._moveVertical = function(angle) {
-        if (typeof this.constrainedAxis !== 'undefined') {
-            var p = this._camera.position.normalize();
+        var p = this._camera.position.normalize();
+        if (typeof this.constrainedAxis !== 'undefined' && !p.equalsEpsilon(this.constrainedAxis, CesiumMath.EPSILON2)) {
             var dot = p.dot(this.constrainedAxis.normalize());
             if (CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0) {
                 return;
