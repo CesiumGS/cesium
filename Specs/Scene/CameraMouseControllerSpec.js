@@ -5,8 +5,10 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Ellipsoid',
          'Core/EquidistantCylindricalProjection',
+         'Core/IntersectionTests',
          'Core/Math',
          'Core/Matrix4',
+         'Core/Ray',
          'Scene/Camera',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode'
@@ -16,8 +18,10 @@ defineSuite([
          Cartesian3,
          Ellipsoid,
          EquidistantCylindricalProjection,
+         IntersectionTests,
          CesiumMath,
          Matrix4,
+         Ray,
          Camera,
          OrthographicFrustum,
          SceneMode) {
@@ -113,6 +117,10 @@ defineSuite([
         controller = new CameraMouseController(canvas, camera);
     });
 
+    afterEach(function() {
+        controller = controller && !controller.isDestroyed() && controller.destroy();
+    });
+
     it('constructor throws without a canvas', function() {
         expect(function() {
             return new CameraMouseController();
@@ -143,22 +151,18 @@ defineSuite([
         }).toThrow();
     });
 
-    function moveMouse(button, startPosition, endPosition) {
-        canvas.fireEvents('mousedown', {
+    function moveMouse(button, startPosition, endPosition, shiftKey) {
+        var args = {
             button : button,
             clientX : startPosition.x,
-            clientY : startPosition.y
-        });
-        canvas.fireEvents('mousemove', {
-            button : button,
-            clientX : endPosition.x,
-            clientY : endPosition.y
-        });
-        canvas.fireEvents('mouseup', {
-            button : button,
-            clientX : endPosition.x,
-            clientY : endPosition.y
-        });
+            clientY : startPosition.y,
+            shiftKey : shiftKey
+        };
+        canvas.fireEvents('mousedown', args);
+        args.clientX = endPosition.x;
+        args.clientY = endPosition.y;
+        canvas.fireEvents('mousemove', args);
+        canvas.fireEvents('mouseup', args);
     }
 
     function updateController(frameState) {
@@ -481,5 +485,130 @@ defineSuite([
         expect(camera.direction.dot(Cartesian3.UNIT_Z)).toBeLessThan(0.0);
         expect(camera.up.dot(Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
         expect(camera.right.dot(Cartesian3.UNIT_Z)).toBeLessThan(CesiumMath.EPSILON16);
+    });
+
+    function setUp3D() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var frameState = {
+            mode : SceneMode.SCENE3D,
+            scene2D : {
+                projection : projection
+            }
+        };
+        return frameState;
+    }
+
+    it('pans in 3D', function() {
+        var frameState = setUp3D();
+        var position = camera.position;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(3 * canvas.clientWidth / 8, 3 * canvas.clientHeight / 8);
+
+        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+
+        expect(camera.position).not.toEqual(position);
+        expect(camera.direction.equalsEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.direction.cross(camera.up).equalsEpsilon(camera.right, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.cross(camera.direction).equalsEpsilon(camera.up, CesiumMath.EPSILON15)).toEqual(true);
+    });
+
+    it('rotates in 3D', function() {
+        var frameState = setUp3D();
+        var position = camera.position;
+        var startPosition = new Cartesian2(0, 0);
+        var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 4);
+
+        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+
+        expect(camera.position).not.toEqual(position);
+        expect(camera.direction.equalsEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.direction.cross(camera.up).equalsEpsilon(camera.right, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.cross(camera.direction).equalsEpsilon(camera.up, CesiumMath.EPSILON15)).toEqual(true);
+    });
+
+    it('zoom in 3D', function() {
+        var frameState = setUp3D();
+        var position = camera.position;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController(frameState);
+        expect(position.magnitude()).toBeGreaterThan(camera.position.magnitude());
+    });
+
+    it('zoom out in 3D', function() {
+        var frameState = setUp3D();
+        var position = camera.position;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController(frameState);
+        expect(position.magnitude()).toBeLessThan(camera.position.magnitude());
+    });
+
+    it('zoom in 3D with wheel', function() {
+        var frameState = setUp3D();
+        var position = camera.position;
+
+        canvas.fireEvents('mousewheel', {
+            wheelDelta : 120
+        });
+        updateController(frameState);
+        expect(position.magnitude()).toBeGreaterThan(camera.position.magnitude());
+    });
+
+    it('zoom out in 3D with wheel', function() {
+        var frameState = setUp3D();
+        var position = camera.position;
+
+        canvas.fireEvents('mousewheel', {
+            wheelDelta : -120
+        });
+        updateController(frameState);
+        expect(position.magnitude()).toBeLessThan(camera.position.magnitude());
+    });
+
+    it('tilts in 3D', function() {
+        var frameState = setUp3D();
+        var position = camera.position;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+
+        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        updateController(frameState);
+        expect(camera.position).not.toEqual(position);
+        expect(camera.direction.equalsEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15)).toEqual(false);
+        expect(camera.direction.cross(camera.up).equalsEpsilon(camera.right, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.cross(camera.direction).equalsEpsilon(camera.up, CesiumMath.EPSILON15)).toEqual(true);
+
+        var ray = new Ray(camera.getPositionWC(), camera.getDirectionWC());
+        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.getEllipsoid());
+        expect(intersection).toBeDefined();
+    });
+
+    it('looks in 3D', function() {
+        var frameState = setUp3D();
+        var position = camera.position;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+
+        moveMouse(MouseButtons.LEFT, startPosition, endPosition, true);
+        updateController(frameState);
+        expect(camera.position).toEqual(position);
+        expect(camera.direction).not.toEqual(camera.position.negate().normalize());
+        expect(camera.direction.cross(camera.up).equalsEpsilon(camera.right, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.up.cross(camera.right).equalsEpsilon(camera.direction, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.right.cross(camera.direction).equalsEpsilon(camera.up, CesiumMath.EPSILON15)).toEqual(true);
+    });
+
+    it('is destroyed', function() {
+        expect(controller.isDestroyed()).toEqual(false);
+        controller.destroy();
+        expect(controller.isDestroyed()).toEqual(true);
     });
 });
