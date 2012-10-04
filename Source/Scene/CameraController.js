@@ -73,6 +73,10 @@ define([
          * @type Cartesian3
          */
         this.constrainedAxis = undefined;
+
+        this._maxCoord = undefined;
+        this._maxTranslateFactor = 1.5;
+        this._maxZoomFactor = 2.5;
     };
 
     /**
@@ -80,8 +84,30 @@ define([
      */
     CameraController.prototype.update = function(frameState) {
         this._mode = frameState.mode;
-        this._projection = frameState.scene2D.projection;
+        var projection = frameState.scene2D.projection;
+        if (projection !== this._projection) {
+            this._projection = projection;
+            this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        }
     };
+
+    function clampMove2D(controller, position) {
+        var maxX = controller._maxCoord.x * controller._maxTranslateFactor;
+        if (position.x > maxX) {
+            position.x = maxX;
+        }
+        if (position.x < -maxX) {
+            position.x = -maxX;
+        }
+
+        var maxY = controller._maxCoord.y * controller._maxTranslateFactor;
+        if (position.y > maxY) {
+            position.y = maxY;
+        }
+        if (position.y < -maxY) {
+            position.y = -maxY;
+        }
+    }
 
     /**
      * Translates the camera's position by <code>amount</code> along <code>direction</code>.
@@ -98,8 +124,13 @@ define([
      * @see CameraController#moveDown
      */
     CameraController.prototype.move = function(direction, amount) {
-        var newPosition = this._camera.position.add(direction.multiplyByScalar(amount));
-        this._camera.position = newPosition;
+        var camera = this._camera;
+        var newPosition = camera.position.add(direction.multiplyByScalar(amount));
+        camera.position = newPosition;
+
+        if (this._mode === SceneMode.SCENE2D) {
+            clampMove2D(this, camera.position);
+        }
     };
 
     /**
@@ -263,15 +294,42 @@ define([
      * @see CameraController#lookRight
      */
     CameraController.prototype.look = function(axis, angle) {
-        var a = Cartesian3.clone(axis);
         var turnAngle = defaultValue(angle, this.defaultLookAmount);
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(a, turnAngle));
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle));
         var direction = rotation.multiplyByVector(this._camera.direction);
         var up = rotation.multiplyByVector(this._camera.up);
         var right = rotation.multiplyByVector(this._camera.right);
         this._camera.direction = direction;
         this._camera.up = up;
         this._camera.right = right;
+    };
+
+    /**
+     * Rotate the camera counter-clockwise around its direction vector by amount, in radians.
+     *
+     * @memberof CameraController
+     *
+     * @param {Number} amount The amount, in radians, to rotate by.
+     *
+     * @see CameraController#twistRight
+     */
+    CameraController.prototype.twistLeft = function(amount) {
+        amount = defaultValue(amount, this.defaultLookAmount);
+        this.look(this._camera.direction, amount);
+    };
+
+    /**
+     * Rotate the camera clockwise around its direction vector by amount, in radians.
+     *
+     * @memberof CameraController
+     *
+     * @param {Number} amount The amount, in radians, to rotate by.
+     *
+     * @see CameraController#twistLeft
+     */
+    CameraController.prototype.twistRight = function(amount) {
+        amount = defaultValue(amount, this.defaultLookAmount);
+        this.look(this._camera.direction, -amount);
     };
 
     /**
@@ -332,8 +390,20 @@ define([
     };
 
     function moveVertical(controller, angle) {
-        var p = controller._camera.position.normalize();
-        if (typeof controller.constrainedAxis !== 'undefined' && !p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2)) {
+        if (typeof controller.constrainedAxis !== 'undefined') {
+            var position = controller._camera.position;
+            var p = position.normalize();
+
+            if ((p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2) && angle < 0) ||
+                    (p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2) && angle > 0)) {
+                return;
+            }
+
+            var theta = Math.acos(controller.constrainedAxis.dot(p)) + angle;
+            if (theta < 0 || theta > Math.PI) {
+                return;
+            }
+
             var dot = p.dot(controller.constrainedAxis.normalize());
             if (CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0) {
                 return;
@@ -401,6 +471,12 @@ define([
 
         var newRight = frustum.right - amount;
         var newLeft = frustum.left + amount;
+
+        var maxRight = controller._maxCoord.x * controller._maxZoomFactor;
+        if (frustum.right > maxRight) {
+            newRight = maxRight;
+            newLeft = -maxRight;
+        }
 
         if (newRight > newLeft) {
             var ratio = frustum.top / frustum.right;

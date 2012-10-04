@@ -152,8 +152,6 @@ define([
         this._translateFactor = 1.0;
         this._minimumZoomRate = 20.0;
         this._maximumZoomRate = FAR;
-        this._maxZoomFactor = 2.5;
-        this._maxTranslateFactor = 1.5;
     };
 
     /**
@@ -342,70 +340,18 @@ define([
     }
 
     function translate2D(controller, movement) {
-        var frustum = controller._camera.frustum;
-
-        var width = controller._canvas.clientWidth;
-        var height = controller._canvas.clientHeight;
-
-        var start = new Cartesian2();
-        start.x = (movement.startPosition.x / width) * (frustum.right - frustum.left) + frustum.left;
-        start.y = ((height - movement.startPosition.y) / height) * (frustum.top - frustum.bottom) + frustum.bottom;
-
-        var end = new Cartesian2();
-        end.x = (movement.endPosition.x / width) * (frustum.right - frustum.left) + frustum.left;
-        end.y = ((height - movement.endPosition.y) / height) * (frustum.top - frustum.bottom) + frustum.bottom;
-
-        var camera = controller._camera;
-        var right = camera.right;
-        var up = camera.up;
-        var position;
-        var newPosition;
+        var start = controller._camera.getPickRay(movement.startPosition).origin;
+        var end = controller._camera.getPickRay(movement.endPosition).origin;
 
         var distance = start.subtract(end);
-        if (distance.x !== 0) {
-            position = camera.position;
-            newPosition = position.add(right.multiplyByScalar(distance.x));
-
-            var maxX = controller._maxCoord.x * controller._maxTranslateFactor;
-            if (newPosition.x > maxX) {
-                newPosition.x = maxX;
-            }
-            if (newPosition.x < -maxX) {
-                newPosition.x = -maxX;
-            }
-
-            camera.position = newPosition;
-        }
-        if (distance.y !== 0) {
-            position = camera.position;
-            newPosition = position.add(up.multiplyByScalar(distance.y));
-
-            var maxY = controller._maxCoord.y * controller._maxTranslateFactor;
-            if (newPosition.y > maxY) {
-                newPosition.y = maxY;
-            }
-            if (newPosition.y < -maxY) {
-                newPosition.y = -maxY;
-            }
-
-            camera.position = newPosition;
-        }
+        controller._camera.controller.moveRight(distance.x);
+        controller._camera.controller.moveUp(distance.y);
     }
 
     function zoom2D(controller, movement) {
         var camera = controller._camera;
         var mag = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
         handleZoom(controller, movement, controller._zoomFactor2D, mag);
-
-        var maxRight = controller._maxCoord.x * controller._maxZoomFactor;
-        if (camera.frustum.right > maxRight) {
-            var frustum = camera.frustum;
-            var ratio = frustum.top / frustum.right;
-            frustum.right = maxRight;
-            frustum.left = -maxRight;
-            frustum.top = frustum.right * ratio;
-            frustum.bottom = -frustum.top;
-        }
     }
 
     function twist2D(controller, movement) {
@@ -433,9 +379,7 @@ define([
         var theta = endTheta - startTheta;
 
         var camera = controller._camera;
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(camera.direction, theta));
-        camera.up = rotation.multiplyByVector(camera.up);
-        camera.right = camera.direction.cross(camera.up);
+        camera.controller.twistLeft(theta);
     }
 
     function update2D(controller) {
@@ -538,29 +482,27 @@ define([
 
     function translateCV(controller, movement) {
         var camera = controller._camera;
-        var sign = (camera.direction.dot(Cartesian3.UNIT_Z) >= 0) ? 1.0 : -1.0;
 
         var startRay = camera.getPickRay(movement.startPosition);
         var endRay = camera.getPickRay(movement.endPosition);
+        var normal = Cartesian3.UNIT_X;
 
-        var normal = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(Cartesian4.UNIT_X));
-
-        var position = new Cartesian4(startRay.origin.x, startRay.origin.y, startRay.origin.z, 1.0);
-        position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(position));
-        var direction = new Cartesian4(startRay.direction.x, startRay.direction.y, startRay.direction.z, 0.0);
-        direction = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(direction));
-        var scalar = sign * normal.dot(position) / normal.dot(direction);
+        var position = startRay.origin;
+        var direction = startRay.direction;
+        var scalar = -normal.dot(position) / normal.dot(direction);
         var startPlanePos = position.add(direction.multiplyByScalar(scalar));
 
-        position = new Cartesian4(endRay.origin.x, endRay.origin.y, endRay.origin.z, 1.0);
-        position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(position));
-        direction = new Cartesian4(endRay.direction.x, endRay.direction.y, endRay.direction.z, 0.0);
-        direction = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(direction));
-        scalar = sign * normal.dot(position) / normal.dot(direction);
+        position = endRay.origin;
+        direction = endRay.direction;
+        scalar = -normal.dot(position) / normal.dot(direction);
         var endPlanePos = position.add(direction.multiplyByScalar(scalar));
 
         var diff = startPlanePos.subtract(endPlanePos);
-        camera.position = camera.position.add(diff);
+        diff = new Cartesian3(diff.y, diff.z, diff.x);
+        var mag = diff.magnitude();
+        if (mag > CesiumMath.EPSILON6) {
+            camera.controller.move(diff.normalize(), mag);
+        }
     }
 
     function correctPositionCV(controller)
@@ -795,11 +737,6 @@ define([
             var deltaPhi = startPhi - endPhi;
             var deltaTheta = startTheta - endTheta;
 
-            var theta = Math.acos(camera.position.z / camera.position.magnitude()) + deltaTheta;
-            if (theta < 0 || theta > Math.PI) {
-                deltaTheta = 0;
-            }
-
             camera.controller.rotateRight(deltaPhi);
             camera.controller.rotateUp(deltaTheta);
         }
@@ -880,65 +817,36 @@ define([
     function look3D(controller, movement) {
         var camera = controller._camera;
 
-        var width = controller._canvas.clientWidth;
-        var height = controller._canvas.clientHeight;
+        var start = new Cartesian2(movement.startPosition.x, 0);
+        var end = new Cartesian2(movement.endPosition.x, 0);
+        start = camera.getPickRay(start).direction;
+        end = camera.getPickRay(end).direction;
 
-        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
-        var tanTheta = camera.frustum.aspectRatio * tanPhi;
-        var near = camera.frustum.near;
-
-        var startNDC = new Cartesian2((2.0 / width) * movement.startPosition.x - 1.0, (2.0 / height) * (height - movement.startPosition.y) - 1.0);
-        var endNDC = new Cartesian2((2.0 / width) * movement.endPosition.x - 1.0, (2.0 / height) * (height - movement.endPosition.y) - 1.0);
-
-        var nearCenter = camera.position.add(camera.direction.multiplyByScalar(near));
-
-        var startX = camera.right.multiplyByScalar(startNDC.x * near * tanTheta);
-        startX = nearCenter.add(startX).subtract(camera.position).normalize();
-        var endX = camera.right.multiplyByScalar(endNDC.x * near * tanTheta);
-        endX = nearCenter.add(endX).subtract(camera.position).normalize();
-
-        var dot = startX.dot(endX);
         var angle = 0.0;
-        var axis = (typeof controller._horizontalRotationAxis !== 'undefined') ? controller._horizontalRotationAxis : camera.up;
-        axis = (movement.startPosition.x > movement.endPosition.x) ? axis : axis.negate();
-        axis = axis.normalize();
+        var dot = start.dot(end);
         if (dot < 1.0) { // dot is in [0, 1]
-            angle = -Math.acos(dot);
+            angle = Math.acos(dot);
         }
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle));
-
-        if (1.0 - Math.abs(camera.direction.dot(axis)) > CesiumMath.EPSILON6) {
-            camera.direction = rotation.multiplyByVector(camera.direction);
-        }
-
-        if (1.0 - Math.abs(camera.up.dot(axis)) > CesiumMath.EPSILON6) {
-            camera.up = rotation.multiplyByVector(camera.up);
+        angle = (movement.startPosition.x > movement.endPosition.x) ? -angle : angle;
+        var rotationAxis = controller._horizontalRotationAxis;
+        if (typeof rotationAxis !== 'undefined') {
+            camera.controller.look(rotationAxis, angle);
+        } else {
+            camera.controller.lookLeft(angle);
         }
 
-        var startY = camera.up.multiplyByScalar(startNDC.y * near * tanPhi);
-        startY = nearCenter.add(startY).subtract(camera.position).normalize();
-        var endY = camera.up.multiplyByScalar(endNDC.y * near * tanPhi);
-        endY = nearCenter.add(endY).subtract(camera.position).normalize();
+        start = new Cartesian2(0, movement.startPosition.y);
+        end = new Cartesian2(0, movement.endPosition.y);
+        start = camera.getPickRay(start).direction;
+        end = camera.getPickRay(end).direction;
 
-        dot = startY.dot(endY);
         angle = 0.0;
-        axis = startY.cross(endY);
-        if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
-            angle = -Math.acos(dot);
-        } else { // no rotation
-            axis = Cartesian3.UNIT_X;
+        dot = start.dot(end);
+        if (dot < 1.0) { // dot is in [0, 1]
+            angle = Math.acos(dot);
         }
-        rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle));
-
-        if (1.0 - Math.abs(camera.direction.dot(axis)) > CesiumMath.EPSILON6) {
-            camera.direction = rotation.multiplyByVector(camera.direction);
-        }
-
-        if (1.0 - Math.abs(camera.up.dot(axis)) > CesiumMath.EPSILON6) {
-            camera.up = rotation.multiplyByVector(camera.up);
-        }
-
-        camera.right = camera.direction.cross(camera.up);
+        angle = (movement.startPosition.y > movement.endPosition.y) ? -angle : angle;
+        camera.controller.lookUp(angle);
     }
 
     function update3D(controller) {
