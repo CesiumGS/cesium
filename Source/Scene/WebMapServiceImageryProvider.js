@@ -90,7 +90,12 @@ define([
         var srs = 'EPSG:4326';
 
         var url = imageryProvider._url;
-        url += '?service=WMS&version=1.1.0&request=GetMap&format=image%2Fjpeg&styles=&width=256&height=256';
+        if (url.indexOf('?') >= 0) {
+            url += '&';
+        } else {
+            url += '?';
+        }
+        url += 'service=WMS&version=1.1.0&request=GetMap&format=image%2Fjpeg&styles=&width=256&height=256';
         url += '&layers=' + imageryProvider._layerName;
         url += '&bbox=' + bbox;
         url += '&srs=' + srs;
