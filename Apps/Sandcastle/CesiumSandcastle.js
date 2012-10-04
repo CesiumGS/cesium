@@ -37,6 +37,7 @@ require({
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/form/TextBox',
+        'dijit/form/Textarea',
         'dijit/Menu',
         'dijit/MenuBar',
         'dijit/PopupMenuBarItem',
@@ -201,6 +202,20 @@ require({
         }).then(function (value) {
             local.docTypes = value;
         });
+
+        var decoderSpan = document.createElement('span');
+        function encodeHTML(text) {
+            decoderSpan.textContent = text;
+            text = decoderSpan.innerHTML;
+            decoderSpan.innerHTML = '';
+            return text;
+        }
+        function decodeHTML(text) {
+            decoderSpan.innerHTML = text;
+            text = decoderSpan.textContent;
+            decoderSpan.innerHTML = '';
+            return text;
+        }
 
         function highlightRun() {
             domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
@@ -577,6 +592,7 @@ require({
 
         function loadFromGallery(demo) {
             document.getElementById('saveAsFile').download = demo.name + '.html';
+            registry.byId('description').set('value', demo.description);
             var pos = demo.code.indexOf('<body');
             pos = demo.code.indexOf('>', pos);
             var body = demo.code.substring(pos + 2);
@@ -710,7 +726,8 @@ require({
 
             var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
             currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
-            html = html.replace('<title>', '<meta name="description" content="' + demoTooltips[currentDemoName].get('content') + '">\n    <title>');
+            var description = encodeHTML(decodeHTML(registry.byId('description').get('value')));
+            html = html.replace('<title>', '<meta name="description" content="' + description + '">\n    <title>');
 
             var octetBlob = new Blob([ html ], { 'type' : 'application/octet-stream', 'endings' : 'native' });
             var octetBlobURL = getURL.createObjectURL(octetBlob);
@@ -797,6 +814,26 @@ require({
                     }
                 }
 
+                demo.bucketTitle = 'Cesium + Dojo';
+                pos = value.indexOf('data-sandcastle-title="');
+                if (pos > 0) {
+                    pos += 23;
+                    pos2 = value.indexOf('"', pos);
+                    if (pos2 > pos) {
+                        demo.bucketTitle = value.substring(pos, pos2);
+                    }
+                }
+
+                demo.description = '';
+                pos = value.indexOf('<meta name="description" content="');
+                if (pos > 0) {
+                    pos += 34;
+                    pos2 = value.indexOf('">', pos);
+                    if (pos2 > pos) {
+                        demo.description = value.substring(pos, pos2);
+                    }
+                }
+
                 // Select the demo to load upon opening based on the query parameter.
                 if (typeof queryObject.src !== 'undefined') {
                     if (demo.name === window.decodeURIComponent(queryObject.src.replace('.html', ''))) {
@@ -808,23 +845,19 @@ require({
                 }
 
                 // Create a tooltip containing the demo's description.
-                var start = value.indexOf('<meta name="description" content="');
-                if (start !== -1) {
-                    var end = value.indexOf('">', start);
-                    demoTooltips[demo.name] = new TooltipDialog({
-                        id: demo.name + 'TooltipDialog',
-                        style: 'width: 200px; font-size: 12px;',
-                        content: value.substring(start + 34, end)
-                    });
+                demoTooltips[demo.name] = new TooltipDialog({
+                    id: demo.name + 'TooltipDialog',
+                    style: 'width: 200px; font-size: 12px;',
+                    content: '<div class="demoTooltipType">' + demo.bucketTitle + '</div>' + demo.description
+                });
 
-                    on(dom.byId(demo.name), 'mouseover', function() {
-                        scheduleGalleryTooltip(demo);
-                    });
+                on(dom.byId(demo.name), 'mouseover', function() {
+                    scheduleGalleryTooltip(demo);
+                });
 
-                    on(dom.byId(demo.name), 'mouseout', function() {
-                        closeGalleryTooltip();
-                    });
-                }
+                on(dom.byId(demo.name), 'mouseout', function() {
+                    closeGalleryTooltip();
+                });
             });
         }
 
@@ -887,7 +920,8 @@ require({
 
             if (!queryInGalleryIndex) {
                 gallery_demos.push({
-                    name: queryName
+                    name: queryName,
+                    description: ''
                 });
                 addFileToGallery(gallery_demos.length - 1);
             }
