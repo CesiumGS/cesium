@@ -469,8 +469,8 @@ define([
         //We use Cartesian2 instead of 3 here because Z must be constant in 2D mode.
         Cartesian2.clone(controller._projection.project(cartographic), camera.position);
         camera.direction = Cartesian3.UNIT_Z.negate();
-        camera.up = Cartesian3.UNIT_Y;
-        camera.right = Cartesian3.UNIT_X;
+        camera.up = Cartesian3.UNIT_Y.clone();
+        camera.right = Cartesian3.UNIT_X.clone();
     }
 
     function setPositionCartographicCV(controller, cartographic) {
@@ -478,8 +478,8 @@ define([
         var projection = controller._projection;
         camera.position = projection.project(cartographic);
         camera.direction = Cartesian3.UNIT_Z.negate();
-        camera.up = Cartesian3.UNIT_Y;
-        camera.right = Cartesian3.UNIT_X;
+        camera.up = Cartesian3.UNIT_Y.clone();
+        camera.right = Cartesian3.UNIT_X.clone();
     }
 
     function setPositionCartographic3D(controller, cartographic) {
