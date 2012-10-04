@@ -6,6 +6,7 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/EquidistantCylindricalProjection',
          'Core/Math',
+         'Core/Matrix4',
          'Scene/Camera',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode'
@@ -16,6 +17,7 @@ defineSuite([
          Ellipsoid,
          EquidistantCylindricalProjection,
          CesiumMath,
+         Matrix4,
          Camera,
          OrthographicFrustum,
          SceneMode) {
@@ -187,6 +189,10 @@ defineSuite([
         camera.direction = Cartesian3.UNIT_Z.negate();
         camera.up = Cartesian3.UNIT_Y.clone();
         camera.right = Cartesian3.UNIT_X.clone();
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
 
         return frameState;
     }
@@ -335,5 +341,145 @@ defineSuite([
         expect(camera.direction).toEqual(Cartesian3.UNIT_Z.negate());
         expect(camera.up.equalsEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON15)).toEqual(true);
         expect(camera.right.equalsEpsilon(Cartesian3.UNIT_Y.negate(), CesiumMath.EPSILON15)).toEqual(true);
+    });
+
+    function setUpCV() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var frameState = {
+            mode : SceneMode.COLUMBUS_VIEW,
+            scene2D : {
+                projection : projection
+            }
+        };
+
+        var maxRadii = ellipsoid.getMaximumRadius();
+        camera.position = new Cartesian3(0.0, 0.0, maxRadii);
+        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.up = Cartesian3.UNIT_Y.clone();
+        camera.right = Cartesian3.UNIT_X.clone();
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
+
+        return frameState;
+    }
+
+    it('translate right in Columbus view', function() {
+        var frameState = setUpCV();
+        var position = camera.position;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+        expect(position.x).toBeLessThan(camera.position.x);
+        expect(position.y).toEqual(camera.position.y);
+        expect(position.z).toEqual(camera.position.z);
+    });
+
+    it('translate left in Columbus view', function() {
+        var frameState = setUpCV();
+        var position = camera.position;
+        var startPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+        expect(position.x).toBeGreaterThan(camera.position.x);
+        expect(position.y).toEqual(camera.position.y);
+        expect(position.z).toEqual(camera.position.z);
+    });
+
+    it('translate up in Columbus view', function() {
+        var frameState = setUpCV();
+        var position = camera.position;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+
+        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+        expect(position.y).toBeGreaterThan(camera.position.y);
+        expect(position.x).toEqual(camera.position.x);
+        expect(position.z).toEqual(camera.position.z);
+    });
+
+    it('translate down in Columbus view', function() {
+        var frameState = setUpCV();
+        var position = camera.position;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+        expect(position.y).toBeLessThan(camera.position.y);
+        expect(position.x).toEqual(camera.position.x);
+        expect(position.z).toEqual(camera.position.z);
+    });
+
+    it('zoom in Columbus view', function() {
+        var frameState = setUpCV();
+        var position = camera.position;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController(frameState);
+        expect(position.x).toEqual(camera.position.x);
+        expect(position.y).toEqual(camera.position.y);
+        expect(position.z).toBeGreaterThan(camera.position.z);
+    });
+
+    it('zoom out in Columbus view', function() {
+        var frameState = setUpCV();
+        var position = camera.position;
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+
+        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        updateController(frameState);
+        expect(position.x).toEqual(camera.position.x);
+        expect(position.y).toEqual(camera.position.y);
+        expect(position.z).toBeLessThan(camera.position.z);
+    });
+
+    it('zoom in Columbus view with wheel', function() {
+        var frameState = setUpCV();
+        var position = camera.position;
+
+        canvas.fireEvents('mousewheel', {
+            wheelDelta : 120
+        });
+        updateController(frameState);
+        expect(position.x).toEqual(camera.position.x);
+        expect(position.y).toEqual(camera.position.y);
+        expect(position.z).toBeGreaterThan(camera.position.z);
+    });
+
+    it('zoom out in Columbus view with wheel', function() {
+        var frameState = setUpCV();
+        var position = camera.position;
+
+        canvas.fireEvents('mousewheel', {
+            wheelDelta : -120
+        });
+        updateController(frameState);
+        expect(position.x).toEqual(camera.position.x);
+        expect(position.y).toEqual(camera.position.y);
+        expect(position.z).toBeLessThan(camera.position.z);
+    });
+
+    it('rotates in Columbus view', function() {
+        var frameState = setUpCV();
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        var endPosition = new Cartesian2(3 * canvas.clientWidth / 8, 3 * canvas.clientHeight / 8);
+
+        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        updateController(frameState);
+        expect(camera.position.normalize().dot(Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
+        expect(camera.direction.dot(Cartesian3.UNIT_Z)).toBeLessThan(0.0);
+        expect(camera.up.dot(Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
+        expect(camera.right.dot(Cartesian3.UNIT_Z)).toBeLessThan(CesiumMath.EPSILON16);
     });
 });

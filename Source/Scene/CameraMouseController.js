@@ -671,6 +671,8 @@ define([
         var rotating = rotate.isMoving() && rotate.getMovement();
         var zoom = controller._zoomHandler;
         var zoomimg = zoom && zoom.isMoving();
+        var wheelZoom = controller._zoomWheel;
+        var wheelZooming = wheelZoom.isMoving();
 
         var buttonDown = translate.isButtonDown() || rotate.isButtonDown() ||
             rotate.isButtonDown() || controller._lookHandler.isButtonDown();
@@ -697,10 +699,16 @@ define([
         if (controller.enableZoom) {
             if (zoomimg) {
                 zoomCV(controller, zoom.getMovement());
+            } else if (wheelZooming) {
+                zoomCV(controller, wheelZoom.getMovement());
             }
 
             if (zoom && !zoomimg && controller.inertiaZoom < 1.0) {
                 maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
+            }
+
+            if (!wheelZooming && controller.inertiaZoom < 1.0) {
+                maintainInertia(wheelZoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaWheelZoomMovement');
             }
         }
 
