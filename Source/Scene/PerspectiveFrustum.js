@@ -54,15 +54,15 @@ define([
          * The distance of the near plane.
          * @type {Number}
          */
-        this.near = undefined;
-        this._near = undefined;
+        this.near = 1.0;
+        this._near = this.near;
 
         /**
          * The distance of the far plane.
          * @type {Number}
          */
-        this.far = undefined;
-        this._far = undefined;
+        this.far = 500000000.0;
+        this._far = this.far;
     };
 
     /**
