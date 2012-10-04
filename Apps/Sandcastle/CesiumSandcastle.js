@@ -576,6 +576,7 @@ require({
         }
 
         function loadFromGallery(demo) {
+            document.getElementById('saveAsFile').download = demo.name + '.html';
             var pos = demo.code.indexOf('<body');
             pos = demo.code.indexOf('>', pos);
             var body = demo.code.substring(pos + 2);
