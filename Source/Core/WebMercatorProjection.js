@@ -72,18 +72,29 @@ define([
 
     /**
      * Converts geodetic ellipsoid coordinates to the equivalent web mercator
-     * X, Y coordinates expressed in meters and returned in a {@link Cartesian2}.
+     * X, Y, Z coordinates expressed in meters and returned in a {@link Cartesian3}.
      *
      * @memberof WebMercatorProjection
      *
      * @param {Cartographic} cartographic The cartographic coordinates in radians.
-     * @returns {Cartesian2} The equivalent web mercator X, Y coordinates, in meters.
+     * @param {Cartesian3} result The instance to which to copy the result, or undefined if a
+     *        new instance should be created.
+     * @returns {Cartesian3} The equivalent web mercator X, Y, Z coordinates, in meters.
      */
-    WebMercatorProjection.prototype.project = function(cartographic) {
+    WebMercatorProjection.prototype.project = function(cartographic, result) {
         var semimajorAxis = this._semimajorAxis;
-        return new Cartesian3(cartographic.longitude * semimajorAxis,
-                              WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographic.latitude) * semimajorAxis,
-                              cartographic.height);
+        var x = cartographic.longitude * semimajorAxis;
+        var y = WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographic.latitude) * semimajorAxis;
+        var z = cartographic.height;
+
+        if (typeof result === 'undefined') {
+            return new Cartesian3(x, y, z);
+        }
+
+        result.x = x;
+        result.y = y;
+        result.z = z;
+        return result;
     };
 
     /**
@@ -93,13 +104,24 @@ define([
      * @memberof WebMercatorProjection
      *
      * @param {Cartesian2} cartesian The web mercator coordinates in meters.
+     * @param {Cartographic} result The instance to which to copy the result, or undefined if a
+     *        new instance should be created.
      * @returns {Cartographic} The equivalent cartographic coordinates.
      */
-    WebMercatorProjection.prototype.unproject = function(cartesian) {
+    WebMercatorProjection.prototype.unproject = function(cartesian, result) {
         var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
         var longitude = cartesian.x * oneOverEarthSemimajorAxis;
         var latitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(cartesian.y * oneOverEarthSemimajorAxis);
-        return new Cartographic(longitude, latitude, cartesian.z);
+        var height = cartesian.z;
+
+        if (typeof result === 'undefined') {
+            return new Cartographic(longitude, latitude, height);
+        }
+
+        result.longitude = longitude;
+        result.latitude = latitude;
+        result.height = height;
+        return result;
     };
 
     return WebMercatorProjection;

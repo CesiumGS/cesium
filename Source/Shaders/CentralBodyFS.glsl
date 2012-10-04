@@ -1,5 +1,5 @@
 //#define SHOW_TILE_BOUNDARIES
-#define SHOW_TEXTURE_BOUNDARIES
+//#define SHOW_TEXTURE_BOUNDARIES
 
 #if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
