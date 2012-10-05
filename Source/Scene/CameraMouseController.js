@@ -12,6 +12,7 @@ define([
         '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
+        '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Transforms',
@@ -33,6 +34,7 @@ define([
         IntersectionTests,
         CesiumMath,
         Matrix3,
+        Matrix4,
         Quaternion,
         Ray,
         Transforms,
@@ -138,7 +140,6 @@ define([
         this._frustum = undefined;
         this._maxCoord = undefined;
 
-        this._transform = this._camera.transform.clone();
         this._horizontalRotationAxis = undefined;
 
         // Constants, Make any of these public?
@@ -378,8 +379,7 @@ define([
         }
         var theta = endTheta - startTheta;
 
-        var camera = controller._camera;
-        camera.controller.twistLeft(theta);
+        controller._camera.controller.twistLeft(theta);
     }
 
     function update2D(controller) {
@@ -516,7 +516,6 @@ define([
         var center = position.add(direction.multiplyByScalar(scalar));
         center = new Cartesian4(center.x, center.y, center.z, 1.0);
         var centerWC = camera.transform.multiplyByVector(center);
-        controller._transform.setColumn(3, centerWC, controller._transform);
 
         var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
         var positionWC = camera.transform.multiplyByVector(cameraPosition);
@@ -563,43 +562,29 @@ define([
 
     function rotateCV(controller, movement) {
         var camera = controller._camera;
+        var ray = camera.getPickRay(new Cartesian2(controller._canvas.clientWidth / 2, controller._canvas.clientHeight / 2));
+        var normal = Cartesian3.UNIT_X;
 
-        var position = camera.getPositionWC();
-        var up = camera.getUpWC();
-        var right = camera.getRightWC();
-        var direction = camera.getDirectionWC();
+        var position = ray.origin;
+        var direction = ray.direction;
+        var scalar = -normal.dot(position) / normal.dot(direction);
+        var center = position.add(direction.multiplyByScalar(scalar));
 
-        var oldTransform = camera.transform;
+        var transform = new Matrix4(0.0, 0.0, 1.0, center.x,
+                                    1.0, 0.0, 0.0, center.y,
+                                    0.0, 1.0, 0.0, center.z,
+                                    0.0, 0.0, 0.0, 1.0);
+
         var oldEllipsoid = controller._ellipsoid;
         var oldAxis = controller.constrainedAxis;
 
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-        controller.constrainedAxis = Cartesian3.UNIT_X;
+        controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-        camera.transform = controller._transform;
-
-        var invTransform = camera.getInverseTransform();
-        camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-        camera.up = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-        camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-        camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
-
-        rotate3D(controller, movement);
-
-        position = camera.getPositionWC();
-        up = camera.getUpWC();
-        right = camera.getRightWC();
-        direction = camera.getDirectionWC();
+        rotate3D(controller, movement, transform);
 
         controller.constrainedAxis = oldAxis;
         controller.setEllipsoid(oldEllipsoid);
-        camera.transform = oldTransform;
-        var transform = camera.getInverseTransform();
-
-        camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-        camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-        camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-        camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
     }
 
     function zoomCV(controller, movement) {
@@ -677,7 +662,7 @@ define([
         }
     }
 
-    function rotate3D(controller, movement) {
+    function rotate3D(controller, movement, transform) {
         controller._camera.controller.constrainedAxis = controller.constrainedAxis;
         var position = controller._camera.position;
         var rho = position.magnitude();
@@ -697,8 +682,8 @@ define([
         var deltaPhi = -rotateRate * phiWindowRatio * Math.PI * 2.0;
         var deltaTheta = -rotateRate * thetaWindowRatio * Math.PI;
 
-        controller._camera.controller.rotateRight(deltaPhi);
-        controller._camera.controller.rotateUp(deltaTheta);
+        controller._camera.controller.rotateRight(deltaPhi, transform);
+        controller._camera.controller.rotateUp(deltaTheta, transform);
     }
 
     function pan3D(controller, movement) {
