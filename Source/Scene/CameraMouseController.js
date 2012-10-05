@@ -761,15 +761,6 @@ define([
 
         controller.constrainedAxis = oldAxis;
         controller.setEllipsoid(oldEllipsoid);
-
-        position = ellipsoid.cartesianToCartographic(camera.position);
-        if (position.height < maxHeight + 1.0) {
-            position.height = maxHeight + 1.0;
-            camera.position = ellipsoid.cartographicToCartesian(position);
-            camera.direction = Cartesian3.fromCartesian4(transform.getColumn(3).subtract(camera.position)).normalize();
-            camera.right = camera.position.negate().cross(camera.direction).normalize();
-            camera.up = camera.right.cross(camera.direction);
-        }
     }
 
     function look3D(controller, movement) {

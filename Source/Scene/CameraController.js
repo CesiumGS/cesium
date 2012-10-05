@@ -334,6 +334,55 @@ define([
         this.look(this._camera.direction, -amount);
     };
 
+    function setTransform(controller, transform) {
+        var camera = controller._camera;
+        var oldTransform;
+        if (typeof transform !== 'undefined') {
+            var position = camera.getPositionWC();
+            var up = camera.getUpWC();
+            var right = camera.getRightWC();
+            var direction = camera.getDirectionWC();
+
+            oldTransform = camera.transform;
+            camera.transform = transform.multiply(oldTransform);
+
+            var invTransform = camera.getInverseTransform();
+            camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+            camera.up = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+            camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+            camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+        }
+        return oldTransform;
+    }
+
+    function revertTransform(controller, transform) {
+        if (typeof transform !== 'undefined') {
+            var camera = controller._camera;
+            var position = camera.getPositionWC();
+            var up = camera.getUpWC();
+            var right = camera.getRightWC();
+            var direction = camera.getDirectionWC();
+
+            camera.transform = transform;
+            transform = camera.getInverseTransform();
+
+            camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+            camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+            camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+            camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+
+            var ellipsoid = controller._projection.getEllipsoid();
+            position = ellipsoid.cartesianToCartographic(camera.position);
+            if (position.height < controller._maxHeight + 1.0) {
+                position.height = controller._maxHeight + 1.0;
+                camera.position = ellipsoid.cartographicToCartesian(position);
+                camera.direction = Cartesian3.fromCartesian4(transform.getColumn(3).subtract(camera.position)).normalize();
+                camera.right = camera.position.negate().cross(camera.direction).normalize();
+                camera.up = camera.right.cross(camera.direction);
+            }
+        }
+    }
+
     /**
      * Rotates the camera around <code>axis</code> by <code>angle</code>. The distance
      * of the camera's position to the center of the camera's reference frame remains the same.
@@ -356,48 +405,13 @@ define([
         var turnAngle = defaultValue(angle, this.defaultRotateAmount);
         var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(a, turnAngle));
 
-        var position;
-        var direction;
-        var right;
-        var up;
-        var oldTransform;
-
-        if (typeof transform !== 'undefined') {
-            position = camera.getPositionWC();
-            up = camera.getUpWC();
-            right = camera.getRightWC();
-            direction = camera.getDirectionWC();
-
-            oldTransform = camera.transform;
-            camera.transform = transform.multiply(oldTransform);
-
-            var invTransform = camera.getInverseTransform();
-            camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-            camera.up = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-            camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-            camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
-        }
-
+        var oldTransform = setTransform(this, transform);
         camera.position = rotation.multiplyByVector(camera.position);
         camera.direction = rotation.multiplyByVector(camera.direction);
         camera.up = rotation.multiplyByVector(camera.up);
         camera.right = camera.direction.cross(camera.up);
         camera.up = camera.right.cross(camera.direction);
-
-        if (typeof transform !== 'undefined') {
-            position = camera.getPositionWC();
-            up = camera.getUpWC();
-            right = camera.getRightWC();
-            direction = camera.getDirectionWC();
-
-            camera.transform = oldTransform;
-            transform = camera.getInverseTransform();
-
-            camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-            camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-            camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-            camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
-        }
+        revertTransform(this, oldTransform);
     };
 
     /**
@@ -432,31 +446,10 @@ define([
 
     function rotateVertical(controller, angle, transform) {
         var camera = controller._camera;
-
-        var position;
-        var direction;
-        var right;
-        var up;
-        var oldTransform;
-
-        if (typeof transform !== 'undefined') {
-            position = camera.getPositionWC();
-            up = camera.getUpWC();
-            right = camera.getRightWC();
-            direction = camera.getDirectionWC();
-
-            oldTransform = camera.transform;
-            camera.transform = transform.multiply(oldTransform);
-
-            var invTransform = camera.getInverseTransform();
-            camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-            camera.up = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-            camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-            camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
-        }
+        var oldTransform = setTransform(controller, transform);
 
         if (typeof controller.constrainedAxis !== 'undefined') {
-            position = camera.position;
+            var position = camera.position;
             var p = position.normalize();
 
             var theta = Math.acos(controller.constrainedAxis.dot(p)) + angle;
@@ -482,20 +475,7 @@ define([
             controller.rotate(controller._camera.right, angle);
         }
 
-        if (typeof transform !== 'undefined') {
-            position = camera.getPositionWC();
-            up = camera.getUpWC();
-            right = camera.getRightWC();
-            direction = camera.getDirectionWC();
-
-            camera.transform = oldTransform;
-            transform = camera.getInverseTransform();
-
-            camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-            camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-            camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-            camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
-        }
+        revertTransform(controller, oldTransform);
     }
 
     /**
