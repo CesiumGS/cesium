@@ -137,7 +137,10 @@ define([
      *
      * @memberof CameraController
      *
+     * @param {Cartesian3} direction The direction to move.
      * @param {Number} amount The amount to move.
+     *
+     * @exception {DeveloperError} direction is required.
      *
      * @see CameraController#moveBackward
      * @see CameraController#moveForward
@@ -147,6 +150,10 @@ define([
      * @see CameraController#moveDown
      */
     CameraController.prototype.move = function(direction, amount) {
+        if (typeof direction === 'undefined') {
+            throw new DeveloperError('direction is required.');
+        }
+
         var camera = this._camera;
         var newPosition = camera.position.add(direction.multiplyByScalar(amount));
         camera.position = newPosition;
@@ -311,12 +318,18 @@ define([
      * @param {Cartesian3} axis The axis to rotate around.
      * @param {Number} angle The angle, in radians, to rotate by.
      *
+     * @exception {DeveloperError} axis is required.
+     *
      * @see CameraController#lookUp
      * @see CameraController#lookDown
      * @see CameraController#lookLeft
      * @see CameraController#lookRight
      */
     CameraController.prototype.look = function(axis, angle) {
+        if (typeof axis === 'undefined') {
+            throw new DeveloperError('axis is required.');
+        }
+
         var turnAngle = defaultValue(angle, this.defaultLookAmount);
         var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle));
         var direction = rotation.multiplyByVector(this._camera.direction);
@@ -413,18 +426,30 @@ define([
      * @param {Cartesian3} axis The axis to rotate around given in world coordinates.
      * @param {Number} angle The angle, in radians, to rotate by. The direction of rotation is
      * determined by the sign of the angle.
+     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
+     *
+     * @exception {DeveloperError} axis is required.
      *
      * @see CameraController#rotateUp
      * @see CameraController#rotateDown
      * @see CameraController#rotateLeft
      * @see CameraController#rotateRight
+     *
+     * @example
+     * // Rotate about a point on the earth.
+     * var center = ellipsoid.cartographicToCartesian(cartographic);
+     * var transform = Matrix4.fromTranslation(center);
+     * controller.rotate(axis, angle, transform);
     */
     CameraController.prototype.rotate = function(axis, angle, transform) {
+        if (typeof axis === 'undefined') {
+            throw new DeveloperError('axis is required.');
+        }
+
         var camera = this._camera;
 
-        var a = Cartesian3.clone(axis);
         var turnAngle = defaultValue(angle, this.defaultRotateAmount);
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(a, turnAngle));
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle));
 
         var oldTransform = setTransform(this, transform);
         camera.position = rotation.multiplyByVector(camera.position);
@@ -441,6 +466,7 @@ define([
      * @memberof CameraController
      *
      * @param {Number} angle The angle to rotate in radians.
+     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateUp
      * @see CameraController#rotate
@@ -456,6 +482,7 @@ define([
      * @memberof CameraController
      *
      * @param {Number} angle The angle to rotate in radians.
+     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateDown
      * @see CameraController#rotate
@@ -499,6 +526,7 @@ define([
      * @memberof CameraController
      *
      * @param {Number} angle The angle to rotate in radians.
+     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateLeft
      * @see CameraController#rotate
@@ -514,6 +542,7 @@ define([
      * @memberof CameraController
      *
      * @param {Number} angle The angle to rotate in radians.
+     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateRight
      * @see CameraController#rotate
@@ -976,23 +1005,31 @@ define([
     /**
      * Transform a vector or point from world coordinates to the camera's reference frame.
      * @memberof CameraController
-     * @param {Cartesian4} vector The vector or point to transform.
+     * @param {Cartesian4} cartesian The vector or point to transform.
+     * @exception {DeveloperError} cartesian is required.
      * @returns {Cartesian4} The transformed vector or point.
      */
-    CameraController.prototype.worldToCameraCoordinates = function(vector) {
+    CameraController.prototype.worldToCameraCoordinates = function(cartesian) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required.');
+        }
         var transform = this._camera.getInverseTransform();
-        return transform.multiplyByVector(vector);
+        return transform.multiplyByVector(cartesian);
     };
 
     /**
      * Transform a vector or point from the camera's reference frame to world coordinates .
      * @memberof CameraController
      * @param {Cartesian4} vector The vector or point to transform.
+     * @exception {DeveloperError} cartesian is required.
      * @returns {Cartesian4} The transformed vector or point.
      */
-    CameraController.prototype.cameraToWorldCoordinates = function(vector) {
+    CameraController.prototype.cameraToWorldCoordinates = function(cartesian) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required.');
+        }
         var transform = this._camera.transform;
-        return transform.multiplyByVector(vector);
+        return transform.multiplyByVector(cartesian);
     };
 
     function createAnimation2D(controller) {

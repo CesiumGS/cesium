@@ -85,6 +85,12 @@ defineSuite([
         }).toThrow();
     });
 
+    it('move throws without an axis', function() {
+        expect(function() {
+            expect(controller.move());
+        }).toThrow();
+    });
+
     it('moves', function() {
         var direction = new Cartesian3(1.0, 1.0, 0.0).normalize();
         controller.move(direction, moveAmount);
@@ -142,6 +148,12 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
+    it('look throws without an axis', function() {
+        expect(function() {
+            expect(controller.look());
+        }).toThrow();
+    });
+
     it('looks', function() {
         controller.look(Cartesian3.UNIT_X, CesiumMath.PI);
         expect(camera.position).toEqual(position);
@@ -196,6 +208,12 @@ defineSuite([
         expect(camera.direction).toEqual(dir);
         expect(camera.up.equalsEpsilon(right, CesiumMath.EPSILON14)).toEqual(true);
         expect(camera.right.equalsEpsilon(up.negate(), CesiumMath.EPSILON15)).toEqual(true);
+    });
+
+    it('rotate throws without an axis', function() {
+        expect(function() {
+            expect(controller.rotate());
+        }).toThrow();
     });
 
     it('rotates up', function() {
@@ -737,12 +755,24 @@ defineSuite([
         expect(controller.getMagnitude()).toEqual(camera.position.magnitude());
     });
 
+    it('worldToCameraCoordinates throws without cartesian', function() {
+        expect(function() {
+            controller.worldToCameraCoordinates();
+        }).toThrow();
+    });
+
     it('transforms to the cameras reference frame', function() {
         camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
                                        1.0, 0.0, 0.0, 0.0,
                                        0.0, 1.0, 0.0, 0.0,
                                        0.0, 0.0, 0.0, 1.0);
         expect(controller.worldToCameraCoordinates(Cartesian4.UNIT_X)).toEqual(Cartesian4.UNIT_Z);
+    });
+
+    it('cameraToWorldCoordinates throws without cartesian', function() {
+        expect(function() {
+            controller.cameraToWorldCoordinates();
+        }).toThrow();
     });
 
     it('transforms from the cameras reference frame', function() {
