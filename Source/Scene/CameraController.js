@@ -338,7 +338,7 @@ define([
      */
     CameraController.prototype.twistLeft = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.direction, amount);
+        this.look(this._camera.direction, -amount);
     };
 
     /**
@@ -352,7 +352,7 @@ define([
      */
     CameraController.prototype.twistRight = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.direction, -amount);
+        this.look(this._camera.direction, amount);
     };
 
     function setTransform(controller, transform) {
@@ -599,8 +599,10 @@ define([
     };
 
     /**
-     * DOC_TBA
-     * @returns DOC_TBA
+     * Gets the magnitude of the camera position. In 3D, this is the vector magnitude. In 2D and
+     * Columbus view, this is the distance to the map.
+     * @memberof CameraController
+     * @returns {Number} The magnitude of the position.
      */
     CameraController.prototype.getMagnitude = function() {
         var camera = this._camera;
@@ -972,9 +974,10 @@ define([
     };
 
     /**
-     * DOC_TBA
-     * @param vector DOC_TBA
-     * @returns DOC_TBA
+     * Transform a vector or point from world coordinates to the camera's reference frame.
+     * @memberof CameraController
+     * @param {Cartesian4} vector The vector or point to transform.
+     * @returns {Cartesian4} The transformed vector or point.
      */
     CameraController.prototype.worldToCameraCoordinates = function(vector) {
         var transform = this._camera.getInverseTransform();
@@ -982,9 +985,10 @@ define([
     };
 
     /**
-     * DOC_TBA
-     * @param vector DOC_TBA
-     * @returns DOC_TBA
+     * Transform a vector or point from the camera's reference frame to world coordinates .
+     * @memberof CameraController
+     * @param {Cartesian4} vector The vector or point to transform.
+     * @returns {Cartesian4} The transformed vector or point.
      */
     CameraController.prototype.cameraToWorldCoordinates = function(vector) {
         var transform = this._camera.transform;
@@ -1122,8 +1126,9 @@ define([
     }
 
     /**
-     * DOC_TBA
-     * @returns DOC_TBA
+     * Create an animation to move the map into view. This method is only valid for 2D and Columbus modes.
+     * @memberof CameraController
+     * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      */
     CameraController.prototype.createCorrectPositionAnimation = function() {
         if (this._mode === SceneMode.SCENE2D) {

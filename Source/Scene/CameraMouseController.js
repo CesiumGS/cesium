@@ -308,7 +308,7 @@ define([
         }
         var theta = endTheta - startTheta;
 
-        controller._cameraController.twistLeft(theta);
+        controller._cameraController.twistRight(theta);
     }
 
     function update2D(controller) {
