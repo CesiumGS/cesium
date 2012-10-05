@@ -289,7 +289,7 @@ define([
      *    version=1.1.1
      *    request=GetMap
      *    styles=
-     *    format=image/png
+     *    format=image/jpeg
      *
      * @memberof WebMapServiceImageryProvider
      */
