@@ -604,11 +604,10 @@ define([
      * DOC_TBA
      * @returns DOC_TBA
      */
-    CameraController.prototype.getHeight = function() {
+    CameraController.prototype.getMagnitude = function() {
         var camera = this._camera;
         if (this._mode === SceneMode.SCENE3D) {
-            var ellipsoid = this._projection.getEllipsoid();
-            return ellipsoid.cartesianToCartographic(camera.position).height;
+            return camera.position.magnitude();
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
             return camera.position.z;
         } else if (this._mode === SceneMode.SCENE2D) {

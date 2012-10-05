@@ -281,7 +281,7 @@ define([
     }
 
     function zoom2D(controller, movement) {
-        handleZoom(controller, movement, controller._zoomFactor2D, controller._cameraController.getHeight());
+        handleZoom(controller, movement, controller._zoomFactor2D, controller._cameraController.getMagnitude());
     }
 
     function twist2D(controller, movement) {
@@ -415,6 +415,10 @@ define([
         controller.setEllipsoid(oldEllipsoid);
     }
 
+    function zoomCV(controller, movement) {
+        handleZoom(controller, movement, controller._zoomFactor2D, controller._cameraController.getMagnitude());
+    }
+
     function updateCV(controller) {
         var translate = controller._translateHandler;
         var translating = translate.isMoving() && translate.getMovement();
@@ -449,17 +453,17 @@ define([
 
         if (controller.enableZoom) {
             if (zoomimg) {
-                zoom3D(controller, zoom.getMovement());
+                zoomCV(controller, zoom.getMovement());
             } else if (wheelZooming) {
-                zoom3D(controller, wheelZoom.getMovement());
+                zoomCV(controller, wheelZoom.getMovement());
             }
 
             if (zoom && !zoomimg && controller.inertiaZoom < 1.0) {
-                maintainInertia(zoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
+                maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
             }
 
             if (!wheelZooming && controller.inertiaZoom < 1.0) {
-                maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
+                maintainInertia(wheelZoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaWheelZoomMovement');
             }
         }
 
@@ -491,7 +495,7 @@ define([
     function rotate3D(controller, movement, transform) {
         var cameraController = controller._cameraController;
         cameraController.constrainedAxis = controller.constrainedAxis;
-        var rho = cameraController.getHeight();
+        var rho = cameraController.getMagnitude();
         var rotateRate = controller._rotateFactor * (rho - controller._rotateRateRangeAdjustment);
 
         if (rotateRate > controller._maximumRotateRate) {
@@ -553,14 +557,16 @@ define([
     }
 
     function zoom3D(controller, movement) {
-        handleZoom(controller, movement, controller._zoomFactor, controller._cameraController.getHeight());
+        var magnitude = controller._cameraController.getMagnitude();
+        handleZoom(controller, movement, controller._zoomFactor, magnitude - controller._ellipsoid.getMaximumRadius());
     }
 
     function tilt3D(controller, movement) {
         var cameraController = controller._cameraController;
 
         var ellipsoid = controller._ellipsoid;
-        if (cameraController.getHeight() - maxHeight - 1.0 < CesiumMath.EPSILON3 &&
+        var height = cameraController.getMagnitude() - ellipsoid.getMaximumRadius()
+        if (height - maxHeight - 1.0 < CesiumMath.EPSILON3 &&
                 movement.endPosition.y - movement.startPosition.y < 0) {
             return;
         }
