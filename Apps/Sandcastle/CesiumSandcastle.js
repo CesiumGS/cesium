@@ -733,7 +733,7 @@ require({
 
             var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
             currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
-            var description = encodeHTML(registry.byId('description').get('value').replace(/\n/g, '\\n'));
+            var description = encodeHTML(registry.byId('description').get('value').replace(/\n/g, '\\n')).replace(/\"/g, '&quot;');
             html = html.replace('<title>', '<meta name="description" content="' + description + '">\n    <title>');
 
             var octetBlob = new Blob([ html ], { 'type' : 'application/octet-stream', 'endings' : 'native' });
