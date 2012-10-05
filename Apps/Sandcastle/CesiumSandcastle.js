@@ -110,6 +110,7 @@ require({
         var docTimer;
         var docTabs = {};
         var docError = false;
+        var galleryError = false;
         var galleryTooltipTimer;
         var activeGalleryTooltipDemo;
         var demoTileHeightRule = findCssStyle('.demoTileThumbnail');
@@ -652,6 +653,9 @@ require({
                                 "'generateDocumentation' build script to generate Cesium documentation.");
                         showGallery();
                     }
+                    if (galleryError) {
+                        appendConsole('consoleError', "Error loading gallery, please run the build script.");
+                    }
                 }
             } else if (typeof e.data.log !== 'undefined') {
                 // Console log messages from the iframe display in Sandcastle.
@@ -803,6 +807,7 @@ require({
                 handleAs: 'text',
                 error: function(error) {
                     appendConsole('consoleError', error);
+                    galleryError = true;
                 }
             }).then(function (value) {
                 // Store the file contents for later searching.
