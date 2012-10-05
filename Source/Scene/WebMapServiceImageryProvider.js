@@ -1,6 +1,8 @@
 /*global define*/
 define([
+        '../Core/combine',
         '../Core/defaultValue',
+        '../Core/freezeObject',
         '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Extent',
@@ -8,7 +10,9 @@ define([
         './WebMercatorTilingScheme',
         './GeographicTilingScheme'
     ], function(
+        combine,
         defaultValue,
+        freezeObject,
         writeTextToCanvas,
         DeveloperError,
         Extent,
@@ -24,9 +28,11 @@ define([
      * @constructor
      *
      * @param {String} description.url The URL of the WMS service.
-     * @param {String} description.layerName The name of the layer.
+     * @param {String} description.layers The layers to include, separated by commas.
+     * @param {Object} [description.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent of the layer.
-     * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
+     * @param {Number} [description.maximumLevel] The maximum level-of-detail supported by the imagery provider.
+     *        If not specified, there is no limit.
      * @param {String} [description.credit] A string crediting the data source, which is displayed on the canvas.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
@@ -48,25 +54,28 @@ define([
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });
      */
-    var WebMapServiceImageryProvider = function(description) {
+    var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(description) {
         description = defaultValue(description, {});
 
         if (typeof description.url === 'undefined') {
             throw new DeveloperError('description.url is required.');
         }
 
-        if (typeof description.layerName === 'undefined') {
-            throw new DeveloperError('description.layerName is required.');
+        if (typeof description.layers === 'undefined') {
+            throw new DeveloperError('description.layers is required.');
         }
 
         this._url = description.url;
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
-        this._layerName = description.layerName;
+        this._layers = description.layers;
+
+        var parameters = defaultValue(description.parameters, {});
+        this._parameters = combine([parameters, WebMapServiceImageryProvider.DefaultParameters], false, true);
 
         this._tileWidth = 256;
         this._tileHeight = 256;
-        this._maximumLevel = defaultValue(description.maximumLevel, 18);
+        this._maximumLevel = description.maximumLevel; // undefined means no limit
 
         var extent = defaultValue(description.extent, Extent.MAX_VALUE);
         this._tilingScheme = new GeographicTilingScheme({
@@ -85,20 +94,42 @@ define([
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
-        var nativeExtent = imageryProvider._tilingScheme.tileXYToNativeExtent(x, y, level);
-        var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
-        var srs = 'EPSG:4326';
-
         var url = imageryProvider._url;
-        if (url.indexOf('?') >= 0) {
+        var indexOfQuestionMark = url.indexOf('?');
+        if (indexOfQuestionMark >= 0 && indexOfQuestionMark < url.length - 1) {
             url += '&';
-        } else {
+        } else if (indexOfQuestionMark < 0) {
             url += '?';
         }
-        url += 'service=WMS&version=1.1.0&request=GetMap&format=image%2Fjpeg&styles=&width=256&height=256';
-        url += '&layers=' + imageryProvider._layerName;
-        url += '&bbox=' + bbox;
-        url += '&srs=' + srs;
+
+        var parameters = imageryProvider._parameters;
+        for (var parameter in parameters) {
+            if (parameters.hasOwnProperty(parameter)) {
+                url += parameter + '=' + parameters[parameter] + '&';
+            }
+        }
+
+        if (typeof parameters.layers === 'undefined') {
+            url += 'layers=' + imageryProvider._layers + '&';
+        }
+
+        if (typeof parameters.srs === 'undefined') {
+            url += 'srs=EPSG:4326&';
+        }
+
+        if (typeof parameters.bbox === 'undefined') {
+            var nativeExtent = imageryProvider._tilingScheme.tileXYToNativeExtent(x, y, level);
+            var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
+            url += '&bbox=' + bbox;
+        }
+
+        if (typeof parameters.width === 'undefined') {
+            url += '&width=256';
+        }
+
+        if (typeof parameters.height === 'undefined') {
+            url += '&height=256';
+        }
 
         var proxy = imageryProvider._proxy;
         if (typeof proxy !== 'undefined') {
@@ -120,14 +151,14 @@ define([
     };
 
     /**
-     * Gets the name of the WMS layer.
+     * Gets the names of the WMS layers, separated by commas.
      *
      * @memberof WebMapServiceImageryProvider
      *
-     * @returns {String} The layer name.
+     * @returns {String} The layer names.
      */
-    WebMapServiceImageryProvider.prototype.getLayerName = function() {
-        return this._layerName;
+    WebMapServiceImageryProvider.prototype.getLayers = function() {
+        return this._layers;
     };
 
     /**
@@ -251,6 +282,24 @@ define([
     WebMapServiceImageryProvider.prototype.getLogo = function() {
         return this._logo;
     };
+
+    /**
+     * The default parameters to include in the WMS URL to obtain images.  The values are as follows:
+     *    service=WMS
+     *    version=1.1.1
+     *    request=GetMap
+     *    styles=
+     *    format=image/png
+     *
+     * @memberof WebMapServiceImageryProvider
+     */
+    WebMapServiceImageryProvider.DefaultParameters = freezeObject({
+        service : 'WMS',
+        version : '1.1.1',
+        request : 'GetMap',
+        styles : '',
+        format : 'image/jpeg'
+    });
 
     return WebMapServiceImageryProvider;
 });
