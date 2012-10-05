@@ -114,7 +114,7 @@ defineSuite([
     beforeEach(function() {
         canvas = new MockCanvas();
         camera = new Camera(canvas);
-        controller = new CameraMouseController(canvas, camera);
+        controller = new CameraMouseController(canvas, camera.controller);
     });
 
     afterEach(function() {
@@ -137,18 +137,6 @@ defineSuite([
         expect(controller.getEllipsoid()).toEqual(Ellipsoid.WGS84);
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
         expect(controller.getEllipsoid()).toEqual(Ellipsoid.UNIT_SPHERE);
-    });
-
-    it('update throws when mode is 2D and frustum is not orthographic', function() {
-        var frameState = {
-            mode : SceneMode.SCENE2D,
-            scene2D : {
-                projection : new EquidistantCylindricalProjection()
-            }
-        };
-        expect(function() {
-            controller.update(frameState);
-        }).toThrow();
     });
 
     function moveMouse(button, startPosition, endPosition, shiftKey) {

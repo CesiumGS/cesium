@@ -474,10 +474,8 @@ define([
         if (typeof controller.constrainedAxis !== 'undefined' &&
                 !p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2) &&
                 !p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2)) {
-            var theta = Math.acos(controller.constrainedAxis.dot(p)) + angle;
             var dot = p.dot(controller.constrainedAxis.normalize());
-            if (theta > 0 && theta < Math.PI &&
-                    !(CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0)) {
+            if (!(CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0)) {
                 var angleToAxis = Math.acos(dot);
                 if (Math.abs(angle) > Math.abs(angleToAxis)) {
                     angle = angleToAxis;

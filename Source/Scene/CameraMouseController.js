@@ -565,7 +565,7 @@ define([
         var cameraController = controller._cameraController;
 
         var ellipsoid = controller._ellipsoid;
-        var height = cameraController.getMagnitude() - ellipsoid.getMaximumRadius()
+        var height = cameraController.getMagnitude() - ellipsoid.getMaximumRadius();
         if (height - maxHeight - 1.0 < CesiumMath.EPSILON3 &&
                 movement.endPosition.y - movement.startPosition.y < 0) {
             return;

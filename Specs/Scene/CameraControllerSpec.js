@@ -288,24 +288,6 @@ defineSuite([
         expect(camera.right.equalsEpsilon(camera2.right, CesiumMath.EPSILON15));
     });
 
-    it('rotate does nothing close to the constrained axis', function() {
-        controller.constrainedAxis = Cartesian3.UNIT_Y;
-
-        // rotate close to constrained axis
-        controller.rotateUp(CesiumMath.PI_OVER_TWO - 0.01);
-        var expectedPosition = camera.position;
-        var expectedDirection = camera.direction;
-        var expectedUp = camera.up;
-        var expectedRight = camera.right;
-
-        // rotating up does nothing
-        controller.rotateUp(rotateAmount);
-        expect(camera.position).toEqual(expectedPosition);
-        expect(camera.direction).toEqual(expectedDirection);
-        expect(camera.up).toEqual(expectedUp);
-        expect(camera.right).toEqual(expectedRight);
-    });
-
     it('rotate past constrained axis stops at constained axis', function() {
         controller.constrainedAxis = Cartesian3.UNIT_Y;
         controller.rotateUp(Math.PI);
@@ -323,9 +305,18 @@ defineSuite([
         frustum.right = 2.0;
         frustum.top = 1.0;
         frustum.bottom = -1.0;
-
-        controller._mode = SceneMode.SCENE2D;
         camera.frustum = frustum;
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var frameState = {
+            mode : SceneMode.SCENE2D,
+            scene2D : {
+                projection : projection
+            }
+        };
+        controller.update(frameState);
+
         controller.zoomOut(zoomAmount);
         expect(camera.frustum.right).toEqualEpsilon(3.0, CesiumMath.EPSILON10);
         expect(camera.frustum.left).toEqual(-3.0, CesiumMath.EPSILON10);
@@ -341,9 +332,18 @@ defineSuite([
         frustum.right = 2.0;
         frustum.top = 1.0;
         frustum.bottom = -1.0;
-
-        controller._mode = SceneMode.SCENE2D;
         camera.frustum = frustum;
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var frameState = {
+            mode : SceneMode.SCENE2D,
+            scene2D : {
+                projection : projection
+            }
+        };
+        controller.update(frameState);
+
         controller.zoomIn(zoomAmount);
         expect(camera.frustum.right).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
         expect(camera.frustum.left).toEqual(-1.0, CesiumMath.EPSILON10);
@@ -646,6 +646,41 @@ defineSuite([
         expect(camera.direction).toEqual(camera.position.negate().normalize());
         expect(camera.up.equalsEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON15)).toEqual(true);
         expect(camera.right).toEqual(camera.direction.cross(camera.up));
+    });
+
+    it('get pick ray throws without a position', function() {
+        expect(function () {
+            controller.getPickRay();
+        }).toThrow();
+    });
+
+    it('get pick ray perspective', function() {
+        var windowCoord = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight);
+        var ray = controller.getPickRay(windowCoord);
+
+        var windowHeight = camera.frustum.near * Math.tan(camera.frustum.fovy * 0.5);
+        var expectedDirection = new Cartesian3(0.0, -windowHeight, -1.0).normalize();
+        expect(ray.origin.equals(camera.position)).toEqual(true);
+        expect(ray.direction.equalsEpsilon(expectedDirection, CesiumMath.EPSILON15)).toEqual(true);
+    });
+
+    it('get pick ray orthographic', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.left = -10.0;
+        frustum.right = 10.0;
+        frustum.bottom = -10.0;
+        frustum.top = 10.0;
+        frustum.near = 1.0;
+        frustum.far = 21.0;
+        camera.frustum = frustum;
+
+        var windowCoord = new Cartesian2((3.0 / 5.0) * canvas.clientWidth, (1.0 - (3.0 / 5.0)) * canvas.clientHeight);
+        var ray = controller.getPickRay(windowCoord);
+
+        var cameraPosition = camera.position;
+        var expectedPosition = new Cartesian3(cameraPosition.x + 2.0, cameraPosition.y + 2, cameraPosition.z);
+        expect(ray.origin.equalsEpsilon(expectedPosition, CesiumMath.EPSILON14)).toEqual(true);
+        expect(ray.direction.equals(camera.direction)).toEqual(true);
     });
 
 });
