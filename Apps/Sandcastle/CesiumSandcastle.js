@@ -530,16 +530,19 @@ require({
                 } else {
                     var pos = local.headers.indexOf('<body class="'), pos2;
                     if (pos > 0) {
-                        pos2 = local.headers.indexOf('"', pos + 13);
+                        pos += 13;
+                        pos2 = local.headers.indexOf('"', pos);
                         if (pos2 > pos) {
-                            bucketDoc.body.className = local.headers.substring(pos + 13, pos2);
+                            bucketDoc.body.className = local.headers.substring(pos, pos2);
                         }
                     }
                     pos = local.headers.indexOf('data-sandcastle-title="');
                     if (pos > 0) {
-                        pos2 = local.headers.indexOf('"', pos + 23);
+                        pos += 23;
+                        pos2 = local.headers.indexOf('"', pos);
                         if (pos2 > pos) {
-                            bucketPane.set('title', local.headers.substring(pos + 23, pos2));
+                            bucketPane.set('title', local.headers.substring(pos, pos2));
+                            document.getElementById('includes').textContent = local.headers.substring(pos, pos2);
                         }
                     }
                     pos = local.headers.indexOf('</head>');
@@ -592,7 +595,7 @@ require({
 
         function loadFromGallery(demo) {
             document.getElementById('saveAsFile').download = demo.name + '.html';
-            registry.byId('description').set('value', demo.description);
+            registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
             var pos = demo.code.indexOf('<body');
             pos = demo.code.indexOf('>', pos);
             var body = demo.code.substring(pos + 2);
@@ -726,7 +729,7 @@ require({
 
             var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
             currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
-            var description = encodeHTML(decodeHTML(registry.byId('description').get('value')));
+            var description = encodeHTML(registry.byId('description').get('value').replace(/\n/g, '\\n'));
             html = html.replace('<title>', '<meta name="description" content="' + description + '">\n    <title>');
 
             var octetBlob = new Blob([ html ], { 'type' : 'application/octet-stream', 'endings' : 'native' });
@@ -848,7 +851,7 @@ require({
                 demoTooltips[demo.name] = new TooltipDialog({
                     id: demo.name + 'TooltipDialog',
                     style: 'width: 200px; font-size: 12px;',
-                    content: '<div class="demoTooltipType">' + demo.bucketTitle + '</div>' + demo.description
+                    content: '<div class="demoTooltipType">' + demo.bucketTitle + '</div>' + demo.description.replace(/\\n/g, '<br/>')
                 });
 
                 on(dom.byId(demo.name), 'mouseover', function() {
