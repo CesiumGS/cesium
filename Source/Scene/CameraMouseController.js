@@ -19,8 +19,7 @@ define([
         './AnimationCollection',
         './CameraEventHandler',
         './CameraEventType',
-        './SceneMode',
-        '../ThirdParty/Tween'
+        './SceneMode'
     ], function(
         destroyObject,
         Cartesian2,
@@ -41,8 +40,7 @@ define([
         AnimationCollection,
         CameraEventHandler,
         CameraEventType,
-        SceneMode,
-        Tween) {
+        SceneMode) {
     "use strict";
 
     /**
@@ -51,18 +49,18 @@ define([
      * @constructor
      *
      * @param {HTMLCanvasElement} canvas The canvas to listen for events.
-     * @param {Camera} camera The camera to modify.
+     * @param {CameraController} cameraController The camera controller used to modify the camera.
      *
      * @exception {DeveloperError} canvas is required.
-     * @exception {DeveloperError} camera is required.
+     * @exception {DeveloperError} cameraController is required.
      */
-    var CameraMouseController = function(canvas, camera) {
+    var CameraMouseController = function(canvas, cameraController) {
         if (typeof canvas === 'undefined') {
             throw new DeveloperError('canvas is required.');
         }
 
-        if (typeof camera === 'undefined') {
-            throw new DeveloperError('camera is required.');
+        if (typeof cameraController === 'undefined') {
+            throw new DeveloperError('cameraController is required.');
         }
 
         /**
@@ -117,10 +115,8 @@ define([
         this.constrainedAxis = undefined;
 
         this._canvas = canvas;
-        this._camera = camera;
-        this._cameraController = camera.controller;
+        this._cameraController = cameraController;
         this._ellipsoid = Ellipsoid.WGS84;
-        this._projection = undefined;
 
         this._spinHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
         this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
@@ -135,11 +131,7 @@ define([
         this._lastInertiaWheelZoomMovement = undefined;
 
         this._animationCollection = new AnimationCollection();
-        this._zoomAnimation = undefined;
-        this._translateAnimation = undefined;
-
-        this._frustum = undefined;
-        this._maxCoord = undefined;
+        this._animation = undefined;
 
         this._horizontalRotationAxis = undefined;
 
@@ -278,68 +270,6 @@ define([
         }
     }
 
-    function addCorrectZoomAnimation2D(controller) {
-        var camera = controller._camera;
-        var frustum = camera.frustum;
-        var top = frustum.top;
-        var bottom = frustum.bottom;
-        var right = frustum.right;
-        var left = frustum.left;
-
-        var startFrustum = controller._frustum;
-
-        var update2D = function(value) {
-            camera.frustum.top = CesiumMath.lerp(top, startFrustum.top, value.time);
-            camera.frustum.bottom = CesiumMath.lerp(bottom, startFrustum.bottom, value.time);
-            camera.frustum.right = CesiumMath.lerp(right, startFrustum.right, value.time);
-            camera.frustum.left = CesiumMath.lerp(left, startFrustum.left, value.time);
-        };
-
-        controller._zoomAnimation = controller._animationCollection.add({
-            easingFunction : Tween.Easing.Exponential.EaseOut,
-            startValue : {
-                time : 0.0
-            },
-            stopValue : {
-                time : 1.0
-            },
-            onUpdate : update2D
-        });
-    }
-
-    function addCorrectTranslateAnimation2D(controller) {
-        var camera = controller._camera;
-        var currentPosition = camera.position;
-        var translatedPosition = currentPosition.clone();
-
-        if (translatedPosition.x > controller._maxCoord.x) {
-            translatedPosition.x = controller._maxCoord.x;
-        } else if (translatedPosition.x < -controller._maxCoord.x) {
-            translatedPosition.x = -controller._maxCoord.x;
-        }
-
-        if (translatedPosition.y > controller._maxCoord.y) {
-            translatedPosition.y = controller._maxCoord.y;
-        } else if (translatedPosition.y < -controller._maxCoord.y) {
-            translatedPosition.y = -controller._maxCoord.y;
-        }
-
-        var update2D = function(value) {
-            camera.position = currentPosition.lerp(translatedPosition, value.time);
-        };
-
-        controller._translateAnimation = controller._animationCollection.add({
-            easingFunction : Tween.Easing.Exponential.EaseOut,
-            startValue : {
-                time : 0.0
-            },
-            stopValue : {
-                time : 1.0
-            },
-            onUpdate : update2D
-        });
-    }
-
     function translate2D(controller, movement) {
         var cameraController = controller._cameraController;
         var start = cameraController.getPickRay(movement.startPosition).origin;
@@ -425,58 +355,18 @@ define([
             }
         }
 
-        if (!translate.isButtonDown() && !rightZoom.isButtonDown()) {
-            if (controller._camera.frustum.right > controller._frustum.right &&
-                !controller._lastInertiaZoomMovement && !controller._animationCollection.contains(controller._zoomAnimation)) {
-                addCorrectZoomAnimation2D(controller);
-            }
-
-            var position = controller._camera.position;
-            var translateX = position.x < -controller._maxCoord.x || position.x > controller._maxCoord.x;
-            var translateY = position.y < -controller._maxCoord.y || position.y > controller._maxCoord.y;
-            if ((translateX || translateY) && !controller._lastInertiaTranslateMovement &&
-                 !controller._animationCollection.contains(controller._translateAnimation)) {
-                addCorrectTranslateAnimation2D(controller);
+        if (!translate.isButtonDown() && !rightZoom.isButtonDown() &&
+                !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
+                !controller._animationCollection.contains(controller._animation)) {
+            var animation = controller._cameraController.createCorrectPositionAnimation();
+            if (typeof animation !== 'undefined') {
+                controller._animation = controller._animationCollection.add(animation);
             }
         }
 
         controller._animationCollection.update();
 
         return true;
-    }
-
-    function addCorrectTranslateAnimationCV(controller, position, center, maxX, maxY) {
-        var newPosition = position.clone();
-
-        if (center.y > maxX) {
-            newPosition.y -= center.y - maxX;
-        } else if (center.y < -maxX) {
-            newPosition.y += -maxX - center.y;
-        }
-
-        if (center.z > maxY) {
-            newPosition.z -= center.z - maxY;
-        } else if (center.z < -maxY) {
-            newPosition.z += -maxY - center.z;
-        }
-
-        var camera = controller._camera;
-        var updateCV = function(value) {
-            var interp = position.lerp(newPosition, value.time);
-            var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
-            camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(pos));
-        };
-
-        controller._translateAnimation = controller._animationCollection.add({
-            easingFunction : Tween.Easing.Exponential.EaseOut,
-            startValue : {
-                time : 0.0
-            },
-            stopValue : {
-                time : 1.0
-            },
-            onUpdate : updateCV
-        });
     }
 
     function translateCV(controller, movement) {
@@ -501,61 +391,6 @@ define([
         if (mag > CesiumMath.EPSILON6) {
             cameraController.move(diff.normalize(), mag);
         }
-    }
-
-    function correctPositionCV(controller)
-    {
-        var camera = controller._camera;
-        var position = camera.position;
-        var direction = camera.direction;
-
-        var normal = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(Cartesian4.UNIT_X));
-        var scalar = -normal.dot(position) / normal.dot(direction);
-        var center = position.add(direction.multiplyByScalar(scalar));
-        center = new Cartesian4(center.x, center.y, center.z, 1.0);
-        var centerWC = camera.transform.multiplyByVector(center);
-
-        var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-        var positionWC = camera.transform.multiplyByVector(cameraPosition);
-
-        var tanPhi = Math.tan(controller._camera.frustum.fovy * 0.5);
-        var tanTheta = controller._camera.frustum.aspectRatio * tanPhi;
-        var distToC = positionWC.subtract(centerWC).magnitude();
-        var dWidth = tanTheta * distToC;
-        var dHeight = tanPhi * distToC;
-
-        var mapWidth = controller._ellipsoid.getRadii().x * Math.PI;
-        var mapHeight = controller._ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
-
-        var maxX = Math.max(dWidth - mapWidth, mapWidth);
-        var maxY = Math.max(dHeight - mapHeight, mapHeight);
-
-        if (positionWC.x < -maxX || positionWC.x > maxX || positionWC.y < -maxY || positionWC.y > maxY) {
-            if (!controller._translateHandler.isButtonDown()) {
-                var translateX = centerWC.y < -maxX || centerWC.y > maxX;
-                var translateY = centerWC.z < -maxY || centerWC.z > maxY;
-                if ((translateX || translateY) && !controller._lastInertiaTranslateMovement &&
-                        !controller._animationCollection.contains(controller._translateAnimation)) {
-                    addCorrectTranslateAnimationCV(controller, Cartesian3.fromCartesian4(positionWC), Cartesian3.fromCartesian4(centerWC), maxX, maxY);
-                }
-            }
-
-            maxX = maxX + mapWidth * 0.5;
-            if (centerWC.y > maxX) {
-                positionWC.y -= centerWC.y - maxX;
-            } else if (centerWC.y < -maxX) {
-                positionWC.y += -maxX - centerWC.y;
-            }
-
-            maxY = maxY + mapHeight * 0.5;
-            if (centerWC.z > maxY) {
-                positionWC.z -= centerWC.z - maxY;
-            } else if (centerWC.z < -maxY) {
-                positionWC.z += -maxY - centerWC.z;
-            }
-        }
-
-        camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(positionWC));
     }
 
     function rotateCV(controller, movement) {
@@ -628,14 +463,16 @@ define([
             }
         }
 
-        if (controller.enableLook) {
-            if (controller._lookHandler.isMoving()) {
+        if (controller.enableLook && controller._lookHandler.isMoving()) {
                 look3D(controller, controller._lookHandler.getMovement());
-            }
         }
 
-        if (!buttonDown) {
-            correctPositionCV(controller);
+        if (!buttonDown && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
+                !controller._animationCollection.contains(controller._animation)) {
+            var animation = controller._cameraController.createCorrectPositionAnimation();
+            if (typeof animation !== 'undefined') {
+                controller._animation = controller._animationCollection.add(animation);
+            }
         }
 
         controller._animationCollection.update();
@@ -848,25 +685,6 @@ define([
     CameraMouseController.prototype.update = function(frameState) {
         var mode = frameState.mode;
         if (mode === SceneMode.SCENE2D) {
-            var projection = frameState.scene2D.projection;
-            if (projection !== this._projection) {
-                this._projection = projection;
-                this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
-            }
-
-            var frustum = this._frustum = this._camera.frustum.clone();
-            if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' ||
-               typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
-                throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
-            }
-
-            var maxZoomOut = 2.0;
-            var ratio = frustum.top / frustum.right;
-            frustum.right = this._maxCoord.x * maxZoomOut;
-            frustum.left = -frustum.right;
-            frustum.top = ratio * frustum.right;
-            frustum.bottom = -frustum.top;
-
             update2D(this);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             this._horizontalRotationAxis = Cartesian3.UNIT_Z;

@@ -74,7 +74,7 @@ define([
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(canvas);
-        this._cameraMouseController = new CameraMouseController(canvas, this._camera);
+        this._cameraMouseController = new CameraMouseController(canvas, this._camera.controller);
 
         this._animate = undefined; // Animation callback
         this._animations = new AnimationCollection();

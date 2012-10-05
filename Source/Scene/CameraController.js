@@ -13,7 +13,8 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Ray',
-        './SceneMode'
+        './SceneMode',
+        '../ThirdParty/Tween'
     ], function(
         defaultValue,
         Cartesian2,
@@ -28,7 +29,8 @@ define([
         Matrix4,
         Quaternion,
         Ray,
-        SceneMode) {
+        SceneMode,
+        Tween) {
     "use strict";
 
     /**
@@ -79,6 +81,7 @@ define([
         this.constrainedAxis = undefined;
 
         this._maxCoord = undefined;
+        this._frustum = undefined;
         this._maxTranslateFactor = 1.5;
         this._maxZoomFactor = 2.5;
         this._maxHeight = 20.0;
@@ -93,6 +96,21 @@ define([
         if (projection !== this._projection) {
             this._projection = projection;
             this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        }
+
+        if (this._mode === SceneMode.SCENE2D) {
+            var frustum = this._frustum = this._camera.frustum.clone();
+            if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' ||
+               typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
+                throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
+            }
+
+            var maxZoomOut = 2.0;
+            var ratio = frustum.top / frustum.right;
+            frustum.right = this._maxCoord.x * maxZoomOut;
+            frustum.left = -frustum.right;
+            frustum.top = ratio * frustum.right;
+            frustum.bottom = -frustum.top;
         }
     };
 
@@ -974,6 +992,150 @@ define([
     CameraController.prototype.cameraToWorldCoordinates = function(vector) {
         var transform = this._camera.transform;
         return transform.multiplyByVector(vector);
+    };
+
+    function createAnimation2D(controller) {
+        var camera = controller._camera;
+
+        var position = camera.position;
+        var translateX = position.x < -controller._maxCoord.x || position.x > controller._maxCoord.x;
+        var translateY = position.y < -controller._maxCoord.y || position.y > controller._maxCoord.y;
+        var animatePosition = translateX || translateY;
+
+        var frustum = camera.frustum;
+        var top = frustum.top;
+        var bottom = frustum.bottom;
+        var right = frustum.right;
+        var left = frustum.left;
+        var startFrustum = controller._frustum;
+        var animateFrustum = right > controller._frustum.right;
+
+        if (animatePosition || animateFrustum) {
+            var translatedPosition = position.clone();
+
+            if (translatedPosition.x > controller._maxCoord.x) {
+                translatedPosition.x = controller._maxCoord.x;
+            } else if (translatedPosition.x < -controller._maxCoord.x) {
+                translatedPosition.x = -controller._maxCoord.x;
+            }
+
+            if (translatedPosition.y > controller._maxCoord.y) {
+                translatedPosition.y = controller._maxCoord.y;
+            } else if (translatedPosition.y < -controller._maxCoord.y) {
+                translatedPosition.y = -controller._maxCoord.y;
+            }
+
+            var update2D = function(value) {
+                if (animatePosition) {
+                    camera.position = position.lerp(translatedPosition, value.time);
+                }
+                if (animateFrustum) {
+                    camera.frustum.top = CesiumMath.lerp(top, startFrustum.top, value.time);
+                    camera.frustum.bottom = CesiumMath.lerp(bottom, startFrustum.bottom, value.time);
+                    camera.frustum.right = CesiumMath.lerp(right, startFrustum.right, value.time);
+                    camera.frustum.left = CesiumMath.lerp(left, startFrustum.left, value.time);
+                }
+            };
+
+            return {
+                easingFunction : Tween.Easing.Exponential.EaseOut,
+                startValue : {
+                    time : 0.0
+                },
+                stopValue : {
+                    time : 1.0
+                },
+                onUpdate : update2D
+            };
+        }
+
+        return undefined;
+    }
+
+    function createAnimationTemplateCV(controller, position, center, maxX, maxY) {
+        var newPosition = position.clone();
+
+        if (center.y > maxX) {
+            newPosition.y -= center.y - maxX;
+        } else if (center.y < -maxX) {
+            newPosition.y += -maxX - center.y;
+        }
+
+        if (center.z > maxY) {
+            newPosition.z -= center.z - maxY;
+        } else if (center.z < -maxY) {
+            newPosition.z += -maxY - center.z;
+        }
+
+        var camera = controller._camera;
+        var updateCV = function(value) {
+            var interp = position.lerp(newPosition, value.time);
+            var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
+            camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(pos));
+        };
+
+        return {
+            easingFunction : Tween.Easing.Exponential.EaseOut,
+            startValue : {
+                time : 0.0
+            },
+            stopValue : {
+                time : 1.0
+            },
+            onUpdate : updateCV
+        };
+    }
+
+    function createAnimationCV(controller) {
+        var camera = controller._camera;
+        var ellipsoid = controller._projection.getEllipsoid();
+        var position = camera.position;
+        var direction = camera.direction;
+
+        var normal = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(Cartesian4.UNIT_X));
+        var scalar = -normal.dot(position) / normal.dot(direction);
+        var center = position.add(direction.multiplyByScalar(scalar));
+        center = new Cartesian4(center.x, center.y, center.z, 1.0);
+        var centerWC = camera.transform.multiplyByVector(center);
+
+        var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
+        var positionWC = camera.transform.multiplyByVector(cameraPosition);
+
+        var tanPhi = Math.tan(controller._camera.frustum.fovy * 0.5);
+        var tanTheta = controller._camera.frustum.aspectRatio * tanPhi;
+        var distToC = positionWC.subtract(centerWC).magnitude();
+        var dWidth = tanTheta * distToC;
+        var dHeight = tanPhi * distToC;
+
+        var mapWidth = ellipsoid.getRadii().x * Math.PI;
+        var mapHeight = ellipsoid.getRadii().y * CesiumMath.PI_OVER_TWO;
+
+        var maxX = Math.max(dWidth - mapWidth, mapWidth);
+        var maxY = Math.max(dHeight - mapHeight, mapHeight);
+
+        if (positionWC.x < -maxX || positionWC.x > maxX || positionWC.y < -maxY || positionWC.y > maxY) {
+            var translateX = centerWC.y < -maxX || centerWC.y > maxX;
+            var translateY = centerWC.z < -maxY || centerWC.z > maxY;
+            if (translateX || translateY) {
+                return createAnimationTemplateCV(controller, Cartesian3.fromCartesian4(positionWC), Cartesian3.fromCartesian4(centerWC), maxX, maxY);
+            }
+        }
+
+        return undefined;
+    }
+
+    /**
+     * DOC_TBA
+     * @returns DOC_TBA
+     */
+    CameraController.prototype.createCorrectPositionAnimation = function() {
+        if (this._mode === SceneMode.SCENE2D) {
+            return createAnimation2D(this);
+        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+            return createAnimationCV(this);
+        }
+
+        return undefined;
     };
 
     return CameraController;
