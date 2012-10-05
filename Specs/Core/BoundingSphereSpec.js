@@ -41,6 +41,17 @@ defineSuite([
             ];
     }
 
+    function getPositionsAsFlatArray() {
+        var positions = getPositions();
+        var result = [];
+        for (var i = 0; i < positions.length; ++i) {
+            result.push(positions[i].x);
+            result.push(positions[i].y);
+            result.push(positions[i].z);
+        }
+        return result;
+    }
+
     it('default constructing produces expected values', function() {
         var sphere = new BoundingSphere();
         expect(sphere.center).toEqual(Cartesian3.ZERO);
@@ -146,6 +157,63 @@ defineSuite([
             expect(currentPos.x <= max.x && currentPos.x >= min.x).toEqual(true);
             expect(currentPos.y <= max.y && currentPos.y >= min.y).toEqual(true);
             expect(currentPos.z <= max.z && currentPos.z >= min.z).toEqual(true);
+        }
+    });
+
+    it('fromPointsAsFlatArray without positions returns an empty sphere', function() {
+        var sphere = BoundingSphere.fromPointsAsFlatArray();
+        expect(sphere.center).toEqual(Cartesian3.ZERO);
+        expect(sphere.radius).toEqual(0.0);
+    });
+
+    it('fromPointsAsFlatArray works with one point', function() {
+        var expectedCenter = new Cartesian3(1.0, 2.0, 3.0);
+        var sphere = BoundingSphere.fromPointsAsFlatArray([expectedCenter.x, expectedCenter.y, expectedCenter.z]);
+        expect(sphere.center).toEqual(expectedCenter);
+        expect(sphere.radius).toEqual(0.0);
+    });
+
+    it('fromPointsAsFlatArray computes a center from points', function() {
+        var sphere = BoundingSphere.fromPointsAsFlatArray(getPositionsAsFlatArray());
+        expect(sphere.center).toEqual(positionsCenter);
+        expect(sphere.radius).toEqual(positionsRadius);
+    });
+
+    it('fromPointsAsFlatArray contains all points (naive)', function() {
+        var sphere = BoundingSphere.fromPointsAsFlatArray(getPositionsAsFlatArray());
+        var radius = sphere.radius;
+        var center = sphere.center;
+
+        var r = new Cartesian3(radius, radius, radius);
+        var max = r.add(center);
+        var min = center.subtract(r);
+
+        var positions = getPositions();
+        var numPositions = positions.length;
+        for ( var i = 0; i < numPositions; i++) {
+            var currentPos = positions[i];
+            expect(currentPos.x <= max.x && currentPos.x >= min.x).toEqual(true);
+            expect(currentPos.y <= max.y && currentPos.y >= min.y).toEqual(true);
+            expect(currentPos.z <= max.z && currentPos.z >= min.z).toEqual(true);
+        }
+    });
+
+    it('fromPointsAsFlatArray contains all points (ritter)', function() {
+        var positions = getPositionsAsFlatArray();
+        positions.push(1, 1, 1,  2, 2, 2,  3, 3, 3);
+        var sphere = BoundingSphere.fromPointsAsFlatArray(positions);
+        var radius = sphere.radius;
+        var center = sphere.center;
+
+        var r = new Cartesian3(radius, radius, radius);
+        var max = r.add(center);
+        var min = center.subtract(r);
+
+        var numElements = positions.length;
+        for (var i = 0; i < numElements; i += 3) {
+            expect(positions[i] <= max.x && positions[i] >= min.x).toEqual(true);
+            expect(positions[i + 1] <= max.y && positions[i + 1] >= min.y).toEqual(true);
+            expect(positions[i + 2] <= max.z && positions[i + 2] >= min.z).toEqual(true);
         }
     });
 
