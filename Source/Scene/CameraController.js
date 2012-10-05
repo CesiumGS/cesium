@@ -369,7 +369,7 @@ define([
             direction = camera.getDirectionWC();
 
             oldTransform = camera.transform;
-            camera.transform = transform;
+            camera.transform = transform.multiply(oldTransform);
 
             var invTransform = camera.getInverseTransform();
             camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
@@ -446,7 +446,7 @@ define([
             direction = camera.getDirectionWC();
 
             oldTransform = camera.transform;
-            camera.transform = transform;
+            camera.transform = transform.multiply(oldTransform);
 
             var invTransform = camera.getInverseTransform();
             camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
@@ -459,30 +459,25 @@ define([
             position = camera.position;
             var p = position.normalize();
 
-            if ((p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2) && angle < 0) ||
-                    (p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2) && angle > 0)) {
-                return;
-            }
-
             var theta = Math.acos(controller.constrainedAxis.dot(p)) + angle;
-            if (theta < 0 || theta > Math.PI) {
-                return;
-            }
-
             var dot = p.dot(controller.constrainedAxis.normalize());
-            if (CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0) {
-                return;
-            }
 
-            var angleToAxis = Math.acos(dot);
-            if (Math.abs(angle) > Math.abs(angleToAxis)) {
-                angle = angleToAxis;
-            }
+            var rotate = !(p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2) && angle < 0) &&
+                            !(p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2) && angle > 0);
+            rotate = rotate && theta > 0 && theta < Math.PI;
+            rotate = rotate && !(CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0);
 
-            var tangent = controller.constrainedAxis.cross(p).normalize();
-            var bitangent = controller._camera.up.cross(tangent);
-            tangent = bitangent.cross(controller._camera.up);
-            controller.rotate(tangent, angle);
+            if (rotate) {
+                var angleToAxis = Math.acos(dot);
+                if (Math.abs(angle) > Math.abs(angleToAxis)) {
+                    angle = angleToAxis;
+                }
+
+                var tangent = controller.constrainedAxis.cross(p).normalize();
+                var bitangent = controller._camera.up.cross(tangent);
+                tangent = bitangent.cross(controller._camera.up);
+                controller.rotate(tangent, angle);
+            }
         } else {
             controller.rotate(controller._camera.right, angle);
         }

@@ -569,11 +569,7 @@ define([
         var direction = ray.direction;
         var scalar = -normal.dot(position) / normal.dot(direction);
         var center = position.add(direction.multiplyByScalar(scalar));
-
-        var transform = new Matrix4(0.0, 0.0, 1.0, center.x,
-                                    1.0, 0.0, 0.0, center.y,
-                                    0.0, 1.0, 0.0, center.z,
-                                    0.0, 0.0, 0.0, 1.0);
+        var transform = Matrix4.fromTranslation(center);
 
         var oldEllipsoid = controller._ellipsoid;
         var oldAxis = controller.constrainedAxis;
@@ -742,13 +738,6 @@ define([
             return;
         }
 
-        var up = camera.up;
-        var right = camera.right;
-        var direction = camera.direction;
-
-        var oldTransform = camera.transform;
-        var oldConstrainedZ = controller.constrainedAxis;
-
         var ray = new Ray(controller._camera.getPositionWC(), controller._camera.getDirectionWC());
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
         if (typeof intersection === 'undefined') {
@@ -757,37 +746,21 @@ define([
 
         var center = ray.getPoint(intersection.start);
         center = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(new Cartesian4(center.x, center.y, center.z, 1.0)));
-        var localTransform = Transforms.eastNorthUpToFixedFrame(center);
-        var transform = localTransform.multiply(oldTransform);
+        var transform = Transforms.eastNorthUpToFixedFrame(center);
 
-        controller.constrainedAxis = Cartesian3.UNIT_Z;
-        controller._camera.transform = transform;
+        var oldEllipsoid = controller._ellipsoid;
+        var oldAxis = controller.constrainedAxis;
+
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-
-        var invTransform = camera.getInverseTransform();
-        camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-        camera.up = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-        camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-        camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+        controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         var yDiff = movement.startPosition.y - movement.endPosition.y;
         if (!camera.position.normalize().equalsEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON2) || yDiff > 0) {
-            rotate3D(controller, movement);
+            rotate3D(controller, movement, transform);
         }
 
-        position = camera.position;
-        up = camera.up;
-        right = camera.right;
-        direction = camera.direction;
-
-        controller.constrainedAxis = oldConstrainedZ;
-        controller._camera.transform = oldTransform;
-        controller.setEllipsoid(ellipsoid);
-
-        camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-        camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-        camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-        camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+        controller.constrainedAxis = oldAxis;
+        controller.setEllipsoid(oldEllipsoid);
 
         position = ellipsoid.cartesianToCartographic(camera.position);
         if (position.height < maxHeight + 1.0) {
