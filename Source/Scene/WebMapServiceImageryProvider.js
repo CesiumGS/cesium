@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../Core/combine',
+        '../Core/clone',
         '../Core/defaultValue',
         '../Core/freezeObject',
         '../Core/writeTextToCanvas',
@@ -10,7 +10,7 @@ define([
         './WebMercatorTilingScheme',
         './GeographicTilingScheme'
     ], function(
-        combine,
+        clone,
         defaultValue,
         freezeObject,
         writeTextToCanvas,
@@ -70,8 +70,18 @@ define([
         this._proxy = description.proxy;
         this._layers = description.layers;
 
-        var parameters = defaultValue(description.parameters, {});
-        this._parameters = combine([parameters, WebMapServiceImageryProvider.DefaultParameters], false, true);
+        // Merge the parameters with the defaults, and make all parameter names lowercase
+        var parameters = clone(WebMapServiceImageryProvider.DefaultParameters);
+        if (typeof description.parameters !== 'undefined') {
+            for (var parameter in description.parameters) {
+                if (description.parameters.hasOwnProperty(parameter)) {
+                    var parameterLowerCase = parameter.toLowerCase();
+                    parameters[parameterLowerCase] = description.parameters[parameter];
+                }
+            }
+        }
+
+        this._parameters = parameters;
 
         this._tileWidth = 256;
         this._tileHeight = 256;
@@ -97,7 +107,9 @@ define([
         var url = imageryProvider._url;
         var indexOfQuestionMark = url.indexOf('?');
         if (indexOfQuestionMark >= 0 && indexOfQuestionMark < url.length - 1) {
-            url += '&';
+            if (url[url.length - 1] !== '&') {
+                url += '&';
+            }
         } else if (indexOfQuestionMark < 0) {
             url += '?';
         }
@@ -119,16 +131,16 @@ define([
 
         if (typeof parameters.bbox === 'undefined') {
             var nativeExtent = imageryProvider._tilingScheme.tileXYToNativeExtent(x, y, level);
-            var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
-            url += '&bbox=' + bbox;
+            var bbox = nativeExtent.west + ',' + nativeExtent.south + ',' + nativeExtent.east + ',' + nativeExtent.north;
+            url += 'bbox=' + bbox + '&';
         }
 
         if (typeof parameters.width === 'undefined') {
-            url += '&width=256';
+            url += 'width=256&';
         }
 
         if (typeof parameters.height === 'undefined') {
-            url += '&height=256';
+            url += 'height=256&';
         }
 
         var proxy = imageryProvider._proxy;
