@@ -296,67 +296,6 @@ define([
         return this._rightWC;
     };
 
-    function getPickRayPerspective(camera, windowPosition) {
-        var width = camera._canvas.clientWidth;
-        var height = camera._canvas.clientHeight;
-
-        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
-        var tanTheta = camera.frustum.aspectRatio * tanPhi;
-        var near = camera.frustum.near;
-
-        var x = (2.0 / width) * windowPosition.x - 1.0;
-        var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
-
-        var position = camera.getPositionWC();
-        var nearCenter = position.add(camera.getDirectionWC().multiplyByScalar(near));
-        var xDir = camera.getRightWC().multiplyByScalar(x * near * tanTheta);
-        var yDir = camera.getUpWC().multiplyByScalar(y * near * tanPhi);
-        var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
-
-        return new Ray(position, direction);
-    }
-
-    function getPickRayOrthographic(camera, windowPosition) {
-        var width = camera._canvas.clientWidth;
-        var height = camera._canvas.clientHeight;
-
-        var x = (2.0 / width) * windowPosition.x - 1.0;
-        x *= (camera.frustum.right - camera.frustum.left) * 0.5;
-        var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
-        y *= (camera.frustum.top - camera.frustum.bottom) * 0.5;
-
-        var position = camera.position.clone();
-        position.x += x;
-        position.y += y;
-
-        return new Ray(position, camera.getDirectionWC());
-    }
-
-    /**
-     * Create a ray from the camera position through the pixel at <code>windowPosition</code>
-     * in world coordinates.
-     *
-     * @memberof Camera
-     *
-     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
-     *
-     * @exception {DeveloperError} windowPosition is required.
-     *
-     * @return {Object} Returns the {@link Cartesian3} position and direction of the ray.
-     */
-    Camera.prototype.getPickRay = function(windowPosition) {
-        if (typeof windowPosition === 'undefined') {
-            throw new DeveloperError('windowPosition is required.');
-        }
-
-        var frustum = this.frustum;
-        if (typeof frustum.aspectRatio !== 'undefined' && typeof frustum.fovy !== 'undefined' && typeof frustum.near !== 'undefined') {
-            return getPickRayPerspective(this, windowPosition);
-        }
-
-        return getPickRayOrthographic(this, windowPosition);
-    };
-
     /**
      * Returns a duplicate of a Camera instance.
      *

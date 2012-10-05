@@ -12,6 +12,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
+        '../Core/Ray',
         './SceneMode'
     ], function(
         defaultValue,
@@ -26,6 +27,7 @@ define([
         Matrix3,
         Matrix4,
         Quaternion,
+        Ray,
         SceneMode) {
     "use strict";
 
@@ -79,6 +81,7 @@ define([
         this._maxCoord = undefined;
         this._maxTranslateFactor = 1.5;
         this._maxZoomFactor = 2.5;
+        this._maxHeight = 20.0;
     };
 
     /**
@@ -448,19 +451,15 @@ define([
         var camera = controller._camera;
         var oldTransform = setTransform(controller, transform);
 
-        if (typeof controller.constrainedAxis !== 'undefined') {
-            var position = camera.position;
-            var p = position.normalize();
-
+        var position = camera.position;
+        var p = position.normalize();
+        if (typeof controller.constrainedAxis !== 'undefined' &&
+                !p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2) &&
+                !p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2)) {
             var theta = Math.acos(controller.constrainedAxis.dot(p)) + angle;
             var dot = p.dot(controller.constrainedAxis.normalize());
-
-            var rotate = !(p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2) && angle < 0) &&
-                            !(p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2) && angle > 0);
-            rotate = rotate && theta > 0 && theta < Math.PI;
-            rotate = rotate && !(CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0);
-
-            if (rotate) {
+            if (theta > 0 && theta < Math.PI &&
+                    !(CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0)) {
                 var angleToAxis = Math.acos(dot);
                 if (Math.abs(angle) > Math.abs(angleToAxis)) {
                     angle = angleToAxis;
@@ -580,6 +579,22 @@ define([
             zoom2D(this, -amount);
         } else {
             zoom3D(this, -amount);
+        }
+    };
+
+    /**
+     * DOC_TBA
+     * @returns DOC_TBA
+     */
+    CameraController.prototype.getHeight = function() {
+        var camera = this._camera;
+        if (this._mode === SceneMode.SCENE3D) {
+            var ellipsoid = this._projection.getEllipsoid();
+            return ellipsoid.cartesianToCartographic(camera.position).height;
+        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+            return camera.position.z;
+        } else if (this._mode === SceneMode.SCENE2D) {
+            return  Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
         }
     };
 
@@ -807,9 +822,9 @@ define([
         }
     };
 
-    function pickEllipsoid3D(camera, windowPosition, ellipsoid) {
+    function pickEllipsoid3D(controller, windowPosition, ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
-        var ray = camera.getPickRay(windowPosition);
+        var ray = controller.getPickRay(windowPosition);
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
         if (!intersection) {
             return undefined;
@@ -819,8 +834,8 @@ define([
         return iPt;
     }
 
-    function pickMap2D(camera, windowPosition, projection) {
-        var ray = camera.getPickRay(windowPosition);
+    function pickMap2D(controller, windowPosition, projection) {
+        var ray = controller.getPickRay(windowPosition);
         var position = ray.origin;
         position.z = 0.0;
         var cart = projection.unproject(position);
@@ -833,8 +848,8 @@ define([
         return projection.getEllipsoid().cartographicToCartesian(cart);
     }
 
-    function pickMapColumbusView(camera, windowPosition, projection) {
-        var ray = camera.getPickRay(windowPosition);
+    function pickMapColumbusView(controller, windowPosition, projection) {
+        var ray = controller.getPickRay(windowPosition);
         var scalar = -ray.origin.x / ray.direction.x;
         var position = ray.getPoint(scalar);
 
@@ -869,14 +884,96 @@ define([
 
         var p;
         if (this._mode === SceneMode.SCENE3D) {
-            p = pickEllipsoid3D(this._camera, windowPosition, ellipsoid);
+            p = pickEllipsoid3D(this, windowPosition, ellipsoid);
         } else if (this._mode === SceneMode.SCENE2D) {
-            p = pickMap2D(this._camera, windowPosition, this._projection);
+            p = pickMap2D(this, windowPosition, this._projection);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            p = pickMapColumbusView(this._camera, windowPosition, this._projection);
+            p = pickMapColumbusView(this, windowPosition, this._projection);
         }
 
         return p;
+    };
+
+    function getPickRayPerspective(camera, windowPosition) {
+        var width = camera._canvas.clientWidth;
+        var height = camera._canvas.clientHeight;
+
+        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+        var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        var near = camera.frustum.near;
+
+        var x = (2.0 / width) * windowPosition.x - 1.0;
+        var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
+
+        var position = camera.getPositionWC();
+        var nearCenter = position.add(camera.getDirectionWC().multiplyByScalar(near));
+        var xDir = camera.getRightWC().multiplyByScalar(x * near * tanTheta);
+        var yDir = camera.getUpWC().multiplyByScalar(y * near * tanPhi);
+        var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
+
+        return new Ray(position, direction);
+    }
+
+    function getPickRayOrthographic(camera, windowPosition) {
+        var width = camera._canvas.clientWidth;
+        var height = camera._canvas.clientHeight;
+
+        var x = (2.0 / width) * windowPosition.x - 1.0;
+        x *= (camera.frustum.right - camera.frustum.left) * 0.5;
+        var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
+        y *= (camera.frustum.top - camera.frustum.bottom) * 0.5;
+
+        var position = camera.position.clone();
+        position.x += x;
+        position.y += y;
+
+        return new Ray(position, camera.getDirectionWC());
+    }
+
+    /**
+     * Create a ray from the camera position through the pixel at <code>windowPosition</code>
+     * in world coordinates.
+     *
+     * @memberof CameraController
+     *
+     * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     *
+     * @exception {DeveloperError} windowPosition is required.
+     *
+     * @return {Object} Returns the {@link Cartesian3} position and direction of the ray.
+     */
+    CameraController.prototype.getPickRay = function(windowPosition) {
+        if (typeof windowPosition === 'undefined') {
+            throw new DeveloperError('windowPosition is required.');
+        }
+
+        var camera = this._camera;
+        var frustum = camera.frustum;
+        if (typeof frustum.aspectRatio !== 'undefined' && typeof frustum.fovy !== 'undefined' && typeof frustum.near !== 'undefined') {
+            return getPickRayPerspective(camera, windowPosition);
+        }
+
+        return getPickRayOrthographic(camera, windowPosition);
+    };
+
+    /**
+     * DOC_TBA
+     * @param vector DOC_TBA
+     * @returns DOC_TBA
+     */
+    CameraController.prototype.worldToCameraCoordinates = function(vector) {
+        var transform = this._camera.getInverseTransform();
+        return transform.multiplyByVector(vector);
+    };
+
+    /**
+     * DOC_TBA
+     * @param vector DOC_TBA
+     * @returns DOC_TBA
+     */
+    CameraController.prototype.cameraToWorldCoordinates = function(vector) {
+        var transform = this._camera.transform;
+        return transform.multiplyByVector(vector);
     };
 
     return CameraController;
