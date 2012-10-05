@@ -166,8 +166,19 @@ require([
             scene.getCamera().frustum.near = 10.0;
             cb.affectedByLighting = false;
             
-            /*var imageryLayerCollection = cb.getImageryLayers();
-            imageryLayerCollection.removeAll();
+            var imageryLayerCollection = cb.getImageryLayers();
+            
+            var radar = new Cesium.WebMapServiceImageryProvider({
+                url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
+                layers : 'nexrad-n0r',
+                parameters : {
+                    transparent : 'true',
+                    format : 'image/png'
+                },
+                proxy : new Cesium.DefaultProxy('/proxy/')
+            });
+            imageryLayerCollection.addImageryProvider(radar).alpha = 0.5;
+            /*imageryLayerCollection.removeAll();
             
             var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
               url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',

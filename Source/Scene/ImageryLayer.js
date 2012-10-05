@@ -192,7 +192,11 @@ define([
         var errorRatio = 1.0;
         var targetGeometricError = errorRatio * terrainProvider.getLevelMaximumGeometricError(tile.level);
         var imageryLevel = this._getLevelWithMaximumTexelSpacing(targetGeometricError, latitudeClosestToEquator);
-        imageryLevel = Math.max(0, Math.min(imageryProvider.getMaximumLevel(), imageryLevel));
+        imageryLevel = Math.max(0, imageryLevel);
+        var maximumLevel = imageryProvider.getMaximumLevel();
+        if (imageryLevel > maximumLevel) {
+            imageryLevel = maximumLevel;
+        }
 
         var imageryTilingScheme = imageryProvider.getTilingScheme();
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);

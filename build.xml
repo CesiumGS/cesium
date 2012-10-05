@@ -84,7 +84,7 @@
 	<property name="build.minification" value="false" />
 
 	<!-- Inputs -->
-	<property name="version" value="b8" />
+	<property name="version" value="b9" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -253,7 +253,7 @@
 		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
 		 listenOnAllAddresses: Set to true if you want the server to listen to all addresses, not just localhost.
 		-->
-		<server proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,release.pixia.com" port="8080" baseDir="${basedir}" />
+		<server proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,release.pixia.com,mesonet.agron.iastate.edu" port="8080" baseDir="${basedir}" />
 	</target>
 
 	<target name="buildApps">
