@@ -132,6 +132,7 @@ define([
         }
     }
 
+    var moveScratch = new Cartesian3();
     /**
      * Translates the camera's position by <code>amount</code> along <code>direction</code>.
      *
@@ -154,12 +155,12 @@ define([
             throw new DeveloperError('direction is required.');
         }
 
-        var camera = this._camera;
-        var newPosition = camera.position.add(direction.multiplyByScalar(amount));
-        camera.position = newPosition;
+        var cameraPosition = this._camera.position;
+        Cartesian3.multiplyByScalar(direction, amount, moveScratch);
+        Cartesian3.add(cameraPosition, moveScratch, cameraPosition);
 
         if (this._mode === SceneMode.SCENE2D) {
-            clampMove2D(this, camera.position);
+            clampMove2D(this, cameraPosition);
         }
     };
 
@@ -310,6 +311,8 @@ define([
         this.look(this._camera.right, -amount);
     };
 
+    var lookScratchQuaternion = new Quaternion();
+    var lookScratchMatrix = new Matrix3();
     /**
      * Rotate each of the camera's orientation vectors around <code>axis</code> by <code>angle</code>
      *
@@ -331,13 +334,15 @@ define([
         }
 
         var turnAngle = defaultValue(angle, this.defaultLookAmount);
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle));
-        var direction = rotation.multiplyByVector(this._camera.direction);
-        var up = rotation.multiplyByVector(this._camera.up);
-        var right = rotation.multiplyByVector(this._camera.right);
-        this._camera.direction = direction;
-        this._camera.up = up;
-        this._camera.right = right;
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle, lookScratchQuaternion), lookScratchMatrix);
+
+        var direction = this._camera.direction;
+        var up = this._camera.up;
+        var right = this._camera.right;
+
+        Matrix3.multiplyByVector(rotation, direction, direction);
+        Matrix3.multiplyByVector(rotation, up, up);
+        Matrix3.multiplyByVector(rotation, right, right);
     };
 
     /**
@@ -417,6 +422,8 @@ define([
         }
     }
 
+    var rotateScratchQuaternion = new Quaternion();
+    var rotateScratchMatrix = new Matrix3();
     /**
      * Rotates the camera around <code>axis</code> by <code>angle</code>. The distance
      * of the camera's position to the center of the camera's reference frame remains the same.
@@ -449,14 +456,14 @@ define([
         var camera = this._camera;
 
         var turnAngle = defaultValue(angle, this.defaultRotateAmount);
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle));
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle, rotateScratchQuaternion), rotateScratchMatrix);
 
         var oldTransform = setTransform(this, transform);
-        camera.position = rotation.multiplyByVector(camera.position);
-        camera.direction = rotation.multiplyByVector(camera.direction);
-        camera.up = rotation.multiplyByVector(camera.up);
-        camera.right = camera.direction.cross(camera.up);
-        camera.up = camera.right.cross(camera.direction);
+        Matrix3.multiplyByVector(rotation, camera.position, camera.position);
+        Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
+        Matrix3.multiplyByVector(rotation, camera.up, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
+        Cartesian3.cross(camera.right, camera.direction, camera.up);
         revertTransform(this, oldTransform);
     };
 
@@ -492,29 +499,34 @@ define([
         rotateVertical(this, angle, transform);
     };
 
+    var rotateVertScratchP = new Cartesian3();
+    var rotateVertScratchA = new Cartesian3();
+    var rotateVertScratchTan = new Cartesian3();
+    var rotateVertScratchBit = new Cartesian3();
     function rotateVertical(controller, angle, transform) {
         var camera = controller._camera;
         var oldTransform = setTransform(controller, transform);
 
         var position = camera.position;
-        var p = position.normalize();
+        var p = Cartesian3.normalize(position, rotateVertScratchP);
         if (typeof controller.constrainedAxis !== 'undefined' &&
                 !p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2) &&
                 !p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2)) {
-            var dot = p.dot(controller.constrainedAxis.normalize());
+            var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
+            var dot = p.dot(constrainedAxis);
             if (!(CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0)) {
                 var angleToAxis = Math.acos(dot);
                 if (Math.abs(angle) > Math.abs(angleToAxis)) {
                     angle = angleToAxis;
                 }
 
-                var tangent = controller.constrainedAxis.cross(p).normalize();
-                var bitangent = controller._camera.up.cross(tangent);
-                tangent = bitangent.cross(controller._camera.up);
+                var tangent = Cartesian3.cross(constrainedAxis, p, rotateVertScratchTan);
+                var bitangent = Cartesian3.cross(camera.up, tangent, rotateVertScratchBit);
+                Cartesian3.cross(bitangent, camera.up, tangent);
                 controller.rotate(tangent, angle);
             }
         } else {
-            controller.rotate(controller._camera.right, angle);
+            controller.rotate(camera.right, angle);
         }
 
         revertTransform(controller, oldTransform);
@@ -554,7 +566,7 @@ define([
 
     function rotateHorizontal(controller, angle, transform) {
         if (typeof controller.constrainedAxis !== 'undefined') {
-            controller.rotate(controller.constrainedAxis.normalize(), angle, transform);
+            controller.rotate(controller.constrainedAxis, angle, transform);
         } else {
             controller.rotate(controller._camera.up, angle, transform);
         }
@@ -660,28 +672,30 @@ define([
 
         //We use Cartesian2 instead of 3 here because Z must be constant in 2D mode.
         Cartesian2.clone(controller._projection.project(cartographic), camera.position);
-        camera.direction = Cartesian3.UNIT_Z.negate();
-        camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = Cartesian3.UNIT_X.clone();
+        Cartesian3.negate(Cartesian3.UNIT_Z, camera.direction);
+        Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
+        Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
     }
 
     function setPositionCartographicCV(controller, cartographic) {
         var camera = controller._camera;
         var projection = controller._projection;
         camera.position = projection.project(cartographic);
-        camera.direction = Cartesian3.UNIT_Z.negate();
-        camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = Cartesian3.UNIT_X.clone();
+        Cartesian3.negate(Cartesian3.UNIT_Z, camera.direction);
+        Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
+        Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
     }
 
     function setPositionCartographic3D(controller, cartographic) {
         var camera = controller._camera;
         var ellipsoid = controller._projection.getEllipsoid();
-        camera.position = ellipsoid.cartographicToCartesian(cartographic);
-        camera.direction = camera.position.negate().normalize();
-        camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
-        camera.up = camera.right.cross(camera.direction);
-        camera.right = camera.direction.cross(camera.up);
+
+        ellipsoid.cartographicToCartesian(cartographic, camera.position);
+        Cartesian3.negate(camera.position, camera.direction);
+        Cartesian3.normalize(camera.direction, camera.direction);
+        Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, camera.right);
+        Cartesian3.cross(camera.right, camera.direction, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
     }
 
     /**

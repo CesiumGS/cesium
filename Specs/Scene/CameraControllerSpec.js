@@ -64,10 +64,10 @@ defineSuite([
         canvas = new FakeCanvas();
 
         camera = new Camera(canvas);
-        camera.position = position;
-        camera.up = up;
-        camera.direction = dir;
-        camera.right = right;
+        camera.position = position.clone();
+        camera.up = up.clone();
+        camera.direction = dir.clone();
+        camera.right = right.clone();
 
         controller = camera.controller;
     });

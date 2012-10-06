@@ -191,7 +191,7 @@ defineSuite([
 
     it('translate right in 2D', function() {
         var frameState = setUp2D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
 
@@ -204,7 +204,7 @@ defineSuite([
 
     it('translate left in 2D', function() {
         var frameState = setUp2D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
@@ -217,7 +217,7 @@ defineSuite([
 
     it('translate up in 2D', function() {
         var frameState = setUp2D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
@@ -230,7 +230,7 @@ defineSuite([
 
     it('translate down in 2D', function() {
         var frameState = setUp2D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
@@ -243,7 +243,7 @@ defineSuite([
 
     it('zoom in 2D', function() {
         var frameState = setUp2D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var frustumDiff = camera.frustum.right - camera.frustum.left;
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
@@ -258,7 +258,7 @@ defineSuite([
 
     it('zoom out in 2D', function() {
         var frameState = setUp2D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var frustumDiff = camera.frustum.right - camera.frustum.left;
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
@@ -273,7 +273,7 @@ defineSuite([
 
     it('zoom in 2D with wheel', function() {
         var frameState = setUp2D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var frustumDiff = camera.frustum.right - camera.frustum.left;
 
         canvas.fireEvents('mousewheel', {
@@ -288,7 +288,7 @@ defineSuite([
 
     it('zoom out in 2D with wheel', function() {
         var frameState = setUp2D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var frustumDiff = camera.frustum.right - camera.frustum.left;
 
         canvas.fireEvents('mousewheel', {
@@ -303,7 +303,7 @@ defineSuite([
 
     it('rotate counter-clockwise in 2D', function() {
         var frameState = setUp2D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
@@ -320,7 +320,7 @@ defineSuite([
 
     it('rotate clockwise in 2D', function() {
         var frameState = setUp2D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
 
@@ -360,7 +360,7 @@ defineSuite([
 
     it('translate right in Columbus view', function() {
         var frameState = setUpCV();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
 
@@ -373,7 +373,7 @@ defineSuite([
 
     it('translate left in Columbus view', function() {
         var frameState = setUpCV();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
@@ -386,7 +386,7 @@ defineSuite([
 
     it('translate up in Columbus view', function() {
         var frameState = setUpCV();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
@@ -399,7 +399,7 @@ defineSuite([
 
     it('translate down in Columbus view', function() {
         var frameState = setUpCV();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
@@ -412,7 +412,7 @@ defineSuite([
 
     it('zoom in Columbus view', function() {
         var frameState = setUpCV();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
@@ -425,7 +425,7 @@ defineSuite([
 
     it('zoom out in Columbus view', function() {
         var frameState = setUpCV();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
@@ -438,7 +438,7 @@ defineSuite([
 
     it('zoom in Columbus view with wheel', function() {
         var frameState = setUpCV();
-        var position = camera.position;
+        var position = camera.position.clone();
 
         canvas.fireEvents('mousewheel', {
             wheelDelta : 120
@@ -451,7 +451,7 @@ defineSuite([
 
     it('zoom out in Columbus view with wheel', function() {
         var frameState = setUpCV();
-        var position = camera.position;
+        var position = camera.position.clone();
 
         canvas.fireEvents('mousewheel', {
             wheelDelta : -120
@@ -489,7 +489,7 @@ defineSuite([
 
     it('pans in 3D', function() {
         var frameState = setUp3D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(3 * canvas.clientWidth / 8, 3 * canvas.clientHeight / 8);
 
@@ -504,7 +504,7 @@ defineSuite([
 
     it('rotates in 3D', function() {
         var frameState = setUp3D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(0, 0);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 4);
 
@@ -519,7 +519,7 @@ defineSuite([
 
     it('zoom in 3D', function() {
         var frameState = setUp3D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
@@ -530,7 +530,7 @@ defineSuite([
 
     it('zoom out in 3D', function() {
         var frameState = setUp3D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
@@ -541,7 +541,7 @@ defineSuite([
 
     it('zoom in 3D with wheel', function() {
         var frameState = setUp3D();
-        var position = camera.position;
+        var position = camera.position.clone();
 
         canvas.fireEvents('mousewheel', {
             wheelDelta : 120
@@ -552,7 +552,7 @@ defineSuite([
 
     it('zoom out in 3D with wheel', function() {
         var frameState = setUp3D();
-        var position = camera.position;
+        var position = camera.position.clone();
 
         canvas.fireEvents('mousewheel', {
             wheelDelta : -120
@@ -563,7 +563,7 @@ defineSuite([
 
     it('tilts in 3D', function() {
         var frameState = setUp3D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
@@ -581,7 +581,7 @@ defineSuite([
 
     it('looks in 3D', function() {
         var frameState = setUp3D();
-        var position = camera.position;
+        var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
