@@ -127,7 +127,7 @@ require([
     function keydownHandler(e) {
         switch (e.keyCode) {
         case 'F'.charCodeAt(0):
-            cb._surface.toggleLodUpdate();
+            cb._surface.debugToggleLodUpdate();
             break;
         case 'B'.charCodeAt(0):
             var camera = scene.getCamera();

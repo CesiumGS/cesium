@@ -95,12 +95,14 @@ define([
             tilesCulled : 0,
             tilesRendered : 0,
             texturesRendered : 0,
+            tilesWaitingForChildren : 0,
 
             lastMaxDepth : -1,
             lastTilesVisited : -1,
             lastTilesCulled : -1,
             lastTilesRendered : -1,
             lastTexturesRendered : -1,
+            lastTilesWaitingForChildren : -1,
 
             suspendLodUpdate : false
         };
@@ -269,6 +271,7 @@ define([
         debug.tilesCulled = 0;
         debug.tilesRendered = 0;
         debug.texturesRendered = 0;
+        debug.tilesWaitingForChildren = 0;
 
         surface._tileLoadQueue.markInsertionPoint();
         surface._tileReplacementQueue.markStartOfRenderFrame();
@@ -328,27 +331,30 @@ define([
                     }
                 }
             } else {
+                ++debug.tilesWaitingForChildren;
                 // SSE is not good enough but not all children are loaded, so render this tile anyway.
                 addTileToRenderList(surface, tile);
             }
         }
 
-        if (debug.tilesVisited !== surface._debug.lastTilesVisited ||
-            debug.tilesRendered !== surface._debug.lastTilesRendered ||
-            debug.texturesRendered !== surface._debug.lastTexturesRendered ||
-            debug.tilesCulled !== surface._debug.lastTilesCulled ||
-            debug.maxDepth !== surface._debug.lastMaxDepth) {
+        if (debug.enableDebugOutput) {
+            if (debug.tilesVisited !== debug.lastTilesVisited ||
+                debug.tilesRendered !== debug.lastTilesRendered ||
+                debug.texturesRendered !== debug.lastTexturesRendered ||
+                debug.tilesCulled !== debug.lastTilesCulled ||
+                debug.maxDepth !== debug.lastMaxDepth ||
+                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
 
-            if (debug.enableDebugOutput) {
                 /*global console*/
-                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Textures: ' + debug.texturesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth);
-            }
+                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Textures: ' + debug.texturesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
 
-            debug.lastTilesVisited = debug.tilesVisited;
-            debug.lastTilesRendered = debug.tilesRendered;
-            debug.lastTexturesRendered = debug.texturesRendered;
-            debug.lastTilesCulled = debug.tilesCulled;
-            debug.lastMaxDepth = debug.maxDepth;
+                debug.lastTilesVisited = debug.tilesVisited;
+                debug.lastTilesRendered = debug.tilesRendered;
+                debug.lastTexturesRendered = debug.texturesRendered;
+                debug.lastTilesCulled = debug.tilesCulled;
+                debug.lastMaxDepth = debug.maxDepth;
+                debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
+            }
         }
     }
 
@@ -669,6 +675,8 @@ define([
         }
     }
 
+    // This is debug code to render the bounding sphere of the tile in
+    // CentralBodySurface._debug.boundingSphereTile.
     CentralBodySurface.prototype.debugShowBoundingSphereOfTileAt = function(cartographicPick) {
         // Find the tile in the render list that overlaps this extent
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
@@ -696,8 +704,6 @@ define([
         this._debug.boundingSphereVA = undefined;
     };
 
-    // This is debug code to render the bounding sphere of the tile in
-    // CentralBodySurface._debug.boundingSphereTile.
     function debugCreateRenderCommandsForTileBoundingSphere(surface, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
         if (typeof surface._debug !== 'undefined' && typeof surface._debug.boundingSphereTile !== 'undefined') {
             if (!surface._debug.boundingSphereVA) {
@@ -738,7 +744,7 @@ define([
         }
     }
 
-    CentralBodySurface.prototype.toggleLodUpdate = function(frameState) {
+    CentralBodySurface.prototype.debugToggleLodUpdate = function(frameState) {
         this._debug.suspendLodUpdate = !this._debug.suspendLodUpdate;
     };
 
