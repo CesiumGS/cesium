@@ -755,6 +755,12 @@ define([
         // lookAt is not supported in 2D because there is only one direction to look
     };
 
+    var viewExtent3DCartographic = new Cartographic();
+    var viewExtent3DNorthEast = new Cartesian3();
+    var viewExtent3DSouthWest = new Cartesian3();
+    var viewExtent3DNorthWest = new Cartesian3();
+    var viewExtent3DSouthEast = new Cartesian3();
+    var viewExtent3DCenter = new Cartesian3();
     function viewExtent3D(camera, extent, ellipsoid) {
         var north = extent.north;
         var south = extent.south;
@@ -766,76 +772,116 @@ define([
             east += CesiumMath.TWO_PI;
         }
 
-        var northEast = ellipsoid.cartographicToCartesian(new Cartographic(east, north));
-        var southWest = ellipsoid.cartographicToCartesian(new Cartographic(west, south));
-        var diagonal = northEast.subtract(southWest);
-        var center = southWest.add(diagonal.normalize().multiplyByScalar(diagonal.magnitude() * 0.5));
+        var cart = viewExtent3DCartographic;
+        cart.longitude = east;
+        cart.latitude = north;
+        var northEast = ellipsoid.cartographicToCartesian(cart, viewExtent3DNorthEast);
+        cart.latitude = south;
+        var southEast = ellipsoid.cartographicToCartesian(cart, viewExtent3DSouthEast);
+        cart.longitude = west;
+        var southWest = ellipsoid.cartographicToCartesian(cart, viewExtent3DSouthWest);
+        cart.longitude = north;
+        var northWest = ellipsoid.cartographicToCartesian(cart, viewExtent3DNorthWest);
 
-        var northWest = ellipsoid.cartographicToCartesian(new Cartographic(west, north)).subtract(center);
-        var southEast = ellipsoid.cartographicToCartesian(new Cartographic(east, south)).subtract(center);
-        northEast = northEast.subtract(center);
-        southWest = southWest.subtract(center);
+        var center = Cartesian3.subtract(northEast, southWest, viewExtent3DCenter);
+        var scalar = center.magnitude() * 0.5;
+        Cartesian3.normalize(center, center);
+        Cartesian3.multiplyByScalar(center, scalar, center);
+        Cartesian3.add(southWest, center, center);
 
-        camera.direction = center.negate().normalize();
-        camera.right = camera.direction.cross(Cartesian3.UNIT_Z).normalize();
-        camera.up = camera.right.cross(camera.direction);
+        Cartesian3.subtract(northWest, center, northWest);
+        Cartesian3.subtract(southEast, center, southEast);
+        Cartesian3.subtract(northEast, center, northEast);
+        Cartesian3.subtract(southWest, center, southWest);
 
-        var height = Math.max(Math.abs(camera.up.dot(northWest)), Math.abs(camera.up.dot(southEast)), Math.abs(camera.up.dot(northEast)), Math.abs(camera.up.dot(southWest)));
-        var width = Math.max(Math.abs(camera.right.dot(northWest)), Math.abs(camera.right.dot(southEast)), Math.abs(camera.right.dot(northEast)), Math.abs(camera.right.dot(southWest)));
+        var direction = camera.direction;
+        Cartesian3.negate(center, direction);
+        Cartesian3.normalize(direction, direction);
+        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, camera.right);
+        var up = Cartesian3.cross(right, direction, camera.up);
+
+        var height = Math.max(Math.abs(up.dot(northWest)), Math.abs(up.dot(southEast)), Math.abs(up.dot(northEast)), Math.abs(up.dot(southWest)));
+        var width = Math.max(Math.abs(right.dot(northWest)), Math.abs(right.dot(southEast)), Math.abs(right.dot(northEast)), Math.abs(right.dot(southWest)));
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
         var d = Math.max(width / tanTheta, height / tanPhi);
 
-        camera.position = center.normalize().multiplyByScalar(center.magnitude() + d);
+        scalar = center.magnitude() + d;
+        Cartesian3.normalize(center, center);
+        Cartesian3.multiplyByScalar(center, scalar, camera.position);
     }
 
+    var viewExtentCVCartographic = new Cartographic();
+    var viewExtentCVCartographicHeight = new Cartographic();
+    var viewExtentCVNorthEast = Cartesian4.UNIT_W.clone();
+    var viewExtentCVSouthWest = Cartesian4.UNIT_W.clone();
+    var viewExtentCVPosition = Cartesian4.UNIT_W.clone();
+    var viewExtentCVTransform = new Matrix4();
     function viewExtentColumbusView(camera, extent, projection) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
         var west = extent.west;
 
-        var transform = camera.transform.setColumn(3, Cartesian4.UNIT_W);
+        var transform = Matrix4.clone(camera.transform, viewExtentCVTransform);
+        transform.setColumn(3, Cartesian4.UNIT_W);
+        var invTransform = camera.getInverseTransform();
 
-        var northEast = projection.project(new Cartographic(east, north));
-        northEast = transform.multiplyByVector(new Cartesian4(northEast.x, northEast.y, northEast.z, 1.0));
-        northEast = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(northEast));
+        var cart = viewExtentCVCartographic;
+        cart.longitude = east;
+        cart.latitude = north;
+        var position = projection.project(cart);
+        var northEast = Cartesian3.clone(position, viewExtentCVNorthEast);
+        Matrix4.multiplyByVector(transform, northEast, northEast);
+        Matrix4.multiplyByVector(invTransform, northEast, northEast);
 
-        var southWest = projection.project(new Cartographic(west, south));
-        southWest = transform.multiplyByVector(new Cartesian4(southWest.x, southWest.y, southWest.z, 1.0));
-        southWest = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(southWest));
+        cart.longitude = west;
+        cart.latitude = south;
+        position = projection.project(cart);
+        var southWest = Cartesian3.clone(position, viewExtentCVSouthWest);
+        Matrix4.multiplyByVector(transform, southWest, southWest);
+        Matrix4.multiplyByVector(invTransform, southWest, southWest);
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
-        var d = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
 
-        var position = projection.project(new Cartographic(0.5 * (west + east), 0.5 * (north + south), d));
-        position = transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0));
-        camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(position));
+        cart = viewExtentCVCartographicHeight;
+        cart.longitude = 0.5 * (west + east);
+        cart.latitude = 0.5 * (north + south);
+        cart.height = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
+        position = projection.project(cart);
+        position = Cartesian3.clone(position, viewExtentCVPosition);
+        Matrix4.multiplyByVector(transform, position, position);
+        Matrix4.multiplyByVector(invTransform, position, position);
+        Cartesian3.clone(position, camera.position);
 
         // Not exactly -z direction because that would lock the camera in place with a constrained z axis.
-        camera.direction = new Cartesian3(0.0, 0.0001, -0.999);
-        Cartesian3.UNIT_X.clone(camera.right);
-        camera.up = camera.right.cross(camera.direction);
+        var direction = camera.direction;
+        direction.x = 0.0;
+        direction.y = 0.0001;
+        direction.z = -0.999;
+        var right = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
+        Cartesian3.cross(right, direction, camera.up);
     }
 
+    var viewExtent2DCartographic = new Cartographic();
     function viewExtent2D(camera, extent, projection) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
         var west = extent.west;
-        var lla = new Cartographic(0.5 * (west + east), 0.5 * (north + south));
 
-        var northEast = projection.project(new Cartographic(east, north));
-        var southWest = projection.project(new Cartographic(west, south));
+        var cart = viewExtent2DCartographic;
+        cart.longitude = east;
+        cart.latitude = north;
+        var northEast = projection.project(cart);
+        cart.longitude = west;
+        cart.latitude = south;
+        var southWest = projection.project(cart);
 
         var width = Math.abs(northEast.x - southWest.x) * 0.5;
         var height = Math.abs(northEast.y - southWest.y) * 0.5;
-
-        var position = projection.project(lla);
-        camera.position.x = position.x;
-        camera.position.y = position.y;
 
         var right, top;
         var ratio = camera.frustum.right / camera.frustum.top;
@@ -853,9 +899,14 @@ define([
         camera.frustum.top = top;
         camera.frustum.bottom = -top;
 
+        cart.longitude = 0.5 * (west + east);
+        cart.latitude = 0.5 * (north + south);
+        var position = projection.project(cart);
+        Cartesian2.clone(position, camera.position);
+
         //Orient the camera north.
-        Cartesian3.UNIT_X.clone(camera.right);
-        camera.up = camera.right.cross(camera.direction);
+        var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
+        Cartesian3.cross(cameraRight, camera.direction, camera.up);
     }
 
     /**
@@ -882,9 +933,10 @@ define([
         }
     };
 
+    var pickEllipsoid3DRay = new Ray();
     function pickEllipsoid3D(controller, windowPosition, ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
-        var ray = controller.getPickRay(windowPosition);
+        var ray = controller.getPickRay(windowPosition, pickEllipsoid3DRay);
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
         if (!intersection) {
             return undefined;
@@ -894,8 +946,9 @@ define([
         return iPt;
     }
 
+    var pickEllipsoid2DRay = new Ray();
     function pickMap2D(controller, windowPosition, projection) {
-        var ray = controller.getPickRay(windowPosition);
+        var ray = controller.getPickRay(windowPosition, pickEllipsoid2DRay);
         var position = ray.origin;
         position.z = 0.0;
         var cart = projection.unproject(position);
@@ -908,8 +961,9 @@ define([
         return projection.getEllipsoid().cartographicToCartesian(cart);
     }
 
+    var pickEllipsoidCVRay = new Ray();
     function pickMapColumbusView(controller, windowPosition, projection) {
-        var ray = controller.getPickRay(windowPosition);
+        var ray = controller.getPickRay(windowPosition, pickEllipsoidCVRay);
         var scalar = -ray.origin.x / ray.direction.x;
         var position = ray.getPoint(scalar);
 
@@ -920,7 +974,7 @@ define([
             return undefined;
         }
 
-        position = projection.getEllipsoid().cartographicToCartesian(cart);
+        position = projection.getEllipsoid().cartographicToCartesian(cart, position);
         return position;
     }
 
@@ -954,7 +1008,14 @@ define([
         return p;
     };
 
-    function getPickRayPerspective(camera, windowPosition) {
+    var pickPerspCenter = new Cartesian3();
+    var pickPerspXDir = new Cartesian3();
+    var pickPerspYDir = new Cartesian3();
+    function getPickRayPerspective(camera, windowPosition, result) {
+        if (typeof result === 'undefined') {
+            result = new Ray();
+        }
+
         var width = camera._canvas.clientWidth;
         var height = camera._canvas.clientHeight;
 
@@ -966,15 +1027,25 @@ define([
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
 
         var position = camera.getPositionWC();
-        var nearCenter = position.add(camera.getDirectionWC().multiplyByScalar(near));
-        var xDir = camera.getRightWC().multiplyByScalar(x * near * tanTheta);
-        var yDir = camera.getUpWC().multiplyByScalar(y * near * tanPhi);
-        var direction = nearCenter.add(xDir).add(yDir).subtract(position).normalize();
+        Cartesian3.clone(position, result.origin);
 
-        return new Ray(position, direction);
+        var nearCenter = Cartesian3.multiplyByScalar(camera.getDirectionWC(), near, pickPerspCenter);
+        Cartesian3.add(position, nearCenter, nearCenter);
+        var xDir = Cartesian3.multiplyByScalar(camera.getRightWC(), x * near * tanTheta, pickPerspXDir);
+        var yDir = Cartesian3.multiplyByScalar(camera.getUpWC(), y * near * tanPhi, pickPerspYDir);
+        var direction = Cartesian3.add(nearCenter, xDir, result.direction);
+        Cartesian3.add(direction, yDir, direction);
+        Cartesian3.subtract(direction, position, direction);
+        Cartesian3.normalize(direction, direction);
+
+        return result;
     }
 
-    function getPickRayOrthographic(camera, windowPosition) {
+    function getPickRayOrthographic(camera, windowPosition, result) {
+        if (typeof result === 'undefined') {
+            result = new Ray();
+        }
+
         var width = camera._canvas.clientWidth;
         var height = camera._canvas.clientHeight;
 
@@ -983,11 +1054,14 @@ define([
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
         y *= (camera.frustum.top - camera.frustum.bottom) * 0.5;
 
-        var position = camera.position.clone();
-        position.x += x;
-        position.y += y;
+        var origin = result.origin;
+        Cartesian3.clone(camera.position, origin);
+        origin.x += x;
+        origin.y += y;
 
-        return new Ray(position, camera.getDirectionWC());
+        Cartesian3.clone(camera.getDirectionWC(), result.direction);
+
+        return result;
     }
 
     /**
@@ -997,12 +1071,13 @@ define([
      * @memberof CameraController
      *
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
+     * @param {Ray} [result] The object onto which to store the result.
      *
      * @exception {DeveloperError} windowPosition is required.
      *
      * @return {Object} Returns the {@link Cartesian3} position and direction of the ray.
      */
-    CameraController.prototype.getPickRay = function(windowPosition) {
+    CameraController.prototype.getPickRay = function(windowPosition, result) {
         if (typeof windowPosition === 'undefined') {
             throw new DeveloperError('windowPosition is required.');
         }
@@ -1010,40 +1085,48 @@ define([
         var camera = this._camera;
         var frustum = camera.frustum;
         if (typeof frustum.aspectRatio !== 'undefined' && typeof frustum.fovy !== 'undefined' && typeof frustum.near !== 'undefined') {
-            return getPickRayPerspective(camera, windowPosition);
+            return getPickRayPerspective(camera, windowPosition, result);
         }
 
-        return getPickRayOrthographic(camera, windowPosition);
+        return getPickRayOrthographic(camera, windowPosition, result);
     };
 
     /**
      * Transform a vector or point from world coordinates to the camera's reference frame.
      * @memberof CameraController
+     *
      * @param {Cartesian4} cartesian The vector or point to transform.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     *
      * @exception {DeveloperError} cartesian is required.
+     *
      * @returns {Cartesian4} The transformed vector or point.
      */
-    CameraController.prototype.worldToCameraCoordinates = function(cartesian) {
+    CameraController.prototype.worldToCameraCoordinates = function(cartesian, result) {
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required.');
         }
         var transform = this._camera.getInverseTransform();
-        return transform.multiplyByVector(cartesian);
+        return Matrix4.multiplyByVector(transform, cartesian, result);
     };
 
     /**
      * Transform a vector or point from the camera's reference frame to world coordinates .
      * @memberof CameraController
+     *
      * @param {Cartesian4} vector The vector or point to transform.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     *
      * @exception {DeveloperError} cartesian is required.
+     *
      * @returns {Cartesian4} The transformed vector or point.
      */
-    CameraController.prototype.cameraToWorldCoordinates = function(cartesian) {
+    CameraController.prototype.cameraToWorldCoordinates = function(cartesian, result) {
         if (typeof cartesian === 'undefined') {
             throw new DeveloperError('cartesian is required.');
         }
         var transform = this._camera.transform;
-        return transform.multiplyByVector(cartesian);
+        return Matrix4.multiplyByVector(transform, cartesian, result);
     };
 
     function createAnimation2D(controller) {
