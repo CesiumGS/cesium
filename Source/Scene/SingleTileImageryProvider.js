@@ -47,8 +47,6 @@ define([
         var proxy = description.proxy;
         this._proxy = proxy;
 
-        this._maximumLevel = 0;
-
         var extent = defaultValue(description.extent, Extent.MAX_VALUE);
         var tilingScheme = new GeographicTilingScheme({
             extent : extent,
@@ -59,6 +57,8 @@ define([
 
         this._image = undefined;
         this._texture = undefined;
+        this._tileWidth = 0;
+        this._tileHeight = 0;
 
         this._ready = false;
 
@@ -78,6 +78,8 @@ define([
         var that = this;
         loadImage(imageUrl).then(function(image) {
             that._image = image;
+            that._tileWidth = image.width;
+            that._tileHeight = image.height;
             that._ready = true;
         });
     };
@@ -126,7 +128,7 @@ define([
      * @returns {Number} The maximum level.
      */
     SingleTileImageryProvider.prototype.getMaximumLevel = function() {
-        return this._maximumLevel;
+        return 0;
     };
 
     /**
@@ -169,7 +171,7 @@ define([
      * @see NeverTileDiscardPolicy
      */
     SingleTileImageryProvider.prototype.getTileDiscardPolicy = function() {
-        return this._tileDiscardPolicy;
+        return undefined;
     };
 
     /**
