@@ -571,7 +571,7 @@ defineSuite([
         updateController(frameState);
         expect(camera.position).not.toEqual(position);
         expect(camera.direction.equalsEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15)).toEqual(false);
-        expect(camera.direction.cross(camera.up).equalsEpsilon(camera.right, CesiumMath.EPSILON15)).toEqual(true);
+        expect(camera.direction.cross(camera.up).equalsEpsilon(camera.right, CesiumMath.EPSILON14)).toEqual(true);
         expect(camera.right.cross(camera.direction).equalsEpsilon(camera.up, CesiumMath.EPSILON15)).toEqual(true);
 
         var ray = new Ray(camera.getPositionWC(), camera.getDirectionWC());
