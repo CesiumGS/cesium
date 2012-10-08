@@ -217,12 +217,15 @@ define([
      * @see CentralBodySurface#isDestroyed
      */
     CentralBodySurface.prototype.destroy = function() {
-        var levelZeroTiles = this.levelZeroTiles;
+        var levelZeroTiles = this._levelZeroTiles;
         for (var i = 0; i < levelZeroTiles.length; ++i) {
-            levelZeroTiles[i].destroy();
+            levelZeroTiles[i].freeResources();
         }
 
-        this._terrainProvider.destroy();
+        if (typeof this._terrainProvider.destroy !== 'undefined') {
+            this._terrainProvider.destroy();
+        }
+
         this._imageryLayerCollection.destroy();
 
         var debug = this._debug;

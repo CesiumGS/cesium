@@ -1412,6 +1412,8 @@ define([
         this._cloudsTexture = this._cloudsTexture && this._cloudsTexture.destroy();
         this._bumpTexture = this._bumpTexture && this._bumpTexture.destroy();
 
+        this._surface = this._surface && this._surface.destroy();
+
         return destroyObject(this);
     };
 

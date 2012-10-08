@@ -267,7 +267,7 @@ define([
         layer._isBaseLayer = false;
         this._layers[0]._isBaseLayer = true;
 
-        this.layerMoved.raiseEvent(layer, layer.length - 1, index);
+        this.layerMoved.raiseEvent(layer, this._layers.length - 1, index);
     };
 
     /**

@@ -2,12 +2,14 @@
 define([
         '../Core/defaultValue',
         '../Core/loadImage',
+        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Extent',
         './GeographicTilingScheme'
     ], function(
         defaultValue,
         loadImage,
+        writeTextToCanvas,
         DeveloperError,
         Extent,
         GeographicTilingScheme) {
