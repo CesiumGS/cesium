@@ -19,6 +19,7 @@ define([
         './AnimationCollection',
         './CameraEventHandler',
         './CameraEventType',
+        './CameraColumbusViewMode',
         './SceneMode'
     ], function(
         destroyObject,
@@ -40,6 +41,7 @@ define([
         AnimationCollection,
         CameraEventHandler,
         CameraEventType,
+        CameraColumbusViewMode,
         SceneMode) {
     "use strict";
 
@@ -76,9 +78,16 @@ define([
         this.enableZoom = true;
         /**
          * If true, allows the user to rotate the camera.  If false, the camera is locked to the current heading.
+         * This flag is only valid in 2D and 3D.
          * @type Boolean
          */
         this.enableRotate = true;
+        /**
+         * If true, allows the user to tilt the camera.  If false, the camera is locked to the current heading.
+         * This flag is only valid in 3D and Columbus view.
+         * @type Boolean
+         */
+        this.enableTilt = true;
         /**
          * If true, allows the user to use free-look. If false, the camera view direction can only be changed through translating
          * or rotating. This flag is only valid in 3D and Columbus view modes.
@@ -113,6 +122,11 @@ define([
          * @type Cartesian3
          */
         this.constrainedAxis = undefined;
+        /**
+         * Sets the behavior in Columbus view.
+         * @type CameraColumbusViewMode
+         */
+        this.columbusViewMode = CameraColumbusViewMode.FREE;
 
         this._canvas = canvas;
         this._cameraController = cameraController;
@@ -442,66 +456,98 @@ define([
     }
 
     function updateCV(controller) {
-        var translate = controller._translateHandler;
-        var translating = translate.isMoving() && translate.getMovement();
-        var rotate = controller._rotateHandler;
-        var rotating = rotate.isMoving() && rotate.getMovement();
         var zoom = controller._zoomHandler;
         var zoomimg = zoom && zoom.isMoving();
         var wheelZoom = controller._zoomWheel;
         var wheelZooming = wheelZoom.isMoving();
 
-        var buttonDown = translate.isButtonDown() || rotate.isButtonDown() ||
-            rotate.isButtonDown() || controller._lookHandler.isButtonDown();
-        if (buttonDown) {
-            controller._animationCollection.removeAll();
+        if (controller.columbusViewMode === CameraColumbusViewMode.LOCKED) {
+            var spin = controller._spinHandler;
+            var spinning = spin.isMoving() && spin.getMovement();
+
+            if (controller.enableRotate) {
+                if (spinning) {
+                    rotate3D(controller, spin.getMovement());
+                }
+
+                if (spin && !spinning && controller.inertiaSpin < 1.0) {
+                    maintainInertia(spin, controller.inertiaSpin, rotate3D, controller, '_lastInertiaSpinMovement');
+                }
+            }
+
+            if (controller.enableZoom) {
+                if (zoomimg) {
+                    zoom3D(controller, zoom.getMovement());
+                } else if (wheelZooming) {
+                    zoom3D(controller, wheelZoom.getMovement());
+                }
+
+                if (zoom && !zoomimg && controller.inertiaZoom < 1.0) {
+                    maintainInertia(zoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
+                }
+
+                if (wheelZoom && !wheelZooming && controller.inertiaZoom < 1.0) {
+                    maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
+                }
+            }
+        } else {
+            var translate = controller._translateHandler;
+            var translating = translate.isMoving() && translate.getMovement();
+            var rotate = controller._rotateHandler;
+            var rotating = rotate.isMoving() && rotate.getMovement();
+
+            var buttonDown = translate.isButtonDown() || rotate.isButtonDown() ||
+                rotate.isButtonDown() || controller._lookHandler.isButtonDown();
+            if (buttonDown) {
+                controller._animationCollection.removeAll();
+            }
+
+            if (controller.enableTilt) {
+                if (rotating) {
+                    rotateCV(controller, rotate.getMovement());
+                }
+            }
+
+            if (controller.enableTranslate) {
+                if (translating) {
+                    translateCV(controller, translate.getMovement());
+                }
+
+                if (!translating && controller.inertiaTranslate < 1.0) {
+                    maintainInertia(translate, controller.inertiaTranslate, translateCV, controller, '_lastInertiaTranslateMovement');
+                }
+            }
+
+            if (controller.enableZoom) {
+                if (zoomimg) {
+                    zoomCV(controller, zoom.getMovement());
+                } else if (wheelZooming) {
+                    zoomCV(controller, wheelZoom.getMovement());
+                }
+
+                if (zoom && !zoomimg && controller.inertiaZoom < 1.0) {
+                    maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
+                }
+
+                if (!wheelZooming && controller.inertiaZoom < 1.0) {
+                    maintainInertia(wheelZoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaWheelZoomMovement');
+                }
+            }
+
+            if (controller.enableLook && controller._lookHandler.isMoving()) {
+                    look3D(controller, controller._lookHandler.getMovement());
+            }
+
+            if (!buttonDown && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
+                    !controller._animationCollection.contains(controller._animation)) {
+                var animation = controller._cameraController.createCorrectPositionAnimation();
+                if (typeof animation !== 'undefined') {
+                    controller._animation = controller._animationCollection.add(animation);
+                }
+            }
+
+            controller._animationCollection.update();
         }
-
-        if (controller.enableRotate) {
-            if (rotating) {
-                rotateCV(controller, rotate.getMovement());
-            }
-        }
-
-        if (controller.enableTranslate) {
-            if (translating) {
-                translateCV(controller, translate.getMovement());
-            }
-
-            if (!translating && controller.inertiaTranslate < 1.0) {
-                maintainInertia(translate, controller.inertiaTranslate, translateCV, controller, '_lastInertiaTranslateMovement');
-            }
-        }
-
-        if (controller.enableZoom) {
-            if (zoomimg) {
-                zoomCV(controller, zoom.getMovement());
-            } else if (wheelZooming) {
-                zoomCV(controller, wheelZoom.getMovement());
-            }
-
-            if (zoom && !zoomimg && controller.inertiaZoom < 1.0) {
-                maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
-            }
-
-            if (!wheelZooming && controller.inertiaZoom < 1.0) {
-                maintainInertia(wheelZoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaWheelZoomMovement');
-            }
-        }
-
-        if (controller.enableLook && controller._lookHandler.isMoving()) {
-                look3D(controller, controller._lookHandler.getMovement());
-        }
-
-        if (!buttonDown && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
-                !controller._animationCollection.contains(controller._animation)) {
-            var animation = controller._cameraController.createCorrectPositionAnimation();
-            if (typeof animation !== 'undefined') {
-                controller._animation = controller._animationCollection.add(animation);
-            }
-        }
-
-        controller._animationCollection.update();
 
         return true;
     }
@@ -628,9 +674,11 @@ define([
         Cartesian3.negate(position, position);
         Cartesian3.normalize(position, position);
         var direction = camera.direction;
-        if (!position.equalsEpsilon(direction, CesiumMath.EPSILON2) || yDiff > 0) {
-            rotate3D(controller, movement, transform);
+        if (position.equalsEpsilon(direction, CesiumMath.EPSILON2) && yDiff < 0) {
+            movement.endPosition.y = movement.startPosition.y;
         }
+
+        rotate3D(controller, movement, transform);
 
         controller.constrainedAxis = oldAxis;
         controller.setEllipsoid(oldEllipsoid);
@@ -700,9 +748,10 @@ define([
                 maintainInertia(spin, controller.inertiaSpin, spin3D, controller, '_lastInertiaSpinMovement');
             }
 
-            if (rotating) {
-                tilt3D(controller, rotate.getMovement());
-            }
+        }
+
+        if (controller.enableTilt && rotating) {
+            tilt3D(controller, rotate.getMovement());
         }
 
         if (controller.enableZoom) {

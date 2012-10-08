@@ -40,6 +40,7 @@ define([
         '../../Scene/PerspectiveFrustum',
         '../../Scene/Material',
         '../../Scene/Scene',
+        '../../Scene/CameraColumbusViewMode',
         '../../Scene/CentralBody',
         '../../Scene/BingMapsTileProvider',
         '../../Scene/BingMapsStyle',
@@ -93,6 +94,7 @@ define([
         PerspectiveFrustum,
         Material,
         Scene,
+        CameraColumbusViewMode,
         CentralBody,
         BingMapsTileProvider,
         BingMapsStyle,
@@ -854,6 +856,12 @@ define([
             var scene = this.scene;
             var mode = scene.mode;
             var camera = scene.getCamera();
+            var mouseHandler = scene.getCameraMouseController();
+
+            mouseHandler.enableTranslate = true;
+            mouseHandler.setEllipsoid(Ellipsoid.WGS84);
+            mouseHandler.constrainedAxis = undefined;
+            mouseHandler.columbusViewMode = CameraColumbusViewMode.FREE;
 
             if (mode === SceneMode.SCENE2D) {
                 camera.controller.viewExtent(Extent.MAX_VALUE);

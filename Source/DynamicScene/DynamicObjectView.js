@@ -11,6 +11,7 @@ define([
         '../Core/Matrix3',
         '../Core/Ellipsoid',
         '../Core/Transforms',
+        '../Scene/CameraColumbusViewMode',
         '../Scene/SceneMode'
        ], function(
          defaultValue,
@@ -24,6 +25,7 @@ define([
          Matrix3,
          Ellipsoid,
          Transforms,
+         CameraColumbusViewMode,
          SceneMode) {
     "use strict";
 
@@ -96,7 +98,12 @@ define([
 
         var tranform = camera.transform;
         tranform.setColumn(3, updateColumbusCartesian4, tranform);
-        that.scene.getCameraMouseController().setEllipsoid(Ellipsoid.UNIT_SPHERE);
+
+        if (that.scene.mode !== that._mode) {
+            that.scene.getCameraMouseController().constrainedAxis = Cartesian3.UNIT_Z;
+            that.scene.getCameraMouseController().setEllipsoid(Ellipsoid.UNIT_SPHERE);
+            that.scene.getCameraMouseController().columbusViewMode = CameraColumbusViewMode.LOCKED;
+        }
 
         var position = camera.position;
         Cartesian3.clone(position, that._lastOffset);
@@ -111,7 +118,7 @@ define([
 
         if (objectChanged) {
             camera.controller.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
-        } else if (that.scene.mode !== that._mode){
+        } else if (that.scene.mode !== that._mode) {
             that._mode = that.scene.mode;
 
             //If we're switching from 2D and any rotation was applied to the camera,
