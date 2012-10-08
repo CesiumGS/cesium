@@ -1149,9 +1149,12 @@ define([
             var widget = this;
             var animationController = widget.animationController;
 
-            function updateAndRender() {
+            this.scene.setAnimation(function() {
                 var currentTime = animationController.update();
                 widget.update(currentTime);
+            });
+
+            function updateAndRender() {
                 widget.render();
                 requestAnimationFrame(updateAndRender);
             }

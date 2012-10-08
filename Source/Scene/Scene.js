@@ -257,21 +257,23 @@ define([
             scene._context.getShaderCache().destroyReleasedShaderPrograms();
         }
 
+        scene._animations.update();
+
         updateFrameState(scene);
         scene._frameState.passes.color = true;
         scene._frameState.passes.overlay = true;
 
-        scene._animations.update();
         camera.controller.update(scene._frameState);
         cameraController.update(scene._frameState);
+
+        if (scene._animate) {
+            scene._animate();
+        }
+
         us.setView(camera.getViewMatrix());
         us.setProjection(camera.frustum.getProjectionMatrix());
         if (camera.frustum.getInfiniteProjectionMatrix) {
             us.setInfiniteProjection(camera.frustum.getInfiniteProjectionMatrix());
-        }
-
-        if (scene._animate) {
-            scene._animate();
         }
 
         scene._commandList.length = 0;
