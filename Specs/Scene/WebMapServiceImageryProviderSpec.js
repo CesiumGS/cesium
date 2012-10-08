@@ -82,6 +82,7 @@ defineSuite([
                 expect(url).toMatch('something=foo');
                 expect(url).toMatch('another=false');
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 
@@ -110,6 +111,7 @@ defineSuite([
                 expect(secondQuestionMarkIndex).toBeLessThan(0);
 
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 
@@ -141,6 +143,7 @@ defineSuite([
                 expect(doubleAmpersandIndex).toBeLessThan(0);
 
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 
@@ -172,6 +175,7 @@ defineSuite([
                 expect(delimitedQueryParameterIndex).not.toBeLessThan(0);
 
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 
@@ -242,6 +246,7 @@ defineSuite([
                 expect(url).toMatch('format=foo');
                 expect(url).not.toMatch('format=image/jpeg');
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 
@@ -331,6 +336,7 @@ defineSuite([
                             CesiumMath.toDegrees(extent.north);
                 expect(url.indexOf(bbox)).not.toBeLessThan(0);
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 

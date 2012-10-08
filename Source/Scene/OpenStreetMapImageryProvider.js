@@ -27,8 +27,9 @@ define([
      * @param {String} [description.url='http://tile.openstreetmap.org'] The OpenStreetMap server url.
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A string crediting the data source, which is displayed on the canvas.
+     * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent of the layer.
      * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
+     * @param {String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A string crediting the data source, which is displayed on the canvas.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -64,6 +65,8 @@ define([
         this._tileHeight = 256;
 
         this._maximumLevel = defaultValue(description.maximumLevel, 18);
+
+        this._extent = defaultValue(description.extent, this._tilingScheme.getExtent());
 
         this._ready = true;
 
@@ -155,7 +158,7 @@ define([
      * @returns {Extent} The extent.
      */
     OpenStreetMapImageryProvider.prototype.getExtent = function() {
-        return this._tilingScheme.getExtent();
+        return this._extent;
     };
 
     /**
