@@ -934,7 +934,7 @@ define([
     };
 
     var pickEllipsoid3DRay = new Ray();
-    function pickEllipsoid3D(controller, windowPosition, ellipsoid) {
+    function pickEllipsoid3D(controller, windowPosition, ellipsoid, result) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var ray = controller.getPickRay(windowPosition, pickEllipsoid3DRay);
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
@@ -942,12 +942,11 @@ define([
             return undefined;
         }
 
-        var iPt = ray.getPoint(intersection.start);
-        return iPt;
+        return ray.getPoint(intersection.start, result);
     }
 
     var pickEllipsoid2DRay = new Ray();
-    function pickMap2D(controller, windowPosition, projection) {
+    function pickMap2D(controller, windowPosition, projection, result) {
         var ray = controller.getPickRay(windowPosition, pickEllipsoid2DRay);
         var position = ray.origin;
         position.z = 0.0;
@@ -958,24 +957,23 @@ define([
             return undefined;
         }
 
-        return projection.getEllipsoid().cartographicToCartesian(cart);
+        return projection.getEllipsoid().cartographicToCartesian(cart, result);
     }
 
     var pickEllipsoidCVRay = new Ray();
-    function pickMapColumbusView(controller, windowPosition, projection) {
+    function pickMapColumbusView(controller, windowPosition, projection, result) {
         var ray = controller.getPickRay(windowPosition, pickEllipsoidCVRay);
         var scalar = -ray.origin.x / ray.direction.x;
-        var position = ray.getPoint(scalar);
+        ray.getPoint(scalar, result);
 
-        var cart = projection.unproject(new Cartesian3(position.y, position.z, 0.0));
+        var cart = projection.unproject(new Cartesian3(result.y, result.z, 0.0));
 
         if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
                 cart.longitude < - Math.PI || cart.longitude > Math.PI) {
             return undefined;
         }
 
-        position = projection.getEllipsoid().cartographicToCartesian(cart, position);
-        return position;
+        return projection.getEllipsoid().cartographicToCartesian(cart, result);
     }
 
     /**
@@ -984,38 +982,39 @@ define([
      *
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
+     * @param {Cartesian3} [result] The object onto which to store the result.
      *
      * @exception {DeveloperError} windowPosition is required.
      *
      * @return {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
      * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
      */
-    CameraController.prototype.pickEllipsoid = function(windowPosition, ellipsoid) {
+    CameraController.prototype.pickEllipsoid = function(windowPosition, ellipsoid, result) {
         if (typeof windowPosition === 'undefined') {
             throw new DeveloperError('windowPosition is required.');
         }
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
 
-        var p;
-        if (this._mode === SceneMode.SCENE3D) {
-            p = pickEllipsoid3D(this, windowPosition, ellipsoid);
-        } else if (this._mode === SceneMode.SCENE2D) {
-            p = pickMap2D(this, windowPosition, this._projection);
-        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            p = pickMapColumbusView(this, windowPosition, this._projection);
+        if (typeof result === 'undefined') {
+            result = new Cartesian3();
         }
 
-        return p;
+        ellipsoid = ellipsoid || Ellipsoid.WGS84;
+
+        if (this._mode === SceneMode.SCENE3D) {
+            result = pickEllipsoid3D(this, windowPosition, ellipsoid, result);
+        } else if (this._mode === SceneMode.SCENE2D) {
+            result = pickMap2D(this, windowPosition, this._projection, result);
+        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+            result = pickMapColumbusView(this, windowPosition, this._projection, result);
+        }
+
+        return result;
     };
 
     var pickPerspCenter = new Cartesian3();
     var pickPerspXDir = new Cartesian3();
     var pickPerspYDir = new Cartesian3();
     function getPickRayPerspective(camera, windowPosition, result) {
-        if (typeof result === 'undefined') {
-            result = new Ray();
-        }
-
         var width = camera._canvas.clientWidth;
         var height = camera._canvas.clientHeight;
 
@@ -1042,10 +1041,6 @@ define([
     }
 
     function getPickRayOrthographic(camera, windowPosition, result) {
-        if (typeof result === 'undefined') {
-            result = new Ray();
-        }
-
         var width = camera._canvas.clientWidth;
         var height = camera._canvas.clientHeight;
 
@@ -1080,6 +1075,10 @@ define([
     CameraController.prototype.getPickRay = function(windowPosition, result) {
         if (typeof windowPosition === 'undefined') {
             throw new DeveloperError('windowPosition is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new Ray();
         }
 
         var camera = this._camera;
