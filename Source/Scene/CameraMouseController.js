@@ -629,8 +629,10 @@ define([
     }
 
     function zoom3D(controller, movement) {
-        var magnitude = controller._cameraController.getMagnitude();
-        handleZoom(controller, movement, controller._zoomFactor, magnitude - controller._ellipsoid.getMaximumRadius());
+        // CAMERA TODO: remove access to camera
+        var ellipsoid = controller._ellipsoid;
+        var height = ellipsoid.cartesianToCartographic(controller._cameraController._camera.position).height;
+        handleZoom(controller, movement, controller._zoomFactor, height);
     }
 
     var tilt3DWindowPos = new Cartesian2();
@@ -642,7 +644,7 @@ define([
         var cameraController = controller._cameraController;
 
         var ellipsoid = controller._ellipsoid;
-        var height = cameraController.getMagnitude() - ellipsoid.getMaximumRadius();
+        var height = ellipsoid.cartesianToCartographic(controller._cameraController._camera.position).height;
         if (height - maxHeight - 1.0 < CesiumMath.EPSILON3 &&
                 movement.endPosition.y - movement.startPosition.y < 0) {
             return;
