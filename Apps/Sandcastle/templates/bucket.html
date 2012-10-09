@@ -90,7 +90,11 @@
     window.onerror = function (errorMsg, url, lineNumber) {
         var rawErrorMsg = errorMsg;
         if (typeof lineNumber !== 'undefined') {
-            errorMsg += ' (on line ' + lineNumber + ')';
+            if (typeof url !== 'undefined' && url && url.indexOf('bucket.html') < 0) {
+                errorMsg += ' (on line ' + lineNumber + ' of ' + url + ')';
+            } else {
+                errorMsg += ' (on line ' + lineNumber + ')';
+            }
             window.parent.postMessage({ 'error': errorMsg, 'url': url, 'lineNumber': lineNumber, 'rawErrorMsg': rawErrorMsg }, '*');
         } else {
             window.parent.postMessage({ 'error': errorMsg, 'url': url }, '*');

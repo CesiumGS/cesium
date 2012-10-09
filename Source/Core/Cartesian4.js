@@ -54,7 +54,7 @@ define([
      *
      * @param {Cartesian4} cartesian The Cartesian to duplicate.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -141,7 +141,7 @@ define([
      *
      * @param {Cartesian4} cartesian The Cartesian to be normalized.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -188,7 +188,7 @@ define([
      * @param {Cartesian4} left The first Cartesian.
      * @param {Cartesian4} right The second Cartesian.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -217,7 +217,7 @@ define([
      * @param {Cartesian4} left The first Cartesian.
      * @param {Cartesian4} right The second Cartesian.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -246,7 +246,7 @@ define([
      * @param {Cartesian4} left The first Cartesian.
      * @param {Cartesian4} right The second Cartesian.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -275,7 +275,7 @@ define([
      * @param {Cartesian4} cartesian The Cartesian to be scaled.
      * @param {Number} scalar The scalar to multiply with.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      * @exception {DeveloperError} scalar is required and must be a number.
@@ -304,7 +304,7 @@ define([
      * @param {Cartesian4} cartesian The Cartesian to be divided.
      * @param {Number} scalar The scalar to divide by.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      * @exception {DeveloperError} scalar is required and must be a number.
@@ -332,7 +332,7 @@ define([
      *
      * @param {Cartesian4} cartesian The Cartesian to be negated.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -356,7 +356,7 @@ define([
      *
      * @param {Cartesian4} cartesian The Cartesian whose absolute value is to be computed.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -383,7 +383,7 @@ define([
      * @param end The value corresponding to t at 1.0.
      * @param t The point along t at which to interpolate.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} start is required.
      * @exception {DeveloperError} end is required.
@@ -504,7 +504,7 @@ define([
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.prototype.clone = function(result) {
         return Cartesian4.clone(this, result);
@@ -535,7 +535,7 @@ define([
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.prototype.normalize = function(result) {
         return Cartesian4.normalize(this, result);
@@ -560,7 +560,7 @@ define([
      *
      * @param {Cartesian4} right The right hand side Cartesian.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -574,7 +574,7 @@ define([
      *
      * @param {Cartesian4} right The right hand side Cartesian.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -588,7 +588,7 @@ define([
      *
      * @param {Cartesian4} right The right hand side Cartesian.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -602,7 +602,7 @@ define([
      *
      * @param {Number} scalar The scalar to multiply with.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
@@ -616,7 +616,7 @@ define([
      *
      * @param {Number} scalar The scalar to divide by.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
@@ -629,7 +629,7 @@ define([
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.prototype.negate = function(result) {
         return Cartesian4.negate(this, result);
@@ -640,7 +640,7 @@ define([
      * @memberof Cartesian4
      *
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.prototype.abs = function(result) {
         return Cartesian4.abs(this, result);
@@ -654,7 +654,7 @@ define([
      * @param end The value corresponding to t at 1.0.
      * @param t The point along t at which to interpolate.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if none was provided.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} end is required.
      * @exception {DeveloperError} t is required and must be a number.

@@ -1,9 +1,9 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicPolygonVisualizer',
-             '../Specs/createScene',
-             '../Specs/destroyScene',
-             '../Specs/MockProperty',
+             'Specs/createScene',
+             'Specs/destroyScene',
+             'Specs/MockProperty',
              'DynamicScene/DynamicPolygon',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',

@@ -94,20 +94,20 @@ define([
      *
      * @example
      * // Create a polyline collection with two polylines
-     * var polylines = new Cesium.PolylineCollection(undefined);
+     * var polylines = new PolylineCollection(undefined);
      * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-75.10, 39.57),
-     *     new Cesium.Cartographic2(-77.02, 38.53),
-     *     new Cesium.Cartographic2(-80.50, 35.14),
-     *     new Cesium.Cartographic2(-80.12, 25.46)]),
+     *     new Cartographic2(-75.10, 39.57),
+     *     new Cartographic2(-77.02, 38.53),
+     *     new Cartographic2(-80.50, 35.14),
+     *     new Cartographic2(-80.12, 25.46)]),
            width:2
            });
 
      * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-73.10, 37.57),
-     *     new Cesium.Cartographic2(-75.02, 36.53),
-     *     new Cesium.Cartographic2(-78.50, 33.14),
-     *     new Cesium.Cartographic2(-78.12, 23.46)]),
+     *     new Cartographic2(-73.10, 37.57),
+     *     new Cartographic2(-75.02, 36.53),
+     *     new Cartographic2(-78.50, 33.14),
+     *     new Cartographic2(-78.12, 23.46)]),
      *     width:4
      * });
      */
@@ -134,6 +134,7 @@ define([
          */
         this.modelMatrix = Matrix4.IDENTITY;
         this._modelMatrix = Matrix4.IDENTITY;
+        this._sp = undefined;
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
@@ -160,73 +161,12 @@ define([
         this._mode = undefined;
         var that = this;
 
-        var drawUniformsOne = {
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
-        var drawUniformsTwo = {
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
-        var drawUniformsThree = {
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
-        var pickUniforms = {
+        this._uniforms = {
             u_morphTime : function() {
                 return that.morphTime;
             }
         };
 
-        this._drawUniformsOne3D = combine([drawUniformsOne, {
-            u_model : function() {
-                return that._getModelMatrix(that._mode);
-            }
-        }], false, false);
-
-        this._drawUniformsTwo3D = combine([drawUniformsTwo, {
-            u_model : function() {
-                return that._getModelMatrix(that._mode);
-            }
-        }], false, false);
-        this._drawUniformsThree3D = combine([drawUniformsThree, {
-            u_model : function() {
-                return that._getModelMatrix(that._mode);
-            }
-        }], false, false);
-        this._pickUniforms3D = combine([pickUniforms, {
-            u_model : function() {
-                return that._getModelMatrix(that._mode);
-            }
-        }], false, false);
-
-        this._drawUniformsOne2D = combine([drawUniformsOne, {
-            u_model : function() {
-                return Matrix4.IDENTITY;
-            }
-        }], false, false);
-        this._drawUniformsTwo2D = combine([drawUniformsTwo, {
-            u_model : function() {
-                return Matrix4.IDENTITY;
-            }
-        }], false, false);
-        this._drawUniformsThree2D = combine([drawUniformsThree, {
-            u_model : function() {
-                return Matrix4.IDENTITY;
-            }
-        }], false, false);
-        this._pickUniforms2D = combine([pickUniforms, {
-            u_model : function() {
-                return Matrix4.IDENTITY;
-            }
-        }], false, false);
-
-        this._drawUniformsOne = undefined;
-        this._drawUniformsTwo = undefined;
-        this._drawUniformsThree = undefined;
         this._polylinesToUpdate = [];
         this._colorVertexArrays = [];
         this._outlineColorVertexArrays = [];
@@ -263,8 +203,8 @@ define([
      * var p = polylines.add({
      *   show : true,
      *   positions : ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-75.10, 39.57),
-     *     new Cesium.Cartographic2(-77.02, 38.53)]),
+     *     new Cartographic2(-75.10, 39.57),
+     *     new Cartographic2(-77.02, 38.53)]),
      *     color : { red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 },
      *     width : 1,
      *     outlineWidth : 2
@@ -431,18 +371,13 @@ define([
 
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
-     * This must be called before calling {@link PolylineCollection#render} in order to realize
-     * changes to PolylineCollection positions and properties.
-     *
      *
      * @memberof PolylineCollection
-     *
      */
     PolylineCollection.prototype.update = function(context, frameState, commandList) {
         if (typeof this._sp === 'undefined') {
             this._sp = context.getShaderCache().getShaderProgram(PolylineVS, PolylineFS, attributeIndices);
         }
-
         this._removePolylines();
         this._updateMode(frameState);
 
@@ -535,7 +470,7 @@ define([
         var commands;
         var command;
         polylineBuckets = this._polylineBuckets;
-
+        var sp = this._sp;
         this._commandLists.removeAll();
         if (typeof polylineBuckets !== 'undefined') {
             if (pass.color) {
@@ -561,8 +496,8 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
-                        command.uniformMap = this._drawUniformsOne;
+                        command.shaderProgram = sp;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsOne;
 
@@ -576,8 +511,8 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
-                        command.uniformMap = this._drawUniformsTwo;
+                        command.shaderProgram = sp;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaColor.va;
                         command.renderState = bucketLocator.rsTwo;
 
@@ -591,8 +526,8 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
-                        command.uniformMap = this._drawUniformsThree;
+                        command.shaderProgram = sp;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaOutlineColor.va;
                         command.renderState = bucketLocator.rsThree;
                     }
@@ -619,8 +554,8 @@ define([
                         command.primitiveType = PrimitiveType.LINES;
                         command.count = bucketLocator.count;
                         command.offset = bucketLocator.offset;
-                        command.shaderProgram = this._sp;
-                        command.uniformMap = this._pickUniforms;
+                        command.shaderProgram = sp;
+                        command.uniformMap = this._uniforms;
                         command.vertexArray = vaPickColor.va;
                         command.renderState = bucketLocator.rsPick;
                     }
@@ -931,36 +866,7 @@ define([
             this._mode = mode;
             this._projection = projection;
             this._modelMatrix = this.modelMatrix.clone();
-            switch (mode) {
-            case SceneMode.SCENE3D:
-                this._drawUniformsOne = this._drawUniformsOne3D;
-                this._drawUniformsTwo = this._drawUniformsTwo3D;
-                this._drawUniformsThree = this._drawUniformsThree3D;
-                this._pickUniforms = this._pickUniforms3D;
-                break;
-            case SceneMode.SCENE2D:
-            case SceneMode.COLUMBUS_VIEW:
-                this._drawUniformsOne = this._drawUniformsOne2D;
-                this._drawUniformsTwo = this._drawUniformsTwo2D;
-                this._drawUniformsThree = this._drawUniformsThree2D;
-                this._pickUniforms = this._pickUniforms2D;
-                break;
-            }
             this._createVertexArray = true;
-        }
-    };
-
-    PolylineCollection.prototype._getModelMatrix = function(mode) {
-        switch (mode) {
-        case SceneMode.SCENE3D:
-            return this.modelMatrix;
-
-        case SceneMode.SCENE2D:
-        case SceneMode.COLUMBUS_VIEW:
-            return this.modelMatrix;
-
-        case SceneMode.MORPHING:
-            return Matrix4.IDENTITY;
         }
     };
 
@@ -1181,7 +1087,11 @@ define([
                 var position = positions[j];
                 positionArray[positionIndex] = position.x;
                 positionArray[positionIndex + 1] = position.y;
-                positionArray[positionIndex + 2] = position.z;
+                if (this.mode === SceneMode.SCENE2D) {
+                    positionArray[positionIndex + 2] = 0.0;
+                } else {
+                    positionArray[positionIndex + 2] = position.z;
+                }
                 outlineColorArray[colorIndex] = Color.floatToByte(outlineColor.red);
                 outlineColorArray[colorIndex + 1] = Color.floatToByte(outlineColor.green);
                 outlineColorArray[colorIndex + 2] = Color.floatToByte(outlineColor.blue);
@@ -1503,7 +1413,11 @@ define([
                 var position = positions[i];
                 positionsArray[index] = position.x;
                 positionsArray[index + 1] = position.y;
-                positionsArray[index + 2] = position.z;
+                if (this.mode === SceneMode.SCENE2D) {
+                    positionsArray[index + 2] = 0.0;
+                } else {
+                    positionsArray[index + 2] = position.z;
+                }
                 index += 3;
             }
 

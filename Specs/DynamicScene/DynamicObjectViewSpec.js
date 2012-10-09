@@ -4,9 +4,9 @@ defineSuite([
              'Core/Ellipsoid',
              'Core/JulianDate',
              'DynamicScene/DynamicObject',
-             '../Specs/MockProperty',
-             '../Specs/createScene',
-             '../Specs/destroyScene'
+             'Specs/MockProperty',
+             'Specs/createScene',
+             'Specs/destroyScene'
             ], function(
               DynamicObjectView,
               Ellipsoid,

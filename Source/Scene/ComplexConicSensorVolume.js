@@ -16,8 +16,7 @@ define([
         '../Renderer/Command',
         '../Renderer/CommandLists',
         '../Renderer/CullFace',
-        '../Renderer/BlendEquation',
-        '../Renderer/BlendFunction',
+        '../Renderer/BlendingState',
         './Material',
         '../Shaders/Noise',
         '../Shaders/Ray',
@@ -43,8 +42,7 @@ define([
         Command,
         CommandLists,
         CullFace,
-        BlendEquation,
-        BlendFunction,
+        BlendingState,
         Material,
         ShadersNoise,
         ShadersRay,
@@ -234,9 +232,6 @@ define([
 
         var that = this;
         this._uniforms = {
-            u_model : function() {
-                return that.modelMatrix;
-            },
             u_sensorRadius : function() {
                 return isFinite(that.radius) ? that.radius : FAR;
             },
@@ -383,6 +378,10 @@ define([
      *
      * @exception {DeveloperError} this.innerHalfAngle cannot be greater than this.outerHalfAngle.
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
+     * @exception {DeveloperError} this.outerMaterial must be defined.
+     * @exception {DeveloperError} this.innerMaterial must be defined.
+     * @exception {DeveloperError} this.capMaterial must be defined.
+     * @exception {DeveloperError} this.silhouetteMaterial must be defined.
      */
     ComplexConicSensorVolume.prototype.update = function(context, frameState, commandList) {
         this._mode = frameState.mode;
@@ -396,6 +395,22 @@ define([
 
         if (this.radius < 0.0) {
             throw new DeveloperError('this.radius must be greater than or equal to zero.');
+        }
+
+        if (typeof this.outerMaterial === 'undefined') {
+            throw new DeveloperError('this.outerMaterial must be defined.');
+        }
+
+        if (typeof this.innerMaterial === 'undefined') {
+            throw new DeveloperError('this.innerMaterial must be defined.');
+        }
+
+        if (typeof this.capMaterial === 'undefined') {
+            throw new DeveloperError('this.capMaterial must be defined.');
+        }
+
+        if (typeof this.silhouetteMaterial === 'undefined') {
+            throw new DeveloperError('this.silhouetteMaterial must be defined.');
         }
 
         // Recreate vertex array when proxy geometry needs to change
@@ -416,16 +431,8 @@ define([
                     enabled : true,
                     face : CullFace.FRONT
                 },
-                blending : {
-                    enabled : true,
-                    equationRgb : BlendEquation.ADD,
-                    equationAlpha : BlendEquation.ADD,
-                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-                    functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
-                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
-                    functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
-                }
-                // Does not read or write depth
+                blending : BlendingState.ALPHA_BLEND
+               // Does not read or write depth
             });
         }
 
@@ -434,18 +441,18 @@ define([
 
         this._commandLists.removeAll();
         if (pass.color) {
-            var outerChanged = typeof this._outerMaterial === 'undefined' || this._outerMaterial !== this.outerMaterial;
-            var innerChanged = typeof this._innerMaterial === 'undefined' || this._innerMaterial !== this.innerMaterial;
-            var capChanged = typeof this._capMaterial === 'undefined' || this._capMaterial !== this.capMaterial;
-            var silhouetteChanged = typeof this._silhouetteMaterial === 'undefined' || this._silhouetteMaterial !== this.silhouetteMaterial;
+            var outerChanged = this._outerMaterial !== this.outerMaterial;
+            var innerChanged = this._innerMaterial !== this.innerMaterial;
+            var capChanged = this._capMaterial !== this.capMaterial;
+            var silhouetteChanged = this._silhouetteMaterial !== this.silhouetteMaterial;
             var affectedByLightingChanged = this._affectedByLighting !== this.affectedByLighting;
             var materialChanged = outerChanged || innerChanged || capChanged || silhouetteChanged || affectedByLightingChanged;
 
             if (materialChanged) {
-                this._outerMaterial = (typeof this.outerMaterial !== 'undefined') ? this.outerMaterial : Material.fromType(context, Material.ColorType);
-                this._innerMaterial = (typeof this.innerMaterial !== 'undefined') ? this.innerMaterial : Material.fromType(context, Material.ColorType);
-                this._capMaterial = (typeof this.capMaterial !== 'undefined') ? this.capMaterial : Material.fromType(context, Material.ColorType);
-                this._silhouetteMaterial = (typeof this.silhouetteMaterial !== 'undefined') ? this.silhouetteMaterial : Material.fromType(context, Material.ColorType);
+                this._outerMaterial = this.outerMaterial;
+                this._innerMaterial = this.innerMaterial;
+                this._capMaterial = this.capMaterial;
+                this._silhouetteMaterial = this.silhouetteMaterial;
                 this._affectedByLighting = this.affectedByLighting;
 
                 var material = this._combineMaterials();
@@ -472,6 +479,7 @@ define([
 
             this._commandLists.colorList.push(this._colorCommand);
         }
+
         if (pass.pick) {
             if (typeof this._pickId === 'undefined') {
                 // Since this ignores all other materials, if a material does discard, the sensor will still be picked.

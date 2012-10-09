@@ -12,8 +12,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
-        '../Renderer/BlendEquation',
-        '../Renderer/BlendFunction',
+        '../Renderer/BlendingState',
         '../Renderer/Command',
         '../Renderer/CommandLists',
         './Material',
@@ -35,8 +34,7 @@ define([
         PrimitiveType,
         BoundingSphere,
         BufferUsage,
-        BlendEquation,
-        BlendFunction,
+        BlendingState,
         Command,
         CommandLists,
         Material,
@@ -160,7 +158,22 @@ define([
         this.setDirections(t.directions);
 
         /**
-         * DOC_TBA
+         * The surface appearance of the sensor.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * <p>
+         * The default material is <code>Material.ColorType</code>.
+         * </p>
+         *
+         * @type Material
+         *
+         * @example
+         * // 1. Change the color of the default material to yellow
+         * sensor.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         *
+         * // 2. Change material to horizontal stripes
+         * sensor.material = Material.fromType(scene.getContext(), Material.StripeType);
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = (typeof t.material !== 'undefined') ? t.material : Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
@@ -183,9 +196,6 @@ define([
 
         var that = this;
         this._uniforms = {
-            u_model : function() {
-                return that.modelMatrix;
-            },
             u_showThroughEllipsoid : function() {
                 return that.showThroughEllipsoid;
             },
@@ -322,6 +332,7 @@ define([
      * @memberof CustomSensorVolume
      *
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
+     * @exception {DeveloperError} this.material must be defined.
      */
     CustomSensorVolume.prototype.update = function(context, frameState, commandList) {
         this._mode = frameState.mode;
@@ -333,22 +344,18 @@ define([
             throw new DeveloperError('this.radius must be greater than or equal to zero.');
         }
 
+        if (typeof this.material === 'undefined') {
+            throw new DeveloperError('this.material must be defined.');
+        }
+
         // Initial render state creation
         if (typeof this._colorCommand.renderState === 'undefined') {
             this._colorCommand.renderState = this._pickCommand.renderState = context.createRenderState({
-                blending : {
-                    enabled : true,
-                    equationRgb : BlendEquation.ADD,
-                    equationAlpha : BlendEquation.ADD,
-                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-                    functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
-                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
-                    functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
-                },
                 depthTest : {
                     enabled : true
                 },
-                depthMask : false
+                depthMask : false,
+                blending : BlendingState.ALPHA_BLEND
             });
         }
         // This would be better served by depth testing with a depth buffer that does not
@@ -375,14 +382,14 @@ define([
         var pass = frameState.passes;
         this._colorCommand.modelMatrix = this._pickCommand.modelMatrix = this.modelMatrix;
         this._commandLists.removeAll();
+
         if (pass.color) {
             var materialChanged = typeof this._material === 'undefined' ||
-            this._material !== this.material ||
-            this._affectedByLighting !== this.affectedByLighting;
+                this._material !== this.material ||
+                this._affectedByLighting !== this.affectedByLighting;
 
             // Recompile shader when material changes
             if (materialChanged) {
-                this.material = (typeof this.material !== 'undefined') ? this.material : Material.fromType(context, Material.ColorType);
                 this._material = this.material;
                 this._affectedByLighting = this.affectedByLighting;
 
@@ -405,6 +412,7 @@ define([
 
             this._commandLists.colorList.push(this._colorCommand);
         }
+
         if (pass.pick) {
             if (typeof this._pickId === 'undefined') {
                 // Since this ignores all other materials, if a material does discard, the sensor will still be picked.

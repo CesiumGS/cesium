@@ -53,8 +53,6 @@ define([
         frustum.left = -frustum.right;
         frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
         frustum.bottom = -frustum.top;
-        frustum.near = 0.01 * maxRadii;
-        frustum.far = 60.0 * maxRadii;
 
         var transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
                                     1.0, 0.0, 0.0, 0.0,
@@ -77,8 +75,6 @@ define([
         frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
-        frustum.near = 0.01 * maxRadii;
-        frustum.far = 60.0 * maxRadii;
 
         this._cameraCV = {
             position : position,
@@ -363,8 +359,6 @@ define([
         var startFOVy = camera.frustum.fovy;
         var endFOVy = CesiumMath.RADIANS_PER_DEGREE * 0.5;
         var d = startPos.magnitude() * Math.tan(startFOVy * 0.5);
-
-        // TODO: remove this when multi-frustum is implemented.
         camera.frustum.far = d / Math.tan(endFOVy * 0.5) + 10000000.0;
 
         var update = function(value) {

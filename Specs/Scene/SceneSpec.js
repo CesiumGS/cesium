@@ -8,8 +8,8 @@ defineSuite([
          'Core/Math',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode',
-         '../Specs/createScene',
-         '../Specs/destroyScene'
+         'Specs/createScene',
+         'Specs/destroyScene'
      ], function(
          Scene,
          Cartesian2,

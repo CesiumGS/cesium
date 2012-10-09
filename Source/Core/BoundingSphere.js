@@ -2,6 +2,7 @@
 define([
         './defaultValue',
         './DeveloperError',
+        './Cartesian2',
         './Cartesian3',
         './Cartesian4',
         './Cartographic',
@@ -9,10 +10,12 @@ define([
         './EquidistantCylindricalProjection',
         './Extent',
         './Intersect',
+        './Interval',
         './Matrix4'
     ], function(
         defaultValue,
         DeveloperError,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
@@ -20,6 +23,7 @@ define([
         EquidistantCylindricalProjection,
         Extent,
         Intersect,
+        Interval,
         Matrix4) {
     "use strict";
 
@@ -67,7 +71,7 @@ define([
      *
      * @param {Array} positions An array of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
      * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      */
@@ -287,6 +291,7 @@ define([
     };
 
     var unionScratch = new Cartesian3();
+    var unionScratchCenter = new Cartesian3();
     /**
      * Computes a bounding sphere that contains both the left and right bounding spheres.
      * @memberof BoundingSphere
@@ -315,12 +320,15 @@ define([
         var leftCenter = left.center;
         var rightCenter = right.center;
 
-        var center = Cartesian3.add(leftCenter, rightCenter, result.center);
-        result.center = Cartesian3.multiplyByScalar(center, 0.5, center);
+        Cartesian3.add(leftCenter, rightCenter, unionScratchCenter);
+        var center = Cartesian3.multiplyByScalar(unionScratchCenter, 0.5, unionScratchCenter);
 
         var radius1 = Cartesian3.subtract(leftCenter, center, unionScratch).magnitude() + left.radius;
         var radius2 = Cartesian3.subtract(rightCenter, center, unionScratch).magnitude() + right.radius;
+
         result.radius = Math.max(radius1, radius2);
+        Cartesian3.clone(center, result.center);
+
         return result;
     };
 
@@ -431,6 +439,51 @@ define([
         return result;
     };
 
+    var scratchCartesian3 = new Cartesian3();
+    /**
+     * The distances calculated by the vector from the center of the bounding sphere to position projected onto direction
+     * plus/minus the radius of the bounding sphere.
+     * <br>
+     * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
+     * closest and farthest planes from position that intersect the bounding sphere.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The bounding sphere to calculate the distance to.
+     * @param {Cartesian3} position The position to calculate the distance from.
+     * @param {Cartesian3} direction The direction from position.
+     * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
+     * @return {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
+     *
+     * @exception {DeveloperError} sphere is required.
+     * @exception {DeveloperError} position is required.
+     * @exception {DeveloperError} direction is required.
+     */
+    BoundingSphere.getPlaneDistances = function(sphere, position, direction, result) {
+        if (typeof sphere === 'undefined') {
+            throw new DeveloperError('sphere is required.');
+        }
+
+        if (typeof position === 'undefined') {
+            throw new DeveloperError('position is required.');
+        }
+
+        if (typeof direction === 'undefined') {
+            throw new DeveloperError('direction is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new Interval();
+        }
+
+        var toCenter = Cartesian3.subtract(sphere.center, position, scratchCartesian3);
+        var proj = Cartesian3.multiplyByScalar(direction, direction.dot(toCenter), scratchCartesian3);
+        var mag = proj.magnitude();
+
+        result.start = mag - sphere.radius;
+        result.stop = mag + sphere.radius;
+        return result;
+    };
+
     /**
      * Compares the provided BoundingSphere componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -478,7 +531,8 @@ define([
      * @memberof BoundingSphere
      *
      * @param {Cartesian3} point A point to enclose in a bounding sphere.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
      * @exception {DeveloperError} point is required.
      */
@@ -515,6 +569,26 @@ define([
      */
     BoundingSphere.prototype.transform = function(transform, result) {
         return BoundingSphere.transform(this, transform, result);
+    };
+
+    /**
+     * The distances calculated by the vector from the center of the bounding sphere to position projected onto direction
+     * plus/minus the radius of the bounding sphere.
+     * <br>
+     * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
+     * closest and farthest planes from position that intersect the bounding sphere.
+     * @memberof BoundingSphere
+     *
+     * @param {Cartesian3} position The position to calculate the distance from.
+     * @param {Cartesian3} direction The direction from position.
+     * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
+     * @return {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
+     *
+     * @exception {DeveloperError} position is required.
+     * @exception {DeveloperError} direction is required.
+     */
+    BoundingSphere.prototype.getPlaneDistances = function(position, direction, result) {
+        return BoundingSphere.getPlaneDistances(this, position, direction, result);
     };
 
     /**

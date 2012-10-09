@@ -64,7 +64,7 @@ define([
          *
          * @type {Matrix4}
          */
-        this.transform = Matrix4.IDENTITY;
+        this.transform = Matrix4.IDENTITY.clone();
         this._transform = this.transform.clone();
         this._invTransform = Matrix4.IDENTITY;
 
@@ -121,8 +121,6 @@ define([
         this.frustum = new PerspectiveFrustum();
         this.frustum.fovy = CesiumMath.toRadians(60.0);
         this.frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
-        this.frustum.near = 0.01 * maxRadii;
-        this.frustum.far = 20.0 * maxRadii;
 
         this._viewMatrix = undefined;
         this._invViewMatrix = undefined;

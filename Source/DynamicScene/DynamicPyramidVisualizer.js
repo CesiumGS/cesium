@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
@@ -8,6 +9,7 @@ define([
         '../Scene/CustomSensorVolume',
         '../Scene/Material'
        ], function(
+         defaultValue,
          DeveloperError,
          destroyObject,
          Color,
@@ -248,8 +250,8 @@ define([
             pyramid._visualizerDirections = directions;
         }
 
-        position = positionProperty.getValueCartesian(time, position) || pyramid._visualizerPosition;
-        orientation = orientationProperty.getValue(time, orientation) || pyramid._visualizerOrientation;
+        position = defaultValue(positionProperty.getValueCartesian(time, position), pyramid._visualizerPosition);
+        orientation = defaultValue(orientationProperty.getValue(time, orientation), pyramid._visualizerOrientation);
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&

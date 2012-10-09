@@ -4,7 +4,13 @@ Change Log
 Beta Releases
 -------------
 
-### b9 - xx/xx/2012
+### b10 - xx/xx/2012
+
+* Breaking changes:
+   * xxx
+* Improved middle mouse click behavior to always tilt in the same direction.
+
+### b9 - 10/01/2012
 
 * Breaking changes:
    * Removed the `render` and `renderForPick` functions of primitives. The primitive `update` function updates a list of commands for the renderer. For more details, see the [Data Driven Renderer](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Data-Driven-Renderer-Details).
@@ -15,10 +21,14 @@ Beta Releases
    * `PolygonPipeline.scaleToGeodeticHeight` now takes ellipsoid as the last parameter, instead of the first.  It also now defaults to `Ellipsoid.WGS84` if no parameter is provided.
 * The new Sandcastle live editor and demo gallery replace the Sandbox and Skeleton examples.
 * Improved picking performance and accuracy.
+* Added EllipsoidPrimitive for visualizing ellipsoids and spheres.  Currently, this is only supported in 3D, not 2D or Columbus view.
+* Added `DynamicEllipsoid` and `DynamicEllipsoidVisualizer` which use the new `EllipsoidPrimitive` to implement ellipsoids in CZML. 
 * `Extent` functions now take optional result parameters.  Also added `getCenter`, `intersectWith`, and `contains` functions.
 * Add new utility class, `DynamicObjectView` for tracking a DynamicObject with the camera across scene modes; also hooked up CesiumViewerWidget to use it.
 * Added `enableTranslate`, `enableZoom`, and `enableRotate` properties to `Camera2DController` to selectively toggle camera behavior.  All values default to `true`.
 * Added `Camera2DController.setPositionCartographic` to simplify moving the camera programmatically when in 2D mode.
+* Improved near/far plane distances and eliminated z-fighting.
+* Added `Matrix4.multiplyByTranslation`, `Matrix4.fromScale`, and `Matrix3.fromScale`.
 
 ### b8 - 09/05/2012
 

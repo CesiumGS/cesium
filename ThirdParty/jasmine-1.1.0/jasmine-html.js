@@ -266,10 +266,11 @@ jasmine.TrivialReporter.prototype.log = function() {
 	}
 };
 
-function wrapWithDebugger(stepIntoThis) {
+function wrapWithDebugger(originalFunction) {
     return function() {
+        var stepIntoThisFunction = originalFunction.bind(this);
         debugger;
-        stepIntoThis();
+        stepIntoThisFunction();
     };
 }
 

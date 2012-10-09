@@ -154,7 +154,7 @@ define([
      * @param {JulianDate} stop The last time to retrieve values for .
      * @param {JulianDate} [currentTime] If provided, causes the algorithm to always sample the provided time, assuming it is between start and stop.
      * @param {Array} [result] The array into which to store the result.
-     * @returns The modified result array or a new instance if none was provided.
+     * @returns The modified result array or a new instance if one was not provided.
      */
     DynamicPositionProperty.prototype.getValueRangeCartesian = function(start, stop, currentTime, result) {
         if (typeof start === 'undefined') {
@@ -222,11 +222,17 @@ define([
                     for (t = 0; t < times.length; t++) {
                         current = times[t];
                         if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                            result[r] = property.getValue(currentTime, result[r++]);
+                            tmp = property.getValue(currentTime, result[r]);
+                            if (typeof tmp !== 'undefined') {
+                                result[r++] = tmp;
+                            }
                             steppedOnNow = true;
                         }
                         if (current.greaterThan(start) && current.lessThan(loopStop)) {
-                            result[r] = property.getValue(current, result[r++]);
+                            tmp = property.getValue(current, result[r]);
+                            if (typeof tmp !== 'undefined') {
+                                result[r++] = tmp;
+                            }
                         }
                     }
                 } else {
@@ -255,7 +261,10 @@ define([
                 //Finally, get the value at this non-sampled interval.
                 if (current.lessThan(loopStop)) {
                     if (valueType === CzmlCartesian3) {
-                        result[r] = property.getValue(current, result[r++]);
+                        tmp = property.getValue(current, result[r]);
+                        if (typeof tmp !== 'undefined') {
+                            result[r++] = tmp;
+                        }
                     } else {
                         scratchCartographic = property.getValue(current, scratchCartographic);
                         result[r++] = wgs84.cartographicToCartesian(scratchCartographic);
@@ -322,8 +331,7 @@ define([
 
         //We could handle the data, add it to the property.
         if (typeof unwrappedInterval !== 'undefined') {
-            property._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm,
-                    czmlInterval.interpolationDegree);
+            property._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
         }
     };
 

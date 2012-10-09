@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
-         '../Specs/createContext',
-         '../Specs/destroyContext',
+         'Specs/createContext',
+         'Specs/destroyContext',
          'Core/IndexDatatype',
          'Core/PrimitiveType',
          'Core/WindingOrder',
@@ -854,7 +854,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
-    it('fails to draw (missing drawArguments)', function() {
+    it('fails to draw (missing command)', function() {
         expect(function() {
             context.draw();
         }).toThrow();

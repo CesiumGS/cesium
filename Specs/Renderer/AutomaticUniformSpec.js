@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
-         '../Specs/createContext',
-         '../Specs/destroyContext',
+         'Specs/createContext',
+         'Specs/destroyContext',
          'Core/Matrix4',
          'Core/PrimitiveType',
          'Renderer/BufferUsage'
@@ -24,7 +24,7 @@ defineSuite([
         destroyContext(context);
     });
 
-    function verifyDraw(fs) {
+    function verifyDraw(fs, modelMatrix) {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var sp = context.createShaderProgram(vs, fs);
 
@@ -41,7 +41,8 @@ defineSuite([
         context.draw({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
-            vertexArray : va
+            vertexArray : va,
+            modelMatrix : modelMatrix
         });
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
@@ -91,11 +92,6 @@ defineSuite([
     });
 
     it('has czm_model', function() {
-        var us = context.getUniformState();
-        us.setModel(new Matrix4( 1.0,  2.0,  3.0,  4.0,
-                                 5.0,  6.0,  7.0,  8.0,
-                                 9.0, 10.0, 11.0, 12.0,
-                                13.0, 14.0, 15.0, 16.0));
         var fs =
             'void main() { ' +
             '  bool b0 = (czm_model[0][0] ==  1.0) && (czm_model[1][0] ==  2.0) && (czm_model[2][0] ==  3.0) && (czm_model[3][0] ==  4.0); ' +
@@ -104,7 +100,10 @@ defineSuite([
             '  bool b3 = (czm_model[0][3] == 13.0) && (czm_model[1][3] == 14.0) && (czm_model[2][3] == 15.0) && (czm_model[3][3] == 16.0); ' +
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
             '}';
-        verifyDraw(fs);
+        verifyDraw(fs, new Matrix4( 1.0,  2.0,  3.0,  4.0,
+            5.0,  6.0,  7.0,  8.0,
+            9.0, 10.0, 11.0, 12.0,
+           13.0, 14.0, 15.0, 16.0));
     });
 
     it('has czm_view', function() {
@@ -234,10 +233,6 @@ defineSuite([
 
     it('has czm_modelView', function() {
         var us = context.getUniformState();
-        us.setModel(new Matrix4(2.0, 0.0, 0.0, 0.0,
-                                0.0, 2.0, 0.0, 0.0,
-                                0.0, 0.0, 2.0, 0.0,
-                                0.0, 0.0, 0.0, 1.0));
         us.setView(new Matrix4(1.0, 0.0, 0.0, 1.0,
                                0.0, 1.0, 0.0, 1.0,
                                0.0, 0.0, 1.0, 1.0,
@@ -251,15 +246,15 @@ defineSuite([
             '  bool b3 = (czm_modelView[0][3] == 0.0) && (czm_modelView[1][3] == 0.0) && (czm_modelView[2][3] == 0.0) && (czm_modelView[3][3] == 1.0); ' +
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
             '}';
-        verifyDraw(fs);
+        verifyDraw(fs, new Matrix4(
+            2.0, 0.0, 0.0, 0.0,
+            0.0, 2.0, 0.0, 0.0,
+            0.0, 0.0, 2.0, 0.0,
+            0.0, 0.0, 0.0, 1.0));
     });
 
     it('has czm_inverseModelView', function() {
         var us = context.getUniformState();
-        us.setModel(new Matrix4(1.0, 0.0, 0.0, 1.0,
-                                0.0, 1.0, 0.0, 2.0,
-                                0.0, 0.0, 1.0, 3.0,
-                                0.0, 0.0, 0.0, 1.0));
         us.setView(new Matrix4(1.0, 0.0, 0.0, 0.0,
                                0.0, 1.0, 0.0, 0.0,
                                0.0, 0.0, 1.0, 0.0,
@@ -273,7 +268,11 @@ defineSuite([
             '  bool b3 = (czm_inverseModelView[0][3] == 0.0) && (czm_inverseModelView[1][3] == 0.0) && (czm_inverseModelView[2][3] == 0.0) && (czm_inverseModelView[3][3] ==  1.0); ' +
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
             '}';
-        verifyDraw(fs);
+        verifyDraw(fs, new Matrix4(
+                1.0, 0.0, 0.0, 1.0,
+                0.0, 1.0, 0.0, 2.0,
+                0.0, 0.0, 1.0, 3.0,
+                0.0, 0.0, 0.0, 1.0));
     });
 
     it('has czm_viewProjection', function() {
@@ -301,10 +300,6 @@ defineSuite([
 
     it('has czm_modelViewProjection', function() {
         var us = context.getUniformState();
-        us.setModel(new Matrix4(1.0, 0.0, 0.0, 7.0,
-                                0.0, 1.0, 0.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 0.0, 1.0));
         us.setView(new Matrix4(1.0, 0.0, 0.0, 0.0,
                                0.0, 1.0, 0.0, 8.0,
                                0.0, 0.0, 1.0, 0.0,
@@ -323,15 +318,15 @@ defineSuite([
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
             '}';
 
-        verifyDraw(fs);
+        verifyDraw(fs, new Matrix4(
+                1.0, 0.0, 0.0, 7.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0));
     });
 
     it('has czm_modelViewInfiniteProjection', function() {
         var us = context.getUniformState();
-        us.setModel(new Matrix4(1.0, 0.0, 0.0, 7.0,
-                                0.0, 1.0, 0.0, 0.0,
-                                0.0, 0.0, 1.0, 0.0,
-                                0.0, 0.0, 0.0, 1.0));
         us.setView(new Matrix4(1.0, 0.0, 0.0, 0.0,
                                0.0, 1.0, 0.0, 8.0,
                                0.0, 0.0, 1.0, 0.0,
@@ -350,16 +345,14 @@ defineSuite([
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
             '}';
 
-        verifyDraw(fs);
+        verifyDraw(fs, new Matrix4(
+                1.0, 0.0, 0.0, 7.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0));
     });
 
     it('has czm_normal', function() {
-        var us = context.getUniformState();
-        us.setModel(new Matrix4(1.0, 0.0, 0.0, 7.0,
-                                0.0, 1.0, 0.0, 8.0,
-                                0.0, 0.0, 1.0, 9.0,
-                                0.0, 0.0, 0.0, 1.0));
-
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(' +
@@ -368,15 +361,14 @@ defineSuite([
             '    (czm_normal[0][2] == 0.0) && (czm_normal[1][2] == 0.0) && (czm_normal[2][2] == 1.0) ' +
             '  ); ' +
             '}';
-        verifyDraw(fs);
+        verifyDraw(fs, new Matrix4(
+                1.0, 0.0, 0.0, 7.0,
+                0.0, 1.0, 0.0, 8.0,
+                0.0, 0.0, 1.0, 9.0,
+                0.0, 0.0, 0.0, 1.0));
     });
 
     it('has czm_inverseNormal', function() {
-        var us = context.getUniformState();
-        us.setModel(new Matrix4(1.0, 0.0, 0.0, 7.0,
-                                0.0, 1.0, 0.0, 8.0,
-                                0.0, 0.0, 1.0, 9.0,
-                                0.0, 0.0, 0.0, 1.0));
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(' +
@@ -385,7 +377,11 @@ defineSuite([
             '    (czm_inverseNormal[0][2] == 0.0) && (czm_inverseNormal[1][2] == 0.0) && (czm_inverseNormal[2][2] == 1.0) ' +
             '  ); ' +
             '}';
-        verifyDraw(fs);
+        verifyDraw(fs, new Matrix4(
+                1.0, 0.0, 0.0, 7.0,
+                0.0, 1.0, 0.0, 8.0,
+                0.0, 0.0, 1.0, 9.0,
+                0.0, 0.0, 0.0, 1.0));
     });
 
     it('has czm_sunDirectionEC', function() {

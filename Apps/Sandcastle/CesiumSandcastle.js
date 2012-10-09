@@ -1,4 +1,4 @@
-/*global require,CodeMirror,JSHINT,gallery_demos*/
+/*global require,Blob,CodeMirror,JSHINT,gallery_demos*/
 require({
         baseUrl: '../../Source',
         packages: [{
@@ -45,7 +45,6 @@ require({
         'dijit/layout/TabContainer',
         'dijit/Toolbar',
         'dijit/ToolbarSeparator',
-        'dojox/mobile/ScrollableView',
         'dojo/domReady!'],
     function (
             LinkButton,
@@ -84,12 +83,23 @@ require({
             hideGallery();
         }
 
-        // NOTE: BlobBuilder will eventually be deprecated and replaced with a direct constructor on Blob itself.
-        // https://developer.mozilla.org/en/DOM/Blob
-        var BlobBuilder = BlobBuilder || window.WebKitBlobBuilder || window.MozBlobBuilder;
         var getURL = window.URL || window.webkitURL || window;
-        if (typeof BlobBuilder === 'undefined') {
+        if (typeof Blob === 'undefined') {
             registry.byId('buttonSaveAs').set('disabled', true);
+            registry.byId('buttonNewWindow').set('disabled', true);
+        }
+
+        function findCssStyle(selectorText) {
+            var iSheets, lenSheets = document.styleSheets.length, rules;
+            for (iSheets = 0; iSheets < lenSheets; ++iSheets) {
+                rules = document.styleSheets[iSheets].cssRules;
+                var iRules, lenRules = rules.length;
+                for (iRules = 0; iRules < lenRules; ++iRules) {
+                    if (rules[iRules].selectorText === selectorText) {
+                        return rules[iRules];
+                    }
+                }
+            }
         }
 
         var jsEditor;
@@ -101,6 +111,7 @@ require({
         var docError = false;
         var galleryTooltipTimer;
         var activeGalleryTooltipDemo;
+        var demoTileHeightRule = findCssStyle('.demoTileThumbnail');
         var cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dom.byId('docPopup');
         var docMessage = dom.byId('docPopupMessage');
@@ -548,7 +559,6 @@ require({
                 galleryErrorMsg.style.display = 'inline-block';
             }
 
-            registry.byId('demosContainer').scrollTo({x:0, y:0});
             showGallery();
             scheduleHintNoChange();
         });
@@ -569,11 +579,9 @@ require({
 
             var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
             currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
-            html = html.replace('<head>', '<head>\n\t<meta name="description" content="' + demoTooltips[currentDemoName].get('content') + '">');
+            html = html.replace('<title>', '<meta name="description" content="' + demoTooltips[currentDemoName].get('content') + '">\n    <title>');
 
-            var octetBB = new BlobBuilder();
-            octetBB.append(html);
-            var octetBlob = octetBB.getBlob("application/octet-stream");
+            var octetBlob = new Blob([ html ], { 'type' : 'application/octet-stream', 'endings' : 'native' });
             var octetBlobURL = getURL.createObjectURL(octetBlob);
             dom.byId('saveAsFile').href = octetBlobURL;
         });
@@ -586,9 +594,7 @@ require({
             var pos = baseHref.lastIndexOf('/');
             baseHref = baseHref.substring(0, pos) + '/gallery/';
             html = html.replace('<head>', '<head>\n    <base href="' + baseHref + '">');
-            var htmlBB = new BlobBuilder();
-            htmlBB.append(html);
-            var htmlBlob = htmlBB.getBlob("text/html;charset=utf-8");
+            var htmlBlob = new Blob([ html ], { 'type' : 'text/html;charset=utf-8', 'endings' : 'native' });
             var htmlBlobURL = getURL.createObjectURL(htmlBlob);
             window.open(htmlBlobURL, '_blank');
             window.focus();
@@ -601,6 +607,35 @@ require({
                 domClass.remove('bucketFrame', 'makeThumbnail');
             }
         });
+
+        var demosContainer = dom.byId('demosContainer');
+        if (typeof document.onmousewheel !== 'undefined') {
+            demosContainer.addEventListener('mousewheel', function (e) {
+                if (typeof e.wheelDelta !== 'undefined' && e.wheelDelta) {
+                    demosContainer.scrollLeft -= e.wheelDelta * 70/120;
+                }
+            }, false);
+        } else {
+            demosContainer.addEventListener('DOMMouseScroll', function (e) {
+                if (typeof e.detail !== 'undefined' && e.detail) {
+                    demosContainer.scrollLeft += e.detail * 70/3;
+                }
+            }, false);
+        }
+
+        var galleryContainer = registry.byId('galleryContainer');
+        galleryContainer.demoTileHeightRule = demoTileHeightRule;
+        galleryContainer.originalResize = galleryContainer.resize;
+        galleryContainer.resize = function (changeSize, resultSize) {
+            var newSize = changeSize.h - 58;
+            if (newSize < 20) {
+                demoTileHeightRule.style.display = 'none';
+            } else {
+                demoTileHeightRule.style.display = 'inline';
+                demoTileHeightRule.style.height = Math.min(newSize, 150) + 'px';
+            }
+            this.originalResize(changeSize, resultSize);
+        };
 
         var queryObject = {};
         if (window.location.search) {
