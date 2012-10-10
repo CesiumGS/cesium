@@ -470,7 +470,7 @@ require({
             for (i = 0; i < len; ++i) {
                 node = headNodes[i];
                 if (typeof node.tagName === 'string' && node.tagName === 'SCRIPT' &&
-                        node.src.indexOf('Sandcastle') < 0) {
+                        node.src.indexOf('Sandcastle-header.js') < 0) {  // header is included in blank frame.
                     nodes.push(node);
                 }
             }
@@ -478,6 +478,14 @@ require({
             for (i = 0; i < len; ++i) {
                 bucketDoc.head.removeChild(nodes[i]);
             }
+
+            var onScriptTagError = function () {
+                if (bucketFrame.contentDocument === bucketDoc) {
+                    appendConsole('consoleError', "Error loading " + this.src);
+                    appendConsole('consoleError', "Make sure Cesium is built, see the Contributor's Guide for details.");
+                }
+            };
+
             // Load each script after the previous one has loaded.
             var loadScript = function () {
                 if (bucketFrame.contentDocument !== bucketDoc) {
@@ -500,6 +508,7 @@ require({
                     scriptEle.innerHTML = node.innerHTML;
                     if (hasSrc) {
                         scriptEle.onload = loadScript;
+                        scriptEle.onerror = onScriptTagError;
                         bucketDoc.head.appendChild(scriptEle);
                     } else {
                         bucketDoc.head.appendChild(scriptEle);
@@ -524,10 +533,7 @@ require({
                 bucketWaiting = false;
                 var bucketDoc = bucketFrame.contentDocument;
                 if (local.headers.substring(0, local.emptyBucket.length) !== local.emptyBucket) {
-                    var ele = document.createElement('span');
-                    ele.className = 'consoleError';
-                    ele.textContent = 'Error, empty bucket.html must match first part of ' + local.bucketName + ' exactly.\n';
-                    appendConsole(ele);
+                    appendConsole('consoleError', 'Error, empty bucket.html must match first part of ' + local.bucketName + ' exactly.');
                 } else {
                     var pos = local.headers.indexOf('<body class="'), pos2;
                     if (pos > 0) {
@@ -603,10 +609,7 @@ require({
             pos = body.indexOf('<script id="cesium_sandcastle_script">');
             var pos2 = body.lastIndexOf('</script>');
             if ((pos <= 0) || (pos2 <= pos)) {
-                var ele = document.createElement('span');
-                ele.className = 'consoleError';
-                ele.textContent = 'Error reading source file: ' + demo.name + '\n';
-                appendConsole(ele);
+                appendConsole('consoleError', 'Error reading source file: ' + demo.name);
             } else {
                 var script = body.substring(pos + 38, pos2);
                 while (script.length > 0 && script.charCodeAt(0) < 32) {
