@@ -533,7 +533,7 @@ require({
                 bucketWaiting = false;
                 var bucketDoc = bucketFrame.contentDocument;
                 if (local.headers.substring(0, local.emptyBucket.length) !== local.emptyBucket) {
-                    appendConsole('consoleError', 'Error, empty bucket.html must match first part of ' + local.bucketName + ' exactly.');
+                    appendConsole('consoleError', 'Error, first part of ' + local.bucketName + ' must match first part of bucket.html exactly.');
                 } else {
                     var pos = local.headers.indexOf('<body class="'), pos2;
                     if (pos > 0) {
