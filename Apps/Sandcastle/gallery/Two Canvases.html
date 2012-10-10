@@ -6,102 +6,67 @@
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Create two canvases on the same page for visualizing different scenes.">
     <title>Cesium Demo</title>
-    <script>
-    var Sandcastle = {};
-    Sandcastle.declare = function () {};
-    Sandcastle.highlight = function () {};
-    Sandcastle.registered = [];
-    if (window.location.protocol === 'file:') {
-        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
-            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
-        }
-    }
-    </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
-    <script type="text/javascript">
-    require({
-        baseUrl : '../../..',
-        packages: [
-            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
-            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
-            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
-            { name: 'Source', location: 'Source' },
-            { name: 'Core', location: 'Source/Core' },
-            { name: 'DynamicScene', location: 'Source/DynamicScene' },
-            { name: 'Renderer', location: 'Source/Renderer' },
-            { name: 'Scene', location: 'Source/Scene' },
-            { name: 'Shaders', location: 'Source/Shaders' },
-            { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' },
-            { name: 'Workers', location: 'Source/Workers' }
-        ]
-    });
-    </script>
-    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
-    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../Build/Unminified/Cesium.js"></script>
+    <script type="text/javascript" src="../Sandcastle-warn.js"></script>
 </head>
-<body class="claro">
+<body data-sandcastle-bucket="bucket-plain.html" data-sandcastle-title="Cesium (standalone)">
 <style>
-body {
-    background: #000;
-    color: #eee;
-    font-family: sans-serif;
-    font-size: 9pt;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-.top {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    border: none;
-    border-bottom: solid 2px #888;
-    width: 100%;
-    height: 50%;
-    z-index: -1;
-}
-.bottom {
-    display: block;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    border: none;
-    border-top: solid 2px #888;
-    width: 100%;
-    height: 50%;
-    z-index: -1;
-}
-#topbar {
-    margin: 5px;
-    padding: 2px 5px;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-#bottombar {
-    margin: 5px;
-    padding: 2px 5px;
-    position: absolute;
-    top: 50%;
-    left: 0;
-}
+    body {
+        background: #000;
+        color: #eee;
+        font-family: sans-serif;
+        font-size: 9pt;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .top {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: none;
+        border-bottom: solid 2px #888;
+        width: 100%;
+        height: 50%;
+        z-index: -1;
+    }
+    .bottom {
+        display: block;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        border: none;
+        border-top: solid 2px #888;
+        width: 100%;
+        height: 50%;
+        z-index: -1;
+    }
+    #topbar {
+        margin: 5px;
+        padding: 2px 5px;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    #bottombar {
+        margin: 5px;
+        padding: 2px 5px;
+        position: absolute;
+        top: 50%;
+        left: 0;
+    }
 </style>
 
 <div id="cesiumContainerTop"></div>
 <div id="cesiumContainerBottom"></div>
 <div id="topbar">Loading...</div>
 <div id="bottombar"></div>
-
 <script id="cesium_sandcastle_script">
-require([
-    'Source/Cesium'
-], function (
-    Cesium
-) {
+(function () {
     "use strict";
 
     var canvas3D = document.createElement('canvas');
@@ -125,7 +90,7 @@ require([
         cb.getImageryLayers().addImageryProvider(imagery);
         cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
         cb.specularMapSource = '../../../Images/earthspec1k.jpg';
-        cb.showSkyAtmosphere = true;
+        cb.showSkyAtmosphere = (canvas === canvas3D);
         cb.showGroundAtmosphere = false;
         primitives.setCentralBody(cb);
 
@@ -174,12 +139,11 @@ require([
         onResizeScene(canvas2D, scene2D);
     };
     window.addEventListener('resize', onResize, false);
-    onResize();
+    window.setTimeout(onResize, 60);
 
     document.getElementById('topbar').innerHTML = '3D';
     document.getElementById('bottombar').innerHTML = '2D';
-});
-
+}());
 </script>
 </body>
 </html>
