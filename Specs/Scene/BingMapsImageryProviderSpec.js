@@ -298,6 +298,28 @@ defineSuite([
         });
     });
 
+    it('raises error on invalid server', function() {
+        var server = 'invalid.localhost';
+        var provider = new BingMapsImageryProvider({
+            server : server
+        });
+
+        var errorEventRaised = false;
+        provider.getErrorEvent().addEventListener(function(error) {
+            expect(error.message.indexOf(server) >= 0).toEqual(true);
+            errorEventRaised = true;
+        });
+
+        waitsFor(function() {
+            return provider.isReady() || errorEventRaised;
+        }, 'imagery provider to become ready or raise error event');
+
+        runs(function() {
+            expect(provider.isReady()).toEqual(false);
+            expect(errorEventRaised).toEqual(true);
+        });
+    });
+
     it('raises error event when image cannot be loaded', function() {
         var mapStyle = BingMapsStyle.COLLINS_BART;
 

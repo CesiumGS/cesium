@@ -190,7 +190,8 @@ define([
         }
 
         function metadataFailure(e) {
-            metadataError = ImageryProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, requestMetadata);
+            var message = 'An error occurred while accessing ' + metadataUrl + '.';
+            metadataError = ImageryProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
         }
 
         function requestMetadata() {

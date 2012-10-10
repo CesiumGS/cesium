@@ -3,6 +3,7 @@ defineSuite([
          'Scene/ArcGisMapServerImageryProvider',
          'Core/jsonp',
          'Core/loadImage',
+         'Core/DefaultProxy',
          'Scene/DiscardMissingTileImagePolicy',
          'Scene/GeographicTilingScheme',
          'Scene/Imagery',
@@ -15,6 +16,7 @@ defineSuite([
          ArcGisMapServerImageryProvider,
          jsonp,
          loadImage,
+         DefaultProxy,
          DiscardMissingTileImagePolicy,
          GeographicTilingScheme,
          Imagery,
@@ -240,6 +242,81 @@ defineSuite([
                 expect(url).toMatch('format=png');
                 expect(url).toMatch('transparent=true');
                 expect(url).toMatch('size=256%2C256');
+                expect(crossOrigin).toEqual(true);
+
+                // Just return any old image.
+                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            when(provider.requestImage(0, 0, 0), function(image) {
+                tile000Image = image;
+            });
+        });
+
+        waitsFor(function() {
+            return typeof tile000Image !== 'undefined';
+        }, 'requested tile to be loaded');
+
+        runs(function() {
+            expect(tile000Image).toBeInstanceOf(Image);
+        });
+    });
+
+    it('routes requests through a proxy if one is specified', function() {
+        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var proxy = new DefaultProxy('/proxy/');
+
+        jsonp.loadAndExecuteScript = function(url, functionName) {
+            expect(url).toEqual(proxy.getURL(baseUrl + '?callback=' + functionName + '&f=json'));
+            setTimeout(function() {
+                window[functionName]({
+                    "currentVersion" : 10.01,
+                    "copyrightText" : "Test copyright text",
+                    "tileInfo" : {
+                        "rows" : 128,
+                        "cols" : 256,
+                        "origin" : {
+                            "x" : -180,
+                            "y" : 90
+                        },
+                        "spatialReference" : {
+                            "wkid" : 4326
+                        },
+                        "lods" : [
+                            {"level" : 0, "resolution" : 0.3515625, "scale" : 147748799.285417},
+                            {"level" : 1, "resolution" : 0.17578125, "scale" : 73874399.6427087},
+                            {"level" : 2, "resolution" : 0.087890625, "scale" : 36937199.8213544}
+                        ]
+                    }
+                });
+            }, 1);
+        };
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl,
+            proxy : proxy
+        });
+
+        expect(provider.getUrl()).toEqual(baseUrl);
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        var tile000Image;
+
+        runs(function() {
+            expect(provider.getTileWidth()).toEqual(128);
+            expect(provider.getTileHeight()).toEqual(256);
+            expect(provider.getMaximumLevel()).toEqual(2);
+            expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.getLogo()).not.toBeUndefined();
+            expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
+            expect(provider.isUsingPrecachedTiles()).toEqual(true);
+
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                expect(url).toEqual(proxy.getURL(baseUrl + '/tile/0/0/0'));
                 expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.
