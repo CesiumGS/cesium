@@ -163,7 +163,7 @@ define([
     };
 
     /**
-     * Returns the ellipsoid. The ellipsoid is used to determine the size of the map in 2D and Columbus view
+     * Gets the ellipsoid. The ellipsoid is used to determine the size of the map in 2D and Columbus view
      * as well as how fast to rotate the camera based on the distance to its surface.
      * @returns {Ellipsoid} The ellipsoid.
      */
@@ -172,7 +172,7 @@ define([
     };
 
     /**
-     * Returns the ellipsoid. The ellipsoid is used to determine the size of the map in 2D and Columbus view
+     * Sets the ellipsoid. The ellipsoid is used to determine the size of the map in 2D and Columbus view
      * as well as how fast to rotate the camera based on the distance to its surface.
      * @param {Ellipsoid} [ellipsoid=WGS84] The ellipsoid.
      */

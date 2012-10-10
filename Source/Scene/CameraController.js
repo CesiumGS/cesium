@@ -139,7 +139,7 @@ define([
      * @memberof CameraController
      *
      * @param {Cartesian3} direction The direction to move.
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @exception {DeveloperError} direction is required.
      *
@@ -169,7 +169,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveBackward
      */
@@ -184,7 +184,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveForward
      */
@@ -198,7 +198,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveDown
      */
@@ -213,7 +213,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveUp
      */
@@ -227,7 +227,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveLeft
      */
@@ -242,7 +242,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveRight
      */
@@ -257,7 +257,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#lookRight
      */
@@ -272,7 +272,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#lookLeft
      */
@@ -287,7 +287,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#lookDown
      */
@@ -302,7 +302,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#lookUp
      */
@@ -319,7 +319,7 @@ define([
      * @memberof CameraController
      *
      * @param {Cartesian3} axis The axis to rotate around.
-     * @param {Number} angle The angle, in radians, to rotate by.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @exception {DeveloperError} axis is required.
      *
@@ -350,7 +350,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#twistRight
      */
@@ -364,7 +364,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#twistLeft
      */
@@ -431,9 +431,8 @@ define([
      * @memberof CameraController
      *
      * @param {Cartesian3} axis The axis to rotate around given in world coordinates.
-     * @param {Number} angle The angle, in radians, to rotate by. The direction of rotation is
-     * determined by the sign of the angle.
-     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
+     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @exception {DeveloperError} axis is required.
      *
@@ -472,8 +471,8 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} angle The angle to rotate in radians.
-     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
+     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateUp
      * @see CameraController#rotate
@@ -488,8 +487,8 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} angle The angle to rotate in radians.
-     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
+     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateDown
      * @see CameraController#rotate
@@ -537,8 +536,8 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} angle The angle to rotate in radians.
-     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
+     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateLeft
      * @see CameraController#rotate
@@ -553,8 +552,8 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} angle The angle to rotate in radians.
-     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
+     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateRight
      * @see CameraController#rotate
@@ -607,7 +606,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultZoomAmount</code>.
      *
      * @see CameraController#zoomOut
      */
@@ -626,7 +625,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultZoomAmount</code>.
      *
      * @see CameraController#zoomIn
      */
