@@ -557,6 +557,7 @@ define([
         var fb = this._pickFramebuffer.begin();
 
         updateFrameState(this);
+        frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
         var commandLists = this._commandList;
