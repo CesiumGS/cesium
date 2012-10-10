@@ -18,6 +18,7 @@ define([
         '../Renderer/TextureWrap',
         './GeographicTilingScheme',
         './Imagery',
+        './ImageryProviderError',
         './ImageryState',
         './TileImagery',
         './TexturePool',
@@ -43,6 +44,7 @@ define([
         TextureWrap,
         GeographicTilingScheme,
         Imagery,
+        ImageryProviderError,
         ImageryState,
         TileImagery,
         TexturePool,
@@ -101,11 +103,7 @@ define([
 
         this._isBaseLayer = false;
 
-        // delay construction of scratch Float32Array since the setup function needs to run
-        // regardless of whether WebGL is supported.
-        if (typeof float32ArrayScratch === 'undefined') {
-            float32ArrayScratch = new Float32Array(1);
-        }
+        this._requestImageError = undefined;
     }
 
     /**
@@ -312,27 +310,48 @@ define([
     ImageryLayer.prototype.requestImagery = function(imagery) {
         var imageryProvider = this.imageryProvider;
 
-        var imagePromise = imageryProvider.requestImage(imagery.x, imagery.y, imagery.level);
+        var that = this;
 
-        if (typeof imagePromise === 'undefined') {
-            // Too many parallel requests, so postpone loading tile.
-            imagery.state = ImageryState.UNLOADED;
-            return;
+        function success(image) {
+            if (typeof image === 'undefined') {
+                return failure();
+            }
+
+            imagery.image = image;
+            imagery.state = ImageryState.RECEIVED;
+
+            ImageryProviderError.handleSuccess(that._requestImageError);
         }
 
-        when(imagePromise, function(image) {
-            imagery.image = image;
-
-            if (typeof image === 'undefined') {
-                imagery.state = ImageryState.INVALID;
-            } else {
-                imagery.state = ImageryState.RECEIVED;
-            }
-        }, function(e) {
-            /*global console*/
-            console.error('failed to load imagery: ' + e);
+        function failure(e) {
+            // Initially assume failure.  handleError may retry, in which case the state will
+            // change to TRANSITIONING.
             imagery.state = ImageryState.FAILED;
-        });
+
+            var message = 'Failed to obtain image tile X: ' + imagery.x + ' Y: ' + imagery.y + ' Level: ' + imagery.level + '.';
+            that._requestImageError = ImageryProviderError.handleError(
+                    that._requestImageError,
+                    imageryProvider,
+                    imageryProvider.getErrorEvent(),
+                    message,
+                    imagery.x, imagery.y, imagery.level,
+                    doRequest);
+        }
+
+        function doRequest() {
+            imagery.state = ImageryState.TRANSITIONING;
+            var imagePromise = imageryProvider.requestImage(imagery.x, imagery.y, imagery.level);
+
+            if (typeof imagePromise === 'undefined') {
+                // Too many parallel requests, so postpone loading tile.
+                imagery.state = ImageryState.UNLOADED;
+                return;
+            }
+
+            when(imagePromise, success, failure);
+        }
+
+        doRequest();
     };
 
     ImageryLayer.prototype.createTexture = function(context, imagery) {
@@ -427,7 +446,7 @@ define([
         oneOverMercatorHeight : 0
     };
 
-    var float32ArrayScratch;
+    var float32ArrayScratch = typeof Float32Array === 'undefined' ? undefined : new Float32Array(1);
 
     function reprojectToGeographic(imageryLayer, context, texture, extent) {
         if (typeof imageryLayer._fbReproject === 'undefined') {

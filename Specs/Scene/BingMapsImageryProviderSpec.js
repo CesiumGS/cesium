@@ -7,7 +7,10 @@ defineSuite([
          'Core/loadImage',
          'Scene/BingMapsStyle',
          'Scene/DiscardMissingTileImagePolicy',
+         'Scene/Imagery',
+         'Scene/ImageryLayer',
          'Scene/ImageryProvider',
+         'Scene/ImageryState',
          'Scene/NeverTileDiscardPolicy',
          'Scene/WebMercatorTilingScheme',
          'ThirdParty/when'
@@ -19,7 +22,10 @@ defineSuite([
          loadImage,
          BingMapsStyle,
          DiscardMissingTileImagePolicy,
+         Imagery,
+         ImageryLayer,
          ImageryProvider,
+         ImageryState,
          NeverTileDiscardPolicy,
          WebMercatorTilingScheme,
          when) {
@@ -289,6 +295,82 @@ defineSuite([
 
         runs(function() {
             expect(tile000Image).toBeInstanceOf(Image);
+        });
+    });
+
+    it('raises error event when image cannot be loaded', function() {
+        var mapStyle = BingMapsStyle.COLLINS_BART;
+
+        jsonp.loadAndExecuteScript = function(url, functionName) {
+            window[functionName]({
+                "authenticationResultCode" : "ValidCredentials",
+                "brandLogoUri" : "http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png",
+                "copyright" : "Copyright © 2012 Microsoft and its suppliers. All rights reserved. This API cannot be accessed and the content and any results may not be used, reproduced or transmitted in any manner without express written permission from Microsoft Corporation.",
+                "resourceSets" : [{
+                    "estimatedTotal" : 1,
+                    "resources" : [{
+                        "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
+                        "imageHeight" : 256,
+                        "imageUrl" : "http:\/\/invalid.{subdomain}.localhost\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
+                        "imageUrlSubdomains" : ["t0"],
+                        "imageWidth" : 256,
+                        "imageryProviders" : null,
+                        "vintageEnd" : null,
+                        "vintageStart" : null,
+                        "zoomMax" : 21,
+                        "zoomMin" : 1
+                    }]
+                }],
+                "statusCode" : 200,
+                "statusDescription" : "OK",
+                "traceId" : "c9cf8c74a8b24644974288c92e448972|EWRM003311|02.00.171.2600|"
+            });
+        };
+
+        var provider = new BingMapsImageryProvider({
+            server : 'invalid.localhost',
+            mapStyle : mapStyle
+        });
+
+        var layer = new ImageryLayer(provider);
+
+        var tries = 0;
+        provider.getErrorEvent().addEventListener(function(error) {
+            expect(error.timesRetried).toEqual(tries);
+            ++tries;
+            if (tries < 3) {
+                error.retry = true;
+            }
+        });
+
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            // Succeed after 2 tries
+            if (tries === 2) {
+                // valid URL
+                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            }
+
+            // invalid URL
+            return loadImage.defaultCreateImage(url, crossOrigin, deferred);
+        };
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        var imagery;
+        runs(function() {
+            imagery = new Imagery(layer, 0, 0, 0);
+            layer.requestImagery(imagery);
+        });
+
+        waitsFor(function() {
+            return imagery.state === ImageryState.RECEIVED;
+        }, 'image to load');
+
+        runs(function() {
+            expect(imagery.image).toBeInstanceOf(Image);
+            expect(tries).toEqual(2);
         });
     });
 });

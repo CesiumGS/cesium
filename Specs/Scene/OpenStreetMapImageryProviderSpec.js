@@ -6,7 +6,10 @@ defineSuite([
          'Core/DefaultProxy',
          'Core/Extent',
          'Core/Math',
+         'Scene/Imagery',
+         'Scene/ImageryLayer',
          'Scene/ImageryProvider',
+         'Scene/ImageryState',
          'Scene/WebMercatorTilingScheme',
          'ThirdParty/when'
      ], function(
@@ -16,7 +19,10 @@ defineSuite([
          DefaultProxy,
          Extent,
          CesiumMath,
+         Imagery,
+         ImageryLayer,
          ImageryProvider,
+         ImageryState,
          WebMercatorTilingScheme,
          when) {
     "use strict";
@@ -229,5 +235,52 @@ defineSuite([
             maximumLevel : 5
         });
         expect(provider.getMaximumLevel()).toEqual(5);
+    });
+
+    it('raises error event when image cannot be loaded', function() {
+        var provider = new OpenStreetMapImageryProvider({
+            url : 'made/up/osm/server'
+        });
+
+        var layer = new ImageryLayer(provider);
+
+        var tries = 0;
+        provider.getErrorEvent().addEventListener(function(error) {
+            expect(error.timesRetried).toEqual(tries);
+            ++tries;
+            if (tries < 3) {
+                error.retry = true;
+            }
+        });
+
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            // Succeed after 2 tries
+            if (tries === 2) {
+                // valid URL
+                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            }
+
+            // invalid URL
+            return loadImage.defaultCreateImage(url, crossOrigin, deferred);
+        };
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        var imagery;
+        runs(function() {
+            imagery = new Imagery(layer, 0, 0, 0);
+            layer.requestImagery(imagery);
+        });
+
+        waitsFor(function() {
+            return imagery.state === ImageryState.RECEIVED;
+        }, 'image to load');
+
+        runs(function() {
+            expect(imagery.image).toBeInstanceOf(Image);
+            expect(tries).toEqual(2);
+        });
     });
 });

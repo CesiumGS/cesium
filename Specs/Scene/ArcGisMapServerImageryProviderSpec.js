@@ -5,7 +5,10 @@ defineSuite([
          'Core/loadImage',
          'Scene/DiscardMissingTileImagePolicy',
          'Scene/GeographicTilingScheme',
+         'Scene/Imagery',
+         'Scene/ImageryLayer',
          'Scene/ImageryProvider',
+         'Scene/ImageryState',
          'Scene/WebMercatorTilingScheme',
          'ThirdParty/when'
      ], function(
@@ -14,7 +17,10 @@ defineSuite([
          loadImage,
          DiscardMissingTileImagePolicy,
          GeographicTilingScheme,
+         Imagery,
+         ImageryLayer,
          ImageryProvider,
+         ImageryState,
          WebMercatorTilingScheme,
          when) {
     "use strict";
@@ -330,6 +336,65 @@ defineSuite([
         runs(function() {
             expect(provider.isReady()).toEqual(false);
             expect(errorEventRaised).toEqual(true);
+        });
+    });
+
+    it('raises error event when image cannot be loaded', function() {
+        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+
+        jsonp.loadAndExecuteScript = function(url, functionName) {
+            expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');
+            setTimeout(function() {
+                window[functionName]({
+                    "currentVersion" : 10.01,
+                    "copyrightText" : "Test copyright text"
+                });
+            }, 1);
+        };
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        var layer = new ImageryLayer(provider);
+
+        var tries = 0;
+        provider.getErrorEvent().addEventListener(function(error) {
+            expect(error.timesRetried).toEqual(tries);
+            ++tries;
+            if (tries < 3) {
+                error.retry = true;
+            }
+        });
+
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            // Succeed after 2 tries
+            if (tries === 2) {
+                // valid URL
+                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            }
+
+            // invalid URL
+            return loadImage.defaultCreateImage(url, crossOrigin, deferred);
+        };
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        var imagery;
+        runs(function() {
+            imagery = new Imagery(layer, 0, 0, 0);
+            layer.requestImagery(imagery);
+        });
+
+        waitsFor(function() {
+            return imagery.state === ImageryState.RECEIVED;
+        }, 'image to load');
+
+        runs(function() {
+            expect(imagery.image).toBeInstanceOf(Image);
+            expect(tries).toEqual(2);
         });
     });
 });

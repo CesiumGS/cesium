@@ -6,7 +6,9 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Extent',
-        './GeographicTilingScheme'
+        './GeographicTilingScheme',
+        './ImageryProviderError',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         loadImage,
@@ -14,7 +16,9 @@ define([
         DeveloperError,
         Event,
         Extent,
-        GeographicTilingScheme) {
+        GeographicTilingScheme,
+        ImageryProviderError,
+        when) {
     "use strict";
 
     /**
@@ -80,12 +84,32 @@ define([
         }
 
         var that = this;
-        loadImage(imageUrl).then(function(image) {
+        var error;
+
+        function success(image) {
             that._image = image;
             that._tileWidth = image.width;
             that._tileHeight = image.height;
             that._ready = true;
-        });
+            ImageryProviderError.handleSuccess(that._errorEvent);
+        }
+
+        function failure(e) {
+            var message = 'Failed to load image ' + imageUrl + '.';
+            error = ImageryProviderError.handleError(
+                    error,
+                    that,
+                    that._errorEvent,
+                    message,
+                    0, 0, 0,
+                    doRequest);
+        }
+
+        function doRequest() {
+            when(loadImage(imageUrl), success, failure);
+        }
+
+        doRequest();
     };
 
     /**
