@@ -70,6 +70,24 @@ require([
 {
     "use strict";
     
+    function flyToSanDiego(scene) {
+        Sandcastle.declare(flyToSanDiego);    // For highlighting in Sandcastle.
+        var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
+        var flight = Cesium.CameraFlightPath.createAnimation(scene.getCamera(), destination);
+        scene.getAnimations().add(flight);
+    }
+    
+    function flyToMyLocation(scene) {
+        Sandcastle.declare(flyToMyLocation);    // For highlighting in Sandcastle.
+        function fly(position) {
+            var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 10000.0);
+            var flight = Cesium.CameraFlightPath.createAnimation(scene.getCamera(), destination);
+            scene.getAnimations().add(flight);        
+        }
+        
+        navigator.geolocation.getCurrentPosition(fly);
+    }
+
     function viewAnExtent(scene) {
         Sandcastle.declare(viewAnExtent);   // For highlighting in Sandcastle.
         var west = Cesium.Math.toRadians(-77.0);
@@ -94,6 +112,22 @@ require([
     }
     
     function createButtons(scene) {
+        new ToggleButton({
+            label: "Fly to San Diego",
+            onClick: function() { 
+                flyToSanDiego(scene);
+                Sandcastle.highlight(flyToSanDiego);
+            }
+        }).placeAt('toolbar');
+
+        new ToggleButton({
+            label: "Fly to My Location",
+            onClick: function() { 
+                flyToMyLocation(scene);
+                Sandcastle.highlight(flyToMyLocation);
+            }
+        }).placeAt('toolbar');
+        
         new ToggleButton({
             label: "View an Extent",
             onClick: function() { 
