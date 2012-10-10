@@ -271,6 +271,7 @@ defineSuite([
         var imagery;
         runs(function() {
             imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
             layer.requestImagery(imagery);
         });
 
@@ -281,6 +282,7 @@ defineSuite([
         runs(function() {
             expect(imagery.image).toBeInstanceOf(Image);
             expect(tries).toEqual(2);
+            imagery.releaseReference();
         });
     });
 });

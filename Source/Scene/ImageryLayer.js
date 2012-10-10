@@ -489,7 +489,8 @@ define([
             wrapS : TextureWrap.CLAMP,
             wrapT : TextureWrap.CLAMP,
             minificationFilter : TextureMinificationFilter.LINEAR,
-            magnificationFilter : TextureMagnificationFilter.LINEAR
+            magnificationFilter : TextureMagnificationFilter.LINEAR,
+            maximumAnisotropy : context.getMaximumTextureFilterAnisotropy()
         });
 
         var width = texture.getWidth();
