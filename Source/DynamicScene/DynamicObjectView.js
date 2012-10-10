@@ -99,11 +99,11 @@ define([
         var tranform = camera.transform;
         tranform.setColumn(3, updateColumbusCartesian4, tranform);
 
-        if (that.scene.mode !== that._mode) {
-            that.scene.getCameraMouseController().constrainedAxis = Cartesian3.UNIT_Z;
-            that.scene.getCameraMouseController().setEllipsoid(Ellipsoid.UNIT_SPHERE);
-            that.scene.getCameraMouseController().columbusViewMode = CameraColumbusViewMode.LOCKED;
-        }
+        var mouseController = that.scene.getCameraMouseController();
+        mouseController.enableTranslate = false;
+        mouseController.constrainedAxis = Cartesian3.UNIT_Z;
+        mouseController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+        mouseController.columbusViewMode = CameraColumbusViewMode.LOCKED;
 
         var position = camera.position;
         Cartesian3.clone(position, that._lastOffset);

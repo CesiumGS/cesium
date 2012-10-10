@@ -564,7 +564,9 @@ define([
     function rotate3D(controller, movement, transform) {
         var cameraController = controller._cameraController;
         cameraController.constrainedAxis = controller.constrainedAxis;
-        var rho = cameraController.getMagnitude();
+        // CAMERA TODO: remove access to camera, fixes a problem in Columbus view
+        //var rho = cameraController.getMagnitude();
+        var rho = controller._cameraController._camera.position.magnitude();
         var rotateRate = controller._rotateFactor * (rho - controller._rotateRateRangeAdjustment);
 
         if (rotateRate > controller._maximumRotateRate) {

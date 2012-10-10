@@ -882,8 +882,10 @@ define([
                 var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
                 var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
                 var direction = Cartesian3.ZERO.subtract(position).normalize();
-                var right = direction.cross(Cartesian3.UNIT_Z).normalize();
+                var right = direction.cross(Cartesian3.UNIT_Z);
                 var up = right.cross(direction);
+                right = camera.direction.cross(camera.up);
+                direction = up.cross(right);
 
                 var frustum = new PerspectiveFrustum();
                 frustum.fovy = CesiumMath.toRadians(60.0);
