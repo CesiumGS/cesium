@@ -2,12 +2,14 @@
 define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/writeTextToCanvas',
         './ImageryProvider',
         './WebMercatorTilingScheme'
     ], function(
         defaultValue,
         DeveloperError,
+        Event,
         writeTextToCanvas,
         ImageryProvider,
         WebMercatorTilingScheme) {
@@ -67,6 +69,8 @@ define([
         this._maximumLevel = defaultValue(description.maximumLevel, 18);
 
         this._extent = defaultValue(description.extent, this._tilingScheme.getExtent());
+
+        this._errorEvent = new Event();
 
         this._ready = true;
 
@@ -176,6 +180,19 @@ define([
      */
     OpenStreetMapImageryProvider.prototype.getTileDiscardPolicy = function() {
         return this._tileDiscardPolicy;
+    };
+
+    /**
+     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link ImageryProviderError}.
+     *
+     * @memberof OpenStreetMapImageryProvider
+     *
+     * @returns {Event} The event.
+     */
+    OpenStreetMapImageryProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
     };
 
     /**

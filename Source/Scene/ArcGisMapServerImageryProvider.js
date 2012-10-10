@@ -3,23 +3,29 @@ define([
         '../Core/defaultValue',
         '../Core/jsonp',
         '../Core/writeTextToCanvas',
-        '../Core/DeveloperError',
         '../Core/Cartesian2',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/RuntimeError',
         './DiscardMissingTileImagePolicy',
-        './ImageryProvider',
-        './WebMercatorTilingScheme',
         './GeographicTilingScheme',
+        './ImageryProvider',
+        './ImageryProviderError',
+        './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         jsonp,
         writeTextToCanvas,
-        DeveloperError,
         Cartesian2,
+        DeveloperError,
+        Event,
+        RuntimeError,
         DiscardMissingTileImagePolicy,
-        ImageryProvider,
-        WebMercatorTilingScheme,
         GeographicTilingScheme,
+        ImageryProvider,
+        ImageryProviderError,
+        WebMercatorTilingScheme,
         when) {
     "use strict";
 
@@ -79,20 +85,17 @@ define([
         this._maximumLevel = undefined;
         this._tilingScheme = undefined;
         this._logo = undefined;
-		this._useTiles = defaultValue(description.usePreCachedTilesIfAvailable, true);
+        this._useTiles = defaultValue(description.usePreCachedTilesIfAvailable, true);
+
+        this._errorEvent = new Event();
 
         this._ready = false;
 
         // Grab the details of this MapServer.
-        var metadata = jsonp(this._url, {
-            parameters : {
-                f : 'json'
-            },
-            proxy : this._proxy
-        });
-
         var that = this;
-        when(metadata, function(data) {
+        var metadataError;
+
+        function metadataSuccess(data) {
             var tileInfo = data.tileInfo;
             if (!that._useTiles || typeof tileInfo === 'undefined') {
                 // TODO: read the extent and maybe tiling scheme from the service.
@@ -110,6 +113,10 @@ define([
                     that._tilingScheme = new WebMercatorTilingScheme();
                 } else if (data.tileInfo.spatialReference.wkid === 4326) {
                     that._tilingScheme = new GeographicTilingScheme();
+                } else {
+                    var message = 'Tile spatial reference WKID ' + data.tileInfo.spatialReference.wkid + ' is not supported.';
+                    metadataError = ImageryProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                    return;
                 }
                 that._maximumLevel = data.tileInfo.lods.length - 1;
 
@@ -133,10 +140,25 @@ define([
             }
 
             that._ready = true;
-        }, function(e) {
-            /*global console*/
-            console.error('failed to load metadata: ' + e);
-        });
+            ImageryProviderError.handleSuccess(metadataError);
+        }
+
+        function metadataFailure(e) {
+            var message = 'An error occurred while accessing ' + that._url + '.';
+            metadataError = ImageryProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+        }
+
+        function requestMetadata() {
+            var metadata = jsonp(that._url, {
+                parameters : {
+                    f : 'json'
+                },
+                proxy : that._proxy
+            });
+            when(metadata, metadataSuccess, metadataFailure);
+        }
+
+        requestMetadata();
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
@@ -263,6 +285,19 @@ define([
      */
     ArcGisMapServerImageryProvider.prototype.getTileDiscardPolicy = function() {
         return this._tileDiscardPolicy;
+    };
+
+    /**
+     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link ImageryProviderError}.
+     *
+     * @memberof ArcGisMapServerImageryProvider
+     *
+     * @returns {Event} The event.
+     */
+    ArcGisMapServerImageryProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
     };
 
     /**

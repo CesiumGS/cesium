@@ -105,6 +105,19 @@ define([
     };
 
     /**
+     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link ImageryProviderError}.
+     *
+     * @memberof ImageryProvider
+     *
+     * @returns {Event} The event.
+     */
+    ImageryProvider.prototype.getErrorEvent = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
      * Gets the logo to display when this imagery provider is active.  Typically this is used to credit
      * the source of the imagery.  This function should not be called before {@link ImageryProvider#isReady} returns true.
      *

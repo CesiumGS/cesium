@@ -4,6 +4,7 @@ define([
         '../Core/loadImage',
         '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/Extent',
         './GeographicTilingScheme'
     ], function(
@@ -11,6 +12,7 @@ define([
         loadImage,
         writeTextToCanvas,
         DeveloperError,
+        Event,
         Extent,
         GeographicTilingScheme) {
     "use strict";
@@ -59,6 +61,8 @@ define([
         this._texture = undefined;
         this._tileWidth = 0;
         this._tileHeight = 0;
+
+        this._errorEvent = new Event();
 
         this._ready = false;
 
@@ -172,6 +176,19 @@ define([
      */
     SingleTileImageryProvider.prototype.getTileDiscardPolicy = function() {
         return undefined;
+    };
+
+    /**
+     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link ImageryProviderError}.
+     *
+     * @memberof SingleTileImageryProvider
+     *
+     * @returns {Event} The event.
+     */
+    SingleTileImageryProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
     };
 
     /**
