@@ -77,7 +77,7 @@ require([
             mapStyle: Cesium.BingMapsStyle.ROAD,
             // Some versions of Safari support WebGL, but don't correctly implement
             // cross-origin image loading, so we need to load Bing imagery using a proxy.
-            proxy: Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+            proxy: Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/Proxy.ashx')
         });
         
         primitives.getCentralBody().dayTileProvider = provider;        
@@ -89,7 +89,7 @@ require([
             host: 'server.arcgisonline.com',
             root: 'ArcGIS/rest',
             service: 'World_Street_Map',
-            proxy: new Cesium.DefaultProxy('/proxy/')
+            proxy: new Cesium.DefaultProxy('/Proxy.ashx')
         });
         
         primitives.getCentralBody().dayTileProvider = provider;        
@@ -98,7 +98,7 @@ require([
     function openStreetMaps(primitives) {
         Sandcastle.declare(openStreetMaps); // For highlighting in Sandcastle.
         var provider = new Cesium.OpenStreetMapTileProvider({
-            proxy: new Cesium.DefaultProxy('/proxy/')
+            proxy: new Cesium.DefaultProxy('/Proxy.ashx')
         });
         
         primitives.getCentralBody().dayTileProvider = provider;        
@@ -110,7 +110,7 @@ require([
         //   http://oatile1.mqcdn.com/naip/
         var provider = new Cesium.OpenStreetMapTileProvider({
             url: 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
-            proxy: new Cesium.DefaultProxy('/proxy/')
+            proxy: new Cesium.DefaultProxy('/Proxy.ashx')
         });
         
         primitives.getCentralBody().dayTileProvider = provider;        
@@ -125,7 +125,7 @@ require([
         var provider = new Cesium.OpenStreetMapTileProvider({
             url: 'http://tile.stamen.com/watercolor/',
             fileExtension: 'jpg',
-            proxy: new Cesium.DefaultProxy('/proxy/'),
+            proxy: new Cesium.DefaultProxy('/Proxy.ashx'),
             credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
         });
         
