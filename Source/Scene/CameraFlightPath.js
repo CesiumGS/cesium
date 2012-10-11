@@ -36,6 +36,96 @@ define([
         return Quaternion.fromRotationMatrix(viewMat);
     }
 
+    function createPath(camera, ellipsoid, end, duration) {
+        var start = camera.position;
+
+        // get minimum altitude from which the whole ellipsoid is visible
+        var radius = ellipsoid.getMaximumRadius();
+
+        var frustum = camera.frustum;
+        var near = frustum.near;
+        var top = frustum.near * Math.tan(0.5 * frustum.fovy);
+        var right = frustum.aspectRatio * top;
+
+        var dx = radius * near / right;
+        var dy = radius * near / top;
+        var maxStartAlt = Math.max(dx, dy);
+
+        var dot = start.normalize().dot(end.normalize());
+
+        var abovePercentage, incrementPercentage;
+        var startAboveMaxAlt = (start.magnitude() > maxStartAlt);
+        if (startAboveMaxAlt) {
+            abovePercentage = 0.6;
+            incrementPercentage = 0.35;
+        } else {
+            abovePercentage = Math.max(0.1, 1.0 - Math.abs(dot));
+            incrementPercentage = 0.5;
+        }
+
+        maxStartAlt = radius + abovePercentage * (maxStartAlt - radius);
+
+        var aboveEnd = end.normalize().multiplyByScalar(maxStartAlt);
+        var afterStart = start.normalize().multiplyByScalar(maxStartAlt);
+
+        var points, axis, angle, rotation;
+        if (start.magnitude() > maxStartAlt && dot > 0) {
+            var middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
+
+            points = [{
+                point : start
+            }, {
+                point : middle
+            }, {
+                point : end
+            }];
+        } else {
+            points = [{
+                point : start
+            }];
+
+            angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
+            axis = aboveEnd.cross(afterStart);
+
+            var increment = incrementPercentage * angle;
+            var startCondition = angle - increment;
+            for ( var i = startCondition; i > 0.0; i = i - increment) {
+                rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
+                points.push({
+                    point : rotation.multiplyByVector(aboveEnd)
+                });
+            }
+
+            points.push({
+                point : end
+            });
+        }
+
+        var scalar = duration / (points.length - 1);
+        for ( var k = 0; k < points.length; ++k) {
+            points[k].time = k * scalar;
+        }
+
+        return new HermiteSpline(points);
+    }
+
+    function createOrientations(camera, end, duration) {
+        var direction = end.negate().normalize();
+        var right = direction.cross(Cartesian3.UNIT_Z).normalize();
+        var up = right.cross(direction);
+        var orientationControlPoints = [
+            {
+                orientation : createQuaternion(camera.direction, camera.up),
+                time : 0.0
+            },
+            {
+                orientation : createQuaternion(direction, up),
+                time : duration
+            }
+        ];
+        return new OrientationInterpolator(orientationControlPoints);
+    }
+
     CameraFlightPath.createAnimation = function(camera, destination, ellipsoid, duration, onComplete) {
         if (typeof camera === 'undefined') {
             throw new DeveloperError('camera is required.');
@@ -47,56 +137,10 @@ define([
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         duration = defaultValue(duration, 3000.0);
-
-        var start = camera.position;
         var end = ellipsoid.cartographicToCartesian(destination);
-        var startCart = ellipsoid.cartesianToCartographic(start);
 
-        var halfDistance = start.subtract(end).magnitude() * 0.5;
-
-        var midCart = new Cartographic();
-        midCart.longitude = CesiumMath.lerp(startCart.longitude, destination.longitude, 0.25);
-        midCart.latitude = CesiumMath.lerp(startCart.latitude, destination.latitude, 0.25);
-        midCart.height = halfDistance;
-        var mid0 = ellipsoid.cartographicToCartesian(midCart);
-        midCart.longitude = CesiumMath.lerp(startCart.longitude, destination.longitude, 0.75);
-        midCart.latitude = CesiumMath.lerp(startCart.latitude, destination.latitude, 0.75);
-        midCart.height = halfDistance;
-        var mid1 = ellipsoid.cartographicToCartesian(midCart);
-
-        var points = [
-            {
-                point : start,
-                time : 0.0
-            },
-            {
-                point : mid0,
-                time : 0.25
-            },
-            {
-                point : mid1,
-                time : 0.75
-            },
-            {
-                point : end,
-                time : 1.0
-            }
-        ];
-        var path = new HermiteSpline(points);
-
-        var direction = end.negate().normalize();
-        var up = direction.cross(points[3].tangent).normalize();
-        var orientationControlPoints = [
-            {
-                orientation : createQuaternion(camera.direction, camera.up),
-                time : 0.0
-            },
-            {
-                orientation : createQuaternion(direction, up),
-                time : 1.0
-            }
-        ];
-        var orientations = new OrientationInterpolator(orientationControlPoints);
+        var path = createPath(camera, ellipsoid, end, duration);
+        var orientations = createOrientations(camera, end, duration);
 
         var update = function(value) {
             var time = value.time;
@@ -107,6 +151,14 @@ define([
             camera.right = rotationMatrix.getColumn(0);
             camera.up = rotationMatrix.getColumn(1);
             camera.direction = rotationMatrix.getColumn(2).negate();
+
+            /*
+            camera.position = path.evaluate(time);
+            camera.direction = camera.position.negate().normalize();
+            camera.right = camera.direction.cross(Cartesian3.UNIT_Z).normalize();
+            camera.up = camera.position.cross(camera.right).normalize();
+            camera.right = camera.direction.cross(camera.up);
+            */
         };
 
         return {
@@ -116,7 +168,7 @@ define([
                 time : 0.0
             },
             stopValue : {
-                time : 1.0
+                time : duration
             },
             onUpdate : update,
             onComplete : onComplete
