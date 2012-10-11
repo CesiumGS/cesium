@@ -1110,11 +1110,13 @@ define([
                 existingImagery = imageLayers.get(0).imageryProvider;
             }
 
+            var newLayer;
+
             if (this.useStreamingImagery) {
                 if (!(existingImagery instanceof BingMapsImageryProvider) ||
                     existingImagery.getMapStyle() !== this.mapStyle) {
 
-                    imageLayers.addImageryProvider(new BingMapsImageryProvider({
+                    newLayer = imageLayers.addImageryProvider(new BingMapsImageryProvider({
                         server : 'dev.virtualearth.net',
                         mapStyle : this.mapStyle,
                         // Some versions of Safari support WebGL, but don't correctly implement
@@ -1124,15 +1126,17 @@ define([
                     if (imageLayers.getLength() > 1) {
                         imageLayers.remove(imageLayers.get(0));
                     }
+                    imageLayers.lowerToBottom(newLayer);
                 }
             } else {
                 if (!(existingImagery instanceof SingleTileImageryProvider) ||
                     existingImagery.getUrl() !== this.dayImageUrl) {
 
-                    imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
+                    newLayer = imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
                     if (imageLayers.getLength() > 1) {
                         imageLayers.remove(imageLayers.get(0));
                     }
+                    imageLayers.lowerToBottom(newLayer);
                 }
             }
 
