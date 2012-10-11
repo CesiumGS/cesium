@@ -55,6 +55,10 @@ define([
      * Manages and renders the terrain and imagery on the surface of a {@link CentralBody}.
      * This class should be considered an implementation detail of {@link CentralBody} and not
      * used directly.
+     *
+     * @alias CentralBodySurface
+     * @constructor
+     * @private
      */
     var CentralBodySurface = function(description) {
         if (typeof description.terrainProvider === 'undefined') {
@@ -125,7 +129,7 @@ define([
         // create TileImagerys for this layer for all previously loaded tiles
         var tile = this._tileReplacementQueue.head;
         while (typeof tile !== 'undefined') {
-            if (layer.createTileImagerySkeletons(tile, this._terrainProvider)) {
+            if (layer._createTileImagerySkeletons(tile, this._terrainProvider)) {
                 tile.doneLoading = false;
             }
 
@@ -586,7 +590,7 @@ define([
 
                     var imageryLayerCollection = surface._imageryLayerCollection;
                     for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-                        imageryLayerCollection.get(i).createTileImagerySkeletons(tile, terrainProvider);
+                        imageryLayerCollection.get(i)._createTileImagerySkeletons(tile, terrainProvider);
                     }
                 }
             }
@@ -618,7 +622,7 @@ define([
                         // at the same position.  Then continue the loop at the same index.
                         imagery.releaseReference();
                         tileImageryCollection.splice(i, 1);
-                        imageryLayer.createTileImagerySkeletons(tile, terrainProvider, i);
+                        imageryLayer._createTileImagerySkeletons(tile, terrainProvider, i);
                         --i;
                         len = tileImageryCollection.length;
                     }

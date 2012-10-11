@@ -39,6 +39,7 @@ define([
      *
      * @alias EllipsoidTerrainProvider
      * @constructor
+     * @private
      *
      * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the ellipsoidal
      * surface is broken into tiles.  If this parameter is not provided, a {@link GeographicTilingScheme}
