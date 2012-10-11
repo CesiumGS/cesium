@@ -430,7 +430,10 @@ require({
             clearErrorsAddHints();
             clearRun();
             cesiumContainer.selectChild(bucketPane);
-            bucketFrame.contentWindow.location.reload();
+            // Check for a race condition in some browsers where the iframe hasn't loaded yet.
+            if (bucketFrame.contentWindow.location.href.indexOf('bucket.html') > 0) {
+                bucketFrame.contentWindow.location.reload();
+            }
         };
 
         CodeMirror.commands.autocomplete = function(cm) {
