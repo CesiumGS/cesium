@@ -414,8 +414,13 @@ require({
             clearErrorsAddHints();
             clearRun();
             cesiumContainer.selectChild(bucketPane);
-console.log('RELOAD bucketFrame.src=' + bucketFrame.src);
-            bucketFrame.contentWindow.location.reload();
+            // Check for a race condition in some browsers where the iframe hasn't loaded yet.
+            if (bucketFrame.contentWindow.location.href.indexOf('bucket.html') > 0) {
+console.log('RELOAD bucketFrame.src=' + bucketFrame.src + ', loc=' + bucketFrame.contentWindow.location.href);
+                bucketFrame.contentWindow.location.reload();
+            } else {
+console.log('DON\'T RELOAD bucketFrame.src=' + bucketFrame.src + ', loc=' + bucketFrame.contentWindow.location.href);
+            }
         };
 
         CodeMirror.commands.autocomplete = function(cm) {
@@ -506,6 +511,7 @@ console.log('Apply body');
         }
 
         function applyBucket() {
+            console.log('Applying bucket');
             if (local.emptyBucket && local.bucketName && typeof bucketTypes[local.bucketName] === 'string') {
                 bucketWaiting = false;
 console.log('Apply bucket');
@@ -544,6 +550,8 @@ console.log('Wait for bucket');
         function applyBucketIfWaiting() {
             if (bucketWaiting) {
                 applyBucket();
+            } else {
+                console.log('Not waiting for bucket.');
             }
         }
 
@@ -574,6 +582,9 @@ console.log('loadBucket ' + bucketName);
                         bucketTypes[bucketName] = value.substring(0, pos + 1) + '\n';
                         if (local.bucketName === bucketName) {
                             local.headers = bucketTypes[bucketName];
+                            console.log('Got contents of ' + bucketName);
+                        } else {
+                            console.log('Got contents of ' + bucketName + ' but was EXPECTING ' + local.bucketName);
                         }
                         applyBucketIfWaiting();
                     });
