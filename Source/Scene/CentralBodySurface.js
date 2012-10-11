@@ -456,7 +456,7 @@ define([
         }
 
         if (frameState.mode === SceneMode.SCENE3D) {
-            var occludeePointInScaledSpace = tile.getOccludeePointInScaledSpace();
+            var occludeePointInScaledSpace = tile.occludeePointInScaledSpace;
             if (typeof occludeePointInScaledSpace === 'undefined') {
                 return true;
             }

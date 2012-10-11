@@ -1,27 +1,9 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Cartesian2',
-        '../Core/Ellipsoid',
-        '../Core/Extent',
-        '../Core/BoundingRectangle',
-        '../Core/BoundingSphere',
-        '../Core/Occluder',
         './TileState'
     ], function(
-        defaultValue,
-        destroyObject,
         DeveloperError,
-        CesiumMath,
-        Cartesian2,
-        Ellipsoid,
-        Extent,
-        BoundingRectangle,
-        BoundingSphere,
-        Occluder,
         TileState) {
     "use strict";
 
@@ -32,6 +14,7 @@ define([
      *
      * @alias Tile
      * @constructor
+     * @private
      *
      * @param {TilingScheme} description.tilingScheme The tiling scheme of which the new tile is a part, such as a
      *                                                {@link WebMercatorTilingScheme} or a {@link GeographicTilingScheme}.
@@ -184,22 +167,73 @@ define([
 
         /**
          * The distance from the camera to this tile, updated when the tile is selected
-         * for rendering.  TODO: can we get rid of this?
+         * for rendering.  We can get rid of this if we have a better way to sort by
+         * distance - for example, by using the natural ordering of a quadtree.
          * @type Number
          */
         this.distance = 0.0;
 
-        // TODO: acknowledge or remove these properties:
-        // southwestCornerCartesian
-        // northeastCornerCartesian
-        // westNormal
-        // southNormal
-        // eastNormal
-        // northNormal
+        /**
+         * The world coordinates of the southwest corner of the tile's extent.
+         *
+         * @type Cartesian3
+         */
+        this.southwestCornerCartesian = undefined;
 
-        // TODO: write doc for these.
-        this.occludeePoint = undefined;
-        this.occludeePointComputed = false;
+        /**
+         * The world coordinates of the northeast corner of the tile's extent.
+         *
+         * @type Cartesian3
+         */
+        this.northeastCornerCartesian = undefined;
+
+        /**
+         * A normal that, along with southwestCornerCartesian, defines a plane at the western edge of
+         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
+         *
+         * @type Cartesian3
+         */
+        this.westNormal = undefined;
+
+        /**
+         * A normal that, along with southwestCornerCartesian, defines a plane at the southern edge of
+         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
+         * Because points of constant latitude do not necessary lie in a plane, positions below this
+         * plane are not necessarily inside the tile, but they are close.
+         *
+         * @type Cartesian3
+         */
+        this.southNormal = undefined;
+
+        /**
+         * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
+         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
+         *
+         * @type Cartesian3
+         */
+        this.eastNormal = undefined;
+
+        /**
+         * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
+         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
+         * Because points of constant latitude do not necessary lie in a plane, positions below this
+         * plane are not necessarily inside the tile, but they are close.
+         *
+         * @type Cartesian3
+         */
+        this.northNormal = undefined;
+
+        /*
+         * A proxy point to use for this tile for horizon culling.  If this point is below the horizon, the
+         * entire tile is below the horizon as well.  The point is expressed in the ellipsoid-scaled
+         * space.  To transform a point from world coordinates centered on the ellipsoid to ellipsoid-scaled
+         * coordinates, multiply the world coordinates by {@link Ellipsoid#getOneOverRadii}.  See
+         * <a href="http://blogs.agi.com/insight3d/index.php/2009/03/25/horizon-culling-2/">http://blogs.agi.com/insight3d/index.php/2009/03/25/horizon-culling-2/</a>
+         * for information the proxy point.
+         *
+         * @type {Cartesian3}
+         */
+        this.occludeePointInScaledSpace = undefined;
     };
 
     /**
@@ -243,26 +277,6 @@ define([
         }
 
         return this.children;
-    };
-
-    /**
-     * Computes a point that when visible means the geometry for this tile is visible.
-     *
-     * @memberof Tile
-     *
-     * @return {Cartesian3} The occludee point or undefined.
-     */
-    Tile.prototype.getOccludeePointInScaledSpace = function() {
-        if (!this.occludeePointComputed) {
-            var ellipsoid = this.tilingScheme.getEllipsoid();
-            var occludeePoint = Occluder.computeOccludeePointFromExtent(this.extent, ellipsoid);
-            if (typeof occludeePoint !== 'undefined') {
-                occludeePoint.multiplyComponents(ellipsoid.getOneOverRadii(), occludeePoint);
-            }
-            this.occludeePoint = occludeePoint;
-            this.occludeePointComputed = true;
-        }
-        return this.occludeePoint;
     };
 
     Tile.prototype.freeResources = function() {
