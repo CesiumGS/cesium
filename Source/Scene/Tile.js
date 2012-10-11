@@ -223,7 +223,7 @@ define([
          */
         this.northNormal = undefined;
 
-        /*
+        /**
          * A proxy point to use for this tile for horizon culling.  If this point is below the horizon, the
          * entire tile is below the horizon as well.  The point is expressed in the ellipsoid-scaled
          * space.  To transform a point from world coordinates centered on the ellipsoid to ellipsoid-scaled

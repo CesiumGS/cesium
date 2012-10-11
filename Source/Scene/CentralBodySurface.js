@@ -396,7 +396,7 @@ define([
         var frustum = camera.frustum;
         var fovy = frustum.fovy;
 
-        // PERFORMANCE_TODO: factor out stuff that's constant across tiles.
+        // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
         return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
     }
 
