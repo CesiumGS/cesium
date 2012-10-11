@@ -482,6 +482,28 @@ define([
         imagery.state = ImageryState.READY;
     };
 
+    ImageryLayer.prototype.getImageryFromCache = function(x, y, level, imageryExtent) {
+        var cacheKey = getImageryCacheKey(x, y, level);
+        var imagery = this._imageryCache[cacheKey];
+
+        if (typeof imagery === 'undefined') {
+            imagery = new Imagery(this, x, y, level, imageryExtent);
+            this._imageryCache[cacheKey] = imagery;
+        }
+
+        imagery.addReference();
+        return imagery;
+    };
+
+    ImageryLayer.prototype.removeImageryFromCache = function(imagery) {
+        var cacheKey = getImageryCacheKey(imagery.x, imagery.y, imagery.level);
+        delete this._imageryCache[cacheKey];
+    };
+
+    function getImageryCacheKey(x, y, level) {
+        return JSON.stringify([x, y, level]);
+    }
+
     var uniformMap = {
         u_textureDimensions : function() {
             return this.textureDimensions;
@@ -622,28 +644,6 @@ define([
         });
 
         return outputTexture;
-    }
-
-    ImageryLayer.prototype.getImageryFromCache = function(x, y, level, imageryExtent) {
-        var cacheKey = getImageryCacheKey(x, y, level);
-        var imagery = this._imageryCache[cacheKey];
-
-        if (typeof imagery === 'undefined') {
-            imagery = new Imagery(this, x, y, level, imageryExtent);
-            this._imageryCache[cacheKey] = imagery;
-        }
-
-        imagery.addReference();
-        return imagery;
-    };
-
-    ImageryLayer.prototype.removeImageryFromCache = function(imagery) {
-        var cacheKey = getImageryCacheKey(imagery.x, imagery.y, imagery.level);
-        delete this._imageryCache[cacheKey];
-    };
-
-    function getImageryCacheKey(x, y, level) {
-        return JSON.stringify([x, y, level]);
     }
 
     /**
