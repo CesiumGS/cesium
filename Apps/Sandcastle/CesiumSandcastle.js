@@ -37,6 +37,7 @@ require({
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/form/TextBox',
+        'dijit/form/Textarea',
         'dijit/Menu',
         'dijit/MenuBar',
         'dijit/PopupMenuBarItem',
@@ -109,6 +110,7 @@ require({
         var docTimer;
         var docTabs = {};
         var docError = false;
+        var galleryError = false;
         var galleryTooltipTimer;
         var activeGalleryTooltipDemo;
         var demoTileHeightRule = findCssStyle('.demoTileThumbnail');
@@ -201,6 +203,20 @@ require({
         }).then(function (value) {
             local.docTypes = value;
         });
+
+        var decoderSpan = document.createElement('span');
+        function encodeHTML(text) {
+            decoderSpan.textContent = text;
+            text = decoderSpan.innerHTML;
+            decoderSpan.innerHTML = '';
+            return text;
+        }
+        function decodeHTML(text) {
+            decoderSpan.innerHTML = text;
+            text = decoderSpan.textContent;
+            decoderSpan.innerHTML = '';
+            return text;
+        }
 
         function highlightRun() {
             domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
@@ -416,10 +432,7 @@ require({
             cesiumContainer.selectChild(bucketPane);
             // Check for a race condition in some browsers where the iframe hasn't loaded yet.
             if (bucketFrame.contentWindow.location.href.indexOf('bucket.html') > 0) {
-console.log('RELOAD bucketFrame.src=' + bucketFrame.src + ', loc=' + bucketFrame.contentWindow.location.href);
                 bucketFrame.contentWindow.location.reload();
-            } else {
-console.log('DON\'T RELOAD bucketFrame.src=' + bucketFrame.src + ', loc=' + bucketFrame.contentWindow.location.href);
             }
         };
 
@@ -460,7 +473,7 @@ console.log('DON\'T RELOAD bucketFrame.src=' + bucketFrame.src + ', loc=' + buck
             for (i = 0; i < len; ++i) {
                 node = headNodes[i];
                 if (typeof node.tagName === 'string' && node.tagName === 'SCRIPT' &&
-                        node.src.indexOf('Sandcastle') < 0) {
+                        node.src.indexOf('Sandcastle-header.js') < 0) {  // header is included in blank frame.
                     nodes.push(node);
                 }
             }
@@ -468,10 +481,18 @@ console.log('DON\'T RELOAD bucketFrame.src=' + bucketFrame.src + ', loc=' + buck
             for (i = 0; i < len; ++i) {
                 bucketDoc.head.removeChild(nodes[i]);
             }
+
+            var onScriptTagError = function () {
+                if (bucketFrame.contentDocument === bucketDoc) {
+                    appendConsole('consoleError', "Error loading " + this.src);
+                    appendConsole('consoleError', "Make sure Cesium is built, see the Contributor's Guide for details.");
+                }
+            };
+
             // Load each script after the previous one has loaded.
             var loadScript = function () {
                 if (bucketFrame.contentDocument !== bucketDoc) {
-console.log('obsolete bucketDoc');
+                    // A newer reload has happened, abort this.
                     return;
                 }
                 if (nodes.length > 0) {
@@ -490,13 +511,13 @@ console.log('obsolete bucketDoc');
                     scriptEle.innerHTML = node.innerHTML;
                     if (hasSrc) {
                         scriptEle.onload = loadScript;
+                        scriptEle.onerror = onScriptTagError;
                         bucketDoc.head.appendChild(scriptEle);
                     } else {
                         bucketDoc.head.appendChild(scriptEle);
                         loadScript();
                     }
                 } else {
-console.log('Apply body');
                     // Apply user code to bucket.
                     var bodyEle = bucketDoc.createElement('div');
                     bodyEle.innerHTML = htmlEditor.getValue();
@@ -511,29 +532,27 @@ console.log('Apply body');
         }
 
         function applyBucket() {
-            console.log('Applying bucket');
             if (local.emptyBucket && local.bucketName && typeof bucketTypes[local.bucketName] === 'string') {
                 bucketWaiting = false;
-console.log('Apply bucket');
                 var bucketDoc = bucketFrame.contentDocument;
                 if (local.headers.substring(0, local.emptyBucket.length) !== local.emptyBucket) {
-                    var ele = document.createElement('span');
-                    ele.className = 'consoleError';
-                    ele.textContent = 'Error, empty bucket.html must match first part of ' + local.bucketName + ' exactly.\n';
-                    appendConsole(ele);
+                    appendConsole('consoleError', 'Error, first part of ' + local.bucketName + ' must match first part of bucket.html exactly.');
                 } else {
                     var pos = local.headers.indexOf('<body class="'), pos2;
                     if (pos > 0) {
-                        pos2 = local.headers.indexOf('"', pos + 13);
+                        pos += 13;
+                        pos2 = local.headers.indexOf('"', pos);
                         if (pos2 > pos) {
-                            bucketDoc.body.className = local.headers.substring(pos + 13, pos2);
+                            bucketDoc.body.className = local.headers.substring(pos, pos2);
                         }
                     }
                     pos = local.headers.indexOf('data-sandcastle-title="');
                     if (pos > 0) {
-                        pos2 = local.headers.indexOf('"', pos + 23);
+                        pos += 23;
+                        pos2 = local.headers.indexOf('"', pos);
                         if (pos2 > pos) {
-                            bucketPane.set('title', local.headers.substring(pos + 23, pos2));
+                            bucketPane.set('title', local.headers.substring(pos, pos2));
+                            document.getElementById('includes').textContent = local.headers.substring(pos, pos2);
                         }
                     }
                     pos = local.headers.indexOf('</head>');
@@ -542,7 +561,6 @@ console.log('Apply bucket');
                     activateBucketScripts(bucketDoc);
                 }
             } else {
-console.log('Wait for bucket');
                 bucketWaiting = true;
             }
         }
@@ -550,8 +568,6 @@ console.log('Wait for bucket');
         function applyBucketIfWaiting() {
             if (bucketWaiting) {
                 applyBucket();
-            } else {
-                console.log('Not waiting for bucket.');
             }
         }
 
@@ -561,12 +577,10 @@ console.log('Wait for bucket');
         }).then(function (value) {
             var pos = value.indexOf('</head>');
             local.emptyBucket = value.substring(0, pos);
-console.log('Empty bucket loaded');
             applyBucketIfWaiting();
         });
 
         function loadBucket(bucketName) {
-console.log('loadBucket ' + bucketName);
             if (local.bucketName !== bucketName) {
                 local.bucketName = bucketName;
                 if (typeof bucketTypes[bucketName] !== 'undefined') {
@@ -582,9 +596,6 @@ console.log('loadBucket ' + bucketName);
                         bucketTypes[bucketName] = value.substring(0, pos + 1) + '\n';
                         if (local.bucketName === bucketName) {
                             local.headers = bucketTypes[bucketName];
-                            console.log('Got contents of ' + bucketName);
-                        } else {
-                            console.log('Got contents of ' + bucketName + ' but was EXPECTING ' + local.bucketName);
                         }
                         applyBucketIfWaiting();
                     });
@@ -593,16 +604,15 @@ console.log('loadBucket ' + bucketName);
         }
 
         function loadFromGallery(demo) {
+            document.getElementById('saveAsFile').download = demo.name + '.html';
+            registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
             var pos = demo.code.indexOf('<body');
             pos = demo.code.indexOf('>', pos);
             var body = demo.code.substring(pos + 2);
             pos = body.indexOf('<script id="cesium_sandcastle_script">');
             var pos2 = body.lastIndexOf('</script>');
             if ((pos <= 0) || (pos2 <= pos)) {
-                var ele = document.createElement('span');
-                ele.className = 'consoleError';
-                ele.textContent = 'Error reading source file: ' + demo.name + '\n';
-                appendConsole(ele);
+                appendConsole('consoleError', 'Error reading source file: ' + demo.name);
             } else {
                 var script = body.substring(pos + 38, pos2);
                 while (script.length > 0 && script.charCodeAt(0) < 32) {
@@ -635,10 +645,9 @@ console.log('loadBucket ' + bucketName);
             if (e.data === 'reload') {
                 var bucketDoc = bucketFrame.contentDocument;
                 if (!local.bucketName) {
-console.log('reload fired, bucket not specified yet.');
+                    // Reload fired, bucket not specified yet.
                     return;
                 }
-console.log('reload fired. Dup? ' + bucketDoc.body.getAttribute('data-sandcastle-loaded') + ' - name=' + local.bucketName);
                 if (bucketDoc.body.getAttribute('data-sandcastle-loaded') !== 'yes') {
                     bucketDoc.body.setAttribute('data-sandcastle-loaded', 'yes');
                     logOutput.innerHTML = "";
@@ -649,6 +658,9 @@ console.log('reload fired. Dup? ' + bucketDoc.body.getAttribute('data-sandcastle
                         appendConsole('consoleError', "Documentation not available.  Please run the " +
                                 "'generateDocumentation' build script to generate Cesium documentation.");
                         showGallery();
+                    }
+                    if (galleryError) {
+                        appendConsole('consoleError', "Error loading gallery, please run the build script.");
                     }
                 }
             } else if (typeof e.data.log !== 'undefined') {
@@ -727,7 +739,8 @@ console.log('reload fired. Dup? ' + bucketDoc.body.getAttribute('data-sandcastle
 
             var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
             currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
-            html = html.replace('<title>', '<meta name="description" content="' + demoTooltips[currentDemoName].get('content') + '">\n    <title>');
+            var description = encodeHTML(registry.byId('description').get('value').replace(/\n/g, '\\n')).replace(/\"/g, '&quot;');
+            html = html.replace('<title>', '<meta name="description" content="' + description + '">\n    <title>');
 
             var octetBlob = new Blob([ html ], { 'type' : 'application/octet-stream', 'endings' : 'native' });
             var octetBlobURL = getURL.createObjectURL(octetBlob);
@@ -800,6 +813,7 @@ console.log('reload fired. Dup? ' + bucketDoc.body.getAttribute('data-sandcastle
                 handleAs: 'text',
                 error: function(error) {
                     appendConsole('consoleError', error);
+                    galleryError = true;
                 }
             }).then(function (value) {
                 // Store the file contents for later searching.
@@ -814,6 +828,26 @@ console.log('reload fired. Dup? ' + bucketDoc.body.getAttribute('data-sandcastle
                     }
                 }
 
+                demo.bucketTitle = 'Cesium + Dojo';
+                pos = value.indexOf('data-sandcastle-title="');
+                if (pos > 0) {
+                    pos += 23;
+                    pos2 = value.indexOf('"', pos);
+                    if (pos2 > pos) {
+                        demo.bucketTitle = value.substring(pos, pos2);
+                    }
+                }
+
+                demo.description = '';
+                pos = value.indexOf('<meta name="description" content="');
+                if (pos > 0) {
+                    pos += 34;
+                    pos2 = value.indexOf('">', pos);
+                    if (pos2 > pos) {
+                        demo.description = value.substring(pos, pos2);
+                    }
+                }
+
                 // Select the demo to load upon opening based on the query parameter.
                 if (typeof queryObject.src !== 'undefined') {
                     if (demo.name === window.decodeURIComponent(queryObject.src.replace('.html', ''))) {
@@ -825,23 +859,19 @@ console.log('reload fired. Dup? ' + bucketDoc.body.getAttribute('data-sandcastle
                 }
 
                 // Create a tooltip containing the demo's description.
-                var start = value.indexOf('<meta name="description" content="');
-                if (start !== -1) {
-                    var end = value.indexOf('">', start);
-                    demoTooltips[demo.name] = new TooltipDialog({
-                        id: demo.name + 'TooltipDialog',
-                        style: 'width: 200px; font-size: 12px;',
-                        content: value.substring(start + 34, end)
-                    });
+                demoTooltips[demo.name] = new TooltipDialog({
+                    id: demo.name + 'TooltipDialog',
+                    style: 'width: 200px; font-size: 12px;',
+                    content: '<div class="demoTooltipType">' + demo.bucketTitle + '</div>' + demo.description.replace(/\\n/g, '<br/>')
+                });
 
-                    on(dom.byId(demo.name), 'mouseover', function() {
-                        scheduleGalleryTooltip(demo);
-                    });
+                on(dom.byId(demo.name), 'mouseover', function() {
+                    scheduleGalleryTooltip(demo);
+                });
 
-                    on(dom.byId(demo.name), 'mouseout', function() {
-                        closeGalleryTooltip();
-                    });
-                }
+                on(dom.byId(demo.name), 'mouseout', function() {
+                    closeGalleryTooltip();
+                });
             });
         }
 
@@ -904,7 +934,8 @@ console.log('reload fired. Dup? ' + bucketDoc.body.getAttribute('data-sandcastle
 
             if (!queryInGalleryIndex) {
                 gallery_demos.push({
-                    name: queryName
+                    name: queryName,
+                    description: ''
                 });
                 addFileToGallery(gallery_demos.length - 1);
             }

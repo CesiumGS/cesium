@@ -69,9 +69,6 @@
         try {
             var stack = new Error().stack.toString();
             var pos = stack.indexOf(Sandcastle.bucket + ':');
-            if (pos >= 0) {
-                pos = stack.indexOf(Sandcastle.bucket + ':', pos + 12);
-            }
             var lineNumber;
             if (pos >= 0) {
                 pos += 12;
