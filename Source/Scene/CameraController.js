@@ -779,7 +779,7 @@ define([
         var southEast = ellipsoid.cartographicToCartesian(cart, viewExtent3DSouthEast);
         cart.longitude = west;
         var southWest = ellipsoid.cartographicToCartesian(cart, viewExtent3DSouthWest);
-        cart.longitude = north;
+        cart.latitude = north;
         var northWest = ellipsoid.cartographicToCartesian(cart, viewExtent3DNorthWest);
 
         var center = Cartesian3.subtract(northEast, southWest, viewExtent3DCenter);
@@ -793,10 +793,10 @@ define([
         Cartesian3.subtract(northEast, center, northEast);
         Cartesian3.subtract(southWest, center, southWest);
 
-        var direction = camera.direction;
-        Cartesian3.negate(center, direction);
+        var direction = Cartesian3.negate(center, camera.direction);
         Cartesian3.normalize(direction, direction);
         var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, camera.right);
+        Cartesian3.normalize(right, right);
         var up = Cartesian3.cross(right, direction, camera.up);
 
         var height = Math.max(Math.abs(up.dot(northWest)), Math.abs(up.dot(southEast)), Math.abs(up.dot(northEast)), Math.abs(up.dot(southWest)));
