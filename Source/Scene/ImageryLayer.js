@@ -320,7 +320,19 @@ define([
         return true;
     };
 
-    ImageryLayer.prototype.calculateTextureTranslationAndScale = function(tile, tileImagery) {
+    /**
+     * Calculate the translation and scale for a particular {@link TileImagery} attached to a
+     * particular terrain {@link Tile}.
+     *
+     * @memberof ImageryLayer
+     * @private
+     *
+     * @param {Tile} tile The terrain tile.
+     * @param {TileImagery} tileImagery The imagery tile mapping.
+     * @returns {Cartesian4} The translation and scale where X and Y are the translation and Z and W
+     *          are the scale.
+     */
+    ImageryLayer.prototype._calculateTextureTranslationAndScale = function(tile, tileImagery) {
         var imageryExtent = tileImagery.imagery.extent;
         var terrainExtent = tile.extent;
         var terrainWidth = terrainExtent.east - terrainExtent.west;
@@ -335,7 +347,16 @@ define([
                 scaleY);
     };
 
-    ImageryLayer.prototype.requestImagery = function(imagery) {
+    /**
+     * Request a particular piece of imagery from the imagery provider.  This method handles raising an
+     * error event if the request fails, and retrying the request if necessary.
+     *
+     * @memberof ImageryLayer
+     * @private
+     *
+     * @param {Imagery} imagery The imagery to request.
+     */
+    ImageryLayer.prototype._requestImagery = function(imagery) {
         var imageryProvider = this.imageryProvider;
 
         var that = this;
@@ -382,7 +403,16 @@ define([
         doRequest();
     };
 
-    ImageryLayer.prototype.createTexture = function(context, imagery) {
+    /**
+     * Create a WebGL texture for a given {@link Imagery} instance.
+     *
+     *  @memberof ImageryLayer
+     *  @private
+     *
+     *  @param {Context} context The rendered context to use to create textures.
+     *  @param {Imagery} imagery The imagery for which to create a texture.
+     */
+    ImageryLayer.prototype._createTexture = function(context, imagery) {
         var imageryProvider = this.imageryProvider;
 
         // If this imagery provider has a discard policy, use it to check if this
@@ -415,7 +445,17 @@ define([
         imagery.state = ImageryState.TEXTURE_LOADED;
     };
 
-    ImageryLayer.prototype.reprojectTexture = function(context, imagery) {
+    /**
+     * Reproject a texture to a {@link GeographicProjection}, if necessary, and generate
+     * mipmaps for the geographic texture.
+     *
+     * @memberof ImageryLayer
+     * @private
+     *
+     * @param {Context} context The rendered context to use.
+     * @param {Imagery} imagery The imagery instance to reproject.
+     */
+    ImageryLayer.prototype._reprojectTexture = function(context, imagery) {
         var texture = imagery.texture;
         var extent = imagery.extent;
 

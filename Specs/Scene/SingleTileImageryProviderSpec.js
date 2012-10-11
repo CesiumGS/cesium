@@ -190,7 +190,7 @@ defineSuite([
         runs(function() {
             imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
-            layer.requestImagery(imagery);
+            layer._requestImagery(imagery);
         });
 
         waitsFor(function() {

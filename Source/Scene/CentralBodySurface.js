@@ -630,17 +630,17 @@ define([
 
                 if (imagery.state === ImageryState.UNLOADED) {
                     imagery.state = ImageryState.TRANSITIONING;
-                    imageryLayer.requestImagery(imagery);
+                    imageryLayer._requestImagery(imagery);
                 }
 
                 if (imagery.state === ImageryState.RECEIVED) {
                     imagery.state = ImageryState.TRANSITIONING;
-                    imageryLayer.createTexture(context, imagery);
+                    imageryLayer._createTexture(context, imagery);
                 }
 
                 if (imagery.state === ImageryState.TEXTURE_LOADED) {
                     imagery.state = ImageryState.TRANSITIONING;
-                    imageryLayer.reprojectTexture(context, imagery);
+                    imageryLayer._reprojectTexture(context, imagery);
                 }
 
                 if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
@@ -662,7 +662,7 @@ define([
                 var imageryDoneLoading = imagery.state === ImageryState.READY;
 
                 if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
-                    tileImagery.textureTranslationAndScale = imageryLayer.calculateTextureTranslationAndScale(tile, tileImagery);
+                    tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                 }
 
                 doneLoading = doneLoading && imageryDoneLoading;

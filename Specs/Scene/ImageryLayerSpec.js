@@ -78,7 +78,7 @@ defineSuite([
             discardPolicy.shouldDiscard = true;
             imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
-            layer.requestImagery(imagery);
+            layer._requestImagery(imagery);
         });
 
         waitsFor(function() {
@@ -86,7 +86,7 @@ defineSuite([
         }, 'image to load');
 
         runs(function() {
-            layer.createTexture(context, imagery);
+            layer._createTexture(context, imagery);
             expect(imagery.state).toEqual(ImageryState.INVALID);
             imagery.releaseReference();
         });
@@ -138,7 +138,7 @@ defineSuite([
         runs(function() {
             imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
-            layer.requestImagery(imagery);
+            layer._requestImagery(imagery);
         });
 
         waitsFor(function() {
@@ -146,7 +146,7 @@ defineSuite([
         }, 'image to load');
 
         runs(function() {
-            layer.createTexture(context, imagery);
+            layer._createTexture(context, imagery);
         });
 
         waitsFor(function() {
@@ -156,7 +156,7 @@ defineSuite([
         var textureBeforeReprojection;
         runs(function() {
             textureBeforeReprojection = imagery.texture;
-            layer.reprojectTexture(context, imagery);
+            layer._reprojectTexture(context, imagery);
         });
 
         waitsFor(function() {
