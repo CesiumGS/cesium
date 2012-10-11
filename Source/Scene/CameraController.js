@@ -139,7 +139,7 @@ define([
      * @memberof CameraController
      *
      * @param {Cartesian3} direction The direction to move.
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @exception {DeveloperError} direction is required.
      *
@@ -169,7 +169,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveBackward
      */
@@ -184,7 +184,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveForward
      */
@@ -198,7 +198,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveDown
      */
@@ -213,7 +213,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveUp
      */
@@ -227,7 +227,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveLeft
      */
@@ -242,7 +242,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveRight
      */
@@ -257,7 +257,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#lookRight
      */
@@ -272,7 +272,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#lookLeft
      */
@@ -287,7 +287,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#lookDown
      */
@@ -302,7 +302,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#lookUp
      */
@@ -319,7 +319,7 @@ define([
      * @memberof CameraController
      *
      * @param {Cartesian3} axis The axis to rotate around.
-     * @param {Number} angle The angle, in radians, to rotate by.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @exception {DeveloperError} axis is required.
      *
@@ -350,7 +350,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#twistRight
      */
@@ -364,7 +364,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount, in radians, to rotate by.
+     * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see CameraController#twistLeft
      */
@@ -373,51 +373,68 @@ define([
         this.look(this._camera.direction, amount);
     };
 
+    var setTransformPosition = Cartesian4.UNIT_W.clone();
+    var setTransformUp = Cartesian4.ZERO.clone();
+    var setTransformRight = Cartesian4.ZERO.clone();
+    var setTransformDirection = Cartesian4.ZERO.clone();
     function setTransform(controller, transform) {
         var camera = controller._camera;
         var oldTransform;
         if (typeof transform !== 'undefined') {
-            var position = camera.getPositionWC();
-            var up = camera.getUpWC();
-            var right = camera.getRightWC();
-            var direction = camera.getDirectionWC();
+            var position = Cartesian3.clone(camera.getPositionWC(), setTransformPosition);
+            var up = Cartesian3.clone(camera.getUpWC(), setTransformUp);
+            var right = Cartesian3.clone(camera.getRightWC(), setTransformRight);
+            var direction = Cartesian3.clone(camera.getDirectionWC(), setTransformDirection);
 
             oldTransform = camera.transform;
             camera.transform = transform.multiply(oldTransform);
 
             var invTransform = camera.getInverseTransform();
-            camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-            camera.up = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-            camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-            camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, position, position), camera.position);
+            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, up, up), camera.up);
+            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, right, right), camera.right);
+            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, direction, direction), camera.direction);
         }
         return oldTransform;
     }
 
+    var revertTransformPosition = Cartesian4.UNIT_W.clone();
+    var revertTransformUp = Cartesian4.ZERO.clone();
+    var revertTransformRight = Cartesian4.ZERO.clone();
+    var revertTransformDirection = Cartesian4.ZERO.clone();
+    var revertTransformCenter = new Cartesian3();
+    var revertTransformPositionCart = new Cartographic();
     function revertTransform(controller, transform) {
         if (typeof transform !== 'undefined') {
             var camera = controller._camera;
-            var position = camera.getPositionWC();
-            var up = camera.getUpWC();
-            var right = camera.getRightWC();
-            var direction = camera.getDirectionWC();
+            var position = Cartesian3.clone(camera.getPositionWC(), revertTransformPosition);
+            var up = Cartesian3.clone(camera.getUpWC(), revertTransformUp);
+            var right = Cartesian3.clone(camera.getRightWC(), revertTransformRight);
+            var direction = Cartesian3.clone(camera.getDirectionWC(), revertTransformDirection);
 
+            var center = camera.transform.getColumn(3, revertTransformCenter);
             camera.transform = transform;
             transform = camera.getInverseTransform();
 
-            camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-            camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-            camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-            camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+            position = Cartesian3.clone(Matrix4.multiplyByVector(transform, position, position), camera.position);
+            up = Cartesian3.clone(Matrix4.multiplyByVector(transform, up, up), camera.up);
+            right = Cartesian3.clone(Matrix4.multiplyByVector(transform, right, right), camera.right);
+            direction = Cartesian3.clone(Matrix4.multiplyByVector(transform, direction, direction), camera.direction);
 
             var ellipsoid = controller._projection.getEllipsoid();
-            position = ellipsoid.cartesianToCartographic(camera.position);
-            if (position.height < controller._maxHeight + 1.0) {
-                position.height = controller._maxHeight + 1.0;
-                camera.position = ellipsoid.cartographicToCartesian(position);
-                camera.direction = Cartesian3.fromCartesian4(transform.getColumn(3).subtract(camera.position)).normalize();
-                camera.right = camera.position.negate().cross(camera.direction).normalize();
-                camera.up = camera.right.cross(camera.direction);
+            var positionCart = ellipsoid.cartesianToCartographic(position, revertTransformPositionCart);
+            if (positionCart.height < controller._maxHeight + 1.0) {
+                positionCart.height = controller._maxHeight + 1.0;
+                ellipsoid.cartographicToCartesian(positionCart, position);
+
+                Cartesian3.subtract(center, position, direction);
+                Cartesian3.normalize(direction, direction);
+
+                Cartesian3.negate(position, right);
+                Cartesian3.cross(right, direction, right);
+                Cartesian3.normalize(right, right);
+
+                Cartesian3.cross(right, direction, up);
             }
         }
     }
@@ -431,9 +448,8 @@ define([
      * @memberof CameraController
      *
      * @param {Cartesian3} axis The axis to rotate around given in world coordinates.
-     * @param {Number} angle The angle, in radians, to rotate by. The direction of rotation is
-     * determined by the sign of the angle.
-     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
+     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @exception {DeveloperError} axis is required.
      *
@@ -472,8 +488,8 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} angle The angle to rotate in radians.
-     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
+     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateUp
      * @see CameraController#rotate
@@ -488,8 +504,8 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} angle The angle to rotate in radians.
-     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
+     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateDown
      * @see CameraController#rotate
@@ -537,8 +553,8 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} angle The angle to rotate in radians.
-     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
+     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateLeft
      * @see CameraController#rotate
@@ -553,8 +569,8 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} angle The angle to rotate in radians.
-     * @param {Matrix4} transform A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
+     * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
+     * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
      * @see CameraController#rotateRight
      * @see CameraController#rotate
@@ -607,7 +623,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultZoomAmount</code>.
      *
      * @see CameraController#zoomOut
      */
@@ -626,7 +642,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} amount The amount to move.
+     * @param {Number} [amount] The amount to move. Defaults to <code>defaultZoomAmount</code>.
      *
      * @see CameraController#zoomIn
      */
@@ -733,6 +749,7 @@ define([
      * @exception {DeveloperError} eye is required.
      * @exception {DeveloperError} target is required.
      * @exception {DeveloperError} up is required.
+     * @exception {DeveloperError} lookAt is not supported in 2D mode because there is only one direction to look.
      */
     CameraController.prototype.lookAt = function(eye, target, up) {
         if (typeof eye === 'undefined') {
@@ -744,6 +761,9 @@ define([
         if (typeof up === 'undefined') {
             throw new DeveloperError('up is required');
         }
+        if (this._mode === SceneMode.SCENE2D) {
+            throw new DeveloperError('lookAt is not supported in 2D mode because there is only one direction to look.');
+        }
 
         if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
             var camera = this._camera;
@@ -752,7 +772,6 @@ define([
             camera.right = Cartesian3.cross(camera.direction, up, camera.right).normalize(camera.right);
             camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
         }
-        // lookAt is not supported in 2D because there is only one direction to look
     };
 
     var viewExtent3DCartographic = new Cartographic();
@@ -780,7 +799,7 @@ define([
         var southEast = ellipsoid.cartographicToCartesian(cart, viewExtent3DSouthEast);
         cart.longitude = west;
         var southWest = ellipsoid.cartographicToCartesian(cart, viewExtent3DSouthWest);
-        cart.longitude = north;
+        cart.latitude = north;
         var northWest = ellipsoid.cartographicToCartesian(cart, viewExtent3DNorthWest);
 
         var center = Cartesian3.subtract(northEast, southWest, viewExtent3DCenter);
@@ -794,10 +813,10 @@ define([
         Cartesian3.subtract(northEast, center, northEast);
         Cartesian3.subtract(southWest, center, southWest);
 
-        var direction = camera.direction;
-        Cartesian3.negate(center, direction);
+        var direction = Cartesian3.negate(center, camera.direction);
         Cartesian3.normalize(direction, direction);
         var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, camera.right);
+        Cartesian3.normalize(right, right);
         var up = Cartesian3.cross(right, direction, camera.up);
 
         var height = Math.max(Math.abs(up.dot(northWest)), Math.abs(up.dot(southEast)), Math.abs(up.dot(northEast)), Math.abs(up.dot(southWest)));

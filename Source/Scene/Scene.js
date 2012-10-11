@@ -423,9 +423,11 @@ define([
         var context = scene._context;
         var us = context.getUniformState();
         var clearColor = context.createClearState({
+            framebuffer : framebuffer,
             color : Color.BLACK
         });
         var clearDepthStencil = context.createClearState({
+            framebuffer : framebuffer,
             depth : 1.0,
             stencil : 0.0
         });
