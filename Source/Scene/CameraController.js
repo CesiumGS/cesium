@@ -373,51 +373,68 @@ define([
         this.look(this._camera.direction, amount);
     };
 
+    var setTransformPosition = Cartesian4.UNIT_W.clone();
+    var setTransformUp = Cartesian4.ZERO.clone();
+    var setTransformRight = Cartesian4.ZERO.clone();
+    var setTransformDirection = Cartesian4.ZERO.clone();
     function setTransform(controller, transform) {
         var camera = controller._camera;
         var oldTransform;
         if (typeof transform !== 'undefined') {
-            var position = camera.getPositionWC();
-            var up = camera.getUpWC();
-            var right = camera.getRightWC();
-            var direction = camera.getDirectionWC();
+            var position = Cartesian3.clone(camera.getPositionWC(), setTransformPosition);
+            var up = Cartesian3.clone(camera.getUpWC(), setTransformUp);
+            var right = Cartesian3.clone(camera.getRightWC(), setTransformRight);
+            var direction = Cartesian3.clone(camera.getDirectionWC(), setTransformDirection);
 
             oldTransform = camera.transform;
             camera.transform = transform.multiply(oldTransform);
 
             var invTransform = camera.getInverseTransform();
-            camera.position = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-            camera.up = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-            camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-            camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, position, position), camera.position);
+            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, up, up), camera.up);
+            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, right, right), camera.right);
+            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, direction, direction), camera.direction);
         }
         return oldTransform;
     }
 
+    var revertTransformPosition = Cartesian4.UNIT_W.clone();
+    var revertTransformUp = Cartesian4.ZERO.clone();
+    var revertTransformRight = Cartesian4.ZERO.clone();
+    var revertTransformDirection = Cartesian4.ZERO.clone();
+    var revertTransformCenter = new Cartesian3();
+    var revertTransformPositionCart = new Cartographic();
     function revertTransform(controller, transform) {
         if (typeof transform !== 'undefined') {
             var camera = controller._camera;
-            var position = camera.getPositionWC();
-            var up = camera.getUpWC();
-            var right = camera.getRightWC();
-            var direction = camera.getDirectionWC();
+            var position = Cartesian3.clone(camera.getPositionWC(), revertTransformPosition);
+            var up = Cartesian3.clone(camera.getUpWC(), revertTransformUp);
+            var right = Cartesian3.clone(camera.getRightWC(), revertTransformRight);
+            var direction = Cartesian3.clone(camera.getDirectionWC(), revertTransformDirection);
 
+            var center = camera.transform.getColumn(3, revertTransformCenter);
             camera.transform = transform;
             transform = camera.getInverseTransform();
 
-            camera.position = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
-            camera.up = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-            camera.right = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-            camera.direction = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+            position = Cartesian3.clone(Matrix4.multiplyByVector(transform, position, position), camera.position);
+            up = Cartesian3.clone(Matrix4.multiplyByVector(transform, up, up), camera.up);
+            right = Cartesian3.clone(Matrix4.multiplyByVector(transform, right, right), camera.right);
+            direction = Cartesian3.clone(Matrix4.multiplyByVector(transform, direction, direction), camera.direction);
 
             var ellipsoid = controller._projection.getEllipsoid();
-            position = ellipsoid.cartesianToCartographic(camera.position);
-            if (position.height < controller._maxHeight + 1.0) {
-                position.height = controller._maxHeight + 1.0;
-                camera.position = ellipsoid.cartographicToCartesian(position);
-                camera.direction = Cartesian3.fromCartesian4(transform.getColumn(3).subtract(camera.position)).normalize();
-                camera.right = camera.position.negate().cross(camera.direction).normalize();
-                camera.up = camera.right.cross(camera.direction);
+            var positionCart = ellipsoid.cartesianToCartographic(position, revertTransformPositionCart);
+            if (positionCart.height < controller._maxHeight + 1.0) {
+                positionCart.height = controller._maxHeight + 1.0;
+                ellipsoid.cartographicToCartesian(positionCart, position);
+
+                Cartesian3.subtract(center, position, direction);
+                Cartesian3.normalize(direction, direction);
+
+                Cartesian3.negate(position, right);
+                Cartesian3.cross(right, direction, right);
+                Cartesian3.normalize(right, right);
+
+                Cartesian3.cross(right, direction, up);
             }
         }
     }
@@ -732,6 +749,7 @@ define([
      * @exception {DeveloperError} eye is required.
      * @exception {DeveloperError} target is required.
      * @exception {DeveloperError} up is required.
+     * @exception {DeveloperError} lookAt is not supported in 2D mode because there is only one direction to look.
      */
     CameraController.prototype.lookAt = function(eye, target, up) {
         if (typeof eye === 'undefined') {
@@ -743,6 +761,9 @@ define([
         if (typeof up === 'undefined') {
             throw new DeveloperError('up is required');
         }
+        if (this._mode === SceneMode.SCENE2D) {
+            throw new DeveloperError('lookAt is not supported in 2D mode because there is only one direction to look.');
+        }
 
         if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
             var camera = this._camera;
@@ -751,7 +772,6 @@ define([
             camera.right = Cartesian3.cross(camera.direction, up, camera.right).normalize(camera.right);
             camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
         }
-        // lookAt is not supported in 2D because there is only one direction to look
     };
 
     var viewExtent3DCartographic = new Cartographic();
