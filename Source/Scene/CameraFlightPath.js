@@ -44,7 +44,8 @@ define([
 
         var frustum = camera.frustum;
         var near = frustum.near;
-        var top = frustum.near * Math.tan(0.5 * frustum.fovy);
+        var tanTheta = Math.tan(0.5 * frustum.fovy);
+        var top = frustum.near * tanTheta;
         var right = frustum.aspectRatio * top;
 
         var dx = radius * near / right;
@@ -53,20 +54,22 @@ define([
 
         var dot = start.normalize().dot(end.normalize());
 
-        var abovePercentage, incrementPercentage;
-        var startAboveMaxAlt = (start.magnitude() > maxStartAlt);
-        if (startAboveMaxAlt) {
-            abovePercentage = 0.6;
+        var altitude, incrementPercentage;
+        if (start.magnitude() > maxStartAlt) {
+            altitude = radius + 0.6 * (maxStartAlt - radius);
             incrementPercentage = 0.35;
         } else {
-            abovePercentage = Math.max(0.1, 1.0 - Math.abs(dot));
+            var tanPhi = frustum.aspectRatio * tanTheta;
+            var diff = start.subtract(end);
+            altitude = diff.multiplyByScalar(0.5).add(end).magnitude();
+            var verticalDistance = camera.up.multiplyByScalar(diff.dot(camera.up)).magnitude();
+            var horizontalDistance = camera.right.multiplyByScalar(diff.dot(camera.right)).magnitude();
+            altitude += Math.max(verticalDistance / tanTheta, horizontalDistance / tanPhi);
             incrementPercentage = 0.5;
         }
 
-        maxStartAlt = radius + abovePercentage * (maxStartAlt - radius);
-
-        var aboveEnd = end.normalize().multiplyByScalar(maxStartAlt);
-        var afterStart = start.normalize().multiplyByScalar(maxStartAlt);
+        var aboveEnd = end.normalize().multiplyByScalar(altitude);
+        var afterStart = start.normalize().multiplyByScalar(altitude);
 
         var points, axis, angle, rotation;
         if (start.magnitude() > maxStartAlt && dot > 0) {
@@ -147,18 +150,18 @@ define([
             var orientation = orientations.evaluate(time);
             var rotationMatrix = Matrix3.fromQuaternion(orientation);
 
+            /*
             camera.position = path.evaluate(time);
             camera.right = rotationMatrix.getColumn(0);
             camera.up = rotationMatrix.getColumn(1);
             camera.direction = rotationMatrix.getColumn(2).negate();
+            */
 
-            /*
             camera.position = path.evaluate(time);
             camera.direction = camera.position.negate().normalize();
             camera.right = camera.direction.cross(Cartesian3.UNIT_Z).normalize();
             camera.up = camera.position.cross(camera.right).normalize();
             camera.right = camera.direction.cross(camera.up);
-            */
         };
 
         return {
