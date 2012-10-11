@@ -167,7 +167,7 @@ define([
      */
     Extent.prototype.getSouthwest = function(result) {
         if (typeof result === 'undefined') {
-            return new Cartographic(this.west, this.south);
+            return new Cartographic(this.west, this.south, 0.0);
         }
         result.longitude = this.west;
         result.latitude = this.south;
@@ -184,7 +184,7 @@ define([
      */
     Extent.prototype.getNorthwest = function(result) {
         if (typeof result === 'undefined') {
-            return new Cartographic(this.west, this.north);
+            return new Cartographic(this.west, this.north, 0.0);
         }
         result.longitude = this.west;
         result.latitude = this.north;
@@ -201,7 +201,7 @@ define([
      */
     Extent.prototype.getNortheast = function(result) {
         if (typeof result === 'undefined') {
-            return new Cartographic(this.east, this.north);
+            return new Cartographic(this.east, this.north, 0.0);
         }
         result.longitude = this.east;
         result.latitude = this.north;
@@ -218,7 +218,7 @@ define([
      */
     Extent.prototype.getSoutheast = function(result) {
         if (typeof result === 'undefined') {
-            return new Cartographic(this.east, this.south);
+            return new Cartographic(this.east, this.south, 0.0);
         }
         result.longitude = this.east;
         result.latitude = this.south;

@@ -18,7 +18,7 @@ define([
     "use strict";
 
     /**
-     * Determine whether or not other objects are visible or hidden behind the visible horizon defined by the
+     * Determine whether or not other objects are visible or hidden behind the visible horizon defined by
      * an {@link Ellipsoid} and a camera position.  The ellipsoid is assumed to be located at the
      * origin of the coordinate system.
      *
@@ -26,11 +26,10 @@ define([
      *
      * @param {Ellipsoid} ellipsoid The ellipsoid to use as an occluder.
      * @param {Cartesian3} [cameraPosition] The coordinate of the viewer/camera.  If this parameter is not
-     *        specified, {@link EllipsoidalOccluder#setCameraPosition} should be called before
+     *        specified, {@link EllipsoidalOccluder#setCameraPosition} must be called before
      *        testing visibility.
      *
      * @exception {DeveloperError} <code>ellipsoid</code> is required.
-     * @exception {DeveloperError} <code>cameraPosition</code> is required.
      *
      * @constructor
      *
@@ -41,7 +40,7 @@ define([
      * var occluder = new Occluder(occluderEllipsoid, cameraPosition);
      */
     var EllipsoidalOccluder = function(ellipsoid, cameraPosition) {
-        if (!ellipsoid) {
+        if (typeof ellipsoid === 'undefined') {
             throw new DeveloperError('ellipsoid is required.');
         }
 
@@ -102,7 +101,6 @@ define([
 
     var scratchCartesian = new Cartesian3(0.0, 0.0, 0.0);
 
-
     /**
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
      *
@@ -118,8 +116,6 @@ define([
      * var occluder = new EllipsoidalOccluder(ellipsoid, cameraPosition);
      * var point = new Cartesian3(0, -3, -3);
      * occluder.isPointVisible(point); //returns true
-     *
-     * @see Occluder#getVisibility
      */
     EllipsoidalOccluder.prototype.isPointVisible = function(occludee) {
         var occludeeScaledSpacePosition = occludee.multiplyComponents(this._ellipsoid.getOneOverRadii(), scratchCartesian);
@@ -144,8 +140,6 @@ define([
      * var point = new Cartesian3(0, -3, -3);
      * var scaledSpacePoint = occluder.transformPositionToScaledSpace(point);
      * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
-     *
-     * @see Occluder#getVisibility
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
         // Based on Cozzi and Stoner's paper, "GPU Ray Casting of Virtual Globes Supplement"
