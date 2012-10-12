@@ -75,7 +75,7 @@ define([
     EllipsoidalOccluder.prototype.setCameraPosition = function(cameraPosition) {
         var ellipsoid = this._ellipsoid;
         var cameraPositionInScaledSpace = ellipsoid.transformPositionToScaledSpace(cameraPosition, this._cameraPositionInScaledSpace);
-        var magnitudeCameraPositionInScaledSpace = cameraPositionInScaledSpace.magnitude();
+        var magnitudeCameraPositionInScaledSpace = Cartesian3.magnitude(cameraPositionInScaledSpace);
         var distanceToLimbInScaledSpaceSquared = magnitudeCameraPositionInScaledSpace * magnitudeCameraPositionInScaledSpace - 1.0;
 
         this._cameraPositionInScaledSpace = cameraPositionInScaledSpace;
@@ -129,7 +129,7 @@ define([
         // Based on Cozzi and Stoner's paper, "GPU Ray Casting of Virtual Globes Supplement"
         var q = this._cameraPositionInScaledSpace;
         var wMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
-        var b = occludeeScaledSpacePosition.subtract(q, scratchCartesian);
+        var b = Cartesian3.subtract(occludeeScaledSpacePosition, q, scratchCartesian);
         var d = -b.dot(q);
         return d < wMagnitudeSquared || d * d / b.magnitudeSquared() < wMagnitudeSquared;
     };
