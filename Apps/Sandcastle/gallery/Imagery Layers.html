@@ -58,14 +58,14 @@ body {
     position: absolute;
 }
 .upArrow {
-   background-image: url("UpArrow.png");
+   background-image: url("../../../Images/UpArrow.png");
    background-repeat: no-repeat;
    width: 16px;
    height: 16px;
    text-align: center;
 }
 .downArrow {
-   background-image: url("DownArrow.png");
+   background-image: url("../../../Images/DownArrow.png");
    background-repeat: no-repeat;
    width: 16px;
    height: 16px;
@@ -175,57 +175,89 @@ require([
 
     var radarLayer;
     var infraredLayer;
+    var singleImageLayer;
+    
+    var layerNames = {};
+    var removedLayers = [];
 
-    function createButtons(imageryLayerCollection) {
+    function updateToolbar(imageryLayerCollection) {
         domConstruct.place(
-                '<table>' +
-                  '<tr><td id="radarToggle"></td><td style="text-align:right">United States weather radar</td><td id="radarSlider"></td></tr>' +
-                  '<tr><td id="infraredToggle"></td><td style="text-align:right">United States GOES infrared</td><td id="infraredSlider"></td></tr>' +
-                '</table>', 'toolbar');
+                '<table id="layerTable">' +
+                  '<tr><td id="layerToggle2"></td><td id="layerLabel2"></td><td id="layerSlider2"></td><td id="layerUpArrow2"></td><td id="layerDownArrow2"></td></tr>' +
+                  '<tr><td id="layerToggle1"></td><td id="layerLabel1"></td><td id="layerSlider1"></td><td id="layerUpArrow1"></td><td id="layerDownArrow1"></td></tr>' +
+                  '<tr><td id="layerToggle0"></td><td id="layerLabel0"></td><td id="layerSlider0"></td><td id="layerUpArrow0"></td><td id="layerDownArrow0"></td></tr>' +
+                '</table>', 'layerTable', 'replace');
         
-        new CheckBox({
-            checked: true,
-            onChange: function(b) {
-                if (b) {
-                    imageryLayerCollection.add(radarLayer);
-                } else {
-                    imageryLayerCollection.remove(radarLayer, false);
-                }
-            }
-        }).placeAt('radarToggle');
+        var allLayers = removedLayers.slice(0);
+        for (var i = 1, len = imageryLayerCollection.getLength(); i < len; ++i) {
+            allLayers.push(imageryLayerCollection.get(i));
+        }
         
-        new HorizontalSlider({
-            value: radarLayer.alpha,
-            minimum: 0.0,
-            maximum: 1.0,
-            intermediateChanges: true,
-            style: "width:300px;",
-            onChange: function(value) {
-                radarLayer.alpha = value;
-            }
-        }).placeAt('radarSlider');
-        
-        new CheckBox({
-            checked: true,
-            onChange: function(b) {
-                if (b) {
-                    imageryLayerCollection.add(infraredLayer);
-                } else {
-                    imageryLayerCollection.remove(infraredLayer, false);
-                }
-            }
-        }).placeAt('infraredToggle');
+        for (var i = allLayers.length - 1; i >= 0; --i) {
+            var layer = allLayers[i];
+            var imageryProvider = layer.getImageryProvider();
 
-        new HorizontalSlider({
-            value: radarLayer.alpha,
-            minimum: 0.0,
-            maximum: 1.0,
-            intermediateChanges: true,
-            style: "width:300px;",
-            onChange: function(value) {
-                infraredLayer.alpha = value;
-            }
-        }).placeAt('infraredSlider');
+            var layerName = layerNames[imageryProvider.getUrl()];
+            domConstruct.place('<span>' + layerName + '</span>', 'layerLabel' + i);
+
+            (function(layer, i) {
+	            new CheckBox({
+	                checked: removedLayers.indexOf(layer) < 0,
+	                onChange: function(b) {
+	                    if (b) {
+	                        imageryLayerCollection.add(layer);
+	                        removedLayers.splice(removedLayers.indexOf(layer), 1);
+	                        updateToolbar(imageryLayerCollection);
+	                    } else {
+	                        imageryLayerCollection.remove(layer, false);
+	                        removedLayers.push(layer);
+	                        updateToolbar(imageryLayerCollection);
+	                    }
+	                }
+	            }).placeAt('layerToggle' + i);
+
+	            new HorizontalSlider({
+	                value: layer.alpha,
+	                minimum: 0.0,
+	                maximum: 1.0,
+	                intermediateChanges: true,
+	                style: "width:150px;",
+	                onChange: function(value) {
+	                    layer.alpha = value;
+	                }
+	            }).placeAt('layerSlider' + i);
+	            
+	            var layerIndex = imageryLayerCollection.indexOf(layer);
+	            var showRaise = layerIndex >= 0 && layerIndex < imageryLayerCollection.getLength() - 1;
+	            var showLower = layerIndex > 1;
+	            
+							new Button({
+							    label: "Raise",
+							    showLabel: false,
+							    iconClass: "upArrow",
+							    style: (showRaise ? "" : "visibility:hidden"),
+							    onClick: function() {
+							        if (showRaise) {
+								        imageryLayerCollection.raise(layer);
+								        updateToolbar(imageryLayerCollection);
+							        }
+							    }
+							}).placeAt('layerUpArrow' + i);
+	
+              new Button({
+                  label: "Lower",
+                  showLabel: false,
+                  iconClass: "downArrow",
+                  style: (showLower ? "" : "visibility:hidden"),
+                  onClick: function() {
+                      if (showLower) {
+	                      imageryLayerCollection.lower(layer);
+	                      updateToolbar(imageryLayerCollection);
+                      }
+                  }
+              }).placeAt('layerDownArrow' + i);
+            })(layer, i);
+        }
     }
 
     var cesiumViewerWidget = new CesiumViewerWidget({
@@ -251,6 +283,7 @@ require([
             });
             radarLayer = imageryLayerCollection.addImageryProvider(radar);
             radarLayer.alpha = 0.5;
+            layerNames[radar.getUrl()] = 'United States weather radar';
             
             var infrared = new Cesium.WebMapServiceImageryProvider({
                 url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
@@ -264,7 +297,20 @@ require([
             });
             infraredLayer = imageryLayerCollection.addImageryProvider(infrared);
             infraredLayer.alpha = 0.5;
-	          
+            layerNames[infrared.getUrl()] = 'United States GOES infrared';
+
+            var singleImage = new Cesium.SingleTileImageryProvider({
+                url : '../../../Images/TestLayer.png',
+                extent : new Cesium.Extent(
+                        Cesium.Math.toRadians(-115.0),
+                        Cesium.Math.toRadians(38.0),
+                        Cesium.Math.toRadians(-108.0),
+                        Cesium.Math.toRadians(45.0))
+            });
+            singleImageLayer = imageryLayerCollection.addImageryProvider(singleImage);
+            singleImageLayer.alpha = 0.8;
+            layerNames[singleImage.getUrl()] = 'Single image';
+
 	          document.addEventListener('keydown', keydownHandler, false);
             
 	          var handler = new Cesium.EventHandler(widget.canvas);
@@ -274,7 +320,9 @@ require([
 	              // Use movement.startPosition, movement.endPosition
 	          }, Cesium.MouseEventType.MOVE);
 	          
-	          createButtons(imageryLayerCollection);
+	          
+	          domConstruct.place('<table id="layerTable"></table>', 'toolbar');
+	          updateToolbar(imageryLayerCollection);
 
             widget.startRenderLoop();
         }

@@ -617,7 +617,7 @@ define([
                 var imageryLayer = imagery.imageryLayer;
 
                 if (imagery.state === ImageryState.PLACEHOLDER) {
-                    if (imageryLayer.imageryProvider.isReady()) {
+                    if (imageryLayer.getImageryProvider().isReady()) {
                         // Remove the placeholder and add the actual skeletons (if any)
                         // at the same position.  Then continue the loop at the same index.
                         imagery.releaseReference();
@@ -975,7 +975,7 @@ define([
                     var intensity = 0.0;
                     if (tileImageryCollection.length > 0) {
                         var firstImagery = tileImageryCollection[0].imagery;
-                        var firstImageryProvider = firstImagery.imageryLayer.imageryProvider;
+                        var firstImageryProvider = firstImagery.imageryLayer.getImageryProvider();
                         if (typeof firstImageryProvider.getIntensity !== 'undefined') {
                             intensity = firstImageryProvider.getIntensity(firstImagery.x, firstImagery.y, firstImagery.level);
                         }

@@ -66,7 +66,7 @@ define([
      * @param {Number} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
      */
     function ImageryLayer(imageryProvider, description) {
-        this.imageryProvider = imageryProvider;
+        this._imageryProvider = imageryProvider;
 
         description = defaultValue(description, {});
 
@@ -92,6 +92,17 @@ define([
 
         this._requestImageError = undefined;
     }
+
+    /**
+     * Gets the imagery provider for this layer.
+     *
+     * @memberof ImageryLayer
+     *
+     * @returns {ImageryProvider} The imagery provider.
+     */
+    ImageryLayer.prototype.getImageryProvider = function() {
+        return this._imageryProvider;
+    };
 
     /**
      * Gets the extent of this layer.  If this extent is smaller than the extent of the
@@ -174,7 +185,7 @@ define([
      * @returns {Boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
      */
     ImageryLayer.prototype._createTileImagerySkeletons = function(tile, terrainProvider, insertionPoint) {
-        var imageryProvider = this.imageryProvider;
+        var imageryProvider = this._imageryProvider;
 
         if (typeof insertionPoint === 'undefined') {
             insertionPoint = tile.imagery.length;
@@ -357,7 +368,7 @@ define([
      * @param {Imagery} imagery The imagery to request.
      */
     ImageryLayer.prototype._requestImagery = function(imagery) {
-        var imageryProvider = this.imageryProvider;
+        var imageryProvider = this._imageryProvider;
 
         var that = this;
 
@@ -413,7 +424,7 @@ define([
      *  @param {Imagery} imagery The imagery for which to create a texture.
      */
     ImageryLayer.prototype._createTexture = function(context, imagery) {
-        var imageryProvider = this.imageryProvider;
+        var imageryProvider = this._imageryProvider;
 
         // If this imagery provider has a discard policy, use it to check if this
         // image should be discarded.
@@ -463,7 +474,7 @@ define([
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
-        if (!(this.imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) &&
+        if (!(this._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) &&
             (extent.east - extent.west) / texture.getWidth() > 1e-5) {
                 var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
                 texture.destroy();
@@ -655,7 +666,7 @@ define([
      */
     function getLevelWithMaximumTexelSpacing(layer, texelSpacing, latitudeClosestToEquator) {
         // PERFORMANCE_IDEA: factor out the stuff that doesn't change.
-        var imageryProvider = layer.imageryProvider;
+        var imageryProvider = layer._imageryProvider;
         var tilingScheme = imageryProvider.getTilingScheme();
         var ellipsoid = tilingScheme.getEllipsoid();
         var latitudeFactor = Math.cos(latitudeClosestToEquator);

@@ -869,8 +869,8 @@ define([
 
         var poleIntensity = 0.0;
         var baseLayer = this._imageryLayerCollection.getLength() > 0 ? this._imageryLayerCollection.get(0) : undefined;
-        if (typeof baseLayer !== 'undefined' && typeof baseLayer.imageryProvider !== 'undefined' && typeof baseLayer.imageryProvider.getPoleIntensity !== 'undefined') {
-            poleIntensity = baseLayer.imageryProvider.getPoleIntensity();
+        if (typeof baseLayer !== 'undefined' && typeof baseLayer.getImageryProvider() !== 'undefined' && typeof baseLayer.getImageryProvider().getPoleIntensity !== 'undefined') {
+            poleIntensity = baseLayer.getImageryProvider().getPoleIntensity();
         }
 
         var drawUniforms = {
@@ -1429,7 +1429,7 @@ define([
         var imageryLayerCollection = centralBody._imageryLayerCollection;
         for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
-            checkLogo(logoData, layer.imageryProvider);
+            checkLogo(logoData, layer.getImageryProvider());
         }
 
         if (logoData.logos.length !== logoData.logoIndex) {
