@@ -171,7 +171,7 @@ define([
 
         var occludeePoint = Occluder.computeOccludeePointFromExtent(tile.extent, ellipsoid);
         if (typeof occludeePoint !== 'undefined') {
-            occludeePoint.multiplyComponents(ellipsoid.getOneOverRadii(), occludeePoint);
+            Cartesian3.multiplyComponents(occludeePoint, ellipsoid.getOneOverRadii(), occludeePoint);
         }
         tile.occludeePoint = occludeePoint;
 
