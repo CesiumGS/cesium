@@ -695,7 +695,7 @@ define([
                     positionIndex += bucketLength * 3;
                     showIndex += bucketLength;
                     colorIndex += bucketLength * 4;
-                    offset += bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
+                    offset = bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
                 }
             }
             this._positionBuffer = context.createVertexBuffer(positionArray, this._buffersUsage[POSITION_INDEX].bufferUsage);
