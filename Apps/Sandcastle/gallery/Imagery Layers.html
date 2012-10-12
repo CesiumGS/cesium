@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Drag and drop CZML files onto the Cesium Viewer Widget to visualize time dynamic data.">
+    <meta name="description" content="Layer imagery from multiple sources and adjust the alpha of each independently.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
@@ -271,20 +271,6 @@ require([
             
             var imageryLayerCollection = cb.getImageryLayers();
             
-            var radar = new Cesium.WebMapServiceImageryProvider({
-                url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
-                layers : 'nexrad-n0r',
-                credit : 'Radar data courtesy Iowa Environmental Mesonet',
-                parameters : {
-                    transparent : 'true',
-                    format : 'image/png'
-                },
-                proxy : new Cesium.DefaultProxy('/proxy/')
-            });
-            radarLayer = imageryLayerCollection.addImageryProvider(radar);
-            radarLayer.alpha = 0.5;
-            layerNames[radar.getUrl()] = 'United States weather radar';
-            
             var infrared = new Cesium.WebMapServiceImageryProvider({
                 url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
                 layers : 'goes_conus_ir',
@@ -299,6 +285,20 @@ require([
             infraredLayer.alpha = 0.5;
             layerNames[infrared.getUrl()] = 'United States GOES infrared';
 
+            var radar = new Cesium.WebMapServiceImageryProvider({
+                url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
+                layers : 'nexrad-n0r',
+                credit : 'Radar data courtesy Iowa Environmental Mesonet',
+                parameters : {
+                    transparent : 'true',
+                    format : 'image/png'
+                },
+                proxy : new Cesium.DefaultProxy('/proxy/')
+            });
+            radarLayer = imageryLayerCollection.addImageryProvider(radar);
+            radarLayer.alpha = 0.5;
+            layerNames[radar.getUrl()] = 'United States weather radar';
+            
             var singleImage = new Cesium.SingleTileImageryProvider({
                 url : '../../../Images/TestLayer.png',
                 extent : new Cesium.Extent(
@@ -308,7 +308,6 @@ require([
                         Cesium.Math.toRadians(45.0))
             });
             singleImageLayer = imageryLayerCollection.addImageryProvider(singleImage);
-            singleImageLayer.alpha = 0.8;
             layerNames[singleImage.getUrl()] = 'Single image';
 
 	          document.addEventListener('keydown', keydownHandler, false);
@@ -319,7 +318,6 @@ require([
 	              mousePosition = movement.endPosition;
 	              // Use movement.startPosition, movement.endPosition
 	          }, Cesium.MouseEventType.MOVE);
-	          
 	          
 	          domConstruct.place('<table id="layerTable"></table>', 'toolbar');
 	          updateToolbar(imageryLayerCollection);
