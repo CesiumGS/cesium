@@ -85,7 +85,7 @@ define([
         });
         this.maxLevel = 25;
         this.heightmapWidth = 64;
-        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.ellipsoid, this.heightmapWidth, this.tilingScheme.numberOfLevelZeroTilesX);
+        this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.getEllipsoid(), this.heightmapWidth, this.tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._proxy = description.proxy;
 
@@ -234,11 +234,12 @@ define([
         var pixels = getImagePixels(image);
 
         var tilingScheme = this.tilingScheme;
-        var ellipsoid = tilingScheme.ellipsoid;
+        var ellipsoid = tilingScheme.getEllipsoid();
         var extent = tile.extent;
 
-        var southwest = tilingScheme.cartographicToWebMercator(extent.west, extent.south);
-        var northeast = tilingScheme.cartographicToWebMercator(extent.east, extent.north);
+        var projection = tilingScheme.getProjection();
+        var southwest = projection.project(new Cartographic(extent.west, extent.south));
+        var northeast = projection.project(new Cartographic(extent.east, extent.north));
         var webMercatorExtent = {
             west : southwest.x,
             south : southwest.y,
@@ -260,7 +261,8 @@ define([
             relativeToCenter : tile.center,
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
-            skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0)
+            skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
+            isGeographic : false
         }, [pixels.buffer]);
 
         if (typeof verticesPromise === 'undefined') {
@@ -303,7 +305,7 @@ define([
         tile.maxHeight = buffers.statistics.maxHeight;
         tile.boundingSphere3D = BoundingSphere.fromPointsAsFlatArray(buffers.vertices, tile.center, 5);
 
-        var ellipsoid = this.tilingScheme.ellipsoid;
+        var ellipsoid = this.tilingScheme.getEllipsoid();
         var extent = tile.extent;
         tile.southwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSouthwest());
         tile.southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast());
