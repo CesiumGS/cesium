@@ -169,8 +169,8 @@ define([
             if (startIndex !== -1) {
                 tileImageryCollection.splice(startIndex, numDestroyed);
             }
-            // If the tile has no imagery left, mark it as non-renderable.
-            if (tileImageryCollection.length === 0) {
+            // If the base layer has been removed, mark the tile as non-renderable.
+            if (layer.isBaseLayer()) {
                 tile.renderable = false;
             }
             tile = tile.replacementNext;

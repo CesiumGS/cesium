@@ -1432,6 +1432,11 @@ define([
             checkLogo(logoData, layer.imageryProvider);
         }
 
+        if (logoData.logos.length !== logoData.logoIndex) {
+            logoData.rebuildLogo = true;
+            logoData.logos.length = logoData.logoIndex;
+        }
+
         if (logoData.rebuildLogo) {
             var width = logoData.totalLogoWidth;
             var height = logoData.totalLogoHeight;

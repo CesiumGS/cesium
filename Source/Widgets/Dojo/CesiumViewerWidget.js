@@ -1002,9 +1002,8 @@ define([
          * @see CesiumViewerWidget#mapStyle
          */
         setStreamingImageryMapStyle : function(value) {
-            this.useStreamingImagery = true;
-
-            if (this.mapStyle !== value) {
+            if (!this.useStreamingImagery || this.mapStyle !== value) {
+                this.useStreamingImagery = true;
                 this.mapStyle = value;
                 this._configureCentralBodyImagery();
             }

@@ -57,6 +57,20 @@ body {
     padding: 2px 5px;
     position: absolute;
 }
+.upArrow {
+   background-image: url("UpArrow.png");
+   background-repeat: no-repeat;
+   width: 16px;
+   height: 16px;
+   text-align: center;
+}
+.downArrow {
+   background-image: url("DownArrow.png");
+   background-repeat: no-repeat;
+   width: 16px;
+   height: 16px;
+   text-align: center;
+}
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
@@ -69,16 +83,18 @@ require([
     'dojo/on',
     'dojo/dom',
     'dojo/dom-construct',
-    'dijit/form/HorizontalSlider',
-    'dijit/form/CheckBox'
+    'dijit/form/Button',
+    'dijit/form/CheckBox',
+    'dijit/form/HorizontalSlider'
 ], function(
     Cesium,
     CesiumViewerWidget,
     on,
     dom,
     domConstruct,
-    HorizontalSlider,
-    CheckBox)
+    Button,
+    CheckBox,
+    HorizontalSlider)
 {
     "use strict";
 
@@ -158,12 +174,13 @@ require([
     }
 
     var radarLayer;
+    var infraredLayer;
 
     function createButtons(imageryLayerCollection) {
         domConstruct.place(
                 '<table>' +
                   '<tr><td id="radarToggle"></td><td style="text-align:right">United States weather radar</td><td id="radarSlider"></td></tr>' +
-                  '<tr><td id="somethingToggle"></td><td style="text-align:right">Something else</td><td id="somethingSlider"></td></tr>' +
+                  '<tr><td id="infraredToggle"></td><td style="text-align:right">United States GOES infrared</td><td id="infraredSlider"></td></tr>' +
                 '</table>', 'toolbar');
         
         new CheckBox({
@@ -188,6 +205,17 @@ require([
             }
         }).placeAt('radarSlider');
         
+        new CheckBox({
+            checked: true,
+            onChange: function(b) {
+                if (b) {
+                    imageryLayerCollection.add(infraredLayer);
+                } else {
+                    imageryLayerCollection.remove(infraredLayer, false);
+                }
+            }
+        }).placeAt('infraredToggle');
+
         new HorizontalSlider({
             value: radarLayer.alpha,
             minimum: 0.0,
@@ -195,9 +223,9 @@ require([
             intermediateChanges: true,
             style: "width:300px;",
             onChange: function(value) {
-                radarLayer.alpha = value;
+                infraredLayer.alpha = value;
             }
-        }).placeAt('somethingSlider');
+        }).placeAt('infraredSlider');
     }
 
     var cesiumViewerWidget = new CesiumViewerWidget({
@@ -223,6 +251,19 @@ require([
             });
             radarLayer = imageryLayerCollection.addImageryProvider(radar);
             radarLayer.alpha = 0.5;
+            
+            var infrared = new Cesium.WebMapServiceImageryProvider({
+                url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
+                layers : 'goes_conus_ir',
+                credit : 'Infrared data courtesy Iowa Environmental Mesonet',
+                parameters : {
+                    transparent : 'true',
+                    format : 'image/png'
+                },
+                proxy : new Cesium.DefaultProxy('/proxy/')
+            });
+            infraredLayer = imageryLayerCollection.addImageryProvider(infrared);
+            infraredLayer.alpha = 0.5;
 	          
 	          document.addEventListener('keydown', keydownHandler, false);
             
