@@ -172,7 +172,7 @@ require([
                 if (b) {
                     imageryLayerCollection.add(radarLayer);
                 } else {
-                    imageryLayerCollection.remove(radarLayer);
+                    imageryLayerCollection.remove(radarLayer, false);
                 }
             }
         }).placeAt('radarToggle');
