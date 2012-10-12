@@ -2,15 +2,23 @@
 define([
         '../Core/defaultValue',
         '../Core/loadImage',
+        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/Extent',
-        './GeographicTilingScheme'
+        './GeographicTilingScheme',
+        './ImageryProviderError',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         loadImage,
+        writeTextToCanvas,
         DeveloperError,
+        Event,
         Extent,
-        GeographicTilingScheme) {
+        GeographicTilingScheme,
+        ImageryProviderError,
+        when) {
     "use strict";
 
     /**
@@ -45,8 +53,6 @@ define([
         var proxy = description.proxy;
         this._proxy = proxy;
 
-        this._maximumLevel = 0;
-
         var extent = defaultValue(description.extent, Extent.MAX_VALUE);
         var tilingScheme = new GeographicTilingScheme({
             extent : extent,
@@ -57,6 +63,10 @@ define([
 
         this._image = undefined;
         this._texture = undefined;
+        this._tileWidth = 0;
+        this._tileHeight = 0;
+
+        this._errorEvent = new Event();
 
         this._ready = false;
 
@@ -74,10 +84,32 @@ define([
         }
 
         var that = this;
-        loadImage(imageUrl).then(function(image) {
+        var error;
+
+        function success(image) {
             that._image = image;
+            that._tileWidth = image.width;
+            that._tileHeight = image.height;
             that._ready = true;
-        });
+            ImageryProviderError.handleSuccess(that._errorEvent);
+        }
+
+        function failure(e) {
+            var message = 'Failed to load image ' + imageUrl + '.';
+            error = ImageryProviderError.handleError(
+                    error,
+                    that,
+                    that._errorEvent,
+                    message,
+                    0, 0, 0,
+                    doRequest);
+        }
+
+        function doRequest() {
+            when(loadImage(imageUrl), success, failure);
+        }
+
+        doRequest();
     };
 
     /**
@@ -124,7 +156,7 @@ define([
      * @returns {Number} The maximum level.
      */
     SingleTileImageryProvider.prototype.getMaximumLevel = function() {
-        return this._maximumLevel;
+        return 0;
     };
 
     /**
@@ -167,7 +199,20 @@ define([
      * @see NeverTileDiscardPolicy
      */
     SingleTileImageryProvider.prototype.getTileDiscardPolicy = function() {
-        return this._tileDiscardPolicy;
+        return undefined;
+    };
+
+    /**
+     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link ImageryProviderError}.
+     *
+     * @memberof SingleTileImageryProvider
+     *
+     * @returns {Event} The event.
+     */
+    SingleTileImageryProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
     };
 
     /**

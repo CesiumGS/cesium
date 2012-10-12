@@ -55,6 +55,10 @@ define([
      * Manages and renders the terrain and imagery on the surface of a {@link CentralBody}.
      * This class should be considered an implementation detail of {@link CentralBody} and not
      * used directly.
+     *
+     * @alias CentralBodySurface
+     * @constructor
+     * @private
      */
     var CentralBodySurface = function(description) {
         if (typeof description.terrainProvider === 'undefined') {
@@ -95,12 +99,14 @@ define([
             tilesCulled : 0,
             tilesRendered : 0,
             texturesRendered : 0,
+            tilesWaitingForChildren : 0,
 
             lastMaxDepth : -1,
             lastTilesVisited : -1,
             lastTilesCulled : -1,
             lastTilesRendered : -1,
             lastTexturesRendered : -1,
+            lastTilesWaitingForChildren : -1,
 
             suspendLodUpdate : false
         };
@@ -123,7 +129,7 @@ define([
         // create TileImagerys for this layer for all previously loaded tiles
         var tile = this._tileReplacementQueue.head;
         while (typeof tile !== 'undefined') {
-            if (layer.createTileImagerySkeletons(tile, this._terrainProvider)) {
+            if (layer._createTileImagerySkeletons(tile, this._terrainProvider)) {
                 tile.doneLoading = false;
             }
 
@@ -163,8 +169,8 @@ define([
             if (startIndex !== -1) {
                 tileImageryCollection.splice(startIndex, numDestroyed);
             }
-            // If the tile has no imagery left, mark it as non-renderable.
-            if (tileImageryCollection.length === 0) {
+            // If the base layer has been removed, mark the tile as non-renderable.
+            if (layer.isBaseLayer()) {
                 tile.renderable = false;
             }
             tile = tile.replacementNext;
@@ -217,12 +223,15 @@ define([
      * @see CentralBodySurface#isDestroyed
      */
     CentralBodySurface.prototype.destroy = function() {
-        var levelZeroTiles = this.levelZeroTiles;
+        var levelZeroTiles = this._levelZeroTiles;
         for (var i = 0; i < levelZeroTiles.length; ++i) {
-            levelZeroTiles[i].destroy();
+            levelZeroTiles[i].freeResources();
         }
 
-        this._terrainProvider.destroy();
+        if (typeof this._terrainProvider.destroy !== 'undefined') {
+            this._terrainProvider.destroy();
+        }
+
         this._imageryLayerCollection.destroy();
 
         var debug = this._debug;
@@ -266,6 +275,7 @@ define([
         debug.tilesCulled = 0;
         debug.tilesRendered = 0;
         debug.texturesRendered = 0;
+        debug.tilesWaitingForChildren = 0;
 
         surface._tileLoadQueue.markInsertionPoint();
         surface._tileReplacementQueue.markStartOfRenderFrame();
@@ -325,27 +335,30 @@ define([
                     }
                 }
             } else {
+                ++debug.tilesWaitingForChildren;
                 // SSE is not good enough but not all children are loaded, so render this tile anyway.
                 addTileToRenderList(surface, tile);
             }
         }
 
-        if (debug.tilesVisited !== surface._debug.lastTilesVisited ||
-            debug.tilesRendered !== surface._debug.lastTilesRendered ||
-            debug.texturesRendered !== surface._debug.lastTexturesRendered ||
-            debug.tilesCulled !== surface._debug.lastTilesCulled ||
-            debug.maxDepth !== surface._debug.lastMaxDepth) {
+        if (debug.enableDebugOutput) {
+            if (debug.tilesVisited !== debug.lastTilesVisited ||
+                debug.tilesRendered !== debug.lastTilesRendered ||
+                debug.texturesRendered !== debug.lastTexturesRendered ||
+                debug.tilesCulled !== debug.lastTilesCulled ||
+                debug.maxDepth !== debug.lastMaxDepth ||
+                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
 
-            if (debug.enableDebugOutput) {
                 /*global console*/
-                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Textures: ' + debug.texturesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth);
-            }
+                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Textures: ' + debug.texturesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
 
-            debug.lastTilesVisited = debug.tilesVisited;
-            debug.lastTilesRendered = debug.tilesRendered;
-            debug.lastTexturesRendered = debug.texturesRendered;
-            debug.lastTilesCulled = debug.tilesCulled;
-            debug.lastMaxDepth = debug.maxDepth;
+                debug.lastTilesVisited = debug.tilesVisited;
+                debug.lastTilesRendered = debug.tilesRendered;
+                debug.lastTexturesRendered = debug.texturesRendered;
+                debug.lastTilesCulled = debug.tilesCulled;
+                debug.lastMaxDepth = debug.maxDepth;
+                debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
+            }
         }
     }
 
@@ -383,7 +396,7 @@ define([
         var frustum = camera.frustum;
         var fovy = frustum.fovy;
 
-        // PERFORMANCE_TODO: factor out stuff that's constant across tiles.
+        // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
         return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
     }
 
@@ -443,7 +456,7 @@ define([
         }
 
         if (frameState.mode === SceneMode.SCENE3D) {
-            var occludeePointInScaledSpace = tile.getOccludeePointInScaledSpace();
+            var occludeePointInScaledSpace = tile.occludeePointInScaledSpace;
             if (typeof occludeePointInScaledSpace === 'undefined') {
                 return true;
             }
@@ -577,7 +590,7 @@ define([
 
                     var imageryLayerCollection = surface._imageryLayerCollection;
                     for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-                        imageryLayerCollection.get(i).createTileImagerySkeletons(tile, terrainProvider);
+                        imageryLayerCollection.get(i)._createTileImagerySkeletons(tile, terrainProvider);
                     }
                 }
             }
@@ -604,12 +617,12 @@ define([
                 var imageryLayer = imagery.imageryLayer;
 
                 if (imagery.state === ImageryState.PLACEHOLDER) {
-                    if (imageryLayer.imageryProvider.isReady()) {
+                    if (imageryLayer.getImageryProvider().isReady()) {
                         // Remove the placeholder and add the actual skeletons (if any)
                         // at the same position.  Then continue the loop at the same index.
                         imagery.releaseReference();
                         tileImageryCollection.splice(i, 1);
-                        imageryLayer.createTileImagerySkeletons(tile, terrainProvider, i);
+                        imageryLayer._createTileImagerySkeletons(tile, terrainProvider, i);
                         --i;
                         len = tileImageryCollection.length;
                     }
@@ -617,17 +630,17 @@ define([
 
                 if (imagery.state === ImageryState.UNLOADED) {
                     imagery.state = ImageryState.TRANSITIONING;
-                    imageryLayer.requestImagery(imagery);
+                    imageryLayer._requestImagery(imagery);
                 }
 
                 if (imagery.state === ImageryState.RECEIVED) {
                     imagery.state = ImageryState.TRANSITIONING;
-                    imageryLayer.createTexture(context, imagery);
+                    imageryLayer._createTexture(context, imagery);
                 }
 
                 if (imagery.state === ImageryState.TEXTURE_LOADED) {
                     imagery.state = ImageryState.TRANSITIONING;
-                    imageryLayer.reprojectTexture(context, imagery);
+                    imageryLayer._reprojectTexture(context, imagery);
                 }
 
                 if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
@@ -649,7 +662,7 @@ define([
                 var imageryDoneLoading = imagery.state === ImageryState.READY;
 
                 if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
-                    tileImagery.textureTranslationAndScale = imageryLayer.calculateTextureTranslationAndScale(tile, tileImagery);
+                    tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                 }
 
                 doneLoading = doneLoading && imageryDoneLoading;
@@ -666,6 +679,8 @@ define([
         }
     }
 
+    // This is debug code to render the bounding sphere of the tile in
+    // CentralBodySurface._debug.boundingSphereTile.
     CentralBodySurface.prototype.debugShowBoundingSphereOfTileAt = function(cartographicPick) {
         // Find the tile in the render list that overlaps this extent
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
@@ -693,8 +708,6 @@ define([
         this._debug.boundingSphereVA = undefined;
     };
 
-    // This is debug code to render the bounding sphere of the tile in
-    // CentralBodySurface._debug.boundingSphereTile.
     function debugCreateRenderCommandsForTileBoundingSphere(surface, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
         if (typeof surface._debug !== 'undefined' && typeof surface._debug.boundingSphereTile !== 'undefined') {
             if (!surface._debug.boundingSphereVA) {
@@ -735,7 +748,7 @@ define([
         }
     }
 
-    CentralBodySurface.prototype.toggleLodUpdate = function(frameState) {
+    CentralBodySurface.prototype.debugToggleLodUpdate = function(frameState) {
         this._debug.suspendLodUpdate = !this._debug.suspendLodUpdate;
     };
 
@@ -962,7 +975,7 @@ define([
                     var intensity = 0.0;
                     if (tileImageryCollection.length > 0) {
                         var firstImagery = tileImageryCollection[0].imagery;
-                        var firstImageryProvider = firstImagery.imageryLayer.imageryProvider;
+                        var firstImageryProvider = firstImagery.imageryLayer.getImageryProvider();
                         if (typeof firstImageryProvider.getIntensity !== 'undefined') {
                             intensity = firstImageryProvider.getIntensity(firstImagery.x, firstImagery.y, firstImagery.level);
                         }

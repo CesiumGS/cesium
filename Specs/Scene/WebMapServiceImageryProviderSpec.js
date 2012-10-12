@@ -7,7 +7,10 @@ defineSuite([
          'Core/Extent',
          'Core/Math',
          'Scene/GeographicTilingScheme',
+         'Scene/Imagery',
+         'Scene/ImageryLayer',
          'Scene/ImageryProvider',
+         'Scene/ImageryState',
          'ThirdParty/when'
      ], function(
          WebMapServiceImageryProvider,
@@ -17,7 +20,10 @@ defineSuite([
          Extent,
          CesiumMath,
          GeographicTilingScheme,
+         Imagery,
+         ImageryLayer,
          ImageryProvider,
+         ImageryState,
          when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -82,6 +88,7 @@ defineSuite([
                 expect(url).toMatch('something=foo');
                 expect(url).toMatch('another=false');
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 
@@ -110,6 +117,7 @@ defineSuite([
                 expect(secondQuestionMarkIndex).toBeLessThan(0);
 
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 
@@ -141,6 +149,7 @@ defineSuite([
                 expect(doubleAmpersandIndex).toBeLessThan(0);
 
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 
@@ -172,6 +181,7 @@ defineSuite([
                 expect(delimitedQueryParameterIndex).not.toBeLessThan(0);
 
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 
@@ -242,6 +252,7 @@ defineSuite([
                 expect(url).toMatch('format=foo');
                 expect(url).not.toMatch('format=image/jpeg');
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 
@@ -331,6 +342,7 @@ defineSuite([
                             CesiumMath.toDegrees(extent.north);
                 expect(url.indexOf(bbox)).not.toBeLessThan(0);
                 calledLoadImage = true;
+                deferred.resolve();
                 return undefined;
             };
 
@@ -346,5 +358,55 @@ defineSuite([
             maximumLevel : 5
         });
         expect(provider.getMaximumLevel()).toEqual(5);
+    });
+
+    it('raises error event when image cannot be loaded', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer'
+        });
+
+        var layer = new ImageryLayer(provider);
+
+        var tries = 0;
+        provider.getErrorEvent().addEventListener(function(error) {
+            expect(error.timesRetried).toEqual(tries);
+            ++tries;
+            if (tries < 3) {
+                error.retry = true;
+            }
+        });
+
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            // Succeed after 2 tries
+            if (tries === 2) {
+                // valid URL
+                return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            }
+
+            // invalid URL
+            return loadImage.defaultCreateImage(url, crossOrigin, deferred);
+        };
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        var imagery;
+        runs(function() {
+            imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+        });
+
+        waitsFor(function() {
+            return imagery.state === ImageryState.RECEIVED;
+        }, 'image to load');
+
+        runs(function() {
+            expect(imagery.image).toBeInstanceOf(Image);
+            expect(tries).toEqual(2);
+            imagery.releaseReference();
+        });
     });
 });

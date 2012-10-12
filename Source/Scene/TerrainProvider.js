@@ -18,6 +18,7 @@ define([
      *
      * @alias TerrainProvider
      * @constructor
+     * @private
      *
      * @see EllipsoidTerrainProvider
      */

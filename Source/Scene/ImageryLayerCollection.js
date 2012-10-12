@@ -149,7 +149,20 @@ define([
      * @returns {Boolean} true if the collection contains the layer, false otherwise.
      */
     ImageryLayerCollection.prototype.contains = function(layer) {
-        return this._layers.indexOf(layer) !== -1;
+        return this.indexOf(layer) !== -1;
+    };
+
+    /**
+     * Determines the index of a given layer in the collection.
+     *
+     * @memberof ImageryLayerCollection
+     *
+     * @param {ImageryLayer} layer The layer to find the index of.
+     *
+     * @returns {Number} The index of the layer in the collection, or -1 if the layer does not exist in the collection.
+     */
+    ImageryLayerCollection.prototype.indexOf = function(layer) {
+        return this._layers.indexOf(layer);
     };
 
     /**
@@ -267,7 +280,7 @@ define([
         layer._isBaseLayer = false;
         this._layers[0]._isBaseLayer = true;
 
-        this.layerMoved.raiseEvent(layer, layer.length - 1, index);
+        this.layerMoved.raiseEvent(layer, this._layers.length - 1, index);
     };
 
     /**

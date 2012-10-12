@@ -1002,9 +1002,8 @@ define([
          * @see CesiumViewerWidget#mapStyle
          */
         setStreamingImageryMapStyle : function(value) {
-            this.useStreamingImagery = true;
-
-            if (this.mapStyle !== value) {
+            if (!this.useStreamingImagery || this.mapStyle !== value) {
+                this.useStreamingImagery = true;
                 this.mapStyle = value;
                 this._configureCentralBodyImagery();
             }
@@ -1110,11 +1109,13 @@ define([
                 existingImagery = imageLayers.get(0).imageryProvider;
             }
 
+            var newLayer;
+
             if (this.useStreamingImagery) {
                 if (!(existingImagery instanceof BingMapsImageryProvider) ||
                     existingImagery.getMapStyle() !== this.mapStyle) {
 
-                    imageLayers.addImageryProvider(new BingMapsImageryProvider({
+                    newLayer = imageLayers.addImageryProvider(new BingMapsImageryProvider({
                         server : 'dev.virtualearth.net',
                         mapStyle : this.mapStyle,
                         // Some versions of Safari support WebGL, but don't correctly implement
@@ -1124,15 +1125,17 @@ define([
                     if (imageLayers.getLength() > 1) {
                         imageLayers.remove(imageLayers.get(0));
                     }
+                    imageLayers.lowerToBottom(newLayer);
                 }
             } else {
                 if (!(existingImagery instanceof SingleTileImageryProvider) ||
                     existingImagery.getUrl() !== this.dayImageUrl) {
 
-                    imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
+                    newLayer = imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
                     if (imageLayers.getLength() > 1) {
                         imageLayers.remove(imageLayers.get(0));
                     }
+                    imageLayers.lowerToBottom(newLayer);
                 }
             }
 

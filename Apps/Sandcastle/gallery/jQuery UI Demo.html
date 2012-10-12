@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Sample of Cesium with jQuery UI.">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.8.2.min.js"></script>
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.23/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="../../../Build/Unminified/Cesium.js"></script>
+    <script type="text/javascript" src="../Sandcastle-warn.js"></script>
+    <link rel="Stylesheet" href="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.23/themes/ui-darkness/jquery-ui.css" type="text/css">
+</head>
+<body data-sandcastle-bucket="bucket-jqueryui.html" data-sandcastle-title="Cesium + jQuery UI">
+<style>
+    body {
+        background: #000;
+        color: #eee;
+        font-family: sans-serif;
+        font-size: 9pt;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+    .fullSize {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: none;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+    #toolbar {
+        margin: 5px;
+        padding: 2px 5px;
+        position: absolute;
+        opacity: 0.85;
+    }
+    .ui-dialog {
+        opacity: 0.9;
+    }
+    .ui-icon-blank {
+        background-position: -224px -192px;
+    }
+</style>
+
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="toolbar">Loading, please wait...</div>
+<div id="dialog" title="Cesium and jQuery UI Demo"></div>
+<script id="cesium_sandcastle_script">
+/*global $*/
+(function () {
+    "use strict";
+
+    // Create canvas element using jQuery:
+    $('<canvas/>', {
+        'id': 'glCanvas',
+        'class': 'fullSize'
+    }).appendTo('#cesiumContainer');
+
+    var canvas = $('#glCanvas')[0];
+    var ellipsoid = Cesium.Ellipsoid.WGS84;
+    var scene = new Cesium.Scene(canvas);
+    var primitives = scene.getPrimitives();
+
+    // Bing Maps
+    var bing = new Cesium.BingMapsImageryProvider({
+        server : 'dev.virtualearth.net',
+        mapStyle : Cesium.BingMapsStyle.AERIAL,
+        // Some versions of Safari support WebGL, but don't correctly implement
+        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+    });
+
+    var cb = new Cesium.CentralBody(ellipsoid);
+    cb.getImageryLayers().addImageryProvider(bing);
+    cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
+    cb.specularMapSource = '../../../Images/earthspec1k.jpg';
+    if (scene.getContext().getMaximumTextureSize() > 2048) {
+        cb.cloudsMapSource = '../../../Images/earthcloudmaptrans.jpg';
+        cb.bumpMapSource = '../../../Images/earthbump1k.jpg';
+    }
+    cb.showSkyAtmosphere = true;
+    cb.showGroundAtmosphere = true;
+    primitives.setCentralBody(cb);
+
+    scene.getCamera().frustum.near = 1.0;
+    scene.getCamera().getControllers().addCentralBody();
+
+    var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
+
+    scene.setAnimation(function() {
+        scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
+    });
+
+    function tick() {
+        scene.render();
+        Cesium.requestAnimationFrame(tick);
+    }
+    tick();
+
+    // Create toolbar template
+    $('#toolbar').html(
+        '<span id="mode3D" class="aButton">3D globe</span> ' +
+        '<span id="modeColumbus" class="aButton">Columbus view</span> ' +
+        '<span id="mode2D" class="aButton">2D map</span>'
+    );
+
+    // Activate toolbar buttons with jQuery UI
+    $(".aButton").button({
+        text: true,
+        icons: { primary: "ui-icon-blank" }
+    }).click(function() {
+        // Emulate radio buttons
+        $(".aButton").button("option", { icons: { primary: "ui-icon-blank" }});
+        $(this).button("option", { icons: { primary: "ui-icon-check" }});
+    });
+
+    // 3D is the default view
+    $('#mode3D').button("option", { icons: { primary: "ui-icon-check" }}
+        ).click(function () {
+            cb.showSkyAtmosphere = true;
+            cb.showGroundAtmosphere = true;
+            transitioner.morphTo3D();
+        });
+
+    $('#modeColumbus').click(function () {
+        cb.showSkyAtmosphere = false;
+        cb.showGroundAtmosphere = false;
+        transitioner.morphToColumbusView();
+    });
+
+    $('#mode2D').click(function () {
+        cb.showSkyAtmosphere = false;
+        cb.showGroundAtmosphere = false;
+        transitioner.morphTo2D();
+    });
+
+    // Prevent right-click from opening a context menu.
+    canvas.oncontextmenu = function() {
+        return false;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Example resize handler
+
+    var onResize = function() {
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+
+        if (canvas.width === width && canvas.height === height) {
+            return;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        scene.getCamera().frustum.aspectRatio = width / height;
+    };
+    window.addEventListener('resize', onResize, false);
+    onResize();
+
+    // Just for fun
+    $('#dialog').text('Try moving and closing this dialog, ' +
+        'and clicking the view buttons.').dialog();
+}());
+</script>
+</body>
+</html>

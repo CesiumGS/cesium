@@ -72,21 +72,25 @@
 define([
         '../Core/defaultValue',
         '../Core/jsonp',
-        '../Core/DeveloperError',
         '../Core/Cartesian2',
+        '../Core/DeveloperError',
+        '../Core/Event',
         './BingMapsStyle',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
+        './ImageryProviderError',
         './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         jsonp,
-        DeveloperError,
         Cartesian2,
+        DeveloperError,
+        Event,
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
+        ImageryProviderError,
         WebMercatorTilingScheme,
         when) {
     "use strict";
@@ -155,14 +159,15 @@ define([
         this._imageUrlTemplate = undefined;
         this._imageUrlSubdomains = undefined;
 
+        this._errorEvent = new Event();
+
         this._ready = false;
 
         var metadataUrl = 'http://' + this._server + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
         var that = this;
-        when(jsonp(metadataUrl, {
-            callbackParameterName : 'jsonp',
-            proxy : this._proxy
-        }), function(data) {
+        var metadataError;
+
+        function metadataSuccess(data) {
             var resource = data.resourceSets[0].resources[0];
 
             that._tileWidth = resource.imageWidth;
@@ -181,7 +186,23 @@ define([
             }
 
             that._ready = true;
-        });
+            ImageryProviderError.handleSuccess(metadataError);
+        }
+
+        function metadataFailure(e) {
+            var message = 'An error occurred while accessing ' + metadataUrl + '.';
+            metadataError = ImageryProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+        }
+
+        function requestMetadata() {
+            var metadata = jsonp(metadataUrl, {
+                callbackParameterName : 'jsonp',
+                proxy : that._proxy
+            });
+            when(metadata, metadataSuccess, metadataFailure);
+        }
+
+        requestMetadata();
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
@@ -312,6 +333,19 @@ define([
      */
     BingMapsImageryProvider.prototype.getTileDiscardPolicy = function() {
         return this._tileDiscardPolicy;
+    };
+
+    /**
+     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+     * are passed an instance of {@link ImageryProviderError}.
+     *
+     * @memberof BingMapsImageryProvider
+     *
+     * @returns {Event} The event.
+     */
+    BingMapsImageryProvider.prototype.getErrorEvent = function() {
+        return this._errorEvent;
     };
 
     /**

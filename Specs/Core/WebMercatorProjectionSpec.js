@@ -64,11 +64,39 @@ defineSuite([
         expect(projection.project(cartographic).equalsEpsilon(expected, CesiumMath.EPSILON15)).toEqual(true);
     });
 
-    it('unproject', function() {
+    it('project3', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var cartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_FOUR, 0.0);
+
+        // expected equations from Wolfram MathWorld:
+        // http://mathworld.wolfram.com/MercatorProjection.html
+        var expected = new Cartesian3(
+                ellipsoid.getMaximumRadius() * cartographic.longitude,
+                ellipsoid.getMaximumRadius() * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
+                0.0);
+
+        var projection = new WebMercatorProjection(ellipsoid);
+        var result = new Cartesian3(0.0, 0.0, 0.0);
+        var returnValue = projection.project(cartographic, result);
+        expect(result).toEqual(returnValue);
+        expect(result.equalsEpsilon(expected, CesiumMath.EPSILON8)).toEqual(true);
+    });
+
+    it('unproject0', function() {
         var cartographic = new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_FOUR, 12.0);
         var projection = new WebMercatorProjection();
         var projected = projection.project(cartographic);
         expect(projection.unproject(projected).equalsEpsilon(cartographic, CesiumMath.EPSILON14)).toEqual(true);
+    });
+
+    it('unproject1', function() {
+        var cartographic = new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_FOUR, 12.0);
+        var projection = new WebMercatorProjection();
+        var projected = projection.project(cartographic);
+        var result = new Cartographic(0.0, 0.0, 0.0);
+        var returnValue = projection.unproject(projected, result);
+        expect(result).toEqual(returnValue);
+        expect(result.equalsEpsilon(cartographic, CesiumMath.EPSILON14)).toEqual(true);
     });
 
     it('unproject is correct at corners', function() {

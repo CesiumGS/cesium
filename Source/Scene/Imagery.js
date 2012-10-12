@@ -26,8 +26,8 @@ define([
         this.texture = undefined;
         this.referenceCount = 0;
 
-        if (typeof extent === 'undefined' && imageryLayer.imageryProvider.isReady()) {
-            var tilingScheme = imageryLayer.imageryProvider.getTilingScheme();
+        if (typeof extent === 'undefined' && imageryLayer.getImageryProvider().isReady()) {
+            var tilingScheme = imageryLayer.getImageryProvider().getTilingScheme();
             extent = tilingScheme.tileXYToExtent(x, y, level);
         }
 

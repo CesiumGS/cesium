@@ -4,19 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Drag and drop CZML files onto the Cesium Viewer Widget to visualize time dynamic data.">
+    <meta name="description" content="Layer imagery from multiple sources and adjust the alpha of each independently.">
     <title>Cesium Demo</title>
-    <script>
-    var Sandcastle = {};
-    Sandcastle.declare = function () {};
-    Sandcastle.highlight = function () {};
-    Sandcastle.registered = [];
-    if (window.location.protocol === 'file:') {
-        if (confirm("You must host this app on a web server.\nSee contributor's guide for more info?")) {
-            window.location = 'https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide';
-        }
-    }
-    </script>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
     <script type="text/javascript">
     require({
@@ -25,7 +15,6 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
-            { name: 'Source', location: 'Source' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -40,7 +29,7 @@
     <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
     <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
 </head>
-<body class="claro">
+<body class="claro" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
 body {
     background: #000;
@@ -68,6 +57,20 @@ body {
     padding: 2px 5px;
     position: absolute;
 }
+.upArrow {
+   background-image: url("../../../Images/UpArrow.png");
+   background-repeat: no-repeat;
+   width: 16px;
+   height: 16px;
+   text-align: center;
+}
+.downArrow {
+   background-image: url("../../../Images/DownArrow.png");
+   background-repeat: no-repeat;
+   width: 16px;
+   height: 16px;
+   text-align: center;
+}
 </style>
 
 <div id="cesiumContainer" class="fullSize"></div>
@@ -75,11 +78,23 @@ body {
 
 <script id="cesium_sandcastle_script">
 require([
-    'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
-    'dojo/on', 'dojo/dom'
+    'Source/Cesium',
+    'Widgets/Dojo/CesiumViewerWidget',
+    'dojo/on',
+    'dojo/dom',
+    'dojo/dom-construct',
+    'dijit/form/Button',
+    'dijit/form/CheckBox',
+    'dijit/form/HorizontalSlider'
 ], function(
-    Cesium, CesiumViewerWidget,
-    on, dom)
+    Cesium,
+    CesiumViewerWidget,
+    on,
+    dom,
+    domConstruct,
+    Button,
+    CheckBox,
+    HorizontalSlider)
 {
     "use strict";
 
@@ -127,7 +142,7 @@ require([
     function keydownHandler(e) {
         switch (e.keyCode) {
         case 'F'.charCodeAt(0):
-            cb._surface.toggleLodUpdate();
+            cb._surface.debugToggleLodUpdate();
             break;
         case 'B'.charCodeAt(0):
             var camera = scene.getCamera();
@@ -158,40 +173,143 @@ require([
         }
     }
 
+    var radarLayer;
+    var infraredLayer;
+    var singleImageLayer;
+    
+    var layerNames = {};
+    var removedLayers = [];
+
+    function updateToolbar(imageryLayerCollection) {
+        domConstruct.place(
+                '<table id="layerTable">' +
+                  '<tr><td id="layerToggle2"></td><td id="layerLabel2"></td><td id="layerSlider2"></td><td id="layerUpArrow2"></td><td id="layerDownArrow2"></td></tr>' +
+                  '<tr><td id="layerToggle1"></td><td id="layerLabel1"></td><td id="layerSlider1"></td><td id="layerUpArrow1"></td><td id="layerDownArrow1"></td></tr>' +
+                  '<tr><td id="layerToggle0"></td><td id="layerLabel0"></td><td id="layerSlider0"></td><td id="layerUpArrow0"></td><td id="layerDownArrow0"></td></tr>' +
+                '</table>', 'layerTable', 'replace');
+        
+        var allLayers = removedLayers.slice(0);
+        for (var i = 1, len = imageryLayerCollection.getLength(); i < len; ++i) {
+            allLayers.push(imageryLayerCollection.get(i));
+        }
+        
+        for (var i = allLayers.length - 1; i >= 0; --i) {
+            var layer = allLayers[i];
+            var imageryProvider = layer.getImageryProvider();
+
+            var layerName = layerNames[imageryProvider.getUrl()];
+            domConstruct.place('<span>' + layerName + '</span>', 'layerLabel' + i);
+
+            (function(layer, i) {
+	            new CheckBox({
+	                checked: removedLayers.indexOf(layer) < 0,
+	                onChange: function(b) {
+	                    if (b) {
+	                        imageryLayerCollection.add(layer);
+	                        removedLayers.splice(removedLayers.indexOf(layer), 1);
+	                        updateToolbar(imageryLayerCollection);
+	                    } else {
+	                        imageryLayerCollection.remove(layer, false);
+	                        removedLayers.push(layer);
+	                        updateToolbar(imageryLayerCollection);
+	                    }
+	                }
+	            }).placeAt('layerToggle' + i);
+
+	            new HorizontalSlider({
+	                value: layer.alpha,
+	                minimum: 0.0,
+	                maximum: 1.0,
+	                intermediateChanges: true,
+	                style: "width:150px;",
+	                onChange: function(value) {
+	                    layer.alpha = value;
+	                }
+	            }).placeAt('layerSlider' + i);
+	            
+	            var layerIndex = imageryLayerCollection.indexOf(layer);
+	            var showRaise = layerIndex >= 0 && layerIndex < imageryLayerCollection.getLength() - 1;
+	            var showLower = layerIndex > 1;
+	            
+							new Button({
+							    label: "Raise",
+							    showLabel: false,
+							    iconClass: "upArrow",
+							    style: (showRaise ? "" : "visibility:hidden"),
+							    onClick: function() {
+							        if (showRaise) {
+								        imageryLayerCollection.raise(layer);
+								        updateToolbar(imageryLayerCollection);
+							        }
+							    }
+							}).placeAt('layerUpArrow' + i);
+	
+              new Button({
+                  label: "Lower",
+                  showLabel: false,
+                  iconClass: "downArrow",
+                  style: (showLower ? "" : "visibility:hidden"),
+                  onClick: function() {
+                      if (showLower) {
+	                      imageryLayerCollection.lower(layer);
+	                      updateToolbar(imageryLayerCollection);
+                      }
+                  }
+              }).placeAt('layerDownArrow' + i);
+            })(layer, i);
+        }
+    }
+
     var cesiumViewerWidget = new CesiumViewerWidget({
         postSetup : function(widget) {
             scene = widget.scene;
             cb = scene.getPrimitives().getCentralBody();
+            cb.logoOffset = new Cesium.Cartesian2(300, 30);
 
             scene.getCamera().frustum.near = 10.0;
             cb.affectedByLighting = false;
             
             var imageryLayerCollection = cb.getImageryLayers();
             
-            var radar = new Cesium.WebMapServiceImageryProvider({
-                url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
-                layers : 'nexrad-n0r',
+            var infrared = new Cesium.WebMapServiceImageryProvider({
+                url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
+                layers : 'goes_conus_ir',
+                credit : 'Infrared data courtesy Iowa Environmental Mesonet',
                 parameters : {
                     transparent : 'true',
                     format : 'image/png'
                 },
                 proxy : new Cesium.DefaultProxy('/proxy/')
             });
-            imageryLayerCollection.addImageryProvider(radar).alpha = 0.5;
-            /*imageryLayerCollection.removeAll();
+            infraredLayer = imageryLayerCollection.addImageryProvider(infrared);
+            infraredLayer.alpha = 0.5;
+            layerNames[infrared.getUrl()] = 'United States GOES infrared';
+
+            var radar = new Cesium.WebMapServiceImageryProvider({
+                url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
+                layers : 'nexrad-n0r',
+                credit : 'Radar data courtesy Iowa Environmental Mesonet',
+                parameters : {
+                    transparent : 'true',
+                    format : 'image/png'
+                },
+                proxy : new Cesium.DefaultProxy('/proxy/')
+            });
+            radarLayer = imageryLayerCollection.addImageryProvider(radar);
+            radarLayer.alpha = 0.5;
+            layerNames[radar.getUrl()] = 'United States weather radar';
             
-            var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-              url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-              proxy : new Cesium.DefaultProxy('/proxy/')
-	          });
-	          var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
-	
-	          var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-	              url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
-	              proxy : new Cesium.DefaultProxy('/proxy/')
-	          });
-	          var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);*/
-	          
+            var singleImage = new Cesium.SingleTileImageryProvider({
+                url : '../../../Images/TestLayer.png',
+                extent : new Cesium.Extent(
+                        Cesium.Math.toRadians(-115.0),
+                        Cesium.Math.toRadians(38.0),
+                        Cesium.Math.toRadians(-108.0),
+                        Cesium.Math.toRadians(45.0))
+            });
+            singleImageLayer = imageryLayerCollection.addImageryProvider(singleImage);
+            layerNames[singleImage.getUrl()] = 'Single image';
+
 	          document.addEventListener('keydown', keydownHandler, false);
             
 	          var handler = new Cesium.EventHandler(widget.canvas);
@@ -200,6 +318,9 @@ require([
 	              mousePosition = movement.endPosition;
 	              // Use movement.startPosition, movement.endPosition
 	          }, Cesium.MouseEventType.MOVE);
+	          
+	          domConstruct.place('<table id="layerTable"></table>', 'toolbar');
+	          updateToolbar(imageryLayerCollection);
 
             widget.startRenderLoop();
         }

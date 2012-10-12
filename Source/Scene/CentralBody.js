@@ -3,27 +3,24 @@ define([
         '../Core/combine',
         '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/RuntimeError',
-        '../Core/Color',
-        '../Core/Math',
-        '../Core/Intersect',
-        '../Core/Occluder',
-        '../Core/Ellipsoid',
-        '../Core/Extent',
-        '../Core/BoundingSphere',
         '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/GeographicProjection',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
         '../Core/ComponentDatatype',
-        '../Core/MeshFilters',
-        '../Core/PrimitiveType',
         '../Core/CubeMapEllipsoidTessellator',
+        '../Core/Ellipsoid',
+        '../Core/Extent',
+        '../Core/GeographicProjection',
+        '../Core/Intersect',
+        '../Core/Math',
+        '../Core/Matrix4',
+        '../Core/MeshFilters',
+        '../Core/Occluder',
+        '../Core/PrimitiveType',
+        '../Core/RuntimeError',
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/Command',
@@ -31,48 +28,44 @@ define([
         '../Renderer/CullFace',
         '../Renderer/DepthFunction',
         '../Renderer/PixelFormat',
-        '../Renderer/RenderbufferFormat',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
+        './EllipsoidTerrainProvider',
         './ImageryLayerCollection',
         './SceneMode',
-        './EllipsoidTerrainProvider',
         './ViewportQuad',
-        '../Shaders/CentralBodyVS',
+        '../Shaders/GroundAtmosphere',
         '../Shaders/CentralBodyFS',
         '../Shaders/CentralBodyFSCommon',
-        '../Shaders/CentralBodyVSDepth',
         '../Shaders/CentralBodyFSDepth',
-        '../Shaders/CentralBodyVSPole',
         '../Shaders/CentralBodyFSPole',
-        '../Shaders/GroundAtmosphere',
+        '../Shaders/CentralBodyVS',
+        '../Shaders/CentralBodyVSDepth',
+        '../Shaders/CentralBodyVSPole',
         '../Shaders/SkyAtmosphereFS',
         '../Shaders/SkyAtmosphereVS'
     ], function(
         combine,
         defaultValue,
         destroyObject,
-        DeveloperError,
-        RuntimeError,
-        Color,
-        CesiumMath,
-        Intersect,
-        Occluder,
-        Ellipsoid,
-        Extent,
-        BoundingSphere,
         BoundingRectangle,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
-        GeographicProjection,
-        Matrix3,
-        Matrix4,
         ComponentDatatype,
-        MeshFilters,
-        PrimitiveType,
         CubeMapEllipsoidTessellator,
+        Ellipsoid,
+        Extent,
+        GeographicProjection,
+        Intersect,
+        CesiumMath,
+        Matrix4,
+        MeshFilters,
+        Occluder,
+        PrimitiveType,
+        RuntimeError,
         Transforms,
         BufferUsage,
         Command,
@@ -80,21 +73,20 @@ define([
         CullFace,
         DepthFunction,
         PixelFormat,
-        RenderbufferFormat,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
+        EllipsoidTerrainProvider,
         ImageryLayerCollection,
         SceneMode,
-        EllipsoidTerrainProvider,
         ViewportQuad,
-        CentralBodyVS,
+        GroundAtmosphere,
         CentralBodyFS,
         CentralBodyFSCommon,
-        CentralBodyVSDepth,
         CentralBodyFSDepth,
-        CentralBodyVSPole,
         CentralBodyFSPole,
-        GroundAtmosphere,
+        CentralBodyVS,
+        CentralBodyVSDepth,
+        CentralBodyVSPole,
         SkyAtmosphereFS,
         SkyAtmosphereVS) {
     "use strict";
@@ -877,8 +869,8 @@ define([
 
         var poleIntensity = 0.0;
         var baseLayer = this._imageryLayerCollection.getLength() > 0 ? this._imageryLayerCollection.get(0) : undefined;
-        if (typeof baseLayer !== 'undefined' && typeof baseLayer.imageryProvider !== 'undefined' && typeof baseLayer.imageryProvider.getPoleIntensity !== 'undefined') {
-            poleIntensity = baseLayer.imageryProvider.getPoleIntensity();
+        if (typeof baseLayer !== 'undefined' && typeof baseLayer.getImageryProvider() !== 'undefined' && typeof baseLayer.getImageryProvider().getPoleIntensity !== 'undefined') {
+            poleIntensity = baseLayer.getImageryProvider().getPoleIntensity();
         }
 
         var drawUniforms = {
@@ -1412,6 +1404,8 @@ define([
         this._cloudsTexture = this._cloudsTexture && this._cloudsTexture.destroy();
         this._bumpTexture = this._bumpTexture && this._bumpTexture.destroy();
 
+        this._surface = this._surface && this._surface.destroy();
+
         return destroyObject(this);
     };
 
@@ -1435,7 +1429,12 @@ define([
         var imageryLayerCollection = centralBody._imageryLayerCollection;
         for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
-            checkLogo(logoData, layer.imageryProvider);
+            checkLogo(logoData, layer.getImageryProvider());
+        }
+
+        if (logoData.logos.length !== logoData.logoIndex) {
+            logoData.rebuildLogo = true;
+            logoData.logos.length = logoData.logoIndex;
         }
 
         if (logoData.rebuildLogo) {
