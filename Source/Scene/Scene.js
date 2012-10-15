@@ -358,7 +358,10 @@ define([
 
                     insertIntoBin(scene, command, distances);
                 } else {
-                    undefBV = true;
+                    // Clear commands don't need a bounding volume - just add the clear to all frustums.
+                    // If another command has no bounding volume, though, we need to use the camera's
+                    // worst-case near and far planes to avoid clipping something important.
+                    undefBV = typeof command.clearState === 'undefined';
                     insertIntoBin(scene, command);
                 }
             }
@@ -397,6 +400,7 @@ define([
         scratchCommand.framebuffer = defaultValue(command.framebuffer, framebuffer);
         scratchCommand.boundingVolume = command.boundingVolume;
         scratchCommand.modelMatrix = command.modelMatrix;
+        scratchCommand.clearState = command.clearState;
 
         return scratchCommand;
     }
