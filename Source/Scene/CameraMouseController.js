@@ -460,11 +460,14 @@ define([
         var zoomimg = zoom && zoom.isMoving();
         var wheelZoom = controller._zoomWheel;
         var wheelZooming = wheelZoom.isMoving();
+        var translate = controller._translateHandler;
+        var translating = translate.isMoving() && translate.getMovement();
+        var rotate = controller._rotateHandler;
+        var rotating = rotate.isMoving() && rotate.getMovement();
+        var spin = controller._spinHandler;
+        var spinning = spin.isMoving() && spin.getMovement();
 
         if (controller.columbusViewMode === CameraColumbusViewMode.LOCKED) {
-            var spin = controller._spinHandler;
-            var spinning = spin.isMoving() && spin.getMovement();
-
             if (controller.enableRotate) {
                 if (spinning) {
                     rotate3D(controller, spin.getMovement());
@@ -491,11 +494,6 @@ define([
                 }
             }
         } else {
-            var translate = controller._translateHandler;
-            var translating = translate.isMoving() && translate.getMovement();
-            var rotate = controller._rotateHandler;
-            var rotating = rotate.isMoving() && rotate.getMovement();
-
             var buttonDown = translate.isButtonDown() || rotate.isButtonDown() ||
                 rotate.isButtonDown() || controller._lookHandler.isButtonDown();
             if (buttonDown) {

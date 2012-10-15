@@ -184,18 +184,6 @@ define([
             camera._positionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
         }
 
-        if (directionChanged || transformChanged) {
-            camera._directionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
-        }
-
-        if (upChanged || transformChanged) {
-            camera._upWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
-        }
-
-        if (rightChanged || transformChanged) {
-            camera._rightWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
-        }
-
         if (directionChanged || upChanged || rightChanged) {
             var det = direction.dot(up.cross(right));
             if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
@@ -212,6 +200,18 @@ define([
                 right = camera._right = direction.cross(up);
                 camera.right = right.clone();
             }
+        }
+
+        if (directionChanged || transformChanged) {
+            camera._directionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+        }
+
+        if (upChanged || transformChanged) {
+            camera._upWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+        }
+
+        if (rightChanged || transformChanged) {
+            camera._rightWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         }
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
