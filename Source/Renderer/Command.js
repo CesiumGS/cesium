@@ -67,6 +67,13 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
         this.renderState = undefined;
 
         /**
+         * The clear state.  If this property is not undefined, this command is a clear only and any
+         * draw-related properties are ignored.
+         * @type Object
+         */
+        this.clearState = undefined;
+
+        /**
          * The framebuffer to draw to.
          * @type Framebuffer
          */

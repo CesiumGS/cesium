@@ -38,6 +38,23 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
+    it('clears to white by drawing a command with a clearState', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        context.draw({
+            clearState : context.createClearState({
+                color : {
+                    red : 1.0,
+                    green : 1.0,
+                    blue : 1.0,
+                    alpha : 1.0
+                }
+            })
+        });
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+    });
+
     it('clears with a color mask', function() {
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

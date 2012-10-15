@@ -2273,9 +2273,13 @@ define([
      * @see Context#createRenderState
      */
     Context.prototype.draw = function(command) {
-        this.beginDraw(command);
-        this.continueDraw(command);
-        this.endDraw();
+        if (typeof command.clearState !== 'undefined') {
+            this.clear(command.clearState);
+        } else {
+            this.beginDraw(command);
+            this.continueDraw(command);
+            this.endDraw();
+        }
     };
 
     /**
