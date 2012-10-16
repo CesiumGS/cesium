@@ -494,8 +494,7 @@ define([
                 }
             }
         } else {
-            var buttonDown = translate.isButtonDown() || rotate.isButtonDown() ||
-                rotate.isButtonDown() || controller._lookHandler.isButtonDown();
+            var buttonDown = translate.isButtonDown() || zoom.isButtonDown() || wheelZooming || rotate.isButtonDown() || controller._lookHandler.isButtonDown();
             if (buttonDown) {
                 controller._animationCollection.removeAll();
             }
@@ -533,7 +532,7 @@ define([
             }
 
             if (controller.enableLook && controller._lookHandler.isMoving()) {
-                    look3D(controller, controller._lookHandler.getMovement());
+                look3D(controller, controller._lookHandler.getMovement());
             }
 
             if (!buttonDown && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
