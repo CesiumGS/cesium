@@ -11,6 +11,8 @@ defineSuite([
          'Core/Extent',
          'Core/Math',
          'Core/Matrix4',
+         'Core/Transforms',
+         'Scene/AnimationCollection',
          'Scene/Camera',
          'Scene/OrthographicFrustum',
          'Scene/PerspectiveFrustum',
@@ -26,6 +28,8 @@ defineSuite([
          Extent,
          CesiumMath,
          Matrix4,
+         Transforms,
+         AnimationCollection,
          Camera,
          OrthographicFrustum,
          PerspectiveFrustum,
@@ -79,7 +83,7 @@ defineSuite([
     });
 
     it('update throws in 2D mode without an orthographic frustum', function() {
-        var frameState = { mode : SceneMode.SCENE2D };
+        var frameState = { mode : SceneMode.SCENE2D, scene2D : {} };
         expect(function() {
             controller.update(frameState);
         }).toThrow();
@@ -146,6 +150,36 @@ defineSuite([
         expect(camera.up).toEqual(up);
         expect(camera.direction).toEqual(dir);
         expect(camera.right).toEqual(right);
+    });
+
+    it('move clamps position in 2D', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        var projection = new EquidistantCylindricalProjection();
+        var frameState = { mode : SceneMode.SCENE2D, scene2D : { projection : projection } };
+        controller.update(frameState);
+
+        var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var factor = 1000.0;
+        var dx = max.x * factor;
+        var dy = max.y * factor;
+
+        controller.moveUp(dy);
+        controller.moveRight(dx);
+        expect(camera.position.x).toBeLessThan(dx);
+        expect(camera.position.y).toBeLessThan(dy);
+
+        controller.moveDown(dy);
+        controller.moveLeft(dx);
+        expect(camera.position.x).toBeGreaterThan(-dx);
+        expect(camera.position.y).toBeGreaterThan(-dy);
     });
 
     it('look throws without an axis', function() {
@@ -394,6 +428,38 @@ defineSuite([
         expect(camera.frustum.bottom).toEqual(-0.5, CesiumMath.EPSILON10);
     });
 
+    it('clamps zoom in 2D', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var frameState = {
+            mode : SceneMode.SCENE2D,
+            scene2D : {
+                projection : projection
+            }
+        };
+        controller.update(frameState);
+
+        var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var factor = 1000.0;
+        var dx = max.x * factor;
+        var ratio = frustum.top / frustum.right;
+
+        controller.zoomOut(dx);
+        expect(frustum.right).toBeLessThan(dx);
+        expect(frustum.left).toBeGreaterThan(-dx);
+        expect(frustum.top).toEqual(frustum.right * ratio);
+        expect(frustum.bottom).toEqual(-frustum.top);
+    });
+
     it('zooms in 3D', function() {
         controller.zoomIn(zoomAmount);
         expect(camera.position.equalsEpsilon(new Cartesian3(0.0, 0.0, 1.0 - zoomAmount), CesiumMath.EPSILON10)).toEqual(true);
@@ -462,6 +528,24 @@ defineSuite([
         }).toThrow();
     });
 
+    it('lookAt throws in 2D mode', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        var frameState = { mode : SceneMode.SCENE2D, scene2D : { projection : new EquidistantCylindricalProjection() } };
+        controller.update(frameState);
+
+        expect(function() {
+            controller.lookAt(Cartesian3.UNIT_X, Cartesian3.ZERO, Cartesian3.UNIT_Y);
+        }).toThrow();
+    });
+
     it('viewExtent throws without extent', function() {
         expect(function () {
             controller.viewExtent();
@@ -476,12 +560,25 @@ defineSuite([
                 CesiumMath.PI_OVER_TWO);
         controller.viewExtent(extent);
         expect(camera.position).toEqualEpsilon(new Cartesian3(-11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON10);
-        expect(camera.up).toEqualEpsilon(new Cartesian3(0.0, 0.0, 1.0), CesiumMath.EPSILON10);
-        expect(camera.right).toEqualEpsilon(new Cartesian3(0.0, -1.0, 0.0), CesiumMath.EPSILON10);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
+        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y.negate(), CesiumMath.EPSILON10);
     });
 
-    it('views extent in 2D', function() {
+    it('views extent in 3D across IDL', function() {
+        var extent = new Extent(
+                0.1,
+                -CesiumMath.PI_OVER_TWO,
+                -0.1,
+                CesiumMath.PI_OVER_TWO);
+        controller.viewExtent(extent);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.UNIT_X.negate(), CesiumMath.EPSILON10);
+        expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
+        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON10);
+    });
+
+    it('views extent in 2D with larger longitude', function() {
         var frustum = new OrthographicFrustum();
         frustum.left = -10.0;
         frustum.right = 10.0;
@@ -496,11 +593,44 @@ defineSuite([
 
         var extent = new Extent(
                 -CesiumMath.PI_OVER_TWO,
-                -CesiumMath.PI_OVER_TWO,
+                -CesiumMath.PI_OVER_FOUR,
                 CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_FOUR);
+        var projection = new EquidistantCylindricalProjection();
+        var edge = projection.project(new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_FOUR));
+        var expected = Math.max(edge.x, edge.y);
+
+        controller._mode = SceneMode.SCENE2D;
+        controller._projection = projection;
+        controller.viewExtent(extent);
+        expect(camera.position.equalsEpsilon(new Cartesian3(0.0, 0.0, maxRadii * 2.0), CesiumMath.EPSILON10)).toEqual(true);
+
+        expect(frustum.right - expected <= CesiumMath.EPSILON14).toEqual(true);
+        expect(frustum.left + expected <= CesiumMath.EPSILON14).toEqual(true);
+        expect(frustum.top - expected <= CesiumMath.EPSILON14).toEqual(true);
+        expect(frustum.bottom + expected <= CesiumMath.EPSILON14).toEqual(true);
+    });
+
+    it('views extent in 2D with larger latitude', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.left = -10.0;
+        frustum.right = 10.0;
+        frustum.bottom = -10.0;
+        frustum.top = 10.0;
+        frustum.near = 1.0;
+        frustum.far = 21.0;
+        camera.frustum = frustum;
+
+        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+        camera.position = new Cartesian3(0.0, 0.0, maxRadii * 2.0);
+
+        var extent = new Extent(
+                -CesiumMath.PI_OVER_FOUR,
+                -CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_FOUR,
                 CesiumMath.PI_OVER_TWO);
         var projection = new EquidistantCylindricalProjection();
-        var edge = projection.project(new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO));
+        var edge = projection.project(new Cartographic(CesiumMath.PI_OVER_FOUR, CesiumMath.PI_OVER_TWO));
         var expected = Math.max(edge.x, edge.y);
 
         controller._mode = SceneMode.SCENE2D;
@@ -783,4 +913,180 @@ defineSuite([
         expect(controller.cameraToWorldCoordinates(Cartesian4.UNIT_Z)).toEqual(Cartesian4.UNIT_X);
     });
 
+    it('does not animate in 3D', function() {
+        expect(controller.createCorrectPositionAnimation()).not.toBeDefined();
+    });
+
+    it('animates position to visible map in 2D', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        var projection = new EquidistantCylindricalProjection();
+        var frameState = { mode : SceneMode.SCENE2D, scene2D : { projection : projection } };
+        controller.update(frameState);
+
+        var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var factor = 1000.0;
+        var dx = max.x * factor;
+        var dy = max.y * factor;
+        var animationCollection = new AnimationCollection();
+
+        controller.moveUp(dy);
+        controller.moveRight(dx);
+
+        var correctAnimation = controller.createCorrectPositionAnimation();
+        expect(correctAnimation).toBeDefined();
+        var animation = animationCollection.add(correctAnimation);
+        while(animationCollection.contains(animation)) {
+            animationCollection.update();
+        }
+
+        expect(camera.position.x).toEqual(max.x);
+        expect(camera.position.y).toEqual(max.y);
+
+        controller.moveDown(dy);
+        controller.moveLeft(dx);
+
+        correctAnimation = controller.createCorrectPositionAnimation();
+        expect(correctAnimation).toBeDefined();
+        animation = animationCollection.add(correctAnimation);
+        while(animationCollection.contains(animation)) {
+            animationCollection.update();
+        }
+
+        expect(camera.position.x).toEqual(-max.x);
+        expect(camera.position.y).toEqual(-max.y);
+    });
+
+    it('animates frustum in 2D', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var frameState = {
+            mode : SceneMode.SCENE2D,
+            scene2D : {
+                projection : projection
+            }
+        };
+        controller.update(frameState);
+
+        var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var factor = 1000.0;
+        var dx = max.x * factor;
+        var animationCollection = new AnimationCollection();
+
+        controller.zoomOut(dx);
+
+        var right = frustum.right;
+        var top = frustum.top;
+
+        var correctAnimation = controller.createCorrectPositionAnimation();
+        expect(correctAnimation).toBeDefined();
+        var animation = animationCollection.add(correctAnimation);
+        while(animationCollection.contains(animation)) {
+            animationCollection.update();
+        }
+
+        expect(frustum.right).toBeLessThan(right);
+        expect(frustum.right).toBeGreaterThan(max.x);
+        expect(frustum.left).toEqual(-frustum.right);
+        expect(frustum.top).toBeLessThan(top);
+        expect(frustum.top).toBeGreaterThan(max.y);
+        expect(frustum.bottom).toEqual(-frustum.top);
+    });
+
+    it('animates position to visible map in Columbus view', function() {
+        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+        var frustum = new PerspectiveFrustum();
+        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+        frustum.near = 100;
+        frustum.far = 60.0 * maxRadii;
+        camera.frustum = frustum;
+        camera.position = Cartesian3.UNIT_Z.multiplyByScalar(maxRadii * 5.0);
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
+
+        var projection = new EquidistantCylindricalProjection();
+        var frameState = { mode : SceneMode.COLUMBUS_VIEW, scene2D : { projection : projection } };
+        controller.update(frameState);
+
+        var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var factor = 1000.0;
+        var dx = max.x * factor;
+        var dy = max.y * factor;
+        var animationCollection = new AnimationCollection();
+
+        controller.moveUp(dy);
+        controller.moveRight(dx);
+
+        var correctAnimation = controller.createCorrectPositionAnimation();
+        expect(correctAnimation).toBeDefined();
+        var animation = animationCollection.add(correctAnimation);
+        while(animationCollection.contains(animation)) {
+            animationCollection.update();
+        }
+
+        expect(camera.position.x).toEqualEpsilon(max.x, CesiumMath.EPSILON6);
+        expect(camera.position.y).toBeGreaterThan(max.y);
+        expect(camera.position.y).toBeLessThan(max.x);
+
+        controller.moveDown(dy);
+        controller.moveLeft(dx);
+
+        correctAnimation = controller.createCorrectPositionAnimation();
+        expect(correctAnimation).toBeDefined();
+        animation = animationCollection.add(correctAnimation);
+        while(animationCollection.contains(animation)) {
+            animationCollection.update();
+        }
+
+        expect(camera.position.x).toEqualEpsilon(-max.x, CesiumMath.EPSILON6);
+        expect(camera.position.y).toBeLessThan(-max.y);
+        expect(camera.position.y).toBeGreaterThan(-max.x);
+    });
+
+    it('will not rotate through the earth when rotating about a point on the surface', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var maxRadii = ellipsoid.getMaximumRadius();
+        controller._projection = new EquidistantCylindricalProjection(ellipsoid);
+
+        var frustum = new PerspectiveFrustum();
+        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+        frustum.near = 100;
+        frustum.far = 60.0 * maxRadii;
+        camera.frustum = frustum;
+        camera.position = Cartesian3.UNIT_X.multiplyByScalar(maxRadii + 1000.0);
+        camera.direction = camera.position.negate().normalize();
+        camera.up = Cartesian3.UNIT_Z.clone();
+        camera.right = camera.direction.cross(camera.up);
+
+        var center = ellipsoid.cartesianToCartographic(camera.position);
+        center.height = 0.0;
+        center = ellipsoid.cartographicToCartesian(center);
+        var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid);
+
+        controller.rotateDown(Math.PI, transform);
+
+        expect(camera.transform).toEqual(Matrix4.IDENTITY);
+        expect(ellipsoid.cartesianToCartographic(camera.position).height).toBeGreaterThan(0.0);
+        expect(camera.direction).toEqual(center.subtract(camera.position).normalize());
+    });
 });

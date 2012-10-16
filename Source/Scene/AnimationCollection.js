@@ -222,7 +222,7 @@ define([
      */
     AnimationCollection.prototype.contains = function(animation) {
         if (typeof animation !== 'undefined') {
-            return Tween.getAll().indexOf(animation) !== -1;
+            return Tween.getAll().indexOf(animation._tween) !== -1;
         }
         return false;
     };

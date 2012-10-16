@@ -600,7 +600,7 @@ define([
         var newLeft = frustum.left + amount;
 
         var maxRight = controller._maxCoord.x * controller._maxZoomFactor;
-        if (frustum.right > maxRight) {
+        if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -maxRight;
         }
