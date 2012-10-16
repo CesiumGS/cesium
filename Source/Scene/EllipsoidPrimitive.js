@@ -16,8 +16,8 @@ define([
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/Command',
         '../Renderer/CommandLists',
+        '../Renderer/DrawCommand',
         './Material',
         './SceneMode',
         '../Shaders/Noise',
@@ -40,8 +40,8 @@ define([
         CullFace,
         BlendingState,
         BufferUsage,
-        Command,
         CommandLists,
+        DrawCommand,
         Material,
         SceneMode,
         Noise,
@@ -189,8 +189,8 @@ define([
         this._pickMaterial = undefined;
         this._pickId = undefined;
 
-        this._colorCommand = new Command();
-        this._pickCommand = new Command();
+        this._colorCommand = new DrawCommand();
+        this._pickCommand = new DrawCommand();
         this._commandLists = new CommandLists();
 
         var that = this;
