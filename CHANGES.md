@@ -7,9 +7,10 @@ Beta Releases
 ### b10 - xx/xx/2012
 
 * Breaking changes:
-   * Renamed BingMapsTileProvider to BingMapsImageryProvider.
-   * Renamed SingleTileProvider to SingleTileImageryProvider.
-   * CentralBody.dayTileProvider has been removed.  Instead, add one or more imagery providers to the collection returned by CentralBody.getImageryLayers().
+   * Renamed `Texture2DPool` to `TexturePool`.
+   * Renamed `BingMapsTileProvider` to `BingMapsImageryProvider`.
+   * Renamed `SingleTileProvider` to `SingleTileImageryProvider`.
+   * `CentralBody.dayTileProvider` has been removed.  Instead, add one or more imagery providers to the collection returned by `CentralBody.getImageryLayers()`.
 * Improved middle mouse click behavior to always tilt in the same direction.
 * CentralBody now allows imagery from multiple sources to be layered and alpha blended on the globe.
 * Added WebMapServiceImageryProvider.
@@ -24,7 +25,6 @@ Beta Releases
    * Passing `undefined` to any of the set functions on `Billboard` now throws an exception.
    * Passing `undefined` to any of the set functions on `Polyline` now throws an exception.
    * `PolygonPipeline.scaleToGeodeticHeight` now takes ellipsoid as the last parameter, instead of the first.  It also now defaults to `Ellipsoid.WGS84` if no parameter is provided.
-   * `Texture2DPool` is renamed to `TexturePool`.
 * The new Sandcastle live editor and demo gallery replace the Sandbox and Skeleton examples.
 * Improved picking performance and accuracy.
 * Added EllipsoidPrimitive for visualizing ellipsoids and spheres.  Currently, this is only supported in 3D, not 2D or Columbus view.

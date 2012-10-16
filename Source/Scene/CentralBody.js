@@ -134,6 +134,8 @@ define([
         this._skyCommand.primitiveType = PrimitiveType.TRIANGLES;
         // this._skyCommand.shaderProgram references sky-from-space or sky-from-atmosphere
 
+        this._clearDepthCommand = new Command();
+
         this._depthCommand = new Command();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
@@ -990,6 +992,11 @@ define([
                         alpha : false
                     }
                 });
+                this._clearDepthCommand.clearState = context.createClearState({ // Clear depth only
+                    depth : 1.0,
+                    stencil : 0.0
+                });
+
             } else {
                 this._rsColor = context.createRenderState();
                 this._rsColorWithoutDepthTest = context.createRenderState();
@@ -1322,6 +1329,9 @@ define([
 
             // render depth plane
             if (mode === SceneMode.SCENE3D) {
+                // TODO: clearing depth here will not be acceptable for actual terrain.
+                colorCommandList.push(this._clearDepthCommand);
+
                 colorCommandList.push(this._depthCommand);
             }
 

@@ -66,22 +66,6 @@ define([
     };
 
     /**
-     * Transforms a Cartesian X, Y, Z position to the ellipsoid-scaled space by multiplying
-     * its components by the result of {@link Ellipsoid#getOneOverRadii}.
-     *
-     * @memberof EllipsoidalOccluder
-     *
-     * @param {Cartesian3} position The position to transform.
-     * @param {Cartesian3} [result] The position to which to copy the result, or undefined to create and
-     *        return a new instance.
-     * @returns {Cartesian3} The position expressed in the scaled space.  The returned instance is the
-     *          one passed as the result parameter if it is not undefined, or a new instance of it is.
-     */
-    EllipsoidalOccluder.prototype.transformPositionToScaledSpace = function(position, result) {
-        return position.multiplyComponents(this._ellipsoid.getOneOverRadii(), result);
-    };
-
-    /**
      * Sets the position of the camera.
      *
      * @memberof EllipsoidalOccluder
@@ -90,9 +74,8 @@ define([
      */
     EllipsoidalOccluder.prototype.setCameraPosition = function(cameraPosition) {
         var ellipsoid = this._ellipsoid;
-
-        var cameraPositionInScaledSpace = cameraPosition.multiplyComponents(ellipsoid.getOneOverRadii(), this._cameraPositionInScaledSpace);
-        var magnitudeCameraPositionInScaledSpace = cameraPositionInScaledSpace.magnitude();
+        var cameraPositionInScaledSpace = ellipsoid.transformPositionToScaledSpace(cameraPosition, this._cameraPositionInScaledSpace);
+        var magnitudeCameraPositionInScaledSpace = Cartesian3.magnitude(cameraPositionInScaledSpace);
         var distanceToLimbInScaledSpaceSquared = magnitudeCameraPositionInScaledSpace * magnitudeCameraPositionInScaledSpace - 1.0;
 
         this._cameraPositionInScaledSpace = cameraPositionInScaledSpace;
@@ -118,14 +101,15 @@ define([
      * occluder.isPointVisible(point); //returns true
      */
     EllipsoidalOccluder.prototype.isPointVisible = function(occludee) {
-        var occludeeScaledSpacePosition = occludee.multiplyComponents(this._ellipsoid.getOneOverRadii(), scratchCartesian);
+        var ellipsoid = this._ellipsoid;
+        var occludeeScaledSpacePosition = ellipsoid.transformPositionToScaledSpace(occludee, scratchCartesian);
         return this.isScaledSpacePointVisible(occludeeScaledSpacePosition);
     };
 
     /**
      * Determines whether or not a point expressed in the ellipsoid scaled space, is hidden from view by the
      * occluder.  To transform a Cartesian X, Y, Z position in the coordinate system aligned with the ellipsoid
-     * into the scaled space, call {@link EllipsoidalOccluder#transformPositionToScaledSpace}.
+     * into the scaled space, call {@link Ellipsoid#transformPositionToScaledSpace}.
      *
      * @memberof EllipsoidalOccluder
      *
@@ -138,14 +122,14 @@ define([
      * var ellipsoid = new Ellipsoid(1.0, 1.1, 0.9);
      * var occluder = new EllipsoidalOccluder(ellipsoid, cameraPosition);
      * var point = new Cartesian3(0, -3, -3);
-     * var scaledSpacePoint = occluder.transformPositionToScaledSpace(point);
+     * var scaledSpacePoint = ellipsoid.transformPositionToScaledSpace(point);
      * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
         // Based on Cozzi and Stoner's paper, "GPU Ray Casting of Virtual Globes Supplement"
         var q = this._cameraPositionInScaledSpace;
         var wMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
-        var b = occludeeScaledSpacePosition.subtract(q, scratchCartesian);
+        var b = Cartesian3.subtract(occludeeScaledSpacePosition, q, scratchCartesian);
         var d = -b.dot(q);
         return d < wMagnitudeSquared || d * d / b.magnitudeSquared() < wMagnitudeSquared;
     };
