@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/Command'
+         'Renderer/DrawCommand'
      ], function(
-         Command) {
+         DrawCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructs', function() {
-        var c = new Command();
+        var c = new DrawCommand();
         expect(c.boundingVolume).toBeUndefined();
         expect(c.modelMatrix).toBeUndefined();
         expect(c.offset).toBeUndefined();

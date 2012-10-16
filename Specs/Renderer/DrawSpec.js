@@ -8,6 +8,7 @@ defineSuite([
          'Renderer/BufferUsage',
          'Renderer/BlendEquation',
          'Renderer/BlendFunction',
+         'Renderer/ClearCommand',
          'Renderer/CullFace',
          'Renderer/DepthFunction',
          'Renderer/StencilFunction',
@@ -21,6 +22,7 @@ defineSuite([
          BufferUsage,
          BlendEquation,
          BlendFunction,
+         ClearCommand,
          CullFace,
          DepthFunction,
          StencilFunction,
@@ -523,7 +525,7 @@ defineSuite([
         };
 
         // 1 of 2.  Triangle fan passes the depth test.
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 0.0,
                 green : 0.0,
@@ -531,14 +533,14 @@ defineSuite([
                 alpha : 0.0
             },
             depth : 1.0
-        }));
+        })));
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw(da);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         // 2 of 2.  Triangle fan fails the depth test.
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 0.0,
                 green : 0.0,
@@ -546,7 +548,7 @@ defineSuite([
                 alpha : 0.0
             },
             depth : 0.0
-        }));
+        })));
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         context.draw(da);

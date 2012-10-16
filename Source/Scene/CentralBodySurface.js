@@ -17,7 +17,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/Queue',
         '../Core/WebMercatorProjection',
-        '../Renderer/Command',
+        '../Renderer/DrawCommand',
         './ImageryState',
         './SceneMode',
         './TerrainProvider',
@@ -42,7 +42,7 @@ define([
         PrimitiveType,
         Queue,
         WebMercatorProjection,
-        Command,
+        DrawCommand,
         ImageryState,
         SceneMode,
         TerrainProvider,
@@ -737,7 +737,7 @@ define([
             uniformMap2.dayTextureTexCoordsExtent[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
             uniformMap2.dayTextureAlpha[0] = 1.0;
 
-            var boundingSphereCommand = new Command();
+            var boundingSphereCommand = new DrawCommand();
             boundingSphereCommand.shaderProgram = shaderSet.getShaderProgram(context, 1);
             boundingSphereCommand.renderState = renderState;
             boundingSphereCommand.primitiveType = PrimitiveType.LINES;
@@ -952,7 +952,7 @@ define([
                     ++tileCommandIndex;
                     var command = tileCommands[tileCommandIndex];
                     if (typeof command === 'undefined') {
-                        command = new Command();
+                        command = new DrawCommand();
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap();
                     }

@@ -23,10 +23,11 @@ define([
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Renderer/BufferUsage',
-        '../Renderer/Command',
+        '../Renderer/ClearCommand',
         '../Renderer/CommandLists',
         '../Renderer/CullFace',
         '../Renderer/DepthFunction',
+        '../Renderer/DrawCommand',
         '../Renderer/PixelFormat',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
@@ -68,10 +69,11 @@ define([
         RuntimeError,
         Transforms,
         BufferUsage,
-        Command,
+        ClearCommand,
         CommandLists,
         CullFace,
         DepthFunction,
+        DrawCommand,
         PixelFormat,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
@@ -130,19 +132,19 @@ define([
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
 
-        this._skyCommand = new Command();
+        this._skyCommand = new DrawCommand();
         this._skyCommand.primitiveType = PrimitiveType.TRIANGLES;
         // this._skyCommand.shaderProgram references sky-from-space or sky-from-atmosphere
 
-        this._clearDepthCommand = new Command();
+        this._clearDepthCommand = new ClearCommand();
 
-        this._depthCommand = new Command();
+        this._depthCommand = new DrawCommand();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
 
-        this._northPoleCommand = new Command();
+        this._northPoleCommand = new DrawCommand();
         this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._southPoleCommand = new Command();
+        this._southPoleCommand = new DrawCommand();
         this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
 
         // this._northPoleCommand.shaderProgram and this.southPoleCommand.shaderProgram reference
@@ -996,7 +998,6 @@ define([
                     depth : 1.0,
                     stencil : 0.0
                 });
-
             } else {
                 this._rsColor = context.createRenderState();
                 this._rsColorWithoutDepthTest = context.createRenderState();
