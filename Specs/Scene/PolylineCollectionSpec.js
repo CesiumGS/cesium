@@ -772,6 +772,12 @@ defineSuite([
             positions : positions,
             color:{red:1, green:0, blue:0, alpha:1}
         });
+
+        polylines.add({
+            positions:positions,
+            color:{red:1, green:0, blue:0, alpha:1},
+            width:2
+        });
         positions = [];
 
         positions.push({x:0, y:-1, z:0});
@@ -1322,7 +1328,79 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
-    it('renders two polylines with different widths and updates one', function() {
+    it('renders four polylines with different widths and outline widths', function() {
+        var positions = [];
+        for(var i = 0; i < 200; ++i){
+            positions.push({
+                x : -1.0,
+                y : 1.0,
+                z : 0.0
+            },{
+                x : -1.0,
+                y : -1.0,
+                z : 0.0
+            });
+        }
+        polylines.add({
+            positions : positions,
+            color:{
+                red : 1.0,
+                green : 0.0,
+                blue : 0.0,
+                alpha : 1.0
+            },
+            width : 3,
+            outlineWidth:8
+        });
+        polylines.add({
+            positions : positions,
+            color:{
+                red : 1.0,
+                green : 0.0,
+                blue : 0.0,
+                alpha : 1.0
+            },
+            width : 1
+        });
+        polylines.add({
+            positions : positions,
+            color:{
+                red : 1.0,
+                green : 0.0,
+                blue : 0.0,
+                alpha : 1.0
+            },
+            width : 2,
+            outlineWidth:4
+        });
+        polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            },
+            {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            color:{
+                red : 0.0,
+                green : 0.0,
+                blue : 1.0,
+                alpha : 1.0
+            },
+            width : 7,
+            outlineWidth:2
+        });
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, polylines);
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+    });
+
+    it('renders three polylines with different widths and updates one', function() {
         var positions = [];
         for(var i = 0; i < 200; ++i){
             positions.push({
@@ -1344,6 +1422,16 @@ defineSuite([
                 alpha : 1.0
             },
             width : 3
+        });
+        polylines.add({
+            positions : positions,
+            color:{
+                red : 1.0,
+                green : 0.0,
+                blue : 0.0,
+                alpha : 1.0
+            },
+            width : 4
         });
         var p2 = polylines.add({
             positions : [{
