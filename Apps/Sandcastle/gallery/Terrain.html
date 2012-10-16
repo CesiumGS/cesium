@@ -166,7 +166,9 @@ require([
             var terrainProvider = new Cesium.TileMapServiceTerrainProvider({
                 url : 'http://cesium.agi.com/terrain'
             });
-            
+
+            cb._surface._terrainProvider = terrainProvider;
+
             /*var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
                 url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
                 token : 'qV84HyuF8fxKlS3QNus8G9J4GxlA6R64C6WSMXcaZqnvvuAbWJARjvH9xt-axZ2cm7O8r11lCO6SxVYteypIKA..',
