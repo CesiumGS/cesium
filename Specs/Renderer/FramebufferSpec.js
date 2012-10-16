@@ -7,6 +7,7 @@ defineSuite([
          'Renderer/PixelFormat',
          'Renderer/PixelDatatype',
          'Renderer/BufferUsage',
+         'Renderer/ClearCommand',
          'Renderer/DepthFunction',
          'Renderer/RenderbufferFormat',
          'Renderer/StencilFunction',
@@ -19,6 +20,7 @@ defineSuite([
          PixelFormat,
          PixelDatatype,
          BufferUsage,
+         ClearCommand,
          DepthFunction,
          RenderbufferFormat,
          StencilFunction,
@@ -154,7 +156,7 @@ defineSuite([
             colorTexture : colorTexture
         });
 
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             framebuffer : framebuffer,
             color : {
                 red : 0.0,
@@ -162,7 +164,7 @@ defineSuite([
                 blue : 0.0,
                 alpha : 1.0
             }
-        }));
+        })));
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -205,7 +207,7 @@ defineSuite([
             colorTexture : cubeMap.getPositiveX()
         });
 
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             framebuffer : framebuffer,
             color : {
                 red : 0.0,
@@ -213,7 +215,7 @@ defineSuite([
                 blue : 0.0,
                 alpha : 1.0
             }
-        }));
+        })));
 
         framebuffer.setColorTexture(undefined);
 
