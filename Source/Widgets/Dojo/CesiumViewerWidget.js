@@ -884,7 +884,7 @@ define([
                 var direction = Cartesian3.ZERO.subtract(position).normalize();
                 var right = direction.cross(Cartesian3.UNIT_Z);
                 var up = right.cross(direction);
-                right = camera.direction.cross(camera.up);
+                right = direction.cross(up);
                 direction = up.cross(right);
 
                 var frustum = new PerspectiveFrustum();
@@ -894,6 +894,7 @@ define([
                 camera.position = position;
                 camera.direction = direction;
                 camera.up = up;
+                camera.right = right;
                 camera.frustum = frustum;
                 camera.transform = transform;
             }
