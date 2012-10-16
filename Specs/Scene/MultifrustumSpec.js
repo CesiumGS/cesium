@@ -11,8 +11,8 @@ defineSuite([
          'Core/MeshFilters',
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
-         'Renderer/Command',
          'Renderer/CommandLists',
+         'Renderer/DrawCommand',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
          'Scene/BillboardCollection'
@@ -28,8 +28,8 @@ defineSuite([
          MeshFilters,
          PrimitiveType,
          BufferUsage,
-         Command,
          CommandLists,
+         DrawCommand,
          TextureMinificationFilter,
          TextureMagnificationFilter,
          BillboardCollection) {
@@ -210,7 +210,7 @@ defineSuite([
                 this._rs = context.createRenderState();
             }
 
-            var command = new Command();
+            var command = new DrawCommand();
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.renderState = this._rs;
             command.shaderProgram = this._sp;

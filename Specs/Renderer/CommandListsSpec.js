@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
          'Renderer/CommandLists',
-         'Renderer/Command'
+         'Renderer/DrawCommand'
      ], function(
          CommandLists,
-         Command) {
+         DrawCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -12,7 +12,7 @@ defineSuite([
         var list = new CommandLists();
         expect(list.empty()).toEqual(true);
 
-        list.colorList.push(new Command());
+        list.colorList.push(new DrawCommand());
         expect(list.empty()).toEqual(false);
     });
 
@@ -20,7 +20,7 @@ defineSuite([
         var list = new CommandLists();
         expect(list.empty()).toEqual(true);
 
-        list.colorList.push(new Command());
+        list.colorList.push(new DrawCommand());
         expect(list.empty()).toEqual(false);
 
         list.removeAll();

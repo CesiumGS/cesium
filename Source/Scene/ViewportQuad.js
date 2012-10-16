@@ -8,8 +8,8 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
-        '../Renderer/Command',
         '../Renderer/CommandLists',
+        '../Renderer/DrawCommand',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
@@ -21,8 +21,8 @@ define([
         BufferUsage,
         BlendEquation,
         BlendFunction,
-        Command,
         CommandLists,
+        DrawCommand,
         ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
@@ -45,7 +45,7 @@ define([
         this.enableBlending = false;
 
         this._va = undefined;
-        this._overlayCommand = new Command();
+        this._overlayCommand = new DrawCommand();
         this._overlayCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
         this._commandLists = new CommandLists();
         this._commandLists.overlayList.push(this._overlayCommand);
