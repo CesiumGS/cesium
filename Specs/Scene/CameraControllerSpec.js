@@ -942,6 +942,7 @@ defineSuite([
 
         var correctAnimation = controller.createCorrectPositionAnimation();
         expect(correctAnimation).toBeDefined();
+        correctAnimation.duration = 0.01;  // make the test run quicker
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
             animationCollection.update();
@@ -955,6 +956,7 @@ defineSuite([
 
         correctAnimation = controller.createCorrectPositionAnimation();
         expect(correctAnimation).toBeDefined();
+        correctAnimation.duration = 0.01;  // make the test run quicker
         animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
             animationCollection.update();
@@ -996,6 +998,7 @@ defineSuite([
 
         var correctAnimation = controller.createCorrectPositionAnimation();
         expect(correctAnimation).toBeDefined();
+        correctAnimation.duration = 0.01;  // make the test run quicker
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
             animationCollection.update();
@@ -1038,6 +1041,7 @@ defineSuite([
 
         var correctAnimation = controller.createCorrectPositionAnimation();
         expect(correctAnimation).toBeDefined();
+        correctAnimation.duration = 0.01;  // make the test run quicker
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
             animationCollection.update();
@@ -1052,6 +1056,7 @@ defineSuite([
 
         correctAnimation = controller.createCorrectPositionAnimation();
         expect(correctAnimation).toBeDefined();
+        correctAnimation.duration = 0.01;  // make the test run quicker
         animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
             animationCollection.update();
