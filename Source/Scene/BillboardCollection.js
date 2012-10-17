@@ -14,8 +14,8 @@ define([
         '../Core/BoundingSphere',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/Command',
         '../Renderer/CommandLists',
+        '../Renderer/DrawCommand',
         '../Renderer/VertexArrayFacade',
         './SceneMode',
         './Billboard',
@@ -37,8 +37,8 @@ define([
         BoundingSphere,
         BlendingState,
         BufferUsage,
-        Command,
         CommandLists,
+        DrawCommand,
         VertexArrayFacade,
         SceneMode,
         Billboard,
@@ -1039,7 +1039,7 @@ define([
             for (j = 0; j < vaLength; ++j) {
                 command = commands[j];
                 if (typeof command === 'undefined') {
-                    command = commands[j] = new Command();
+                    command = commands[j] = new DrawCommand();
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -1071,7 +1071,7 @@ define([
             for (j = 0; j < vaLength; ++j) {
                 command = commands[j];
                 if (typeof command === 'undefined') {
-                    command = commands[j] = new Command();
+                    command = commands[j] = new DrawCommand();
                 }
 
                 command.boundingVolume = boundingVolume;

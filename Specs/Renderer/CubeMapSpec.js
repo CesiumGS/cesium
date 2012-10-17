@@ -6,6 +6,7 @@ defineSuite([
          'Core/PrimitiveType',
          'Core/Color',
          'Renderer/BufferUsage',
+         'Renderer/ClearCommand',
          'Renderer/PixelDatatype',
          'Renderer/PixelFormat',
          'Renderer/TextureWrap',
@@ -18,6 +19,7 @@ defineSuite([
          PrimitiveType,
          Color,
          BufferUsage,
+         ClearCommand,
          PixelDatatype,
          PixelFormat,
          TextureWrap,
@@ -655,9 +657,9 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // Clear framebuffer to red and copy to +X face
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : new Color (1.0, 0.0, 0.0, 1.0)
-        }));
+        })));
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
         cubeMap.getPositiveX().copyFromFramebuffer();
 
