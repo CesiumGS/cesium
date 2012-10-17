@@ -49,6 +49,7 @@ define([
         this.visualizers = [];
         this._scene = scene;
         this._updaters = [];
+        this._documentAdded = [];
     };
 
     var Updater = function(cdoc, updater){
@@ -179,6 +180,7 @@ define([
                     var collections = compositeDynamicObjectCollection.getCollections();
                     collections.splice(collections.length, 0, doc);
                     compositeDynamicObjectCollection.setCollections(collections);
+                    this._documentAddedCallback(compositeDynamicObjectCollection);
                 }
                 else{
                     var cDoc = new CompositeDynamicObjectCollection([doc]);
@@ -186,9 +188,20 @@ define([
                     cDoc.parent = compositeDynamicObjectCollection;
                     this.compositeCollections.push(cDoc);
                     this.visualizers.push(VisualizerCollection.createCzmlStandardCollection(this._scene, cDoc));
+                    this._documentAddedCallback(cDoc);
                 }
             }
         }
+    };
+
+    CzmlProcessor.prototype._documentAddedCallback = function(compositeDynamicObjectCollection) {
+        for ( var i = 0; i < this._documentAdded.length; ++i) {
+            this._documentAdded[i](compositeDynamicObjectCollection);
+        }
+    };
+
+    CzmlProcessor.prototype.addDocumentAddedListener = function(callback) {
+        this._documentAdded.push(callback);
     };
 
     /**
