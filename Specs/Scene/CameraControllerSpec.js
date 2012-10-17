@@ -885,36 +885,14 @@ defineSuite([
         expect(controller.getMagnitude()).toEqual(camera.position.magnitude());
     });
 
-    it('worldToCameraCoordinates throws without cartesian', function() {
+    it('create animation throws without a duration', function() {
         expect(function() {
-            controller.worldToCameraCoordinates();
+            controller.createCorrectPositionAnimation();
         }).toThrow();
-    });
-
-    it('transforms to the cameras reference frame', function() {
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                       1.0, 0.0, 0.0, 0.0,
-                                       0.0, 1.0, 0.0, 0.0,
-                                       0.0, 0.0, 0.0, 1.0);
-        expect(controller.worldToCameraCoordinates(Cartesian4.UNIT_X)).toEqual(Cartesian4.UNIT_Z);
-    });
-
-    it('cameraToWorldCoordinates throws without cartesian', function() {
-        expect(function() {
-            controller.cameraToWorldCoordinates();
-        }).toThrow();
-    });
-
-    it('transforms from the cameras reference frame', function() {
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                       1.0, 0.0, 0.0, 0.0,
-                                       0.0, 1.0, 0.0, 0.0,
-                                       0.0, 0.0, 0.0, 1.0);
-        expect(controller.cameraToWorldCoordinates(Cartesian4.UNIT_Z)).toEqual(Cartesian4.UNIT_X);
     });
 
     it('does not animate in 3D', function() {
-        expect(controller.createCorrectPositionAnimation()).not.toBeDefined();
+        expect(controller.createCorrectPositionAnimation(50.0)).not.toBeDefined();
     });
 
     it('animates position to visible map in 2D', function() {
@@ -940,7 +918,7 @@ defineSuite([
         controller.moveUp(dy);
         controller.moveRight(dx);
 
-        var correctAnimation = controller.createCorrectPositionAnimation();
+        var correctAnimation = controller.createCorrectPositionAnimation(50.0);
         expect(correctAnimation).toBeDefined();
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
@@ -953,7 +931,7 @@ defineSuite([
         controller.moveDown(dy);
         controller.moveLeft(dx);
 
-        correctAnimation = controller.createCorrectPositionAnimation();
+        correctAnimation = controller.createCorrectPositionAnimation(50.0);
         expect(correctAnimation).toBeDefined();
         animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
@@ -994,7 +972,7 @@ defineSuite([
         var right = frustum.right;
         var top = frustum.top;
 
-        var correctAnimation = controller.createCorrectPositionAnimation();
+        var correctAnimation = controller.createCorrectPositionAnimation(50.0);
         expect(correctAnimation).toBeDefined();
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
@@ -1036,7 +1014,7 @@ defineSuite([
         controller.moveUp(dy);
         controller.moveRight(dx);
 
-        var correctAnimation = controller.createCorrectPositionAnimation();
+        var correctAnimation = controller.createCorrectPositionAnimation(50.0);
         expect(correctAnimation).toBeDefined();
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
@@ -1050,7 +1028,7 @@ defineSuite([
         controller.moveDown(dy);
         controller.moveLeft(dx);
 
-        correctAnimation = controller.createCorrectPositionAnimation();
+        correctAnimation = controller.createCorrectPositionAnimation(50.0);
         expect(correctAnimation).toBeDefined();
         animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {

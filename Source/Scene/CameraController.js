@@ -1109,45 +1109,7 @@ define([
         return getPickRayOrthographic(camera, windowPosition, result);
     };
 
-    /**
-     * Transform a vector or point from world coordinates to the camera's reference frame.
-     * @memberof CameraController
-     *
-     * @param {Cartesian4} cartesian The vector or point to transform.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     *
-     * @returns {Cartesian4} The transformed vector or point.
-     */
-    CameraController.prototype.worldToCameraCoordinates = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
-            throw new DeveloperError('cartesian is required.');
-        }
-        var transform = this._camera.getInverseTransform();
-        return Matrix4.multiplyByVector(transform, cartesian, result);
-    };
-
-    /**
-     * Transform a vector or point from the camera's reference frame to world coordinates .
-     * @memberof CameraController
-     *
-     * @param {Cartesian4} vector The vector or point to transform.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     *
-     * @returns {Cartesian4} The transformed vector or point.
-     */
-    CameraController.prototype.cameraToWorldCoordinates = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
-            throw new DeveloperError('cartesian is required.');
-        }
-        var transform = this._camera.transform;
-        return Matrix4.multiplyByVector(transform, cartesian, result);
-    };
-
-    function createAnimation2D(controller) {
+    function createAnimation2D(controller, duration) {
         var camera = controller._camera;
 
         var position = camera.position;
@@ -1198,6 +1160,7 @@ define([
                 stopValue : {
                     time : 1.0
                 },
+                duration : duration,
                 onUpdate : update2D
             };
         }
@@ -1205,7 +1168,7 @@ define([
         return undefined;
     }
 
-    function createAnimationTemplateCV(controller, position, center, maxX, maxY) {
+    function createAnimationTemplateCV(controller, position, center, maxX, maxY, duration) {
         var newPosition = position.clone();
 
         if (center.y > maxX) {
@@ -1235,11 +1198,12 @@ define([
             stopValue : {
                 time : 1.0
             },
+            duration : duration,
             onUpdate : updateCV
         };
     }
 
-    function createAnimationCV(controller) {
+    function createAnimationCV(controller, duration) {
         var camera = controller._camera;
         var ellipsoid = controller._projection.getEllipsoid();
         var position = camera.position;
@@ -1270,7 +1234,7 @@ define([
             var translateX = centerWC.y < -maxX || centerWC.y > maxX;
             var translateY = centerWC.z < -maxY || centerWC.z > maxY;
             if (translateX || translateY) {
-                return createAnimationTemplateCV(controller, Cartesian3.fromCartesian4(positionWC), Cartesian3.fromCartesian4(centerWC), maxX, maxY);
+                return createAnimationTemplateCV(controller, Cartesian3.fromCartesian4(positionWC), Cartesian3.fromCartesian4(centerWC), maxX, maxY, duration);
             }
         }
 
@@ -1280,13 +1244,19 @@ define([
     /**
      * Create an animation to move the map into view. This method is only valid for 2D and Columbus modes.
      * @memberof CameraController
+     * @param {Number} duration The duration, in milliseconds, of the animation.
+     * @exception {DeveloperException} duration is required.
      * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      */
-    CameraController.prototype.createCorrectPositionAnimation = function() {
+    CameraController.prototype.createCorrectPositionAnimation = function(duration) {
+        if (typeof duration === 'undefined') {
+            throw new DeveloperError('duration is required.');
+        }
+
         if (this._mode === SceneMode.SCENE2D) {
-            return createAnimation2D(this);
+            return createAnimation2D(this, duration);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            return createAnimationCV(this);
+            return createAnimationCV(this, duration);
         }
 
         return undefined;

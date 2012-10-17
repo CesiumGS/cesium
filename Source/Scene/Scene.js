@@ -17,7 +17,7 @@ define([
         '../Core/Interval',
         '../Core/Matrix4',
         '../Renderer/Context',
-        '../Renderer/Command',
+        '../Renderer/ClearCommand',
         './Camera',
         './CameraMouseController',
         './CompositePrimitive',
@@ -46,7 +46,7 @@ define([
         Interval,
         Matrix4,
         Context,
-        Command,
+        ClearCommand,
         Camera,
         CameraMouseController,
         CompositePrimitive,
@@ -83,6 +83,16 @@ define([
 
         this._commandList = [];
         this._frustumCommandsList = [];
+
+        this._clearColorCommand = new ClearCommand();
+        this._clearColorCommand.clearState = context.createClearState({
+            color : Color.BLACK
+        });
+        this._clearDepthStencilCommand = new ClearCommand();
+        this._clearDepthStencilCommand.clearState = context.createClearState({
+            depth : 1.0,
+            stencil : 0.0
+        });
 
         /**
          * The current mode of the scene.
@@ -373,7 +383,10 @@ define([
 
                     insertIntoBin(scene, command, distances);
                 } else {
-                    undefBV = true;
+                    // Clear commands don't need a bounding volume - just add the clear to all frustums.
+                    // If another command has no bounding volume, though, we need to use the camera's
+                    // worst-case near and far planes to avoid clipping something important.
+                    undefBV = !(command instanceof ClearCommand);
                     insertIntoBin(scene, command);
                 }
             }
@@ -391,29 +404,11 @@ define([
         // last frame, else compute the new frustums and sort them by frustum again.
         var farToNearRatio = scene.farToNearRatio;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-        if (near !== Number.MAX_VALUE && (numFrustums !== frustumsLength ||
-                near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)) {
+        if (near !== Number.MAX_VALUE && (numFrustums !== frustumsLength || (frustumCommandsList.length !== 0 &&
+                (near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
             createPotentiallyVisibleSet(scene, listName);
         }
-    }
-
-    var scratchCommand = new Command();
-
-    function getFinalCommand(command, framebuffer) {
-        // Shadow copy to potentially replace framebuffer
-        scratchCommand.primitiveType = command.primitiveType;
-        scratchCommand.vertexArray = command.vertexArray;
-        scratchCommand.count = command.count;
-        scratchCommand.offset = command.offset;
-        scratchCommand.shaderProgram = command.shaderProgram;
-        scratchCommand.uniformMap = command.uniformMap;
-        scratchCommand.renderState = command.renderState;
-        scratchCommand.framebuffer = defaultValue(command.framebuffer, framebuffer);
-        scratchCommand.boundingVolume = command.boundingVolume;
-        scratchCommand.modelMatrix = command.modelMatrix;
-
-        return scratchCommand;
     }
 
     function executeCommands(scene, framebuffer) {
@@ -422,21 +417,14 @@ define([
 
         var context = scene._context;
         var us = context.getUniformState();
-        var clearColor = context.createClearState({
-            framebuffer : framebuffer,
-            color : Color.BLACK
-        });
-        var clearDepthStencil = context.createClearState({
-            framebuffer : framebuffer,
-            depth : 1.0,
-            stencil : 0.0
-        });
-        context.clear(clearColor);
+        scene._clearColorCommand.execute(context, framebuffer);
+
+        var clearDepthStencil = scene._clearDepthStencilCommand;
 
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
         for (var i = 0; i < numFrustums; ++i) {
-            context.clear(clearDepthStencil);
+            clearDepthStencil.execute(context, framebuffer);
 
             var index = numFrustums - i - 1.0;
             var frustumCommands = frustumCommandsList[index];
@@ -451,7 +439,7 @@ define([
             var commands = frustumCommands.commands;
             var length = commands.length;
             for (var j = 0; j < length; ++j) {
-                context.draw(getFinalCommand(commands[j], framebuffer));
+                commands[j].execute(context, framebuffer);
             }
         }
     }
@@ -464,7 +452,7 @@ define([
             var commandList = commandLists[i].overlayList;
             var commandListLength = commandList.length;
             for (var j = 0; j < commandListLength; ++j) {
-                context.draw(commandList[j]);
+                commandList[j].execute(context);
             }
         }
     }

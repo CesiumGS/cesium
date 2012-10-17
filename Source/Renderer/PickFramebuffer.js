@@ -4,12 +4,14 @@ define([
         '../Core/destroyObject',
         '../Core/Color',
         '../Core/DeveloperError',
+        './ClearCommand',
         './RenderbufferFormat'
     ], function(
         defaultValue,
         destroyObject,
         Color,
         DeveloperError,
+        ClearCommand,
         RenderbufferFormat) {
     "use strict";
 
@@ -27,6 +29,14 @@ define([
         this._fb = null;
         this._width = 0;
         this._height = 0;
+
+        // Clear to black.  Since this is the background color, no objects will be black
+        this._clearCommand = new ClearCommand();
+        this._clearCommand.clearState = context.createClearState({
+            color : new Color(0.0, 0.0, 0.0, 1.0),
+            depth : 1.0,
+            stencil : 0
+        });
     };
 
     /**
@@ -52,13 +62,7 @@ define([
             });
         }
 
-        // Clear to black.  Since this is the background color, no objects will be black
-        context.clear(context.createClearState({
-            framebuffer : this._fb,
-            color : new Color(0.0, 0.0, 0.0, 1.0),
-            depth : 1.0,
-            stencil : 0
-        }));
+        this._clearCommand.execute(context, this._fb);
 
         return this._fb;
     };

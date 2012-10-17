@@ -127,6 +127,11 @@ define([
          * @type CameraColumbusViewMode
          */
         this.columbusViewMode = CameraColumbusViewMode.FREE;
+        /**
+         * Sets the duration, in milliseconds, of the bounce back animations in 2D and Columbus view. The default value is 3000.
+         * @type Number
+         */
+        this.bounceAnimationTime = 3000.0;
 
         this._canvas = canvas;
         this._cameraController = cameraController;
@@ -375,7 +380,7 @@ define([
         if (!translate.isButtonDown() && !rightZoom.isButtonDown() &&
                 !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
                 !controller._animationCollection.contains(controller._animation)) {
-            var animation = controller._cameraController.createCorrectPositionAnimation();
+            var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
             if (typeof animation !== 'undefined') {
                 controller._animation = controller._animationCollection.add(animation);
             }
@@ -494,8 +499,7 @@ define([
                 }
             }
         } else {
-            var buttonDown = translate.isButtonDown() || rotate.isButtonDown() ||
-                rotate.isButtonDown() || controller._lookHandler.isButtonDown();
+            var buttonDown = translate.isButtonDown() || zoom.isButtonDown() || wheelZooming || rotate.isButtonDown() || controller._lookHandler.isButtonDown();
             if (buttonDown) {
                 controller._animationCollection.removeAll();
             }
@@ -533,12 +537,12 @@ define([
             }
 
             if (controller.enableLook && controller._lookHandler.isMoving()) {
-                    look3D(controller, controller._lookHandler.getMovement());
+                look3D(controller, controller._lookHandler.getMovement());
             }
 
             if (!buttonDown && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
                     !controller._animationCollection.contains(controller._animation)) {
-                var animation = controller._cameraController.createCorrectPositionAnimation();
+                var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
                 if (typeof animation !== 'undefined') {
                     controller._animation = controller._animationCollection.add(animation);
                 }
@@ -598,8 +602,9 @@ define([
             return;
         }
 
-        p0 = cameraController.worldToCameraCoordinates(p0, p0);
-        p1 = cameraController.worldToCameraCoordinates(p1, p1);
+        // CAMERA TODO: remove access to camera
+        p0 = cameraController._camera.worldToCameraCoordinates(p0, p0);
+        p1 = cameraController._camera.worldToCameraCoordinates(p1, p1);
 
         if (typeof controller.constrainedAxis === 'undefined') {
             Cartesian3.normalize(p0, p0);
@@ -659,8 +664,9 @@ define([
             return;
         }
 
+        // CAMERA TODO: Remove the need for camera access
         var center = ray.getPoint(intersection.start, tilt3DCenter);
-        center = cameraController.worldToCameraCoordinates(center, center);
+        center = cameraController._camera.worldToCameraCoordinates(center, center);
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
 
         var oldEllipsoid = controller._ellipsoid;
