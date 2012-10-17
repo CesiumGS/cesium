@@ -602,8 +602,9 @@ define([
             return;
         }
 
-        p0 = cameraController.worldToCameraCoordinates(p0, p0);
-        p1 = cameraController.worldToCameraCoordinates(p1, p1);
+        // CAMERA TODO: remove access to camera
+        p0 = cameraController._camera.worldToCameraCoordinates(p0, p0);
+        p1 = cameraController._camera.worldToCameraCoordinates(p1, p1);
 
         if (typeof controller.constrainedAxis === 'undefined') {
             Cartesian3.normalize(p0, p0);
@@ -663,8 +664,9 @@ define([
             return;
         }
 
+        // CAMERA TODO: Remove the need for camera access
         var center = ray.getPoint(intersection.start, tilt3DCenter);
-        center = cameraController.worldToCameraCoordinates(center, center);
+        center = cameraController._camera.worldToCameraCoordinates(center, center);
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
 
         var oldEllipsoid = controller._ellipsoid;

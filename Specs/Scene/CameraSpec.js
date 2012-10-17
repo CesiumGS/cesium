@@ -3,6 +3,7 @@ defineSuite([
          'Scene/Camera',
          'Core/Cartesian2',
          'Core/Cartesian3',
+         'Core/Cartesian4',
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/EquidistantCylindricalProjection',
@@ -15,6 +16,7 @@ defineSuite([
          Camera,
          Cartesian2,
          Cartesian3,
+         Cartesian4,
          Cartographic,
          Ellipsoid,
          EquidistantCylindricalProjection,
@@ -76,6 +78,34 @@ defineSuite([
         camera.transform = new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0);
         var expected = camera.transform.inverseTransformation();
         expect(expected.equals(camera.getInverseTransform())).toEqual(true);
+    });
+
+    it('worldToCameraCoordinates throws without cartesian', function() {
+        expect(function() {
+            camera.worldToCameraCoordinates();
+        }).toThrow();
+    });
+
+    it('transforms to the cameras reference frame', function() {
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                       1.0, 0.0, 0.0, 0.0,
+                                       0.0, 1.0, 0.0, 0.0,
+                                       0.0, 0.0, 0.0, 1.0);
+        expect(camera.worldToCameraCoordinates(Cartesian4.UNIT_X)).toEqual(Cartesian4.UNIT_Z);
+    });
+
+    it('cameraToWorldCoordinates throws without cartesian', function() {
+        expect(function() {
+            camera.cameraToWorldCoordinates();
+        }).toThrow();
+    });
+
+    it('transforms from the cameras reference frame', function() {
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                       1.0, 0.0, 0.0, 0.0,
+                                       0.0, 1.0, 0.0, 0.0,
+                                       0.0, 0.0, 0.0, 1.0);
+        expect(camera.cameraToWorldCoordinates(Cartesian4.UNIT_Z)).toEqual(Cartesian4.UNIT_X);
     });
 
 });

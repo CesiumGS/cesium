@@ -314,5 +314,43 @@ define([
         return camera;
     };
 
+    /**
+     * Transform a vector or point from world coordinates to the camera's reference frame.
+     * @memberof Camera
+     *
+     * @param {Cartesian4} cartesian The vector or point to transform.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     *
+     * @returns {Cartesian4} The transformed vector or point.
+     */
+    Camera.prototype.worldToCameraCoordinates = function(cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required.');
+        }
+        var transform = this.getInverseTransform();
+        return Matrix4.multiplyByVector(transform, cartesian, result);
+    };
+
+    /**
+     * Transform a vector or point from the camera's reference frame to world coordinates .
+     * @memberof Camera
+     *
+     * @param {Cartesian4} vector The vector or point to transform.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     *
+     * @returns {Cartesian4} The transformed vector or point.
+     */
+    Camera.prototype.cameraToWorldCoordinates = function(cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required.');
+        }
+        var transform = this.transform;
+        return Matrix4.multiplyByVector(transform, cartesian, result);
+    };
+
     return Camera;
 });

@@ -885,34 +885,6 @@ defineSuite([
         expect(controller.getMagnitude()).toEqual(camera.position.magnitude());
     });
 
-    it('worldToCameraCoordinates throws without cartesian', function() {
-        expect(function() {
-            controller.worldToCameraCoordinates();
-        }).toThrow();
-    });
-
-    it('transforms to the cameras reference frame', function() {
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                       1.0, 0.0, 0.0, 0.0,
-                                       0.0, 1.0, 0.0, 0.0,
-                                       0.0, 0.0, 0.0, 1.0);
-        expect(controller.worldToCameraCoordinates(Cartesian4.UNIT_X)).toEqual(Cartesian4.UNIT_Z);
-    });
-
-    it('cameraToWorldCoordinates throws without cartesian', function() {
-        expect(function() {
-            controller.cameraToWorldCoordinates();
-        }).toThrow();
-    });
-
-    it('transforms from the cameras reference frame', function() {
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                       1.0, 0.0, 0.0, 0.0,
-                                       0.0, 1.0, 0.0, 0.0,
-                                       0.0, 0.0, 0.0, 1.0);
-        expect(controller.cameraToWorldCoordinates(Cartesian4.UNIT_Z)).toEqual(Cartesian4.UNIT_X);
-    });
-
     it('create animation throws without a duration', function() {
         expect(function() {
             controller.createCorrectPositionAnimation();
