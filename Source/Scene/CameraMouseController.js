@@ -127,6 +127,11 @@ define([
          * @type CameraColumbusViewMode
          */
         this.columbusViewMode = CameraColumbusViewMode.FREE;
+        /**
+         * Sets the duration, in milliseconds, of the bounce back animations in 2D and Columbus view. The default value is 3000.
+         * @type Number
+         */
+        this.bounceAnimationTime = 3000.0;
 
         this._canvas = canvas;
         this._cameraController = cameraController;
@@ -375,7 +380,7 @@ define([
         if (!translate.isButtonDown() && !rightZoom.isButtonDown() &&
                 !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
                 !controller._animationCollection.contains(controller._animation)) {
-            var animation = controller._cameraController.createCorrectPositionAnimation();
+            var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
             if (typeof animation !== 'undefined') {
                 controller._animation = controller._animationCollection.add(animation);
             }
@@ -537,7 +542,7 @@ define([
 
             if (!buttonDown && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
                     !controller._animationCollection.contains(controller._animation)) {
-                var animation = controller._cameraController.createCorrectPositionAnimation();
+                var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
                 if (typeof animation !== 'undefined') {
                     controller._animation = controller._animationCollection.add(animation);
                 }

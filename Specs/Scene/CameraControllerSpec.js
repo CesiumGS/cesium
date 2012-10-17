@@ -913,8 +913,14 @@ defineSuite([
         expect(controller.cameraToWorldCoordinates(Cartesian4.UNIT_Z)).toEqual(Cartesian4.UNIT_X);
     });
 
+    it('create animation throws without a duration', function() {
+        expect(function() {
+            controller.createCorrectPositionAnimation();
+        }).toThrow();
+    });
+
     it('does not animate in 3D', function() {
-        expect(controller.createCorrectPositionAnimation()).not.toBeDefined();
+        expect(controller.createCorrectPositionAnimation(50.0)).not.toBeDefined();
     });
 
     it('animates position to visible map in 2D', function() {
@@ -940,9 +946,8 @@ defineSuite([
         controller.moveUp(dy);
         controller.moveRight(dx);
 
-        var correctAnimation = controller.createCorrectPositionAnimation();
+        var correctAnimation = controller.createCorrectPositionAnimation(50.0);
         expect(correctAnimation).toBeDefined();
-        correctAnimation.duration = 0.01;  // make the test run quicker
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
             animationCollection.update();
@@ -954,9 +959,8 @@ defineSuite([
         controller.moveDown(dy);
         controller.moveLeft(dx);
 
-        correctAnimation = controller.createCorrectPositionAnimation();
+        correctAnimation = controller.createCorrectPositionAnimation(50.0);
         expect(correctAnimation).toBeDefined();
-        correctAnimation.duration = 0.01;  // make the test run quicker
         animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
             animationCollection.update();
@@ -996,9 +1000,8 @@ defineSuite([
         var right = frustum.right;
         var top = frustum.top;
 
-        var correctAnimation = controller.createCorrectPositionAnimation();
+        var correctAnimation = controller.createCorrectPositionAnimation(50.0);
         expect(correctAnimation).toBeDefined();
-        correctAnimation.duration = 0.01;  // make the test run quicker
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
             animationCollection.update();
@@ -1039,9 +1042,8 @@ defineSuite([
         controller.moveUp(dy);
         controller.moveRight(dx);
 
-        var correctAnimation = controller.createCorrectPositionAnimation();
+        var correctAnimation = controller.createCorrectPositionAnimation(50.0);
         expect(correctAnimation).toBeDefined();
-        correctAnimation.duration = 0.01;  // make the test run quicker
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
             animationCollection.update();
@@ -1054,9 +1056,8 @@ defineSuite([
         controller.moveDown(dy);
         controller.moveLeft(dx);
 
-        correctAnimation = controller.createCorrectPositionAnimation();
+        correctAnimation = controller.createCorrectPositionAnimation(50.0);
         expect(correctAnimation).toBeDefined();
-        correctAnimation.duration = 0.01;  // make the test run quicker
         animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
             animationCollection.update();
