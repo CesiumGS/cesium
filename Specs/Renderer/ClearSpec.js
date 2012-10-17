@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
          'Specs/createContext',
-         'Specs/destroyContext'
+         'Specs/destroyContext',
+         'Renderer/ClearCommand'
      ], 'Renderer/Clear', function(
          createContext,
-         destroyContext) {
+         destroyContext,
+         ClearCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -27,7 +29,22 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
+            color : {
+                red : 1.0,
+                green : 1.0,
+                blue : 1.0,
+                alpha : 1.0
+            }
+        })));
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+    });
+
+    it('clears to white by executing a clear command', function() {
+        context.clear();
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        var command = new ClearCommand(context.createClearState({
             color : {
                 red : 1.0,
                 green : 1.0,
@@ -35,6 +52,8 @@ defineSuite([
                 alpha : 1.0
             }
         }));
+
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -42,7 +61,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 1.0,
                 green : 1.0,
@@ -55,22 +74,22 @@ defineSuite([
                 blue : true,
                 alpha : false
             }
-        }));
+        })));
         expect(context.readPixels()).toEqual([255, 0, 255, 0]);
     });
 
     it('clears with scissor test', function() {
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 1.0,
                 green : 1.0,
                 blue : 1.0,
                 alpha : 1.0
             }
-        }));
+        })));
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 0.0,
                 green : 0.0,
@@ -86,10 +105,10 @@ defineSuite([
                     height : 0
                 }
             }
-        }));
+        })));
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 0.0,
                 green : 0.0,
@@ -105,7 +124,7 @@ defineSuite([
                     height : 1
                 }
             }
-        }));
+        })));
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
@@ -118,7 +137,7 @@ defineSuite([
             colorTexture : colorTexture
         });
 
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             framebuffer : framebuffer,
             color : {
                 red : 0.0,
@@ -126,7 +145,7 @@ defineSuite([
                 blue : 0.0,
                 alpha : 1.0
             }
-        }));
+        })));
 
         expect(context.readPixels({
             framebuffer : framebuffer
@@ -139,7 +158,7 @@ defineSuite([
         context.clear();
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 1.0,
                 green : 1.0,
@@ -147,10 +166,10 @@ defineSuite([
                 alpha : 1.0
             },
             dither : false
-        }));
+        })));
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 0.0,
                 green : 0.0,
@@ -158,7 +177,7 @@ defineSuite([
                 alpha : 0.0
             },
             dither : true
-        }));
+        })));
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
