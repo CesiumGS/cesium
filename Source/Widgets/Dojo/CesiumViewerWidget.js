@@ -581,8 +581,8 @@ define([
             var f = files[0];
             var reader = new FileReader();
             var widget = this;
+            widget.clearAllCZML();
             reader.onload = function(evt) {
-                widget.clearAllCZML();
                 widget.addCZML(JSON.parse(evt.target.result), f.name);
             };
             reader.readAsText(f);
