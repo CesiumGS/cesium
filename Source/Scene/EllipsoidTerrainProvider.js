@@ -173,7 +173,7 @@ define([
         if (typeof occludeePoint !== 'undefined') {
             Cartesian3.multiplyComponents(occludeePoint, ellipsoid.getOneOverRadii(), occludeePoint);
         }
-        tile.occludeePoint = occludeePoint;
+        tile.occludeePointInScaledSpace = occludeePoint;
 
         tile.state = TileState.READY;
     };
