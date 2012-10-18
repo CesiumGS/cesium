@@ -24,7 +24,6 @@ defineSuite([
         var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
         var occluder = new EllipsoidalOccluder(ellipsoid);
         expect(occluder.getEllipsoid()).toEqual(ellipsoid);
-        expect(occluder.transformPositionToScaledSpace(new Cartesian3(1.0, 1.0, 1.0))).toEqual(new Cartesian3(1.0 / 2.0, 1.0 / 3.0, 1.0 / 4.0));
     });
 
     it('throws if ellipsoid is not provided to constructor', function() {
@@ -47,7 +46,7 @@ defineSuite([
         var ellipsoid = new Ellipsoid(1.0, 1.1, 0.9);
         var occluder = new EllipsoidalOccluder(ellipsoid, cameraPosition);
         var point = new Cartesian3(0, -3, -3);
-        var scaledSpacePoint = occluder.transformPositionToScaledSpace(point);
+        var scaledSpacePoint = ellipsoid.transformPositionToScaledSpace(point);
         expect(occluder.isScaledSpacePointVisible(scaledSpacePoint)).toEqual(true);
     });
 
