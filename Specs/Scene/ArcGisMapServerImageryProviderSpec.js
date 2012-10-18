@@ -292,6 +292,10 @@ defineSuite([
             }, 1);
         };
 
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            return undefined;
+        };
+
         var provider = new ArcGisMapServerImageryProvider({
             url : baseUrl,
             proxy : proxy
