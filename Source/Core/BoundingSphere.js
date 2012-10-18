@@ -309,6 +309,10 @@ define([
             stride = 3;
         }
 
+        if (stride < 3) {
+            throw new DeveloperError('stride must be 3 or greater.');
+        }
+
         var currentPos = fromPointsCurrentPos;
         currentPos.x = positions[0] + center.x;
         currentPos.y = positions[1] + center.y;
