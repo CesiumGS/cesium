@@ -545,6 +545,7 @@ define([
          * @memberof CesiumViewerWidget.prototype
          */
         clearAllCZML : function() {
+            this.centerCameraOnObject(undefined);
             //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
             //cache data indefinitely and removeAll is the only way to get rid of it.
             //while there are no visual differences, removeAll cleans the cache and improves performance
@@ -558,10 +559,10 @@ define([
          * @function
          * @memberof CesiumViewerWidget.prototype
          * @param {CZML} czml - The CZML (as objects, not JSON) to be processed and added to the viewer.
-         * @param {string} name - The name of the CZML collection.
+         * @param {string} source - The filename or URI that was the source of the CZML collection.
          */
-        addCZML : function(czml, name) {
-            processCzml(czml, this.dynamicObjectCollection, name);
+        addCZML : function(czml, source) {
+            processCzml(czml, this.dynamicObjectCollection, source);
             this.setTimeFromBuffer();
         },
 
@@ -707,8 +708,7 @@ define([
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 getJson(widget.endUserOptions.source).then(function(czmlData) {
-                    processCzml(czmlData, widget.dynamicObjectCollection, widget.endUserOptions.source);
-                    widget.setTimeFromBuffer();
+                    widget.addCZML(czmlData, widget.endUserOptions.source);
                     if (typeof widget.endUserOptions.lookAt !== 'undefined') {
                         widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(widget.endUserOptions.lookAt));
                     }
