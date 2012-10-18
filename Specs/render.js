@@ -38,7 +38,7 @@ define([
                     }
                 }
 
-                context.draw(command);
+                command.execute(context);
                 numRendered++;
             }
         }
