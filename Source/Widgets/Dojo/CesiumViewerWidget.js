@@ -539,6 +539,33 @@ define([
         },
 
         /**
+         * Clears all CZML data from the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
+        clearAllCZML : function() {
+            //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
+            //cache data indefinitely and removeAll is the only way to get rid of it.
+            //while there are no visual differences, removeAll cleans the cache and improves performance
+            this.visualizers.removeAllPrimitives();
+            this.dynamicObjectCollection.clear();
+        },
+
+        /**
+         * Add CZML data to the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {CZML} czml - The CZML (as objects, not JSON) to be processed and added to the viewer.
+         * @param {string} name - The name of the CZML collection.
+         */
+        addCZML : function(czml, name) {
+            processCzml(czml, this.dynamicObjectCollection, name);
+            this.setTimeFromBuffer();
+        },
+
+        /**
          * This function is called when files are dropped on the widget, if drag-and-drop is enabled.
          *
          * @function
@@ -554,13 +581,8 @@ define([
             var reader = new FileReader();
             var widget = this;
             reader.onload = function(evt) {
-                //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
-                //cache data indefinitely and removeAll is the only way to get rid of it.
-                //while there are no visual differences, removeAll cleans the cache and improves performance
-                widget.visualizers.removeAllPrimitives();
-                widget.dynamicObjectCollection.clear();
-                processCzml(JSON.parse(evt.target.result), widget.dynamicObjectCollection, f.name);
-                widget.setTimeFromBuffer();
+                widget.clearAllCZML();
+                widget.addCZML(JSON.parse(evt.target.result), f.name);
             };
             reader.readAsText(f);
         },
