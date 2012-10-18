@@ -539,6 +539,38 @@ define([
         },
 
         /**
+         * Clears all CZML data from the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
+        clearAllCZML : function() {
+            this.centerCameraOnObject(undefined);
+            //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
+            //cache data indefinitely and removeAll is the only way to get rid of it.
+            //while there are no visual differences, removeAll cleans the cache and improves performance
+            this.visualizers.removeAllPrimitives();
+            this.dynamicObjectCollection.clear();
+        },
+
+        /**
+         * Add CZML data to the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {CZML} czml - The CZML (as objects, not JSON) to be processed and added to the viewer.
+         * @param {string} source - The filename or URI that was the source of the CZML collection.
+         * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
+         */
+        addCZML : function(czml, source, lookAt) {
+            processCzml(czml, this.dynamicObjectCollection, source);
+            this.setTimeFromBuffer();
+            if (typeof lookAt !== 'undefined') {
+                this.centerCameraOnObject(this.dynamicObjectCollection.getObject(lookAt));
+            }
+        },
+
+        /**
          * This function is called when files are dropped on the widget, if drag-and-drop is enabled.
          *
          * @function
@@ -553,14 +585,9 @@ define([
             var f = files[0];
             var reader = new FileReader();
             var widget = this;
+            widget.clearAllCZML();
             reader.onload = function(evt) {
-                //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
-                //cache data indefinitely and removeAll is the only way to get rid of it.
-                //while there are no visual differences, removeAll cleans the cache and improves performance
-                widget.visualizers.removeAllPrimitives();
-                widget.dynamicObjectCollection.clear();
-                processCzml(JSON.parse(evt.target.result), widget.dynamicObjectCollection, f.name);
-                widget.setTimeFromBuffer();
+                widget.addCZML(JSON.parse(evt.target.result), f.name);
             };
             reader.readAsText(f);
         },
@@ -685,10 +712,10 @@ define([
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 getJson(widget.endUserOptions.source).then(function(czmlData) {
-                    processCzml(czmlData, widget.dynamicObjectCollection, widget.endUserOptions.source);
-                    widget.setTimeFromBuffer();
                     if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                        widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(widget.endUserOptions.lookAt));
+                        widget.addCZML(czmlData, widget.endUserOptions.source, widget.endUserOptions.lookAt);
+                    } else {
+                        widget.addCZML(czmlData, widget.endUserOptions.source);
                     }
                 },
                 function(error) {
