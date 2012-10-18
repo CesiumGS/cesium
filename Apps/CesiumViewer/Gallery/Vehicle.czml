@@ -1,7 +1,7 @@
 
 [
   {
-    "id":"/Application/STK/Scenario/BASIC_STK_Air_Missions/GroundVehicle/Vehicle",
+    "id":"Vehicle",
     "availability":"2012-08-04T16:00:00Z/2012-08-04T17:04:54.9962195740191Z",
     "billboard":{
       "eyeOffset":{

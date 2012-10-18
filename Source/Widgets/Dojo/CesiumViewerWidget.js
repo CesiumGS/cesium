@@ -560,10 +560,14 @@ define([
          * @memberof CesiumViewerWidget.prototype
          * @param {CZML} czml - The CZML (as objects, not JSON) to be processed and added to the viewer.
          * @param {string} source - The filename or URI that was the source of the CZML collection.
+         * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
          */
-        addCZML : function(czml, source) {
+        addCZML : function(czml, source, lookAt) {
             processCzml(czml, this.dynamicObjectCollection, source);
             this.setTimeFromBuffer();
+            if (typeof lookAt !== 'undefined') {
+                this.centerCameraOnObject(this.dynamicObjectCollection.getObject(lookAt));
+            }
         },
 
         /**
@@ -708,9 +712,10 @@ define([
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 getJson(widget.endUserOptions.source).then(function(czmlData) {
-                    widget.addCZML(czmlData, widget.endUserOptions.source);
                     if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                        widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(widget.endUserOptions.lookAt));
+                        widget.addCZML(czmlData, widget.endUserOptions.source, widget.endUserOptions.lookAt);
+                    } else {
+                        widget.addCZML(czmlData, widget.endUserOptions.source);
                     }
                 },
                 function(error) {
