@@ -37,7 +37,7 @@ define([
      * // Construct an ellipsoidal occluder with radii 1.0, 1.1, and 0.9.
      * var cameraPosition = new Cartesian3(5.0, 6.0, 7.0);
      * var occluderEllipsoid = new Ellipsoid(1.0, 1.1, 0.9);
-     * var occluder = new Occluder(occluderEllipsoid, cameraPosition);
+     * var occluder = new EllipsoidalOccluder(occluderEllipsoid, cameraPosition);
      */
     var EllipsoidalOccluder = function(ellipsoid, cameraPosition) {
         if (typeof ellipsoid === 'undefined') {

@@ -972,7 +972,7 @@ define([
 
                     // The first TileImagery's provider select the itensity for the entire tile.
                     // This needs improvement, but that's part of a bigger lighting overhaul.
-                    var intensity = 0.0;
+                    var intensity = 0.2;
                     if (tileImageryCollection.length > 0) {
                         var firstImagery = tileImageryCollection[0].imagery;
                         var firstImageryProvider = firstImagery.imageryLayer.getImageryProvider();

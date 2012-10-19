@@ -417,7 +417,7 @@ define([
         if ((this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) && level <= 7.0) {
             return 1.0;
         }
-        return 0.1;
+        return 0.2;
     };
 
     /**
