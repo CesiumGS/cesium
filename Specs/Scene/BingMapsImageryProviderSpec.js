@@ -87,8 +87,8 @@ defineSuite([
         expect(provider.getIntensity(0, 0, 5)).toEqual(1.0);
         expect(provider.getIntensity(0, 0, 6)).toEqual(1.0);
         expect(provider.getIntensity(0, 0, 7)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 8)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 9)).toEqual(0.1);
+        expect(provider.getIntensity(0, 0, 8)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 9)).toEqual(0.2);
     });
 
     it('getIntensity returns 1.0 for aerial-with-labels imagery less than level 8', function() {
@@ -106,27 +106,27 @@ defineSuite([
         expect(provider.getIntensity(0, 0, 5)).toEqual(1.0);
         expect(provider.getIntensity(0, 0, 6)).toEqual(1.0);
         expect(provider.getIntensity(0, 0, 7)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 8)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 9)).toEqual(0.1);
+        expect(provider.getIntensity(0, 0, 8)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 9)).toEqual(0.2);
     });
 
-    it('getIntensity returns 0.1 for non-aerial imagery', function() {
+    it('getIntensity returns 0.2 for non-aerial imagery', function() {
         var provider = new BingMapsImageryProvider({
             server : 'dev.virtualearth.net',
             mapStyle : BingMapsStyle.ROAD,
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
 
-        expect(provider.getIntensity(0, 0, 0)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 1)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 2)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 3)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 4)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 5)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 6)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 7)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 8)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 9)).toEqual(0.1);
+        expect(provider.getIntensity(0, 0, 0)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 1)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 2)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 3)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 4)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 5)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 6)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 7)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 8)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 9)).toEqual(0.2);
     });
 
     it('getPoleIntensity returns 1.0 for any imagery', function() {
