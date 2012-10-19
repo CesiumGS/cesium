@@ -21,9 +21,9 @@ define([
         '../Core/Queue',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/Command',
         '../Renderer/CommandLists',
         '../Renderer/CullFace',
+        '../Renderer/DrawCommand',
         '../Renderer/VertexLayout',
         './Material',
         './SceneMode',
@@ -54,9 +54,9 @@ define([
         Queue,
         BlendingState,
         BufferUsage,
-        Command,
         CommandLists,
         CullFace,
+        DrawCommand,
         VertexLayout,
         Material,
         SceneMode,
@@ -517,7 +517,7 @@ define([
         var i;
         var meshes = [];
         if (typeof this._extent !== 'undefined') {
-            meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true}));
+            meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoordinates:true}));
 
             this._boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid, this._boundingVolume);
             if (this._mode !== SceneMode.SCENE3D) {
@@ -723,7 +723,7 @@ define([
             for (var i = 0; i < length; ++i) {
                 command = commands[i];
                 if (typeof command === 'undefined') {
-                    command = commands[i] = new Command();
+                    command = commands[i] = new DrawCommand();
                 }
 
                 command.boundingVolume = boundingVolume;
@@ -769,7 +769,7 @@ define([
             for (var j = 0; j < length; ++j) {
                 command = commands[j];
                 if (typeof command === 'undefined') {
-                    command = commands[j] = new Command();
+                    command = commands[j] = new DrawCommand();
                 }
 
                 command.boundingVolume = boundingVolume;

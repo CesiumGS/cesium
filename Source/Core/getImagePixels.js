@@ -8,11 +8,13 @@ define(function() {
      * Extract a pixel array from a loaded image.  Draws the image
      * into a canvas so it can read the pixels back.
      *
+     * @exports getImagePixels
+     *
      * @param {Image} image The image to extract pixels from.
      *
      * @returns {CanvasPixelArray} The pixels of the image.
      */
-    var imageToPixels = function(image, width, height) {
+    var getImagePixels = function(image, width, height) {
         if (typeof width === 'undefined') {
             width = image.width;
         }
@@ -40,5 +42,5 @@ define(function() {
         return context2d.getImageData(0, 0, width, height).data;
     };
 
-    return imageToPixels;
+    return getImagePixels;
 });

@@ -17,7 +17,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/Queue',
         '../Core/WebMercatorProjection',
-        '../Renderer/Command',
+        '../Renderer/DrawCommand',
         './ImageryState',
         './SceneMode',
         './TerrainProvider',
@@ -42,7 +42,7 @@ define([
         PrimitiveType,
         Queue,
         WebMercatorProjection,
-        Command,
+        DrawCommand,
         ImageryState,
         SceneMode,
         TerrainProvider,
@@ -737,7 +737,7 @@ define([
             uniformMap2.dayTextureTexCoordsExtent[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
             uniformMap2.dayTextureAlpha[0] = 1.0;
 
-            var boundingSphereCommand = new Command();
+            var boundingSphereCommand = new DrawCommand();
             boundingSphereCommand.shaderProgram = shaderSet.getShaderProgram(context, 1);
             boundingSphereCommand.renderState = renderState;
             boundingSphereCommand.primitiveType = PrimitiveType.LINES;
@@ -906,8 +906,8 @@ define([
                     tileExtent.z = northeast.x;
                     tileExtent.w = northeast.y;
 
-                    // In 2D, use the center of the tile for RTC rendering.
-                    if (mode === SceneMode.SCENE2D) {
+                    // In 2D and Columbus View, use the center of the tile for RTC rendering.
+                    if (mode !== SceneMode.MORPHING) {
                         rtc = rtcScratch;
                         rtc.x = 0.0;
                         rtc.y = (tileExtent.z + tileExtent.x) * 0.5;
@@ -952,7 +952,7 @@ define([
                     ++tileCommandIndex;
                     var command = tileCommands[tileCommandIndex];
                     if (typeof command === 'undefined') {
-                        command = new Command();
+                        command = new DrawCommand();
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap();
                     }

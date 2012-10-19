@@ -23,6 +23,8 @@ define([
      * @immutable
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid.
+     *
+     * @see GeographicProjection
      */
     var WebMercatorProjection = function(ellipsoid) {
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);

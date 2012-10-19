@@ -52,6 +52,19 @@ defineSuite([
         return result;
     }
 
+    function getPositionsAsFlatArrayWithStride5() {
+        var positions = getPositions();
+        var result = [];
+        for (var i = 0; i < positions.length; ++i) {
+            result.push(positions[i].x);
+            result.push(positions[i].y);
+            result.push(positions[i].z);
+            result.push(1.23);
+            result.push(4.56);
+        }
+        return result;
+    }
+
     it('default constructing produces expected values', function() {
         var sphere = new BoundingSphere();
         expect(sphere.center).toEqual(Cartesian3.ZERO);
@@ -215,6 +228,35 @@ defineSuite([
             expect(positions[i + 1] <= max.y && positions[i + 1] >= min.y).toEqual(true);
             expect(positions[i + 2] <= max.z && positions[i + 2] >= min.z).toEqual(true);
         }
+    });
+
+    it('fromPointsAsFlatArray works with a stride of 5', function() {
+        var sphere = BoundingSphere.fromPointsAsFlatArray(getPositionsAsFlatArrayWithStride5(), undefined, 5);
+        expect(sphere.center).toEqual(positionsCenter);
+        expect(sphere.radius).toEqual(positionsRadius);
+    });
+
+    it('fromPointsAsFlatArray works with defined center', function() {
+        var center = new Cartesian3(1.0, 2.0, 3.0);
+        var sphere = BoundingSphere.fromPointsAsFlatArray(getPositionsAsFlatArrayWithStride5(), center, 5);
+        expect(sphere.center).toEqual(positionsCenter.add(center));
+        expect(sphere.radius).toEqual(positionsRadius);
+    });
+
+    it('fromPointsAsFlatArray requires a stride of at least 3', function() {
+        function callWithStrideOf2() {
+            BoundingSphere.fromPointsAsFlatArray(getPositionsAsFlatArray(), undefined, 2);
+        }
+        expect(callWithStrideOf2).toThrow();
+    });
+
+    it('fromPointsAsFlatArray fills result parameter if specified', function() {
+        var center = new Cartesian3(1.0, 2.0, 3.0);
+        var result = new BoundingSphere();
+        var sphere = BoundingSphere.fromPointsAsFlatArray(getPositionsAsFlatArrayWithStride5(), center, 5, result);
+        expect(sphere).toEqual(result);
+        expect(result.center).toEqual(positionsCenter.add(center));
+        expect(result.radius).toEqual(positionsRadius);
     });
 
     it('fromExtent2D creates an empty sphere if no extent provided', function() {
