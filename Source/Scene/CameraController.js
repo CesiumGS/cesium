@@ -79,12 +79,26 @@ define([
          * @type Cartesian3
          */
         this.constrainedAxis = undefined;
+        /**
+         * The factor multiplied by the the map size used to determine where to clamp the camera position
+         * when translating across the surface. The default is 1.5. Only valid for 2D and Columbus view.
+         * @type Number
+         */
+        this.maximumTranslateFactor = 1.5;
+        /**
+         * The factor multiplied by the the map size used to determine where to clamp the camera position
+         * when zooming out from the surface. The default is 2.5. Only valid for 2D.
+         * @type Number
+         */
+        this.maximumZoomFactor = 2.5;
+        /**
+         * The maximum height, in meters, above the surface of the ellipsoid of the camera position. Defaults to 20.0.
+         * @type Number
+         */
+        this.maximumHeightAboveSurface = 20.0;
 
         this._maxCoord = undefined;
         this._frustum = undefined;
-        this._maxTranslateFactor = 1.5;
-        this._maxZoomFactor = 2.5;
-        this._maxHeight = 20.0;
     };
 
     /**
@@ -115,7 +129,7 @@ define([
     };
 
     function clampMove2D(controller, position) {
-        var maxX = controller._maxCoord.x * controller._maxTranslateFactor;
+        var maxX = controller._maxCoord.x * controller.maximumTranslateFactor;
         if (position.x > maxX) {
             position.x = maxX;
         }
@@ -123,7 +137,7 @@ define([
             position.x = -maxX;
         }
 
-        var maxY = controller._maxCoord.y * controller._maxTranslateFactor;
+        var maxY = controller._maxCoord.y * controller.maximumTranslateFactor;
         if (position.y > maxY) {
             position.y = maxY;
         }
@@ -139,7 +153,7 @@ define([
      * @memberof CameraController
      *
      * @param {Cartesian3} direction The direction to move.
-     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
+     * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @exception {DeveloperError} direction is required.
      *
@@ -169,7 +183,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
+     * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveBackward
      */
@@ -184,7 +198,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
+     * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveForward
      */
@@ -198,7 +212,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
+     * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveDown
      */
@@ -213,7 +227,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
+     * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveUp
      */
@@ -227,7 +241,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
+     * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveLeft
      */
@@ -242,7 +256,7 @@ define([
      *
      * @memberof CameraController
      *
-     * @param {Number} [amount] The amount to move. Defaults to <code>defaultMoveAmount</code>.
+     * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see CameraController#moveRight
      */
@@ -373,18 +387,18 @@ define([
         this.look(this._camera.direction, amount);
     };
 
-    var setTransformPosition = Cartesian4.UNIT_W.clone();
-    var setTransformUp = Cartesian4.ZERO.clone();
-    var setTransformRight = Cartesian4.ZERO.clone();
-    var setTransformDirection = Cartesian4.ZERO.clone();
-    function setTransform(controller, transform) {
+    var appendTransformPosition = Cartesian4.UNIT_W.clone();
+    var appendTransformUp = Cartesian4.ZERO.clone();
+    var appendTransformRight = Cartesian4.ZERO.clone();
+    var appendTransformDirection = Cartesian4.ZERO.clone();
+    function appendTransform(controller, transform) {
         var camera = controller._camera;
         var oldTransform;
         if (typeof transform !== 'undefined') {
-            var position = Cartesian3.clone(camera.getPositionWC(), setTransformPosition);
-            var up = Cartesian3.clone(camera.getUpWC(), setTransformUp);
-            var right = Cartesian3.clone(camera.getRightWC(), setTransformRight);
-            var direction = Cartesian3.clone(camera.getDirectionWC(), setTransformDirection);
+            var position = Cartesian3.clone(camera.getPositionWC(), appendTransformPosition);
+            var up = Cartesian3.clone(camera.getUpWC(), appendTransformUp);
+            var right = Cartesian3.clone(camera.getRightWC(), appendTransformRight);
+            var direction = Cartesian3.clone(camera.getDirectionWC(), appendTransformDirection);
 
             oldTransform = camera.transform;
             camera.transform = transform.multiply(oldTransform);
@@ -423,8 +437,8 @@ define([
 
             var ellipsoid = controller._projection.getEllipsoid();
             var positionCart = ellipsoid.cartesianToCartographic(position, revertTransformPositionCart);
-            if (positionCart.height < controller._maxHeight + 1.0) {
-                positionCart.height = controller._maxHeight + 1.0;
+            if (positionCart.height < controller.maximumHeightAboveSurface + 1.0) {
+                positionCart.height = controller.maximumHeightAboveSurface + 1.0;
                 ellipsoid.cartographicToCartesian(positionCart, position);
 
                 Cartesian3.subtract(center, position, direction);
@@ -474,7 +488,7 @@ define([
         var turnAngle = defaultValue(angle, this.defaultRotateAmount);
         var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle, rotateScratchQuaternion), rotateScratchMatrix);
 
-        var oldTransform = setTransform(this, transform);
+        var oldTransform = appendTransform(this, transform);
         Matrix3.multiplyByVector(rotation, camera.position, camera.position);
         Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
         Matrix3.multiplyByVector(rotation, camera.up, camera.up);
@@ -521,7 +535,7 @@ define([
     var rotateVertScratchBit = new Cartesian3();
     function rotateVertical(controller, angle, transform) {
         var camera = controller._camera;
-        var oldTransform = setTransform(controller, transform);
+        var oldTransform = appendTransform(controller, transform);
 
         var position = camera.position;
         var p = Cartesian3.normalize(position, rotateVertScratchP);
@@ -599,7 +613,7 @@ define([
         var newRight = frustum.right - amount;
         var newLeft = frustum.left + amount;
 
-        var maxRight = controller._maxCoord.x * controller._maxZoomFactor;
+        var maxRight = controller._maxCoord.x * controller.maximumZoomFactor;
         if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -maxRight;
