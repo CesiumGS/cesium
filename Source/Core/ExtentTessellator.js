@@ -31,8 +31,9 @@ define([
     var ExtentTessellator = {};
 
     /**
-     * Compute vertices from a cartographic extent.  This function is lower-level than the other
-     * functions on this class.
+     * Compute vertices from a cartographic extent.  This function is different from
+     * {@link ExtentTessellator#compute} and {@link ExtentTessellator#computeBuffers}
+     * in that it assumes that you have already allocated output arrays of the correct size.
      *
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {Number} description.width The number of vertices in the longitude direction.
@@ -205,7 +206,6 @@ define([
 
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
         description.radiiSquared = ellipsoid.getRadiiSquared();
-        description.oneOverCentralBodySemimajorAxis = ellipsoid.getOneOverRadii().x;
         description.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
 
         var granularity = defaultValue(description.granularity, 0.1);
@@ -344,7 +344,6 @@ define([
 
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
         description.radiiSquared = ellipsoid.getRadiiSquared();
-        description.oneOverCentralBodySemimajorAxis = ellipsoid.getOneOverRadii().x;
         description.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
 
         var granularity = defaultValue(description.granularity, 0.1);
