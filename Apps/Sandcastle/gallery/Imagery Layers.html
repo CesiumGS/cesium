@@ -103,42 +103,6 @@ require([
     var cb;
     var mousePosition;
 
-    function ellipsoidIntersections(ellipsoid, ray) {
-        var position = ray.origin;
-        var direction = ray.direction;
-        var oneOverRadii = ellipsoid.getOneOverRadii();
-
-        var scaledPosition = position.multiplyComponents(oneOverRadii);
-        var scaledDirection = direction.multiplyComponents(oneOverRadii);
-
-        var a = scaledDirection.magnitudeSquared();
-        var b = 2.0 * scaledPosition.dot(scaledDirection);
-        var c = scaledPosition.magnitudeSquared() - 1.0;
-
-        var b2 = b * b;
-        var four_ac = 4.0 * a * c;
-        var radicand = b2 - four_ac;
-
-        if (radicand < 0.0) {
-            return undefined;
-        }
-
-        var q = -0.5 * (b + sign(b) * Math.sqrt(radicand));
-        if (b > 0.0) {
-            return [q / a, c / q];
-        }
-        return [c / q, q / a];
-    }
-
-    function sign(x) {
-        if (x < 0.0) {
-            return -1.0;
-        } else if (x > 0.0) {
-            return 1.0;
-        }
-        return 0.0;
-    }
-
     function keydownHandler(e) {
         switch (e.keyCode) {
         case 'F'.charCodeAt(0):
@@ -147,7 +111,7 @@ require([
         case 'B'.charCodeAt(0):
             var camera = scene.getCamera();
             var pickRay = camera.getPickRay(mousePosition);
-            var intersectionDistance = ellipsoidIntersections(ellipsoid, pickRay)[0];
+            var intersectionDistance = Cesium.IntersectionTests.rayEllipsoid(pickRay, ellipsoid).start;
             var intersectionPoint = pickRay.getPoint(intersectionDistance);
             var cartographicPick = ellipsoid.cartesianToCartographic(intersectionPoint);
             cb._surface.debugShowBoundingSphereOfTileAt(cartographicPick);
