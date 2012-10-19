@@ -906,8 +906,8 @@ define([
                     tileExtent.z = northeast.x;
                     tileExtent.w = northeast.y;
 
-                    // In 2D, use the center of the tile for RTC rendering.
-                    if (mode === SceneMode.SCENE2D) {
+                    // In 2D and Columbus View, use the center of the tile for RTC rendering.
+                    if (mode !== SceneMode.MORPHING) {
                         rtc = rtcScratch;
                         rtc.x = 0.0;
                         rtc.y = (tileExtent.z + tileExtent.x) * 0.5;

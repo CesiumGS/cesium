@@ -74,10 +74,7 @@ vec4 getPosition2DMode(vec3 position3DWC)
 
 vec4 getPositionColumbusViewMode(vec3 position3DWC)
 {
-    // TODO: RTC in Columbus View
-    float yPositionFraction = get2DYPositionFraction();
-    vec4 position2DWC = vec4(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
-    return czm_modelViewProjection * position2DWC;
+    return getPosition2DMode(position3DWC);
 }
 
 vec4 getPositionMorphingMode(vec3 position3DWC)
