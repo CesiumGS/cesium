@@ -112,7 +112,7 @@ define([
 
         var verticesPromise = taskProcessor.scheduleTask({
             extent : extent,
-            altitude : 0,
+            surfaceHeight : 0,
             width : width,
             height : height,
             relativeToCenter : tile.center,
