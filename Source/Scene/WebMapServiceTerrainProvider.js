@@ -11,6 +11,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Extent',
+        '../Core/Occluder',
         '../Core/TaskProcessor',
         './Projections',
         './TileState',
@@ -30,6 +31,7 @@ define([
         Cartesian3,
         Cartographic,
         Extent,
+        Occluder,
         TaskProcessor,
         Projections,
         TileState,
@@ -267,23 +269,14 @@ define([
         tile.southNormal = ellipsoid.geodeticSurfaceNormal(tile.southeastCornerCartesian).cross(tile.southwestCornerCartesian.subtract(tile.southeastCornerCartesian, scratch)).normalize();
         tile.northNormal = ellipsoid.geodeticSurfaceNormal(tile.northwestCornerCartesian).cross(tile.northeastCornerCartesian.subtract(tile.northwestCornerCartesian, scratch)).normalize();
 
-        tile.state = TileState.READY;
-    };
+        // TODO: we need to take the heights into account when computing the occludee point.
+        var occludeePoint = Occluder.computeOccludeePointFromExtent(tile.extent, ellipsoid);
+        if (typeof occludeePoint !== 'undefined') {
+            Cartesian3.multiplyComponents(occludeePoint, ellipsoid.getOneOverRadii(), occludeePoint);
+        }
+        tile.occludeePointInScaledSpace = occludeePoint;
 
-    /**
-     * Populates a {@link Tile} with plane-mapped surface geometry from this
-     * tile provider.
-     *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
-     * @param {Context} context The rendered context to use to create renderer resources.
-     * @param {Tile} tile The tile to populate with surface geometry.
-     * @param {Projection} projection The map projection to use.
-     * @returns {Boolean|Promise} A boolean value indicating whether the tile was successfully
-     * populated with geometry, or a promise for such a value in the future.
-     */
-    WebMapServiceTerrainProvider.prototype.createTilePlaneGeometry = function(context, tile, projection) {
-        throw new DeveloperError('Not supported yet.');
+        tile.state = TileState.READY;
     };
 
     /**
