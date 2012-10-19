@@ -11,6 +11,7 @@ Beta Releases
    * Renamed `BingMapsTileProvider` to `BingMapsImageryProvider`.
    * Renamed `SingleTileProvider` to `SingleTileImageryProvider`.
    * `CentralBody.dayTileProvider` has been removed.  Instead, add one or more imagery providers to the collection returned by `CentralBody.getImageryLayers()`.
+   * The `description.generateTextureCoords` parameter passed to `ExtentTessellator.compute` is now called `description.generateTextureCoordinates`.  
 * `CentralBody` now allows imagery from multiple sources to be layered and alpha blended on the globe.  See the new `Imagery Layers` and `Map Projections` Sandcastle examples.
 * Added `WebMapServiceImageryProvider` and `ArcGisMapServerImageryProvider`.
 * Improved middle mouse click behavior to always tilt in the same direction.
