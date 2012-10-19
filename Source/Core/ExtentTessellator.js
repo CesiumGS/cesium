@@ -174,8 +174,8 @@ define([
      * from the extent for creating a vertex array.
      *
      * @see Context#createVertexArrayFromMesh
-     * @see MeshFilters#createAttributeIndices
-     * @see MeshFilters#toWireframeInPlace
+     * @see MeshFilters.createAttributeIndices
+     * @see MeshFilters.toWireframeInPlace
      * @see Extent
      *
      * @example
