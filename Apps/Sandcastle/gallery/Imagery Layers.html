@@ -129,11 +129,11 @@ require([
             break;
         case 'C'.charCodeAt(0):
             var position = new Cesium.Cartesian3(-2444319.744271441, -4490462.305656268, 3800605.179680734);
-		        var direction = new Cesium.Cartesian3(0.3079076572929976, 0.5183187255969877, 0.7978336751954334);
-		        var up = new Cesium.Cartesian3(-0.38141711164833125, -0.7009912978668698, 0.6026045031832784);
-		        var camera = scene.getCamera();
-		        camera.lookAt(position, position.add(direction), up);
-		        break;
+            var direction = new Cesium.Cartesian3(0.3079076572929976, 0.5183187255969877, 0.7978336751954334);
+            var up = new Cesium.Cartesian3(-0.38141711164833125, -0.7009912978668698, 0.6026045031832784);
+            var camera = scene.getCamera();
+            camera.lookAt(position, position.add(direction), up);
+            break;
         }
     }
 
@@ -230,8 +230,7 @@ require([
             cb = scene.getPrimitives().getCentralBody();
             cb.logoOffset = new Cesium.Cartesian2(300, 30);
 
-            scene.getCamera().frustum.near = 10.0;
-            cb.affectedByLighting = false;
+            widget.cbLighting.set('checked', true);
             
             var imageryLayerCollection = cb.getImageryLayers();
             
@@ -274,17 +273,17 @@ require([
             singleImageLayer = imageryLayerCollection.addImageryProvider(singleImage);
             layerNames[singleImage.getUrl()] = 'Single image';
 
-	          document.addEventListener('keydown', keydownHandler, false);
+            document.addEventListener('keydown', keydownHandler, false);
             
-	          var handler = new Cesium.EventHandler(widget.canvas);
+            var handler = new Cesium.EventHandler(widget.canvas);
 
-	          handler.setMouseAction(function(movement) {
-	              mousePosition = movement.endPosition;
-	              // Use movement.startPosition, movement.endPosition
-	          }, Cesium.MouseEventType.MOVE);
-	          
-	          domConstruct.place('<table id="layerTable"></table>', 'toolbar');
-	          updateToolbar(imageryLayerCollection);
+            handler.setMouseAction(function(movement) {
+                mousePosition = movement.endPosition;
+                // Use movement.startPosition, movement.endPosition
+            }, Cesium.MouseEventType.MOVE);
+
+            domConstruct.place('<table id="layerTable"></table>', 'toolbar');
+            updateToolbar(imageryLayerCollection);
 
             widget.startRenderLoop();
         }
