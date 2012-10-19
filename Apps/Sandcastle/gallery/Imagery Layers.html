@@ -32,51 +32,55 @@
 <body class="claro" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
 body {
-    background: #000;
-    color: #eee;
-    font-family: sans-serif;
-    font-size: 9pt;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
+	background: #000;
+	color: #eee;
+	font-family: sans-serif;
+	font-size: 9pt;
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
 }
+
 .fullSize {
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    border: none;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	border: none;
+	width: 100%;
+	height: 100%;
+	z-index: -1;
 }
+
 #toolbar {
-    margin: 5px;
-    padding: 2px 5px;
-    position: absolute;
+	margin: 5px;
+	padding: 2px 5px;
+	position: absolute;
 }
+
 .upArrow {
-   background-image: url("../../../Images/UpArrow.png");
-   background-repeat: no-repeat;
-   width: 16px;
-   height: 16px;
-   text-align: center;
+	background-image: url("../../../Images/UpArrow.png");
+	background-repeat: no-repeat;
+	width: 16px;
+	height: 16px;
+	text-align: center;
 }
+
 .downArrow {
-   background-image: url("../../../Images/DownArrow.png");
-   background-repeat: no-repeat;
-   width: 16px;
-   height: 16px;
-   text-align: center;
+	background-image: url("../../../Images/DownArrow.png");
+	background-repeat: no-repeat;
+	width: 16px;
+	height: 16px;
+	text-align: center;
 }
 </style>
 
-<div id="cesiumContainer" class="fullSize"></div>
-<div id="toolbar">Loading...</div>
+	<div id="cesiumContainer" class="fullSize"></div>
+	<div id="toolbar">Loading...</div>
 
-<script id="cesium_sandcastle_script">
+	<script id="cesium_sandcastle_script">
 require([
     'Source/Cesium',
     'Widgets/Dojo/CesiumViewerWidget',
@@ -102,6 +106,10 @@ require([
     var scene; 
     var cb;
     var mousePosition;
+    var camera;
+    var position;
+    var direction;
+    var up;
 
     function keydownHandler(e) {
         switch (e.keyCode) {
@@ -109,7 +117,7 @@ require([
             cb._surface.debugToggleLodUpdate();
             break;
         case 'B'.charCodeAt(0):
-            var camera = scene.getCamera();
+            camera = scene.getCamera();
             var pickRay = camera.getPickRay(mousePosition);
             var intersectionDistance = Cesium.IntersectionTests.rayEllipsoid(pickRay, ellipsoid).start;
             var intersectionPoint = pickRay.getPoint(intersectionDistance);
@@ -117,21 +125,21 @@ require([
             cb._surface.debugShowBoundingSphereOfTileAt(cartographicPick);
             break;
         case 'V'.charCodeAt(0):
-            var camera = scene.getCamera();
+            camera = scene.getCamera();
             console.log('position: ' + camera.getPositionWC() + ' direction: ' + camera.getDirectionWC() + ' up: ' + camera.getUpWC());
             break;
         case 'L'.charCodeAt(0):
-            var position = new Cesium.Cartesian3(-2444822.7410362503, -4495391.442027786, 3800016.0770029235);
-            var direction = new Cesium.Cartesian3(0.2306406390807245, 0.8212545213405562, 0.5218677100397503);
-            var up = new Cesium.Cartesian3(-0.31881470184216937, -0.44294118336776583, 0.8379500545772692);
-            var camera = scene.getCamera();
+            position = new Cesium.Cartesian3(-2444822.7410362503, -4495391.442027786, 3800016.0770029235);
+            direction = new Cesium.Cartesian3(0.2306406390807245, 0.8212545213405562, 0.5218677100397503);
+            up = new Cesium.Cartesian3(-0.31881470184216937, -0.44294118336776583, 0.8379500545772692);
+            camera = scene.getCamera();
             camera.lookAt(position, position.add(direction), up);
             break;
         case 'C'.charCodeAt(0):
-            var position = new Cesium.Cartesian3(-2444319.744271441, -4490462.305656268, 3800605.179680734);
-            var direction = new Cesium.Cartesian3(0.3079076572929976, 0.5183187255969877, 0.7978336751954334);
-            var up = new Cesium.Cartesian3(-0.38141711164833125, -0.7009912978668698, 0.6026045031832784);
-            var camera = scene.getCamera();
+            position = new Cesium.Cartesian3(-2444319.744271441, -4490462.305656268, 3800605.179680734);
+            direction = new Cesium.Cartesian3(0.3079076572929976, 0.5183187255969877, 0.7978336751954334);
+            up = new Cesium.Cartesian3(-0.38141711164833125, -0.7009912978668698, 0.6026045031832784);
+            camera = scene.getCamera();
             camera.lookAt(position, position.add(direction), up);
             break;
         }
@@ -143,6 +151,64 @@ require([
     
     var layerNames = {};
     var removedLayers = [];
+    
+    function createLayerToolbar(imageryLayerCollection, layer, i) {
+        new CheckBox({
+            checked: removedLayers.indexOf(layer) < 0,
+            onChange: function(b) {
+                if (b) {
+                    imageryLayerCollection.add(layer);
+                    removedLayers.splice(removedLayers.indexOf(layer), 1);
+                    updateToolbar(imageryLayerCollection);
+                } else {
+                    imageryLayerCollection.remove(layer, false);
+                    removedLayers.push(layer);
+                    updateToolbar(imageryLayerCollection);
+                }
+            }
+        }).placeAt('layerToggle' + i);
+
+        new HorizontalSlider({
+            value: layer.alpha,
+            minimum: 0.0,
+            maximum: 1.0,
+            intermediateChanges: true,
+            style: "width:150px;",
+            onChange: function(value) {
+                layer.alpha = value;
+            }
+        }).placeAt('layerSlider' + i);
+
+        var layerIndex = imageryLayerCollection.indexOf(layer);
+        var showRaise = layerIndex >= 0 && layerIndex < imageryLayerCollection.getLength() - 1;
+        var showLower = layerIndex > 1;
+
+        new Button({
+            label: "Raise",
+            showLabel: false,
+            iconClass: "upArrow",
+            style: (showRaise ? "" : "visibility:hidden"),
+            onClick: function() {
+                if (showRaise) {
+                    imageryLayerCollection.raise(layer);
+                    updateToolbar(imageryLayerCollection);
+                    }
+                }
+        }).placeAt('layerUpArrow' + i);
+
+        new Button({
+            label: "Lower",
+            showLabel: false,
+            iconClass: "downArrow",
+            style: (showLower ? "" : "visibility:hidden"),
+            onClick: function() {
+                if (showLower) {
+                  imageryLayerCollection.lower(layer);
+                  updateToolbar(imageryLayerCollection);
+                }
+            }
+        }).placeAt('layerDownArrow' + i);
+    }
 
     function updateToolbar(imageryLayerCollection) {
         domConstruct.place(
@@ -153,74 +219,19 @@ require([
                 '</table>', 'layerTable', 'replace');
         
         var allLayers = removedLayers.slice(0);
-        for (var i = 1, len = imageryLayerCollection.getLength(); i < len; ++i) {
+        var i, len;
+        for (i = 1, len = imageryLayerCollection.getLength(); i < len; ++i) {
             allLayers.push(imageryLayerCollection.get(i));
         }
         
-        for (var i = allLayers.length - 1; i >= 0; --i) {
+        for (i = allLayers.length - 1; i >= 0; --i) {
             var layer = allLayers[i];
             var imageryProvider = layer.getImageryProvider();
 
             var layerName = layerNames[imageryProvider.getUrl()];
             domConstruct.place('<span>' + layerName + '</span>', 'layerLabel' + i);
 
-            (function(layer, i) {
-	            new CheckBox({
-	                checked: removedLayers.indexOf(layer) < 0,
-	                onChange: function(b) {
-	                    if (b) {
-	                        imageryLayerCollection.add(layer);
-	                        removedLayers.splice(removedLayers.indexOf(layer), 1);
-	                        updateToolbar(imageryLayerCollection);
-	                    } else {
-	                        imageryLayerCollection.remove(layer, false);
-	                        removedLayers.push(layer);
-	                        updateToolbar(imageryLayerCollection);
-	                    }
-	                }
-	            }).placeAt('layerToggle' + i);
-
-	            new HorizontalSlider({
-	                value: layer.alpha,
-	                minimum: 0.0,
-	                maximum: 1.0,
-	                intermediateChanges: true,
-	                style: "width:150px;",
-	                onChange: function(value) {
-	                    layer.alpha = value;
-	                }
-	            }).placeAt('layerSlider' + i);
-	            
-	            var layerIndex = imageryLayerCollection.indexOf(layer);
-	            var showRaise = layerIndex >= 0 && layerIndex < imageryLayerCollection.getLength() - 1;
-	            var showLower = layerIndex > 1;
-	            
-							new Button({
-							    label: "Raise",
-							    showLabel: false,
-							    iconClass: "upArrow",
-							    style: (showRaise ? "" : "visibility:hidden"),
-							    onClick: function() {
-							        if (showRaise) {
-								        imageryLayerCollection.raise(layer);
-								        updateToolbar(imageryLayerCollection);
-							        }
-							    }
-							}).placeAt('layerUpArrow' + i);
-	
-              new Button({
-                  label: "Lower",
-                  showLabel: false,
-                  iconClass: "downArrow",
-                  style: (showLower ? "" : "visibility:hidden"),
-                  onClick: function() {
-                      if (showLower) {
-	                      imageryLayerCollection.lower(layer);
-	                      updateToolbar(imageryLayerCollection);
-                      }
-                  }
-              }).placeAt('layerDownArrow' + i);
-            })(layer, i);
+            createLayerToolbar(imageryLayerCollection, layer, i);
         }
     }
 
