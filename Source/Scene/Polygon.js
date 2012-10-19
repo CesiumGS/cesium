@@ -517,7 +517,7 @@ define([
         var i;
         var meshes = [];
         if (typeof this._extent !== 'undefined') {
-            meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true}));
+            meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoordinates:true}));
 
             this._boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid, this._boundingVolume);
             if (this._mode !== SceneMode.SCENE3D) {
