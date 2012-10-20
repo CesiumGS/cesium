@@ -535,18 +535,27 @@ define([
         },
 
         /**
-         * Clears all CZML data from the viewer.
+         * Removes all CZML data from the viewer.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
          */
-        clearAllCZML : function() {
+        removeAllCZML : function() {
             this.centerCameraOnObject(undefined);
-            //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
-            //cache data indefinitely and removeAll is the only way to get rid of it.
-            //while there are no visual differences, removeAll cleans the cache and improves performance
-            this.visualizers.removeAllPrimitives();
-            this.dynamicObjectCollection.clear();
+            this.czmlProcessor.removeAll();
+        },
+
+        /**
+         * Removes a named CZML stream from the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {string} source - The original filename or URI that was supplied to addCZML.
+         */
+        removeCZML : function(source) {
+            // Any easy way to check if the camera is centered on an object that will survive?
+            this.centerCameraOnObject(undefined);
+            this.czmlProcessor.remove(source);
         },
 
         /**
