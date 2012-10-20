@@ -535,6 +535,65 @@ define([
         },
 
         /**
+         * Removes all CZML data from the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
+        removeAllCZML : function() {
+            this.centerCameraOnObject(undefined);
+            this.czmlProcessor.removeAll();
+        },
+
+        /**
+         * Removes a named CZML stream from the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {string} source - The original filename or URI that was supplied to addCZML.
+         */
+        removeCZML : function(source) {
+            // Any easy way to check if the camera is centered on an object that will survive?
+            this.centerCameraOnObject(undefined);
+            this.czmlProcessor.remove(source);
+        },
+
+        /**
+         * Add CZML data to the viewer.  The first parameter can be a collection of CZML
+         * objects, or <code>undefined</code>.  If the first parameter is <code>undefined</code>,
+         * the second parameter will be used to fetch the CZML stream asynchronously.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {CZML} czml - The CZML (as objects or undefined) to be processed and added to the viewer.
+         * @param {string} source - The filename or URI that was the source of the CZML collection.
+         * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
+         */
+        addCZML : function(czml, source, lookAt) {
+            var widget = this;
+            var onLoad = function(czmlData) {
+                widget.czmlProcessor.add(czmlData, source);
+                widget.setTimeFromBuffer();
+                if (typeof lookAt !== 'undefined') {
+                    widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(lookAt));
+                }
+            };
+
+            // Test if the CZML objects were provided, and if not, fetch them asynchronously.
+            if (typeof czml === 'undefined') {
+                loadJson(source).then(function(czmlData) {
+                    onLoad(czmlData);
+                },
+                function(error) {
+                    console.error(error);
+                    window.alert(error);
+                });
+            } else {
+                onLoad(czml);
+            }
+        },
+
+        /**
          * This function is called when files are dropped on the widget, if drag-and-drop is enabled.
          *
          * @function
@@ -550,8 +609,7 @@ define([
             var reader = new FileReader();
             var widget = this;
             reader.onload = function(evt) {
-                widget.czmlProcessor.add(JSON.parse(evt.target.result), f.name);
-                widget.setTimeFromBuffer();
+                widget.addCZML(JSON.parse(evt.target.result), f.name);
             };
             reader.readAsText(f);
         },
@@ -676,16 +734,11 @@ define([
 
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
-                loadJson(widget.endUserOptions.source).then(function(czmlData) {
-                    widget.czmlProcessor.add(czmlData, widget.endUserOptions.source);
-                    widget.setTimeFromBuffer();
-                    if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                        widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(widget.endUserOptions.lookAt));
-                    }
-                },
-                function(error) {
-                    window.alert(error);
-                });
+                if (typeof widget.endUserOptions.lookAt !== 'undefined') {
+                    widget.addCZML(undefined, widget.endUserOptions.source, widget.endUserOptions.lookAt);
+                } else {
+                    widget.addCZML(undefined, widget.endUserOptions.source);
+                }
             }
 
             if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
