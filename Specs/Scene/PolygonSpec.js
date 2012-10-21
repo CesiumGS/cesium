@@ -133,7 +133,7 @@ defineSuite([
         };
 
         polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(polygon._polygonHierarchy).toBeDefined();
+        expect(polygon.getPositions()).not.toBeDefined();
     });
 
     it('configure polygon from clockwise hierarchy', function() {
@@ -163,7 +163,7 @@ defineSuite([
         };
 
         polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(polygon._polygonHierarchy).toBeDefined();
+        expect(polygon.getPositions()).not.toBeDefined();
     });
 
     it('configureFromPolygonHierarchy throws with less than three positions', function() {
@@ -187,7 +187,6 @@ defineSuite([
 
         polygon.configureExtent(extent);
         expect(polygon.getPositions()).not.toBeDefined();
-
     });
 
     it('gets the default color', function() {
@@ -266,7 +265,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('does not render', function() {
+    it('does not render when show is false', function() {
         polygon = createPolygon();
         polygon.material.uniforms.color = {
             red : 1.0,
@@ -283,6 +282,21 @@ defineSuite([
         polygon = new Polygon();
         polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.granularity = CesiumMath.toRadians(20.0);
+        expect(render(context, frameState, polygon)).toEqual(0);
+    });
+
+    it('does not render with empty extent', function() {
+        var extent = new Extent(
+            0.0,
+            0.0,
+            0.0,
+            0.0
+        );
+
+        polygon = new Polygon();
+        polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
+        polygon.configureExtent(extent);
+
         expect(render(context, frameState, polygon)).toEqual(0);
     });
 

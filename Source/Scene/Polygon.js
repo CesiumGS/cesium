@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/Color',
         '../Core/combine',
         '../Core/destroyObject',
@@ -34,6 +35,7 @@ define([
         '../Shaders/PolygonFSPick'
     ], function(
         DeveloperError,
+        defaultValue,
         Color,
         combine,
         destroyObject,
@@ -334,7 +336,7 @@ define([
         if (typeof positions !== 'undefined' && (positions.length < 3)) {
             throw new DeveloperError('At least three positions are required.');
         }
-        this.height = height || 0.0;
+        this.height = defaultValue(height, 0.0);
         this._extent = undefined;
         this._polygonHierarchy = undefined;
         this._positions = positions;
@@ -425,7 +427,7 @@ define([
             }
         }
 
-        this.height = height || 0.0;
+        this.height = defaultValue(height, 0.0);
         this._positions = undefined;
         this._extent = undefined;
         this._polygonHierarchy = polygons;
@@ -451,7 +453,7 @@ define([
      */
     Polygon.prototype.configureExtent = function(extent, height){
         this._extent = extent;
-        this.height = height || 0.0;
+        this.height = defaultValue(height, 0.0);
         this._positions = undefined;
         this._polygonHierarchy = undefined;
         this._createVertexArray = true;
@@ -518,7 +520,7 @@ define([
         // PERFORMANCE_IDEA:  Move this to a web-worker.
         var i;
         var meshes = [];
-        if (typeof polygon._extent !== 'undefined') {
+        if ((typeof polygon._extent !== 'undefined') && !polygon._extent.isEmpty()) {
             meshes.push(ExtentTessellator.compute({extent: polygon._extent, generateTextureCoords:true}));
 
             polygon._boundingVolume = BoundingSphere.fromExtent3D(polygon._extent, polygon._ellipsoid, polygon._boundingVolume);
