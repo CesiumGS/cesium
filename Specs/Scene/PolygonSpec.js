@@ -285,7 +285,7 @@ defineSuite([
         expect(render(context, frameState, polygon)).toEqual(0);
     });
 
-    it('does not render without duplicate positions', function() {
+    it('does not render without positions due to duplicates', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
 
         polygon = new Polygon();
@@ -295,6 +295,30 @@ defineSuite([
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0))
         ]);
+
+        expect(render(context, frameState, polygon)).toEqual(0);
+    });
+
+    it('does not render without hierarchy positions due to duplicates', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var hierarchy = {
+                positions : ellipsoid.cartographicArrayToCartesianArray([
+                    new Cartographic.fromDegrees(1.0, 1.0, 0.0),
+                    new Cartographic.fromDegrees(1.0, 1.0, 0.0),
+                    new Cartographic.fromDegrees(1.0, 1.0, 0.0)
+                ]),
+                holes : [{
+                        positions : ellipsoid.cartographicArrayToCartesianArray([
+                            new Cartographic.fromDegrees(0.0, 0.0, 0.0),
+                            new Cartographic.fromDegrees(0.0, 0.0, 0.0),
+                            new Cartographic.fromDegrees(0.0, 0.0, 0.0)
+                        ])
+                }]
+        };
+
+        polygon = new Polygon();
+        polygon.ellipsoid = ellipsoid;
+        polygon.configureFromPolygonHierarchy(hierarchy);
 
         expect(render(context, frameState, polygon)).toEqual(0);
     });

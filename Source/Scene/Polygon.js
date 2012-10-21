@@ -547,13 +547,18 @@ define([
             var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, polygon.ellipsoid);
             var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions, createMeshesOuterPositions2D);
             for (i = 0; i < polygon._polygonHierarchy.length; i++) {
-                 meshes.push(createMeshFromPositions(polygon, polygon._polygonHierarchy[i], outerPositions2D));
+                mesh = createMeshFromPositions(polygon, polygon._polygonHierarchy[i], outerPositions2D);
+                if (typeof mesh !== 'undefined') {
+                    meshes.push(mesh);
+                }
             }
 
-            // The bounding volume is just around the boundary points, so there could be cases for
-            // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
-            // volume doesn't cover the polygon.
-            polygon._boundingVolume = BoundingSphere.fromPoints(outerPositions, polygon._boundingVolume);
+            if (meshes.length > 0) {
+                // The bounding volume is just around the boundary points, so there could be cases for
+                // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
+                // volume doesn't cover the polygon.
+                polygon._boundingVolume = BoundingSphere.fromPoints(outerPositions, polygon._boundingVolume);
+            }
         }
 
         if (meshes.length === 0) {
