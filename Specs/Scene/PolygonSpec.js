@@ -285,6 +285,20 @@ defineSuite([
         expect(render(context, frameState, polygon)).toEqual(0);
     });
 
+    it('does not render without duplicate positions', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+
+        polygon = new Polygon();
+        polygon.ellipsoid = ellipsoid;
+        polygon.setPositions([
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0))
+        ]);
+
+        expect(render(context, frameState, polygon)).toEqual(0);
+    });
+
     it('does not render with empty extent', function() {
         var extent = new Extent(
             0.0,

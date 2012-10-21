@@ -499,6 +499,11 @@ define([
 
     function createMeshFromPositions(polygon, positions, outerPositions2D) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
+        if (cleanedPositions.length < 3) {
+            // Duplicate positions result in not enough positions to form a polygon.
+            return undefined;
+        }
+
         var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, polygon.ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createMeshFromPositionsPositions);
 
@@ -520,6 +525,8 @@ define([
         // PERFORMANCE_IDEA:  Move this to a web-worker.
         var i;
         var meshes = [];
+        var mesh;
+
         if ((typeof polygon._extent !== 'undefined') && !polygon._extent.isEmpty()) {
             meshes.push(ExtentTessellator.compute({extent: polygon._extent, generateTextureCoords:true}));
 
@@ -530,8 +537,11 @@ define([
                 polygon._boundingVolume2D.center = new Cartesian3(0.0, center2D.x, center2D.y);
             }
         } else if (typeof polygon._positions !== 'undefined') {
-            meshes.push(createMeshFromPositions(polygon, polygon._positions));
-            polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
+            mesh = createMeshFromPositions(polygon, polygon._positions);
+            if (typeof mesh !== 'undefined') {
+                meshes.push(mesh);
+                polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
+            }
         } else if (typeof polygon._polygonHierarchy !== 'undefined') {
             var outerPositions =  polygon._polygonHierarchy[0];
             var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, polygon.ellipsoid);
@@ -544,11 +554,12 @@ define([
             // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
             // volume doesn't cover the polygon.
             polygon._boundingVolume = BoundingSphere.fromPoints(outerPositions, polygon._boundingVolume);
-        } else {
+        }
+
+        if (meshes.length === 0) {
             return undefined;
         }
 
-        var mesh;
         var processedMeshes = [];
         for (i = 0; i < meshes.length; i++) {
             mesh = meshes[i];
