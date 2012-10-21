@@ -15,8 +15,8 @@ define([
         '../Core/Intersect',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/Command',
         '../Renderer/CommandLists',
+        '../Renderer/DrawCommand',
         './SceneMode',
         './Polyline',
         '../Shaders/PolylineVS',
@@ -39,8 +39,8 @@ define([
         Intersect,
         BlendingState,
         BufferUsage,
-        Command,
         CommandLists,
+        DrawCommand,
         SceneMode,
         Polyline,
         PolylineVS,
@@ -492,7 +492,7 @@ define([
 
                         command = commands[p];
                         if (typeof command === 'undefined') {
-                            command = commands[p] = new Command();
+                            command = commands[p] = new DrawCommand();
                         }
 
                         command.boundingVolume = boundingVolume;
@@ -507,7 +507,7 @@ define([
 
                         command = commands[p + 1];
                         if (typeof command === 'undefined') {
-                            command = commands[p + 1] = new Command();
+                            command = commands[p + 1] = new DrawCommand();
                         }
 
                         command.boundingVolume = boundingVolume;
@@ -522,7 +522,7 @@ define([
 
                         command = commands[p + 2];
                         if (typeof command === 'undefined') {
-                            command = commands[p + 2] = new Command();
+                            command = commands[p + 2] = new DrawCommand();
                         }
 
                         command.boundingVolume = boundingVolume;
@@ -550,7 +550,7 @@ define([
 
                         command = commands[b];
                         if (typeof command === 'undefined') {
-                            command = commands[b] = new Command();
+                            command = commands[b] = new DrawCommand();
                         }
 
                         command.boundingVolume = boundingVolume;
@@ -699,7 +699,7 @@ define([
                     positionIndex += 2 * bucketLength * 3;
                     showIndex += bucketLength;
                     colorIndex += bucketLength * 4;
-                    offset += bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
+                    offset = bucket.updateIndices(totalIndices, vertexBufferOffset, vertexArrayBuckets, offset);
                 }
             }
             this._positionBuffer = context.createVertexBuffer(positionArray, this._buffersUsage[POSITION_INDEX].bufferUsage);

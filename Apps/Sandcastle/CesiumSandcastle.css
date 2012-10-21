@@ -84,6 +84,17 @@ html, body {
     font-size: 0.9em;
 }
 
+.demoTooltipType {
+    text-align: center;
+    color: #888;
+    margin-bottom: 5px;
+    padding-right: 10px;
+}
+
+.subInfo {
+    font-size: 11px;
+}
+
 .galleryError {
     color: #f88;
 }

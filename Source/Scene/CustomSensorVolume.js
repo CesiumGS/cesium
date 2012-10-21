@@ -13,8 +13,8 @@ define([
         '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
-        '../Renderer/Command',
         '../Renderer/CommandLists',
+        '../Renderer/DrawCommand',
         './Material',
         '../Shaders/Noise',
         '../Shaders/SensorVolume',
@@ -35,8 +35,8 @@ define([
         BoundingSphere,
         BufferUsage,
         BlendingState,
-        Command,
         CommandLists,
+        DrawCommand,
         Material,
         ShadersNoise,
         ShadersSensorVolume,
@@ -64,8 +64,8 @@ define([
         this._pickId = undefined;
         this._pickIdThis = t._pickIdThis || this;
 
-        this._colorCommand = new Command();
-        this._pickCommand = new Command();
+        this._colorCommand = new DrawCommand();
+        this._pickCommand = new DrawCommand();
         this._commandLists = new CommandLists();
 
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = PrimitiveType.TRIANGLES;
