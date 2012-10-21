@@ -11,7 +11,13 @@ Beta Releases
    * Replaced the `positionToEyeWC` field of the `czm_materialInput` struct with its equivalent in eye coordinates, `positionToEyeEC`.
 * Added new Materials: `RimLighting`, Erosion`, TODO.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
 
-### b9 - xx/xx/2012
+### b10 - xx/xx/2012
+
+* Breaking changes:
+   * xxx
+* Improved middle mouse click behavior to always tilt in the same direction.
+
+### b9 - 10/01/2012
 
 * Breaking changes:
    * Removed the `render` and `renderForPick` functions of primitives. The primitive `update` function updates a list of commands for the renderer. For more details, see the [Data Driven Renderer](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Data-Driven-Renderer-Details).

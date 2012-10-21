@@ -13,9 +13,9 @@ define([
         '../Core/BoxTessellator',
         '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
-        '../Renderer/Command',
         '../Renderer/CommandLists',
         '../Renderer/CullFace',
+        '../Renderer/DrawCommand',
         '../Renderer/BlendingState',
         './Material',
         '../Shaders/Noise',
@@ -39,9 +39,9 @@ define([
         BoxTessellator,
         BoundingSphere,
         BufferUsage,
-        Command,
         CommandLists,
         CullFace,
+        DrawCommand,
         BlendingState,
         Material,
         ShadersNoise,
@@ -70,8 +70,8 @@ define([
 
         this._pickId = undefined;
 
-        this._colorCommand = new Command();
-        this._pickCommand = new Command();
+        this._colorCommand = new DrawCommand();
+        this._pickCommand = new DrawCommand();
         this._commandLists = new CommandLists();
 
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = PrimitiveType.TRIANGLES;

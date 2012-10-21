@@ -8,7 +8,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
      * @alias Command
      * @constructor
      */
-    var Command = function() {
+    var DrawCommand = function() {
         /**
          * The bounding volume of the geometry.
          * @type DOC_TBA
@@ -73,5 +73,17 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
         this.framebuffer = undefined;
     };
 
-    return Command;
+    /**
+     * Executes the draw command.
+     *
+     * @memberof DrawCommand
+     *
+     * @param {Context} context The renderer context in which to draw.
+     * @param {Framebuffer} [framebuffer] The framebuffer to which to draw if one is not specified by the command.
+     */
+    DrawCommand.prototype.execute = function(context, framebuffer) {
+        context.draw(this, framebuffer);
+    };
+
+    return DrawCommand;
 });
