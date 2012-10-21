@@ -47,12 +47,16 @@ define([], function() {
                  * @type Boolean
                  */
                 color : false,
-
                 /**
                  * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
                  * @type Boolean
                  */
-                pick : false
+                pick : false,
+                /**
+                 * <code>true</code> if the primitive should update for an overlay pass, <code>false</code> otherwise.
+                 * @type Boolean
+                 */
+                overlay : false
         };
     };
 

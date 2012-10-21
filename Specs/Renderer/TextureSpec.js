@@ -5,6 +5,7 @@ defineSuite([
          'Core/Cartesian2',
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
+         'Renderer/ClearCommand',
          'Renderer/PixelFormat',
          'Renderer/PixelDatatype',
          'Renderer/TextureWrap',
@@ -16,6 +17,7 @@ defineSuite([
          Cartesian2,
          PrimitiveType,
          BufferUsage,
+         ClearCommand,
          PixelFormat,
          PixelDatatype,
          TextureWrap,
@@ -101,28 +103,28 @@ defineSuite([
     });
 
     it('creates from the framebuffer', function() {
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 1.0,
                 green : 0.0,
                 blue : 0.0,
                 alpha : 1.0
             }
-        }));
+        })));
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         texture = context.createTexture2DFromFramebuffer();
         expect(texture.getWidth()).toEqual(context.getCanvas().clientWidth);
         expect(texture.getHeight()).toEqual(context.getCanvas().clientHeight);
 
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 1.0,
                 green : 1.0,
                 blue : 1.0,
                 alpha : 1.0
             }
-        }));
+        })));
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         expect(renderFragment(context)).toEqual([255, 0, 0, 255]);
@@ -138,27 +140,27 @@ defineSuite([
         expect(renderFragment(context)).toEqual([0, 0, 255, 255]);
 
         // Clear to red
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 1.0,
                 green : 0.0,
                 blue : 0.0,
                 alpha : 1.0
             }
-        }));
+        })));
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         texture.copyFromFramebuffer();
 
         // Clear to white
-        context.clear(context.createClearState({
+        context.clear(new ClearCommand(context.createClearState({
             color : {
                 red : 1.0,
                 green : 1.0,
                 blue : 1.0,
                 alpha : 1.0
             }
-        }));
+        })));
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         // Render red
