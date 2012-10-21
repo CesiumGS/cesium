@@ -122,21 +122,18 @@ defineSuite([
                             new Cartographic.fromDegrees(-112.0, 36.0, 0.0)
                         ]),
                         holes : [{
-                                positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                                    new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
-                                    new Cartographic.fromDegrees(-114.0, 36.5, 0.0),
-                                    new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
-                                    new Cartographic.fromDegrees(-120.0, 38.5, 0.0)
-                                ])
+                            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
+                                new Cartographic.fromDegrees(-114.0, 36.5, 0.0),
+                                new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
+                                new Cartographic.fromDegrees(-120.0, 38.5, 0.0)
+                            ])
                         }]
                 }]
         };
 
         polygon.configureFromPolygonHierarchy(hierarchy);
         expect(polygon._polygonHierarchy).toBeDefined();
-        expect(function() {
-            polygon._vertices.update(context, polygon._createMeshes(), polygon.bufferUsage);
-        }).not.toThrow();
     });
 
     it('configure polygon from clockwise hierarchy', function() {
@@ -155,21 +152,18 @@ defineSuite([
                             new Cartographic.fromDegrees(-122.0, 39.0, 0.0)
                         ]),
                         holes : [{
-                                positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                                    new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
-                                    new Cartographic.fromDegrees(-120.0, 38.5, 0.0),
-                                    new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
-                                    new Cartographic.fromDegrees(-114.0, 36.5, 0.0)
-                                ])
+                            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                                new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
+                                new Cartographic.fromDegrees(-120.0, 38.5, 0.0),
+                                new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
+                                new Cartographic.fromDegrees(-114.0, 36.5, 0.0)
+                            ])
                         }]
                 }]
         };
 
         polygon.configureFromPolygonHierarchy(hierarchy);
         expect(polygon._polygonHierarchy).toBeDefined();
-        expect(function() {
-            polygon._vertices.update(context, polygon._createMeshes(), polygon.bufferUsage);
-        }).not.toThrow();
     });
 
     it('configureFromPolygonHierarchy throws with less than three positions', function() {

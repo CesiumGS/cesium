@@ -493,11 +493,12 @@ define([
         return mesh;
     };
 
-    var _createMeshFromPositionsPositions = [];
-    Polygon.prototype._createMeshFromPositions = function (positions, outerPositions2D) {
+    var createMeshFromPositionsPositions = [];
+
+    function createMeshFromPositions(polygon, positions, outerPositions2D) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, this.ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, _createMeshFromPositionsPositions);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, polygon.ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createMeshFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
@@ -505,41 +506,42 @@ define([
             cleanedPositions.reverse();
         }
         var indices = PolygonPipeline.earClip2D(positions2D);
-        var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, this._granularity);
+        var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, polygon._granularity);
         var boundary2D = outerPositions2D || positions2D;
         mesh = Polygon._appendTextureCoordinates(tangentPlane, boundary2D, mesh);
         return mesh;
-    };
+    }
 
-    var _createMeshesOuterPositions2D = [];
-    Polygon.prototype._createMeshes = function() {
+    var createMeshesOuterPositions2D = [];
+
+    function createMeshes(polygon) {
         // PERFORMANCE_IDEA:  Move this to a web-worker.
         var i;
         var meshes = [];
-        if (typeof this._extent !== 'undefined') {
-            meshes.push(ExtentTessellator.compute({extent: this._extent, generateTextureCoords:true}));
+        if (typeof polygon._extent !== 'undefined') {
+            meshes.push(ExtentTessellator.compute({extent: polygon._extent, generateTextureCoords:true}));
 
-            this._boundingVolume = BoundingSphere.fromExtent3D(this._extent, this._ellipsoid, this._boundingVolume);
-            if (this._mode !== SceneMode.SCENE3D) {
-                this._boundingVolume2D = BoundingSphere.fromExtent2D(this._extent, this._projection, this._boundingVolume2D);
-                var center2D = this._boundingVolume2D.center;
-                this._boundingVolume2D.center = new Cartesian3(0.0, center2D.x, center2D.y);
+            polygon._boundingVolume = BoundingSphere.fromExtent3D(polygon._extent, polygon._ellipsoid, polygon._boundingVolume);
+            if (polygon._mode !== SceneMode.SCENE3D) {
+                polygon._boundingVolume2D = BoundingSphere.fromExtent2D(polygon._extent, polygon._projection, polygon._boundingVolume2D);
+                var center2D = polygon._boundingVolume2D.center;
+                polygon._boundingVolume2D.center = new Cartesian3(0.0, center2D.x, center2D.y);
             }
-        } else if (typeof this._positions !== 'undefined') {
-            meshes.push(this._createMeshFromPositions(this._positions));
-            this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
-        } else if (typeof this._polygonHierarchy !== 'undefined') {
-            var outerPositions =  this._polygonHierarchy[0];
-            var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, this.ellipsoid);
-            var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions, _createMeshesOuterPositions2D);
-            for (i = 0; i < this._polygonHierarchy.length; i++) {
-                 meshes.push(this._createMeshFromPositions(this._polygonHierarchy[i], outerPositions2D));
+        } else if (typeof polygon._positions !== 'undefined') {
+            meshes.push(createMeshFromPositions(polygon, polygon._positions));
+            polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
+        } else if (typeof polygon._polygonHierarchy !== 'undefined') {
+            var outerPositions =  polygon._polygonHierarchy[0];
+            var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, polygon.ellipsoid);
+            var outerPositions2D = tangentPlane.projectPointsOntoPlane(outerPositions, createMeshesOuterPositions2D);
+            for (i = 0; i < polygon._polygonHierarchy.length; i++) {
+                 meshes.push(createMeshFromPositions(polygon, polygon._polygonHierarchy[i], outerPositions2D));
             }
 
             // The bounding volume is just around the boundary points, so there could be cases for
             // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
             // volume doesn't cover the polygon.
-            this._boundingVolume = BoundingSphere.fromPoints(outerPositions, this._boundingVolume);
+            polygon._boundingVolume = BoundingSphere.fromPoints(outerPositions, polygon._boundingVolume);
         } else {
             return undefined;
         }
@@ -548,23 +550,23 @@ define([
         var processedMeshes = [];
         for (i = 0; i < meshes.length; i++) {
             mesh = meshes[i];
-            mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, this.height, this.ellipsoid);
+            mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, polygon.height, polygon.ellipsoid);
             mesh = MeshFilters.reorderForPostVertexCache(mesh);
             mesh = MeshFilters.reorderForPreVertexCache(mesh);
 
-            if (this._mode === SceneMode.SCENE3D) {
+            if (polygon._mode === SceneMode.SCENE3D) {
                 mesh.attributes.position2D = { // Not actually used in shader
                         value : [0.0, 0.0]
                     };
                 mesh.attributes.position3D = mesh.attributes.position;
                 delete mesh.attributes.position;
             } else {
-                mesh = MeshFilters.projectTo2D(mesh, this._projection);
+                mesh = MeshFilters.projectTo2D(mesh, polygon._projection);
             }
             processedMeshes = processedMeshes.concat(MeshFilters.fitToUnsignedShortIndices(mesh));
         }
 
-        if (this._mode !== SceneMode.SCENE3D) {
+        if (polygon._mode !== SceneMode.SCENE3D) {
             mesh = meshes[0];
             var projectedPositions = mesh.attributes.position2D.values;
             var positions = [];
@@ -573,21 +575,21 @@ define([
                 positions.push(new Cartesian3(projectedPositions[i], projectedPositions[i + 1], 0.0));
             }
 
-            this._boundingVolume2D = BoundingSphere.fromPoints(positions, this._boundingVolume2D);
-            var center2DPositions = this._boundingVolume2D.center;
-            this._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
+            polygon._boundingVolume2D = BoundingSphere.fromPoints(positions, polygon._boundingVolume2D);
+            var center2DPositions = polygon._boundingVolume2D.center;
+            polygon._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
         }
 
         return processedMeshes;
-    };
+    }
 
-    Polygon.prototype._getGranularity = function(mode) {
+    function getGranularity(polygon, mode) {
         if (mode === SceneMode.SCENE3D) {
-            return this.scene3D.granularity || this.granularity;
+            return polygon.scene3D.granularity || polygon.granularity;
         }
 
-        return this.scene2D.granularity || this.granularity;
-    };
+        return polygon.scene2D.granularity || polygon.granularity;
+    }
 
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
@@ -609,7 +611,7 @@ define([
         }
 
         var mode = frameState.mode;
-        var granularity = this._getGranularity(mode);
+        var granularity = getGranularity(this, mode);
 
         if (granularity < 0.0) {
             throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
@@ -658,7 +660,7 @@ define([
 
         if (this._createVertexArray) {
             this._createVertexArray = false;
-            this._vertices.update(context, this._createMeshes(), this.bufferUsage);
+            this._vertices.update(context, createMeshes(this), this.bufferUsage);
         }
 
         if (typeof this._vertices.getVertexArrays() === 'undefined') {
