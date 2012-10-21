@@ -459,9 +459,10 @@ define([
         this._createVertexArray = true;
     };
 
-    var _appendTextureCoordinatesCartesian2 = new Cartesian2();
-    var _appendTextureCoordinatesCartesian3 = new Cartesian3();
-    Polygon._appendTextureCoordinates = function(tangentPlane, positions2D, mesh) {
+    var appendTextureCoordinatesCartesian2 = new Cartesian2();
+    var appendTextureCoordinatesCartesian3 = new Cartesian3();
+
+    function appendTextureCoordinates(tangentPlane, positions2D, mesh) {
         var boundingRectangle = new BoundingRectangle.fromPoints(positions2D);
         var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
 
@@ -475,11 +476,11 @@ define([
         // save memory by computing them in the fragment shader.  However, projecting
         // the point onto the plane may have precision issues.
         for ( var i = 0; i < length; i += 3) {
-            var p = _appendTextureCoordinatesCartesian3;
+            var p = appendTextureCoordinatesCartesian3;
             p.x = positions[i];
             p.y = positions[i + 1];
             p.z = positions[i + 2];
-            var st = tangentPlane.projectPointOntoPlane(p, _appendTextureCoordinatesCartesian2);
+            var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
             st.subtract(origin, st);
 
             textureCoordinates[j++] = st.x / boundingRectangle.width;
@@ -493,7 +494,7 @@ define([
         };
 
         return mesh;
-    };
+    }
 
     var createMeshFromPositionsPositions = [];
 
@@ -515,7 +516,7 @@ define([
         var indices = PolygonPipeline.earClip2D(positions2D);
         var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, polygon._granularity);
         var boundary2D = outerPositions2D || positions2D;
-        mesh = Polygon._appendTextureCoordinates(tangentPlane, boundary2D, mesh);
+        mesh = appendTextureCoordinates(tangentPlane, boundary2D, mesh);
         return mesh;
     }
 
