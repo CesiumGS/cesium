@@ -920,7 +920,9 @@ require({
 
             // Sort alphabetically.  This will eventually be a user option.
             gallery_demos.sort(function(a, b) {
-                return (b.name < a.name) ? 1 : ((b.name > a.name) ? -1 : 0);
+                var aName = a.name.toUpperCase();
+                var bName = b.name.toUpperCase();
+                return (bName < aName) ? 1 : ((bName > aName) ? -1 : 0);
             });
 
             var queryInGalleryIndex = false;
