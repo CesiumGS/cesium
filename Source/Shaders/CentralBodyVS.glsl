@@ -9,11 +9,8 @@ uniform mat4 u_modifiedModelView;
 uniform vec4 u_tileExtent;
 
 // Uniforms for 2D Mercator projection
-uniform float u_southLatitude;
-uniform float u_northLatitude;
-uniform float u_southMercatorYLow;
-uniform float u_southMercatorYHigh;
-uniform float u_oneOverMercatorHeight;
+uniform vec2 u_southAndNorthLatitude;
+uniform vec3 u_southMercatorYLowAndHighAndOneOverHeight;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -41,21 +38,27 @@ float get2DMercatorYPositionFraction()
     // above evaluated and then rounded up at the 4th significant digit.
     const float maxTileWidth = 0.003068;
     float positionFraction = textureCoordinates.y;
-    if (u_northLatitude - u_southLatitude > maxTileWidth)
+    float southLatitude = u_southAndNorthLatitude.x;
+    float northLatitude = u_southAndNorthLatitude.y;
+    if (northLatitude - southLatitude > maxTileWidth)
     {
-        float currentLatitude = mix(u_southLatitude, u_northLatitude, textureCoordinates.y);
+        float currentLatitude = mix(southLatitude, northLatitude, textureCoordinates.y);
         currentLatitude = clamp(currentLatitude, -czm_webMercatorMaxLatitude, czm_webMercatorMaxLatitude);
         float sinLatitude = sin(currentLatitude);
         float mercatorY = 0.5 * log((1.0 + sinLatitude) / (1.0 - sinLatitude));
+        
+        float southMercatorYLow = u_southMercatorYLowAndHighAndOneOverHeight.x;
+        float southMercatorYHigh = u_southMercatorYLowAndHighAndOneOverHeight.y;
+        float oneOverMercatorHeight = u_southMercatorYLowAndHighAndOneOverHeight.z;
     
         // mercatorY - u_southMercatorY in simulated double precision.
-        float t1 = 0.0 - u_southMercatorYLow;
+        float t1 = 0.0 - southMercatorYLow;
         float e = t1 - 0.0;
-        float t2 = ((-u_southMercatorYLow - e) + (0.0 - (t1 - e))) + mercatorY - u_southMercatorYHigh;
+        float t2 = ((-southMercatorYLow - e) + (0.0 - (t1 - e))) + mercatorY - southMercatorYHigh;
         float highDifference = t1 + t2;
         float lowDifference = t2 - (highDifference - t1);
         
-        positionFraction = highDifference * u_oneOverMercatorHeight + lowDifference * u_oneOverMercatorHeight;
+        positionFraction = highDifference * oneOverMercatorHeight + lowDifference * oneOverMercatorHeight;
     }    
     return positionFraction;
 }

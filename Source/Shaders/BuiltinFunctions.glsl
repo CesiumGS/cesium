@@ -461,7 +461,7 @@ vec3 czm_multiplyWithColorBalance(vec3 left, vec3 right)
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * The maximum latitude (both North and South) supported by a Web Mercator
+ * The maximum latitude, in radians, both North and South, supported by a Web Mercator
  * (EPSG:3857) projection.  Technically, the Mercator projection is defined
  * for any latitude up to (but not including) 90 degrees, but it makes sense
  * to cut it off sooner because it grows exponentially with increasing latitude.
@@ -504,10 +504,10 @@ const int czm_scene3D = 2;
 /**
  * Specifies that the scene is morphing between modes.
  * 
- * @name czml_morphing
+ * @name czm_morphing
  * @glslConstant
  */
-const int czml_morphing = 3;
+const int czm_morphing = 3;
 
 /**
  * DOC_TBA

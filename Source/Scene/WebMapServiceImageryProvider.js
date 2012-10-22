@@ -40,6 +40,7 @@ define([
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
+     * @exception {DeveloperError} <code>description.layers</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see SingleTileImageryProvider

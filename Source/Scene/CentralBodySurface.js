@@ -814,20 +814,11 @@ define([
             u_dayIntensity : function() {
                 return this.dayIntensity;
             },
-            u_southLatitude : function() {
-                return this.southLatitude;
+            u_southAndNorthLatitude : function() {
+                return this.southAndNorthLatitude;
             },
-            u_northLatitude : function() {
-                return this.northLatitude;
-            },
-            u_southMercatorYLow : function() {
-                return this.southMercatorYLow;
-            },
-            u_southMercatorYHigh : function() {
-                return this.southMercatorYHigh;
-            },
-            u_oneOverMercatorHeight : function() {
-                return this.oneOverMercatorHeight;
+            u_southMercatorYLowAndHighAndOneOverHeight : function() {
+               return this.southMercatorYLowAndHighAndOneOverHeight;
             },
 
             center3D : undefined,
@@ -840,11 +831,8 @@ define([
             dayTextureAlpha : [],
             dayIntensity : 0.0,
 
-            southLatitude : 0.0,
-            northLatitude : 0.0,
-            southMercatorYLow : 0.0,
-            southMercatorYHigh : 0.0,
-            oneOverMercatorHeight : 0.0
+            southAndNorthLatitude : new Cartesian2(0.0, 0.0),
+            southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(0.0, 0.0, 0.0)
         };
     }
 
@@ -963,11 +951,11 @@ define([
                     uniformMap.center3D = tile.center;
 
                     Cartesian4.clone(tileExtent, uniformMap.tileExtent);
-                    uniformMap.southLatitude = southLatitude;
-                    uniformMap.northLatitude = northLatitude;
-                    uniformMap.southMercatorYHigh = southMercatorYHigh;
-                    uniformMap.southMercatorYLow = southMercatorYLow;
-                    uniformMap.oneOverMercatorHeight = oneOverMercatorHeight;
+                    uniformMap.southAndNorthLatitude.x = southLatitude;
+                    uniformMap.southAndNorthLatitude.y = northLatitude;
+                    uniformMap.southMercatorYLowAndHighAndOneOverHeight.x = southMercatorYLow;
+                    uniformMap.southMercatorYLowAndHighAndOneOverHeight.y = southMercatorYHigh;
+                    uniformMap.southMercatorYLowAndHighAndOneOverHeight.z = oneOverMercatorHeight;
                     Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
                     // The first TileImagery's provider select the itensity for the entire tile.
