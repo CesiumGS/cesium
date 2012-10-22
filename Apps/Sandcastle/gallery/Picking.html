@@ -255,7 +255,7 @@ require([
             handler.setMouseAction(function(movement) {
                 var p = scene.pick(movement.endPosition);
                 if (primitives.contains(p)) {
-                    primitives.bringToFront(p);
+                    primitives.raiseToTop(p);
                 }
             }, Cesium.MouseEventType.MOVE);
 

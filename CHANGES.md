@@ -14,7 +14,8 @@ Beta Releases
    * Renamed `EquidistantCylindrdicalProjection` to `GeographicProjection`.
    * Renamed `MercatorProjection` to `WebMercatorProjection`.
    * `CentralBody.dayTileProvider` has been removed.  Instead, add one or more imagery providers to the collection returned by `CentralBody.getImageryLayers()`.
-   * The `description.generateTextureCoords` parameter passed to `ExtentTessellator.compute` is now called `description.generateTextureCoordinates`.  
+   * The `description.generateTextureCoords` parameter passed to `ExtentTessellator.compute` is now called `description.generateTextureCoordinates`.
+   * Renamed `bringForward`, `sendBackward`, `bringToFront`, and `sendToBack` methods on `CompositePrimitive` to `raise`, `lower`, `raiseToTop`, and `lowerToBottom`, respectively.    
 * `CentralBody` now allows imagery from multiple sources to be layered and alpha blended on the globe.  See the new `Imagery Layers` and `Map Projections` Sandcastle examples.
 * Added `WebMapServiceImageryProvider`.
 * Improved middle mouse click behavior to always tilt in the same direction.
