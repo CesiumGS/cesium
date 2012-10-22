@@ -26,6 +26,9 @@ define([
      * @param {Boolean} [description.disableCheckIfAllPixelsAreTransparent=false] If true, the discard check will be disabled
      *                  if all of the pixelsToCheck in the missingImageUrl have an alpha value of 0.  If false, the
      *                  discard check will proceed no matter the values of the pixelsToCheck.
+     *
+     * @exception {DeveloperError} <code>description.missingImageUrl</code> is required.
+     * @exception {DeveloperError} <code>pixelsToCheck</code> is required.
      */
     var DiscardMissingTileImagePolicy = function(description) {
         description = defaultValue(description, {});
@@ -95,6 +98,8 @@ define([
      * @param {Image} image An image to test.
      *
      * @returns True if the image should be discarded; otherwise, false.
+     *
+     * @exception {DeveloperError} <code>shouldDiscardImage</code> must not be called before the discard policy is ready.
      */
     DiscardMissingTileImagePolicy.prototype.shouldDiscardImage = function(image) {
         if (!this._isReady) {
