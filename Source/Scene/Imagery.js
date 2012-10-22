@@ -7,6 +7,12 @@ define([
         ImageryState) {
     "use strict";
 
+    /**
+     * Stores details about a tile of imagery.
+     *
+     * @alias Imagery
+     * @private
+     */
     var Imagery = function(imageryLayer, x, y, level, extent) {
         this.imageryLayer = imageryLayer;
         this.x = x;

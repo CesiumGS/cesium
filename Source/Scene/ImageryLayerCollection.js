@@ -1,28 +1,34 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/Event',
+        '../Core/Math',
         './ImageryLayer'
     ], function(
         DeveloperError,
+        defaultValue,
         destroyObject,
         Event,
+        CesiumMath,
         ImageryLayer) {
     "use strict";
 
     /**
      * An ordered collection of imagery layers.
      *
+     * @alias ImageryLayerCollection
+     *
      * @name ImageryLayerCollection
      */
-    function ImageryLayerCollection() {
+    var ImageryLayerCollection = function ImageryLayerCollection() {
         this._layers = [];
 
         this.layerAdded = new Event();
         this.layerRemoved = new Event();
         this.layerMoved = new Event();
-    }
+    };
 
     /**
      * Adds a layer to the collection.
@@ -34,6 +40,7 @@ define([
      *                         added on top of all existing layers.
      *
      * @exception {DeveloperError} layer is required.
+     * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
      */
     ImageryLayerCollection.prototype.add = function(layer, index) {
         if (typeof layer === 'undefined') {
@@ -44,6 +51,11 @@ define([
             index = this._layers.length;
             this._layers.push(layer);
         } else {
+            if (index < 0) {
+                throw new DeveloperError('index must be greater than or equal to zero.');
+            } else if (index > this._layers.length) {
+                throw new DeveloperError('index must be less than or equal to the number of layers.');
+            }
             this._layers.splice(index, 0, layer);
         }
 
@@ -70,7 +82,7 @@ define([
      *
      * @returns {ImageryLayer} The newly created layer.
      *
-     * @exception {DeveloperError} layer is required.
+     * @exception {DeveloperError} imageryProvider is required.
      */
     ImageryLayerCollection.prototype.addImageryProvider = function(imageryProvider, index) {
         if (typeof imageryProvider === 'undefined') {
@@ -94,7 +106,7 @@ define([
      *                    false if the layer was not in the collection.
      */
     ImageryLayerCollection.prototype.remove = function(layer, destroy) {
-        destroy = typeof destroy === 'undefined' ? true : destroy;
+        destroy = defaultValue(destroy, true);
 
         var index = this._layers.indexOf(layer);
         if (index !== -1) {
@@ -124,7 +136,7 @@ define([
      * @param {Boolean} [destroy=true] whether to destroy the layers in addition to removing them.
      */
     ImageryLayerCollection.prototype.removeAll = function(destroy) {
-        destroy = typeof destroy === 'undefined' ? true : destroy;
+        destroy = defaultValue(destroy, true);
 
         var layers = this._layers;
         for ( var i = 0, len = layers.length; i < len; i++) {
@@ -207,14 +219,10 @@ define([
         return index;
     }
 
-    function clamp(value, min, max) {
-        return value < min ? min : value > max ? max : value;
-    }
-
     function swapLayers(collection, i, j) {
         var arr = collection._layers;
-        i = clamp(i, 0, arr.length - 1);
-        j = clamp(j, 0, arr.length - 1);
+        i = CesiumMath.clamp(i, 0, arr.length - 1);
+        j = CesiumMath.clamp(j, 0, arr.length - 1);
 
         if (i === j) {
             return;

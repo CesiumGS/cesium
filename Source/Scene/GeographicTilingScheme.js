@@ -125,8 +125,14 @@ define([
      *        should be created.
      * @returns {Extent} The specified 'result', or a new object containing the native extent if 'result'
      *          is undefined.
+     *
+     * @exception {DeveloperError} <code>extent</code> is required.
      */
     GeographicTilingScheme.prototype.extentToNativeExtent = function(extent, result) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
         var west = CesiumMath.toDegrees(extent.west);
         var south = CesiumMath.toDegrees(extent.south);
         var east = CesiumMath.toDegrees(extent.east);

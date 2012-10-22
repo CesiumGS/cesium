@@ -64,8 +64,12 @@ define([
      * @param {Extent} [description.extent=imageryProvider.extent] The extent of the layer.  This extent
      *        can limit the visible portion of the imagery provider.
      * @param {Number} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
+     * @param {Number} [description.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
+     *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
+     *        by the WebGL stack will be used.  Larger values make the imagery look better in horizon
+     *        views.
      */
-    function ImageryLayer(imageryProvider, description) {
+    var ImageryLayer = function ImageryLayer(imageryProvider, description) {
         this._imageryProvider = imageryProvider;
 
         description = defaultValue(description, {});
@@ -78,6 +82,7 @@ define([
         this.alpha = defaultValue(description.alpha, 1.0);
 
         this._extent = defaultValue(description.extent, Extent.MAX_VALUE);
+        this._maximumAnisotropy = description.maximumAnisotropy;
 
         this._imageryCache = {};
         this._texturePool = new TexturePool();
@@ -91,7 +96,7 @@ define([
         this._isBaseLayer = false;
 
         this._requestImageError = undefined;
-    }
+    };
 
     /**
      * Gets the imagery provider for this layer.
@@ -177,7 +182,6 @@ define([
      * tile.
      *
      * @memberof ImageryLayer
-     * @private
      *
      * @param {Tile} tile The terrain tile.
      * @param {TerrainProvider} terrainProvider The terrain provider associated with the terrain tile.
@@ -336,7 +340,6 @@ define([
      * particular terrain {@link Tile}.
      *
      * @memberof ImageryLayer
-     * @private
      *
      * @param {Tile} tile The terrain tile.
      * @param {TileImagery} tileImagery The imagery tile mapping.
@@ -363,7 +366,6 @@ define([
      * error event if the request fails, and retrying the request if necessary.
      *
      * @memberof ImageryLayer
-     * @private
      *
      * @param {Imagery} imagery The imagery to request.
      */
@@ -418,7 +420,6 @@ define([
      * Create a WebGL texture for a given {@link Imagery} instance.
      *
      *  @memberof ImageryLayer
-     *  @private
      *
      *  @param {Context} context The rendered context to use to create textures.
      *  @param {Imagery} imagery The imagery for which to create a texture.
@@ -461,7 +462,6 @@ define([
      * mipmaps for the geographic texture.
      *
      * @memberof ImageryLayer
-     * @private
      *
      * @param {Context} context The rendered context to use.
      * @param {Imagery} imagery The imagery instance to reproject.
@@ -481,13 +481,15 @@ define([
                 imagery.texture = texture = reprojectedTexture;
         }
 
+        var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+
         texture.generateMipmap(MipmapHint.NICEST);
         texture.setSampler({
             wrapS : TextureWrap.CLAMP,
             wrapT : TextureWrap.CLAMP,
             minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
             magnificationFilter : TextureMagnificationFilter.LINEAR,
-            maximumAnisotropy : context.getMaximumTextureFilterAnisotropy()
+            maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
         });
 
         imagery.state = ImageryState.READY;
@@ -579,19 +581,17 @@ define([
                 ReprojectWebMercatorFS,
                 reprojectAttribInds);
 
-            imageryLayer._rsColor = context.createRenderState({
-                cull : {
-                    enabled : false
-                }
-            });
+            imageryLayer._rsColor = context.createRenderState();
         }
+
+        var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
 
         texture.setSampler({
             wrapS : TextureWrap.CLAMP,
             wrapT : TextureWrap.CLAMP,
             minificationFilter : TextureMinificationFilter.LINEAR,
             magnificationFilter : TextureMagnificationFilter.LINEAR,
-            maximumAnisotropy : context.getMaximumTextureFilterAnisotropy()
+            maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
         });
 
         var width = texture.getWidth();
