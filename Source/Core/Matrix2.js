@@ -124,19 +124,19 @@ define([
     };
 
     /**
-     * Retrieves the value of the provided matrix at the provided row and column.
+     * Retrieves the element of the provided matrix at the provided row and column.
      * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} row The zero-based index of the row.
      * @param {Number} column The zero-based index of the column.
-     * @return {Number} The value of the matrix at the provided row and column.
+     * @return {Number} The element of the matrix at the provided row and column.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} row is required and must be 0, 1, or 2.
      * @exception {DeveloperError} column is required and must be 0, 1, or 2.
      */
-    Matrix2.getValue = function(matrix, row, column) {
+    Matrix2.getElement = function(matrix, row, column) {
         if (typeof matrix === 'undefined') {
             throw new DeveloperError('matrix is required.');
         }
@@ -150,22 +150,22 @@ define([
     };
 
     /**
-     * Computes a new matrix that replaces the specified value at the specified row and column.
+     * Computes a new matrix that replaces the specified element at the specified row and column.
      * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} row The zero-based index of the row.
      * @param {Number} column The zero-based index of the column.
-     * @param {Number} value The new value to use.
+     * @param {Number} element The new element to use.
      * @param {Matrix2} [result] The object onto which to store the result.
      * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} row is required and must be 0 or 1.
      * @exception {DeveloperError} column is required and must be 0 or 1.
-     * @exception {DeveloperError} value value is required to be a number.
+     * @exception {DeveloperError} element element is required to be a number.
      */
-    Matrix2.setValue = function(matrix, row, column, value, result) {
+    Matrix2.setElement = function(matrix, row, column, element, result) {
         if (typeof matrix === 'undefined') {
             throw new DeveloperError('matrix is required.');
         }
@@ -175,12 +175,12 @@ define([
         if (typeof column !== 'number' || column < 0 || column > 1) {
             throw new DeveloperError('column is required and must be 0 or 1.');
         }
-        if (typeof value !== 'number') {
-            throw new DeveloperError('value is required to be a number.');
+        if (typeof element !== 'number') {
+            throw new DeveloperError('element is required to be a number.');
         }
 
         result = Matrix2.clone(matrix, result);
-        result[column * 2 + row] = value;
+        result[column * 2 + row] = element;
         return result;
     };
 
@@ -590,36 +590,36 @@ define([
     };
 
     /**
-     * Retrieves the value at the provided row and column.
+     * Retrieves the element at the provided row and column.
      * @memberof Matrix2
      *
      * @param {Number} row The zero-based index of the row.
      * @param {Number} column The zero-based index of the column.
-     * @return {Number} The value of the matrix at the provided row and column.
+     * @return {Number} The element of the matrix at the provided row and column.
      *
      * @exception {DeveloperError} row is required and must be 0, 1, or 2.
      * @exception {DeveloperError} column is required and must be 0, 1, or 2.
      */
-    Matrix2.prototype.getValue = function(row, column) {
-        return Matrix2.getValue(this, row, column);
+    Matrix2.prototype.getElement = function(row, column) {
+        return Matrix2.getElement(this, row, column);
     };
 
     /**
-     * Computes a new matrix that replaces the specified value at the specified row and column.
+     * Computes a new matrix that replaces the specified element at the specified row and column.
      * @memberof Matrix2
      *
      * @param {Number} row The zero-based index of the row.
      * @param {Number} column The zero-based index of the column.
-     * @param {Number} value The new value to use.
+     * @param {Number} element The new element to use.
      * @param {Matrix2} [result] The object onto which to store the result.
      * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} row is required and must be 0 or 1.
      * @exception {DeveloperError} column is required and must be 0 or 1.
-     * @exception {DeveloperError} value value is required to be a number.
+     * @exception {DeveloperError} element element is required to be a number.
      */
-    Matrix2.prototype.setValue = function(row, column, value, result) {
-        return Matrix2.setValue(this, row, column, value, result);
+    Matrix2.prototype.setElement = function(row, column, element, result) {
+        return Matrix2.setElement(this, row, column, element, result);
     };
 
     /**
