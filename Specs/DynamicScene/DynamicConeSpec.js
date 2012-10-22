@@ -173,50 +173,63 @@ defineSuite([
     });
 
     it('mergeProperties does not change a fully configured cone', function() {
+        var expectedCapMaterial = 13;
+        var expectedInnerHalfAngle = 14;
+        var expectedInnerMaterial = 15;
+        var expectedIntersectionColor = 16;
+        var expectedMaximumClockAngle = 17;
+        var expectedMinimumClockAngle = 18;
+        var expectedOuterHalfAngle = 19;
+        var expectedOuterMaterial = 20;
+        var expectedRadius = 21;
+        var expectedShow = 22;
+        var expectedShowIntersection = 23;
+        var expectedSilhouetteMaterial = 24;
+
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.cone = new DynamicCone();
-        objectToMerge.capMaterial = 1;
-        objectToMerge.innerHalfAngle = 2;
-        objectToMerge.innerMaterial = 3;
-        objectToMerge.intersectionColor = 4;
-        objectToMerge.maximumClockAngle = 5;
-        objectToMerge.minimumClockAngle = 6;
-        objectToMerge.outerHalfAngle = 7;
-        objectToMerge.outerMaterial = 8;
-        objectToMerge.radius = 9;
-        objectToMerge.show = 10;
-        objectToMerge.showIntersection = 11;
-        objectToMerge.silhouetteMaterial = 12;
+        objectToMerge.cone.capMaterial = 1;
+        objectToMerge.cone.innerHalfAngle = 2;
+        objectToMerge.cone.innerMaterial = 3;
+        objectToMerge.cone.intersectionColor = 4;
+        objectToMerge.cone.maximumClockAngle = 5;
+        objectToMerge.cone.minimumClockAngle = 6;
+        objectToMerge.cone.outerHalfAngle = 7;
+        objectToMerge.cone.outerMaterial = 8;
+        objectToMerge.cone.radius = 9;
+        objectToMerge.cone.show = 10;
+        objectToMerge.cone.showIntersection = 11;
+        objectToMerge.cone.silhouetteMaterial = 12;
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.cone = new DynamicCone();
-        targetObject.capMaterial = 13;
-        targetObject.innerHalfAngle = 14;
-        targetObject.innerMaterial = 15;
-        targetObject.intersectionColor = 16;
-        targetObject.maximumClockAngle = 17;
-        targetObject.minimumClockAngle = 18;
-        targetObject.outerHalfAngle = 19;
-        targetObject.outerMaterial = 20;
-        targetObject.radius = 21;
-        targetObject.show = 22;
-        targetObject.showIntersection = 23;
-        targetObject.silhouetteMaterial = 24;
+        targetObject.cone.capMaterial = expectedCapMaterial;
+        targetObject.cone.innerHalfAngle = expectedInnerHalfAngle;
+        targetObject.cone.innerMaterial = expectedInnerMaterial;
+        targetObject.cone.intersectionColor = expectedIntersectionColor;
+        targetObject.cone.maximumClockAngle = expectedMaximumClockAngle;
+        targetObject.cone.minimumClockAngle = expectedMinimumClockAngle;
+        targetObject.cone.outerHalfAngle = expectedOuterHalfAngle;
+        targetObject.cone.outerMaterial = expectedOuterMaterial;
+        targetObject.cone.radius = expectedRadius;
+        targetObject.cone.show = expectedShow;
+        targetObject.cone.showIntersection = expectedShowIntersection;
+        targetObject.cone.silhouetteMaterial = expectedSilhouetteMaterial;
 
         DynamicCone.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.cone.capMaterial).toEqual(targetObject.cone.capMaterial);
-        expect(targetObject.cone.innerHalfAngle).toEqual(targetObject.cone.innerHalfAngle);
-        expect(targetObject.cone.innerMaterial).toEqual(targetObject.cone.innerMaterial);
-        expect(targetObject.cone.intersectionColor).toEqual(targetObject.cone.intersectionColor);
-        expect(targetObject.cone.maximumClockAngle).toEqual(targetObject.cone.maximumClockAngle);
-        expect(targetObject.cone.minimumClockAngle).toEqual(targetObject.cone.minimumClockAngle);
-        expect(targetObject.cone.outerHalfAngle).toEqual(targetObject.cone.outerHalfAngle);
-        expect(targetObject.cone.outerMaterial).toEqual(targetObject.cone.outerMaterial);
-        expect(targetObject.cone.radius).toEqual(targetObject.cone.radius);
-        expect(targetObject.cone.show).toEqual(targetObject.cone.show);
-        expect(targetObject.cone.showIntersection).toEqual(targetObject.cone.showIntersection);
-        expect(targetObject.cone.silhouetteMaterial).toEqual(targetObject.cone.silhouetteMaterial);
+        expect(targetObject.cone.capMaterial).toEqual(expectedCapMaterial);
+        expect(targetObject.cone.innerHalfAngle).toEqual(expectedInnerHalfAngle);
+        expect(targetObject.cone.innerMaterial).toEqual(expectedInnerMaterial);
+        expect(targetObject.cone.intersectionColor).toEqual(expectedIntersectionColor);
+        expect(targetObject.cone.maximumClockAngle).toEqual(expectedMaximumClockAngle);
+        expect(targetObject.cone.minimumClockAngle).toEqual(expectedMinimumClockAngle);
+        expect(targetObject.cone.outerHalfAngle).toEqual(expectedOuterHalfAngle);
+        expect(targetObject.cone.outerMaterial).toEqual(expectedOuterMaterial);
+        expect(targetObject.cone.radius).toEqual(expectedRadius);
+        expect(targetObject.cone.show).toEqual(expectedShow);
+        expect(targetObject.cone.showIntersection).toEqual(expectedShowIntersection);
+        expect(targetObject.cone.silhouetteMaterial).toEqual(expectedSilhouetteMaterial);
     });
 
     it('mergeProperties creates and configures an undefined cone', function() {
@@ -254,33 +267,50 @@ defineSuite([
     });
 
     it('mergeProperties does not change when used with an undefined cone', function() {
+        var expectedCapMaterial = 13;
+        var expectedInnerHalfAngle = 14;
+        var expectedInnerMaterial = 15;
+        var expectedIntersectionColor = 16;
+        var expectedMaximumClockAngle = 17;
+        var expectedMinimumClockAngle = 18;
+        var expectedOuterHalfAngle = 19;
+        var expectedOuterMaterial = 20;
+        var expectedRadius = 21;
+        var expectedShow = 22;
+        var expectedShowIntersection = 23;
+        var expectedSilhouetteMaterial = 24;
+
         var objectToMerge = new DynamicObject('objectToMerge');
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.cone = new DynamicCone();
-        targetObject.cone.image = 'image';
-        targetObject.cone.scale = 'scale';
-        targetObject.cone.horizontalOrigin = 'horizontalOrigin';
-        targetObject.cone.verticalOrigin = 'verticalOrigin';
-        targetObject.cone.color = 'color';
-        targetObject.cone.eyeOffset = 'eyeOffset';
-        targetObject.cone.pixelOffset = 'pixelOffset';
-        targetObject.cone.show = 'show';
+        targetObject.cone.capMaterial = expectedCapMaterial;
+        targetObject.cone.innerHalfAngle = expectedInnerHalfAngle;
+        targetObject.cone.innerMaterial = expectedInnerMaterial;
+        targetObject.cone.intersectionColor = expectedIntersectionColor;
+        targetObject.cone.maximumClockAngle = expectedMaximumClockAngle;
+        targetObject.cone.minimumClockAngle = expectedMinimumClockAngle;
+        targetObject.cone.outerHalfAngle = expectedOuterHalfAngle;
+        targetObject.cone.outerMaterial = expectedOuterMaterial;
+        targetObject.cone.radius = expectedRadius;
+        targetObject.cone.show = expectedShow;
+        targetObject.cone.showIntersection = expectedShowIntersection;
+        targetObject.cone.silhouetteMaterial = expectedSilhouetteMaterial;
 
         DynamicCone.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.cone.capMaterial).toEqual(targetObject.cone.capMaterial);
-        expect(targetObject.cone.innerHalfAngle).toEqual(targetObject.cone.innerHalfAngle);
-        expect(targetObject.cone.innerMaterial).toEqual(targetObject.cone.innerMaterial);
-        expect(targetObject.cone.intersectionColor).toEqual(targetObject.cone.intersectionColor);
-        expect(targetObject.cone.maximumClockAngle).toEqual(targetObject.cone.maximumClockAngle);
-        expect(targetObject.cone.minimumClockAngle).toEqual(targetObject.cone.minimumClockAngle);
-        expect(targetObject.cone.outerHalfAngle).toEqual(targetObject.cone.outerHalfAngle);
-        expect(targetObject.cone.outerMaterial).toEqual(targetObject.cone.outerMaterial);
-        expect(targetObject.cone.radius).toEqual(targetObject.cone.radius);
-        expect(targetObject.cone.show).toEqual(targetObject.cone.show);
-        expect(targetObject.cone.showIntersection).toEqual(targetObject.cone.showIntersection);
-        expect(targetObject.cone.silhouetteMaterial).toEqual(targetObject.cone.silhouetteMaterial);
+        expect(targetObject.cone.capMaterial).toEqual(expectedCapMaterial);
+        expect(targetObject.cone.innerHalfAngle).toEqual(expectedInnerHalfAngle);
+        expect(targetObject.cone.innerMaterial).toEqual(expectedInnerMaterial);
+        expect(targetObject.cone.intersectionColor).toEqual(expectedIntersectionColor);
+        expect(targetObject.cone.maximumClockAngle).toEqual(expectedMaximumClockAngle);
+        expect(targetObject.cone.minimumClockAngle).toEqual(expectedMinimumClockAngle);
+        expect(targetObject.cone.outerHalfAngle).toEqual(expectedOuterHalfAngle);
+        expect(targetObject.cone.outerMaterial).toEqual(expectedOuterMaterial);
+        expect(targetObject.cone.radius).toEqual(expectedRadius);
+        expect(targetObject.cone.show).toEqual(expectedShow);
+        expect(targetObject.cone.showIntersection).toEqual(expectedShowIntersection);
+        expect(targetObject.cone.silhouetteMaterial).toEqual(expectedSilhouetteMaterial);
     });
 
     it('undefineProperties works', function() {
