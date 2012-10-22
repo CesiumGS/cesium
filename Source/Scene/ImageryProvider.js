@@ -22,9 +22,9 @@ define([
      * @see OpenStreetMapImageryProvider
      * @see WebMapServiceImageryProvider
      */
-    function ImageryProvider() {
+    var ImageryProvider = function ImageryProvider() {
         throw new DeveloperError('This type should not be instantiated directly.');
-    }
+    };
 
     /**
      * Gets a value indicating whether or not the provider is ready for use.

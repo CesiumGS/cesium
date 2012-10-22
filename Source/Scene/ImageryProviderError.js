@@ -1,14 +1,31 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/loadImage',
         '../Core/DeveloperError',
         '../Core/throttleRequestByServer'
     ], function(
+        defaultValue,
         loadImage,
         DeveloperError,
         throttleRequestByServer) {
     "use strict";
 
+    /**
+     * Provides details about an error that occurred in an {@link ImageryProvider}.
+     *
+     * @alias ImageryProviderError
+     *
+     * @param {ImageryProvider} imageryProvider The imagery provider that experienced the error.
+     * @param {String} message A message describing the error.
+     * @param {Number} [x] The X coordinate of the tile that experienced the error, or undefined if the error
+     *        is not specific to a particular tile.
+     * @param {Number} [y] The Y coordinate of the tile that experienced the error, or undefined if the error
+     *        is not specific to a particular tile.
+     * @param {Number} [level] The level of the tile that experienced the error, or undefined if the error
+     *        is not specific to a particular tile.
+     * @param {Number} [timesRetried=0] The number of times this operation has been retried.
+     */
     var ImageryProviderError = function ImageryProviderError(imageryProvider, message, x, y, level, timesRetried) {
         /**
          * The {@link ImageryProvider} that experienced the error.
@@ -47,7 +64,7 @@ define([
          * The number of times this operation has been retried.
          * @type Number
          */
-        this.timesRetried = timesRetried;
+        this.timesRetried = defaultValue(timesRetried, 0);
 
         /**
          * True if the failed operation should be retried; otherwise, false.  The imagery provider

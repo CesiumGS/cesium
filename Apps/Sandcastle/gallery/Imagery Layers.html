@@ -102,49 +102,6 @@ require([
 {
     "use strict";
 
-    var ellipsoid = Cesium.Ellipsoid.WGS84;
-    var scene; 
-    var cb;
-    var mousePosition;
-    var camera;
-    var position;
-    var direction;
-    var up;
-
-    function keydownHandler(e) {
-        switch (e.keyCode) {
-        case 'F'.charCodeAt(0):
-            cb._surface.debugToggleLodUpdate();
-            break;
-        case 'B'.charCodeAt(0):
-            camera = scene.getCamera();
-            var pickRay = camera.getPickRay(mousePosition);
-            var intersectionDistance = Cesium.IntersectionTests.rayEllipsoid(pickRay, ellipsoid).start;
-            var intersectionPoint = pickRay.getPoint(intersectionDistance);
-            var cartographicPick = ellipsoid.cartesianToCartographic(intersectionPoint);
-            cb._surface.debugShowBoundingSphereOfTileAt(cartographicPick);
-            break;
-        case 'V'.charCodeAt(0):
-            camera = scene.getCamera();
-            console.log('position: ' + camera.getPositionWC() + ' direction: ' + camera.getDirectionWC() + ' up: ' + camera.getUpWC());
-            break;
-        case 'L'.charCodeAt(0):
-            position = new Cesium.Cartesian3(-2444822.7410362503, -4495391.442027786, 3800016.0770029235);
-            direction = new Cesium.Cartesian3(0.2306406390807245, 0.8212545213405562, 0.5218677100397503);
-            up = new Cesium.Cartesian3(-0.31881470184216937, -0.44294118336776583, 0.8379500545772692);
-            camera = scene.getCamera();
-            camera.lookAt(position, position.add(direction), up);
-            break;
-        case 'C'.charCodeAt(0):
-            position = new Cesium.Cartesian3(-2444319.744271441, -4490462.305656268, 3800605.179680734);
-            direction = new Cesium.Cartesian3(0.3079076572929976, 0.5183187255969877, 0.7978336751954334);
-            up = new Cesium.Cartesian3(-0.38141711164833125, -0.7009912978668698, 0.6026045031832784);
-            camera = scene.getCamera();
-            camera.lookAt(position, position.add(direction), up);
-            break;
-        }
-    }
-
     var radarLayer;
     var infraredLayer;
     var singleImageLayer;
@@ -237,8 +194,8 @@ require([
 
     var cesiumViewerWidget = new CesiumViewerWidget({
         postSetup : function(widget) {
-            scene = widget.scene;
-            cb = scene.getPrimitives().getCentralBody();
+            var scene = widget.scene;
+            var cb = scene.getPrimitives().getCentralBody();
             cb.logoOffset = new Cesium.Cartesian2(300, 30);
 
             widget.cbLighting.set('checked', true);
@@ -283,15 +240,6 @@ require([
             });
             singleImageLayer = imageryLayerCollection.addImageryProvider(singleImage);
             layerNames[singleImage.getUrl()] = 'Single image';
-
-            document.addEventListener('keydown', keydownHandler, false);
-            
-            var handler = new Cesium.EventHandler(widget.canvas);
-
-            handler.setMouseAction(function(movement) {
-                mousePosition = movement.endPosition;
-                // Use movement.startPosition, movement.endPosition
-            }, Cesium.MouseEventType.MOVE);
 
             domConstruct.place('<table id="layerTable"></table>', 'toolbar');
             updateToolbar(imageryLayerCollection);

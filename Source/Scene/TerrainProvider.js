@@ -179,15 +179,6 @@ define([
         return this.levelZeroMaximumGeometricError / (1 << level);
     };
 
-    /**
-     * Gets the level with the specified quantity of geometric error or less.
-     *
-     * @memberof TilingScheme
-     *
-     * @param {Number} geometricError The geometric error for which to find a corresponding level.
-     * @returns {Number} The level with the specified geometric error or less.
-     */
-
     // Is there a limit on 'level' of the tile that can be passed in?  It seems
     // natural to have a maxLevel, but this would cause problems if we have hi-res imagery
     // and low-res terrain.  So I'd say we can continue to refine terrain tiles arbitrarily
