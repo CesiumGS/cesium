@@ -778,6 +778,67 @@ define([
     };
 
     /**
+     * Retrieves the value of the provided matrix at the provided row and column.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix to use.
+     * @param {Number} row The zero-based index of the row.
+     * @param {Number} column The zero-based index of the column.
+     * @return {Number} The value of the matrix at the provided row and column.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} row is required and must be 0, 1, 2, or 3.
+     * @exception {DeveloperError} column is required and must be 0, 2, or 3.
+     */
+    Matrix4.getValue = function(matrix, row, column) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required.');
+        }
+        if (typeof row !== 'number' || row < 0 || row > 3) {
+            throw new DeveloperError('row is required and must be 0, 1, 2, or 3.');
+        }
+        if (typeof column !== 'number' || column < 0 || column > 3) {
+            throw new DeveloperError('column is required and must be 0, 1, 2, or 3.');
+        }
+        return matrix[column * 4 + row];
+    };
+
+    /**
+     * Computes a new matrix that replaces the specified value at the specified row and column.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix to use.
+     * @param {Number} row The zero-based index of the row.
+     * @param {Number} column The zero-based index of the column.
+     * @param {Number} value The new value to use.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} row is required and must be 0, 1, or 2.
+     * @exception {DeveloperError} column is required and must be 0, 1, or 2.
+     * @exception {DeveloperError} value value is required to be a number.
+     */
+    Matrix4.setValue = function(matrix, row, column, value, result) {
+        if (typeof matrix === 'undefined') {
+            throw new DeveloperError('matrix is required.');
+        }
+        if (typeof row !== 'number' || row < 0 || row > 3) {
+            throw new DeveloperError('row is required and must be 0, 1, 2, or 3.');
+        }
+        if (typeof column !== 'number' || column < 0 || column > 3) {
+            throw new DeveloperError('column is required and must be 0, 1, 2, or 3.');
+        }
+        if (typeof value !== 'number') {
+            throw new DeveloperError('value is required to be a number.');
+        }
+
+        result = Matrix4.clone(matrix, result);
+        result[column * 4 + row] = value;
+        return result;
+    };
+
+    /**
      * Retrieves a copy of the matrix column at the provided index as a Cartesian4 instance.
      * @memberof Matrix4
      *
@@ -1705,6 +1766,39 @@ define([
      */
     Matrix4.prototype.toArray = function(result) {
         return Matrix4.toArray(this, result);
+    };
+
+    /**
+     * Retrieves the value at the provided row and column.
+     * @memberof Matrix4
+     *
+     * @param {Number} row The zero-based index of the row.
+     * @param {Number} column The zero-based index of the column.
+     * @return {Number} The value of the matrix at the provided row and column.
+     *
+     * @exception {DeveloperError} row is required and must be 0, 1, 2, or 3.
+     * @exception {DeveloperError} column is required and must be 0, 2, or 3.
+     */
+    Matrix4.prototype.getValue = function(row, column) {
+        return Matrix4.getValue(this, row, column);
+    };
+
+    /**
+     * Computes a new matrix that replaces the specified value at the specified row and column.
+     * @memberof Matrix4
+     *
+     * @param {Number} row The zero-based index of the row.
+     * @param {Number} column The zero-based index of the column.
+     * @param {Number} value The new value to use.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} row is required and must be 0, 1, or 2.
+     * @exception {DeveloperError} column is required and must be 0, 1, or 2.
+     * @exception {DeveloperError} value value is required to be a number.
+     */
+    Matrix4.prototype.setValue = function(row, column, value, result) {
+        return Matrix4.setValue(this, row, column, value, result);
     };
 
     /**

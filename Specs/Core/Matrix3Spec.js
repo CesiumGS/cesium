@@ -133,7 +133,6 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
-
     it('toArray works without a result parameter', function() {
         var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
         var returnedResult = Matrix3.fromColumnMajorArray(expected).toArray();
@@ -148,6 +147,64 @@ defineSuite([
         expect(returnedResult).toBe(result);
         expect(returnedResult).toNotBe(expected);
         expect(returnedResult).toEqual(expected);
+    });
+
+
+    it('getValue works', function() {
+        var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+        var matrix = Matrix3.fromRowMajorArray(expected);
+        var i = 0;
+        for ( var row = 0; row < 3; row++) {
+            for ( var col = 0; col < 3; col++) {
+                var returnedResult = matrix.getValue(row, col);
+                expect(returnedResult).toEqual(expected[i]);
+                i++;
+            }
+        }
+    });
+
+    it('setValue works without a result parameter', function() {
+        var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+        var matrix = new Matrix3();
+        var i = 0;
+        for ( var row = 0; row < 3; row++) {
+            for ( var col = 0; col < 3; col++) {
+                var returnedResult = matrix.setValue(row, col, expected[i]);
+                expect(Matrix3.getValue(returnedResult, row, col)).toEqual(expected[i]);
+                expect(returnedResult).toNotBe(matrix);
+                i++;
+            }
+        }
+    });
+
+    it('setValue works with a result parameter', function() {
+        var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+        var matrix = new Matrix3();
+        var result = new Matrix3();
+        var i = 0;
+        for ( var row = 0; row < 3; row++) {
+            for ( var col = 0; col < 3; col++) {
+                var returnedResult = Matrix3.setValue(matrix, row, col, expected[i], result);
+                expect(Matrix3.getValue(returnedResult, row, col)).toEqual(expected[i]);
+                expect(returnedResult).toNotBe(matrix);
+                expect(returnedResult).toBe(result);
+                i++;
+            }
+        }
+    });
+
+    it('setValue works with "this" result parameter', function() {
+        var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+        var matrix = new Matrix3();
+        var i = 0;
+        for ( var row = 0; row < 3; row++) {
+            for ( var col = 0; col < 3; col++) {
+                var returnedResult = Matrix3.setValue(matrix, row, col, expected[i], matrix);
+                expect(Matrix3.getValue(returnedResult, row, col)).toEqual(expected[i]);
+                expect(returnedResult).toBe(matrix);
+                i++;
+            }
+        }
     });
 
     it('getColumn works without a result parameter', function() {
@@ -536,6 +593,74 @@ defineSuite([
     it('static toArray throws without matrix parameter', function() {
         expect(function() {
             Matrix3.toArray(undefined);
+        }).toThrow();
+    });
+
+    it('static getValue throws without matrix parameter', function() {
+        var matrix;
+        var row = 0.0;
+        var col = 0.0;
+        expect(function() {
+            Matrix3.getValue(matrix, row, col);
+        }).toThrow();
+    });
+
+    it('static getValue throws without row parameter', function() {
+        var matrix = new Matrix3();
+        var row;
+        var col = 0.0;
+        expect(function() {
+            Matrix3.getValue(matrix, row, col);
+        }).toThrow();
+    });
+
+    it('static getValue throws without col parameter', function() {
+        var matrix = new Matrix3();
+        var row = 0.0;
+        var col;
+        expect(function() {
+            Matrix3.getValue(matrix, row, col);
+        }).toThrow();
+    });
+
+    it('static setValue throws without matrix parameter', function() {
+        var matrix;
+        var row = 0.0;
+        var col = 0.0;
+        var value = 0.0;
+        expect(function() {
+            Matrix3.setValue(matrix, row, col, value);
+        }).toThrow();
+    });
+
+    it('static setValue throws without row parameter', function() {
+        var matrix = new Matrix3();
+        var row;
+        var col = 0.0;
+        var value = 0.0;
+        expect(function() {
+            Matrix3.setValue(matrix, row, col, value);
+        }).toThrow();
+    });
+
+    it('static setValue throws without col parameter', function() {
+        var matrix = new Matrix3();
+        var row = 0.0;
+        var col;
+        var value = 0.0;
+        expect(function() {
+            Matrix3.setValue(matrix, row, col, value);
+        }).toThrow();
+    });
+
+
+    it('static setValue throws without value parameter', function() {
+        var matrix = new Matrix3();
+        var row = 0.0;
+        var col = 0.0;
+        var value;
+        expect(function() {
+            Matrix3.setValue(matrix, row, col, value);
         }).toThrow();
     });
 
