@@ -1491,6 +1491,10 @@ define([
     }
 
     function checkLogo(logoData, logoSource) {
+        if (typeof logoSource.isReady === 'function' && !logoSource.isReady()) {
+            return;
+        }
+
         var logo;
         if (typeof logoSource.getLogo === 'function') {
             logo = logoSource.getLogo();

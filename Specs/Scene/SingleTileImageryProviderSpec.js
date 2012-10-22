@@ -124,13 +124,29 @@ defineSuite([
         var provider = new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
         });
-        expect(provider.getLogo()).toBeUndefined();
 
-        var providerWithCredit = new SingleTileImageryProvider({
-            url : 'Data/Images/Red16x16.png',
-            credit : 'Thanks to our awesome made up source of this imagery!'
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        var providerWithCredit;
+
+        runs(function() {
+            expect(provider.getLogo()).toBeUndefined();
+
+            providerWithCredit = new SingleTileImageryProvider({
+                url : 'Data/Images/Red16x16.png',
+                credit : 'Thanks to our awesome made up source of this imagery!'
+            });
         });
-        expect(providerWithCredit.getLogo()).not.toBeUndefined();
+
+        waitsFor(function() {
+            return providerWithCredit.isReady();
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(providerWithCredit.getLogo()).not.toBeUndefined();
+        });
     });
 
     it('routes requests through a proxy if one is specified', function() {

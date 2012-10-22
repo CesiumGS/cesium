@@ -110,8 +110,13 @@ define([
      * @memberof OpenStreetMapImageryProvider
      *
      * @returns {Number} The width.
+     *
+     * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getTileWidth = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileWidth must not be called before the imagery provider is ready.');
+        }
         return this._tileWidth;
     };
 
@@ -122,8 +127,13 @@ define([
      * @memberof OpenStreetMapImageryProvider
      *
      * @returns {Number} The height.
+     *
+     * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getTileHeight = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
+        }
         return this._tileHeight;
     };
 
@@ -134,8 +144,13 @@ define([
      * @memberof OpenStreetMapImageryProvider
      *
      * @returns {Number} The maximum level.
+     *
+     * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getMaximumLevel = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
+        }
         return this._maximumLevel;
     };
 
@@ -148,8 +163,13 @@ define([
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getTilingScheme = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
+        }
         return this._tilingScheme;
     };
 
@@ -160,8 +180,13 @@ define([
      * @memberof OpenStreetMapImageryProvider
      *
      * @returns {Extent} The extent.
+     *
+     * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getExtent = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getExtent must not be called before the imagery provider is ready.');
+        }
         return this._extent;
     };
 
@@ -177,8 +202,13 @@ define([
      *
      * @see DiscardMissingTileImagePolicy
      * @see NeverTileDiscardPolicy
+     *
+     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getTileDiscardPolicy = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileDiscardPolicy must not be called before the imagery provider is ready.');
+        }
         return this._tileDiscardPolicy;
     };
 
@@ -220,8 +250,13 @@ define([
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
+     *
+     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.requestImage = function(x, y, level) {
+        if (!this._ready) {
+            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+        }
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(url);
     };
@@ -233,8 +268,13 @@ define([
      * @memberof OpenStreetMapImageryProvider
      *
      * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getLogo = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getLogo must not be called before the imagery provider is ready.');
+        }
         return this._logo;
     };
 
