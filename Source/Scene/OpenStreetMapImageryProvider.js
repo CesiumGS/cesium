@@ -74,7 +74,6 @@ define([
 
         this._ready = true;
 
-        // TODO: should not hard-code, get from server?
         var credit = defaultValue(description.credit, 'MapQuest, Open Street Map and contributors, CC-BY-SA');
         this._logo = writeTextToCanvas(credit, {
             font : '12px sans-serif'

@@ -98,7 +98,6 @@ define([
         function metadataSuccess(data) {
             var tileInfo = data.tileInfo;
             if (!that._useTiles || typeof tileInfo === 'undefined') {
-                // TODO: read the extent and maybe tiling scheme from the service.
                 that._tileWidth = 256;
                 that._tileHeight = 256;
                 that._tilingScheme = new GeographicTilingScheme();
@@ -106,8 +105,6 @@ define([
             } else {
                 that._tileWidth = tileInfo.rows;
                 that._tileHeight = tileInfo.cols;
-
-                // TODO: support non-default tiling schemes, because ArcGIS does: http://webhelp.esri.com/arcgisserver/9.3/java/index.htm#what_is_map_caching.htm
 
                 if (tileInfo.spatialReference.wkid === 102100) {
                     that._tilingScheme = new WebMercatorTilingScheme();
