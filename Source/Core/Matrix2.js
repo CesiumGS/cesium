@@ -133,18 +133,18 @@ define([
      * @return {Number} The element of the matrix at the provided row and column.
      *
      * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} row is required and must be 0, 1, or 2.
-     * @exception {DeveloperError} column is required and must be 0, 1, or 2.
+     * @exception {DeveloperError} row is required and must be 0 or 1.
+     * @exception {DeveloperError} column is required and must be 0 or 1.
      */
     Matrix2.getElement = function(matrix, row, column) {
         if (typeof matrix === 'undefined') {
             throw new DeveloperError('matrix is required.');
         }
         if (typeof row !== 'number' || row < 0 || row > 2) {
-            throw new DeveloperError('row is required and must be 0, 1, or 2.');
+            throw new DeveloperError('row is required and must be 0 or 1.');
         }
         if (typeof column !== 'number' || column < 0 || column > 2) {
-            throw new DeveloperError('column is required and must be 0, 1, or 2.');
+            throw new DeveloperError('column is required and must be 0 or 1.');
         }
         return matrix[column * 2 + row];
     };
@@ -597,8 +597,8 @@ define([
      * @param {Number} column The zero-based index of the column.
      * @return {Number} The element of the matrix at the provided row and column.
      *
-     * @exception {DeveloperError} row is required and must be 0, 1, or 2.
-     * @exception {DeveloperError} column is required and must be 0, 1, or 2.
+     * @exception {DeveloperError} row is required and must be 0 or 1.
+     * @exception {DeveloperError} column is required and must be 0 or 1.
      */
     Matrix2.prototype.getElement = function(row, column) {
         return Matrix2.getElement(this, row, column);
