@@ -144,14 +144,14 @@ define([
             var j = next[i];
             var k = next[j];
 
-            root = Math.sqrt(matrix[i * 4] - matrix[j * 4] - matrix[k * 4] + 1.0);
+            root = Math.sqrt(matrix[Matrix3.getElementIndex(i, i)] - matrix[Matrix3.getElementIndex(j, j)] - matrix[Matrix3.getElementIndex(k, k)] + 1.0);
 
             var quat = fromRotationMatrixQuat;
             quat[i] = 0.5 * root;
             root = 0.5 / root;
-            w = (matrix[k * 3 + j] - matrix[j * 3 + k]) * root;
-            quat[j] = (matrix[j * 3 + i] + matrix[i * 3 + j]) * root;
-            quat[k] = (matrix[k * 3 + i] + matrix[i * 3 + k]) * root;
+            w = (matrix[Matrix3.getElementIndex(k, j)] - matrix[Matrix3.getElementIndex(j, k)]) * root;
+            quat[j] = (matrix[Matrix3.getElementIndex(j, i)] + matrix[Matrix3.getElementIndex(i, j)]) * root;
+            quat[k] = (matrix[Matrix3.getElementIndex(k, i)] + matrix[Matrix3.getElementIndex(i, k)]) * root;
 
             x = quat[0];
             y = quat[1];

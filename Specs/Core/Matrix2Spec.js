@@ -68,63 +68,6 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
-    it('getElement works', function() {
-        var expected = [1.0, 2.0, 3.0, 4.0];
-        var matrix = Matrix2.fromRowMajorArray(expected);
-        var i = 0;
-        for ( var row = 0; row < 2; row++) {
-            for ( var col = 0; col < 2; col++) {
-                var returnedResult = matrix.getElement(row, col);
-                expect(returnedResult).toEqual(expected[i]);
-                i++;
-            }
-        }
-    });
-
-    it('setElement works without a result parameter', function() {
-        var expected = [1.0, 2.0, 3.0, 4.0];
-        var matrix = new Matrix2();
-        var i = 0;
-        for ( var row = 0; row < 2; row++) {
-            for ( var col = 0; col < 2; col++) {
-                var returnedResult = matrix.setElement(row, col, expected[i]);
-                expect(Matrix2.getElement(returnedResult, row, col)).toEqual(expected[i]);
-                expect(returnedResult).toNotBe(matrix);
-                i++;
-            }
-        }
-    });
-
-    it('setElement works with a result parameter', function() {
-        var expected = [1.0, 2.0, 3.0, 4.0];
-        var matrix = new Matrix2();
-        var result = new Matrix2();
-        var i = 0;
-        for ( var row = 0; row < 2; row++) {
-            for ( var col = 0; col < 2; col++) {
-                var returnedResult = Matrix2.setElement(matrix, row, col, expected[i], result);
-                expect(Matrix2.getElement(returnedResult, row, col)).toEqual(expected[i]);
-                expect(returnedResult).toNotBe(matrix);
-                expect(returnedResult).toBe(result);
-                i++;
-            }
-        }
-    });
-
-    it('setElement works with "this" result parameter', function() {
-        var expected = [1.0, 2.0, 3.0, 4.0];
-        var matrix = new Matrix2();
-        var i = 0;
-        for ( var row = 0; row < 2; row++) {
-            for ( var col = 0; col < 2; col++) {
-                var returnedResult = Matrix2.setElement(matrix, row, col, expected[i], matrix);
-                expect(Matrix2.getElement(returnedResult, row, col)).toEqual(expected[i]);
-                expect(returnedResult).toBe(matrix);
-                i++;
-            }
-        }
-    });
-
     it('toArray works without a result parameter', function() {
         var expected = [1.0, 2.0, 3.0, 4.0];
         var returnedResult = Matrix2.fromColumnMajorArray(expected).toArray();
@@ -139,6 +82,17 @@ defineSuite([
         expect(returnedResult).toBe(result);
         expect(returnedResult).toNotBe(expected);
         expect(returnedResult).toEqual(expected);
+    });
+
+    it('getElementIndex works', function() {
+        var i = 0;
+        for ( var col = 0; col < 2; col++) {
+            for ( var row = 0; row < 2; row++) {
+                var index = Matrix2.getElementIndex(row, col);
+                expect(index).toEqual(i);
+                i++;
+            }
+        }
     });
 
     it('getColumn works without a result parameter', function() {
@@ -457,71 +411,19 @@ defineSuite([
         }).toThrow();
     });
 
-    it('static getElement throws without matrix parameter', function() {
-        var matrix;
-        var row = 0.0;
-        var col = 0.0;
-        expect(function() {
-            Matrix2.getElement(matrix, row, col);
-        }).toThrow();
-    });
-
     it('static getElement throws without row parameter', function() {
-        var matrix = new Matrix2();
         var row;
         var col = 0.0;
         expect(function() {
-            Matrix2.getElement(matrix, row, col);
+            Matrix2.getElementIndex(row, col);
         }).toThrow();
     });
 
     it('static getElement throws without col parameter', function() {
-        var matrix = new Matrix2();
         var row = 0.0;
         var col;
         expect(function() {
-            Matrix2.getElement(matrix, row, col);
-        }).toThrow();
-    });
-
-    it('static setElement throws without matrix parameter', function() {
-        var matrix;
-        var row = 0.0;
-        var col = 0.0;
-        var value = 0.0;
-        expect(function() {
-            Matrix2.setElement(matrix, row, col, value);
-        }).toThrow();
-    });
-
-    it('static setElement throws without row parameter', function() {
-        var matrix = new Matrix2();
-        var row;
-        var col = 0.0;
-        var value = 0.0;
-        expect(function() {
-            Matrix2.setElement(matrix, row, col, value);
-        }).toThrow();
-    });
-
-    it('static setElement throws without col parameter', function() {
-        var matrix = new Matrix2();
-        var row = 0.0;
-        var col;
-        var value = 0.0;
-        expect(function() {
-            Matrix2.setElement(matrix, row, col, value);
-        }).toThrow();
-    });
-
-
-    it('static setElement throws without value parameter', function() {
-        var matrix = new Matrix2();
-        var row = 0.0;
-        var col = 0.0;
-        var value;
-        expect(function() {
-            Matrix2.setElement(matrix, row, col, value);
+            Matrix2.getElementIndex(row, col);
         }).toThrow();
     });
 

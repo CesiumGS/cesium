@@ -249,64 +249,30 @@ define([
     };
 
     /**
-     * Retrieves the element of the provided matrix at the provided row and column.
+     * Computes the array index of the element at the provided row and column.
      * @memberof Matrix3
      *
-     * @param {Matrix3} matrix The matrix to use.
      * @param {Number} row The zero-based index of the row.
      * @param {Number} column The zero-based index of the column.
-     * @return {Number} The element of the matrix at the provided row and column.
+     * @return {Number} The index of the element at the provided row and column.
      *
-     * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} row is required and must be 0, 1, or 2.
      * @exception {DeveloperError} column is required and must be 0, 1, or 2.
+     *
+     * @example
+     * var myMatrix = new Matrix3();
+     * var row1Column0Index = Matrix3.getElementIndex(1, 0);
+     * var row1Column0 = myMatrix[row1Column0Index]
+     * myMatrix[row1Column0Index] = 10.0;
      */
-    Matrix3.getElement = function(matrix, row, column) {
-        if (typeof matrix === 'undefined') {
-            throw new DeveloperError('matrix is required.');
-        }
+    Matrix3.getElementIndex = function(row, column) {
         if (typeof row !== 'number' || row < 0 || row > 2) {
             throw new DeveloperError('row is required and must be 0, 1, or 2.');
         }
         if (typeof column !== 'number' || column < 0 || column > 2) {
             throw new DeveloperError('column is required and must be 0, 1, or 2.');
         }
-        return matrix[column * 3 + row];
-    };
-
-    /**
-     * Computes a new matrix that replaces the specified element at the specified row and column.
-     * @memberof Matrix3
-     *
-     * @param {Matrix3} matrix The matrix to use.
-     * @param {Number} row The zero-based index of the row.
-     * @param {Number} column The zero-based index of the column.
-     * @param {Number} element The new element to use.
-     * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} row is required and must be 0, 1, or 2.
-     * @exception {DeveloperError} column is required and must be 0, 1, or 2.
-     * @exception {DeveloperError} element element is required to be a number.
-     */
-    Matrix3.setElement = function(matrix, row, column, element, result) {
-        if (typeof matrix === 'undefined') {
-            throw new DeveloperError('matrix is required.');
-        }
-        if (typeof row !== 'number' || row < 0 || row > 2) {
-            throw new DeveloperError('row is required and must be 0, 1, or 2.');
-        }
-        if (typeof column !== 'number' || column < 0 || column > 2) {
-            throw new DeveloperError('column is required and must be 0, 1, or 2.');
-        }
-        if (typeof element !== 'number') {
-            throw new DeveloperError('element is required to be a number.');
-        }
-
-        result = Matrix3.clone(matrix, result);
-        result[column * 3 + row] = element;
-        return result;
+        return column * 3 + row;
     };
 
     /**
@@ -785,39 +751,6 @@ define([
      */
     Matrix3.prototype.toArray = function(result) {
         return Matrix3.toArray(this, result);
-    };
-
-    /**
-     * Retrieves the element at the provided row and column.
-     * @memberof Matrix3
-     *
-     * @param {Number} row The zero-based index of the row.
-     * @param {Number} column The zero-based index of the column.
-     * @return {Number} The element of the matrix at the provided row and column.
-     *
-     * @exception {DeveloperError} row is required and must be 0, 1, or 2.
-     * @exception {DeveloperError} column is required and must be 0, 1, or 2.
-     */
-    Matrix3.prototype.getElement = function(row, column) {
-        return Matrix3.getElement(this, row, column);
-    };
-
-    /**
-     * Computes a new matrix that replaces the specified element at the specified row and column.
-     * @memberof Matrix3
-     *
-     * @param {Number} row The zero-based index of the row.
-     * @param {Number} column The zero-based index of the column.
-     * @param {Number} element The new element to use.
-     * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} row is required and must be 0, 1, or 2.
-     * @exception {DeveloperError} column is required and must be 0, 1, or 2.
-     * @exception {DeveloperError} element element is required to be a number.
-     */
-    Matrix3.prototype.setElement = function(row, column, element, result) {
-        return Matrix3.setElement(this, row, column, element, result);
     };
 
     /**
