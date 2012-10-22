@@ -25,6 +25,8 @@ define([
      * returns undefined immediately if the request would exceed the maximum, allowing
      * the caller to retry later.
      *
+     * @exports throttleRequestByServer
+     *
      * @param {String} url The URL to request.
      * @param {Function} requestFunction The actual function that makes the request.
      * This function is expected to return a Promise for the requested data.
@@ -33,6 +35,21 @@ define([
      * number of parallel requests, or a Promise that returns the requested data.
      *
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
+     *
+     * @example
+     * // throttle requests for an image
+     * var promise = throttleRequestsByServer(
+     *     'http://madeupserver.agi.com/myImage.png',
+     *     function(url) {
+     *        return loadImage(url);
+     *     });
+     * if (typeof promise === 'undefined') {
+     *     // too many active requests, try again later.
+     * } else {
+     *     when(promise, function(image) {
+     *         // handle loaded image
+     *     });
+     * }
      */
     function throttleRequestByServer(url, requestFunction) {
         var server = getServer(url);
