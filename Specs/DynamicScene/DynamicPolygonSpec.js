@@ -82,13 +82,13 @@ defineSuite([
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.polygon = new DynamicPolygon();
-        objectToMerge.polygon.material = 3;
-        objectToMerge.polygon.show = 4;
+        targetObject.polygon.material = 3;
+        targetObject.polygon.show = 4;
 
         DynamicPolygon.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.polygon.material).toEqual(targetObject.polygon.material);
-        expect(targetObject.polygon.show).toEqual(targetObject.polygon.show);
+        expect(targetObject.polygon.material).toEqual(3);
+        expect(targetObject.polygon.show).toEqual(4);
     });
 
     it('mergeProperties creates and configures an undefined polygon', function() {
@@ -110,14 +110,13 @@ defineSuite([
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.polygon = new DynamicPolygon();
-        targetObject.polygon = new DynamicPolygon();
-        targetObject.polygon.material = 1;
-        targetObject.polygon.show = 2;
+        targetObject.polygon.material = 3;
+        targetObject.polygon.show = 4;
 
         DynamicPolygon.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.polygon.image).toEqual(targetObject.polygon.image);
-        expect(targetObject.polygon.show).toEqual(targetObject.polygon.show);
+        expect(targetObject.polygon.material).toEqual(3);
+        expect(targetObject.polygon.show).toEqual(4);
     });
 
     it('undefineProperties works', function() {

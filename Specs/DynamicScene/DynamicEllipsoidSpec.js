@@ -21,7 +21,7 @@ defineSuite([
     var expectedRadii = new Cartesian3(1.0, 2.0, 3.0);
 
     var ellipsoidPacket = {
-            ellipsoid : {
+        ellipsoid : {
             radii : {
                 cartesian : [1.0, 2.0, 3.0]
             },
@@ -37,7 +37,7 @@ defineSuite([
     };
 
     var ellipsoidPacketInterval = {
-            ellipsoid : {
+        ellipsoid : {
             interval : '2000-01-01/2001-01-01',
             radii : {
                 cartesian : [1.0, 2.0, 3.0]
