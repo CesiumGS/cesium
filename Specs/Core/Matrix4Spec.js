@@ -283,6 +283,17 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
+    it('getElementIndex works', function() {
+        var i = 0;
+        for ( var col = 0; col < 4; col++) {
+            for ( var row = 0; row < 4; row++) {
+                var index = Matrix4.getElementIndex(row, col);
+                expect(index).toEqual(i);
+                i++;
+            }
+        }
+    });
+
     it('getColumn works without a result parameter', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var expectedColumn0 = new Cartesian4(1.0, 5.0, 9.0, 13.0);
@@ -1067,6 +1078,22 @@ defineSuite([
     it('static toArray throws without matrix parameter', function() {
         expect(function() {
             Matrix4.toArray(undefined);
+        }).toThrow();
+    });
+
+    it('static getElement throws without row parameter', function() {
+        var row;
+        var col = 0.0;
+        expect(function() {
+            Matrix4.getElementIndex(row, col);
+        }).toThrow();
+    });
+
+    it('static getElement throws without col parameter', function() {
+        var row = 0.0;
+        var col;
+        expect(function() {
+            Matrix4.getElementIndex(row, col);
         }).toThrow();
     });
 
