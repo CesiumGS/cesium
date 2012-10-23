@@ -743,7 +743,7 @@ define([
     var viewportScratch = new BoundingRectangle();
     var vpTransformScratch = new Matrix4();
     CentralBody.prototype._fillPoles = function(context, frameState) {
-        var terrainProvider = this._surface.terrainProvider;
+        var terrainProvider = this._surface._terrainProvider;
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }

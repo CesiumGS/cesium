@@ -19,14 +19,29 @@ define([
      * An ordered collection of imagery layers.
      *
      * @alias ImageryLayerCollection
-     *
-     * @name ImageryLayerCollection
      */
     var ImageryLayerCollection = function ImageryLayerCollection() {
         this._layers = [];
 
+        /**
+         * An event that is raised when a layer is added to the collection.  Event handlers are passed the layer that
+         * was added and the index at which it was added.
+         * @type {Event}
+         */
         this.layerAdded = new Event();
+
+        /**
+         * An event that is raised when a layer is removed from the collection.  Event handlers are passed the layer that
+         * was removed and the index from which it was removed.
+         * @type {Event}
+         */
         this.layerRemoved = new Event();
+
+        /**
+         * An event that is raised when a layer changes position in the collection.  Event handlers are passed the layer that
+         * was moved, its new index after the move, and its old index prior to the move.
+         * @type {Event}
+         */
         this.layerMoved = new Event();
     };
 

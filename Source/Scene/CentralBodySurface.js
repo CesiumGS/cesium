@@ -566,12 +566,15 @@ define([
         var terrainProvider = surface._terrainProvider;
 
         var tile = tileLoadQueue.head;
+        if (typeof tile === 'undefined') {
+            return;
+        }
 
         var startTime = Date.now();
-        var timeSlice = 10;
+        var timeSlice = 5;
         var endTime = startTime + timeSlice;
 
-        while (Date.now() < endTime && typeof tile !== 'undefined') {
+        do {
             var i, len;
 
             // Transition terrain states.
@@ -611,7 +614,7 @@ define([
 
             // Transition imagery states
             var tileImageryCollection = tile.imagery;
-            for (i = 0, len = tileImageryCollection.length; Date.now() < endTime && i < len; ++i) {
+            for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
                 var tileImagery = tileImageryCollection[i];
                 var imagery = tileImagery.imagery;
                 var imageryLayer = imagery.imageryLayer;
@@ -666,6 +669,10 @@ define([
                 }
 
                 doneLoading = doneLoading && imageryDoneLoading;
+
+                if (Date.now() >= endTime) {
+                    break;
+                }
             }
 
             // The tile becomes renderable when the terrain and all imagery data are loaded.
@@ -676,7 +683,7 @@ define([
             }
 
             tile = tile.loadNext;
-        }
+        } while (Date.now() < endTime && typeof tile !== 'undefined');
     }
 
     // This is debug code to render the bounding sphere of the tile in
