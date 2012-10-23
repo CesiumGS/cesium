@@ -5,7 +5,7 @@
 
 	<path id="task.classpath">
 		<fileset dir="jetty" includes="*.jar" />
-		<pathelement location="jai_imageio-1.1/jai_imageio.jar" />
+		<pathelement location="jai-imageio-core/jai-imageio-core-standalone-1.2-pre-dr-b04-2010-04-30.jar" />
 	</path>
 
 	<target name="clean">
