@@ -6,21 +6,28 @@
     <style>
     body { font-family: sans-serif; }
     li { margin-top: 5px; }
+    .outer > li { margin-top: 1.4em; }
     </style>
 </head>
 
 <body>
-<ul>
+
+<ul class="outer">
     <li>
-    	<a href="Specs/SpecRunner.html">Tests</a> 
-    	[with <a href="Instrumented/jscoverage.html?../Specs/SpecRunner.html%3FbaseUrl%3D..%2FInstrumented">code coverage</a>]
-   	</li>
-    <li>
-        Apps:
+        Apps
         <ul>
             <li><a href="Apps/CesiumViewer/index.html">Cesium Viewer</a></li>
             <li><a href="Apps/Sandcastle/index.html">Sandcastle</a></li>
             <li><a href="Apps/TimelineDemo/index.html">Timeline Demo</a></li>
+        </ul>
+    </li>
+    <li>
+        Tests
+        <ul>
+            <li><a href="Specs/SpecRunner.html">Run all tests</a></li>
+            <li><a href="Specs/SpecRunner.html?suite=_none_">Select a test to run</a></li>
+            <li><a href="Instrumented/jscoverage.html?../Specs/SpecRunner.html%3FbaseUrl%3D..%2FInstrumented">Run all tests with code coverage</a>
+                (build 'instrumentForCoverage' first.)</li>
         </ul>
     </li>
     <li>
