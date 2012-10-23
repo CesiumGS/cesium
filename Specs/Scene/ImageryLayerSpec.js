@@ -34,9 +34,6 @@ defineSuite([
         destroyContext(context);
     });
 
-    beforeEach(function() {
-    });
-
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
