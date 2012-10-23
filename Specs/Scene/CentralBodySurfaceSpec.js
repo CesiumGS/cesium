@@ -116,25 +116,21 @@ defineSuite([
 
     describe('construction', function() {
         it('throws if an terrain provider is not provided', function() {
-            var surface;
             function constructWithoutTerrainProvider() {
-                surface = new CentralBodySurface({
+                return new CentralBodySurface({
                     imageryLayerCollection : new ImageryLayerCollection()
                 });
             }
             expect(constructWithoutTerrainProvider).toThrow();
-            expect(surface).toBeUndefined();
         });
 
         it('throws if a ImageryLayerCollection is not provided', function() {
-            var surface;
             function constructWithoutImageryLayerCollection() {
-                surface = new CentralBodySurface({
+                return new CentralBodySurface({
                     terrainProvider : new EllipsoidTerrainProvider()
                 });
             }
             expect(constructWithoutImageryLayerCollection).toThrow();
-            expect(surface).toBeUndefined();
         });
     });
 

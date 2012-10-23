@@ -53,14 +53,12 @@ defineSuite([
     });
 
     it('constructor throws when server is not specified', function() {
-        var provider;
         function constructWithoutServer() {
-            provider = new BingMapsImageryProvider({
+            return new BingMapsImageryProvider({
                 mapStyle : BingMapsStyle.AERIAL
             });
         }
         expect(constructWithoutServer).toThrow();
-        expect(provider).toBeUndefined();
     });
 
     it('getIntensity returns 1.0 for aerial imagery less than level 8', function() {

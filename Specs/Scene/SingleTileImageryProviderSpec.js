@@ -65,12 +65,10 @@ defineSuite([
     });
 
     it('url is required', function() {
-        var provider;
         function constructWithoutUrl() {
-            provider = new SingleTileImageryProvider({});
+            return new SingleTileImageryProvider({});
         }
         expect(constructWithoutUrl).toThrow();
-        expect(provider).toBeUndefined();
     });
 
     it('requests the single image immediately upon construction', function() {

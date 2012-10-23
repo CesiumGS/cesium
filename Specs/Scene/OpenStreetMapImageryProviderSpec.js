@@ -38,12 +38,10 @@ defineSuite([
     });
 
     it('can be default constructed', function() {
-        var provider;
         function defaultConstruct() {
-            provider = new OpenStreetMapImageryProvider();
+            return new OpenStreetMapImageryProvider();
         }
         expect(defaultConstruct).not.toThrow();
-        expect(provider).not.toBeUndefined();
     });
 
     it('supports a slash at the end of the URL', function() {
