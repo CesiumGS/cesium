@@ -421,7 +421,8 @@ define([
         var readyTextureCount = 0;
         var tileImageryCollection = tile.imagery;
         for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-            if (tileImageryCollection[i].imagery.state === ImageryState.READY) {
+            var tileImagery = tileImageryCollection[i];
+            if (tileImageryIsReadyToRender(tileImagery)) {
                 ++readyTextureCount;
             }
         }
@@ -867,6 +868,11 @@ define([
         }
     }
 
+    function tileImageryIsReadyToRender(tileImagery) {
+        return tileImagery.textureTranslationAndScale !== 'undefined' &&
+               tileImagery.imagery.state === ImageryState.READY;
+    }
+
     var float32ArrayScratch = typeof Float32Array !== 'undefined' ? new Float32Array(1) : undefined;
     var modifiedModelViewScratch = new Matrix4();
     var tileExtentScratch = new Cartesian4();
@@ -1000,7 +1006,7 @@ define([
                         var imageryLayer = imagery.imageryLayer;
                         ++imageryIndex;
 
-                        if (imagery.state !== ImageryState.READY) {
+                        if (!tileImageryIsReadyToRender(tileImagery)) {
                             continue;
                         }
 
