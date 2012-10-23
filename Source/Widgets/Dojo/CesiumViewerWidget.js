@@ -575,7 +575,8 @@ define([
                 widget.czmlProcessor.add(czmlData, source);
                 widget.setTimeFromBuffer();
                 if (typeof lookAt !== 'undefined') {
-                    widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(lookAt));
+                    var lookAtObject = widget.czmlProcessor.getObject(lookAt, source);
+                    widget.centerCameraOnObject(lookAtObject);
                 }
             };
 
