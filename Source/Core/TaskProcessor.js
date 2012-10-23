@@ -120,15 +120,15 @@ define([
      * @example
      * var taskProcessor = new TaskProcessor('myWorkerName');
      * var promise = taskProcessor.scheduleTask({
-     *         someParameter : true,
-     *         another : 'hello'
-     *     });
+     *     someParameter : true,
+     *     another : 'hello'
+     * });
      * if (typeof promise === 'undefined') {
      *     // too many active tasks - try again later
      * } else {
      *     when(promise, function(result) {
-     *             // use the result of the task
-     *         });
+     *         // use the result of the task
+     *     });
      * }
      */
     TaskProcessor.prototype.scheduleTask = function(parameters, transferableObjects) {
