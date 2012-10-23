@@ -43,7 +43,7 @@ define([
         this._projection = new GeographicProjection(this._ellipsoid);
         this._numberOfLevelZeroTilesX = defaultValue(description.numberOfLevelZeroTilesX, 2);
         this._numberOfLevelZeroTilesY = defaultValue(description.numberOfLevelZeroTilesY, 1);
-    }
+    };
 
     /**
      * Gets the ellipsoid that is tiled by this tiling scheme.
