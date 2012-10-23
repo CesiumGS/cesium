@@ -298,9 +298,9 @@ define([
      * var points = [1.0, 2.0, 3.0, 0.1, 0.2,
      *               4.0, 5.0, 6.0, 0.1, 0.2,
      *               7.0, 8.0, 9.0, 0.1, 0.2];
-     * var sphere = BoundingSphere.fromPointsAsFlatArray(points, center, 5);
+     * var sphere = BoundingSphere.fromVertices(points, center, 5);
      */
-    BoundingSphere.fromPointsAsFlatArray = function(positions, center, stride, result) {
+    BoundingSphere.fromVertices = function(positions, center, stride, result) {
         if (typeof result === 'undefined') {
             result = new BoundingSphere();
         }
