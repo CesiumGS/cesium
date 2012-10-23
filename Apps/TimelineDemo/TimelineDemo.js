@@ -5,6 +5,8 @@ define(['dojo',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
+        'Core/AnimationController',
+        'Widgets/Playback',
         'Widgets/Timeline'
     ], function(
          dojo,
@@ -13,11 +15,13 @@ define(['dojo',
          Color,
          JulianDate,
          TimeInterval,
+         AnimationController,
+         Playback,
          Timeline) {
     "use strict";
 
     var startDatePart, endDatePart, startTimePart, endTimePart;
-    var timeline, clock;
+    var timeline, clock, animationController, playback;
 
     function handleSetTime(e) {
         if (typeof timeline !== 'undefined') {
@@ -69,6 +73,9 @@ define(['dojo',
         timeline.addTrack(new TimeInterval(endJulian.addSeconds(-60*60), endJulian), 8, Color.GREEN);
         var middle = startJulian.getSecondsDifference(endJulian) / 4;
         timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.BLUE, new Color(0.75, 0.75, 0.75, 0.5));
+
+        animationController = new AnimationController(clock);
+        playback = new Playback(dojo.byId('playbackTest'), animationController);
     }
 
     // Adjust start/end dates in reaction to any calendar/time clicks
