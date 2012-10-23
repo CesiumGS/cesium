@@ -80,17 +80,10 @@ define(function() {
         }
 
         if (typeof insertionPoint === 'undefined') {
-            if (typeof this.head === 'undefined') {
-                item.loadPrevious = undefined;
-                item.loadNext = undefined;
-                this.head = item;
-                this.tail = item;
-            } else {
-                item.loadPrevious = this.tail;
-                item.loadNext = undefined;
-                this.tail.loadNext = item;
-                this.tail = item;
-            }
+            item.loadPrevious = this.tail;
+            item.loadNext = undefined;
+            this.tail.loadNext = item;
+            this.tail = item;
             return;
         }
 

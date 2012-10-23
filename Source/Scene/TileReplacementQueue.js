@@ -91,8 +91,8 @@ define([
      * @param {TileReplacementQueue} item The tile that was rendered.
      */
     TileReplacementQueue.prototype.markTileRendered = function(item) {
-        var insertionPoint = this.head;
-        if (insertionPoint === item) {
+        var head = this.head;
+        if (head === item) {
             if (item === this._lastBeforeStartOfFrame) {
                 this._lastBeforeStartOfFrame = item.replacementNext;
             }
@@ -101,7 +101,7 @@ define([
 
         ++this.count;
 
-        if (typeof this.head === 'undefined') {
+        if (typeof head === 'undefined') {
             // no other tiles in the list
             item.replacementPrevious = undefined;
             item.replacementNext = undefined;
@@ -115,33 +115,11 @@ define([
             this._remove(item);
         }
 
-        if (typeof insertionPoint === 'undefined') {
-            if (typeof this.head === 'undefined') {
-                item.replacementPrevious = undefined;
-                item.replacementNext = undefined;
-                this.head = item;
-                this.tail = item;
-            } else {
-                item.replacementPrevious = this.tail;
-                item.replacementNext = undefined;
-                this.tail.replacementNext = item;
-                this.tail = item;
-            }
-            return;
-        }
+        item.replacementPrevious = undefined;
+        item.replacementNext = head;
+        head.replacementPrevious = item;
 
-        var insertAfter = insertionPoint.replacementPrevious;
-        item.replacementPrevious = insertAfter;
-        if (typeof insertAfter !== 'undefined') {
-            insertAfter.replacementNext = item;
-        }
-
-        item.replacementNext = insertionPoint;
-        insertionPoint.replacementPrevious = item;
-
-        if (insertionPoint === this.head) {
-            this.head = item;
-        }
+        this.head = item;
     };
 
     return TileReplacementQueue;

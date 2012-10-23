@@ -89,4 +89,37 @@ defineSuite([
         expect(pool.isDestroyed()).toEqual(true);
         expect(texture1.isDestroyed()).toEqual(true);
     });
+
+    it('does not allow the pool to grow beyond 8 textures', function() {
+        var textures = [];
+        var i;
+        for (i = 0; i < 12; ++i) {
+            textures.push(pool.createTexture2D(fakeContext, {
+                width : 1,
+                height : 1
+            }));
+        }
+
+        var notDestroyed = 0;
+        for (i = 0; i < textures.length; ++i) {
+            textures[i].destroy();
+            if (!textures[i].isDestroyed()) {
+                ++notDestroyed;
+            }
+        }
+
+        expect(notDestroyed).toEqual(8);
+    });
+
+    it('createTexture2D throws if description is not supplied', function() {
+        expect(function() {
+            pool.createTexture2D(fakeContext);
+        }).toThrow();
+    });
+
+    it('is destroyable', function() {
+        expect(pool.isDestroyed()).toEqual(false);
+        pool.destroy();
+        expect(pool.isDestroyed()).toEqual(true);
+    });
 });

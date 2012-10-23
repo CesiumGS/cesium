@@ -298,15 +298,10 @@ define([
             }
         }
 
-        if (typeof this.geometry !== 'undefined' && typeof this.geometry.destroy !== 'undefined') {
-            this.geometry.destroy();
+        if (typeof this.transientData !== 'undefined' && typeof this.transientData.destroy !== 'undefined') {
+            this.transientData.destroy();
         }
-        this.geometry = undefined;
-
-        if (typeof this.transformedGeometry !== 'undefined' && typeof this.transformedGeometry.destroy !== 'undefined') {
-            this.transformedGeometry.destroy();
-        }
-        this.transformedGeometry = undefined;
+        this.transientData = undefined;
 
         var i, len;
 
