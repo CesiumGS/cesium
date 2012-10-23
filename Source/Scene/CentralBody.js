@@ -744,7 +744,7 @@ define([
     var vpTransformScratch = new Matrix4();
     CentralBody.prototype._fillPoles = function(context, frameState) {
         var terrainProvider = this._surface.terrainProvider;
-        if (typeof terrainProvider === 'undefined' || frameState.mode !== SceneMode.SCENE3D) {
+        if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
 

@@ -5,6 +5,12 @@ define([
         destroyObject) {
     "use strict";
 
+    /**
+     * Manages the shaders used to shade the surface of a {@link CentralBody}.
+     *
+     * @alias CentralBodySurfaceShaderSet
+     * @private
+     */
     function CentralBodySurfaceShaderSet(attributeIndices) {
         this.baseVertexShaderString = undefined;
         this.baseFragmentShaderString = undefined;
