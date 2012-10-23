@@ -9,6 +9,7 @@ Beta Releases
 * Breaking changes:
    * xxx
 * Improved middle mouse click behavior to always tilt in the same direction.
+* Added `getElementIndex` to `Matrix2`, `Matrix3`, and `Matrix4`.
 
 ### b9 - 10/01/2012
 

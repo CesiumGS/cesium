@@ -1202,11 +1202,11 @@ define([
          * // These widgets can animate at different rates and pause individually.
          *
          * function updateAndRender() {
-         *     var currentTime = widget1.animationController.update();
-         *     widget1.update(currentTime);
+         *     var time1 = widget1.animationController.update();
+         *     var time2 = widget2.animationController.update();
+         *     widget1.update(time1);
+         *     widget2.update(time2);
          *     widget1.render();
-         *     currentTime = widget2.animationController.update();
-         *     widget2.update(currentTime);
          *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }
