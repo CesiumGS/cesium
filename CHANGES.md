@@ -19,6 +19,7 @@ Beta Releases
 * `CentralBody` now allows imagery from multiple sources to be layered and alpha blended on the globe.  See the new `Imagery Layers` and `Map Projections` Sandcastle examples.
 * Added `WebMapServiceImageryProvider`.
 * Improved middle mouse click behavior to always tilt in the same direction.
+* Added `getElementIndex` to `Matrix2`, `Matrix3`, and `Matrix4`.
 
 ### b9 - 10/01/2012
 

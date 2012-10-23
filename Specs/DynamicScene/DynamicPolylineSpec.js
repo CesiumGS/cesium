@@ -96,19 +96,19 @@ defineSuite([
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.polyline = new DynamicPolyline();
-        objectToMerge.polyline.color = 6;
-        objectToMerge.polyline.width = 7;
-        objectToMerge.polyline.outlineColor = 8;
-        objectToMerge.polyline.outlineWidth = 9;
-        objectToMerge.polyline.show = 10;
+        targetObject.polyline.color = 6;
+        targetObject.polyline.width = 7;
+        targetObject.polyline.outlineColor = 8;
+        targetObject.polyline.outlineWidth = 9;
+        targetObject.polyline.show = 10;
 
         DynamicPolyline.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.polyline.color).toEqual(targetObject.polyline.color);
-        expect(targetObject.polyline.width).toEqual(targetObject.polyline.width);
-        expect(targetObject.polyline.outlineColor).toEqual(targetObject.polyline.outlineColor);
-        expect(targetObject.polyline.outlineWidth).toEqual(targetObject.polyline.outlineWidth);
-        expect(targetObject.polyline.show).toEqual(targetObject.polyline.show);
+        expect(targetObject.polyline.color).toEqual(6);
+        expect(targetObject.polyline.width).toEqual(7);
+        expect(targetObject.polyline.outlineColor).toEqual(8);
+        expect(targetObject.polyline.outlineWidth).toEqual(9);
+        expect(targetObject.polyline.show).toEqual(10);
     });
 
     it('mergeProperties creates and configures an undefined polyline', function() {
@@ -136,22 +136,19 @@ defineSuite([
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.polyline = new DynamicPolyline();
-        targetObject.polyline = new DynamicPolyline();
-        targetObject.polyline.color = 1;
-        targetObject.polyline.width = 2;
-        targetObject.polyline.outlineColor = 3;
-        targetObject.polyline.outlineWidth = 4;
-        targetObject.polyline.show = 5;
+        targetObject.polyline.color = 6;
+        targetObject.polyline.width = 7;
+        targetObject.polyline.outlineColor = 8;
+        targetObject.polyline.outlineWidth = 9;
+        targetObject.polyline.show = 10;
 
         DynamicPolyline.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.polyline.scale).toEqual(targetObject.polyline.scale);
-        expect(targetObject.polyline.horizontalOrigin).toEqual(targetObject.polyline.horizontalOrigin);
-        expect(targetObject.polyline.verticalOrigin).toEqual(targetObject.polyline.verticalOrigin);
-        expect(targetObject.polyline.color).toEqual(targetObject.polyline.color);
-        expect(targetObject.polyline.eyeOffset).toEqual(targetObject.polyline.eyeOffset);
-        expect(targetObject.polyline.pixelOffset).toEqual(targetObject.polyline.pixelOffset);
-        expect(targetObject.polyline.show).toEqual(targetObject.polyline.show);
+        expect(targetObject.polyline.color).toEqual(6);
+        expect(targetObject.polyline.width).toEqual(7);
+        expect(targetObject.polyline.outlineColor).toEqual(8);
+        expect(targetObject.polyline.outlineWidth).toEqual(9);
+        expect(targetObject.polyline.show).toEqual(10);
     });
 
     it('undefineProperties works', function() {
