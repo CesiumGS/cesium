@@ -86,6 +86,11 @@ define([
         this._tileLoadQueue = new TileLoadQueue();
         this._tileReplacementQueue = new TileReplacementQueue();
 
+        // The number of milliseconds each frame to allow for processing the tile load queue.
+        // At least one tile will be processed per frame (assuming that any need processing),
+        // even if this value is 0.
+        this._loadQueueTimeSlice = 5;
+
         var ellipsoid = terrainTilingScheme.getEllipsoid();
         this._ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid, Cartesian3.ZERO);
 
@@ -571,7 +576,7 @@ define([
         }
 
         var startTime = Date.now();
-        var timeSlice = 5;
+        var timeSlice = surface._loadQueueTimeSlice;
         var endTime = startTime + timeSlice;
 
         do {
@@ -595,6 +600,7 @@ define([
                     for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
                         imageryLayerCollection.get(i)._createTileImagerySkeletons(tile, terrainProvider);
                     }
+
                 }
             }
 
@@ -611,6 +617,8 @@ define([
             //       because EllipsoidTerrainProvider won't fail.
 
             var doneLoading = tile.state === TileState.READY;
+
+            var didSomeWork = false;
 
             // Transition imagery states
             var tileImageryCollection = tile.imagery;
@@ -629,21 +637,25 @@ define([
                         --i;
                         len = tileImageryCollection.length;
                     }
+                    didSomeWork = true;
                 }
 
                 if (imagery.state === ImageryState.UNLOADED) {
                     imagery.state = ImageryState.TRANSITIONING;
                     imageryLayer._requestImagery(imagery);
+                    didSomeWork = true;
                 }
 
                 if (imagery.state === ImageryState.RECEIVED) {
                     imagery.state = ImageryState.TRANSITIONING;
                     imageryLayer._createTexture(context, imagery);
+                    didSomeWork = true;
                 }
 
                 if (imagery.state === ImageryState.TEXTURE_LOADED) {
                     imagery.state = ImageryState.TRANSITIONING;
                     imageryLayer._reprojectTexture(context, imagery);
+                    didSomeWork = true;
                 }
 
                 if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
@@ -660,17 +672,21 @@ define([
                     parent.addReference();
                     tileImagery.imagery = parent;
                     imagery = parent;
+
+                    didSomeWork = true;
                 }
 
                 var imageryDoneLoading = imagery.state === ImageryState.READY;
 
                 if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
+
+                    didSomeWork = true;
                 }
 
                 doneLoading = doneLoading && imageryDoneLoading;
 
-                if (Date.now() >= endTime) {
+                if (didSomeWork && Date.now() >= endTime) {
                     break;
                 }
             }
