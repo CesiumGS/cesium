@@ -84,6 +84,8 @@ define([
             this._layers.splice(index, 0, layer);
         }
 
+        this._update();
+
         this.layerAdded.raiseEvent(layer, index);
     };
 
@@ -127,6 +129,8 @@ define([
         var index = this._layers.indexOf(layer);
         if (index !== -1) {
             this._layers.splice(index, 1);
+
+            this._update();
 
             this.layerRemoved.raiseEvent(layer, index);
 
@@ -244,6 +248,8 @@ define([
         arr[i] = arr[j];
         arr[j] = temp;
 
+        collection._update();
+
         collection.layerMoved.raiseEvent(temp, j, i);
     }
 
@@ -292,6 +298,8 @@ define([
         this._layers.splice(index, 1);
         this._layers.push(layer);
 
+        this._update();
+
         this.layerMoved.raiseEvent(layer, this._layers.length - 1, index);
     };
 
@@ -309,6 +317,8 @@ define([
         var index = getLayerIndex(this._layers, layer);
         this._layers.splice(index, 1);
         this._layers.splice(0, 0, layer);
+
+        this._update();
 
         this.layerMoved.raiseEvent(layer, 0, index);
     };

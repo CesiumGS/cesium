@@ -222,7 +222,11 @@ defineSuite([
                 });
 
                 layerCollection.raiseToTop(layer1);
+            });
 
+            updateUntilDone(cb);
+
+            runs(function() {
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
                     expect(tile.imagery.length).toBeGreaterThan(0);
                     var indexOfFirstLayer2 = tile.imagery.length;
