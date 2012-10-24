@@ -43,6 +43,16 @@ define([
          * @type {Event}
          */
         this.layerMoved = new Event();
+
+        /**
+         * An event that is raised when a layer is shown or hidden by setting the
+         * {@link ImageryLayer#show} property.  Event handlers are passed a reference to this layer,
+         * the index of the layer in the collection, and a flag that is true if the layer is now
+         * shown or false if it is now hidden.
+         *
+         * @type {Event}
+         */
+        this.layerShownOrHidden = new Event();
     };
 
     /**
@@ -72,15 +82,6 @@ define([
                 throw new DeveloperError('index must be less than or equal to the number of layers.');
             }
             this._layers.splice(index, 0, layer);
-        }
-
-        if (index === 0) {
-            layer._isBaseLayer = true;
-            if (this._layers.length > 1) {
-                this._layers[1]._isBaseLayer = false;
-            }
-        } else {
-            layer._isBaseLayer = false;
         }
 
         this.layerAdded.raiseEvent(layer, index);
@@ -125,10 +126,6 @@ define([
 
         var index = this._layers.indexOf(layer);
         if (index !== -1) {
-            if (index === 0 && this._layers.length > 1) {
-                this._layers[1]._isBaseLayer = true;
-            }
-
             this._layers.splice(index, 1);
 
             this.layerRemoved.raiseEvent(layer, index);
@@ -247,11 +244,6 @@ define([
         arr[i] = arr[j];
         arr[j] = temp;
 
-        arr[i]._isBaseLayer = false;
-        arr[j]._isBaseLayer = false;
-
-        arr[0]._isBaseLayer = true;
-
         collection.layerMoved.raiseEvent(temp, j, i);
     }
 
@@ -300,9 +292,6 @@ define([
         this._layers.splice(index, 1);
         this._layers.push(layer);
 
-        layer._isBaseLayer = false;
-        this._layers[0]._isBaseLayer = true;
-
         this.layerMoved.raiseEvent(layer, this._layers.length - 1, index);
     };
 
@@ -320,11 +309,6 @@ define([
         var index = getLayerIndex(this._layers, layer);
         this._layers.splice(index, 1);
         this._layers.splice(0, 0, layer);
-
-        this._layers[0]._isBaseLayer = true;
-        if (this._layers.length > 1) {
-            this._layers[1]._isBaseLayer = false;
-        }
 
         this.layerMoved.raiseEvent(layer, 0, index);
     };
@@ -368,6 +352,28 @@ define([
     ImageryLayerCollection.prototype.destroy = function() {
         this.removeAll(true);
         return destroyObject(this);
+    };
+
+    ImageryLayerCollection.prototype._update = function() {
+        var isBaseLayer = true;
+        var layers = this._layers;
+        for (var i = 0, len = layers.length; i < len; ++i) {
+            var layer = layers[i];
+
+            layer._layerIndex = i;
+
+            if (layer.show) {
+                layer._isBaseLayer = isBaseLayer;
+                isBaseLayer = false;
+            } else {
+                layer._isBaseLayer = false;
+            }
+
+            if (layer.show !== layer._show) {
+                layer._show = layer.show;
+                this.layerShownOrHidden.raiseEvent(layer, i, layer.show);
+            }
+        }
     };
 
     return ImageryLayerCollection;

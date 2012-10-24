@@ -75,6 +75,9 @@ define([
         this._imageryLayerCollection.layerAdded.addEventListener(CentralBodySurface.prototype._onLayerAdded, this);
         this._imageryLayerCollection.layerRemoved.addEventListener(CentralBodySurface.prototype._onLayerRemoved, this);
         this._imageryLayerCollection.layerMoved.addEventListener(CentralBodySurface.prototype._onLayerMoved, this);
+        this._imageryLayerCollection.layerShownOrHidden.addEventListener(CentralBodySurface.prototype._onLayerShownOrHidden, this);
+
+        this._layerOrderChanged = false;
 
         var terrainTilingScheme = this._terrainProvider.tilingScheme;
         this._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
@@ -118,6 +121,7 @@ define([
     };
 
     CentralBodySurface.prototype.update = function(context, frameState, colorCommandList, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
+        updateLayers(this);
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState);
@@ -129,20 +133,16 @@ define([
             return;
         }
 
-        var newNextLayer = this._imageryLayerCollection.get(index + 1);
-
         // create TileImagerys for this layer for all previously loaded tiles
         var tile = this._tileReplacementQueue.head;
         while (typeof tile !== 'undefined') {
             if (layer._createTileImagerySkeletons(tile, this._terrainProvider)) {
                 tile.doneLoading = false;
             }
-
-            if (typeof newNextLayer !== 'undefined') {
-                moveTileImageryObjects(tile.imagery, layer, newNextLayer);
-            }
             tile = tile.replacementNext;
         }
+
+        this._layerOrderChanged = true;
     };
 
     CentralBodySurface.prototype._onLayerRemoved = function(layer, index) {
@@ -187,11 +187,18 @@ define([
             return;
         }
 
-        var newNextLayer = this._imageryLayerCollection.get(newIndex + 1);
-        var tile = this._tileReplacementQueue.head;
-        while (typeof tile !== 'undefined') {
-            moveTileImageryObjects(tile.imagery, layer, newNextLayer);
-            tile = tile.replacementNext;
+        this._layerOrderChanged = true;
+    };
+
+    CentralBodySurface.prototype._onLayerShownOrHidden = function(layer, index, show) {
+        if (typeof this._levelZeroTiles === 'undefined') {
+            return;
+        }
+
+        if (show) {
+            this._onLayerAdded(layer, index);
+        } else {
+            this._onLayerRemoved(layer, index);
         }
     };
 
@@ -248,6 +255,25 @@ define([
 
         return destroyObject(this);
     };
+
+    function sortTileImageryByLayerIndex(a, b) {
+        return a.imagery.imageryLayer._layerIndex - b.imagery.imageryLayer._layerIndex;
+    }
+
+    function updateLayers(surface) {
+        surface._imageryLayerCollection._update();
+
+        if (surface._layerOrderChanged) {
+            surface._layerOrderChanged = false;
+
+            // Sort the TileImagery instances in each tile by the layer index.
+            var tile = surface._tileReplacementQueue.head;
+            while (typeof tile !== 'undefined') {
+                tile.imagery.sort(sortTileImageryByLayerIndex);
+                tile = tile.replacementNext;
+            }
+        }
+    }
 
     function selectTilesForRendering(surface, context, frameState) {
         var debug = surface._debug;
@@ -422,7 +448,7 @@ define([
         var tileImageryCollection = tile.imagery;
         for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
-            if (tileImageryIsReadyToRender(tileImagery)) {
+            if (tileImagery.imagery.state === ImageryState.READY) {
                 ++readyTextureCount;
             }
         }
@@ -776,38 +802,6 @@ define([
         this._debug.suspendLodUpdate = !this._debug.suspendLodUpdate;
     };
 
-    function moveTileImageryObjects(tileImageryCollection, layer, newNextLayer) {
-        var oldTileImageryIndex = -1;
-        var newTileImageryIndex = -1;
-        var numTileImagery = 0;
-        for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-            var tileImagery = tileImageryCollection[i];
-            var tileImageryLayer = tileImagery.imagery.imageryLayer;
-
-            if (newTileImageryIndex === -1 && tileImageryLayer === newNextLayer) {
-                newTileImageryIndex = i;
-            } else if (tileImageryLayer === layer) {
-                ++numTileImagery;
-                if (oldTileImageryIndex === -1) {
-                    oldTileImageryIndex = i;
-                }
-            } else if (newTileImageryIndex !== -1 && oldTileImageryIndex !== -1) {
-                // we have all the info we need, don't need to continue iterating
-                break;
-            }
-        }
-
-        // splice out TileImagerys from old location
-        var tileImageryObjects = tileImageryCollection.splice(oldTileImageryIndex, numTileImagery);
-
-        // splice them back into the new location using tileImagerys as the args array with apply
-        if (newTileImageryIndex === -1) {
-            newTileImageryIndex = tileImageryCollection.length;
-        }
-        tileImageryObjects.unshift(newTileImageryIndex, 0);
-        Array.prototype.splice.apply(tileImageryCollection, tileImageryObjects);
-    }
-
     function tileDistanceSortFunction(a, b) {
         return a.distance - b.distance;
     }
@@ -866,11 +860,6 @@ define([
                 target[property] = source[property];
             }
         }
-    }
-
-    function tileImageryIsReadyToRender(tileImagery) {
-        return tileImagery.textureTranslationAndScale !== 'undefined' &&
-               tileImagery.imagery.state === ImageryState.READY;
     }
 
     var float32ArrayScratch = typeof Float32Array !== 'undefined' ? new Float32Array(1) : undefined;
@@ -1006,8 +995,12 @@ define([
                         var imageryLayer = imagery.imageryLayer;
                         ++imageryIndex;
 
-                        if (!tileImageryIsReadyToRender(tileImagery)) {
+                        if (imagery.state !== ImageryState.READY) {
                             continue;
+                        }
+
+                        if (typeof tileImagery.textureTranslationAndScale === 'undefined') {
+                            tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                         }
 
                         uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;

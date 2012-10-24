@@ -8,6 +8,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/Extent',
         '../Core/Math',
         '../Core/PrimitiveType',
@@ -34,6 +35,7 @@ define([
         Cartesian4,
         Color,
         DeveloperError,
+        Event,
         Extent,
         CesiumMath,
         PrimitiveType,
@@ -64,6 +66,7 @@ define([
      * @param {Extent} [description.extent=imageryProvider.extent] The extent of the layer.  This extent
      *        can limit the visible portion of the imagery provider.
      * @param {Number} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
+     * @param {Boolean} [description.show=true] True if the layer is shown; otherwise, false.
      * @param {Number} [description.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
      *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
      *        by the WebGL stack will be used.  Larger values make the imagery look better in horizon
@@ -81,6 +84,13 @@ define([
          */
         this.alpha = defaultValue(description.alpha, 1.0);
 
+        /**
+         * Determines if this layer is shown.
+         *
+         * @type {Boolean}
+         */
+        this.show = defaultValue(description.show, true);
+
         this._extent = defaultValue(description.extent, Extent.MAX_VALUE);
         this._maximumAnisotropy = description.maximumAnisotropy;
 
@@ -93,9 +103,25 @@ define([
 
         this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
 
+        // The value of the show property on the last update.
+        this._show = false;
+
+        // The index of this layer in the ImageryLayerCollection.
+        this._layerIndex = -1;
+
+        // true if this is the base (lowest shown) layer.
         this._isBaseLayer = false;
 
         this._requestImageError = undefined;
+    };
+
+    ImageryLayer.prototype.update = function() {
+        if (this._currentLayerIndex === -1) {
+
+        }
+        if (this.show !== this._show) {
+
+        }
     };
 
     /**
