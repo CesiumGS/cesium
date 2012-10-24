@@ -624,6 +624,10 @@ define([
             // Transition imagery states
             var tileImageryCollection = tile.imagery;
             for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
+                if (didSomeWork && Date.now() >= endTime) {
+                    break;
+                }
+
                 var tileImagery = tileImageryCollection[i];
                 var imagery = tileImagery.imagery;
                 var imageryLayer = imagery.imageryLayer;
@@ -686,10 +690,6 @@ define([
                 }
 
                 doneLoading = doneLoading && imageryDoneLoading;
-
-                if (didSomeWork && Date.now() >= endTime) {
-                    break;
-                }
             }
 
             // The tile becomes renderable when the terrain and all imagery data are loaded.
