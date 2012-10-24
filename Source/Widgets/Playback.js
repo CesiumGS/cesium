@@ -41,6 +41,7 @@ define([
     };
 
     Playback.prototype._createNodes = function(parentNode) {
+        var widget = this;
         var svg = this.containerNode = this._svg('svg:svg');
         svg.style.cssText = 'width: 100%; height: 100%;';
         svg.setAttribute('width', 200);
@@ -57,12 +58,16 @@ define([
         //svg.appendChild(this.testing);
 
         // Reset
-        svg.appendChild(this._svg('path').set('transform', 'translate(0,0)').set('d',
-                'M24.316,5.318,9.833,13.682,9.833,5.5,5.5,5.5,5.5,25.5,9.833,25.5,9.833,17.318,24.316,25.682z'));
+        var resetSVG = this._svg('path').set('transform', 'translate(0,0)').set('d',
+                'M24.316,5.318,9.833,13.682,9.833,5.5,5.5,5.5,5.5,25.5,9.833,25.5,9.833,17.318,24.316,25.682z');
+        svg.appendChild(resetSVG);
+        resetSVG.addEventListener('click', function () { widget.animationController.reset(); }, true);
 
         // Play
-        svg.appendChild(this._svg('path').set('transform', 'translate(25,0)').set('d',
-                'M6.684,25.682L24.316,15.5L6.684,5.318V25.682z'));
+        var playSVG = this._svg('path').set('transform', 'translate(25,0)').set('d',
+                'M6.684,25.682L24.316,15.5L6.684,5.318V25.682z');
+        svg.appendChild(playSVG);
+        playSVG.addEventListener('click', function () { widget.animationController.play(); }, true);
 
         // Clock
         svg.appendChild(this._svg('path').set('transform', 'translate(50,0)').set('d',
