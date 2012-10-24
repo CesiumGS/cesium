@@ -196,7 +196,11 @@ require([
     
     var cesiumWidget = new CesiumWidget({
         postSetup : function(widget) {
-            createButtons(widget.scene.getPrimitives());
+            var scene = widget.scene;
+            var centralBody = scene.getPrimitives().getCentralBody();
+            centralBody.showClouds = false;
+            centralBody.showCloudShadows = false;
+            createButtons(scene.getPrimitives());
             widget.startRenderLoop();
         }
     }).placeAt(dom.byId('cesiumContainer'));
