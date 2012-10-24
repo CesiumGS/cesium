@@ -37,6 +37,7 @@ require({
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/form/TextBox',
+        'dijit/form/Textarea',
         'dijit/Menu',
         'dijit/MenuBar',
         'dijit/PopupMenuBarItem',
@@ -109,13 +110,15 @@ require({
         var docTimer;
         var docTabs = {};
         var docError = false;
+        var galleryError = false;
         var galleryTooltipTimer;
         var activeGalleryTooltipDemo;
         var demoTileHeightRule = findCssStyle('.demoTileThumbnail');
         var cesiumContainer = registry.byId('cesiumContainer');
         var docNode = dom.byId('docPopup');
         var docMessage = dom.byId('docPopupMessage');
-        var local = { 'docTypes': [],  'headers': "<html><head></head><body>"};
+        var local = { 'docTypes': [],  'headers': '<html><head></head><body>', 'bucketName': '', 'emptyBucket': ''};
+        var bucketTypes = {};
         var demoTooltips = {};
         var errorLines = [];
         var highlightLines = [];
@@ -126,7 +129,8 @@ require({
             'document',
             'window',
             'console',
-            'Sandcastle'
+            'Sandcastle',
+            'Cesium'
         ];
         var hintOptions = {
             predef: hintGlobals,
@@ -186,6 +190,10 @@ require({
             addExtraLine = true;
         }
 
+        var bucketFrame = document.getElementById('bucketFrame');
+        var bucketPane = registry.byId('bucketPane');
+        var bucketWaiting = false;
+
         xhr.get({
             url: '../../Build/Documentation/types.txt',
             handleAs: 'json',
@@ -196,14 +204,19 @@ require({
             local.docTypes = value;
         });
 
-        xhr.get({
-            url: 'templates/bucket.html',
-            handleAs: 'text'
-        }).then(function (value) {
-            var pos = value.indexOf('<body');
-            pos = value.indexOf('>', pos);
-            local.headers = value.substring(0, pos + 1) + '\n';
-        });
+        var decoderSpan = document.createElement('span');
+        function encodeHTML(text) {
+            decoderSpan.textContent = text;
+            text = decoderSpan.innerHTML;
+            decoderSpan.innerHTML = '';
+            return text;
+        }
+        function decodeHTML(text) {
+            decoderSpan.innerHTML = text;
+            text = decoderSpan.textContent;
+            decoderSpan.innerHTML = '';
+            return text;
+        }
 
         function highlightRun() {
             domClass.add(registry.byId('buttonRun').domNode, 'highlightToolbarButton');
@@ -284,9 +297,6 @@ require({
             }
             docTimer = window.setTimeout(showDocPopup, 500);
         }
-
-        var bucketFrame = document.getElementById('bucketFrame');
-        var bucketPane = registry.byId('bucketPane');
 
         var abbrDiv = document.createElement('div');
         var abbrEle = document.createElement('abbr');
@@ -420,7 +430,10 @@ require({
             clearErrorsAddHints();
             clearRun();
             cesiumContainer.selectChild(bucketPane);
-            bucketFrame.contentWindow.location.reload();
+            // Check for a race condition in some browsers where the iframe hasn't loaded yet.
+            if (bucketFrame.contentWindow.location.href.indexOf('bucket.html') > 0) {
+                bucketFrame.contentWindow.location.reload();
+            }
         };
 
         CodeMirror.commands.autocomplete = function(cm) {
@@ -454,24 +467,166 @@ require({
             }
         });
 
+        function activateBucketScripts(bucketDoc) {
+            var headNodes = bucketDoc.head.childNodes, i, len = headNodes.length, node, nodes = [];
+            var scriptEle, j, numAttrs;
+            for (i = 0; i < len; ++i) {
+                node = headNodes[i];
+                if (typeof node.tagName === 'string' && node.tagName === 'SCRIPT' &&
+                        node.src.indexOf('Sandcastle-header.js') < 0) {  // header is included in blank frame.
+                    nodes.push(node);
+                }
+            }
+            len = nodes.length;
+            for (i = 0; i < len; ++i) {
+                bucketDoc.head.removeChild(nodes[i]);
+            }
+
+            var onScriptTagError = function () {
+                if (bucketFrame.contentDocument === bucketDoc) {
+                    appendConsole('consoleError', "Error loading " + this.src);
+                    appendConsole('consoleError', "Make sure Cesium is built, see the Contributor's Guide for details.");
+                }
+            };
+
+            // Load each script after the previous one has loaded.
+            var loadScript = function () {
+                if (bucketFrame.contentDocument !== bucketDoc) {
+                    // A newer reload has happened, abort this.
+                    return;
+                }
+                if (nodes.length > 0) {
+                    node = nodes.shift();
+                    scriptEle = bucketDoc.createElement('script');
+                    numAttrs = node.attributes.length;
+                    var hasSrc = false, name, val;
+                    for (j = 0; j < numAttrs; ++j) {
+                        name = node.attributes[j].name;
+                        val = node.attributes[j].value;
+                        scriptEle.setAttribute(name, val);
+                        if (name === 'src' && val) {
+                            hasSrc = true;
+                        }
+                    }
+                    scriptEle.innerHTML = node.innerHTML;
+                    if (hasSrc) {
+                        scriptEle.onload = loadScript;
+                        scriptEle.onerror = onScriptTagError;
+                        bucketDoc.head.appendChild(scriptEle);
+                    } else {
+                        bucketDoc.head.appendChild(scriptEle);
+                        loadScript();
+                    }
+                } else {
+                    // Apply user code to bucket.
+                    var bodyEle = bucketDoc.createElement('div');
+                    bodyEle.innerHTML = htmlEditor.getValue();
+                    bucketDoc.body.appendChild(bodyEle);
+                    var jsEle = bucketDoc.createElement('script');
+                    jsEle.type = 'text/javascript';
+                    jsEle.textContent = (addExtraLine ? '\n' : '') + jsEditor.getValue();
+                    bucketDoc.body.appendChild(jsEle);
+                }
+            };
+            loadScript();
+        }
+
+        function applyBucket() {
+            if (local.emptyBucket && local.bucketName && typeof bucketTypes[local.bucketName] === 'string') {
+                bucketWaiting = false;
+                var bucketDoc = bucketFrame.contentDocument;
+                if (local.headers.substring(0, local.emptyBucket.length) !== local.emptyBucket) {
+                    appendConsole('consoleError', 'Error, first part of ' + local.bucketName + ' must match first part of bucket.html exactly.');
+                } else {
+                    var pos = local.headers.indexOf('<body class="'), pos2;
+                    if (pos > 0) {
+                        pos += 13;
+                        pos2 = local.headers.indexOf('"', pos);
+                        if (pos2 > pos) {
+                            bucketDoc.body.className = local.headers.substring(pos, pos2);
+                        }
+                    }
+                    pos = local.headers.indexOf('data-sandcastle-title="');
+                    if (pos > 0) {
+                        pos += 23;
+                        pos2 = local.headers.indexOf('"', pos);
+                        if (pos2 > pos) {
+                            bucketPane.set('title', local.headers.substring(pos, pos2));
+                            document.getElementById('includes').textContent = local.headers.substring(pos, pos2);
+                        }
+                    }
+                    pos = local.headers.indexOf('</head>');
+                    var extraHeaders = local.headers.substring(local.emptyBucket.length, pos);
+                    bucketDoc.head.innerHTML += extraHeaders;
+                    activateBucketScripts(bucketDoc);
+                }
+            } else {
+                bucketWaiting = true;
+            }
+        }
+
+        function applyBucketIfWaiting() {
+            if (bucketWaiting) {
+                applyBucket();
+            }
+        }
+
+        xhr.get({
+            url: 'templates/bucket.html',
+            handleAs: 'text'
+        }).then(function (value) {
+            var pos = value.indexOf('</head>');
+            local.emptyBucket = value.substring(0, pos);
+            applyBucketIfWaiting();
+        });
+
+        function loadBucket(bucketName) {
+            if (local.bucketName !== bucketName) {
+                local.bucketName = bucketName;
+                if (typeof bucketTypes[bucketName] !== 'undefined') {
+                    local.headers = bucketTypes[bucketName];
+                } else {
+                    local.headers = '<html><head></head><body data-sandcastle-bucket-loaded="no">';
+                    xhr.get({
+                        url: 'templates/' + bucketName,
+                        handleAs: 'text'
+                    }).then(function (value) {
+                        var pos = value.indexOf('<body');
+                        pos = value.indexOf('>', pos);
+                        bucketTypes[bucketName] = value.substring(0, pos + 1) + '\n';
+                        if (local.bucketName === bucketName) {
+                            local.headers = bucketTypes[bucketName];
+                        }
+                        applyBucketIfWaiting();
+                    });
+                }
+            }
+        }
+
         function loadFromGallery(demo) {
+            document.getElementById('saveAsFile').download = demo.name + '.html';
+            registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
             var pos = demo.code.indexOf('<body');
             pos = demo.code.indexOf('>', pos);
             var body = demo.code.substring(pos + 2);
             pos = body.indexOf('<script id="cesium_sandcastle_script">');
             var pos2 = body.lastIndexOf('</script>');
             if ((pos <= 0) || (pos2 <= pos)) {
-                var ele = document.createElement('span');
-                ele.className = 'consoleError';
-            ele.textContent = 'Error reading source file: ' + demo.name + '\n';
-                appendConsole(ele);
+                appendConsole('consoleError', 'Error reading source file: ' + demo.name);
             } else {
-                var script = body.substring(pos + 38, pos2 - 1);
-                while (script.charAt(0) < 32) {
+                var script = body.substring(pos + 38, pos2);
+                while (script.length > 0 && script.charCodeAt(0) < 32) {
                     script = script.substring(1);
                 }
                 jsEditor.setValue(script);
-                htmlEditor.setValue(body.substring(0, pos - 1));
+                script = body.substring(0, pos);
+                while (script.length > 0 && script.charCodeAt(0) < 32) {
+                    script = script.substring(1);
+                }
+                htmlEditor.setValue(script);
+                if (typeof demo.bucket === 'string') {
+                    loadBucket(demo.bucket);
+                }
                 CodeMirror.commands.runCesium(jsEditor);
             }
         }
@@ -488,20 +643,25 @@ require({
             // The iframe (bucket.html) sends this message on load.
             // This triggers the code to be injected into the iframe.
             if (e.data === 'reload') {
-                logOutput.innerHTML = "";
-                // This happens after a Run (F8) reloads bucket.html, to inject the editor code
-                // into the iframe, causing the demo to run there.
                 var bucketDoc = bucketFrame.contentDocument;
-                var bodyEle = bucketDoc.createElement('div');
-                bodyEle.innerHTML = htmlEditor.getValue();
-                bucketDoc.body.appendChild(bodyEle);
-                var jsEle = bucketDoc.createElement('script');
-                jsEle.type = 'text/javascript';
-                jsEle.textContent = (addExtraLine ? '\n' : '') + jsEditor.getValue();
-                bucketDoc.body.appendChild(jsEle);
-                if (docError) {
-                    appendConsole('consoleError', "Documentation not available.  Please run the 'generateDocumentation' build script to generate Cesium documentation.");
-                    showGallery();
+                if (!local.bucketName) {
+                    // Reload fired, bucket not specified yet.
+                    return;
+                }
+                if (bucketDoc.body.getAttribute('data-sandcastle-loaded') !== 'yes') {
+                    bucketDoc.body.setAttribute('data-sandcastle-loaded', 'yes');
+                    logOutput.innerHTML = "";
+                    // This happens after a Run (F8) reloads bucket.html, to inject the editor code
+                    // into the iframe, causing the demo to run there.
+                    applyBucket();
+                    if (docError) {
+                        appendConsole('consoleError', "Documentation not available.  Please run the " +
+                                "'generateDocumentation' build script to generate Cesium documentation.");
+                        showGallery();
+                    }
+                    if (galleryError) {
+                        appendConsole('consoleError', "Error loading gallery, please run the build script.");
+                    }
                 }
             } else if (typeof e.data.log !== 'undefined') {
                 // Console log messages from the iframe display in Sandcastle.
@@ -574,12 +734,13 @@ require({
 
         registry.byId('dropDownSaveAs').on('show', function () {
             var html = local.headers + htmlEditor.getValue() +
-                '\n<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
-                '\n</script>\n</body>\n</html>\n';
+                '<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
+                '</script>\n</body>\n</html>\n';
 
             var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
             currentDemoName = window.decodeURIComponent(currentDemoName.replace('.html', ''));
-            html = html.replace('<title>', '<meta name="description" content="' + demoTooltips[currentDemoName].get('content') + '">\n    <title>');
+            var description = encodeHTML(registry.byId('description').get('value').replace(/\n/g, '\\n')).replace(/\"/g, '&quot;');
+            html = html.replace('<title>', '<meta name="description" content="' + description + '">\n    <title>');
 
             var octetBlob = new Blob([ html ], { 'type' : 'application/octet-stream', 'endings' : 'native' });
             var octetBlobURL = getURL.createObjectURL(octetBlob);
@@ -588,8 +749,8 @@ require({
 
         registry.byId('buttonNewWindow').on('click', function () {
             var html = local.headers + htmlEditor.getValue() +
-                '\n<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
-                '\n</script>\n</body>\n</html>\n';
+                '<script id="cesium_sandcastle_script">\n' + jsEditor.getValue() +
+                '</script>\n</body>\n</html>\n';
             var baseHref = window.location.href;
             var pos = baseHref.lastIndexOf('/');
             baseHref = baseHref.substring(0, pos) + '/gallery/';
@@ -652,10 +813,40 @@ require({
                 handleAs: 'text',
                 error: function(error) {
                     appendConsole('consoleError', error);
+                    galleryError = true;
                 }
             }).then(function (value) {
                 // Store the file contents for later searching.
                 demo.code = value;
+                demo.bucket = 'bucket-dojo.html';
+                var pos = value.indexOf('data-sandcastle-bucket="'), pos2;
+                if (pos > 0) {
+                    pos += 24;
+                    pos2 = value.indexOf('"', pos);
+                    if (pos2 > pos) {
+                        demo.bucket = value.substring(pos, pos2);
+                    }
+                }
+
+                demo.bucketTitle = 'Cesium + Dojo';
+                pos = value.indexOf('data-sandcastle-title="');
+                if (pos > 0) {
+                    pos += 23;
+                    pos2 = value.indexOf('"', pos);
+                    if (pos2 > pos) {
+                        demo.bucketTitle = value.substring(pos, pos2);
+                    }
+                }
+
+                demo.description = '';
+                pos = value.indexOf('<meta name="description" content="');
+                if (pos > 0) {
+                    pos += 34;
+                    pos2 = value.indexOf('">', pos);
+                    if (pos2 > pos) {
+                        demo.description = value.substring(pos, pos2);
+                    }
+                }
 
                 // Select the demo to load upon opening based on the query parameter.
                 if (typeof queryObject.src !== 'undefined') {
@@ -668,23 +859,19 @@ require({
                 }
 
                 // Create a tooltip containing the demo's description.
-                var start = value.indexOf('<meta name="description" content="');
-                if (start !== -1) {
-                    var end = value.indexOf('">', start);
-                    demoTooltips[demo.name] = new TooltipDialog({
-                        id: demo.name + 'TooltipDialog',
-                        style: 'width: 200px; font-size: 12px;',
-                        content: value.substring(start + 34, end)
-                    });
+                demoTooltips[demo.name] = new TooltipDialog({
+                    id: demo.name + 'TooltipDialog',
+                    style: 'width: 200px; font-size: 12px;',
+                    content: '<div class="demoTooltipType">' + demo.bucketTitle + '</div>' + demo.description.replace(/\\n/g, '<br/>')
+                });
 
-                    on(dom.byId(demo.name), 'mouseover', function() {
-                        scheduleGalleryTooltip(demo);
-                    });
+                on(dom.byId(demo.name), 'mouseover', function() {
+                    scheduleGalleryTooltip(demo);
+                });
 
-                    on(dom.byId(demo.name), 'mouseout', function() {
-                        closeGalleryTooltip();
-                    });
-                }
+                on(dom.byId(demo.name), 'mouseout', function() {
+                    closeGalleryTooltip();
+                });
             });
         }
 
@@ -733,7 +920,9 @@ require({
 
             // Sort alphabetically.  This will eventually be a user option.
             gallery_demos.sort(function(a, b) {
-                return (b.name < a.name) ? 1 : ((b.name > a.name) ? -1 : 0);
+                var aName = a.name.toUpperCase();
+                var bName = b.name.toUpperCase();
+                return (bName < aName) ? 1 : ((bName > aName) ? -1 : 0);
             });
 
             var queryInGalleryIndex = false;
@@ -747,7 +936,8 @@ require({
 
             if (!queryInGalleryIndex) {
                 gallery_demos.push({
-                    name: queryName
+                    name: queryName,
+                    description: ''
                 });
                 addFileToGallery(gallery_demos.length - 1);
             }

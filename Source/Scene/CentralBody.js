@@ -30,10 +30,10 @@ define([
         '../Core/JulianDate',
         '../Core/Transforms',
         '../Renderer/BufferUsage',
-        '../Renderer/Command',
         '../Renderer/CommandLists',
         '../Renderer/CullFace',
         '../Renderer/DepthFunction',
+        '../Renderer/DrawCommand',
         '../Renderer/PixelFormat',
         '../Renderer/MipmapHint',
         '../Renderer/TextureMagnificationFilter',
@@ -86,10 +86,10 @@ define([
         JulianDate,
         Transforms,
         BufferUsage,
-        Command,
         CommandLists,
         CullFace,
         DepthFunction,
+        DrawCommand,
         PixelFormat,
         MipmapHint,
         TextureMagnificationFilter,
@@ -256,20 +256,20 @@ define([
         this._rsColor = undefined;
         this._tileCommandList = [];
 
-        this._skyCommand = new Command();
+        this._skyCommand = new DrawCommand();
         this._skyCommand.primitiveType = PrimitiveType.TRIANGLES;
 
         // this._skyCommand.shaderProgram references sky-from-space or sky-from-atmosphere
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
 
-        this._depthCommand = new Command();
+        this._depthCommand = new DrawCommand();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
 
-        this._northPoleCommand = new Command();
+        this._northPoleCommand = new DrawCommand();
         this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._southPoleCommand = new Command();
+        this._southPoleCommand = new DrawCommand();
         this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
 
         // this._northPoleCommand.shaderProgram and this.southPoleCommand.shaderProgram reference
@@ -1969,7 +1969,7 @@ define([
 
                     var command = tileCommands[j++];
                     if (typeof command === 'undefined') {
-                        command = tileCommands[j - 1] = new Command();
+                        command = tileCommands[j - 1] = new DrawCommand();
                     }
 
                     command.shaderProgram = this._sp;

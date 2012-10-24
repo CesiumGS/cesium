@@ -101,7 +101,9 @@ jasmine.TrivialReporter.prototype.reportRunnerStarting = function(runner) {
             this.createDom('div', {className: 'progressContainer'},
             this.progress = this.createDom('div', {className: 'progressBar passed', style: 'width: 0%'},
             this.createDom('div', {className: 'progressText'},
-                this.createDom('a', {className: 'run_spec', href: '?'}, "run all"),
+                this.createDom('a', {className: 'run_spec', href: '?', target: '_top'}, "run all"),
+                this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
+                    window.encodeURIComponent('?baseUrl=../Instrumented'), target: '_top' }, "coverage"),
                 this.runnerMessageSpan = this.createDom('span', {}, "Running..."),
                 this.finishedAtSpan = this.createDom('span', {className: 'finished-at'}, ""))))));
 
@@ -119,10 +121,12 @@ jasmine.TrivialReporter.prototype.reportRunnerStarting = function(runner) {
 		    isSuiteFocused = jasmine.TrivialReporter.isSuiteFocused;
 
 		var suiteDiv = this.createDom('div', {className: 'suite' + (isSuiteFocused(suite) ? '' : ' collapse'), id: name},
-			this.createDom('a', {className: 'run_spec', href: '?suite=' + name}, "run"),
+			this.createDom('a', {className: 'run_spec', href: '?suite=' + name, target: '_top'}, "run"),
+            this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
+                window.encodeURIComponent('?baseUrl=../Instrumented&suite=' + name), target: '_top' }, "coverage"),
 			expander = this.createDom('a', {className: 'expander'}, '[+]'),
 			collapser = this.createDom('a', {className: 'collapser'}, '[-]'),
-			this.createDom('a', {className: 'description', href: '?suite=' + name}, suite.description),
+			this.createDom('a', {className: 'description', href: '?suite=' + name, target: '_top'}, suite.description),
 			timeSpan = document.createTextNode(''));
 
 		suiteDiv.timeSpan = timeSpan;
@@ -223,12 +227,15 @@ jasmine.TrivialReporter.prototype.reportSpecResults = function(spec) {
 	}
 	var name = jasmine.TrivialReporter.encode(spec.getFullName());
 	var specDiv = this.createDom('div', {className: 'spec ' + status, id: name},
-		this.createDom('a', {className: 'run_spec', href: '?spec=' + name}, "run"),
-		this.createDom('a', {className: 'run_spec', href: '?spec=' + name + '&debug=' + name}, "debug"),
+		this.createDom('a', {className: 'run_spec', href: '?spec=' + name, target: '_top'}, "run"),
+        this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
+            window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name), target: '_top' }, "coverage"),
+		this.createDom('a', {className: 'run_spec', href: '?spec=' + name + '&debug=' + name, target: '_top'}, "debug"),
 		this.createDom('a', {
 			className: 'description',
 			href: '?spec=' + name,
-			title: spec.getFullName()
+			title: spec.getFullName(),
+			target: '_top'
 		}, spec.description),
 		timing);
 

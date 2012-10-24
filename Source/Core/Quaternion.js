@@ -91,6 +91,8 @@ define([
         return result;
     };
 
+    var fromRotationMatrixNext = [1, 2, 0];
+    var fromRotationMatrixQuat = new Array(3);
     /**
      * Computes a Quaternion from the provided Matrix3 instance.
      * @memberof Quaternion
@@ -108,68 +110,52 @@ define([
             throw new DeveloperError('matrix is required.');
         }
 
+        var root;
         var x;
         var y;
         var z;
         var w;
-        var factor;
 
         var m00 = matrix[Matrix3.COLUMN0ROW0];
         var m11 = matrix[Matrix3.COLUMN1ROW1];
         var m22 = matrix[Matrix3.COLUMN2ROW2];
+        var trace = m00 + m11 + m22;
 
-        var tmp = m00 * m11 * m22;
-        switch (Math.max(tmp, m00, m11, m22)) {
-        case tmp:
-            w = 0.5 * Math.sqrt(1.0 + m00 * m11 * m22);
-            factor = 1.0 / (4.0 * w);
+        if (trace > 0.0) {
+            // |w| > 1/2, may as well choose w > 1/2
+            root = Math.sqrt(trace + 1.0); // 2w
+            w = 0.5 * root;
+            root = 0.5 / root; // 1/(4w)
 
-            x = factor * (matrix[Matrix3.COLUMN2ROW1] - matrix[Matrix3.COLUMN1ROW2]);
-            y = factor * (matrix[Matrix3.COLUMN0ROW2] - matrix[Matrix3.COLUMN2ROW0]);
-            z = factor * (matrix[Matrix3.COLUMN1ROW0] - matrix[Matrix3.COLUMN0ROW1]);
-            break;
-        case m00:
-            x = 0.5 * Math.sqrt(1.0 + m00 - m11 - m22);
-            factor = 1.0 / (4.0 * x);
+            x = (matrix[Matrix3.COLUMN2ROW1] - matrix[Matrix3.COLUMN1ROW2]) * root;
+            y = (matrix[Matrix3.COLUMN0ROW2] - matrix[Matrix3.COLUMN2ROW0]) * root;
+            z = (matrix[Matrix3.COLUMN1ROW0] - matrix[Matrix3.COLUMN0ROW1]) * root;
+        } else {
+            // |w| <= 1/2
+            var next = fromRotationMatrixNext;
 
-            w = factor * (matrix[Matrix3.COLUMN2ROW1] - matrix[Matrix3.COLUMN1ROW2]);
-
-            if (w < 0.0) {
-                w = -w;
-                factor = -factor;
+            var i = 0;
+            if (m11 > m00) {
+                i = 1;
             }
-
-            y = factor * (matrix[Matrix3.COLUMN1ROW0] + matrix[Matrix3.COLUMN0ROW1]);
-            z = factor * (matrix[Matrix3.COLUMN2ROW0] + matrix[Matrix3.COLUMN0ROW2]);
-            break;
-        case m11:
-            y = 0.5 * Math.sqrt(1.0 - m00 + m11 - m22);
-            factor = 1.0 / (4.0 * y);
-
-            w = factor * (matrix[Matrix3.COLUMN0ROW2] - matrix[Matrix3.COLUMN2ROW0]);
-
-            if (w < 0) {
-                w = -w;
-                factor = -factor;
+            if (m22 > m00 && m22 > m11) {
+                i = 2;
             }
+            var j = next[i];
+            var k = next[j];
 
-            x = factor * (matrix[Matrix3.COLUMN1ROW0] + matrix[Matrix3.COLUMN0ROW1]);
-            z = factor * (matrix[Matrix3.COLUMN2ROW1] + matrix[Matrix3.COLUMN1ROW2]);
-            break;
-        case m22:
-            z = 0.5 * Math.sqrt(1.0 - m00 - m11 + m22);
-            factor = 1.0 / (4.0 * z);
+            root = Math.sqrt(matrix[Matrix3.getElementIndex(i, i)] - matrix[Matrix3.getElementIndex(j, j)] - matrix[Matrix3.getElementIndex(k, k)] + 1.0);
 
-            w = factor * (matrix[Matrix3.COLUMN1ROW0] - matrix[Matrix3.COLUMN0ROW1]);
+            var quat = fromRotationMatrixQuat;
+            quat[i] = 0.5 * root;
+            root = 0.5 / root;
+            w = (matrix[Matrix3.getElementIndex(k, j)] - matrix[Matrix3.getElementIndex(j, k)]) * root;
+            quat[j] = (matrix[Matrix3.getElementIndex(j, i)] + matrix[Matrix3.getElementIndex(i, j)]) * root;
+            quat[k] = (matrix[Matrix3.getElementIndex(k, i)] + matrix[Matrix3.getElementIndex(i, k)]) * root;
 
-            if (w < 0) {
-                w = -w;
-                factor = -factor;
-            }
-
-            x = factor * (matrix[Matrix3.COLUMN2ROW0] + matrix[Matrix3.COLUMN0ROW2]);
-            y = factor * (matrix[Matrix3.COLUMN2ROW1] + matrix[Matrix3.COLUMN1ROW2]);
-            break;
+            x = quat[0];
+            y = quat[1];
+            z = quat[2];
         }
 
         if (typeof result === 'undefined') {

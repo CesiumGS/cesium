@@ -290,6 +290,18 @@ define([
                cartographic.latitude <= this.north;
     };
 
+    /**
+     * Determines if the extent is empty, i.e., if <code>west === east</code>
+     * and <code>south === north</code>.
+     *
+     * @memberof Extent
+     *
+     * @return {Boolean} True if the extent is empty; otherwise, false.
+     */
+    Extent.prototype.isEmpty = function() {
+        return (this.west === this.east) && (this.south === this.north);
+    };
+
     var subsampleLlaScratch = new Cartographic();
     /**
      * Samples this Extent so that it includes a list of Cartesian points suitable for passing to
