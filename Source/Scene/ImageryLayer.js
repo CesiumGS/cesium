@@ -208,6 +208,7 @@ define([
      * tile.
      *
      * @memberof ImageryLayer
+     * @private
      *
      * @param {Tile} tile The terrain tile.
      * @param {TerrainProvider} terrainProvider The terrain provider associated with the terrain tile.
@@ -366,6 +367,7 @@ define([
      * particular terrain {@link Tile}.
      *
      * @memberof ImageryLayer
+     * @private
      *
      * @param {Tile} tile The terrain tile.
      * @param {TileImagery} tileImagery The imagery tile mapping.
@@ -392,6 +394,7 @@ define([
      * error event if the request fails, and retrying the request if necessary.
      *
      * @memberof ImageryLayer
+     * @private
      *
      * @param {Imagery} imagery The imagery to request.
      */
@@ -446,6 +449,7 @@ define([
      * Create a WebGL texture for a given {@link Imagery} instance.
      *
      *  @memberof ImageryLayer
+     *  @private
      *
      *  @param {Context} context The rendered context to use to create textures.
      *  @param {Imagery} imagery The imagery for which to create a texture.
@@ -488,6 +492,7 @@ define([
      * mipmaps for the geographic texture.
      *
      * @memberof ImageryLayer
+     * @private
      *
      * @param {Context} context The rendered context to use.
      * @param {Imagery} imagery The imagery instance to reproject.
