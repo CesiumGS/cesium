@@ -529,7 +529,7 @@ define([
         var mesh;
 
         if ((typeof polygon._extent !== 'undefined') && !polygon._extent.isEmpty()) {
-            meshes.push(ExtentTessellator.compute({extent: polygon._extent, generateTextureCoords:true}));
+            meshes.push(ExtentTessellator.compute({extent: polygon._extent, generateTextureCoordinates:true}));
 
             polygon._boundingVolume = BoundingSphere.fromExtent3D(polygon._extent, polygon._ellipsoid, polygon._boundingVolume);
             if (polygon._mode !== SceneMode.SCENE3D) {

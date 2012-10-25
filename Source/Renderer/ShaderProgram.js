@@ -1345,9 +1345,10 @@ define([
         if ((activeUniform.type === _gl.SAMPLER_2D) || (activeUniform.type === _gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
                 for ( var i = 0; i < _locations.length; ++i) {
+                    var value = this.value[i];
                     var index = textureUnitIndex + i;
                     _gl.activeTexture(_gl.TEXTURE0 + index);
-                    _gl.bindTexture(this.value[i]._getTarget(), this.value[i]._getTexture());
+                    _gl.bindTexture(value._getTarget(), value._getTexture());
                     _gl.uniform1i(_locations[i], index);
                 }
 
@@ -1814,7 +1815,7 @@ define([
 
             // Ignore GLSL built-in uniforms returned in Firefox.
             if (uniformName.indexOf('gl_') !== 0) {
-                if (activeUniform.size === 1) {
+                if (activeUniform.name.indexOf('[') < 0) {
                     // Single uniform
                     var location = gl.getUniformLocation(program, uniformName);
                     var uniformValue = gl.getUniform(program, location);
