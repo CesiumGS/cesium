@@ -514,14 +514,24 @@ define([
 
         var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
 
-        texture.generateMipmap(MipmapHint.NICEST);
-        texture.setSampler({
-            wrapS : TextureWrap.CLAMP,
-            wrapT : TextureWrap.CLAMP,
-            minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-            magnificationFilter : TextureMagnificationFilter.LINEAR,
-            maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
-        });
+        // Use mipmaps if this texture has power-of-two dimensions.
+        if (CesiumMath.isPowerOfTwo(texture.getWidth()) && CesiumMath.isPowerOfTwo(texture.getHeight())) {
+            texture.generateMipmap(MipmapHint.NICEST);
+            texture.setSampler({
+                wrapS : TextureWrap.CLAMP,
+                wrapT : TextureWrap.CLAMP,
+                minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR,
+                maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
+            });
+        } else {
+            texture.setSampler({
+                wrapS : TextureWrap.CLAMP,
+                wrapT : TextureWrap.CLAMP,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
+            });
+        }
 
         imagery.state = ImageryState.READY;
     };

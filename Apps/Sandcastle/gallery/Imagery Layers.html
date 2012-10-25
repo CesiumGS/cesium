@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Layer imagery from multiple sources and adjust the alpha of each independently.">
+    <meta name="description" content="Layer imagery from multiple sources, including WMS servers, Bing Maps, ArcGIS Online, OpenStreetMaps, and more, and adjust the alpha of each independently.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
@@ -181,14 +181,14 @@ require([
                     proxy : new Cesium.DefaultProxy('/proxy/')
                 }));
         addAdditionalLayerOption(
-                'Single Image',
+                'Single image',
                 new Cesium.SingleTileImageryProvider({
-                    url : '../../../Images/TestLayer.png',
+                    url : '../../../Images/Cesium_Logo_overlay.png',
                     extent : new Cesium.Extent(
                             Cesium.Math.toRadians(-115.0),
                             Cesium.Math.toRadians(38.0),
-                            Cesium.Math.toRadians(-108.0),
-                            Cesium.Math.toRadians(45.0))
+                            Cesium.Math.toRadians(-107),
+                            Cesium.Math.toRadians(39.75))
                 }),
                 1.0);
     }
