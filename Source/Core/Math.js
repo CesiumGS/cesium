@@ -471,5 +471,19 @@ define([
         return (m !== 0) && ((m & (m - 1)) === 0);
     };
 
+    /**
+     * Constraint a value to lie between two values.
+     *
+     * @memberof CesiumMath
+     *
+     * @param {Number} value The value to constrain.
+     * @param {Number} min The minimum value.
+     * @param {Number} max The maximum value.
+     * @returns The value clamped so that min <= value <= max.
+     */
+    CesiumMath.clamp = function(value, min, max) {
+        return value < min ? min : value > max ? max : value;
+    };
+
     return CesiumMath;
 });

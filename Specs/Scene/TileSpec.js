@@ -2,11 +2,13 @@
 defineSuite([
          'Scene/Tile',
          'Core/Extent',
-         'Core/Math'
+         'Core/Math',
+         'Scene/WebMercatorTilingScheme'
      ], function(
          Tile,
          Extent,
-         CesiumMath) {
+         CesiumMath,
+         WebMercatorTilingScheme) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -26,7 +28,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('throws without description.zoom', function() {
+    it('throws without description.level', function() {
         expect(function() {
             return new Tile({
                 extent : new Extent(
@@ -46,31 +48,104 @@ defineSuite([
             return new Tile({
                 x : -1.0,
                 y : -1.0,
-                zoom : 1.0
+                level : 1.0
             });
         }).toThrow();
     });
 
     it('creates extent on construction', function() {
-        var desc = {x : 0, y : 0, zoom : 0};
+        var desc = {tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, level : 0};
         var tile = new Tile(desc);
-        var extent = Tile.tileXYToExtent(desc.x, desc.y, desc.zoom);
+        var extent = desc.tilingScheme.tileXYToExtent(desc.x, desc.y, desc.level);
         expect(tile.extent).toEqual(extent);
     });
 
-    it('creates x, y, zoom on construction', function() {
-        var desc = {
-            extent : new Extent(
-                    -CesiumMath.PI,
-                    CesiumMath.toRadians(-85.05112878),
-                    CesiumMath.PI,
-                    CesiumMath.toRadians(85.05112878)
-            ),
-            zoom : 0
+    it('destroys transientData property if it has a destroy function', function() {
+        var isDestroyed = false;
+        var data = {
+                destroy : function() {
+                    isDestroyed = true;
+                }
         };
-        var tile = new Tile(desc);
-        var coords = Tile.extentToTileXY(desc.extent, desc.zoom);
-        expect(tile.x).toEqual(coords.x);
-        expect(tile.y).toEqual(coords.y);
+
+        var tile = new Tile({
+            x : 0,
+            y : 0,
+            level : 0,
+            tilingScheme : {
+                tileXYToExtent : function() {
+                    return undefined;
+                }
+            }
+        });
+
+        tile.transientData = data;
+
+        tile.freeResources();
+
+        expect(isDestroyed).toEqual(true);
+    });
+
+    it('throws if constructed improperly', function() {
+        expect(function() {
+            return new Tile();
+        }).toThrow();
+
+        expect(function() {
+            return new Tile({
+                x : 0,
+                y : 0,
+                level : 0,
+                tilingScheme : {
+                    tileXYToExtent : function() {
+                        return undefined;
+                    }
+                }
+            });
+        }).not.toThrow();
+
+        expect(function() {
+            return new Tile({
+                y : 0,
+                level : 0,
+                tilingScheme : {
+                    tileXYToExtent : function() {
+                        return undefined;
+                    }
+                }
+            });
+        }).toThrow();
+
+        expect(function() {
+            return new Tile({
+                x : 0,
+                level : 0,
+                tilingScheme : {
+                    tileXYToExtent : function() {
+                        return undefined;
+                    }
+                }
+            });
+        }).toThrow();
+
+        expect(function() {
+            return new Tile({
+                x : 0,
+                y : 0,
+                tilingScheme : {
+                    tileXYToExtent : function() {
+                        return undefined;
+                    }
+                }
+            });
+        }).toThrow();
+
+        expect(function() {
+            return new Tile({
+                x : 0,
+                y : 0,
+                level : 0
+            });
+        }).toThrow();
     });
 });
