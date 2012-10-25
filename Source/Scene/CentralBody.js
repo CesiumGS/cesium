@@ -1436,7 +1436,9 @@ define([
         var imageryLayerCollection = centralBody._imageryLayerCollection;
         for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
-            checkLogo(logoData, layer.getImageryProvider());
+            if (layer.show) {
+                checkLogo(logoData, layer.getImageryProvider());
+            }
         }
 
         if (logoData.logos.length !== logoData.logoIndex) {
