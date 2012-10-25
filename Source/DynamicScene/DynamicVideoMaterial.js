@@ -85,9 +85,7 @@ define([
         }
     };
 
-    var startTime = JulianDate.fromIso8601('2012-03-15T10:00:00Z');
-    //var endTime = JulianDate.fromIso8601('2012-03-16T10:00:00Z');
-    //var simulationDuration = startTime.getSecondsDifference(endTime);
+    var startTime;
 
     /**
      * Gets an Image Material that represents this dynamic material at the provided time.
@@ -120,6 +118,23 @@ define([
             }
         }
 
+        var loop = false;
+        property = this.loop;
+        if (typeof property !== 'undefined') {
+            loop = property.getValue(time);
+        }
+
+        var speed = 1;
+        property = this.speed;
+        if (typeof property !== 'undefined') {
+            speed = property.getValue(time);
+        }
+
+        property = this.startTime;
+        if (typeof property !== 'undefined') {
+            startTime = property.getValue(time, startTime);
+        }
+
         var video;
         property = this.video;
         if (typeof property !== 'undefined') {
@@ -144,19 +159,20 @@ define([
                 if (!video.seeking) {
                     existingMaterial.texture.copyFrom(video);
 
-                    var videoTime = startTime.getSecondsDifference(time);
-                    video.currentTime = videoTime % duration;//Math.min(Math.max(videoTime, 0), duration);
-                    //                    var seekableSegments = video.seekable.length;
-//                    if (seekableSegments > 0) {
-//                        for ( var i = 0; i < seekableSegments; i++) {
-//                            var a = video.seekable.start(0); // Returns the starting time (in seconds)
-//                            var b = video.seekable.end(0); // Returns the ending time (in seconds)
-//
-//                            var frameTime = Math.max(videoTime, a);
-//                            frameTime = Math.min(startTime.getSecondsDifference(time), b);
-//                        }
-//                        video.currentTime = videoTime;
-//                    }
+                    //TODO: We should probably be checking the video.seekable segments
+                    //before setting the currentTime, but if there are no seekable
+                    //segments, then this code will have no affect, so the net result
+                    //seems to be the same.
+                    var videoTime = startTime.getSecondsDifference(time) * speed;
+                    if (loop) {
+                        video.currentTime = videoTime % duration;
+                    } else if (videoTime > duration) {
+                        video.currentTime = duration;
+                    } else if (videoTime < duration) {
+                        video.currentTime = 0;
+                    } else {
+                        video = videoTime;
+                    }
                 }
             }
         }
