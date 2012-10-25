@@ -1,28 +1,59 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/Event',
+        '../Core/Math',
         './ImageryLayer'
     ], function(
         DeveloperError,
+        defaultValue,
         destroyObject,
         Event,
+        CesiumMath,
         ImageryLayer) {
     "use strict";
 
     /**
      * An ordered collection of imagery layers.
      *
-     * @name ImageryLayerCollection
+     * @alias ImageryLayerCollection
      */
-    function ImageryLayerCollection() {
+    var ImageryLayerCollection = function ImageryLayerCollection() {
         this._layers = [];
 
+        /**
+         * An event that is raised when a layer is added to the collection.  Event handlers are passed the layer that
+         * was added and the index at which it was added.
+         * @type {Event}
+         */
         this.layerAdded = new Event();
+
+        /**
+         * An event that is raised when a layer is removed from the collection.  Event handlers are passed the layer that
+         * was removed and the index from which it was removed.
+         * @type {Event}
+         */
         this.layerRemoved = new Event();
+
+        /**
+         * An event that is raised when a layer changes position in the collection.  Event handlers are passed the layer that
+         * was moved, its new index after the move, and its old index prior to the move.
+         * @type {Event}
+         */
         this.layerMoved = new Event();
-    }
+
+        /**
+         * An event that is raised when a layer is shown or hidden by setting the
+         * {@link ImageryLayer#show} property.  Event handlers are passed a reference to this layer,
+         * the index of the layer in the collection, and a flag that is true if the layer is now
+         * shown or false if it is now hidden.
+         *
+         * @type {Event}
+         */
+        this.layerShownOrHidden = new Event();
+    };
 
     /**
      * Adds a layer to the collection.
@@ -34,6 +65,7 @@ define([
      *                         added on top of all existing layers.
      *
      * @exception {DeveloperError} layer is required.
+     * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
      */
     ImageryLayerCollection.prototype.add = function(layer, index) {
         if (typeof layer === 'undefined') {
@@ -44,17 +76,15 @@ define([
             index = this._layers.length;
             this._layers.push(layer);
         } else {
+            if (index < 0) {
+                throw new DeveloperError('index must be greater than or equal to zero.');
+            } else if (index > this._layers.length) {
+                throw new DeveloperError('index must be less than or equal to the number of layers.');
+            }
             this._layers.splice(index, 0, layer);
         }
 
-        if (index === 0) {
-            layer._isBaseLayer = true;
-            if (this._layers.length > 1) {
-                this._layers[1]._isBaseLayer = false;
-            }
-        } else {
-            layer._isBaseLayer = false;
-        }
+        this._update();
 
         this.layerAdded.raiseEvent(layer, index);
     };
@@ -70,7 +100,7 @@ define([
      *
      * @returns {ImageryLayer} The newly created layer.
      *
-     * @exception {DeveloperError} layer is required.
+     * @exception {DeveloperError} imageryProvider is required.
      */
     ImageryLayerCollection.prototype.addImageryProvider = function(imageryProvider, index) {
         if (typeof imageryProvider === 'undefined') {
@@ -94,15 +124,13 @@ define([
      *                    false if the layer was not in the collection.
      */
     ImageryLayerCollection.prototype.remove = function(layer, destroy) {
-        destroy = typeof destroy === 'undefined' ? true : destroy;
+        destroy = defaultValue(destroy, true);
 
         var index = this._layers.indexOf(layer);
         if (index !== -1) {
-            if (index === 0 && this._layers.length > 1) {
-                this._layers[1]._isBaseLayer = true;
-            }
-
             this._layers.splice(index, 1);
+
+            this._update();
 
             this.layerRemoved.raiseEvent(layer, index);
 
@@ -124,7 +152,7 @@ define([
      * @param {Boolean} [destroy=true] whether to destroy the layers in addition to removing them.
      */
     ImageryLayerCollection.prototype.removeAll = function(destroy) {
-        destroy = typeof destroy === 'undefined' ? true : destroy;
+        destroy = defaultValue(destroy, true);
 
         var layers = this._layers;
         for ( var i = 0, len = layers.length; i < len; i++) {
@@ -207,14 +235,10 @@ define([
         return index;
     }
 
-    function clamp(value, min, max) {
-        return value < min ? min : value > max ? max : value;
-    }
-
     function swapLayers(collection, i, j) {
         var arr = collection._layers;
-        i = clamp(i, 0, arr.length - 1);
-        j = clamp(j, 0, arr.length - 1);
+        i = CesiumMath.clamp(i, 0, arr.length - 1);
+        j = CesiumMath.clamp(j, 0, arr.length - 1);
 
         if (i === j) {
             return;
@@ -224,10 +248,7 @@ define([
         arr[i] = arr[j];
         arr[j] = temp;
 
-        arr[i]._isBaseLayer = false;
-        arr[j]._isBaseLayer = false;
-
-        arr[0]._isBaseLayer = true;
+        collection._update();
 
         collection.layerMoved.raiseEvent(temp, j, i);
     }
@@ -277,8 +298,7 @@ define([
         this._layers.splice(index, 1);
         this._layers.push(layer);
 
-        layer._isBaseLayer = false;
-        this._layers[0]._isBaseLayer = true;
+        this._update();
 
         this.layerMoved.raiseEvent(layer, this._layers.length - 1, index);
     };
@@ -298,10 +318,7 @@ define([
         this._layers.splice(index, 1);
         this._layers.splice(0, 0, layer);
 
-        this._layers[0]._isBaseLayer = true;
-        if (this._layers.length > 1) {
-            this._layers[1]._isBaseLayer = false;
-        }
+        this._update();
 
         this.layerMoved.raiseEvent(layer, 0, index);
     };
@@ -345,6 +362,40 @@ define([
     ImageryLayerCollection.prototype.destroy = function() {
         this.removeAll(true);
         return destroyObject(this);
+    };
+
+    ImageryLayerCollection.prototype._update = function() {
+        var isBaseLayer = true;
+        var layers = this._layers;
+        var layersShownOrHidden;
+        var layer;
+        for (var i = 0, len = layers.length; i < len; ++i) {
+            layer = layers[i];
+
+            layer._layerIndex = i;
+
+            if (layer.show) {
+                layer._isBaseLayer = isBaseLayer;
+                isBaseLayer = false;
+            } else {
+                layer._isBaseLayer = false;
+            }
+
+            if (layer.show !== layer._show) {
+                layer._show = layer.show;
+                if (typeof layersShownOrHidden === 'undefined') {
+                    layersShownOrHidden = [];
+                }
+                layersShownOrHidden.push(layer);
+            }
+        }
+
+        if (typeof layersShownOrHidden !== 'undefined') {
+            for (i = 0, len = layersShownOrHidden.length; i < len; ++i) {
+                layer = layersShownOrHidden[i];
+                this.layerShownOrHidden.raiseEvent(layer, layer._layerIndex, layer.show);
+            }
+        }
     };
 
     return ImageryLayerCollection;

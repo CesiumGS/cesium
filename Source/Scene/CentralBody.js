@@ -101,15 +101,11 @@ define([
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
      * central body.
-     * @param {TerrainProvider} [terrainProvider=new EllipsoidTerrainProvider()] The terrain
-     * provider that will provide geometry for the surface of the central body.
-     * @param {ImageryLayerCollection} [imageryLayerCollection=new ImageryLayerCollection()] The
-     * collection of imagery layers that will be rendered on the surface of the central body.
      */
-    var CentralBody = function(ellipsoid, terrainProvider, imageryLayerCollection) {
+    var CentralBody = function(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        terrainProvider = typeof terrainProvider !== 'undefined' ? terrainProvider : new EllipsoidTerrainProvider({ellipsoid : ellipsoid});
-        imageryLayerCollection = typeof imageryLayerCollection !== 'undefined' ? imageryLayerCollection : new ImageryLayerCollection();
+        var terrainProvider = new EllipsoidTerrainProvider({ellipsoid : ellipsoid});
+        var imageryLayerCollection = new ImageryLayerCollection();
 
         this._ellipsoid = ellipsoid;
         this._imageryLayerCollection = imageryLayerCollection;
@@ -747,8 +743,8 @@ define([
     var viewportScratch = new BoundingRectangle();
     var vpTransformScratch = new Matrix4();
     CentralBody.prototype._fillPoles = function(context, frameState) {
-        var terrainProvider = this._surface.terrainProvider;
-        if (typeof terrainProvider === 'undefined' || frameState.mode !== SceneMode.SCENE3D) {
+        var terrainProvider = this._surface._terrainProvider;
+        if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
 
@@ -1440,7 +1436,9 @@ define([
         var imageryLayerCollection = centralBody._imageryLayerCollection;
         for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
-            checkLogo(logoData, layer.getImageryProvider());
+            if (layer.show) {
+                checkLogo(logoData, layer.getImageryProvider());
+            }
         }
 
         if (logoData.logos.length !== logoData.logoIndex) {
@@ -1491,6 +1489,10 @@ define([
     }
 
     function checkLogo(logoData, logoSource) {
+        if (typeof logoSource.isReady === 'function' && !logoSource.isReady()) {
+            return;
+        }
+
         var logo;
         if (typeof logoSource.getLogo === 'function') {
             logo = logoSource.getLogo();

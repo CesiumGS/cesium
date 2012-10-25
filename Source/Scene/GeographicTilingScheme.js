@@ -35,7 +35,7 @@ define([
      * @param {Number} [description.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
      * the tile tree.
      */
-    function GeographicTilingScheme(description) {
+    var GeographicTilingScheme = function GeographicTilingScheme(description) {
         description = defaultValue(description, {});
 
         this._ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
@@ -43,7 +43,7 @@ define([
         this._projection = new GeographicProjection(this._ellipsoid);
         this._numberOfLevelZeroTilesX = defaultValue(description.numberOfLevelZeroTilesX, 2);
         this._numberOfLevelZeroTilesY = defaultValue(description.numberOfLevelZeroTilesY, 1);
-    }
+    };
 
     /**
      * Gets the ellipsoid that is tiled by this tiling scheme.
@@ -125,8 +125,14 @@ define([
      *        should be created.
      * @returns {Extent} The specified 'result', or a new object containing the native extent if 'result'
      *          is undefined.
+     *
+     * @exception {DeveloperError} <code>extent</code> is required.
      */
     GeographicTilingScheme.prototype.extentToNativeExtent = function(extent, result) {
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+
         var west = CesiumMath.toDegrees(extent.west);
         var south = CesiumMath.toDegrees(extent.south);
         var east = CesiumMath.toDegrees(extent.east);

@@ -1260,11 +1260,7 @@ define([
                 return function() {
                     for ( var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
-                        if (typeof v !== 'undefined') {
-                            _gl.uniform2f(_locations[i], v.x, v.y);
-                        } else {
-                            _gl.uniform2f(_locations[i], 0.0, 0.0);
-                        }
+                        _gl.uniform2f(_locations[i], v.x, v.y);
                     }
                 };
             case _gl.FLOAT_VEC3:
@@ -1279,9 +1275,7 @@ define([
                     for ( var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
 
-                        if (typeof v === 'undefined') {
-                            _gl.uniform4f(_locations[i], 0.0, 0.0, 0.0, 0.0);
-                        } else if (typeof v.red !== 'undefined') {
+                        if (typeof v.red !== 'undefined') {
                             _gl.uniform4f(_locations[i], v.red, v.green, v.blue, v.alpha);
                         } else if (typeof v.x !== 'undefined') {
                             _gl.uniform4f(_locations[i], v.x, v.y, v.z, v.w);
@@ -1352,12 +1346,10 @@ define([
             this._setSampler = function(textureUnitIndex) {
                 for ( var i = 0; i < _locations.length; ++i) {
                     var value = this.value[i];
-                    if (typeof value !== 'undefined') {
-                        var index = textureUnitIndex + i;
-                        _gl.activeTexture(_gl.TEXTURE0 + index);
-                        _gl.bindTexture(value._getTarget(), value._getTexture());
-                        _gl.uniform1i(_locations[i], index);
-                    }
+                    var index = textureUnitIndex + i;
+                    _gl.activeTexture(_gl.TEXTURE0 + index);
+                    _gl.bindTexture(value._getTarget(), value._getTexture());
+                    _gl.uniform1i(_locations[i], index);
                 }
 
                 return textureUnitIndex + _locations.length;
@@ -1365,11 +1357,8 @@ define([
 
             this._clearSampler = function(textureUnitIndex) {
                 for ( var i = 0; i < _locations.length; ++i) {
-                    var value = this.value[i];
-                    if (typeof value !== 'undefined') {
-                        _gl.activeTexture(_gl.TEXTURE0 + textureUnitIndex + i);
-                        _gl.bindTexture(value._getTarget(), null);
-                    }
+                    _gl.activeTexture(_gl.TEXTURE0 + textureUnitIndex + i);
+                    _gl.bindTexture(this.value[i]._getTarget(), null);
                 }
 
                 return textureUnitIndex + _locations.length;
@@ -1826,7 +1815,7 @@ define([
 
             // Ignore GLSL built-in uniforms returned in Firefox.
             if (uniformName.indexOf('gl_') !== 0) {
-                if (activeUniform.size === 1 && activeUniform.name.indexOf('[') < 0) {
+                if (activeUniform.name.indexOf('[') < 0) {
                     // Single uniform
                     var location = gl.getUniformLocation(program, uniformName);
                     var uniformValue = gl.getUniform(program, location);

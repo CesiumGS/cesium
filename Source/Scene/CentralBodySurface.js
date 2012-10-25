@@ -75,6 +75,9 @@ define([
         this._imageryLayerCollection.layerAdded.addEventListener(CentralBodySurface.prototype._onLayerAdded, this);
         this._imageryLayerCollection.layerRemoved.addEventListener(CentralBodySurface.prototype._onLayerRemoved, this);
         this._imageryLayerCollection.layerMoved.addEventListener(CentralBodySurface.prototype._onLayerMoved, this);
+        this._imageryLayerCollection.layerShownOrHidden.addEventListener(CentralBodySurface.prototype._onLayerShownOrHidden, this);
+
+        this._layerOrderChanged = false;
 
         var terrainTilingScheme = this._terrainProvider.tilingScheme;
         this._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
@@ -85,6 +88,11 @@ define([
         this._tileTraversalQueue = new Queue();
         this._tileLoadQueue = new TileLoadQueue();
         this._tileReplacementQueue = new TileReplacementQueue();
+
+        // The number of milliseconds each frame to allow for processing the tile load queue.
+        // At least one tile will be processed per frame (assuming that any need processing),
+        // even if this value is 0.
+        this._loadQueueTimeSlice = 5;
 
         var ellipsoid = terrainTilingScheme.getEllipsoid();
         this._ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid, Cartesian3.ZERO);
@@ -113,6 +121,7 @@ define([
     };
 
     CentralBodySurface.prototype.update = function(context, frameState, colorCommandList, centralBodyUniformMap, shaderSet, renderState, mode, projection) {
+        updateLayers(this);
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, mode, projection, centralBodyUniformMap, colorCommandList, renderState);
@@ -124,19 +133,17 @@ define([
             return;
         }
 
-        var newNextLayer = this._imageryLayerCollection.get(index + 1);
-
         // create TileImagerys for this layer for all previously loaded tiles
-        var tile = this._tileReplacementQueue.head;
-        while (typeof tile !== 'undefined') {
-            if (layer._createTileImagerySkeletons(tile, this._terrainProvider)) {
-                tile.doneLoading = false;
+        if (layer.show) {
+            var tile = this._tileReplacementQueue.head;
+            while (typeof tile !== 'undefined') {
+                if (layer._createTileImagerySkeletons(tile, this._terrainProvider)) {
+                    tile.doneLoading = false;
+                }
+                tile = tile.replacementNext;
             }
 
-            if (typeof newNextLayer !== 'undefined') {
-                moveTileImageryObjects(tile.imagery, layer, newNextLayer);
-            }
-            tile = tile.replacementNext;
+            this._layerOrderChanged = true;
         }
     };
 
@@ -149,16 +156,18 @@ define([
         var tile = this._tileReplacementQueue.head;
         while (typeof tile !== 'undefined') {
             var tileImageryCollection = tile.imagery;
+
             var startIndex = -1;
             var numDestroyed = 0;
             for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-                var imagery = tileImageryCollection[i].imagery;
+                var tileImagery = tileImageryCollection[i];
+                var imagery = tileImagery.imagery;
                 if (imagery.imageryLayer === layer) {
                     if (startIndex === -1) {
                         startIndex = i;
                     }
 
-                    imagery.releaseReference();
+                    tileImagery.freeResources();
                     ++numDestroyed;
                 } else if (startIndex !== -1) {
                     // iterated past the section of TileImagerys belonging to this layer, no need to continue.
@@ -173,6 +182,7 @@ define([
             if (layer.isBaseLayer()) {
                 tile.renderable = false;
             }
+
             tile = tile.replacementNext;
         }
     };
@@ -182,11 +192,18 @@ define([
             return;
         }
 
-        var newNextLayer = this._imageryLayerCollection.get(newIndex + 1);
-        var tile = this._tileReplacementQueue.head;
-        while (typeof tile !== 'undefined') {
-            moveTileImageryObjects(tile.imagery, layer, newNextLayer);
-            tile = tile.replacementNext;
+        this._layerOrderChanged = true;
+    };
+
+    CentralBodySurface.prototype._onLayerShownOrHidden = function(layer, index, show) {
+        if (typeof this._levelZeroTiles === 'undefined') {
+            return;
+        }
+
+        if (show) {
+            this._onLayerAdded(layer, index);
+        } else {
+            this._onLayerRemoved(layer, index);
         }
     };
 
@@ -243,6 +260,25 @@ define([
 
         return destroyObject(this);
     };
+
+    function sortTileImageryByLayerIndex(a, b) {
+        return a.imagery.imageryLayer._layerIndex - b.imagery.imageryLayer._layerIndex;
+    }
+
+    function updateLayers(surface) {
+        surface._imageryLayerCollection._update();
+
+        if (surface._layerOrderChanged) {
+            surface._layerOrderChanged = false;
+
+            // Sort the TileImagery instances in each tile by the layer index.
+            var tile = surface._tileReplacementQueue.head;
+            while (typeof tile !== 'undefined') {
+                tile.imagery.sort(sortTileImageryByLayerIndex);
+                tile = tile.replacementNext;
+            }
+        }
+    }
 
     function selectTilesForRendering(surface, context, frameState) {
         var debug = surface._debug;
@@ -416,7 +452,8 @@ define([
         var readyTextureCount = 0;
         var tileImageryCollection = tile.imagery;
         for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-            if (tileImageryCollection[i].imagery.state === ImageryState.READY) {
+            var tileImagery = tileImageryCollection[i];
+            if (tileImagery.imagery.state === ImageryState.READY) {
                 ++readyTextureCount;
             }
         }
@@ -566,12 +603,15 @@ define([
         var terrainProvider = surface._terrainProvider;
 
         var tile = tileLoadQueue.head;
+        if (typeof tile === 'undefined') {
+            return;
+        }
 
         var startTime = Date.now();
-        var timeSlice = 10;
+        var timeSlice = surface._loadQueueTimeSlice;
         var endTime = startTime + timeSlice;
 
-        while (Date.now() < endTime && typeof tile !== 'undefined') {
+        do {
             var i, len;
 
             // Transition terrain states.
@@ -590,8 +630,12 @@ define([
 
                     var imageryLayerCollection = surface._imageryLayerCollection;
                     for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-                        imageryLayerCollection.get(i)._createTileImagerySkeletons(tile, terrainProvider);
+                        var layer = imageryLayerCollection.get(i);
+                        if (layer.show) {
+                            layer._createTileImagerySkeletons(tile, terrainProvider);
+                        }
                     }
+
                 }
             }
 
@@ -609,9 +653,15 @@ define([
 
             var doneLoading = tile.state === TileState.READY;
 
+            var didSomeWork = false;
+
             // Transition imagery states
             var tileImageryCollection = tile.imagery;
-            for (i = 0, len = tileImageryCollection.length; Date.now() < endTime && i < len; ++i) {
+            for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
+                if (didSomeWork && Date.now() >= endTime) {
+                    break;
+                }
+
                 var tileImagery = tileImageryCollection[i];
                 var imagery = tileImagery.imagery;
                 var imageryLayer = imagery.imageryLayer;
@@ -626,21 +676,25 @@ define([
                         --i;
                         len = tileImageryCollection.length;
                     }
+                    didSomeWork = true;
                 }
 
                 if (imagery.state === ImageryState.UNLOADED) {
                     imagery.state = ImageryState.TRANSITIONING;
                     imageryLayer._requestImagery(imagery);
+                    didSomeWork = true;
                 }
 
                 if (imagery.state === ImageryState.RECEIVED) {
                     imagery.state = ImageryState.TRANSITIONING;
                     imageryLayer._createTexture(context, imagery);
+                    didSomeWork = true;
                 }
 
                 if (imagery.state === ImageryState.TEXTURE_LOADED) {
                     imagery.state = ImageryState.TRANSITIONING;
                     imageryLayer._reprojectTexture(context, imagery);
+                    didSomeWork = true;
                 }
 
                 if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
@@ -657,12 +711,16 @@ define([
                     parent.addReference();
                     tileImagery.imagery = parent;
                     imagery = parent;
+
+                    didSomeWork = true;
                 }
 
                 var imageryDoneLoading = imagery.state === ImageryState.READY;
 
                 if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
+
+                    didSomeWork = true;
                 }
 
                 doneLoading = doneLoading && imageryDoneLoading;
@@ -676,7 +734,7 @@ define([
             }
 
             tile = tile.loadNext;
-        }
+        } while (Date.now() < endTime && typeof tile !== 'undefined');
     }
 
     // This is debug code to render the bounding sphere of the tile in
@@ -752,38 +810,6 @@ define([
         this._debug.suspendLodUpdate = !this._debug.suspendLodUpdate;
     };
 
-    function moveTileImageryObjects(tileImageryCollection, layer, newNextLayer) {
-        var oldTileImageryIndex = -1;
-        var newTileImageryIndex = -1;
-        var numTileImagery = 0;
-        for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-            var tileImagery = tileImageryCollection[i];
-            var tileImageryLayer = tileImagery.imagery.imageryLayer;
-
-            if (newTileImageryIndex === -1 && tileImageryLayer === newNextLayer) {
-                newTileImageryIndex = i;
-            } else if (tileImageryLayer === layer) {
-                ++numTileImagery;
-                if (oldTileImageryIndex === -1) {
-                    oldTileImageryIndex = i;
-                }
-            } else if (newTileImageryIndex !== -1 && oldTileImageryIndex !== -1) {
-                // we have all the info we need, don't need to continue iterating
-                break;
-            }
-        }
-
-        // splice out TileImagerys from old location
-        var tileImageryObjects = tileImageryCollection.splice(oldTileImageryIndex, numTileImagery);
-
-        // splice them back into the new location using tileImagerys as the args array with apply
-        if (newTileImageryIndex === -1) {
-            newTileImageryIndex = tileImageryCollection.length;
-        }
-        tileImageryObjects.unshift(newTileImageryIndex, 0);
-        Array.prototype.splice.apply(tileImageryCollection, tileImageryObjects);
-    }
-
     function tileDistanceSortFunction(a, b) {
         return a.distance - b.distance;
     }
@@ -814,20 +840,11 @@ define([
             u_dayIntensity : function() {
                 return this.dayIntensity;
             },
-            u_southLatitude : function() {
-                return this.southLatitude;
+            u_southAndNorthLatitude : function() {
+                return this.southAndNorthLatitude;
             },
-            u_northLatitude : function() {
-                return this.northLatitude;
-            },
-            u_southMercatorYLow : function() {
-                return this.southMercatorYLow;
-            },
-            u_southMercatorYHigh : function() {
-                return this.southMercatorYHigh;
-            },
-            u_oneOverMercatorHeight : function() {
-                return this.oneOverMercatorHeight;
+            u_southMercatorYLowAndHighAndOneOverHeight : function() {
+               return this.southMercatorYLowAndHighAndOneOverHeight;
             },
 
             center3D : undefined,
@@ -840,11 +857,8 @@ define([
             dayTextureAlpha : [],
             dayIntensity : 0.0,
 
-            southLatitude : 0.0,
-            northLatitude : 0.0,
-            southMercatorYLow : 0.0,
-            southMercatorYHigh : 0.0,
-            oneOverMercatorHeight : 0.0
+            southAndNorthLatitude : new Cartesian2(0.0, 0.0),
+            southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(0.0, 0.0, 0.0)
         };
     }
 
@@ -963,16 +977,16 @@ define([
                     uniformMap.center3D = tile.center;
 
                     Cartesian4.clone(tileExtent, uniformMap.tileExtent);
-                    uniformMap.southLatitude = southLatitude;
-                    uniformMap.northLatitude = northLatitude;
-                    uniformMap.southMercatorYHigh = southMercatorYHigh;
-                    uniformMap.southMercatorYLow = southMercatorYLow;
-                    uniformMap.oneOverMercatorHeight = oneOverMercatorHeight;
+                    uniformMap.southAndNorthLatitude.x = southLatitude;
+                    uniformMap.southAndNorthLatitude.y = northLatitude;
+                    uniformMap.southMercatorYLowAndHighAndOneOverHeight.x = southMercatorYLow;
+                    uniformMap.southMercatorYLowAndHighAndOneOverHeight.y = southMercatorYHigh;
+                    uniformMap.southMercatorYLowAndHighAndOneOverHeight.z = oneOverMercatorHeight;
                     Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
                     // The first TileImagery's provider select the itensity for the entire tile.
                     // This needs improvement, but that's part of a bigger lighting overhaul.
-                    var intensity = 0.0;
+                    var intensity = 0.2;
                     if (tileImageryCollection.length > 0) {
                         var firstImagery = tileImageryCollection[0].imagery;
                         var firstImageryProvider = firstImagery.imageryLayer.getImageryProvider();
@@ -991,6 +1005,10 @@ define([
 
                         if (imagery.state !== ImageryState.READY) {
                             continue;
+                        }
+
+                        if (typeof tileImagery.textureTranslationAndScale === 'undefined') {
+                            tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                         }
 
                         uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;

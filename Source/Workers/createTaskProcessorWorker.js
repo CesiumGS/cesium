@@ -3,10 +3,29 @@ define(function() {
     "use strict";
 
     /**
-     * Given a worker function that takes as input a parameters object
-     * and an array into which transferrable result objects can be pushed,
-     * and returns as output a result object, create an adapter function to handle
-     * the TaskProcessor task ID management and response message posting.
+     * Creates an adapter function to allow a calculation function to operate as a Web Worker,
+     * paired with TaskProcessor, to receive tasks and return results.
+     *
+     * @exports createTaskProcessorWorker
+     *
+     * @param {Function} workerFunction A function that takes as input two arguments:
+     * a parameters object, and an array into which transferable result objects can be pushed,
+     * and returns as output a result object.
+     * @returns {Function} An adapter function that handles the interaction with TaskProcessor,
+     * specifically, task ID management and posting a response message containing the result.
+     *
+     * @example
+     * function doCalculation(parameters, transferableObjects) {
+     *   // calculate some result using the inputs in parameters
+     *   return result;
+     * }
+     *
+     * return createTaskProcessorWorker(doCalculation);
+     * // the resulting function is compatible with TaskProcessor
+     *
+     * @see TaskProcessor
+     * @see <a href='http://www.w3.org/TR/workers/'>Web Workers</a>
+     * @see <a href='http://www.w3.org/TR/html5/common-dom-interfaces.html#transferable-objects'>Transferable objects</a>
      */
     var createTaskProcessorWorker = function(workerFunction) {
         var postMessage;

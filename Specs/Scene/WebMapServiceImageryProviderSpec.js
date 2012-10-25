@@ -28,15 +28,6 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    beforeAll(function() {
-    });
-
-    afterAll(function() {
-    });
-
-    beforeEach(function() {
-    });
-
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -47,25 +38,21 @@ defineSuite([
     });
 
     it('requires the url to be specified', function() {
-        var provider;
         function createWithoutUrl() {
-            provider = new WebMapServiceImageryProvider({
+            return new WebMapServiceImageryProvider({
                 layers : 'someLayer'
             });
         }
         expect(createWithoutUrl).toThrow();
-        expect(provider).toBeUndefined();
     });
 
     it('requires the layers to be specified', function() {
-        var provider;
         function createWithoutUrl() {
-            provider = new WebMapServiceImageryProvider({
+            return new WebMapServiceImageryProvider({
                 url : 'made/up/wms/server'
             });
         }
         expect(createWithoutUrl).toThrow();
-        expect(provider).toBeUndefined();
     });
 
     it('includes specified parameters in URL', function() {

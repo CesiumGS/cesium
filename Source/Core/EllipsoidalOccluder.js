@@ -37,7 +37,7 @@ define([
      * // Construct an ellipsoidal occluder with radii 1.0, 1.1, and 0.9.
      * var cameraPosition = new Cartesian3(5.0, 6.0, 7.0);
      * var occluderEllipsoid = new Ellipsoid(1.0, 1.1, 0.9);
-     * var occluder = new Occluder(occluderEllipsoid, cameraPosition);
+     * var occluder = new EllipsoidalOccluder(occluderEllipsoid, cameraPosition);
      */
     var EllipsoidalOccluder = function(ellipsoid, cameraPosition) {
         if (typeof ellipsoid === 'undefined') {
@@ -45,6 +45,7 @@ define([
         }
 
         this._ellipsoid = ellipsoid;
+        this._cameraPosition = new Cartesian3(0.0, 0.0, 0.0);
         this._cameraPositionInScaledSpace = new Cartesian3(0.0, 0.0, 0.0);
         this._distanceToLimbInScaledSpaceSquared = 0.0;
 
@@ -78,8 +79,20 @@ define([
         var magnitudeCameraPositionInScaledSpace = Cartesian3.magnitude(cameraPositionInScaledSpace);
         var distanceToLimbInScaledSpaceSquared = magnitudeCameraPositionInScaledSpace * magnitudeCameraPositionInScaledSpace - 1.0;
 
+        Cartesian3.clone(cameraPosition, this._cameraPosition);
         this._cameraPositionInScaledSpace = cameraPositionInScaledSpace;
         this._distanceToLimbInScaledSpaceSquared = distanceToLimbInScaledSpaceSquared;
+    };
+
+    /**
+     * Gets the position of the camera.
+     *
+     * @memberof EllipsoidalOccluder
+     *
+     * @returns {Cartesian3} The position of the camera.
+     */
+    EllipsoidalOccluder.prototype.getCameraPosition = function() {
+        return this._cameraPosition;
     };
 
     var scratchCartesian = new Cartesian3(0.0, 0.0, 0.0);
@@ -89,7 +102,7 @@ define([
      *
      * @memberof EllipsoidalOccluder
      *
-     * @param {Cartesian3} occludee The point surrounding the occludee object.
+     * @param {Cartesian3} occludee The point to test for visibility.
      *
      * @return {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
@@ -113,7 +126,7 @@ define([
      *
      * @memberof EllipsoidalOccluder
      *
-     * @param {Cartesian3} occludeeScaledSpacePosition The point surrounding the occludee object represented in the scaled space.
+     * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space.
      *
      * @return {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *

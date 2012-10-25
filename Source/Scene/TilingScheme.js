@@ -20,9 +20,9 @@ define([
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
      */
-    function TilingScheme(description) {
+    var TilingScheme = function TilingScheme(description) {
         throw new DeveloperError('This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.');
-    }
+    };
 
     /**
      * Gets the ellipsoid that is tiled by this tiling scheme.
@@ -176,8 +176,22 @@ define([
      *        the tile tree.
      * @returns {Array} An array containing the tiles at level of detail zero, starting with the
      * tile in the northwest corner and followed by the tile (if any) to its east.
+     *
+     * @exception {DeveloperError} <code>tilingScheme</code> is required.
+     * @exception {DeveloperError} <code>numberOfLevelZeroTilesX</code> is required.
+     * @exception {DeveloperError} <code>numberOfLevelZeroTilesY</code> is required.
      */
     TilingScheme.createRectangleOfLevelZeroTiles = function(tilingScheme, numberOfLevelZeroTilesX, numberOfLevelZeroTilesY) {
+        if (typeof tilingScheme === 'undefined') {
+            throw new DeveloperError('tilingScheme is required.');
+        }
+        if (typeof numberOfLevelZeroTilesX === 'undefined') {
+            throw new DeveloperError('numberOfLevelZeroTilesX is required.');
+        }
+        if (typeof numberOfLevelZeroTilesY === 'undefined') {
+            throw new DeveloperError('numberOfLevelZeroTilesY is required.');
+        }
+
         var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
 
         var index = 0;

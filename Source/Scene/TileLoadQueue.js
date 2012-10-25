@@ -2,12 +2,25 @@
 define(function() {
     "use strict";
 
-    function TileLoadQueue() {
+    /**
+     * A priority queue of tiles to be loaded, implemented as a linked list.
+     *
+     * @alias TileLoadQueue
+     * @private
+     */
+    var TileLoadQueue = function TileLoadQueue() {
         this.head = undefined;
         this.tail = undefined;
         this._insertionPoint = undefined;
-    }
+    };
 
+    /**
+     * Removes a tile from the load queue.
+     *
+     * @memberof TileLoadQueue
+     *
+     * @param {Tile} item The tile to remove from the load queue.
+     */
     TileLoadQueue.prototype.remove = function(item) {
         var previous = item.loadPrevious;
         var next = item.loadNext;
@@ -28,10 +41,24 @@ define(function() {
         item.loadNext = undefined;
     };
 
-    TileLoadQueue.prototype.markInsertionPoint = function(item) {
+    /**
+     * Marks the point at which new tiles will be inserted into the queue, which is initially the
+     * head of the queue.  As each new tile is added to or repositioned in the queue, the insertion
+     * point represents the first tile that was not added or repositioned this frame.
+     *
+     * @memberof TileLoadQueue
+     */
+    TileLoadQueue.prototype.markInsertionPoint = function() {
         this._insertionPoint = this.head;
     };
 
+    /**
+     * Inserts (or repositions) a tile to place it just before the insertion point.
+     *
+     * @memberof TileLoadQueue
+     *
+     * @param {Tile} item The tile to insert or reposition.
+     */
     TileLoadQueue.prototype.insertBeforeInsertionPoint = function(item) {
         var insertionPoint = this._insertionPoint;
         if (insertionPoint === item) {
@@ -53,17 +80,10 @@ define(function() {
         }
 
         if (typeof insertionPoint === 'undefined') {
-            if (typeof this.head === 'undefined') {
-                item.loadPrevious = undefined;
-                item.loadNext = undefined;
-                this.head = item;
-                this.tail = item;
-            } else {
-                item.loadPrevious = this.tail;
-                item.loadNext = undefined;
-                this.tail.loadNext = item;
-                this.tail = item;
-            }
+            item.loadPrevious = this.tail;
+            item.loadNext = undefined;
+            this.tail.loadNext = item;
+            this.tail = item;
             return;
         }
 

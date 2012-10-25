@@ -9,10 +9,9 @@
 			<createCesiumJs output="${sourceDirectory}/Cesium.js">
 				<sourcefiles dir="${sourceDirectory}">
 					<include name="**/*.js" />
+					<exclude name="*.js" />
 					<exclude name="Widgets/**" />
 					<exclude name="Workers/**" />
-					<exclude name="Cesium.js" />
-					<exclude name="main.js" />
 					<exclude name="**/*.profile.js" />
 				</sourcefiles>
 			</createCesiumJs>
@@ -183,7 +182,7 @@
 		<copy todir="${buildDirectory}">
 			<fileset dir="${combineOutputDirectory}" includes="*.js" />
 			<filterchain>
-				<concatfilter prepend="${basedir}/copyright.txt" />
+				<concatfilter prepend="${sourceDirectory}/copyrightHeader.js" />
 			</filterchain>
 		</copy>
 

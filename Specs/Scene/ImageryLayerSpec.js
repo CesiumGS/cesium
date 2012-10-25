@@ -3,23 +3,27 @@ defineSuite([
          'Scene/ImageryLayer',
          'Specs/createContext',
          'Specs/destroyContext',
+         'Core/Extent',
          'Core/jsonp',
          'Core/loadImage',
          'Scene/BingMapsImageryProvider',
          'Scene/Imagery',
          'Scene/ImageryState',
          'Scene/NeverTileDiscardPolicy',
+         'Scene/SingleTileImageryProvider',
          'Scene/WebMapServiceImageryProvider'
      ], function(
          ImageryLayer,
          createContext,
          destroyContext,
+         Extent,
          jsonp,
          loadImage,
          BingMapsImageryProvider,
          Imagery,
          ImageryState,
          NeverTileDiscardPolicy,
+         SingleTileImageryProvider,
          WebMapServiceImageryProvider) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -32,9 +36,6 @@ defineSuite([
 
     afterAll(function() {
         destroyContext(context);
-    });
-
-    beforeEach(function() {
     });
 
     afterEach(function() {
@@ -167,5 +168,18 @@ defineSuite([
             expect(textureBeforeReprojection).not.toEqual(imagery.texture);
             imagery.releaseReference();
         });
+    });
+
+    it('basic properties work as expected', function() {
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        });
+
+        var extent = new Extent(0.1, 0.2, 0.3, 0.4);
+        var layer = new ImageryLayer(provider, {
+            extent : extent
+        });
+        expect(layer.getExtent()).toEqual(extent);
+        expect(layer.isDestroyed()).toEqual(false);
     });
 });

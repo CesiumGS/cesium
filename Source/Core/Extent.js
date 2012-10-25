@@ -167,7 +167,7 @@ define([
      */
     Extent.prototype.getSouthwest = function(result) {
         if (typeof result === 'undefined') {
-            return new Cartographic(this.west, this.south, 0.0);
+            return new Cartographic(this.west, this.south);
         }
         result.longitude = this.west;
         result.latitude = this.south;
@@ -184,7 +184,7 @@ define([
      */
     Extent.prototype.getNorthwest = function(result) {
         if (typeof result === 'undefined') {
-            return new Cartographic(this.west, this.north, 0.0);
+            return new Cartographic(this.west, this.north);
         }
         result.longitude = this.west;
         result.latitude = this.north;
@@ -201,7 +201,7 @@ define([
      */
     Extent.prototype.getNortheast = function(result) {
         if (typeof result === 'undefined') {
-            return new Cartographic(this.east, this.north, 0.0);
+            return new Cartographic(this.east, this.north);
         }
         result.longitude = this.east;
         result.latitude = this.north;
@@ -218,7 +218,7 @@ define([
      */
     Extent.prototype.getSoutheast = function(result) {
         if (typeof result === 'undefined') {
-            return new Cartographic(this.east, this.south, 0.0);
+            return new Cartographic(this.east, this.south);
         }
         result.longitude = this.east;
         result.latitude = this.south;
@@ -235,7 +235,7 @@ define([
      */
     Extent.prototype.getCenter = function(result) {
         if (typeof result === 'undefined') {
-            return new Cartographic((this.west + this.east) * 0.5, (this.south + this.north) * 0.5, 0.0);
+            return new Cartographic((this.west + this.east) * 0.5, (this.south + this.north) * 0.5);
         }
         result.longitude = (this.west + this.east) * 0.5;
         result.latitude = (this.south + this.north) * 0.5;
@@ -288,6 +288,18 @@ define([
                cartographic.longitude <= this.east &&
                cartographic.latitude >= this.south &&
                cartographic.latitude <= this.north;
+    };
+
+    /**
+     * Determines if the extent is empty, i.e., if <code>west === east</code>
+     * and <code>south === north</code>.
+     *
+     * @memberof Extent
+     *
+     * @return {Boolean} True if the extent is empty; otherwise, false.
+     */
+    Extent.prototype.isEmpty = function() {
+        return (this.west === this.east) && (this.south === this.north);
     };
 
     var subsampleLlaScratch = new Cartographic();

@@ -28,15 +28,6 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    beforeAll(function() {
-    });
-
-    afterAll(function() {
-    });
-
-    beforeEach(function() {
-    });
-
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -47,12 +38,10 @@ defineSuite([
     });
 
     it('can be default constructed', function() {
-        var provider;
         function defaultConstruct() {
-            provider = new OpenStreetMapImageryProvider();
+            return new OpenStreetMapImageryProvider();
         }
         expect(defaultConstruct).not.toThrow();
-        expect(provider).not.toBeUndefined();
     });
 
     it('supports a slash at the end of the URL', function() {

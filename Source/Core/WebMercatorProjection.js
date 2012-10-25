@@ -36,6 +36,8 @@ define([
      * Converts a Mercator angle, in the range -PI to PI, to a geodetic latitude
      * in the range -PI/2 to PI/2.
      *
+     * @memberof WebMercatorProjection
+     *
      * @param {Number} mercatorAngle The angle to convert.
      * @returns {Number} The geodetic latitude in radians.
      */
@@ -46,6 +48,8 @@ define([
     /**
      * Converts a geodetic latitude in radians, in the range -PI/2 to PI/2, to a Mercator
      * angle in the range -PI to PI.
+     *
+     * @memberof WebMercatorProjection
      *
      * @param {Number} latitude The geodetic latitude in radians.
      * @returns {Number} The Mercator angle.
@@ -73,6 +77,8 @@ define([
      * The constant value is computed by calling:
      *    WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI)
      *
+     * @memberof WebMercatorProjection
+     *
      * @type {Number}
      */
     WebMercatorProjection.MaximumLatitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI);
@@ -80,7 +86,7 @@ define([
     /**
      * Gets the {@link Ellipsoid}.
      *
-     * @memberof GeographicProjection
+     * @memberof WebMercatorProjection
      *
      * @returns {Ellipsoid} The ellipsoid.
      */

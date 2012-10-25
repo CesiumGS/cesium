@@ -116,25 +116,21 @@ defineSuite([
 
     describe('construction', function() {
         it('throws if an terrain provider is not provided', function() {
-            var surface;
             function constructWithoutTerrainProvider() {
-                surface = new CentralBodySurface({
+                return new CentralBodySurface({
                     imageryLayerCollection : new ImageryLayerCollection()
                 });
             }
             expect(constructWithoutTerrainProvider).toThrow();
-            expect(surface).toBeUndefined();
         });
 
         it('throws if a ImageryLayerCollection is not provided', function() {
-            var surface;
             function constructWithoutImageryLayerCollection() {
-                surface = new CentralBodySurface({
+                return new CentralBodySurface({
                     terrainProvider : new EllipsoidTerrainProvider()
                 });
             }
             expect(constructWithoutImageryLayerCollection).toThrow();
-            expect(surface).toBeUndefined();
         });
     });
 
@@ -226,7 +222,11 @@ defineSuite([
                 });
 
                 layerCollection.raiseToTop(layer1);
+            });
 
+            updateUntilDone(cb);
+
+            runs(function() {
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
                     expect(tile.imagery.length).toBeGreaterThan(0);
                     var indexOfFirstLayer2 = tile.imagery.length;
@@ -315,6 +315,30 @@ defineSuite([
             layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
             frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+
+            updateUntilDone(cb);
+
+            runs(function() {
+                expect(render(context, frameState, cb)).toBeGreaterThan(0);
+            });
+        });
+
+        it('renders in 3D and then Columbus View', function() {
+            var layerCollection = cb.getImageryLayers();
+            layerCollection.removeAll();
+            layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+            frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+
+            updateUntilDone(cb);
+
+            runs(function() {
+                expect(render(context, frameState, cb)).toBeGreaterThan(0);
+
+                frameState.mode = SceneMode.COLUMBUS_VIEW;
+                frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
+                frameState.camera.viewExtentColumbusView(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
+            });
 
             updateUntilDone(cb);
 

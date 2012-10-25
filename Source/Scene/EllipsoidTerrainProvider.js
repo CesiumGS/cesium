@@ -112,7 +112,7 @@ define([
 
         var verticesPromise = taskProcessor.scheduleTask({
             extent : extent,
-            altitude : 0,
+            surfaceHeight : 0,
             width : width,
             height : height,
             relativeToCenter : tile.center,
@@ -155,7 +155,7 @@ define([
 
         TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = 0;
-        tile.boundingSphere3D = BoundingSphere.fromPointsAsFlatArray(buffers.vertices, tile.center, 5);
+        tile.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);
 
         var ellipsoid = this.tilingScheme.getEllipsoid();
         var extent = tile.extent;

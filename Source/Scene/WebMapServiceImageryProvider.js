@@ -40,6 +40,7 @@ define([
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
+     * @exception {DeveloperError} <code>description.layers</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see SingleTileImageryProvider
@@ -184,8 +185,13 @@ define([
      * @memberof WebMapServiceImageryProvider
      *
      * @returns {Number} The width.
+     *
+     * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.getTileWidth = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileWidth must not be called before the imagery provider is ready.');
+        }
         return this._tileWidth;
     };
 
@@ -196,8 +202,13 @@ define([
      * @memberof WebMapServiceImageryProvider
      *
      * @returns {Number} The height.
+     *
+     * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.getTileHeight = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
+        }
         return this._tileHeight;
     };
 
@@ -208,8 +219,13 @@ define([
      * @memberof WebMapServiceImageryProvider
      *
      * @returns {Number} The maximum level.
+     *
+     * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.getMaximumLevel = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
+        }
         return this._maximumLevel;
     };
 
@@ -222,8 +238,13 @@ define([
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.getTilingScheme = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
+        }
         return this._tilingScheme;
     };
 
@@ -234,8 +255,13 @@ define([
      * @memberof WebMapServiceImageryProvider
      *
      * @returns {Extent} The extent.
+     *
+     * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.getExtent = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getExtent must not be called before the imagery provider is ready.');
+        }
         return this._tilingScheme.getExtent();
     };
 
@@ -251,8 +277,13 @@ define([
      *
      * @see DiscardMissingTileImagePolicy
      * @see NeverTileDiscardPolicy
+     *
+     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.getTileDiscardPolicy = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTileDiscardPolicy must not be called before the imagery provider is ready.');
+        }
         return this._tileDiscardPolicy;
     };
 
@@ -294,8 +325,13 @@ define([
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
+     *
+     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.requestImage = function(x, y, level) {
+        if (!this._ready) {
+            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
+        }
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(url);
     };
@@ -307,8 +343,13 @@ define([
      * @memberof WebMapServiceImageryProvider
      *
      * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     *
+     * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.getLogo = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getLogo must not be called before the imagery provider is ready.');
+        }
         return this._logo;
     };
 

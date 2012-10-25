@@ -32,15 +32,6 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    beforeAll(function() {
-    });
-
-    afterAll(function() {
-    });
-
-    beforeEach(function() {
-    });
-
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -62,19 +53,17 @@ defineSuite([
     });
 
     it('constructor throws when server is not specified', function() {
-        var provider;
         function constructWithoutServer() {
-            provider = new BingMapsImageryProvider({
+            return new BingMapsImageryProvider({
                 mapStyle : BingMapsStyle.AERIAL
             });
         }
         expect(constructWithoutServer).toThrow();
-        expect(provider).toBeUndefined();
     });
 
     it('getIntensity returns 1.0 for aerial imagery less than level 8', function() {
         var provider = new BingMapsImageryProvider({
-            server : 'dev.virtualearth.net',
+            server : 'fake.fake.net',
             mapStyle : BingMapsStyle.AERIAL,
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
@@ -87,13 +76,13 @@ defineSuite([
         expect(provider.getIntensity(0, 0, 5)).toEqual(1.0);
         expect(provider.getIntensity(0, 0, 6)).toEqual(1.0);
         expect(provider.getIntensity(0, 0, 7)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 8)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 9)).toEqual(0.1);
+        expect(provider.getIntensity(0, 0, 8)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 9)).toEqual(0.2);
     });
 
     it('getIntensity returns 1.0 for aerial-with-labels imagery less than level 8', function() {
         var provider = new BingMapsImageryProvider({
-            server : 'dev.virtualearth.net',
+            server : 'fake.fake.net',
             mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
@@ -106,32 +95,32 @@ defineSuite([
         expect(provider.getIntensity(0, 0, 5)).toEqual(1.0);
         expect(provider.getIntensity(0, 0, 6)).toEqual(1.0);
         expect(provider.getIntensity(0, 0, 7)).toEqual(1.0);
-        expect(provider.getIntensity(0, 0, 8)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 9)).toEqual(0.1);
+        expect(provider.getIntensity(0, 0, 8)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 9)).toEqual(0.2);
     });
 
-    it('getIntensity returns 0.1 for non-aerial imagery', function() {
+    it('getIntensity returns 0.2 for non-aerial imagery', function() {
         var provider = new BingMapsImageryProvider({
-            server : 'dev.virtualearth.net',
+            server : 'fake.fake.net',
             mapStyle : BingMapsStyle.ROAD,
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
 
-        expect(provider.getIntensity(0, 0, 0)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 1)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 2)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 3)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 4)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 5)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 6)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 7)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 8)).toEqual(0.1);
-        expect(provider.getIntensity(0, 0, 9)).toEqual(0.1);
+        expect(provider.getIntensity(0, 0, 0)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 1)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 2)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 3)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 4)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 5)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 6)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 7)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 8)).toEqual(0.2);
+        expect(provider.getIntensity(0, 0, 9)).toEqual(0.2);
     });
 
     it('getPoleIntensity returns 1.0 for any imagery', function() {
         var provider = new BingMapsImageryProvider({
-            server : 'dev.virtualearth.net',
+            server : 'fake.fake.net',
             mapStyle : BingMapsStyle.ROAD,
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
@@ -140,7 +129,7 @@ defineSuite([
     });
 
     it('can provide a root tile', function() {
-        var server = 'dev.virtualearth.net';
+        var server = 'fake.fake.net';
         var mapStyle = BingMapsStyle.COLLINS_BART;
         var metadataUrl = 'http://' + server + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
 
@@ -156,7 +145,7 @@ defineSuite([
                         "resources" : [{
                             "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
                             "imageHeight" : 256,
-                            "imageUrl" : "http:\/\/ecn.{subdomain}.tiles.virtualearth.net\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
+                            "imageUrl" : "http:\/\/fake.{subdomain}.tiles.fake.net\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
                             "imageUrlSubdomains" : ["t0"],
                             "imageWidth" : 256,
                             "imageryProviders" : null,
@@ -205,7 +194,7 @@ defineSuite([
             expect(provider.getLogo()).toBeInstanceOf(Image);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toEqual('http://ecn.t0.tiles.virtualearth.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
+                expect(url).toEqual('http://fake.t0.tiles.fake.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
                 expect(crossOrigin).toEqual(true);
 
                 // Just return any old image.

@@ -83,7 +83,7 @@ define([
     }
 
     /**
-     * An wrapper around a web worker that allows scheduling tasks for a given worker,
+     * A wrapper around a web worker that allows scheduling tasks for a given worker,
      * returning results asynchronously via a promise.
      *
      * The Worker is not constructed until a task is scheduled.
@@ -93,13 +93,13 @@ define([
      *
      * @param {String} workerName The name of the worker.  This is expected to be a script
      *                            in the Workers folder.
-     * @param {Number} [maxActiveTasks=5] The maximum number of active tasks.  Once exceeded,
-     *                                    scheduleTask will not queue any more tasks, allowing
-     *                                    work to be rescheduled in future frames.
+     * @param {Number} [maximumActiveTasks=5] The maximum number of active tasks.  Once exceeded,
+     *                                        scheduleTask will not queue any more tasks, allowing
+     *                                        work to be rescheduled in future frames.
      */
-    var TaskProcessor = function(workerName, maxActiveTasks) {
+    var TaskProcessor = function(workerName, maximumActiveTasks) {
         this._workerName = workerName;
-        this._maxActiveTasks = defaultValue(maxActiveTasks, 5);
+        this._maximumActiveTasks = defaultValue(maximumActiveTasks, 5);
         this._activeTasks = 0;
         this._deferreds = {};
         this._nextID = 0;
@@ -116,13 +116,27 @@ define([
      *                                      transferred to the worker instead of copied.
      * @returns {Promise} Either a promise that will resolve to the result when available, or undefined
      *                    if there are too many active tasks,
+     *
+     * @example
+     * var taskProcessor = new TaskProcessor('myWorkerName');
+     * var promise = taskProcessor.scheduleTask({
+     *     someParameter : true,
+     *     another : 'hello'
+     * });
+     * if (typeof promise === 'undefined') {
+     *     // too many active tasks - try again later
+     * } else {
+     *     when(promise, function(result) {
+     *         // use the result of the task
+     *     });
+     * }
      */
     TaskProcessor.prototype.scheduleTask = function(parameters, transferableObjects) {
         if (typeof this._worker === 'undefined') {
             createWorker(this);
         }
 
-        if (this._activeTasks >= this._maxActiveTasks) {
+        if (this._activeTasks >= this._maximumActiveTasks) {
             return undefined;
         }
 
