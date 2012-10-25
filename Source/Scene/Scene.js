@@ -3,7 +3,7 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/EquidistantCylindricalProjection',
+        '../Core/GeographicProjection',
         '../Core/Ellipsoid',
         '../Core/DeveloperError',
         '../Core/Occluder',
@@ -31,7 +31,7 @@ define([
         Color,
         defaultValue,
         destroyObject,
-        EquidistantCylindricalProjection,
+        GeographicProjection,
         Ellipsoid,
         DeveloperError,
         Occluder,
@@ -104,7 +104,7 @@ define([
             /**
              * The projection to use in 2D mode.
              */
-            projection : new EquidistantCylindricalProjection(Ellipsoid.WGS84)
+            projection : new GeographicProjection(Ellipsoid.WGS84)
         };
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -358,7 +358,7 @@ define([
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
                     if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
-                            (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
+                            (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(transformedBV))) {
                         continue;
                     }
 

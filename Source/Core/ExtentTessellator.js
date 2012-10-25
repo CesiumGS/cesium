@@ -1,20 +1,20 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError',
         './Math',
         './Ellipsoid',
         './Extent',
         './Cartesian3',
-        './Cartographic',
         './ComponentDatatype',
         './PrimitiveType'
     ], function(
+        defaultValue,
         DeveloperError,
         CesiumMath,
         Ellipsoid,
         Extent,
         Cartesian3,
-        Cartographic,
         ComponentDatatype,
         PrimitiveType) {
     "use strict";
@@ -30,107 +30,137 @@ define([
      */
     var ExtentTessellator = {};
 
-    ExtentTessellator._computeVertices = function(description) {
-        var desc = description || {};
+    /**
+     * Compute vertices from a cartographic extent.  This function is different from
+     * {@link ExtentTessellator#compute} and {@link ExtentTessellator#computeBuffers}
+     * in that it assumes that you have already allocated output arrays of the correct size.
+     *
+     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Number} description.width The number of vertices in the longitude direction.
+     * @param {Number} description.height The number of vertices in the latitude direction.
+     * @param {Number} description.granularityX The distance, in radians, between each longitude.
+     * @param {Number} description.granularityY The distance, in radians, between each latitude.
+     * @param {Number} description.surfaceHeight The height from the surface of the ellipsoid.
+     * @param {Boolean} description.generateTextureCoordinates Whether to generate texture coordinates.
+     * @param {Boolean} description.interleaveTextureCoordinates Whether to interleave the texture coordinates into the vertex array.
+     * @param {Cartesian3} description.relativetoCenter The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
+     * @param {Cartesian3} description.radiiSquared The radii squared of the ellipsoid to use.
+     * @param {Array|Float32Array} description.vertices The array to use to store computed vertices.
+     * @param {Array|Float32Array} description.textureCoordinates The array to use to store computed texture coordinates, unless interleaved.
+     * @param {Array|Float32Array} [description.indices] The array to use to store computed indices.  If undefined, indices will be not computed.
+     */
+    ExtentTessellator.computeVertices = function(description) {
+        description = defaultValue(description, {});
 
-        var extent = desc.extent.clone();
-        var boundExtent = desc.boundaryExtent;
-        var ellipsoid = desc.ellipsoid;
-        var granularity = desc.granularity;
-        var altitude = desc.altitude;
-        var genTexCoords = desc.generateTextureCoords;
-        var interleave = desc.interleave;
-        var relativeToCenter = desc.relativeToCenter;
+        var extent = description.extent;
+        var surfaceHeight = description.surfaceHeight;
+        var width = description.width;
+        var height = description.height;
 
-        var vertices = desc.vertices;
-        var texCoords = desc.texCoords;
-        var indices = desc.indices;
+        var granularityX = (extent.east - extent.west) / (width - 1);
+        var granularityY = (extent.north - extent.south) / (height - 1);
+        var generateTextureCoordinates = description.generateTextureCoordinates;
+        var interleaveTextureCoordinates = description.interleaveTextureCoordinates;
+        var relativeToCenter = description.relativeToCenter;
 
-        if (boundExtent.south > boundExtent.north) {
-            boundExtent.north += CesiumMath.TWO_PI;
-            extent.north += CesiumMath.TWO_PI;
-        }
+        var vertices = description.vertices;
+        var textureCoordinates = description.textureCoordinates;
+        var indices = description.indices;
 
-        if (boundExtent.west > boundExtent.east) {
-            boundExtent.east += CesiumMath.TWO_PI;
-            extent.east += CesiumMath.TWO_PI;
-        }
+        var radiiSquared = description.radiiSquared;
+        var radiiSquaredX = radiiSquared.x;
+        var radiiSquaredY = radiiSquared.y;
+        var radiiSquaredZ = radiiSquared.z;
+
+        var cos = Math.cos;
+        var sin = Math.sin;
+        var sqrt = Math.sqrt;
 
         // for computing texture coordinates
         var lonScalar = 1.0 / (extent.east - extent.west);
         var latScalar = 1.0 / (extent.north - extent.south);
 
-        var i;
-        var j;
-        var rows = 0;
-        var cols = 0;
+        var vertexArrayIndex = 0;
+        var textureCoordinatesIndex = 0;
 
-        for (i = boundExtent.north;; i = i - granularity) {
-            if (i < boundExtent.south) {
-                i = boundExtent.south;
-            }
+        for ( var row = 0; row < height; ++row) {
+            var latitude = extent.north - granularityY * row;
+            var cosLatitude = cos(latitude);
+            var nZ = sin(latitude);
+            var kZ = radiiSquaredZ * nZ;
 
-            cols = 0;
-            for (j = boundExtent.west;; j = j + granularity) {
-                if (j > boundExtent.east) {
-                    j = boundExtent.east;
-                }
+            var geographicV = (latitude - extent.south) * latScalar;
 
-                var cartPosition = new Cartographic(j, i, altitude);
-                var position = ellipsoid.cartographicToCartesian(cartPosition).subtract(relativeToCenter);
-                vertices.push(position.x, position.y, position.z);
+            var v = geographicV;
 
-                if (genTexCoords) {
-                    var u = (j - extent.west) * lonScalar;
-                    var v = (i - extent.south) * latScalar;
-                    if (interleave) {
-                        vertices.push(u, v);
+            for ( var col = 0; col < width; ++col) {
+                var longitude = extent.west + granularityX * col;
+
+                var nX = cosLatitude * cos(longitude);
+                var nY = cosLatitude * sin(longitude);
+
+                var kX = radiiSquaredX * nX;
+                var kY = radiiSquaredY * nY;
+
+                var gamma = sqrt((kX * nX) + (kY * nY) + (kZ * nZ));
+
+                var rSurfaceX = kX / gamma;
+                var rSurfaceY = kY / gamma;
+                var rSurfaceZ = kZ / gamma;
+
+                vertices[vertexArrayIndex++] = rSurfaceX + nX * surfaceHeight - relativeToCenter.x;
+                vertices[vertexArrayIndex++] = rSurfaceY + nY * surfaceHeight - relativeToCenter.y;
+                vertices[vertexArrayIndex++] = rSurfaceZ + nZ * surfaceHeight - relativeToCenter.z;
+
+                if (generateTextureCoordinates) {
+                    var geographicU = (longitude - extent.west) * lonScalar;
+
+                    var u = geographicU;
+
+                    if (interleaveTextureCoordinates) {
+                        vertices[vertexArrayIndex++] = u;
+                        vertices[vertexArrayIndex++] = v;
                     } else {
-                        texCoords.push(u, v);
+                        textureCoordinates[textureCoordinatesIndex++] = u;
+                        textureCoordinates[textureCoordinatesIndex++] = v;
                     }
                 }
-
-                ++cols;
-
-                if (j === boundExtent.east) {
-                    break;
-                }
-            }
-            ++rows;
-
-            if (i === boundExtent.south) {
-                break;
             }
         }
 
-        var index = 0;
-        for (i = 0; i < rows - 1; ++i) {
-            for (j = 0; j < cols - 1; ++j) {
-                var upperLeft = index;
-                var lowerLeft = upperLeft + cols;
-                var lowerRight = lowerLeft + 1;
-                var upperRight = upperLeft + 1;
+        if (typeof indices !== 'undefined') {
+            var index = 0;
+            var indicesIndex = 0;
+            for ( var i = 0; i < height - 1; ++i) {
+                for ( var j = 0; j < width - 1; ++j) {
+                    var upperLeft = index;
+                    var lowerLeft = upperLeft + width;
+                    var lowerRight = lowerLeft + 1;
+                    var upperRight = upperLeft + 1;
 
-                indices.push(upperLeft, lowerLeft, upperRight);
-                indices.push(upperRight, lowerLeft, lowerRight);
+                    indices[indicesIndex++] = upperLeft;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = lowerRight;
 
+                    ++index;
+                }
                 ++index;
             }
-            ++index;
         }
     };
 
     /**
      * Creates a mesh from a cartographic extent.
      *
-     * @param {Ellipsoid} description.ellipsoid The ellipsoid on which the extent lies. Defaults to a WGS84 ellipsoid.
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
-     * @param {Number} description.granularity The distance, in radians, between each latitude and longitude.
-     * Determines the number of positions in the buffer. Defaults to 0.1.
-     * @param {Number} description.altitude The height from the surface of the ellipsoid. Defaults to 0.
-     * @param {Boolean} description.generateTextureCoords A truthy value will cause texture coordinates to be generated.
-     * @param {Cartesian3} description.relativetoCenter If this parameter is provided, the positions will be
-     * computed as <code>worldPosition.subtract(relativeToCenter)</code>. Defaults to (0, 0, 0).
+     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
+     * @param {Number} [description.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Number} [description.surfaceHeight=0.0] The height from the surface of the ellipsoid.
+     * @param {Cartesian3} [description.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
+     * @param {Boolean} [description.generateTextureCoordinates=false] Whether to generate texture coordinates.
      *
      * @exception {DeveloperError} <code>description.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>description.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -145,8 +175,8 @@ define([
      * from the extent for creating a vertex array.
      *
      * @see Context#createVertexArrayFromMesh
-     * @see MeshFilters#createAttributeIndices
-     * @see MeshFilters#toWireframeInPlace
+     * @see MeshFilters.createAttributeIndices
+     * @see MeshFilters.toWireframeInPlace
      * @see Extent
      *
      * @example
@@ -160,7 +190,7 @@ define([
      *         CesiumMath.toRadians(42.0)
      *     ),
      *     granularity : 0.01,
-     *     altitude : 10000.0
+     *     surfaceHeight : 10000.0
      * });
      * mesh = MeshFilters.toWireframeInPlace(mesh);
      * var va = context.createVertexArrayFromMesh({
@@ -169,57 +199,56 @@ define([
      * });
      */
     ExtentTessellator.compute = function(description) {
-        var desc = description || {};
+        description = defaultValue(description, {});
 
-        desc.extent.validate();
+        var extent = description.extent;
+        extent.validate();
 
-        desc.ellipsoid = desc.ellipsoid || Ellipsoid.WGS84;
-        desc.granularity = (desc.granularity && desc.granularity > 0.0) ? desc.granularity : 0.1;
-        desc.altitude = (desc.altitude && desc.altitude > 0.0) ? desc.altitude : 0.0;
-        desc.relativeToCenter = (desc.relativeToCenter) ? Cartesian3.clone(desc.relativeToCenter) : Cartesian3.ZERO;
-        desc.boundaryWidth = desc.boundaryWidth || 0; // NOTE: may want to expose in the future.
-        desc.interleave = false;
-        desc.positionName = desc.positionName || 'position';
-        desc.textureCoordName = desc.textureCoordName || 'textureCoordinates';
+        var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
+        description.radiiSquared = ellipsoid.getRadiiSquared();
+        description.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
+
+        var granularity = defaultValue(description.granularity, 0.1);
+        description.surfaceHeight = defaultValue(description.surfaceHeight, 0.0);
+
+        description.width = Math.ceil((extent.east - extent.west) / granularity) + 1;
+        description.height = Math.ceil((extent.north - extent.south) / granularity) + 1;
 
         var vertices = [];
         var indices = [];
-        var texCoords = [];
+        var textureCoordinates = [];
 
-        desc.vertices = vertices;
-        desc.texCoords = texCoords;
-        desc.indices = indices;
-        desc.boundaryExtent = new Extent(
-            desc.extent.west - desc.granularity * desc.boundaryWidth,
-            desc.extent.south - desc.granularity * desc.boundaryWidth,
-            desc.extent.east + desc.granularity * desc.boundaryWidth,
-            desc.extent.north + desc.granularity * desc.boundaryWidth
-        );
+        description.generateTextureCoordinates = defaultValue(description.generateTextureCoordinates, false);
+        description.interleaveTextureCoordinates = false;
+        description.vertices = vertices;
+        description.textureCoordinates = textureCoordinates;
+        description.indices = indices;
 
-        ExtentTessellator._computeVertices(desc);
+        ExtentTessellator.computeVertices(description);
 
-        var mesh = {};
-        mesh.attributes = {};
-        mesh.indexLists = [];
+        var mesh = {
+            attributes : {},
+            indexLists : [{
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : indices
+            }]
+        };
 
-        mesh.attributes[desc.positionName] = {
+        var positionName = defaultValue(description.positionName, 'position');
+        mesh.attributes[positionName] = {
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3,
             values : vertices
         };
 
-        if (desc.generateTextureCoords) {
-            mesh.attributes[desc.textureCoordName] = {
+        if (description.generateTextureCoordinates) {
+            var textureCoordinatesName = defaultValue(description.textureCoordinatesName, 'textureCoordinates');
+            mesh.attributes[textureCoordinatesName] = {
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
-                values : texCoords
+                values : textureCoordinates
             };
         }
-
-        mesh.indexLists.push({
-            primitiveType : PrimitiveType.TRIANGLES,
-            values : indices
-        });
 
         return mesh;
     };
@@ -227,19 +256,13 @@ define([
     /**
      * Creates arrays of vertex attributes and indices from a cartographic extent.
      *
-     * @param {Ellipsoid} description.ellipsoid The ellipsoid on which the extent lies. Defaults to a WGS84 ellipsoid.
      * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
-     * @param {Number} description.granularity The distance, in radians, between each latitude and longitude.
-     * Determines the number of positions in the buffer. Defaults to 0.1.
-     * @param {Number} description.altitude The height from the surface of the ellipsoid. Defaults to 0.
-     * @param {Boolean} description.generateTextureCoords A truthy value will cause texture coordinates to be generated.
-     * @param {Boolean} description.interleave If both this parameter and <code>generateTextureCoords</code> are truthy,
-     * the positions and texture coordinates will be interleaved in a single buffer.
-     * @param {Object} description.attributeIndices An object with possibly two numeric attributes, <code>position</code>
-     * and <code>textureCoordinates</code>, used to index the shader attributes of the same names.
-     * <code>position</code> defaults to 0 and <code>textureCoordinates</code> defaults to 1.
-     * @param {Cartesian3} description.relativetoCenter If this parameter is provided, the positions will be
-     * computed as <code>worldPosition.subtract(relativeToCenter)</code>. Defaults to (0, 0, 0).
+     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
+     * @param {Number} [description.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Number} [description.surfaceHeight=0.0] The height from the surface of the ellipsoid.
+     * @param {Cartesian3} [description.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>worldPosition.subtract(relativeToCenter)</code>.
+     * @param {Boolean} [description.generateTextureCoordinates=false] Whether to generate texture coordinates.
+     * @param {Boolean} [description.interleaveTextureCoordinates=false] If texture coordinates are generated, whether to interleave the positions and texture coordinates in a single buffer.
      *
      * @exception {DeveloperError} <code>description.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>description.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -257,13 +280,13 @@ define([
      * var buffers = ExtentTessellator.computeBuffers({
      *     ellipsoid : ellipsoid,
      *     extent : extent,
-     *     generateTextureCoords : true
+     *     generateTextureCoordinates : true
      * });
      *
      * var datatype = ComponentDatatype.FLOAT;
      * var usage = BufferUsage.STATIC_DRAW;
      * var positionBuffer = context.createVertexBuffer(datatype.toTypedArray(buffers.positions), usage);
-     * var texCoordBuffer = context.createVertexBuffer(datatype.toTypedArray(buffers.textureCoords), usage);
+     * var textureCoordinateBuffer = context.createVertexBuffer(datatype.toTypedArray(buffers.textureCoordinates), usage);
      * attributes = [{
      *         index : attributeIndices.position,
      *         vertexBuffer : positionBuffer,
@@ -271,7 +294,7 @@ define([
      *         componentsPerAttribute : 3
      *     }, {
      *         index : attributeIndices.textureCoordinates,
-     *         vertexBuffer : texCoordBuffer,
+     *         vertexBuffer : textureCoordinateBuffer,
      *         componentDatatype : datatype,
      *         componentsPerAttribute : 2
      *     }];
@@ -284,8 +307,8 @@ define([
      * var buffers = ExtentTessellator.computeBuffers({
      *     ellipsoid : ellipsoid,
      *     extent : extent,
-     *     generateTextureCoords : true,
-     *     interleave : true
+     *     generateTextureCoordinates : true,
+     *     interleaveTextureCoordinates : true
      * });
      *
      * var datatype = ComponentDatatype.FLOAT;
@@ -312,42 +335,48 @@ define([
      *     }];
      * var indexBuffer = context.createIndexBuffer(new Uint16Array(buffers.indices), usage, IndexDatatype.UNSIGNED_SHORT);
      * var vacontext.createVertexArray(attributes, indexBuffer);
-     *
      */
     ExtentTessellator.computeBuffers = function(description) {
-        var desc = description || {};
+        description = defaultValue(description, {});
 
-        desc.extent.validate();
+        var extent = description.extent;
+        extent.validate();
 
-        desc.ellipsoid = desc.ellipsoid || Ellipsoid.WGS84;
-        desc.granularity = (typeof desc.granularity !== 'undefined' && desc.granularity > 0.0) ? desc.granularity : 0.1;
-        desc.altitude = (typeof desc.altitude !== 'undefined' && desc.altitude > 0.0) ? desc.altitude : 0.0;
-        desc.relativeToCenter = (desc.relativeToCenter) ? Cartesian3.clone(desc.relativeToCenter) : Cartesian3.ZERO;
-        desc.boundaryWidth = desc.boundaryWidth || 0; // NOTE: may want to expose in the future.
+        var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
+        description.radiiSquared = ellipsoid.getRadiiSquared();
+        description.relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
 
-        desc.vertices = [];
-        desc.texCoords = [];
-        desc.indices = [];
-        desc.boundaryExtent = new Extent(
-            desc.extent.west - desc.granularity * desc.boundaryWidth,
-            desc.extent.south - desc.granularity * desc.boundaryWidth,
-            desc.extent.east + desc.granularity * desc.boundaryWidth,
-            desc.extent.north + desc.granularity * desc.boundaryWidth
-        );
+        var granularity = defaultValue(description.granularity, 0.1);
+        description.surfaceHeight = defaultValue(description.surfaceHeight, 0.0);
 
-        ExtentTessellator._computeVertices(desc);
+        description.width = Math.ceil((extent.east - extent.west) / granularity) + 1;
+        description.height = Math.ceil((extent.north - extent.south) / granularity) + 1;
 
-        var result = {};
-        if (desc.interleave) {
-            result.vertices = desc.vertices;
+        var vertices = [];
+        var indices = [];
+        var textureCoordinates = [];
+
+        description.generateTextureCoordinates = defaultValue(description.generateTextureCoordinates, false);
+        description.interleaveTextureCoordinates = defaultValue(description.interleaveTextureCoordinates, false);
+        description.vertices = vertices;
+        description.textureCoordinates = textureCoordinates;
+        description.indices = indices;
+
+        ExtentTessellator.computeVertices(description);
+
+        var result = {
+            indices : indices
+        };
+
+        if (description.interleaveTextureCoordinates) {
+            result.vertices = vertices;
         } else {
-            result.positions = desc.vertices;
-            if (desc.generateTextureCoords) {
-                result.textureCoords = desc.texCoords;
+            result.positions = vertices;
+            if (description.generateTextureCoordinates) {
+                result.textureCoordinates = textureCoordinates;
             }
         }
 
-        result.indices = desc.indices;
         return result;
     };
 
