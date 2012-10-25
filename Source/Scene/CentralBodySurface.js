@@ -157,13 +157,6 @@ define([
         while (typeof tile !== 'undefined') {
             var tileImageryCollection = tile.imagery;
 
-            // If the layer order has changed, sync it up first.
-            // This is important because the code below expects TileImagery instances from the same layer
-            // to be grouped together.
-            if (this._layerOrderChanged) {
-                tileImageryCollection.sort(sortTileImageryByLayerIndex);
-            }
-
             var startIndex = -1;
             var numDestroyed = 0;
             for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
@@ -192,8 +185,6 @@ define([
 
             tile = tile.replacementNext;
         }
-
-        this._layerOrderChanged = false;
     };
 
     CentralBodySurface.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
