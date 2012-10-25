@@ -134,15 +134,17 @@ define([
         }
 
         // create TileImagerys for this layer for all previously loaded tiles
-        var tile = this._tileReplacementQueue.head;
-        while (typeof tile !== 'undefined') {
-            if (layer._createTileImagerySkeletons(tile, this._terrainProvider)) {
-                tile.doneLoading = false;
+        if (layer.show) {
+            var tile = this._tileReplacementQueue.head;
+            while (typeof tile !== 'undefined') {
+                if (layer._createTileImagerySkeletons(tile, this._terrainProvider)) {
+                    tile.doneLoading = false;
+                }
+                tile = tile.replacementNext;
             }
-            tile = tile.replacementNext;
-        }
 
-        this._layerOrderChanged = true;
+            this._layerOrderChanged = true;
+        }
     };
 
     CentralBodySurface.prototype._onLayerRemoved = function(layer, index) {
@@ -154,16 +156,25 @@ define([
         var tile = this._tileReplacementQueue.head;
         while (typeof tile !== 'undefined') {
             var tileImageryCollection = tile.imagery;
+
+            // If the layer order has changed, sync it up first.
+            // This is important because the code below expects TileImagery instances from the same layer
+            // to be grouped together.
+            if (this._layerOrderChanged) {
+                tileImageryCollection.sort(sortTileImageryByLayerIndex);
+            }
+
             var startIndex = -1;
             var numDestroyed = 0;
             for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-                var imagery = tileImageryCollection[i].imagery;
+                var tileImagery = tileImageryCollection[i];
+                var imagery = tileImagery.imagery;
                 if (imagery.imageryLayer === layer) {
                     if (startIndex === -1) {
                         startIndex = i;
                     }
 
-                    imagery.releaseReference();
+                    tileImagery.freeResources();
                     ++numDestroyed;
                 } else if (startIndex !== -1) {
                     // iterated past the section of TileImagerys belonging to this layer, no need to continue.
@@ -178,8 +189,11 @@ define([
             if (layer.isBaseLayer()) {
                 tile.renderable = false;
             }
+
             tile = tile.replacementNext;
         }
+
+        this._layerOrderChanged = false;
     };
 
     CentralBodySurface.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
@@ -625,7 +639,10 @@ define([
 
                     var imageryLayerCollection = surface._imageryLayerCollection;
                     for (i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-                        imageryLayerCollection.get(i)._createTileImagerySkeletons(tile, terrainProvider);
+                        var layer = imageryLayerCollection.get(i);
+                        if (layer.show) {
+                            layer._createTileImagerySkeletons(tile, terrainProvider);
+                        }
                     }
 
                 }

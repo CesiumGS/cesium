@@ -367,8 +367,10 @@ define([
     ImageryLayerCollection.prototype._update = function() {
         var isBaseLayer = true;
         var layers = this._layers;
+        var layersShownOrHidden;
+        var layer;
         for (var i = 0, len = layers.length; i < len; ++i) {
-            var layer = layers[i];
+            layer = layers[i];
 
             layer._layerIndex = i;
 
@@ -381,7 +383,17 @@ define([
 
             if (layer.show !== layer._show) {
                 layer._show = layer.show;
-                this.layerShownOrHidden.raiseEvent(layer, i, layer.show);
+                if (typeof layersShownOrHidden === 'undefined') {
+                    layersShownOrHidden = [];
+                }
+                layersShownOrHidden.push(layer);
+            }
+        }
+
+        if (typeof layersShownOrHidden !== 'undefined') {
+            for (i = 0, len = layersShownOrHidden.length; i < len; ++i) {
+                layer = layersShownOrHidden[i];
+                this.layerShownOrHidden.raiseEvent(layer, layer._layerIndex, layer.show);
             }
         }
     };
