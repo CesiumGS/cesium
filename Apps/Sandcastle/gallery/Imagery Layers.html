@@ -313,7 +313,6 @@ require([
         postSetup : function(widget) {
             var scene = widget.scene;
             var centralBody = scene.getPrimitives().getCentralBody();
-            centralBody.logoOffset = new Cesium.Cartesian2(200, 0);
 
             centralBody.affectedByLighting = false;
             
