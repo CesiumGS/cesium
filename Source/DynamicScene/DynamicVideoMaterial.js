@@ -3,12 +3,16 @@ define([
         './DynamicProperty',
         './CzmlVideo',
         './CzmlNumber',
+        './CzmlBoolean',
+        './CzmlTime',
         '../Scene/Material',
         '../Core/JulianDate'
     ], function(
          DynamicProperty,
          CzmlVideo,
          CzmlNumber,
+         CzmlBoolean,
+         CzmlTime,
          Material,
          JulianDate) {
     "use strict";
@@ -35,6 +39,24 @@ define([
          * @type DynamicProperty
          */
         this.horizontalRepeat = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the material's horizontal repeat.
+         *
+         * @type DynamicProperty
+         */
+        this.startTime = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the material's horizontal repeat.
+         *
+         * @type DynamicProperty
+         */
+        this.loop = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the material's horizontal repeat.
+         *
+         * @type DynamicProperty
+         */
+        this.speed = undefined;
     };
 
     /**
@@ -82,6 +104,30 @@ define([
                 this.horizontalRepeat = horizontalRepeat = new DynamicProperty(CzmlNumber);
             }
             horizontalRepeat.processCzmlIntervals(materialData.horizontalRepeat);
+        }
+
+        if (typeof materialData.startTime !== 'undefined') {
+            var startTime = this.startTime;
+            if (typeof startTime === 'undefined') {
+                this.startTime = startTime = new DynamicProperty(CzmlTime);
+            }
+            startTime.processCzmlIntervals(materialData.startTime);
+        }
+
+        if (typeof materialData.loop !== 'undefined') {
+            var loop = this.loop;
+            if (typeof loop === 'undefined') {
+                this.loop = loop = new DynamicProperty(CzmlBoolean);
+            }
+            loop.processCzmlIntervals(materialData.loop);
+        }
+
+        if (typeof materialData.speed !== 'undefined') {
+            var speed = this.speed;
+            if (typeof speed === 'undefined') {
+                this.speed = speed = new DynamicProperty(CzmlNumber);
+            }
+            speed.processCzmlIntervals(materialData.speed);
         }
     };
 
@@ -163,15 +209,20 @@ define([
                     //before setting the currentTime, but if there are no seekable
                     //segments, then this code will have no affect, so the net result
                     //seems to be the same.
-                    var videoTime = startTime.getSecondsDifference(time) * speed;
+                    var videoTime = startTime.getSecondsDifference(time);
+                    videoTime = videoTime * speed;
                     if (loop) {
-                        video.currentTime = videoTime % duration;
+                        videoTime = videoTime % duration;
+                        if (videoTime < 0.0) {
+                            videoTime = duration - videoTime;
+                        }
+                        video.currentTime = videoTime;
                     } else if (videoTime > duration) {
                         video.currentTime = duration;
-                    } else if (videoTime < duration) {
-                        video.currentTime = 0;
+                    } else if (videoTime < 0.0) {
+                        video.currentTime = 0.0;
                     } else {
-                        video = videoTime;
+                        video.currentTime = videoTime;
                     }
                 }
             }
