@@ -194,8 +194,9 @@ define([
         }
 
         video = existingMaterial.video;
-        var duration = video.duration;
-        if (!isNaN(duration)) {
+
+        //These properties won't be set until the video is actually ready to be used.
+        if (video.videoWidth > 0 && video.seekable.length > 0) {
             if (typeof existingMaterial.texture === 'undefined') {
                 existingMaterial.texture = context.createTexture2D({
                     source : video
@@ -204,6 +205,8 @@ define([
             } else {
                 if (!video.seeking) {
                     existingMaterial.texture.copyFrom(video);
+
+                    var duration = video.duration;
 
                     //TODO: We should probably be checking the video.seekable segments
                     //before setting the currentTime, but if there are no seekable
