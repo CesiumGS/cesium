@@ -1326,9 +1326,6 @@ define([
 
             // render depth plane
             if (mode === SceneMode.SCENE3D) {
-                // TODO: clearing depth here will not be acceptable for actual terrain.
-                colorCommandList.push(this._clearDepthCommand);
-
                 colorCommandList.push(this._depthCommand);
             }
 
