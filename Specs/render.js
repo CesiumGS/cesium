@@ -33,12 +33,12 @@ define([
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     var transformedBV = boundingVolume.transform(modelMatrix);
                     if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
-                            (typeof occluder !== 'undefined' && !occluder.isVisible(transformedBV))) {
+                            (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(transformedBV))) {
                         continue;
                     }
                 }
 
-                context.draw(command);
+                command.execute(context);
                 numRendered++;
             }
         }
