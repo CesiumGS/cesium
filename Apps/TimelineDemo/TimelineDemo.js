@@ -6,6 +6,7 @@ define(['dojo',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/AnimationController',
+        'Core/requestAnimationFrame',
         'Widgets/Playback',
         'Widgets/Timeline'
     ], function(
@@ -16,6 +17,7 @@ define(['dojo',
          JulianDate,
          TimeInterval,
          AnimationController,
+         requestAnimationFrame,
          Playback,
          Timeline) {
     "use strict";
@@ -23,12 +25,17 @@ define(['dojo',
     var startDatePart, endDatePart, startTimePart, endTimePart;
     var timeline, clock, animationController, playback;
 
+    function updateDateDisplay(currentTime) {
+        var date = currentTime.toDate();
+        document.getElementById('mousePos').innerHTML = date.toUTCString();
+    }
+
     function handleSetTime(e) {
         if (typeof timeline !== 'undefined') {
+            animationController.pause();
             var scrubJulian = e.timeJulian;
             clock.currentTime = scrubJulian;
-            var date = scrubJulian.toDate();
-            document.getElementById('mousePos').innerHTML = date.toUTCString();
+            updateDateDisplay(scrubJulian);
         }
     }
 
@@ -76,6 +83,14 @@ define(['dojo',
 
         animationController = new AnimationController(clock);
         playback = new Playback(dojo.byId('playbackTest'), animationController);
+
+        function tick() {
+            var currentTime = animationController.update();
+            timeline.updateFromClock();
+            updateDateDisplay(currentTime);
+            requestAnimationFrame(tick);
+        }
+        tick();
     }
 
     // Adjust start/end dates in reaction to any calendar/time clicks
