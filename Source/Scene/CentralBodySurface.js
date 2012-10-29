@@ -670,7 +670,7 @@ define([
                     if (imageryLayer.getImageryProvider().isReady()) {
                         // Remove the placeholder and add the actual skeletons (if any)
                         // at the same position.  Then continue the loop at the same index.
-                        imagery.releaseReference();
+                        tileImagery.freeResources();
                         tileImageryCollection.splice(i, 1);
                         imageryLayer._createTileImagerySkeletons(tile, terrainProvider, i);
                         --i;
@@ -702,6 +702,15 @@ define([
                     var parent = imagery.parent;
                     while (typeof parent !== 'undefined' && (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID)) {
                         parent = parent.parent;
+                    }
+
+                    // If there's no valid parent, remove this TileImagery from the tile.
+                    if (typeof parent === 'undefined') {
+                        tileImagery.freeResources();
+                        tileImageryCollection.splice(i, 1);
+                        --i;
+                        len = tileImageryCollection.length;
+                        continue;
                     }
 
                     // use that parent imagery instead, storing the original imagery
