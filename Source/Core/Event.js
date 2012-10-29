@@ -31,6 +31,17 @@ define([
     };
 
     /**
+     * Gets the number of listeners currently subscribed to the event.
+     *
+     * @memberof Event
+     *
+     * @returns {Number} The number of subscribed listeners.
+     */
+    Event.prototype.getNumberOfListeners = function() {
+        return this._listeners.length;
+    };
+
+    /**
      * Registers a callback function to be executed whenever the event is raised.
      * An optional scope can be provided to serve as the <code>this</code> pointer
      * in which the function will execute.

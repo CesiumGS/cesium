@@ -41,10 +41,10 @@ define([
         '../../Scene/Material',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
-        '../../Scene/BingMapsTileProvider',
+        '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
         '../../Scene/SceneTransitioner',
-        '../../Scene/SingleTileProvider',
+        '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
         '../../Scene/SceneMode',
         '../../DynamicScene/DynamicObjectView',
@@ -92,10 +92,10 @@ define([
         Material,
         Scene,
         CentralBody,
-        BingMapsTileProvider,
+        BingMapsImageryProvider,
         BingMapsStyle,
         SceneTransitioner,
-        SingleTileProvider,
+        SingleTileImageryProvider,
         PerformanceDisplay,
         SceneMode,
         DynamicObjectView,
@@ -1048,9 +1048,8 @@ define([
          * @see CesiumViewerWidget#mapStyle
          */
         setStreamingImageryMapStyle : function(value) {
-            this.useStreamingImagery = true;
-
-            if (this.mapStyle !== value) {
+            if (!this.useStreamingImagery || this.mapStyle !== value) {
+                this.useStreamingImagery = true;
                 this.mapStyle = value;
                 this._configureCentralBodyImagery();
             }
@@ -1147,16 +1146,41 @@ define([
         _configureCentralBodyImagery : function() {
             var centralBody = this.centralBody;
 
+            var imageLayers = centralBody.getImageryLayers();
+
+            var existingImagery;
+            if (imageLayers.getLength() !== 0) {
+                existingImagery = imageLayers.get(0).imageryProvider;
+            }
+
+            var newLayer;
+
             if (this.useStreamingImagery) {
-                centralBody.dayTileProvider = new BingMapsTileProvider({
-                    server : 'dev.virtualearth.net',
-                    mapStyle : this.mapStyle,
-                    // Some versions of Safari support WebGL, but don't correctly implement
-                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                });
+                if (!(existingImagery instanceof BingMapsImageryProvider) ||
+                    existingImagery.getMapStyle() !== this.mapStyle) {
+
+                    newLayer = imageLayers.addImageryProvider(new BingMapsImageryProvider({
+                        server : 'dev.virtualearth.net',
+                        mapStyle : this.mapStyle,
+                        // Some versions of Safari support WebGL, but don't correctly implement
+                        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                        proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
+                    }));
+                    if (imageLayers.getLength() > 1) {
+                        imageLayers.remove(imageLayers.get(0));
+                    }
+                    imageLayers.lowerToBottom(newLayer);
+                }
             } else {
-                centralBody.dayTileProvider = new SingleTileProvider(this.dayImageUrl);
+                if (!(existingImagery instanceof SingleTileImageryProvider) ||
+                    existingImagery.getUrl() !== this.dayImageUrl) {
+
+                    newLayer = imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
+                    if (imageLayers.getLength() > 1) {
+                        imageLayers.remove(imageLayers.get(0));
+                    }
+                    imageLayers.lowerToBottom(newLayer);
+                }
             }
 
             centralBody.nightImageSource = this.nightImageUrl;

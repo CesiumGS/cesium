@@ -3,14 +3,14 @@ defineSuite([
          'Core/BoundingRectangle',
          'Core/Cartesian2',
          'Core/Ellipsoid',
-         'Core/EquidistantCylindricalProjection',
+         'Core/GeographicProjection',
          'Core/Extent',
          'Core/Intersect'
      ], function(
          BoundingRectangle,
          Cartesian2,
          Ellipsoid,
-         EquidistantCylindricalProjection,
+         GeographicProjection,
          Extent,
          Intersect) {
     "use strict";
@@ -112,7 +112,7 @@ defineSuite([
 
     it('create a bounding rectangle from an extent', function() {
         var extent = Extent.MAX_VALUE;
-        var projection = new EquidistantCylindricalProjection(Ellipsoid.UNIT_SPHERE);
+        var projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);
         var expected = new BoundingRectangle(extent.west, extent.south, extent.east - extent.west, extent.north - extent.south);
         expect(BoundingRectangle.fromExtent(extent, projection)).toEqual(expected);
     });
@@ -120,7 +120,7 @@ defineSuite([
     it('fromExtent works with a result parameter', function() {
         var extent = Extent.MAX_VALUE;
         var expected = new BoundingRectangle(extent.west, extent.south, extent.east - extent.west, extent.north - extent.south);
-        var projection = new EquidistantCylindricalProjection(Ellipsoid.UNIT_SPHERE);
+        var projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);
 
         var result = new BoundingRectangle();
         var returnedResult = BoundingRectangle.fromExtent(extent, projection, result);
