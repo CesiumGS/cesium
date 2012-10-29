@@ -180,6 +180,7 @@ defineSuite([
         runs(function() {
             expect(provider.getTileWidth()).toEqual(256);
             expect(provider.getTileHeight()).toEqual(256);
+            expect(provider.getMinimumLevel()).toEqual(0);
             expect(provider.getMaximumLevel()).toEqual(20);
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);

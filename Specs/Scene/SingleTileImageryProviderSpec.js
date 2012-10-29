@@ -59,6 +59,7 @@ defineSuite([
             expect(provider.getTilingScheme().getExtent()).toEqual(extent);
             expect(provider.getTileWidth()).toEqual(16);
             expect(provider.getTileHeight()).toEqual(16);
+            expect(provider.getMinimumLevel()).toEqual(0);
             expect(provider.getMaximumLevel()).toEqual(0);
             expect(provider.getTileDiscardPolicy()).toBeUndefined();
         });

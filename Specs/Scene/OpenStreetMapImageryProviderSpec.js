@@ -110,6 +110,7 @@ defineSuite([
         runs(function() {
             expect(provider.getTileWidth()).toEqual(256);
             expect(provider.getTileHeight()).toEqual(256);
+            expect(provider.getMinimumLevel()).toEqual(0);
             expect(provider.getMaximumLevel()).toEqual(18);
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
@@ -200,6 +201,7 @@ defineSuite([
         runs(function() {
             expect(provider.getTileWidth()).toEqual(256);
             expect(provider.getTileHeight()).toEqual(256);
+            expect(provider.getMinimumLevel()).toEqual(0);
             expect(provider.getMaximumLevel()).toEqual(18);
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.getExtent()).toEqual(extent);

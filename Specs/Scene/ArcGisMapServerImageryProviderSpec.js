@@ -88,6 +88,7 @@ defineSuite([
         runs(function() {
             expect(provider.getTileWidth()).toEqual(128);
             expect(provider.getTileHeight()).toEqual(256);
+            expect(provider.getMinimumLevel()).toEqual(0);
             expect(provider.getMaximumLevel()).toEqual(2);
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.getLogo()).not.toBeUndefined();
@@ -161,6 +162,7 @@ defineSuite([
         runs(function() {
             expect(provider.getTileWidth()).toEqual(128);
             expect(provider.getTileHeight()).toEqual(256);
+            expect(provider.getMinimumLevel()).toEqual(0);
             expect(provider.getMaximumLevel()).toEqual(2);
             expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.getLogo()).not.toBeUndefined();
@@ -218,6 +220,7 @@ defineSuite([
         runs(function() {
             expect(provider.getTileWidth()).toEqual(256);
             expect(provider.getTileHeight()).toEqual(256);
+            expect(provider.getMinimumLevel()).toEqual(0);
             expect(provider.getMaximumLevel()).toBeUndefined();
             expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.getLogo()).not.toBeUndefined();
@@ -303,6 +306,7 @@ defineSuite([
         runs(function() {
             expect(provider.getTileWidth()).toEqual(128);
             expect(provider.getTileHeight()).toEqual(256);
+            expect(provider.getMinimumLevel()).toEqual(0);
             expect(provider.getMaximumLevel()).toEqual(2);
             expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.getLogo()).not.toBeUndefined();

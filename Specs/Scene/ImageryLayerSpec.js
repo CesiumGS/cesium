@@ -7,10 +7,13 @@ defineSuite([
          'Core/jsonp',
          'Core/loadImage',
          'Scene/BingMapsImageryProvider',
+         'Scene/EllipsoidTerrainProvider',
+         'Scene/GeographicTilingScheme',
          'Scene/Imagery',
          'Scene/ImageryState',
          'Scene/NeverTileDiscardPolicy',
          'Scene/SingleTileImageryProvider',
+         'Scene/Tile',
          'Scene/WebMapServiceImageryProvider'
      ], function(
          ImageryLayer,
@@ -20,10 +23,13 @@ defineSuite([
          jsonp,
          loadImage,
          BingMapsImageryProvider,
+         EllipsoidTerrainProvider,
+         GeographicTilingScheme,
          Imagery,
          ImageryState,
          NeverTileDiscardPolicy,
          SingleTileImageryProvider,
+         Tile,
          WebMapServiceImageryProvider) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -181,5 +187,52 @@ defineSuite([
         });
         expect(layer.getExtent()).toEqual(extent);
         expect(layer.isDestroyed()).toEqual(false);
+    });
+
+    it('honors the imagery provider\'s minimum level', function() {
+        var tilingScheme = new GeographicTilingScheme();
+        var imageryProviderWithMinimumLevel = {
+                isReady : function() { return true; },
+                getExtent : function() { return Extent.MAX_VALUE; },
+                getTileWidth : function() { return 256; },
+                getTileHeight : function() { return 256; },
+                getMaximumLevel : function() { return 10; },
+                getMinimumLevel : function() { return 5; },
+                getTilingScheme : function() { return tilingScheme; },
+                getTileDiscardPolicy : function() { return undefined; },
+                getErrorEvent : function() { return undefined; },
+                getLogo : function() { return undefined; },
+                requestImage : function(hostnames, hostnameIndex, x, y, level) {
+                    expect(level).toBeLessThanOrEqualTo(this.getMaximumLevel());
+                    expect(level).toBeGreaterThanOrEqualTo(this.getMinimumLevel());
+                    return undefined;
+                }
+            };
+
+        var layer = new ImageryLayer(imageryProviderWithMinimumLevel);
+
+        waitsFor(function() {
+            return imageryProviderWithMinimumLevel.isReady();
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            var tile = new Tile({
+                x : 0,
+                y: 0,
+                level : 0,
+                tilingScheme : tilingScheme
+            });
+            var terrainProvider = new EllipsoidTerrainProvider();
+            layer._createTileImagerySkeletons(tile, terrainProvider);
+
+            expect(tile.imagery.length).toBeGreaterThan(0);
+
+            for (var i = 0, len = tile.imagery.length; i < len; ++i) {
+                var tileImagery = tile.imagery[i];
+                var imagery = tileImagery.imagery;
+                expect(imagery.level).toBeLessThanOrEqualTo(imageryProviderWithMinimumLevel.getMaximumLevel());
+                expect(imagery.level).toBeGreaterThanOrEqualTo(imageryProviderWithMinimumLevel.getMinimumLevel());
+            }
+        });
     });
 });
