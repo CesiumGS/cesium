@@ -40,11 +40,33 @@ body {
 	clear: both;
 }
 
+.timelineAndPlayback {
+    display: block;
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 90%;
+    height: 102px;
+    margin: 20px auto;
+}
+
+.myPlayback {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 200px;
+    height: 100px;
+    border: 1px solid #888;
+}
+
 .myTimeline {
 	display: block;
-	width: 90%;
+    position: absolute;
+    top: 49px;
+    left: 201px;
+    right: 0;
 	height: 51px;
-	margin: 20px auto;
 }
 
 .usage {
@@ -78,14 +100,6 @@ table {
 
 tr {
     border-top: solid 1px #ddd;
-}
-
-#playbackTest {
-    display: block;
-    clear: both;
-    width: 200px;
-    height: 100px;
-    border: 1px solid #888;
 }
 </style>
 <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0"
@@ -135,13 +149,14 @@ tr {
         <div class="clear"></div>
     </div>
 
-    <div id="time1" class="myTimeline"></div>
+    <div class="timelineAndPlayback">
+        <div id="playbackTest" class="myPlayback"></div>
+        <div id="time1" class="myTimeline"></div>
+    </div>
 
     <p class="info">
         Tick position: <span id="mousePos"></span>
     </p>
-
-    <div id="playbackTest"></div>
 
 </body>
 </html>

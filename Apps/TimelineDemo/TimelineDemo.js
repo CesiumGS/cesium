@@ -70,6 +70,7 @@ define(['dojo',
             startTime : startJulian,
             currentTime : scrubJulian,
             stopTime : endJulian
+            // , multiplier : 60
         });
 
         timeline = new Timeline('time1', clock);
@@ -82,6 +83,7 @@ define(['dojo',
         timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.BLUE, new Color(0.75, 0.75, 0.75, 0.5));
 
         animationController = new AnimationController(clock);
+        animationController.pause();
         playback = new Playback(dojo.byId('playbackTest'), animationController);
 
         function tick() {
