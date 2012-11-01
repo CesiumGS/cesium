@@ -42,10 +42,10 @@ define([
         '../../Scene/Scene',
         '../../Scene/CameraColumbusViewMode',
         '../../Scene/CentralBody',
-        '../../Scene/BingMapsTileProvider',
+        '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
         '../../Scene/SceneTransitioner',
-        '../../Scene/SingleTileProvider',
+        '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
         '../../Scene/SceneMode',
         '../../DynamicScene/processCzml',
@@ -96,10 +96,10 @@ define([
         Scene,
         CameraColumbusViewMode,
         CentralBody,
-        BingMapsTileProvider,
+        BingMapsImageryProvider,
         BingMapsStyle,
         SceneTransitioner,
-        SingleTileProvider,
+        SingleTileImageryProvider,
         PerformanceDisplay,
         SceneMode,
         processCzml,
@@ -990,9 +990,8 @@ define([
          * @see CesiumViewerWidget#mapStyle
          */
         setStreamingImageryMapStyle : function(value) {
-            this.useStreamingImagery = true;
-
-            if (this.mapStyle !== value) {
+            if (!this.useStreamingImagery || this.mapStyle !== value) {
+                this.useStreamingImagery = true;
                 this.mapStyle = value;
                 this._configureCentralBodyImagery();
             }
@@ -1091,16 +1090,41 @@ define([
         _configureCentralBodyImagery : function() {
             var centralBody = this.centralBody;
 
+            var imageLayers = centralBody.getImageryLayers();
+
+            var existingImagery;
+            if (imageLayers.getLength() !== 0) {
+                existingImagery = imageLayers.get(0).imageryProvider;
+            }
+
+            var newLayer;
+
             if (this.useStreamingImagery) {
-                centralBody.dayTileProvider = new BingMapsTileProvider({
-                    server : 'dev.virtualearth.net',
-                    mapStyle : this.mapStyle,
-                    // Some versions of Safari support WebGL, but don't correctly implement
-                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                });
+                if (!(existingImagery instanceof BingMapsImageryProvider) ||
+                    existingImagery.getMapStyle() !== this.mapStyle) {
+
+                    newLayer = imageLayers.addImageryProvider(new BingMapsImageryProvider({
+                        server : 'dev.virtualearth.net',
+                        mapStyle : this.mapStyle,
+                        // Some versions of Safari support WebGL, but don't correctly implement
+                        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                        proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
+                    }));
+                    if (imageLayers.getLength() > 1) {
+                        imageLayers.remove(imageLayers.get(0));
+                    }
+                    imageLayers.lowerToBottom(newLayer);
+                }
             } else {
-                centralBody.dayTileProvider = new SingleTileProvider(this.dayImageUrl);
+                if (!(existingImagery instanceof SingleTileImageryProvider) ||
+                    existingImagery.getUrl() !== this.dayImageUrl) {
+
+                    newLayer = imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
+                    if (imageLayers.getLength() > 1) {
+                        imageLayers.remove(imageLayers.get(0));
+                    }
+                    imageLayers.lowerToBottom(newLayer);
+                }
             }
 
             centralBody.nightImageSource = this.nightImageUrl;
@@ -1146,11 +1170,11 @@ define([
          * // These widgets can animate at different rates and pause individually.
          *
          * function updateAndRender() {
-         *     var currentTime = widget1.animationController.update();
-         *     widget1.update(currentTime);
+         *     var time1 = widget1.animationController.update();
+         *     var time2 = widget2.animationController.update();
+         *     widget1.update(time1);
+         *     widget2.update(time2);
          *     widget1.render();
-         *     currentTime = widget2.animationController.update();
-         *     widget2.update(currentTime);
          *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }

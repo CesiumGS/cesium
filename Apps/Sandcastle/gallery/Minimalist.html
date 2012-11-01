@@ -7,7 +7,7 @@
     <meta name="description" content="An example of using the &quot;built&quot; Cesium with minimal dependencies (uses static imagery).">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../Build/CesiumUnminified.js"></script>
+    <script type="text/javascript" src="../../../Build/Unminified/Cesium.js"></script>
     <script type="text/javascript" src="../Sandcastle-warn.js"></script>
 </head>
 <body data-sandcastle-bucket="bucket-plain.html" data-sandcastle-title="Cesium (standalone)">
@@ -52,10 +52,12 @@
     var ellipsoid = Cesium.Ellipsoid.WGS84;
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
-    var imagery = new Cesium.SingleTileProvider('../../../Images/NE2_50M_SR_W_2048.jpg');
+    var imagery = new Cesium.SingleTileImageryProvider({
+        url : '../../../Images/NE2_50M_SR_W_2048.jpg'
+    });
 
     var cb = new Cesium.CentralBody(ellipsoid);
-    cb.dayTileProvider = imagery;
+    cb.getImageryLayers().addImageryProvider(imagery);
     cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = '../../../Images/earthspec1k.jpg';
     cb.showSkyAtmosphere = true;

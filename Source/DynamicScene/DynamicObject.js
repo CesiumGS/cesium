@@ -303,15 +303,13 @@ define([
             return false;
         }
 
-        var propertyCreated = false;
+        var propertyChanged = false;
         var interval = TimeInterval.fromIso8601(availability);
         if (typeof interval !== 'undefined') {
-            propertyCreated = typeof dynamicObject.availability === 'undefined';
-            dynamicObject._setAvailability(interval);
+            propertyChanged = dynamicObject._setAvailability(interval);
         }
-        return propertyCreated;
+        return propertyChanged;
     };
-
 
     /**
      * Given two DynamicObjects, takes the position, orientation, vertexPositions and availability
@@ -329,7 +327,7 @@ define([
         targetObject.orientation = defaultValue(targetObject.orientation, objectToMerge.orientation);
         targetObject.vertexPositions = defaultValue(targetObject.vertexPositions, objectToMerge.vertexPositions);
         targetObject.viewFrom = defaultValue(targetObject.viewFrom, objectToMerge.viewFrom);
-        targetObject._setAvailability(defaultValue(targetObject.availability, objectToMerge.availability));
+        targetObject._setAvailability(objectToMerge.availability);
     };
 
     /**
@@ -350,9 +348,13 @@ define([
     };
 
     DynamicObject.prototype._setAvailability = function(availability) {
+        var changed = !TimeInterval.equals(this.availability, availability);
+
         this.availability = availability;
         this._cachedAvailabilityDate = undefined;
         this._cachedAvailabilityValue = undefined;
+
+        return changed;
     };
 
     return DynamicObject;

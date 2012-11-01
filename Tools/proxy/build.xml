@@ -5,6 +5,7 @@
 
 	<path id="task.classpath">
 		<fileset dir="jetty" includes="*.jar" />
+		<pathelement location="jai-imageio-core/jai-imageio-core-standalone-1.2-pre-dr-b04-2010-04-30.jar" />
 	</path>
 
 	<target name="clean">
@@ -44,6 +45,6 @@
          noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
          listenOnAllAddresses: Set to true if you want the server to listen to all addresses, not just localhost
         -->
-		<server proxyContextPath="/proxy" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
+		<server proxyContextPath="/proxy" terrainTranscodingPath="/terrain" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net" port="8080" baseDir="${basedir}" />
 	</target>
 </project>
