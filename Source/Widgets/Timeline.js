@@ -283,10 +283,6 @@ define(['./TimelineTrack',
             timeBarWidth = 10;
         }
         var startJulian = this._startJulian;
-window.JulianDate = JulianDate;
-window.timeline = this;
-window.epochJulian = epochJulian;
-console.log('startTime: ' + startTime + ', epoch: ' + epochJulian.toDate().toUTCString() + ', startJulian: ' + this._startJulian.toDate().toUTCString());
 
         function getStartTic(ticScale) {
             return Math.floor(startTime / ticScale) * ticScale;
