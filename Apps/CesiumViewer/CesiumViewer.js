@@ -23,13 +23,10 @@ define([
 
         var widget = new CesiumViewerWidget({
             endUserOptions : endUserOptions,
-            enableDragDrop : true,
-
-            postSetup : function(widget) {
-                widget.startRenderLoop();
-            }
+            enableDragDrop : true
         });
         widget.placeAt(dom.byId('cesiumContainer'));
-        widget.startup();
+        widget.startWidget();
+        widget.startRenderLoop();
     });
 });
