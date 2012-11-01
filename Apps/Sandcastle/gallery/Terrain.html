@@ -163,7 +163,7 @@ require([
             scene = widget.scene;
             cb = scene.getPrimitives().getCentralBody();
 
-            var terrainProvider = new Cesium.TileMapServiceTerrainProvider({
+            var terrainProvider = new Cesium.CesiumTerrainProvider({
                 url : 'http://cesium.cloudapp.net/terrain'
             });
 

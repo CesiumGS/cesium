@@ -144,9 +144,9 @@ define([
         }, function(e) {
             /*global console*/
             //console.error('failed to load tile geometry: ' + e);
-            //tile.state = TileState.FAILED;
-            tile.geometry = new Float32Array(65 * 65).buffer;
-            tile.state = TileState.RECEIVED;
+            tile.state = TileState.FAILED;
+            //tile.geometry = new Float32Array(65 * 65).buffer;
+            //tile.state = TileState.RECEIVED;
             --requestsInFlight;
         });
     };
