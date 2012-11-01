@@ -271,6 +271,12 @@ define(['./TimelineTrack',
             epochJulian = JulianDate.fromIso8601(this._startJulian.toDate().toISOString().substring(0, 10) + 'T00:00:00Z');
             startTime = epochJulian.addSeconds(epsilon).getSecondsDifference(this._startJulian);
         }
+        // If the epoch time has a different number of leap seconds than the start time, shift it so the start time is round.
+        var leapSecond = this._startJulian.getTaiMinusUtc() - epochJulian.getTaiMinusUtc();
+        if (leapSecond > 0.1) {
+            epochJulian = epochJulian.addSeconds(leapSecond);
+            startTime -= leapSecond;
+        }
         var endTime = startTime + duration;
         var timeBarWidth = this._timeBarEle.clientWidth;
         if (timeBarWidth < 10) {
