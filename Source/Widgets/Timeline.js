@@ -249,8 +249,6 @@ define(['./TimelineTrack',
         // If time step size is known, enter it here...
         var minSize = 0;
 
-        // startTime is the number of seconds into the day of _startJulian.
-        var startTime = (this._startJulian.getSecondsOfDay() - this._startJulian.getTaiMinusUtc()) - 0.0001;
         var duration = this._timeBarSecondsSpan;
         if (duration < minimumDuration) {
             duration = minimumDuration;
@@ -262,7 +260,7 @@ define(['./TimelineTrack',
             this._endJulian = this._startJulian.addSeconds(maximumDuration);
         }
 
-        var epochJulian;
+        var epochJulian, startTime;
         if (duration > 31536000) { // 365 days
             epochJulian = JulianDate.fromIso8601(this._startJulian.toDate().getFullYear().toString().substring(0, 3) + '0-01-01T00:00:00Z');
             startTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
@@ -270,7 +268,8 @@ define(['./TimelineTrack',
             epochJulian = JulianDate.fromIso8601(this._startJulian.toDate().getFullYear().toString() + '-01-01T00:00:00Z');
             startTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
         } else {
-            epochJulian = this._startJulian.addSeconds(-startTime);
+            epochJulian = JulianDate.fromIso8601(this._startJulian.toDate().toISOString().substring(0, 10) + 'T00:00:00Z');
+            startTime = epochJulian.addSeconds(epsilon).getSecondsDifference(this._startJulian);
         }
         var endTime = startTime + duration;
         var timeBarWidth = this._timeBarEle.clientWidth;
