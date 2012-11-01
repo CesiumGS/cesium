@@ -198,8 +198,10 @@ define(['./TimelineTrack',
 
     Timeline.prototype.zoomFrom = function(amount) {
         var centerSec = this._startJulian.getSecondsDifference(this._scrubJulian);
-        if ((centerSec < 0) || (centerSec > this._timeBarSecondsSpan)) {
+        if ((amount > 1) || (centerSec < 0) || (centerSec > this._timeBarSecondsSpan)) {
             centerSec = this._timeBarSecondsSpan * 0.5;
+        } else {
+            centerSec += (centerSec - this._timeBarSecondsSpan * 0.5);
         }
         var centerSecFlip = this._timeBarSecondsSpan - centerSec;
         this.zoomTo(this._startJulian.addSeconds(centerSec - (centerSec * amount)), this._endJulian.addSeconds((centerSecFlip * amount) - centerSecFlip));
