@@ -240,20 +240,6 @@ define([
             this.ellipsoid = Ellipsoid.WGS84;
         },
 
-        // for Dojo use only
-        postCreate : function() {
-            ready(this, '_setupCesium');
-        },
-
-        /**
-         * If supplied, this function will be called at the end of widget setup.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @see CesiumViewerWidget#startRenderLoop
-         */
-        postSetup : undefined,
-
         /**
          * This function will get a callback in the event of setup failure, likely indicating
          * a problem with WebGL support or the availability of a GL context.
@@ -565,7 +551,16 @@ define([
             reader.readAsText(f);
         },
 
-        _setupCesium : function() {
+        /**
+         * Call this after placing the widget in the DOM, to initialize the WebGL context,
+         * wire up event callbacks, begin requesting CZML, imagery, etc.  Note this does
+         * not start a render loop (because you may need a custom render loop).
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @see CesiumViewerWidget#startRenderLoop
+         */
+        startWidget : function() {
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
@@ -854,10 +849,6 @@ define([
             }
 
             this._camera3D = this.scene.getCamera().clone();
-
-            if (typeof this.postSetup !== 'undefined') {
-                this.postSetup(this);
-            }
         },
 
         /**
@@ -1147,11 +1138,12 @@ define([
 
         /**
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
-         * on your page.  Typically it is started from {@link CesiumViewerWidget.postSetup}.  If you wish to
-         * customize your render loop, avoid this function and instead use code similar to the following example.
+         * on your page.  If you wish to customize your render loop, avoid this function and instead
+         * use code similar to one of the following examples.
          * @function
          * @memberof CesiumViewerWidget.prototype
          * @see requestAnimationFrame
+         * @see CesiumViewerWidget#startWidget
          * @example
          * // This takes the place of startRenderLoop for a single widget.
          *

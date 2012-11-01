@@ -92,7 +92,7 @@ require([
     }
     
     function cleanup() {
-        cesiumWidget.scene.getPrimitives().removeAll();
+        widget.scene.getPrimitives().removeAll();
         handler = handler && handler.destroy();
     }
     
@@ -347,15 +347,14 @@ require([
         }).placeAt('toolbar');        
     }
 
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget);
-            widget.startRenderLoop();
-            pickCartographicPosition(widget.scene, widget.ellipsoid); 
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
-
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget);
+    widget.startRenderLoop();
+    pickCartographicPosition(widget.scene, widget.ellipsoid); 
 });
 </script>
 </body>
