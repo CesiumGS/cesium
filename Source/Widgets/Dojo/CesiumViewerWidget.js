@@ -240,11 +240,6 @@ define([
             this.ellipsoid = Ellipsoid.WGS84;
         },
 
-        // for Dojo use only
-        postCreate : function() {
-            ready(this, '_setupCesium');
-        },
-
         /**
          * If supplied, this function will be called at the end of widget setup.
          *
@@ -565,7 +560,7 @@ define([
             reader.readAsText(f);
         },
 
-        _setupCesium : function() {
+        startup : function() {
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
