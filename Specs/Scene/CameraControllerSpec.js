@@ -7,7 +7,7 @@ defineSuite([
          'Core/Cartesian4',
          'Core/Cartographic',
          'Core/Ellipsoid',
-         'Core/EquidistantCylindricalProjection',
+         'Core/GeographicProjection',
          'Core/Extent',
          'Core/Math',
          'Core/Matrix4',
@@ -24,7 +24,7 @@ defineSuite([
          Cartesian4,
          Cartographic,
          Ellipsoid,
-         EquidistantCylindricalProjection,
+         GeographicProjection,
          Extent,
          CesiumMath,
          Matrix4,
@@ -162,7 +162,7 @@ defineSuite([
         frustum.bottom = -1.0;
         camera.frustum = frustum;
 
-        var projection = new EquidistantCylindricalProjection();
+        var projection = new GeographicProjection();
         var frameState = { mode : SceneMode.SCENE2D, scene2D : { projection : projection } };
         controller.update(frameState);
 
@@ -385,7 +385,7 @@ defineSuite([
         camera.frustum = frustum;
 
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.SCENE2D,
             scene2D : {
@@ -412,7 +412,7 @@ defineSuite([
         camera.frustum = frustum;
 
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.SCENE2D,
             scene2D : {
@@ -439,7 +439,7 @@ defineSuite([
         camera.frustum = frustum;
 
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.SCENE2D,
             scene2D : {
@@ -538,7 +538,7 @@ defineSuite([
         frustum.bottom = -1.0;
         camera.frustum = frustum;
 
-        var frameState = { mode : SceneMode.SCENE2D, scene2D : { projection : new EquidistantCylindricalProjection() } };
+        var frameState = { mode : SceneMode.SCENE2D, scene2D : { projection : new GeographicProjection() } };
         controller.update(frameState);
 
         expect(function() {
@@ -596,7 +596,7 @@ defineSuite([
                 -CesiumMath.PI_OVER_FOUR,
                 CesiumMath.PI_OVER_TWO,
                 CesiumMath.PI_OVER_FOUR);
-        var projection = new EquidistantCylindricalProjection();
+        var projection = new GeographicProjection();
         var edge = projection.project(new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_FOUR));
         var expected = Math.max(edge.x, edge.y);
 
@@ -629,7 +629,7 @@ defineSuite([
                 -CesiumMath.PI_OVER_TWO,
                 CesiumMath.PI_OVER_FOUR,
                 CesiumMath.PI_OVER_TWO);
-        var projection = new EquidistantCylindricalProjection();
+        var projection = new GeographicProjection();
         var edge = projection.project(new Cartographic(CesiumMath.PI_OVER_FOUR, CesiumMath.PI_OVER_TWO));
         var expected = Math.max(edge.x, edge.y);
 
@@ -650,11 +650,11 @@ defineSuite([
                 -CesiumMath.PI_OVER_TWO,
                 CesiumMath.PI_OVER_TWO,
                 CesiumMath.PI_OVER_TWO);
-        var projection = new EquidistantCylindricalProjection();
+        var projection = new GeographicProjection();
         controller._mode = SceneMode.COLUMBUS_VIEW;
         controller._projection = projection;
         controller.viewExtent(extent);
-        expect(camera.position.equalsEpsilon(new Cartesian3(0.0, 0.0, 17294809.959258452), CesiumMath.EPSILON10)).toEqual(true);
+        expect(camera.position.equalsEpsilon(new Cartesian3(0.0, 0.0, 17352991.253398113), CesiumMath.EPSILON10)).toEqual(true);
         expect(camera.direction.equalsEpsilon(new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON2)).toEqual(true);
         expect(camera.up.equalsEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON2)).toEqual(true);
         expect(camera.right.equalsEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON10)).toEqual(true);
@@ -693,7 +693,7 @@ defineSuite([
 
     it('pick map in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
@@ -723,7 +723,7 @@ defineSuite([
 
     it('pick map in columbus view', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
@@ -763,7 +763,7 @@ defineSuite([
 
     it('set position cartographic in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.getMaximumRadius();
 
         controller._mode = SceneMode.SCENE2D;
@@ -792,7 +792,7 @@ defineSuite([
 
     it('set position cartographic in Columbus View', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
 
         controller._mode = SceneMode.COLUMBUS_VIEW;
         controller._projection = projection;
@@ -807,7 +807,7 @@ defineSuite([
 
     it('set position cartographic in 3D', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
 
         controller._mode = SceneMode.SCENE3D;
         controller._projection = projection;
@@ -858,7 +858,7 @@ defineSuite([
 
     it('gets magnitude in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.getMaximumRadius();
 
         controller._mode = SceneMode.SCENE2D;
@@ -905,11 +905,11 @@ defineSuite([
         frustum.bottom = -1.0;
         camera.frustum = frustum;
 
-        var projection = new EquidistantCylindricalProjection();
+        var projection = new GeographicProjection();
         var frameState = { mode : SceneMode.SCENE2D, scene2D : { projection : projection } };
         controller.update(frameState);
 
-        var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var max = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         var factor = 1000.0;
         var dx = max.x * factor;
         var dy = max.y * factor;
@@ -953,7 +953,7 @@ defineSuite([
         camera.frustum = frustum;
 
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.SCENE2D,
             scene2D : {
@@ -1001,7 +1001,7 @@ defineSuite([
                 0.0, 1.0, 0.0, 0.0,
                 0.0, 0.0, 0.0, 1.0);
 
-        var projection = new EquidistantCylindricalProjection();
+        var projection = new GeographicProjection();
         var frameState = { mode : SceneMode.COLUMBUS_VIEW, scene2D : { projection : projection } };
         controller.update(frameState);
 
@@ -1043,7 +1043,7 @@ defineSuite([
     it('will not rotate through the earth when rotating about a point on the surface', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var maxRadii = ellipsoid.getMaximumRadius();
-        controller._projection = new EquidistantCylindricalProjection(ellipsoid);
+        controller._projection = new GeographicProjection(ellipsoid);
 
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);

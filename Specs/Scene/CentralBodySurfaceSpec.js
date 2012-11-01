@@ -89,7 +89,8 @@ defineSuite([
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
-        frameState.camera.viewExtent2D(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
+        frameState.camera.controller.update(frameState);
+        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
     }
 
     var context;
@@ -286,7 +287,8 @@ defineSuite([
 
             frameState.mode = SceneMode.COLUMBUS_VIEW;
             frameState.scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
-            frameState.camera.viewExtentColumbusView(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
+            frameState.camera.controller.update(frameState);
+            frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
 
             updateUntilDone(cb);
 
@@ -302,7 +304,8 @@ defineSuite([
 
             frameState.mode = SceneMode.COLUMBUS_VIEW;
             frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
-            frameState.camera.viewExtentColumbusView(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
+            frameState.camera.controller.update(frameState);
+            frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
 
             updateUntilDone(cb);
 
@@ -316,7 +319,7 @@ defineSuite([
             layerCollection.removeAll();
             layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-            frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+            frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
             updateUntilDone(cb);
 
@@ -330,7 +333,7 @@ defineSuite([
             layerCollection.removeAll();
             layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-            frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+            frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
             updateUntilDone(cb);
 
@@ -339,7 +342,8 @@ defineSuite([
 
                 frameState.mode = SceneMode.COLUMBUS_VIEW;
                 frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
-                frameState.camera.viewExtentColumbusView(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
+                frameState.camera.controller.update(frameState);
+                frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
             });
 
             updateUntilDone(cb);
@@ -360,7 +364,7 @@ defineSuite([
 
             layerCollection.addImageryProvider(providerWithInvalidRootTiles);
 
-            frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+            frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
             updateUntilDone(cb);
 

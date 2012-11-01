@@ -109,7 +109,7 @@ define([
         var projection = frameState.scene2D.projection;
         if (projection !== this._projection) {
             this._projection = projection;
-            this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+            this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         }
 
         if (this._mode === SceneMode.SCENE2D) {
