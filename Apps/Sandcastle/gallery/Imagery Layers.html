@@ -309,24 +309,23 @@ require([
         });
     }
 
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            var scene = widget.scene;
-            var centralBody = scene.getPrimitives().getCentralBody();
-
-            centralBody.affectedByLighting = false;
-            
-            imageryLayerCollection = centralBody.getImageryLayers();            
-
-            setupLayers();
-
-            createLayerUserInterface();
-
-            widget.startRenderLoop();
-        }
-    }).placeAt(dom.byId("cesiumContainer"));
-    
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    var scene = widget.scene;
+    var centralBody = widget.centralBody;
+
+    centralBody.affectedByLighting = false;
+
+    imageryLayerCollection = centralBody.getImageryLayers();            
+
+    setupLayers();
+
+    createLayerUserInterface();
+
+    widget.startRenderLoop();
 });
 </script>
 </body>
