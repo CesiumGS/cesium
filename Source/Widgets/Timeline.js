@@ -267,7 +267,8 @@ define(['./TimelineTrack',
             epochJulian = JulianDate.fromDate(new Date(this._startJulian.toDate().getFullYear().toString().substring(0, 3) + '0-01-01'));
             StartTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
         } else if (Duration > 86400) { // 1 day
-            epochJulian = JulianDate.fromDate(new Date(this._startJulian.toDate().getFullYear().toString() + '-01-01'));
+            //epochJulian = JulianDate.fromDate(new Date(this._startJulian.toDate().getFullYear().toString() + '-01-01'));
+            epochJulian = JulianDate.fromIso8601(this._startJulian.toDate().getFullYear().toString() + '-01-01T00:00:00Z');
             StartTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
         } else {
             epochJulian = this._startJulian.addSeconds(-StartTime);
@@ -278,9 +279,14 @@ define(['./TimelineTrack',
             timeBarWidth = 10;
         }
         var startJulian = this._startJulian;
+window.JulianDate = JulianDate;
+window.timeline = this;
+window.epochJulian = epochJulian;
+console.log('StartTime: ' + StartTime + ', epoch: ' + epochJulian.toDate().toUTCString() + ', startJulian: ' + this._startJulian.toDate().toUTCString());
+//StartTime: 44.46447669036217, epoch: Sat, 30 Jun 2012 11:59:26 GMT, startJulian: Sat, 30 Jun 2012 12:00:10 GMT
 
         function getStartTic(ticScale) {
-            return Math.ceil((StartTime / ticScale) - 1.0) * ticScale;
+            return Math.floor(StartTime / ticScale) * ticScale;
         }
 
         function getNextTic(tic, ticScale) {
