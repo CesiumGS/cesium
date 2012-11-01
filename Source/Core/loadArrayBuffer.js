@@ -53,7 +53,11 @@ define([
             var deferred = when.defer();
 
             xhr.onload = function(e) {
-                deferred.resolve(xhr.response);
+                if (xhr.status === 200) {
+                    deferred.resolve(xhr.response);
+                } else {
+                    deferred.reject(e);
+                }
             };
 
             xhr.onerror = function(e) {

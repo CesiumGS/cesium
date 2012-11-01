@@ -164,7 +164,7 @@ require([
             cb = scene.getPrimitives().getCentralBody();
 
             var terrainProvider = new Cesium.TileMapServiceTerrainProvider({
-                url : 'http://cesium.agi.com/terrain'
+                url : 'http://cesium.cloudapp.net/terrain'
             });
 
             cb._surface._terrainProvider = terrainProvider;
@@ -202,7 +202,7 @@ require([
                 proxy : new Cesium.DefaultProxy('/proxy/')
             });
             var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);*/
-            
+
             document.addEventListener('keydown', keydownHandler, false);
             
             var handler = new Cesium.EventHandler(widget.canvas);
