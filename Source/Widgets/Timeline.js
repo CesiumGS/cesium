@@ -242,37 +242,37 @@ define(['./TimelineTrack',
 
         var tics = '<span class="timelineIcon16" style="left:' + scrubX + 'px;bottom:0;background-position: 0px 0px;"></span>';
 
-        var MinimumDuration = 0.01;
-        var MaximumDuration = 31536000000.0; // ~1000 years
-        var Epsilon = 1e-10;
+        var minimumDuration = 0.01;
+        var maximumDuration = 31536000000.0; // ~1000 years
+        var epsilon = 1e-10;
 
         // If time step size is known, enter it here...
         var minSize = 0;
 
-        // StartTime is the number of seconds into the day of _startJulian.
-        var StartTime = (this._startJulian.getSecondsOfDay() - this._startJulian.getTaiMinusUtc()) - 0.0001;
-        var Duration = this._timeBarSecondsSpan;
-        if (Duration < MinimumDuration) {
-            Duration = MinimumDuration;
-            this._timeBarSecondsSpan = MinimumDuration;
-            this._endJulian = this._startJulian.addSeconds(MinimumDuration);
-        } else if (Duration > MaximumDuration) {
-            Duration = MaximumDuration;
-            this._timeBarSecondsSpan = MaximumDuration;
-            this._endJulian = this._startJulian.addSeconds(MaximumDuration);
+        // startTime is the number of seconds into the day of _startJulian.
+        var startTime = (this._startJulian.getSecondsOfDay() - this._startJulian.getTaiMinusUtc()) - 0.0001;
+        var duration = this._timeBarSecondsSpan;
+        if (duration < minimumDuration) {
+            duration = minimumDuration;
+            this._timeBarSecondsSpan = minimumDuration;
+            this._endJulian = this._startJulian.addSeconds(minimumDuration);
+        } else if (duration > maximumDuration) {
+            duration = maximumDuration;
+            this._timeBarSecondsSpan = maximumDuration;
+            this._endJulian = this._startJulian.addSeconds(maximumDuration);
         }
 
         var epochJulian;
-        if (Duration > 31536000) { // 365 days
+        if (duration > 31536000) { // 365 days
             epochJulian = JulianDate.fromIso8601(this._startJulian.toDate().getFullYear().toString().substring(0, 3) + '0-01-01T00:00:00Z');
-            StartTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
-        } else if (Duration > 86400) { // 1 day
+            startTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
+        } else if (duration > 86400) { // 1 day
             epochJulian = JulianDate.fromIso8601(this._startJulian.toDate().getFullYear().toString() + '-01-01T00:00:00Z');
-            StartTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
+            startTime = epochJulian.addSeconds(0.01).getSecondsDifference(this._startJulian);
         } else {
-            epochJulian = this._startJulian.addSeconds(-StartTime);
+            epochJulian = this._startJulian.addSeconds(-startTime);
         }
-        var EndTime = StartTime + Duration;
+        var endTime = startTime + duration;
         var timeBarWidth = this._timeBarEle.clientWidth;
         if (timeBarWidth < 10) {
             timeBarWidth = 10;
@@ -281,10 +281,10 @@ define(['./TimelineTrack',
 window.JulianDate = JulianDate;
 window.timeline = this;
 window.epochJulian = epochJulian;
-console.log('StartTime: ' + StartTime + ', epoch: ' + epochJulian.toDate().toUTCString() + ', startJulian: ' + this._startJulian.toDate().toUTCString());
+console.log('startTime: ' + startTime + ', epoch: ' + epochJulian.toDate().toUTCString() + ', startJulian: ' + this._startJulian.toDate().toUTCString());
 
         function getStartTic(ticScale) {
-            return Math.floor(StartTime / ticScale) * ticScale;
+            return Math.floor(startTime / ticScale) * ticScale;
         }
 
         function getNextTic(tic, ticScale) {
@@ -292,11 +292,11 @@ console.log('StartTime: ' + StartTime + ', epoch: ' + epochJulian.toDate().toUTC
         }
 
         function getAlpha(time) {
-            return (time - StartTime) / Duration;
+            return (time - startTime) / duration;
         }
 
         function getTicLabel(tic) {
-            var date = startJulian.addSeconds(tic - StartTime).toDate();
+            var date = startJulian.addSeconds(tic - startTime).toDate();
             //return date.toString();
             return self.makeLabel(date);
         }
@@ -307,18 +307,18 @@ console.log('StartTime: ' + StartTime + ', epoch: ' + epochJulian.toDate().toUTC
         }
 
         // Width in pixels of a typical label, plus padding
-        this._rulerEle.innerHTML = getTicLabel(EndTime - MinimumDuration);
+        this._rulerEle.innerHTML = getTicLabel(endTime - minimumDuration);
         var sampleWidth = this._rulerEle.offsetWidth + 20;
 
         var origMinSize = minSize;
-        minSize -= Epsilon;
+        minSize -= epsilon;
 
         var renderState = {
             y : 0,
-            startTime : StartTime,
+            startTime : startTime,
             startJulian : startJulian,
             epochJulian : epochJulian,
-            duration : Duration,
+            duration : duration,
             timeBarWidth : timeBarWidth,
             getAlpha : getAlpha
         };
@@ -376,26 +376,26 @@ console.log('StartTime: ' + StartTime + ', epoch: ' + epochJulian.toDate().toUTC
         }
 
         minSize = origMinSize;
-        if ((minSize > Epsilon) && (tinyTic < 0.00001) && (Math.abs(minSize - mainTic) > Epsilon)) {
+        if ((minSize > epsilon) && (tinyTic < 0.00001) && (Math.abs(minSize - mainTic) > epsilon)) {
             tinyTic = minSize;
-            if (minSize <= (mainTic + Epsilon)) {
+            if (minSize <= (mainTic + epsilon)) {
                 subTic = 0.0;
             }
         }
 
         var lastTextLeft = -999999, textWidth;
         if ((timeBarWidth * (tinyTic / this._timeBarSecondsSpan)) >= 3.0) {
-            for (tic = getStartTic(tinyTic); tic <= EndTime; tic = getNextTic(tic, tinyTic)) {
+            for (tic = getStartTic(tinyTic); tic <= endTime; tic = getNextTic(tic, tinyTic)) {
                 tics += '<span class="timelineTicTiny" style="left: ' + Math.round(timeBarWidth * getAlpha(tic)).toString() + 'px;"></span>';
             }
         }
         if ((timeBarWidth * (subTic / this._timeBarSecondsSpan)) >= 3.0) {
-            for (tic = getStartTic(subTic); tic <= EndTime; tic = getNextTic(tic, subTic)) {
+            for (tic = getStartTic(subTic); tic <= endTime; tic = getNextTic(tic, subTic)) {
                 tics += '<span class="timelineTicSub" style="left: ' + Math.round(timeBarWidth * getAlpha(tic)).toString() + 'px;"></span>';
             }
         }
         if ((timeBarWidth * (mainTic / this._timeBarSecondsSpan)) >= 2.0) {
-            for (tic = getStartTic(mainTic); tic <= (EndTime + mainTic); tic = getNextTic(tic, mainTic)) {
+            for (tic = getStartTic(mainTic); tic <= (endTime + mainTic); tic = getNextTic(tic, mainTic)) {
                 var ticLeft = Math.round(timeBarWidth * getAlpha(tic));
                 var ticLabel = getTicLabel(tic);
                 this._rulerEle.innerHTML = ticLabel;
