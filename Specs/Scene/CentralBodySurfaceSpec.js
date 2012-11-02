@@ -17,7 +17,8 @@ defineSuite([
          'Scene/ImageryLayerCollection',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode',
-         'Scene/SingleTileImageryProvider'
+         'Scene/SingleTileImageryProvider',
+         'Scene/WebMapServiceImageryProvider'
      ], function(
          CentralBodySurface,
          createContext,
@@ -36,7 +37,8 @@ defineSuite([
          ImageryLayerCollection,
          OrthographicFrustum,
          SceneMode,
-         SingleTileImageryProvider) {
+         SingleTileImageryProvider,
+         WebMapServiceImageryProvider) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -339,6 +341,26 @@ defineSuite([
                 frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
                 frameState.camera.viewExtentColumbusView(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
             });
+
+            updateUntilDone(cb);
+
+            runs(function() {
+                expect(render(context, frameState, cb)).toBeGreaterThan(0);
+            });
+        });
+
+        it('renders even if imagery root tiles fail to load', function() {
+            var layerCollection = cb.getImageryLayers();
+            layerCollection.removeAll();
+
+            var providerWithInvalidRootTiles = new WebMapServiceImageryProvider({
+                url : '/invalid',
+                layers : 'invalid'
+            });
+
+            layerCollection.addImageryProvider(providerWithInvalidRootTiles);
+
+            frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
             updateUntilDone(cb);
 

@@ -129,6 +129,14 @@ defineSuite([
         expect(interval.equalsEpsilon(undefined, 1.0)).toEqual(false);
     });
 
+    it('static equals and equalsEpsilon return false for undefined', function() {
+        var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(1), true, true);
+        expect(TimeInterval.equals(undefined, interval)).toEqual(false);
+        expect(TimeInterval.equalsEpsilon(undefined, interval, 1.0)).toEqual(false);
+        expect(TimeInterval.equals(interval, undefined)).toEqual(false);
+        expect(TimeInterval.equalsEpsilon(interval, undefined, 1.0)).toEqual(false);
+    });
+
     it('clone returns an identical interval', function() {
         var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false, 12);
         expect(interval.equals(interval.clone())).toEqual(true);
