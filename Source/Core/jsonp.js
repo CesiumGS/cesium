@@ -87,6 +87,13 @@ define([
             url = proxy.getURL(url);
         }
 
+        jsonp.loadAndExecuteScript(url, functionName, deferred);
+
+        return deferred.promise;
+    };
+
+    // This is broken out into a separate function so that it can be mocked for testing purposes.
+    jsonp.loadAndExecuteScript = function(url, functionName, deferred) {
         var script = document.createElement('script');
         script.async = true;
         script.src = url;
@@ -96,11 +103,14 @@ define([
             script.onload = undefined;
             head.removeChild(script);
         };
+        script.onerror = function(e) {
+            deferred.reject(e);
+        };
 
         head.appendChild(script);
-
-        return deferred.promise;
     };
+
+    jsonp.defaultLoadAndExecuteScript = jsonp.loadAndExecuteScript;
 
     return jsonp;
 });

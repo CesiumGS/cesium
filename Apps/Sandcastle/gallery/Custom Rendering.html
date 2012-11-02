@@ -21,7 +21,8 @@
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' }
+            { name: 'Widgets', location: 'Source/Widgets' },
+            { name: 'Workers', location: 'Source/Workers' }
         ]
     });
     </script>
@@ -195,8 +196,8 @@ require([
         this._ellipsoid = ellipsoid;
         this._pickId = undefined;
 
-        this._colorCommand = new Cesium.Command();
-        this._pickCommand = new Cesium.Command();
+        this._colorCommand = new Cesium.DrawCommand();
+        this._pickCommand = new Cesium.DrawCommand();
         this._colorCommand.primitiveType = this._pickCommand.primitiveType = Cesium.PrimitiveType.LINES;
         this._colorCommand.boundingVolume = this._pickCommand.boundingVolume = new Cesium.BoundingSphere();
 
@@ -433,16 +434,15 @@ require([
             dropDown: sceneMenu
         }).placeAt('toolbar');
     }
-    
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget);
-            widget.startRenderLoop();
-            renderBox(widget.scene);
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
 
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget);
+    widget.startRenderLoop();
+    renderBox(widget.scene);
 });
 </script>
 </body>

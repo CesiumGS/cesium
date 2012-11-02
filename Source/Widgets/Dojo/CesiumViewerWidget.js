@@ -41,10 +41,10 @@ define([
         '../../Scene/Material',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
-        '../../Scene/BingMapsTileProvider',
+        '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
         '../../Scene/SceneTransitioner',
-        '../../Scene/SingleTileProvider',
+        '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
         '../../Scene/SceneMode',
         '../../DynamicScene/processCzml',
@@ -94,10 +94,10 @@ define([
         Material,
         Scene,
         CentralBody,
-        BingMapsTileProvider,
+        BingMapsImageryProvider,
         BingMapsStyle,
         SceneTransitioner,
-        SingleTileProvider,
+        SingleTileImageryProvider,
         PerformanceDisplay,
         SceneMode,
         processCzml,
@@ -239,20 +239,6 @@ define([
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
         },
-
-        // for Dojo use only
-        postCreate : function() {
-            ready(this, '_setupCesium');
-        },
-
-        /**
-         * If supplied, this function will be called at the end of widget setup.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @see CesiumViewerWidget#startRenderLoop
-         */
-        postSetup : undefined,
 
         /**
          * This function will get a callback in the event of setup failure, likely indicating
@@ -611,7 +597,16 @@ define([
             reader.readAsText(f);
         },
 
-        _setupCesium : function() {
+        /**
+         * Call this after placing the widget in the DOM, to initialize the WebGL context,
+         * wire up event callbacks, begin requesting CZML, imagery, etc.  Note this does
+         * not start a render loop (because you may need a custom render loop).
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @see CesiumViewerWidget#startRenderLoop
+         */
+        startWidget : function() {
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
@@ -895,10 +890,6 @@ define([
             }
 
             this._camera3D = this.scene.getCamera().clone();
-
-            if (typeof this.postSetup !== 'undefined') {
-                this.postSetup(this);
-            }
         },
 
         /**
@@ -1043,9 +1034,8 @@ define([
          * @see CesiumViewerWidget#mapStyle
          */
         setStreamingImageryMapStyle : function(value) {
-            this.useStreamingImagery = true;
-
-            if (this.mapStyle !== value) {
+            if (!this.useStreamingImagery || this.mapStyle !== value) {
+                this.useStreamingImagery = true;
                 this.mapStyle = value;
                 this._configureCentralBodyImagery();
             }
@@ -1144,16 +1134,41 @@ define([
         _configureCentralBodyImagery : function() {
             var centralBody = this.centralBody;
 
+            var imageLayers = centralBody.getImageryLayers();
+
+            var existingImagery;
+            if (imageLayers.getLength() !== 0) {
+                existingImagery = imageLayers.get(0).imageryProvider;
+            }
+
+            var newLayer;
+
             if (this.useStreamingImagery) {
-                centralBody.dayTileProvider = new BingMapsTileProvider({
-                    server : 'dev.virtualearth.net',
-                    mapStyle : this.mapStyle,
-                    // Some versions of Safari support WebGL, but don't correctly implement
-                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                });
+                if (!(existingImagery instanceof BingMapsImageryProvider) ||
+                    existingImagery.getMapStyle() !== this.mapStyle) {
+
+                    newLayer = imageLayers.addImageryProvider(new BingMapsImageryProvider({
+                        server : 'dev.virtualearth.net',
+                        mapStyle : this.mapStyle,
+                        // Some versions of Safari support WebGL, but don't correctly implement
+                        // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                        proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
+                    }));
+                    if (imageLayers.getLength() > 1) {
+                        imageLayers.remove(imageLayers.get(0));
+                    }
+                    imageLayers.lowerToBottom(newLayer);
+                }
             } else {
-                centralBody.dayTileProvider = new SingleTileProvider(this.dayImageUrl);
+                if (!(existingImagery instanceof SingleTileImageryProvider) ||
+                    existingImagery.getUrl() !== this.dayImageUrl) {
+
+                    newLayer = imageLayers.addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
+                    if (imageLayers.getLength() > 1) {
+                        imageLayers.remove(imageLayers.get(0));
+                    }
+                    imageLayers.lowerToBottom(newLayer);
+                }
             }
 
             centralBody.nightImageSource = this.nightImageUrl;
@@ -1164,11 +1179,12 @@ define([
 
         /**
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
-         * on your page.  Typically it is started from {@link CesiumViewerWidget.postSetup}.  If you wish to
-         * customize your render loop, avoid this function and instead use code similar to the following example.
+         * on your page.  If you wish to customize your render loop, avoid this function and instead
+         * use code similar to one of the following examples.
          * @function
          * @memberof CesiumViewerWidget.prototype
          * @see requestAnimationFrame
+         * @see CesiumViewerWidget#startWidget
          * @example
          * // This takes the place of startRenderLoop for a single widget.
          *
@@ -1199,11 +1215,11 @@ define([
          * // These widgets can animate at different rates and pause individually.
          *
          * function updateAndRender() {
-         *     var currentTime = widget1.animationController.update();
-         *     widget1.update(currentTime);
+         *     var time1 = widget1.animationController.update();
+         *     var time2 = widget2.animationController.update();
+         *     widget1.update(time1);
+         *     widget2.update(time2);
          *     widget1.render();
-         *     currentTime = widget2.animationController.update();
-         *     widget2.update(currentTime);
          *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }

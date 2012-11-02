@@ -4,7 +4,7 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Ellipsoid',
-         'Core/EquidistantCylindricalProjection',
+         'Core/GeographicProjection',
          'Core/Math',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode',
@@ -15,7 +15,7 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Ellipsoid,
-         EquidistantCylindricalProjection,
+         GeographicProjection,
          CesiumMath,
          OrthographicFrustum,
          SceneMode,
@@ -92,7 +92,7 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         scene.mode = SceneMode.COLUMBUS_VIEW;
-        scene.scene2D.projection = new EquidistantCylindricalProjection(ellipsoid);
+        scene.scene2D.projection = new GeographicProjection(ellipsoid);
         var camera = scene.getCamera();
 
         var point = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.5);
@@ -108,7 +108,7 @@ defineSuite([
 
         var camera = scene.getCamera();
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);

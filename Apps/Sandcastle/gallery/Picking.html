@@ -21,7 +21,8 @@
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' }
+            { name: 'Widgets', location: 'Source/Widgets' },
+            { name: 'Workers', location: 'Source/Workers' }
         ]
     });
     </script>
@@ -91,7 +92,7 @@ require([
     }
     
     function cleanup() {
-        cesiumWidget.scene.getPrimitives().removeAll();
+        widget.scene.getPrimitives().removeAll();
         handler = handler && handler.destroy();
     }
     
@@ -254,7 +255,7 @@ require([
             handler.setMouseAction(function(movement) {
                 var p = scene.pick(movement.endPosition);
                 if (primitives.contains(p)) {
-                    primitives.bringToFront(p);
+                    primitives.raiseToTop(p);
                 }
             }, Cesium.MouseEventType.MOVE);
 
@@ -346,15 +347,14 @@ require([
         }).placeAt('toolbar');        
     }
 
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget);
-            widget.startRenderLoop();
-            pickCartographicPosition(widget.scene, widget.ellipsoid); 
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
-
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget);
+    widget.startRenderLoop();
+    pickCartographicPosition(widget.scene, widget.ellipsoid); 
 });
 </script>
 </body>

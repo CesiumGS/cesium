@@ -21,9 +21,9 @@ define([
         '../../Core/requestAnimationFrame',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
-        '../../Scene/BingMapsTileProvider',
+        '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
-        '../../Scene/SingleTileProvider',
+        '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
         'dojo/text!./CesiumWidget.html'
     ], function (
@@ -48,9 +48,9 @@ define([
         requestAnimationFrame,
         Scene,
         CentralBody,
-        BingMapsTileProvider,
+        BingMapsImageryProvider,
         BingMapsStyle,
-        SingleTileProvider,
+        SingleTileImageryProvider,
         PerformanceDisplay,
         template) {
     "use strict";
@@ -70,12 +70,6 @@ define([
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
         },
-
-        postCreate : function() {
-            ready(this, '_setupCesium');
-        },
-
-        postSetup : undefined,
 
         onSetupError : function(widget, error) {
             console.error(error);
@@ -172,7 +166,7 @@ define([
             }
         },
 
-        _setupCesium : function() {
+        startWidget : function() {
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
@@ -231,10 +225,6 @@ define([
                 on(window, 'resize', function() {
                     widget.resize();
                 });
-            }
-
-            if (typeof this.postSetup !== 'undefined') {
-                this.postSetup(this);
             }
 
             this.defaultCamera = camera.clone();
@@ -317,15 +307,15 @@ define([
             var centralBody = this.centralBody;
 
             if (this.useStreamingImagery) {
-                centralBody.dayTileProvider = new BingMapsTileProvider({
+                centralBody.getImageryLayers().addImageryProvider(new BingMapsImageryProvider({
                     server : 'dev.virtualearth.net',
                     mapStyle : this.mapStyle,
                     // Some versions of Safari support WebGL, but don't correctly implement
                     // cross-origin image loading, so we need to load Bing imagery using a proxy.
                     proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                });
+                }));
             } else {
-                centralBody.dayTileProvider = new SingleTileProvider(this.dayImageUrl);
+                centralBody.getImageryLayers().addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
             }
 
             centralBody.nightImageSource = this.nightImageUrl;

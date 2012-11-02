@@ -52,63 +52,39 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
-      it('fromRotationMatrix works when m22 is max', function() {
-        var theta = CesiumMath.PI_OVER_TWO;
-
-        var sHalfTheta = Math.sin(theta / 2.0);
-        var cHalfTheta = Math.cos(theta / 2.0);
-
-        var sTheta = Math.sin(theta);
-        var cTheta = Math.cos(theta);
-
-        var zAxis = new Cartesian3(0.0, 0.0, 1.0);
-        var z = zAxis.multiplyByScalar(sHalfTheta);
-        var q = new Quaternion(z.x, z.y, z.z, cHalfTheta);
-        var zRotation = new Matrix3(cTheta, -sTheta, 0.0, sTheta, cTheta, 0.0, 0.0, 0.0, 1.0);
-        expect(Quaternion.fromRotationMatrix(zRotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
+    it('fromRotationMatrix works when m22 is max', function() {
+        var q = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, Math.PI);
+        var rotation = new Matrix3(-1.0,  0.0, 0.0,
+                                    0.0, -1.0, 0.0,
+                                    0.0,  0.0, 1.0);
+        expect(Quaternion.fromRotationMatrix(rotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
     });
 
     it('fromRotationMatrix works when m11 is max', function() {
-        var theta = CesiumMath.PI_OVER_TWO;
-
-        var sHalfTheta = Math.sin(theta / 2.0);
-        var cHalfTheta = Math.cos(theta / 2.0);
-
-        var sTheta = Math.sin(theta);
-        var cTheta = Math.cos(theta);
-
-        var yAxis = new Cartesian3(0.0, 1.0, 0.0);
-        var y = yAxis.multiplyByScalar(sHalfTheta);
-        var q = new Quaternion(y.x, y.y, y.z, cHalfTheta);
-        var yRotation = new Matrix3(cTheta, 0.0, sTheta, 0.0, 1.0, 0.0, -sTheta, 0.0, cTheta);
-        expect(Quaternion.fromRotationMatrix(yRotation)).toEqualEpsilon(q, CesiumMath.EPSILON15);
+        var q = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, Math.PI);
+        var rotation = new Matrix3(-1.0, 0.0,  0.0,
+                                    0.0, 1.0,  0.0,
+                                    0.0, 0.0, -1.0);
+        expect(Quaternion.fromRotationMatrix(rotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
     });
 
     it('fromRotationMatrix works when m00 is max', function() {
-        var theta = CesiumMath.PI_OVER_TWO;
-
-        var sHalfTheta = Math.sin(theta / 2.0);
-        var cHalfTheta = Math.cos(theta / 2.0);
-
-        var sTheta = Math.sin(theta);
-        var cTheta = Math.cos(theta);
-
-        var xAxis = new Cartesian3(1.0, 0.0, 0.0);
-        var x = xAxis.multiplyByScalar(sHalfTheta);
-        var q = new Quaternion(x.x, x.y, x.z, cHalfTheta);
-        var xRotation = new Matrix3(1.0, 0.0, 0.0, 0.0, cTheta, -sTheta, 0.0, sTheta, cTheta);
-        expect(Quaternion.fromRotationMatrix(xRotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
+        var q = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, Math.PI);
+        var rotation = new Matrix3(1.0,  0.0,  0.0,
+                                   0.0, -1.0,  0.0,
+                                   0.0,  0.0, -1.0);
+        expect(Quaternion.fromRotationMatrix(rotation).equalsEpsilon(q, CesiumMath.EPSILON15)).toEqual(true);
     });
 
-    it('fromRotationMatrix works when  m00 * m11 * m22 is max', function() {
+    it('fromRotationMatrix works when trace is greater than zero', function() {
         var rotation = new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
-        var q = new Quaternion(0.0, 0.0, 0.0, Math.sqrt(2.0) / 2.0);
+        var q = new Quaternion(0.0, 0.0, 0.0, 1.0);
         expect(Quaternion.fromRotationMatrix(rotation)).toEqualEpsilon(q, CesiumMath.EPSILON15);
     });
 
     it('fromRotationMatrix works with result parameter', function() {
         var rotation = new Matrix3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
-        var q = new Quaternion(0.0, 0.0, 0.0, Math.sqrt(2.0) / 2.0);
+        var q = new Quaternion(0.0, 0.0, 0.0, 1.0);
         var result = new Quaternion();
         var returnedResult = Quaternion.fromRotationMatrix(rotation, result);
         expect(returnedResult).toEqualEpsilon(q, CesiumMath.EPSILON15);
