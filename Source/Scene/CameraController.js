@@ -539,12 +539,12 @@ define([
 
         var position = camera.position;
         var p = Cartesian3.normalize(position, rotateVertScratchP);
-        if (typeof controller.constrainedAxis !== 'undefined' &&
-                !p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2) &&
-                !p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2)) {
-            var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
-            var dot = p.dot(constrainedAxis);
-            if (!(CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0)) {
+        if (typeof controller.constrainedAxis !== 'undefined') {
+            var northParallel = p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2);
+            var southParallel = p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2);
+            if ((!northParallel && !southParallel)) {
+                var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
+                var dot = p.dot(constrainedAxis);
                 var angleToAxis = Math.acos(dot);
                 if (Math.abs(angle) > Math.abs(angleToAxis)) {
                     angle = angleToAxis;
@@ -554,6 +554,8 @@ define([
                 var bitangent = Cartesian3.cross(camera.up, tangent, rotateVertScratchBit);
                 Cartesian3.cross(bitangent, camera.up, tangent);
                 controller.rotate(tangent, angle);
+            } else if ((northParallel && angle > 0) || (southParallel && angle < 0)) {
+                controller.rotate(camera.right, angle);
             }
         } else {
             controller.rotate(camera.right, angle);
