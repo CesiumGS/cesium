@@ -13,8 +13,8 @@ define([
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/TooltipDialog',
-        './getJson',
         './TimelineWidget',
+        '../../Core/loadJson',
         '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
@@ -66,8 +66,8 @@ define([
         ToggleButton,
         DropDownButton,
         TooltipDialog,
-        getJson,
         TimelineWidget,
+        loadJson,
         BoundingRectangle,
         Clock,
         ClockStep,
@@ -539,12 +539,12 @@ define([
         },
 
         /**
-         * Clears all CZML data from the viewer.
+         * Removes all CZML data from the viewer.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
          */
-        clearAllCZML : function() {
+        removeAllCZML : function() {
             this.centerCameraOnObject(undefined);
             //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
             //cache data indefinitely and removeAll is the only way to get rid of it.
@@ -554,19 +554,38 @@ define([
         },
 
         /**
-         * Add CZML data to the viewer.
+         * Add CZML data to the viewer.  The first parameter can be a collection of CZML
+         * objects, or <code>undefined</code>.  If the first parameter is <code>undefined</code>,
+         * the second parameter will be used to fetch the CZML stream asynchronously.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {CZML} czml - The CZML (as objects, not JSON) to be processed and added to the viewer.
+         * @param {CZML} czml - The CZML (as objects or undefined) to be processed and added to the viewer.
          * @param {string} source - The filename or URI that was the source of the CZML collection.
          * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
          */
         addCZML : function(czml, source, lookAt) {
-            processCzml(czml, this.dynamicObjectCollection, source);
-            this.setTimeFromBuffer();
-            if (typeof lookAt !== 'undefined') {
-                this.centerCameraOnObject(this.dynamicObjectCollection.getObject(lookAt));
+            var widget = this;
+            var onLoad = function(czmlData) {
+                processCzml(czmlData, widget.dynamicObjectCollection, source);
+                widget.setTimeFromBuffer();
+                if (typeof lookAt !== 'undefined') {
+                    var lookAtObject = widget.dynamicObjectCollection.getObject(lookAt);
+                    widget.centerCameraOnObject(lookAtObject);
+                }
+            };
+
+            // Test if the CZML objects were provided, and if not, fetch them asynchronously.
+            if (typeof czml === 'undefined') {
+                loadJson(source).then(function(czmlData) {
+                    onLoad(czmlData);
+                },
+                function(error) {
+                    console.error(error);
+                    window.alert(error);
+                });
+            } else {
+                onLoad(czml);
             }
         },
 
@@ -711,16 +730,11 @@ define([
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
-                getJson(widget.endUserOptions.source).then(function(czmlData) {
-                    if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                        widget.addCZML(czmlData, widget.endUserOptions.source, widget.endUserOptions.lookAt);
-                    } else {
-                        widget.addCZML(czmlData, widget.endUserOptions.source);
-                    }
-                },
-                function(error) {
-                    window.alert(error);
-                });
+                if (typeof widget.endUserOptions.lookAt !== 'undefined') {
+                    widget.addCZML(undefined, widget.endUserOptions.source, widget.endUserOptions.lookAt);
+                } else {
+                    widget.addCZML(undefined, widget.endUserOptions.source);
+                }
             }
 
             if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
