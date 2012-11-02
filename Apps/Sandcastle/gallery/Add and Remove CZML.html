@@ -21,7 +21,8 @@
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' }
+            { name: 'Widgets', location: 'Source/Widgets' },
+            { name: 'Workers', location: 'Source/Workers' }
         ]
     });
     </script>
@@ -100,14 +101,13 @@ require([
         }).placeAt('toolbar');
     }
 
-    var cesiumViewerWidget = new CesiumViewerWidget({
-        postSetup : function(widget) {
-            createButtons(widget);
-            widget.startRenderLoop();
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
-
+    var widget = new CesiumViewerWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = 'Toggle: ';
+
+    createButtons(widget);
+    widget.startRenderLoop();
 });
 </script>
 </body>
