@@ -766,6 +766,7 @@ define([
      * @exception {DeveloperError} target is required.
      * @exception {DeveloperError} up is required.
      * @exception {DeveloperError} lookAt is not supported in 2D mode because there is only one direction to look.
+     * @exception {DeveloperError} lookAt is not supported while morphing.
      */
     CameraController.prototype.lookAt = function(eye, target, up) {
         if (typeof eye === 'undefined') {
@@ -780,14 +781,15 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             throw new DeveloperError('lookAt is not supported in 2D mode because there is only one direction to look.');
         }
-
-        if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
-            var camera = this._camera;
-            camera.position = Cartesian3.clone(eye, camera.position);
-            camera.direction = Cartesian3.subtract(target, eye, camera.direction).normalize(camera.direction);
-            camera.right = Cartesian3.cross(camera.direction, up, camera.right).normalize(camera.right);
-            camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
+        if (this._mode === SceneMode.MORPHING) {
+            throw new DeveloperError('lookAt is not supported while morphing.');
         }
+
+        var camera = this._camera;
+        camera.position = Cartesian3.clone(eye, camera.position);
+        camera.direction = Cartesian3.subtract(target, eye, camera.direction).normalize(camera.direction);
+        camera.right = Cartesian3.cross(camera.direction, up, camera.right).normalize(camera.right);
+        camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
     };
 
     var viewExtent3DCartographic = new Cartographic();
@@ -819,9 +821,7 @@ define([
         var northWest = ellipsoid.cartographicToCartesian(cart, viewExtent3DNorthWest);
 
         var center = Cartesian3.subtract(northEast, southWest, viewExtent3DCenter);
-        var scalar = center.magnitude() * 0.5;
-        Cartesian3.normalize(center, center);
-        Cartesian3.multiplyByScalar(center, scalar, center);
+        Cartesian3.multiplyByScalar(center, 0.5, center);
         Cartesian3.add(southWest, center, center);
 
         Cartesian3.subtract(northWest, center, northWest);
@@ -829,7 +829,8 @@ define([
         Cartesian3.subtract(northEast, center, northEast);
         Cartesian3.subtract(southWest, center, southWest);
 
-        var direction = Cartesian3.negate(center, camera.direction);
+        var direction = ellipsoid.geodeticSurfaceNormal(center, camera.direction);
+        Cartesian3.negate(direction, direction);
         Cartesian3.normalize(direction, direction);
         var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, camera.right);
         Cartesian3.normalize(right, right);
@@ -842,7 +843,7 @@ define([
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
         var d = Math.max(width / tanTheta, height / tanPhi);
 
-        scalar = center.magnitude() + d;
+        var scalar = center.magnitude() + d;
         Cartesian3.normalize(center, center);
         Cartesian3.multiplyByScalar(center, scalar, camera.position);
     }

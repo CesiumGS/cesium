@@ -546,6 +546,15 @@ defineSuite([
         }).toThrow();
     });
 
+    it('lookAt throws when morphing', function() {
+        var frameState = {mode : SceneMode.MORPHING, scene2D : { projection : new GeographicProjection() } };
+        controller.update(frameState);
+
+        expect(function() {
+            controller.lookAt(Cartesian3.UNIT_X, Cartesian3.ZERO, Cartesian3.UNIT_Y);
+        }).toThrow();
+    });
+
     it('viewExtent throws without extent', function() {
         expect(function () {
             controller.viewExtent();
