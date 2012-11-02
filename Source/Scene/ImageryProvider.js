@@ -84,6 +84,18 @@ define([
     };
 
     /**
+     * Gets the minimum level-of-detail that can be requested.  This function should
+     * not be called before {@link ImageryProvider#isReady} returns true.
+     *
+     * @returns {Number} The minimum level.  Unlike the maximum level, the minimum level must not be undefined.
+     *
+     * @exception {DeveloperError} <code>getMinimumLevel</code> must not be called before the imagery provider is ready.
+     */
+    ImageryProvider.prototype.getMinimumLevel = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
      * Gets the tiling scheme used by this provider.  This function should
      * not be called before {@link ImageryProvider#isReady} returns true.
      *

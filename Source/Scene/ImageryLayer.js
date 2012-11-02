@@ -260,8 +260,12 @@ define([
         var imageryLevel = getLevelWithMaximumTexelSpacing(this, targetGeometricError, latitudeClosestToEquator);
         imageryLevel = Math.max(0, imageryLevel);
         var maximumLevel = imageryProvider.getMaximumLevel();
+        var minimumLevel = imageryProvider.getMinimumLevel();
         if (imageryLevel > maximumLevel) {
             imageryLevel = maximumLevel;
+        }
+        if (imageryLevel < minimumLevel) {
+            imageryLevel = minimumLevel;
         }
 
         var imageryTilingScheme = imageryProvider.getTilingScheme();
