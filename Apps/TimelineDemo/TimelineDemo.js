@@ -19,17 +19,29 @@ define(['dojo',
     var startDatePart, endDatePart, startTimePart, endTimePart;
     var timeline, clock;
 
+    function updateScrubTime(julianDate) {
+        var date = julianDate.toDate();
+        var mils = date.getUTCMilliseconds(), milString = '';
+        if ((mils > 0) && (timeline._timeBarSecondsSpan < 3600)) {
+            milString = mils.toString();
+            while (milString.length < 3) {
+                milString = '0' + milString;
+            }
+            milString = '.' + milString;
+        }
+        document.getElementById('mousePos').innerHTML = date.toUTCString().replace(' GMT', milString + ' GMT');
+    }
+
     function handleSetTime(e) {
         if (typeof timeline !== 'undefined') {
             var scrubJulian = e.timeJulian;
             clock.currentTime = scrubJulian;
-            var date = scrubJulian.toDate();
-            document.getElementById('mousePos').innerHTML = date.toUTCString();
+            updateScrubTime(scrubJulian);
         }
     }
 
-    function handleSetZoom(e) {
-        var span = timeline._timeBarSecondsSpan, spanUnits = 'sec';
+    function spanToString(span) {
+        var spanUnits = 'sec';
         if (span > 31536000) {
             span /= 31536000;
             spanUnits = 'years';
@@ -49,9 +61,16 @@ define(['dojo',
             span /= 60;
             spanUnits = 'minutes';
         }
+        return span.toString() + ' ' + spanUnits;
+    }
 
-        dojo.byId('formatted').innerHTML = '<br/>Start: ' + e.startJulian.toDate().toUTCString() + '<br/>Stop: ' + e.endJulian.toDate().toUTCString() + '<br/>Span: ' + span + ' ' + spanUnits;
-        document.getElementById('mousePos').innerHTML = clock.currentTime.toDate().toUTCString();
+    function handleSetZoom(e) {
+        dojo.byId('formatted').innerHTML =
+            '<br/>Start: ' + e.startJulian.toDate().toUTCString() +
+            '<br/>Stop: ' + e.endJulian.toDate().toUTCString() +
+            '<br/>Span: ' + spanToString(timeline._timeBarSecondsSpan) +
+            '<br/>Tic: ' + spanToString(timeline._mainTicSpan);
+        updateScrubTime(clock.currentTime);
     }
 
     function makeTimeline(startJulian, scrubJulian, endJulian) {

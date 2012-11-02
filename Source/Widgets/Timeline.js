@@ -74,6 +74,7 @@ define(['./TimelineTrack',
         }
         this._clock = clock;
         this._scrubJulian = clock.currentTime;
+        this._mainTicSpan = -1;
         this._mouseMode = timelineMouseMode.none;
         this._touchMode = timelineTouchMode.none;
         this._touchState = {
@@ -81,7 +82,7 @@ define(['./TimelineTrack',
             spanX : 0
         };
         this._mouseX = 0;
-        var self = this;
+        var widget = this;
 
         this._topElement.className += ' timelineMain';
         this._topElement.innerHTML = '<div class="timelineBar"></div><div class="timelineTrackContainer">' +
@@ -100,39 +101,39 @@ define(['./TimelineTrack',
         this.zoomTo(clock.startTime, clock.stopTime);
 
         this._timeBarEle.addEventListener('mousedown', function(e) {
-            self._handleMouseDown(e);
+            widget._handleMouseDown(e);
         }, false);
         document.addEventListener('mouseup', function(e) {
-            self._handleMouseUp(e);
+            widget._handleMouseUp(e);
         }, false);
         document.addEventListener('mousemove', function(e) {
-            self._handleMouseMove(e);
+            widget._handleMouseMove(e);
         }, false);
         this._timeBarEle.addEventListener('DOMMouseScroll', function(e) {
-            self._handleMouseWheel(e);
+            widget._handleMouseWheel(e);
         }, false); // Mozilla mouse wheel
         this._timeBarEle.addEventListener('mousewheel', function(e) {
-            self._handleMouseWheel(e);
+            widget._handleMouseWheel(e);
         }, false);
         this._timeBarEle.addEventListener('touchstart', function(e) {
-            self._handleTouchStart(e);
+            widget._handleTouchStart(e);
         }, false);
         document.addEventListener('touchmove', function(e) {
-            self._handleTouchMove(e);
+            widget._handleTouchMove(e);
         }, false);
         document.addEventListener('touchend', function(e) {
-            self._handleTouchEnd(e);
+            widget._handleTouchEnd(e);
         }, false);
         this._topElement.oncontextmenu = function() {
             return false;
         };
 
         window.addEventListener('resize', function() {
-            self.handleResize();
+            widget.handleResize();
         }, false);
 
         this.addEventListener = function(type, listener, useCapture) {
-            self._topElement.addEventListener(type, listener, useCapture);
+            widget._topElement.addEventListener(type, listener, useCapture);
         };
     }
 
@@ -238,7 +239,7 @@ define(['./TimelineTrack',
         var seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
         var xPos = seconds * this._topElement.clientWidth / this._timeBarSecondsSpan;
         var scrubX = xPos - 8, tic;
-        var self = this;
+        var widget = this;
 
         this._needleEle.style.left = xPos.toString() + 'px';
 
@@ -307,7 +308,7 @@ define(['./TimelineTrack',
         function getTicLabel(tic) {
             var date = startJulian.addSeconds(tic - startTime).toDate();
             //return date.toString();
-            return self.makeLabel(date);
+            return widget.makeLabel(date);
         }
 
         function remainder(x, y) {
@@ -404,6 +405,7 @@ define(['./TimelineTrack',
             }
         }
         if ((timeBarWidth * (mainTic / this._timeBarSecondsSpan)) >= 2.0) {
+            this._mainTicSpan = mainTic;
             for (tic = getStartTic(mainTic); tic <= (endTime + mainTic); tic = getNextTic(tic, mainTic)) {
                 var ticLeft = Math.round(timeBarWidth * getAlpha(tic));
                 var ticLabel = getTicLabel(tic);
@@ -418,6 +420,8 @@ define(['./TimelineTrack',
                     tics += '<span class="timelineTicSub" style="left: ' + ticLeft.toString() + 'px;"></span>';
                 }
             }
+        } else {
+            this._mainTicSpan = -1;
         }
 
         timeBar.innerHTML = tics;
@@ -425,7 +429,7 @@ define(['./TimelineTrack',
 
         renderState.y = 0;
         this._trackList.forEach(function(track) {
-            track.render(self._context, renderState);
+            track.render(widget._context, renderState);
             renderState.y += track.height;
         });
     };
