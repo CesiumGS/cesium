@@ -71,13 +71,12 @@ require([
 {
     "use strict";
 
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            widget.startRenderLoop();
-        }
-    }).placeAt(dom.byId("cesiumContainer"));
-
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    widget.startRenderLoop();
 });
 </script>
 </body>

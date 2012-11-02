@@ -79,16 +79,15 @@ require([
 
     // Initialize a viewer capable of drag-and-drop
     // and user customizations.
-    var cesiumViewerWidget = new CesiumViewerWidget({
+    var widget = new CesiumViewerWidget({
         endUserOptions : endUserOptions,
-        enableDragDrop : true,
-
-        postSetup : function(widget) {
-            widget.startRenderLoop();
-        }
-    }).placeAt(dom.byId("cesiumContainer"));
-    
+        enableDragDrop : true
+    });
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    widget.startRenderLoop();
 });
 </script>
 </body>
