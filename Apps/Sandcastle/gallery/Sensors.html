@@ -142,20 +142,20 @@ require([
         }).placeAt('toolbar');
     }
 
-    var cesiumViewerWidget = new CesiumViewerWidget({
+    var widget = new CesiumViewerWidget({
         onObjectMousedOver : function(mousedOverObject) {
-            cesiumViewerWidget.highlightObject(mousedOverObject);
+            widget.highlightObject(mousedOverObject);
             Sandcastle.highlight(mousedOverObject);
-        },
-        postSetup : function(widget) {
-            var sensors = new Cesium.SensorVolumeCollection();
-            createButtons(widget, sensors);
-            widget.startRenderLoop();
-            addRectangularSensor(sensors, widget.ellipsoid, widget.scene);
         }
-    }).placeAt(dom.byId('cesiumContainer'));
-
+    });
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    var sensors = new Cesium.SensorVolumeCollection();
+    createButtons(widget, sensors);
+    widget.startRenderLoop();
+    addRectangularSensor(sensors, widget.ellipsoid, widget.scene);
 });
 </script>
 </body>

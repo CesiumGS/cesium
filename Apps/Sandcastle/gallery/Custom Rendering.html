@@ -434,16 +434,15 @@ require([
             dropDown: sceneMenu
         }).placeAt('toolbar');
     }
-    
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget);
-            widget.startRenderLoop();
-            renderBox(widget.scene);
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
 
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget);
+    widget.startRenderLoop();
+    renderBox(widget.scene);
 });
 </script>
 </body>
