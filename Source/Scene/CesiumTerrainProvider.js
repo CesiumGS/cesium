@@ -113,6 +113,8 @@ define([
     // intensive, though, which is why we probably won't want to do it while waiting for the
     // actual data to load.  We could also potentially add fractal detail when subdividing.
 
+    var sixtyDegreesLatitude = CesiumMath.toRadians(60.0);
+
     /**
      * Request the tile geometry from the remote server.  Once complete, the
      * tile state should be set to RECEIVED.  Alternatively, tile state can be set to
@@ -122,6 +124,16 @@ define([
      * @param {Tile} The tile to request geometry for.
      */
     CesiumTerrainProvider.prototype.requestTileGeometry = function(tile) {
+        // If this tile is entirely above 60 degrees latitude, it won't exist, so
+        // don't even try to load it.  Tessellate the ellipsoid instead.
+        if (tile.extent.south > sixtyDegreesLatitude ||
+            tile.extent.north < -sixtyDegreesLatitude) {
+
+            tile.geometry = new Float32Array(65 * 65).buffer;
+            tile.state = TileState.RECEIVED;
+            return;
+        }
+
         if (requestsInFlight > 6) {
             tile.state = TileState.UNLOADED;
             return;
@@ -144,9 +156,9 @@ define([
         }, function(e) {
             /*global console*/
             //console.error('failed to load tile geometry: ' + e);
-            tile.state = TileState.FAILED;
-            //tile.geometry = new Float32Array(65 * 65).buffer;
-            //tile.state = TileState.RECEIVED;
+            //tile.state = TileState.FAILED;
+            tile.geometry = new Float32Array(65 * 65).buffer;
+            tile.state = TileState.RECEIVED;
             --requestsInFlight;
         });
     };
