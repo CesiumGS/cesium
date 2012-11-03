@@ -526,7 +526,7 @@ define([
          * @function
          * @memberof CesiumViewerWidget.prototype
          */
-        removeAllCZML : function() {
+        removeAllCzml : function() {
             this.centerCameraOnObject(undefined);
             this.czmlProcessor.removeAll();
         },
@@ -538,46 +538,49 @@ define([
          * @memberof CesiumViewerWidget.prototype
          * @param {string} source - The original filename or URI that was supplied to addCZML.
          */
-        removeCZML : function(source) {
+        removeCzml : function(source) {
             // Any easy way to check if the camera is centered on an object that will survive?
             this.centerCameraOnObject(undefined);
             this.czmlProcessor.remove(source);
         },
 
         /**
-         * Add CZML data to the viewer.  The first parameter can be a collection of CZML
-         * objects, or <code>undefined</code>.  If the first parameter is <code>undefined</code>,
-         * the second parameter will be used to fetch the CZML stream asynchronously.
+         * Add CZML data to the viewer.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {CZML} czml - The CZML (as objects or undefined) to be processed and added to the viewer.
+         * @param {CZML} czml - The CZML (as objects) to be processed and added to the viewer.
          * @param {string} source - The filename or URI that was the source of the CZML collection.
          * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
+         * @see CesiumViewerWidget#loadCzml
          */
-        addCZML : function(czml, source, lookAt) {
-            var widget = this;
-            var onLoad = function(czmlData) {
-                widget.czmlProcessor.add(czmlData, source);
-                widget.setTimeFromBuffer();
-                if (typeof lookAt !== 'undefined') {
-                    var lookAtObject = widget.czmlProcessor.getObject(lookAt, source);
-                    widget.centerCameraOnObject(lookAtObject);
-                }
-            };
-
-            // Test if the CZML objects were provided, and if not, fetch them asynchronously.
-            if (typeof czml === 'undefined') {
-                loadJson(source).then(function(czmlData) {
-                    onLoad(czmlData);
-                },
-                function(error) {
-                    console.error(error);
-                    window.alert(error);
-                });
-            } else {
-                onLoad(czml);
+        addCzml : function(czml, source, lookAt) {
+            this.czmlProcessor.add(czml, source);
+            this.setTimeFromBuffer();
+            if (typeof lookAt !== 'undefined') {
+                var lookAtObject = this.czmlProcessor.getObject(lookAt, source);
+                this.centerCameraOnObject(lookAtObject);
             }
+        },
+
+        /**
+         * Asynchronously load and add CZML data to the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {string} source - The URI to load the CZML from.
+         * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
+         * @see CesiumViewerWidget#addCzml
+         */
+        loadCzml : function(source, lookAt) {
+            var widget = this;
+            loadJson(source).then(function(czml) {
+                widget.addCzml(czml, source, lookAt);
+            },
+            function(error) {
+                console.error(error);
+                window.alert(error);
+            });
         },
 
         /**
@@ -596,7 +599,7 @@ define([
             var reader = new FileReader();
             var widget = this;
             reader.onload = function(evt) {
-                widget.addCZML(JSON.parse(evt.target.result), f.name);
+                widget.addCzml(JSON.parse(evt.target.result), f.name);
             };
             reader.readAsText(f);
         },
@@ -731,9 +734,9 @@ define([
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                    widget.addCZML(undefined, widget.endUserOptions.source, widget.endUserOptions.lookAt);
+                    widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
                 } else {
-                    widget.addCZML(undefined, widget.endUserOptions.source);
+                    widget.loadCzml(widget.endUserOptions.source);
                 }
             }
 

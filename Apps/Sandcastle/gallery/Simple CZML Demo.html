@@ -76,29 +76,31 @@ require([
         'source' : gallery + 'simple.czml'
     };
 
-    function czmlOrbits(widget) {
-        Sandcastle.declare(czmlOrbits);    // For highlighting in Sandcastle.
-        widget.removeAllCZML();
-        widget.addCZML(undefined, gallery + 'simple.czml');
+    function czmlSatellites(widget) {
+        Sandcastle.declare(czmlSatellites);    // For highlighting in Sandcastle.
+        widget.removeAllCzml();
+        widget.viewHome();
+        widget.loadCzml(gallery + 'simple.czml');
     }
 
     function czmlSensors(widget) {
         Sandcastle.declare(czmlSensors);    // For highlighting in Sandcastle.
-        widget.removeAllCZML();
-        widget.addCZML(undefined, gallery + 'LotsOfSensors.czml');
+        widget.removeAllCzml();
+        widget.viewHome();
+        widget.loadCzml(gallery + 'LotsOfSensors.czml');
     }
     function czmlVehicle(widget) {
         Sandcastle.declare(czmlVehicle);    // For highlighting in Sandcastle.
-        widget.removeAllCZML();
-        widget.addCZML(undefined, gallery + 'Vehicle.czml', 'Vehicle');
+        widget.removeAllCzml();
+        widget.loadCzml(gallery + 'Vehicle.czml', 'Vehicle');
     }
 
     function createButtons(widget) {
         new Button({
-            label: 'Orbits',
+            label: 'Satellites',
             onClick: function() {
-                czmlOrbits(widget);
-                Sandcastle.highlight(czmlOrbits);
+                czmlSatellites(widget);
+                Sandcastle.highlight(czmlSatellites);
             }
         }).placeAt('toolbar');
 

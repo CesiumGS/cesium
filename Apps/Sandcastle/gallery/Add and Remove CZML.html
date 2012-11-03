@@ -80,9 +80,9 @@ require([
             checked: false,
             onChange: function (newValue) {
                 if (newValue) {
-                    widget.addCZML(undefined, gallery + 'simple.czml');
+                    widget.loadCzml(gallery + 'simple.czml');
                 } else {
-                    widget.removeCZML(gallery + 'simple.czml');
+                    widget.removeCzml(gallery + 'simple.czml');
                 }
             }
         }).placeAt('toolbar');
@@ -93,9 +93,9 @@ require([
             checked: false,
             onChange: function (newValue) {
                 if (newValue) {
-                    widget.addCZML(undefined, gallery + 'LotsOfSensors.czml');
+                    widget.loadCzml(gallery + 'LotsOfSensors.czml');
                 } else {
-                    widget.removeCZML(gallery + 'LotsOfSensors.czml');
+                    widget.removeCzml(gallery + 'LotsOfSensors.czml');
                 }
             }
         }).placeAt('toolbar');
