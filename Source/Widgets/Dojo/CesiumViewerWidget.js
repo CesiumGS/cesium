@@ -530,7 +530,7 @@ define([
          * @function
          * @memberof CesiumViewerWidget.prototype
          */
-        removeAllCZML : function() {
+        removeAllCzml : function() {
             this.centerCameraOnObject(undefined);
             //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
             //cache data indefinitely and removeAll is the only way to get rid of it.
@@ -540,39 +540,42 @@ define([
         },
 
         /**
-         * Add CZML data to the viewer.  The first parameter can be a collection of CZML
-         * objects, or <code>undefined</code>.  If the first parameter is <code>undefined</code>,
-         * the second parameter will be used to fetch the CZML stream asynchronously.
+         * Add CZML data to the viewer.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @param {CZML} czml - The CZML (as objects or undefined) to be processed and added to the viewer.
+         * @param {CZML} czml - The CZML (as objects) to be processed and added to the viewer.
          * @param {string} source - The filename or URI that was the source of the CZML collection.
          * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
+         * @see CesiumViewerWidget#loadCzml
          */
-        addCZML : function(czml, source, lookAt) {
-            var widget = this;
-            var onLoad = function(czmlData) {
-                processCzml(czmlData, widget.dynamicObjectCollection, source);
-                widget.setTimeFromBuffer();
-                if (typeof lookAt !== 'undefined') {
-                    var lookAtObject = widget.dynamicObjectCollection.getObject(lookAt);
-                    widget.centerCameraOnObject(lookAtObject);
-                }
-            };
-
-            // Test if the CZML objects were provided, and if not, fetch them asynchronously.
-            if (typeof czml === 'undefined') {
-                loadJson(source).then(function(czmlData) {
-                    onLoad(czmlData);
-                },
-                function(error) {
-                    console.error(error);
-                    window.alert(error);
-                });
-            } else {
-                onLoad(czml);
+        addCzml : function(czml, source, lookAt) {
+            processCzml(czml, this.dynamicObjectCollection, source);
+            this.setTimeFromBuffer();
+            if (typeof lookAt !== 'undefined') {
+                var lookAtObject = this.dynamicObjectCollection.getObject(lookAt);
+                this.centerCameraOnObject(lookAtObject);
             }
+        },
+
+        /**
+         * Asynchronously load and add CZML data to the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {string} source - The URI to load the CZML from.
+         * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
+         * @see CesiumViewerWidget#addCzml
+         */
+        loadCzml : function(source, lookAt) {
+            var widget = this;
+            loadJson(source).then(function(czml) {
+                widget.addCzml(czml, source, lookAt);
+            },
+            function(error) {
+                console.error(error);
+                window.alert(error);
+            });
         },
 
         /**
@@ -590,9 +593,9 @@ define([
             var f = files[0];
             var reader = new FileReader();
             var widget = this;
-            widget.removeAllCZML();
+            widget.removeAllCzml();
             reader.onload = function(evt) {
-                widget.addCZML(JSON.parse(evt.target.result), f.name);
+                widget.addCzml(JSON.parse(evt.target.result), f.name);
             };
             reader.readAsText(f);
         },
@@ -726,9 +729,9 @@ define([
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                    widget.addCZML(undefined, widget.endUserOptions.source, widget.endUserOptions.lookAt);
+                    widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
                 } else {
-                    widget.addCZML(undefined, widget.endUserOptions.source);
+                    widget.loadCzml(widget.endUserOptions.source);
                 }
             }
 
