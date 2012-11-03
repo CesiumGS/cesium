@@ -212,7 +212,8 @@ define(['./TimelineTrack',
         return ((num < 10) ? ('0' + num.toString()) : num.toString());
     }
 
-    Timeline.prototype.makeLabel = function(date) {
+    Timeline.prototype.makeLabel = function(julianDate) {
+        var date = julianDate.toDate();
         var hours = date.getUTCHours();
         var ampm = (hours < 12) ? ' AM' : ' PM';
         if (hours >= 13) {
@@ -306,9 +307,7 @@ define(['./TimelineTrack',
         }
 
         function getTicLabel(tic) {
-            var date = startJulian.addSeconds(tic - startTime).toDate();
-            //return date.toString();
-            return widget.makeLabel(date);
+            return widget.makeLabel(startJulian.addSeconds(tic - startTime));
         }
 
         function remainder(x, y) {

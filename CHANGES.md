@@ -4,6 +4,11 @@ Change Log
 Beta Releases
 -------------
 
+### b11 - xx/xx/2012
+
+* Breaking changes:
+   * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
+
 ### b10 - 11/02/2012
 
 * Breaking changes:

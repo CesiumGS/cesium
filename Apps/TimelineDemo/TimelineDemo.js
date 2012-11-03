@@ -20,16 +20,7 @@ define(['dojo',
     var timeline, clock;
 
     function updateScrubTime(julianDate) {
-        var date = julianDate.toDate();
-        var mils = date.getUTCMilliseconds(), milString = '';
-        if ((mils > 0) && (timeline._timeBarSecondsSpan < 3600)) {
-            milString = mils.toString();
-            while (milString.length < 3) {
-                milString = '0' + milString;
-            }
-            milString = '.' + milString;
-        }
-        document.getElementById('mousePos').innerHTML = date.toUTCString().replace(' GMT', milString + ' GMT');
+        document.getElementById('mousePos').innerHTML = timeline.makeLabel(julianDate) + ' UTC';
     }
 
     function handleSetTime(e) {
@@ -66,8 +57,8 @@ define(['dojo',
 
     function handleSetZoom(e) {
         dojo.byId('formatted').innerHTML =
-            '<br/>Start: ' + e.startJulian.toDate().toUTCString() +
-            '<br/>Stop: ' + e.endJulian.toDate().toUTCString() +
+            '<br/>Start: ' + timeline.makeLabel(e.startJulian) + ' UTC' +
+            '<br/>Stop: ' + timeline.makeLabel(e.endJulian) + ' UTC' +
             '<br/>Span: ' + spanToString(timeline._timeBarSecondsSpan) +
             '<br/>Tic: ' + spanToString(timeline._mainTicSpan);
         updateScrubTime(clock.currentTime);
