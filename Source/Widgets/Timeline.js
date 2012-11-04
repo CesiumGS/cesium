@@ -285,10 +285,10 @@ define(['./TimelineTrack',
         // If the epoch time has a different number of leap seconds than the start time, shift it so the start time is round.
         // (For example, _startJulian could be Aug 2012 with duration 2 days, so epochJulian = Jan 1 2012 00:00:01.  The
         // extra second will be used by the June 2012 leap second when counting timelineTicScales, making round numbers in August.)
-        var leapSecond = startJulian.getTaiMinusUtc() - epochJulian.getTaiMinusUtc();
-        if (leapSecond > 0.1) {
-            epochJulian = epochJulian.addSeconds(leapSecond);
-        }
+        //var leapSecond = startJulian.getTaiMinusUtc() - epochJulian.getTaiMinusUtc();
+        //if (Math.abs(leapSecond) > 0.1) {
+        //    epochJulian = epochJulian.addSeconds(leapSecond);
+        //}
         // startTime: Seconds offset of the left side of the timeline from epochJulian.
         var startTime = epochJulian.addSeconds(epsilonTime).getSecondsDifference(this._startJulian);
         // endTime: Seconds offset of the right side of the timeline from epochJulian.
@@ -306,17 +306,13 @@ define(['./TimelineTrack',
             return (time - startTime) / duration;
         }
 
-        function getTicLabel(tic) {
-            return widget.makeLabel(startJulian.addSeconds(tic - startTime));
-        }
-
         function remainder(x, y) {
             //return x % y;
             return x - (y * Math.round(x / y));
         }
 
         // Width in pixels of a typical label, plus padding
-        this._rulerEle.innerHTML = getTicLabel(endTime - minimumDuration);
+        this._rulerEle.innerHTML = this.makeLabel(this._endJulian.addSeconds(-minimumDuration));
         var sampleWidth = this._rulerEle.offsetWidth + 20;
 
         var origMinSize = minSize;
@@ -405,9 +401,20 @@ define(['./TimelineTrack',
         }
         if ((timeBarWidth * (mainTic / this._timeBarSecondsSpan)) >= 2.0) {
             this._mainTicSpan = mainTic;
-            for (tic = getStartTic(mainTic); tic <= (endTime + mainTic); tic = getNextTic(tic, mainTic)) {
+            endTime += mainTic;
+            tic = getStartTic(mainTic);
+            var leapSecond = epochJulian.getTaiMinusUtc();
+            while (tic <= endTime) {
+                var ticTime = startJulian.addSeconds(tic - startTime);
+                if (mainTic > 2.1) {
+                    var ticLeap = ticTime.getTaiMinusUtc();
+                    if (Math.abs(ticLeap - leapSecond) > 0.1) {
+                        tic += (ticLeap - leapSecond);
+                        ticTime = startJulian.addSeconds(tic - startTime);
+                    }
+                }
                 var ticLeft = Math.round(timeBarWidth * getAlpha(tic));
-                var ticLabel = getTicLabel(tic);
+                var ticLabel = this.makeLabel(ticTime);
                 this._rulerEle.innerHTML = ticLabel;
                 textWidth = this._rulerEle.offsetWidth;
                 var labelLeft = ticLeft - ((textWidth / 2) - 1);
@@ -418,6 +425,7 @@ define(['./TimelineTrack',
                 } else {
                     tics += '<span class="timelineTicSub" style="left: ' + ticLeft.toString() + 'px;"></span>';
                 }
+                tic = getNextTic(tic, mainTic);
             }
         } else {
             this._mainTicSpan = -1;
