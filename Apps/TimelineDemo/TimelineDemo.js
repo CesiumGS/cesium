@@ -130,10 +130,9 @@ define(['dojo',
         dijit.byId('startTimeSel').set('value', 'T00:00:00');
         dijit.byId('endTimeSel').set('value', 'T24:00:00');
 
-        var now = new Date();
-        var today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
-        var tomorrow = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + (now.getDate() + 1);
-        dijit.byId('startCal').set('value', today);
-        dijit.byId('endCal').set('value', tomorrow);
+        var today = new JulianDate();
+        var tomorrow = today.addDays(1);
+        dijit.byId('startCal').set('value', today.toDate());
+        dijit.byId('endCal').set('value', tomorrow.toDate());
     });
 });

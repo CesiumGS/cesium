@@ -398,15 +398,14 @@ require([
         }).placeAt('toolbar');        
     }
 
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget);
-            widget.startRenderLoop();
-            addBillboard(widget.scene, widget.ellipsoid);
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
-    
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget);
+    addBillboard(widget.scene, widget.ellipsoid);
+    widget.startRenderLoop();
 });
 </script>
 </body>
