@@ -4,7 +4,7 @@ Change Log
 Beta Releases
 -------------
 
-### b10 - xx/xx/2012
+### b10 - 11/02/2012
 
 * Breaking changes:
    * Renamed `Texture2DPool` to `TexturePool`.

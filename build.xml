@@ -83,7 +83,7 @@
 	<property name="build.minification" value="false" />
 
 	<!-- Inputs -->
-	<property name="version" value="b9" />
+	<property name="version" value="b10" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -265,7 +265,7 @@
 		<java classname="org.mozilla.javascript.tools.shell.Main" fork="true">
 			<classpath>
 				<pathelement location="${dojoPath}/util/shrinksafe/js.jar" />
-				<pathelement location="${dojoPath}/util/closureCompiler/compiler.jar " />
+				<pathelement location="${dojoPath}/util/closureCompiler/compiler.jar" />
 			</classpath>
 			<sysproperty key="java.util.logging.config.file" value="${toolsDirectory}/dojoBuildLogging.properties" />
 			<arg line="${dojoPath}/dojo/dojo.js" />
