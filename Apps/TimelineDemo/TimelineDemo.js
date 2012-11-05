@@ -57,7 +57,7 @@ define(['dojo',
 
     function handleSetZoom(e) {
         dojo.byId('formatted').innerHTML =
-            '<br/>Epoch: ' + timeline.makeLabel(e.epochJulian) + ' UTC' +
+            //'<br/>Epoch: ' + timeline.makeLabel(e.epochJulian) + ' UTC' +
             '<br/>Start: ' + timeline.makeLabel(e.startJulian) + ' UTC' +
             '<br/>&nbsp;Stop: ' + timeline.makeLabel(e.endJulian) + ' UTC' +
             '<br/>Span: ' + spanToString(e.totalSpan) +

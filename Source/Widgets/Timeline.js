@@ -279,11 +279,11 @@ define(['./TimelineTrack',
         // epochJulian: a nearby time to be considered "zero seconds", should be a round-ish number by human standards.
         var epochJulian;
         if (duration > 315360000) { // 3650+ days visible, epoch is start of the first visible century.
-            epochJulian = JulianDate.fromIso8601(startJulian.toDate().getFullYear().toString().substring(0, 2) + '00-01-01T00:00:00Z');
+            epochJulian = JulianDate.fromIso8601(startJulian.toDate().toISOString().substring(0, 2) + '00-01-01T00:00:00Z');
         } else if (duration > 31536000) { // 365+ days visible, epoch is start of the first visible decade.
-            epochJulian = JulianDate.fromIso8601(startJulian.toDate().getFullYear().toString().substring(0, 3) + '0-01-01T00:00:00Z');
+            epochJulian = JulianDate.fromIso8601(startJulian.toDate().toISOString().substring(0, 3) + '0-01-01T00:00:00Z');
         } else if (duration > 86400) { // 1+ day(s) visible, epoch is start of the year.
-            epochJulian = JulianDate.fromIso8601(startJulian.toDate().getFullYear().toString() + '-01-01T00:00:00Z');
+            epochJulian = JulianDate.fromIso8601(startJulian.toDate().toISOString().substring(0, 4) + '-01-01T00:00:00Z');
         } else { // Less than a day on timeline, epoch is midnight of the visible day.
             epochJulian = JulianDate.fromIso8601(startJulian.toDate().toISOString().substring(0, 10) + 'T00:00:00Z');
         }
