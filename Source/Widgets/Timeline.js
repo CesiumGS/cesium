@@ -194,6 +194,9 @@ define(['./TimelineTrack',
         evt.initEvent('setzoom', true, true);
         evt.startJulian = this._startJulian;
         evt.endJulian = this._endJulian;
+        evt.epochJulian = this._epochJulian;
+        evt.totalSpan = this._timeBarSecondsSpan;
+        evt.mainTicSpan = this._mainTicSpan;
         this._topElement.dispatchEvent(evt);
     };
 
@@ -293,6 +296,7 @@ define(['./TimelineTrack',
         var startTime = epochJulian.addSeconds(epsilonTime).getSecondsDifference(this._startJulian);
         // endTime: Seconds offset of the right side of the timeline from epochJulian.
         var endTime = startTime + duration;
+        this._epochJulian = epochJulian;
 
         function getStartTic(ticScale) {
             return Math.floor(startTime / ticScale) * ticScale;
