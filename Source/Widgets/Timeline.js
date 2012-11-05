@@ -274,24 +274,19 @@ define(['./TimelineTrack',
         var startJulian = this._startJulian;
 
         // epsilonTime: a small fraction of one pixel width of the timeline, measured in seconds.
-        var epsilonTime = (duration / timeBarWidth) * 1e-5;
+        var epsilonTime = Math.min((duration / timeBarWidth) * 1e-5, 0.4);
 
         // epochJulian: a nearby time to be considered "zero seconds", should be a round-ish number by human standards.
         var epochJulian;
-        if (duration > 31536000) { // 365+ days visible, epoch is start of the first visible decade.
+        if (duration > 315360000) { // 3650+ days visible, epoch is start of the first visible century.
+            epochJulian = JulianDate.fromIso8601(startJulian.toDate().getFullYear().toString().substring(0, 2) + '00-01-01T00:00:00Z');
+        } else if (duration > 31536000) { // 365+ days visible, epoch is start of the first visible decade.
             epochJulian = JulianDate.fromIso8601(startJulian.toDate().getFullYear().toString().substring(0, 3) + '0-01-01T00:00:00Z');
         } else if (duration > 86400) { // 1+ day(s) visible, epoch is start of the year.
             epochJulian = JulianDate.fromIso8601(startJulian.toDate().getFullYear().toString() + '-01-01T00:00:00Z');
         } else { // Less than a day on timeline, epoch is midnight of the visible day.
             epochJulian = JulianDate.fromIso8601(startJulian.toDate().toISOString().substring(0, 10) + 'T00:00:00Z');
         }
-        // If the epoch time has a different number of leap seconds than the start time, shift it so the start time is round.
-        // (For example, _startJulian could be Aug 2012 with duration 2 days, so epochJulian = Jan 1 2012 00:00:01.  The
-        // extra second will be used by the June 2012 leap second when counting timelineTicScales, making round numbers in August.)
-        //var leapSecond = startJulian.getTaiMinusUtc() - epochJulian.getTaiMinusUtc();
-        //if (Math.abs(leapSecond) > 0.1) {
-        //    epochJulian = epochJulian.addSeconds(leapSecond);
-        //}
         // startTime: Seconds offset of the left side of the timeline from epochJulian.
         var startTime = epochJulian.addSeconds(epsilonTime).getSecondsDifference(this._startJulian);
         // endTime: Seconds offset of the right side of the timeline from epochJulian.
