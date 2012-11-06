@@ -151,7 +151,7 @@ defineSuite([
     });
 
     it('routes requests through a proxy if one is specified', function() {
-        var proxy = new DefaultProxy('/proxy/');
+        var proxy = new DefaultProxy('/Proxy.ashx');
         var provider = new OpenStreetMapImageryProvider({
             url : 'made/up/osm/server',
             proxy : proxy

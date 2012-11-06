@@ -126,31 +126,31 @@ require([
                     mapStyle: Cesium.BingMapsStyle.ROAD,
                     // Some versions of Safari support WebGL, but don't correctly implement
                     // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy: Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+                    proxy: Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/Proxy.ashx')
                 }));
         addBaseLayerOption(
                 'ArcGIS World Street Maps',
                 new Cesium.ArcGisMapServerImageryProvider({
                     url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
-                    proxy: new Cesium.DefaultProxy('/proxy/')
+                    proxy: new Cesium.DefaultProxy('/Proxy.ashx')
                 }));
         addBaseLayerOption(
                 'OpenStreetMaps',
                 new Cesium.OpenStreetMapImageryProvider({
-                    proxy: new Cesium.DefaultProxy('/proxy/')
+                    proxy: new Cesium.DefaultProxy('/Proxy.ashx')
                 }));
         addBaseLayerOption(
                 'MapQuest OpenStreetMaps',
                 new Cesium.OpenStreetMapImageryProvider({
                     url: 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
-                    proxy: new Cesium.DefaultProxy('/proxy/')
+                    proxy: new Cesium.DefaultProxy('/Proxy.ashx')
                 }));
         addBaseLayerOption(
                 'Stamen Maps',
                 new Cesium.OpenStreetMapImageryProvider({
                     url: 'http://tile.stamen.com/watercolor/',
                     fileExtension: 'jpg',
-                    proxy: new Cesium.DefaultProxy('/proxy/'),
+                    proxy: new Cesium.DefaultProxy('/Proxy.ashx'),
                     credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 }));
         addBaseLayerOption('Single Image', new Cesium.SingleTileImageryProvider({url : '../../../Images/NE2_50M_SR_W_4096.jpg'}));
@@ -166,7 +166,7 @@ require([
                         transparent : 'true',
                         format : 'image/png'
                     },
-                    proxy : new Cesium.DefaultProxy('/proxy/')
+                    proxy : new Cesium.DefaultProxy('/Proxy.ashx')
                 }));
         addAdditionalLayerOption(
                 'United States weather radar',
@@ -178,7 +178,7 @@ require([
                         transparent : 'true',
                         format : 'image/png'
                     },
-                    proxy : new Cesium.DefaultProxy('/proxy/')
+                    proxy : new Cesium.DefaultProxy('/Proxy.ashx')
                 }));
         addAdditionalLayerOption(
                 'Single image',

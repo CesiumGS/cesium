@@ -150,7 +150,7 @@ defineSuite([
             return undefined;
         };
 
-        var proxy = new DefaultProxy('/proxy/');
+        var proxy = new DefaultProxy('/Proxy.ashx');
         var provider = new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png',
             proxy : proxy
