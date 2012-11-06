@@ -158,65 +158,75 @@ require([
         }
     }
 
-    var cesiumViewerWidget = new CesiumViewerWidget({
-        postSetup : function(widget) {
-            scene = widget.scene;
-            cb = scene.getPrimitives().getCentralBody();
+    // Ask Dojo to parse URL configuration options
+    var endUserOptions = {};
+    if (window.location.search) {
+        endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
+    }
 
-            var terrainProvider = new Cesium.CesiumTerrainProvider({
-                url : 'http://cesium.cloudapp.net/terrain'
-            });
-
-            cb._surface._terrainProvider = terrainProvider;
-
-            /*var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
-                url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
-                token : 'qV84HyuF8fxKlS3QNus8G9J4GxlA6R64C6WSMXcaZqnvvuAbWJARjvH9xt-axZ2cm7O8r11lCO6SxVYteypIKA..',
-                proxy : new Cesium.DefaultProxy('/terrain/')
-            });
-
-            cb._surface._terrainProvider = terrainProvider;
-            
-            // TODO: this shouldn't be necessary
-            var surface = cb._surface;
-            var levelZeroTiles = surface._levelZeroTiles;
-            for (var i = 0; i < levelZeroTiles.length; ++i) {
-                levelZeroTiles[i].freeResources();
-            }
-            surface._levelZeroTiles = terrainProvider.tilingScheme.createLevelZeroTiles();*/
-
-            scene.getCamera().frustum.near = 10.0;
-            cb.affectedByLighting = false;
-            
-            /*var imageryLayerCollection = cb.getImageLayers();
-            imageryLayerCollection.removeAll();
-            
-            var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-              url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-              proxy : new Cesium.DefaultProxy('/proxy/')
-            });
-            var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
-  
-            var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
-                url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
-                proxy : new Cesium.DefaultProxy('/proxy/')
-            });
-            var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);*/
-
-            document.addEventListener('keydown', keydownHandler, false);
-            
-            var handler = new Cesium.EventHandler(widget.canvas);
-
-            handler.setMouseAction(function(movement) {
-                mousePosition = movement.endPosition;
-                // Use movement.startPosition, movement.endPosition
-            }, Cesium.MouseEventType.MOVE);
-
-            widget.startRenderLoop();
-        }
-    }).placeAt(dom.byId("cesiumContainer"));
-    
+    // Initialize a viewer capable of drag-and-drop
+    // and user customizations.
+    var widget = new CesiumViewerWidget({
+        endUserOptions : endUserOptions,
+        enableDragDrop : true
+    });
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    scene = widget.scene;
+    cb = scene.getPrimitives().getCentralBody();
+
+    var terrainProvider = new Cesium.CesiumTerrainProvider({
+        url : 'http://cesium.cloudapp.net/terrain'
+    });
+
+    cb._surface._terrainProvider = terrainProvider;
+
+    /*var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
+        url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+        token : 'qV84HyuF8fxKlS3QNus8G9J4GxlA6R64C6WSMXcaZqnvvuAbWJARjvH9xt-axZ2cm7O8r11lCO6SxVYteypIKA..',
+        proxy : new Cesium.DefaultProxy('/terrain/')
+    });
+
+    cb._surface._terrainProvider = terrainProvider;
+    
+    // TODO: this shouldn't be necessary
+    var surface = cb._surface;
+    var levelZeroTiles = surface._levelZeroTiles;
+    for (var i = 0; i < levelZeroTiles.length; ++i) {
+        levelZeroTiles[i].freeResources();
+    }
+    surface._levelZeroTiles = terrainProvider.tilingScheme.createLevelZeroTiles();*/
+
+    scene.getCamera().frustum.near = 10.0;
+    cb.affectedByLighting = false;
+    
+    /*var imageryLayerCollection = cb.getImageLayers();
+    imageryLayerCollection.removeAll();
+    
+    var esriImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+      url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+      proxy : new Cesium.DefaultProxy('/proxy/')
+    });
+    var esriLayer = imageryLayerCollection.addImageryProvider(esriImageryProvider);
+
+    var esriStreetsImageryProvider = new Cesium.ArcGisMapServerImageryProvider({
+        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer',
+        proxy : new Cesium.DefaultProxy('/proxy/')
+    });
+    var esriStreetsLayer = imageryLayerCollection.addImageryProvider(esriStreetsImageryProvider);*/
+
+    document.addEventListener('keydown', keydownHandler, false);
+    
+    var handler = new Cesium.EventHandler(widget.canvas);
+
+    handler.setMouseAction(function(movement) {
+        mousePosition = movement.endPosition;
+        // Use movement.startPosition, movement.endPosition
+    }, Cesium.MouseEventType.MOVE);
+
+    widget.startRenderLoop();
 });
 </script>
 </body>
