@@ -1,35 +1,14 @@
 /*global define*/
-define(function() {
+define([
+        './equals'
+    ], function(
+        equals) {
     "use strict";
-    /*global Uint8ClampedArray,CanvasPixelArray*/
 
-    var typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array];
-
-    if (typeof Uint8ClampedArray !== 'undefined') {
-        typedArrayTypes.push(Uint8ClampedArray);
-    }
-
-    if (typeof CanvasPixelArray !== 'undefined') {
-        typedArrayTypes.push(CanvasPixelArray);
-    }
-
-    function isTypedArray(o) {
-        return typedArrayTypes.some(function(type) {
-            return o instanceof type;
-        });
-    }
-
-    function typedArrayToArray(array) {
-        if (array !== null && typeof array === 'object' && isTypedArray(array)) {
-            return Array.prototype.slice.call(array, 0);
-        }
-        return array;
-    }
-
-    function equals(env, a, b) {
-        a = typedArrayToArray(a);
-        b = typedArrayToArray(b);
-        return env.equals_(a, b);
+    function createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype) {
+        return function() {
+            return 'Expected function \'' + item + '\' to exist on ' + actualPrototype.constructor.name + ' because it should implement interface ' + expectedInterfacePrototype.constructor.name + '.';
+        };
     }
 
     var defaultMatchers = {
@@ -79,6 +58,27 @@ define(function() {
             this.env.equalityTesters_ = origTesters;
 
             return result;
+        },
+
+        toConformToInterface : function(expectedInterface) {
+            // All function properties on the prototype should also exist on the actual's prototype.
+            var actualPrototype = this.actual.prototype;
+            var expectedInterfacePrototype = expectedInterface.prototype;
+
+            for (var item in expectedInterfacePrototype) {
+                if (expectedInterfacePrototype.hasOwnProperty(item) &&
+                    typeof expectedInterfacePrototype[item] === 'function' &&
+                    !actualPrototype.hasOwnProperty(item)) {
+                        this.message = createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype);
+                        return false;
+                }
+            }
+
+            return true;
+        },
+
+        toBeInstanceOf : function(expectedConstructor) {
+            return this.actual instanceof expectedConstructor;
         }
     };
 

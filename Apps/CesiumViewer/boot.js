@@ -14,6 +14,9 @@ require({
         name : 'Widgets',
         location : 'Source/Widgets'
     }, {
+        name : 'Workers',
+        location : 'Source/Workers'
+    }, {
         name : 'DynamicScene',
         location : 'Source/DynamicScene'
     }, {

@@ -5,7 +5,7 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Ellipsoid',
-         'Core/EquidistantCylindricalProjection',
+         'Core/GeographicProjection',
          'Core/Extent',
          'Core/Intersect',
          'Core/Interval',
@@ -17,7 +17,7 @@ defineSuite([
          Cartesian3,
          Cartesian4,
          Ellipsoid,
-         EquidistantCylindricalProjection,
+         GeographicProjection,
          Extent,
          Intersect,
          Interval,
@@ -39,6 +39,30 @@ defineSuite([
                 new Cartesian3(1, 0, 1),
                 new Cartesian3(1, 0, -1)
             ];
+    }
+
+    function getPositionsAsFlatArray() {
+        var positions = getPositions();
+        var result = [];
+        for (var i = 0; i < positions.length; ++i) {
+            result.push(positions[i].x);
+            result.push(positions[i].y);
+            result.push(positions[i].z);
+        }
+        return result;
+    }
+
+    function getPositionsAsFlatArrayWithStride5() {
+        var positions = getPositions();
+        var result = [];
+        for (var i = 0; i < positions.length; ++i) {
+            result.push(positions[i].x);
+            result.push(positions[i].y);
+            result.push(positions[i].z);
+            result.push(1.23);
+            result.push(4.56);
+        }
+        return result;
     }
 
     it('default constructing produces expected values', function() {
@@ -149,6 +173,92 @@ defineSuite([
         }
     });
 
+    it('fromVertices without positions returns an empty sphere', function() {
+        var sphere = BoundingSphere.fromVertices();
+        expect(sphere.center).toEqual(Cartesian3.ZERO);
+        expect(sphere.radius).toEqual(0.0);
+    });
+
+    it('fromVertices works with one point', function() {
+        var expectedCenter = new Cartesian3(1.0, 2.0, 3.0);
+        var sphere = BoundingSphere.fromVertices([expectedCenter.x, expectedCenter.y, expectedCenter.z]);
+        expect(sphere.center).toEqual(expectedCenter);
+        expect(sphere.radius).toEqual(0.0);
+    });
+
+    it('fromVertices computes a center from points', function() {
+        var sphere = BoundingSphere.fromVertices(getPositionsAsFlatArray());
+        expect(sphere.center).toEqual(positionsCenter);
+        expect(sphere.radius).toEqual(positionsRadius);
+    });
+
+    it('fromVertices contains all points (naive)', function() {
+        var sphere = BoundingSphere.fromVertices(getPositionsAsFlatArray());
+        var radius = sphere.radius;
+        var center = sphere.center;
+
+        var r = new Cartesian3(radius, radius, radius);
+        var max = r.add(center);
+        var min = center.subtract(r);
+
+        var positions = getPositions();
+        var numPositions = positions.length;
+        for ( var i = 0; i < numPositions; i++) {
+            var currentPos = positions[i];
+            expect(currentPos.x <= max.x && currentPos.x >= min.x).toEqual(true);
+            expect(currentPos.y <= max.y && currentPos.y >= min.y).toEqual(true);
+            expect(currentPos.z <= max.z && currentPos.z >= min.z).toEqual(true);
+        }
+    });
+
+    it('fromVertices contains all points (ritter)', function() {
+        var positions = getPositionsAsFlatArray();
+        positions.push(1, 1, 1,  2, 2, 2,  3, 3, 3);
+        var sphere = BoundingSphere.fromVertices(positions);
+        var radius = sphere.radius;
+        var center = sphere.center;
+
+        var r = new Cartesian3(radius, radius, radius);
+        var max = r.add(center);
+        var min = center.subtract(r);
+
+        var numElements = positions.length;
+        for (var i = 0; i < numElements; i += 3) {
+            expect(positions[i] <= max.x && positions[i] >= min.x).toEqual(true);
+            expect(positions[i + 1] <= max.y && positions[i + 1] >= min.y).toEqual(true);
+            expect(positions[i + 2] <= max.z && positions[i + 2] >= min.z).toEqual(true);
+        }
+    });
+
+    it('fromVertices works with a stride of 5', function() {
+        var sphere = BoundingSphere.fromVertices(getPositionsAsFlatArrayWithStride5(), undefined, 5);
+        expect(sphere.center).toEqual(positionsCenter);
+        expect(sphere.radius).toEqual(positionsRadius);
+    });
+
+    it('fromVertices works with defined center', function() {
+        var center = new Cartesian3(1.0, 2.0, 3.0);
+        var sphere = BoundingSphere.fromVertices(getPositionsAsFlatArrayWithStride5(), center, 5);
+        expect(sphere.center).toEqual(positionsCenter.add(center));
+        expect(sphere.radius).toEqual(positionsRadius);
+    });
+
+    it('fromVertices requires a stride of at least 3', function() {
+        function callWithStrideOf2() {
+            BoundingSphere.fromVertices(getPositionsAsFlatArray(), undefined, 2);
+        }
+        expect(callWithStrideOf2).toThrow();
+    });
+
+    it('fromVertices fills result parameter if specified', function() {
+        var center = new Cartesian3(1.0, 2.0, 3.0);
+        var result = new BoundingSphere();
+        var sphere = BoundingSphere.fromVertices(getPositionsAsFlatArrayWithStride5(), center, 5, result);
+        expect(sphere).toEqual(result);
+        expect(result.center).toEqual(positionsCenter.add(center));
+        expect(result.radius).toEqual(positionsRadius);
+    });
+
     it('fromExtent2D creates an empty sphere if no extent provided', function() {
         var sphere = BoundingSphere.fromExtent2D();
         expect(sphere.center).toEqual(Cartesian3.ZERO);
@@ -157,7 +267,7 @@ defineSuite([
 
     it('fromExtent2D', function() {
         var extent = Extent.MAX_VALUE;
-        var projection = new EquidistantCylindricalProjection(Ellipsoid.UNIT_SPHERE);
+        var projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);
         var expected = new BoundingSphere(Cartesian3.ZERO, Math.sqrt(extent.east * extent.east + extent.north * extent.north));
         expect(BoundingSphere.fromExtent2D(extent, projection)).toEqual(expected);
     });

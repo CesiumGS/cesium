@@ -7,7 +7,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
      *
      * @exports BingMapsStyle
      *
-     * @see BingMapsTileProvider
+     * @see BingMapsImageryProvider
      */
     var BingMapsStyle = {
         /**

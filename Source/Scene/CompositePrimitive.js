@@ -238,12 +238,12 @@ define([
      * @exception {DeveloperError} primitive is not in this composite.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#bringToFront
-     * @see CompositePrimitive#sendBackward
-     * @see CompositePrimitive#sendToBack
+     * @see CompositePrimitive#raiseToTop
+     * @see CompositePrimitive#lower
+     * @see CompositePrimitive#lowerToBottom
      * @see CompositePrimitive#addGround
      */
-    CompositePrimitive.prototype.bringForward = function(primitive) {
+    CompositePrimitive.prototype.raise = function(primitive) {
         if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;
@@ -264,12 +264,12 @@ define([
      * @exception {DeveloperError} primitive is not in this composite.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#bringForward
-     * @see CompositePrimitive#sendBackward
-     * @see CompositePrimitive#sendToBack
+     * @see CompositePrimitive#raise
+     * @see CompositePrimitive#lower
+     * @see CompositePrimitive#lowerToBottom
      * @see CompositePrimitive#addGround
      */
-    CompositePrimitive.prototype.bringToFront = function(primitive) {
+    CompositePrimitive.prototype.raiseToTop = function(primitive) {
         if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;
@@ -290,12 +290,12 @@ define([
      * @exception {DeveloperError} primitive is not in this composite.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#sendToBack
-     * @see CompositePrimitive#bringForward
-     * @see CompositePrimitive#bringToFront
+     * @see CompositePrimitive#lowerToBottom
+     * @see CompositePrimitive#raise
+     * @see CompositePrimitive#raiseToTop
      * @see CompositePrimitive#addGround
      */
-    CompositePrimitive.prototype.sendBackward = function(primitive) {
+    CompositePrimitive.prototype.lower = function(primitive) {
         if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;
@@ -316,12 +316,12 @@ define([
      * @exception {DeveloperError} primitive is not in this composite.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#sendBackward
-     * @see CompositePrimitive#bringForward
-     * @see CompositePrimitive#bringToFront
+     * @see CompositePrimitive#lower
+     * @see CompositePrimitive#raise
+     * @see CompositePrimitive#raiseToTop
      * @see CompositePrimitive#addGround
      */
-    CompositePrimitive.prototype.sendToBack = function(primitive) {
+    CompositePrimitive.prototype.lowerToBottom = function(primitive) {
         if (typeof primitive !== 'undefined') {
             var index = this._getPrimitiveIndex(primitive);
             var primitives = this._primitives;

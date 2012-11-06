@@ -21,7 +21,8 @@
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' }
+            { name: 'Widgets', location: 'Source/Widgets' },
+            { name: 'Workers', location: 'Source/Workers' }
         ]
     });
     </script>
@@ -131,18 +132,18 @@ require([
         primitives.add(checkeredPolygon);        
     }
 
-    var cesiumViewerWidget = new CesiumViewerWidget({
+    var widget = new CesiumViewerWidget({
         onObjectMousedOver : function(mousedOverObject) {
-            cesiumViewerWidget.highlightObject(mousedOverObject);
+            widget.highlightObject(mousedOverObject);
             Sandcastle.highlight(mousedOverObject);
-        },
-        postSetup : function(widget) {
-            createPrimitives(widget);
-            widget.startRenderLoop();
         }
-    }).placeAt(dom.byId('cesiumContainer'));
-    
+    });
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    createPrimitives(widget);
+    widget.startRenderLoop();
 });
 </script>
 </body>

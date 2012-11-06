@@ -21,7 +21,8 @@
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' }
+            { name: 'Widgets', location: 'Source/Widgets' },
+            { name: 'Workers', location: 'Source/Workers' }
         ]
     });
     </script>
@@ -123,14 +124,13 @@ require([
         primitives.add(polylines);        
     }
     
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            widget.startRenderLoop();
-            eastNorthUp(widget.scene);
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
-
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startWidget();
     dom.byId('toolbar').innerHTML = '';
+
+    eastNorthUp(widget.scene);
+    widget.startRenderLoop();
 });
 </script>
 </body>
