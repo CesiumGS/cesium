@@ -122,11 +122,10 @@ require([
         }
     });
     widget.placeAt(dom.byId('cesiumContainer'));
-    widget.startWidget();
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
 
     createPrimitives(widget);
-    widget.startRenderLoop();
 });
 </script>
 </body>
