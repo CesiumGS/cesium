@@ -312,7 +312,7 @@ define([
                     mapStyle : this.mapStyle,
                     // Some versions of Safari support WebGL, but don't correctly implement
                     // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/Proxy.ashx')
+                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
                 }));
             } else {
                 centralBody.getImageryLayers().addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));

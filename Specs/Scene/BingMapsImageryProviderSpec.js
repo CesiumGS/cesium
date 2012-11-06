@@ -219,7 +219,7 @@ defineSuite([
         var server = 'foo.bar.net';
         var mapStyle = BingMapsStyle.COLLINS_BART;
         var metadataUrl = 'http://' + server + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
-        var proxy = new DefaultProxy('/Proxy.ashx');
+        var proxy = new DefaultProxy('/proxy/');
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url.indexOf(proxy.getURL(metadataUrl)) === 0).toEqual(true);

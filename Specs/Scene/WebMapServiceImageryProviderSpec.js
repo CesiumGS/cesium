@@ -264,7 +264,7 @@ defineSuite([
     });
 
     it('routes requests through a proxy if one is specified', function() {
-        var proxy = new DefaultProxy('/Proxy.ashx');
+        var proxy = new DefaultProxy('/proxy/');
         var provider = new WebMapServiceImageryProvider({
             url : 'made/up/wms/server',
             layers : 'someLayer',

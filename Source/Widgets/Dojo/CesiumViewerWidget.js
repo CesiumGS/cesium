@@ -1155,7 +1155,7 @@ define([
                         mapStyle : this.mapStyle,
                         // Some versions of Safari support WebGL, but don't correctly implement
                         // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                        proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/Proxy.ashx')
+                        proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
                     }));
                     if (imageLayers.getLength() > 1) {
                         imageLayers.remove(imageLayers.get(0));

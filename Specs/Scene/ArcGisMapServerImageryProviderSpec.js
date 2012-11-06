@@ -255,7 +255,7 @@ defineSuite([
 
     it('routes requests through a proxy if one is specified', function() {
         var baseUrl = 'Made/Up/TiledArcGisMapServer';
-        var proxy = new DefaultProxy('/Proxy.ashx');
+        var proxy = new DefaultProxy('/proxy/');
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(proxy.getURL(baseUrl + '?callback=' + functionName + '&f=json'));
