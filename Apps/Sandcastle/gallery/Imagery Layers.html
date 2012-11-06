@@ -311,7 +311,7 @@ require([
 
     var widget = new CesiumWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
-    widget.startWidget();
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
 
     var scene = widget.scene;
@@ -324,8 +324,6 @@ require([
     setupLayers();
 
     createLayerUserInterface();
-
-    widget.startRenderLoop();
 });
 </script>
 </body>

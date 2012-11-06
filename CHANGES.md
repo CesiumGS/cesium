@@ -4,6 +4,11 @@ Change Log
 Beta Releases
 -------------
 
+### b11 - xx/xx/2012
+
+* Breaking changes:
+   * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
+
 ### b10 - 11/02/2012
 
 * Breaking changes:

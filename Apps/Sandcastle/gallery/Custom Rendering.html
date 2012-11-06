@@ -437,11 +437,10 @@ require([
 
     var widget = new CesiumWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
-    widget.startWidget();
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
 
     createButtons(widget);
-    widget.startRenderLoop();
     renderBox(widget.scene);
 });
 </script>
