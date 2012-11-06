@@ -79,7 +79,6 @@ define([
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 1
         });
-        this.maxLevel = 11;
         this.heightmapWidth = 64;
         this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.getEllipsoid(), this.heightmapWidth, this.tilingScheme.getNumberOfXTilesAtLevel(0));
 
@@ -113,8 +112,6 @@ define([
     // intensive, though, which is why we probably won't want to do it while waiting for the
     // actual data to load.  We could also potentially add fractal detail when subdividing.
 
-    var sixtyDegreesLatitude = CesiumMath.toRadians(60.0);
-
     /**
      * Request the tile geometry from the remote server.  Once complete, the
      * tile state should be set to RECEIVED.  Alternatively, tile state can be set to
@@ -124,43 +121,121 @@ define([
      * @param {Tile} The tile to request geometry for.
      */
     CesiumTerrainProvider.prototype.requestTileGeometry = function(tile) {
-        // If this tile is entirely above 60 degrees latitude, it won't exist, so
-        // don't even try to load it.  Tessellate the ellipsoid instead.
-        if (tile.extent.south > sixtyDegreesLatitude ||
-            tile.extent.north < -sixtyDegreesLatitude) {
+        // Is there data available for this tile?
+        // All root tiles are expected to have data available.
+        var parent = tile.parent;
+        var dataAvailable = true;
+        if (typeof parent !== 'undefined') {
+            var childBits = parent.childTileBits;
 
-            tile.geometry = new Float32Array(65 * 65).buffer;
-            tile.state = TileState.RECEIVED;
-            return;
+            var bitNumber = 2; // southwest child
+            if (tile.x !== parent.x * 2) {
+                ++bitNumber; // east child
+            }
+            if (tile.y !== parent.y * 2) {
+                bitNumber -= 2; // south child
+            }
+
+            dataAvailable = (childBits & (1 << bitNumber)) !== 0;
         }
 
-        if (requestsInFlight > 6) {
-            tile.state = TileState.UNLOADED;
-            return;
+        if (dataAvailable) {
+            if (requestsInFlight > 6) {
+                tile.state = TileState.UNLOADED;
+                return;
+            }
+
+            ++requestsInFlight;
+
+            var yTiles = this.tilingScheme.getNumberOfYTilesAtLevel(tile.level);
+
+            var url = this.url + '/' + tile.level + '/' + tile.x + '/' + (yTiles - tile.y - 1) + '.bilgz';
+
+            if (typeof this._proxy !== 'undefined') {
+                url = this._proxy.getURL(url);
+            }
+
+            when(loadArrayBuffer(url), function(buffer) {
+                tile.geometry = buffer;
+                tile.state = TileState.RECEIVED;
+                --requestsInFlight;
+            }, function(e) {
+                /*global console*/
+                // This shouldn't happen in the absence of network problems.  Log it and then use 0 heights.
+                // TODO: retry?
+                console.error('failed to load tile geometry: ' + e);
+                tile.geometry = new Float32Array(65 * 65).buffer;
+                tile.state = TileState.RECEIVED;
+                --requestsInFlight;
+            });
+        } else {
+            // Find the nearest ancestor with data.
+            var levelDifference = 1;
+            var sourceTile = parent;
+            while (typeof sourceTile.geometry !== 'undefined') {
+                sourceTile = sourceTile.parent;
+                ++levelDifference;
+            }
+
+            // Upsample (subset) the ancestor's data for use by this tile.
+            var width = 65;
+            var height = 65;
+
+            // We can support the following level differences without interpolating:
+            // 1 - 33x33 posts
+            // 2 - 17x17 posts
+            // 3 - 9x9 posts
+            // 4 - 5x5 posts
+            // 5 - 3x3 posts
+            // 6 - 2x2 posts
+            if (levelDifference > 6) {
+                // TODO: interpolate
+            }
+
+            // Compute the post indices of the corners of this tile within its own level.
+            var leftPostIndex = tile.x * (width - 1);
+            var rightPostIndex = leftPostIndex + width - 1;
+            var topPostIndex = tile.y * (height - 1);
+            var bottomPostIndex = topPostIndex + height - 1;
+
+            // Transform the post indices to the ancestor's level.
+            var twoToTheLevelDifference = 1 << levelDifference;
+            leftPostIndex /= twoToTheLevelDifference;
+            rightPostIndex /= twoToTheLevelDifference;
+            topPostIndex /= twoToTheLevelDifference;
+            bottomPostIndex /= twoToTheLevelDifference;
+
+            // Make sure the post indices are integers.
+            leftPostIndex |= 0;
+            rightPostIndex |= 0;
+            topPostIndex |= 0;
+            bottomPostIndex |= 0;
+
+            // Adjust the indices to be relative to the northwest corner of the source tile.
+            var sourceLeft = sourceTile.x * (width - 1);
+            var sourceTop = sourceTile.y * (height - 1);
+            leftPostIndex -= sourceLeft;
+            rightPostIndex -= sourceLeft;
+            topPostIndex -= sourceTop;
+            bottomPostIndex -= sourceTop;
+
+            // Copy the relevant posts.
+            var sourceHeights = sourceTile.geometry;
+            var numberOfFloats = (rightPostIndex - leftPostIndex + 1) * (bottomPostIndex - topPostIndex + 1);
+            var buffer = new ArrayBuffer(numberOfFloats * 4);
+            var heights = new Float32Array(buffer, 0, numberOfFloats);
+
+            var outputIndex = 0;
+            for (var j = bottomPostIndex; j <= topPostIndex; ++j) {
+                for (var i = leftPostIndex; i <= rightPostIndex; ++i) {
+                    heights[outputIndex++] = sourceHeights[j * width + i];
+                }
+            }
+
+            tile.geometry = heights;
+            tile.state = TileState.RECEIVED;
         }
 
-        ++requestsInFlight;
-
-        var yTiles = this.tilingScheme.getNumberOfYTilesAtLevel(tile.level);
-
-        var url = this.url + '/' + tile.level + '/' + tile.x + '/' + (yTiles - tile.y - 1) + '.bilgz';
-
-        if (typeof this._proxy !== 'undefined') {
-            url = this._proxy.getURL(url);
-        }
-
-        when(loadArrayBuffer(url), function(buffer) {
-            tile.geometry = buffer;
-            tile.state = TileState.RECEIVED;
-            --requestsInFlight;
-        }, function(e) {
-            /*global console*/
-            //console.error('failed to load tile geometry: ' + e);
-            //tile.state = TileState.FAILED;
-            tile.geometry = new Float32Array(65 * 65).buffer;
-            tile.state = TileState.RECEIVED;
-            --requestsInFlight;
-        });
     };
 
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
@@ -176,10 +251,12 @@ define([
      * @param {Tile} tile The tile to transform geometry for.
      */
     CesiumTerrainProvider.prototype.transformGeometry = function(context, tile) {
-        // Get the height data from the image by copying it to a canvas.
-        var width = 65;
-        var height = 65;
         var pixels = new Float32Array(tile.geometry);
+        var width = Math.sqrt(pixels.length) | 0;
+        var height = width;
+
+        var childTileBits = new Uint8Array(tile.geometry, width * height * 4 - 1, 1);
+        tile.childTileBits = childTileBits[0];
 
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();
@@ -209,7 +286,13 @@ define([
         }
 
         when(verticesPromise, function(result) {
-            tile.geometry = undefined;
+            // If data is not available for any of this tile's children, keep the
+            // raw geometry around because the no-data children will use it.
+            var allChildrenHaveData = tile.childTileBits === 15; // 15 = all four bits set, 1+2+4+8
+            var isUpsampled = tile.geometry.length !== this.heightmapWidth * this.heightmapWidth * 4;
+            if (allChildrenHaveData || isUpsampled) {
+                tile.geometry = undefined;
+            }
             tile.transformedGeometry = {
                 vertices : result.vertices,
                 statistics : result.statistics,
