@@ -79,7 +79,8 @@ define([
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 1
         });
-        this.heightmapWidth = 64;
+        this.maxLevel = 17;
+        this.heightmapWidth = 65;
         this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.getEllipsoid(), this.heightmapWidth, this.tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._proxy = description.proxy;
@@ -128,7 +129,7 @@ define([
         if (typeof parent !== 'undefined') {
             var childBits = parent.childTileBits;
 
-            var bitNumber = 2; // southwest child
+            var bitNumber = 2; // northwest child
             if (tile.x !== parent.x * 2) {
                 ++bitNumber; // east child
             }
@@ -172,7 +173,7 @@ define([
             // Find the nearest ancestor with data.
             var levelDifference = 1;
             var sourceTile = parent;
-            while (typeof sourceTile.geometry !== 'undefined') {
+            while (typeof sourceTile.geometry === 'undefined') {
                 sourceTile = sourceTile.parent;
                 ++levelDifference;
             }
@@ -220,13 +221,13 @@ define([
             bottomPostIndex -= sourceTop;
 
             // Copy the relevant posts.
-            var sourceHeights = sourceTile.geometry;
+            var sourceHeights = new Float32Array(sourceTile.geometry, 0, (sourceTile.geometry.byteLength - 1) / 4);
             var numberOfFloats = (rightPostIndex - leftPostIndex + 1) * (bottomPostIndex - topPostIndex + 1);
             var buffer = new ArrayBuffer(numberOfFloats * 4);
             var heights = new Float32Array(buffer, 0, numberOfFloats);
 
             var outputIndex = 0;
-            for (var j = bottomPostIndex; j <= topPostIndex; ++j) {
+            for (var j = topPostIndex; j <= bottomPostIndex; ++j) {
                 for (var i = leftPostIndex; i <= rightPostIndex; ++i) {
                     heights[outputIndex++] = sourceHeights[j * width + i];
                 }
@@ -251,18 +252,32 @@ define([
      * @param {Tile} tile The tile to transform geometry for.
      */
     CesiumTerrainProvider.prototype.transformGeometry = function(context, tile) {
-        var pixels = new Float32Array(tile.geometry);
+        var pixels = new Float32Array(tile.geometry, 0, (tile.geometry.byteLength - 1) / 4);
         var width = Math.sqrt(pixels.length) | 0;
         var height = width;
 
-        var childTileBits = new Uint8Array(tile.geometry, width * height * 4 - 1, 1);
+        var childTileBits = new Uint8Array(tile.geometry, width * height * 4, 1);
         tile.childTileBits = childTileBits[0];
+
+        // TODO: use the data from the downloaded tile instead of making this assumption.
+        if (tile.level < 11) {
+            tile.childTileBits = 15;
+        } else {
+            tile.childTileBits = 0;
+        }
 
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();
         var extent = tilingScheme.tileXYToNativeExtent(tile.x, tile.y, tile.level);
 
         tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
+
+        // If data is not available for any of this tile's children, keep the
+        // raw geometry around because the no-data children will use it.
+        var transfer = [];
+        if (tile.childTileBits === 15 || pixels.length !== this.heightmapWidth * this.heightmapWidth) {
+            transfer.push(pixels.buffer);
+        }
 
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : pixels,
@@ -277,7 +292,7 @@ define([
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
             skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
             isGeographic : true
-        }, [pixels.buffer]);
+        }, transfer);
 
         if (typeof verticesPromise === 'undefined') {
             //postponed
@@ -285,12 +300,9 @@ define([
             return;
         }
 
+        var that = this;
         when(verticesPromise, function(result) {
-            // If data is not available for any of this tile's children, keep the
-            // raw geometry around because the no-data children will use it.
-            var allChildrenHaveData = tile.childTileBits === 15; // 15 = all four bits set, 1+2+4+8
-            var isUpsampled = tile.geometry.length !== this.heightmapWidth * this.heightmapWidth * 4;
-            if (allChildrenHaveData || isUpsampled) {
+            if (tile.childTileBits === 15 || pixels.length !== that.heightmapWidth * that.heightmapWidth) {
                 tile.geometry = undefined;
             }
             tile.transformedGeometry = {
