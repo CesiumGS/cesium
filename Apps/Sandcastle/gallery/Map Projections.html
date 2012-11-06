@@ -77,7 +77,7 @@ require([
 
         var geographic = new ToggleButton({
             label: "Geographic",
-            onClick: function() { 
+            onClick: function() {
                 scene.scene2D.projection = new Cesium.GeographicProjection(Cesium.Ellipsoid.WGS84);
                 geographic.set('checked', true);
                 webMercator.set('checked', false);
@@ -101,7 +101,7 @@ require([
     
     var widget = new CesiumViewerWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
-    widget.startWidget();
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
 
     widget.showSkyAtmosphere(false);
@@ -111,9 +111,7 @@ require([
     transitioner.to2D();
 
     createButtons(widget.scene);
-    widget.startRenderLoop();
 });
-
 </script>
 </body>
 </html>

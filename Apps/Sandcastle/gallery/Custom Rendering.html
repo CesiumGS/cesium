@@ -63,10 +63,10 @@
 <div id="toolbar">Loading...</div>
 <script id="cesium_sandcastle_script">
 require([
-    'Source/Cesium', 'Widgets/Dojo/CesiumWidget', 'dijit/form/Button', 'dijit/form/DropDownButton', 
+    'Source/Cesium', 'Widgets/Dojo/CesiumWidget', 'dijit/form/Button', 'dijit/form/DropDownButton',
     'dijit/DropDownMenu', 'dijit/MenuItem', 'dojo/on', 'dojo/dom'
 ], function(
-    Cesium, CesiumWidget, Button, DropDownButton, 
+    Cesium, CesiumWidget, Button, DropDownButton,
     DropDownMenu, MenuItem, on, dom)
 {
     "use strict";
@@ -163,7 +163,7 @@ require([
         this._commandLists.removeAll();
         if (pass.color) {
             this._commandLists.colorList.push(colorCommand);
-        } 
+        }
         if (pass.pick) {
             this._commandLists.pickList.push(pickCommand);
         }
@@ -362,7 +362,7 @@ require([
         if (pass.color) {
             colorCommand.modelMatrix = modelMatrix;
             this._commandLists.colorList.push(colorCommand);
-        } 
+        }
         if (pass.pick) {
             pickCommand.modelMatrix = modelMatrix;
             this._commandLists.pickList.push(pickCommand);
@@ -386,7 +386,7 @@ require([
         
         sceneMenu.addChild(new MenuItem({
             label: '2D',
-            onClick: function() { 
+            onClick: function() {
                 centralBody.showSkyAtmosphere = false;
                 centralBody.showGroundAtmosphere = false;
                 transitioner.morphTo2D();
@@ -395,7 +395,7 @@ require([
         
         sceneMenu.addChild(new MenuItem({
             label: 'Columbus View',
-            onClick: function() { 
+            onClick: function() {
                 centralBody.showSkyAtmosphere = false;
                 centralBody.showGroundAtmosphere = false;
                 transitioner.morphToColumbusView();
@@ -404,7 +404,7 @@ require([
         
         sceneMenu.addChild(new MenuItem({
             label: '3D',
-            onClick: function() { 
+            onClick: function() {
                 centralBody.showSkyAtmosphere = true;
                 centralBody.showGroundAtmosphere = true;
                 transitioner.morphTo3D();
@@ -414,7 +414,7 @@ require([
         new Button({
             label: 'Render a box',
             onClick: function() {
-                primitives.removeAll();               
+                primitives.removeAll();
                 renderBox(scene);
                 Sandcastle.highlight(renderBox);
             }
@@ -437,11 +437,10 @@ require([
 
     var widget = new CesiumWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
-    widget.startWidget();
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
 
     createButtons(widget);
-    widget.startRenderLoop();
     renderBox(widget.scene);
 });
 </script>

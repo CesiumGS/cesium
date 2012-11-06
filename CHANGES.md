@@ -7,6 +7,7 @@ Beta Releases
 ### b11 - xx/xx/2012
 
 * Breaking changes:
+   * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
    * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
 
 ### b10 - 11/02/2012
