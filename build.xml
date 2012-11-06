@@ -255,7 +255,7 @@
 		<server proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,mesonet.agron.iastate.edu" port="8080" baseDir="${basedir}" />
 	</target>
 
-	<target name="buildApps">
+	<target name="buildApps" depends="build">
 		<antcall target="buildApp">
 			<param name="app.path" value="Apps/CesiumViewer" />
 		</antcall>

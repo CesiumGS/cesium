@@ -153,7 +153,7 @@ require({
             undef : true,
             unused : false,
             strict : true,
-            trailing : false,
+            trailing : true,
             asi : false,
             boss : false,
             debug : false,

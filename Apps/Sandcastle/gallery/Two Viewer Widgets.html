@@ -105,10 +105,11 @@ require([
 
     // First, create widget1 (the top widget).
     var widget1 = new CesiumViewerWidget({
-        endUserOptions : endUserOptions
+        endUserOptions : endUserOptions,
+        autoStartRenderLoop : false
     });
     widget1.placeAt(dom.byId("cesiumContainerTop"));
-    widget1.startWidget();
+    widget1.startup();
     dom.byId('topbar').innerHTML = '';
     
     // Save off a copy of widget1's animationController
@@ -118,10 +119,11 @@ require([
     // existing animationController to be shared.
     var widget2 = new CesiumViewerWidget({
         animationController : animationController,
-        endUserOptions : endUserOptions
+        endUserOptions : endUserOptions,
+        autoStartRenderLoop : false
     });
     widget2.placeAt(dom.byId("cesiumContainerBottom"));
-    widget2.startWidget();
+    widget2.startup();
 
     // Switch widget2 to Columbus View.
     widget2.viewColumbus.onClick();
