@@ -327,7 +327,10 @@ define([
         targetObject.orientation = defaultValue(targetObject.orientation, objectToMerge.orientation);
         targetObject.vertexPositions = defaultValue(targetObject.vertexPositions, objectToMerge.vertexPositions);
         targetObject.viewFrom = defaultValue(targetObject.viewFrom, objectToMerge.viewFrom);
-        targetObject._setAvailability(objectToMerge.availability);
+        var availability = objectToMerge.availability;
+        if (typeof availability !== 'undefined') {
+            targetObject._setAvailability(availability);
+        }
     };
 
     /**

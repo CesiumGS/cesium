@@ -71,12 +71,6 @@ define([
             this.ellipsoid = Ellipsoid.WGS84;
         },
 
-        postCreate : function() {
-            ready(this, '_setupCesium');
-        },
-
-        postSetup : undefined,
-
         onSetupError : function(widget, error) {
             console.error(error);
         },
@@ -172,7 +166,7 @@ define([
             }
         },
 
-        _setupCesium : function() {
+        startWidget : function() {
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
@@ -231,10 +225,6 @@ define([
                 on(window, 'resize', function() {
                     widget.resize();
                 });
-            }
-
-            if (typeof this.postSetup !== 'undefined') {
-                this.postSetup(this);
             }
 
             this.defaultCamera = camera.clone();
