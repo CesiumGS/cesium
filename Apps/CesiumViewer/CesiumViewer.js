@@ -26,7 +26,6 @@ define([
             enableDragDrop : true
         });
         widget.placeAt(dom.byId('cesiumContainer'));
-        widget.startWidget();
-        widget.startRenderLoop();
+        widget.startup();
     });
 });

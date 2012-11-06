@@ -85,10 +85,10 @@ require([
         
         rectangularPyramidSensor.material = Cesium.Material.fromType(scene.getContext(), 'Color');
         rectangularPyramidSensor.material.uniforms.color = {
-                         red : 0.0,
-                         green : 1.0,
-                         blue : 1.0,
-                         alpha : 0.5
+            red : 0.0,
+            green : 1.0,
+            blue : 1.0,
+            alpha : 0.5
         };
     }
     
@@ -123,7 +123,7 @@ require([
             label: 'Rectangular',
             onClick: function() {
                 sensors.removeAll();
-                addRectangularSensor(sensors, ellipsoid, scene); 
+                addRectangularSensor(sensors, ellipsoid, scene);
             }
         }));
         
@@ -131,7 +131,7 @@ require([
             label: 'Custom',
             onClick: function() {
                 sensors.removeAll();
-                addCustomSensor(sensors, ellipsoid, scene); 
+                addCustomSensor(sensors, ellipsoid, scene);
             }
         }));
 
@@ -149,12 +149,11 @@ require([
         }
     });
     widget.placeAt(dom.byId('cesiumContainer'));
-    widget.startWidget();
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
 
     var sensors = new Cesium.SensorVolumeCollection();
     createButtons(widget, sensors);
-    widget.startRenderLoop();
     addRectangularSensor(sensors, widget.ellipsoid, widget.scene);
 });
 </script>
