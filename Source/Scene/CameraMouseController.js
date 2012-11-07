@@ -116,13 +116,6 @@ define([
          */
         this.inertiaZoom = 0.8;
         /**
-         * If set, the camera will not be able to rotate past this axis in either direction.
-         * If this is set while in pan mode, the position clicked on the ellipsoid
-         * will not always map directly to the cursor.
-         * @type Cartesian3
-         */
-        this.constrainedAxis = undefined;
-        /**
          * Sets the behavior in Columbus view.
          * @type CameraColumbusViewMode
          */
@@ -218,7 +211,7 @@ define([
         if (ts && tr && threshold < inertiaMaxClickTimeThreshold && fromNow <= inertiaMaxTimeThreshold) {
             var d = decay(fromNow, decayCoef);
 
-            if (!object[lastMovementName]) {
+            if (typeof object[lastMovementName] === 'undefined') {
                 var lastMovement = handler.getLastMovement();
                 if (!lastMovement || sameMousePosition(lastMovement)) {
                     return;
@@ -246,6 +239,17 @@ define([
             if (isNaN(object[lastMovementName].endPosition.x) || isNaN(object[lastMovementName].endPosition.y) || sameMousePosition(object[lastMovementName])) {
                 object[lastMovementName] = undefined;
                 return;
+            }
+
+            var constrainedAxis = object._cameraController.constrainedAxis;
+            if (typeof constrainedAxis !== 'undefined') {
+                var cameraPosition = object._cameraController._camera.position.normalize();
+                var northParallel = cameraPosition.equalsEpsilon(constrainedAxis, CesiumMath.EPSILON2);
+                var southParallel = cameraPosition.equalsEpsilon(constrainedAxis.negate(), CesiumMath.EPSILON2);
+                if (northParallel || southParallel) {
+                    object[lastMovementName] = undefined;
+                    return;
+                }
             }
 
             if (!handler.isButtonDown()) {
@@ -445,14 +449,10 @@ define([
         var transform = Matrix4.fromTranslation(center, rotateTransform);
 
         var oldEllipsoid = controller._ellipsoid;
-        var oldAxis = controller.constrainedAxis;
-
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-        controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-        rotate3D(controller, movement, transform);
+        rotate3D(controller, movement, transform, Cartesian3.UNIT_Z);
 
-        controller.constrainedAxis = oldAxis;
         controller.setEllipsoid(oldEllipsoid);
     }
 
@@ -563,9 +563,13 @@ define([
         }
     }
 
-    function rotate3D(controller, movement, transform) {
+    function rotate3D(controller, movement, transform, constrainedAxis) {
         var cameraController = controller._cameraController;
-        cameraController.constrainedAxis = controller.constrainedAxis;
+        var oldAxis = cameraController.constrainedAxis;
+        if (typeof constrainedAxis !== 'undefined') {
+            cameraController.constrainedAxis = constrainedAxis;
+        }
+
         // CAMERA TODO: remove access to camera, fixes a problem in Columbus view
         //var rho = cameraController.getMagnitude();
         var rho = controller._cameraController._camera.position.magnitude();
@@ -587,6 +591,8 @@ define([
 
         cameraController.rotateRight(deltaPhi, transform);
         cameraController.rotateUp(deltaTheta, transform);
+
+        cameraController.constrainedAxis = oldAxis;
     }
 
     var pan3DP0 = Cartesian4.UNIT_W.clone();
@@ -594,7 +600,6 @@ define([
     var pan3DAxis = new Cartesian3();
     function pan3D(controller, movement) {
         var cameraController = controller._cameraController;
-        cameraController.constrainedAxis = controller.constrainedAxis;
         var p0 = cameraController.pickEllipsoid(movement.startPosition, controller._ellipsoid, pan3DP0);
         var p1 = cameraController.pickEllipsoid(movement.endPosition, controller._ellipsoid, pan3DP1);
 
@@ -606,7 +611,7 @@ define([
         p0 = cameraController._camera.worldToCameraCoordinates(p0, p0);
         p1 = cameraController._camera.worldToCameraCoordinates(p1, p1);
 
-        if (typeof controller.constrainedAxis === 'undefined') {
+        if (typeof cameraController.constrainedAxis === 'undefined') {
             Cartesian3.normalize(p0, p0);
             Cartesian3.normalize(p1, p1);
             var dot = Cartesian3.dot(p0, p1);
@@ -670,10 +675,7 @@ define([
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
 
         var oldEllipsoid = controller._ellipsoid;
-        var oldAxis = controller.constrainedAxis;
-
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-        controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         // CAMERA TODO: Remove the need for camera access
         var yDiff = movement.startPosition.y - movement.endPosition.y;
@@ -686,9 +688,8 @@ define([
             movement.endPosition.y = movement.startPosition.y;
         }
 
-        rotate3D(controller, movement, transform);
+        rotate3D(controller, movement, transform, Cartesian3.UNIT_Z);
 
-        controller.constrainedAxis = oldAxis;
         controller.setEllipsoid(oldEllipsoid);
     }
 

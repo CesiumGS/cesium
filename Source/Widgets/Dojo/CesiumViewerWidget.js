@@ -900,12 +900,13 @@ define([
 
             var scene = this.scene;
             var mode = scene.mode;
-            var camera = scene.getCamera();
-            var mouseHandler = scene.getCameraMouseController();
 
+            var camera = scene.getCamera();
+            camera.controller.constrainedAxis = undefined;
+
+            var mouseHandler = scene.getCameraMouseController();
             mouseHandler.enableTranslate = true;
             mouseHandler.setEllipsoid(Ellipsoid.WGS84);
-            mouseHandler.constrainedAxis = undefined;
             mouseHandler.columbusViewMode = CameraColumbusViewMode.FREE;
 
             if (mode === SceneMode.SCENE2D) {

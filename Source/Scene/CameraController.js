@@ -546,7 +546,13 @@ define([
                 var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
                 var dot = p.dot(constrainedAxis);
                 var angleToAxis = Math.acos(dot);
-                if (Math.abs(angle) > Math.abs(angleToAxis)) {
+                if (angle < 0 && -angle > angleToAxis) {
+                    angle = -angleToAxis;
+                }
+
+                dot = p.dot(constrainedAxis.negate());
+                angleToAxis = Math.acos(dot);
+                if (angle > 0 && angle > angleToAxis) {
                     angle = angleToAxis;
                 }
 
