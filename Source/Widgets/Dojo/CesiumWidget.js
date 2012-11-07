@@ -71,6 +71,10 @@ define([
             this.ellipsoid = Ellipsoid.WGS84;
         },
 
+        postCreate : function() {
+            this.cesiumLogo.style.backgroundImage = 'url(' + require.toUrl('../Images/Cesium_Logo_overlay.png') + ')';
+        },
+
         onSetupError : function(widget, error) {
             console.error(error);
         },

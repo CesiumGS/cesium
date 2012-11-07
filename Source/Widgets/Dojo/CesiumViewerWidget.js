@@ -240,10 +240,6 @@ define([
             this.ellipsoid = Ellipsoid.WGS84;
         },
 
-        postCreate : function() {
-            this.cesiumLogo.style.backgroundImage = 'url(' + require.toUrl('../Images/Cesium_Logo_overlay.png') + ')';
-        },
-
         /**
          * This function will get a callback in the event of setup failure, likely indicating
          * a problem with WebGL support or the availability of a GL context.
