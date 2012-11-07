@@ -196,7 +196,7 @@ define([
 
             var context = scene.getContext();
 
-            var imageryUrl = '../../Resources/Imagery/';
+            var imageryUrl = '../../Assets/Imagery/';
             var maxTextureSize = context.getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card

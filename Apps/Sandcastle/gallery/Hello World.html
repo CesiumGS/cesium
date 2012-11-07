@@ -77,7 +77,7 @@ require([
     var cb = new Cesium.CentralBody(ellipsoid);
     cb.getImageryLayers().addImageryProvider(bing);
 
-    var imageryUrl = '../../../Source/Resources/Imagery/';
+    var imageryUrl = '../../../Source/Assets/Imagery/';
     cb.nightImageSource = imageryUrl + 'land_ocean_ice_lights_2048.jpg';
     cb.specularMapSource = imageryUrl + 'earthspec1k.jpg';
     if (scene.getContext().getMaximumTextureSize() > 2048) {

@@ -644,7 +644,7 @@ define([
                 context.setThrowOnWebGLError(true);
             }
 
-            var imageryUrl = '../../Resources/Imagery/';
+            var imageryUrl = '../../Assets/Imagery/';
             var maxTextureSize = context.getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card

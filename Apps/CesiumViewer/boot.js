@@ -17,8 +17,8 @@ require({
         name : 'Renderer',
         location : 'Source/Renderer'
     }, {
-        name : 'Resources',
-        location : 'Source/Resources'
+        name : 'Assets',
+        location : 'Source/Assets'
     }, {
         name : 'Scene',
         location : 'Source/Scene'

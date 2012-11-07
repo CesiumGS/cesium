@@ -18,7 +18,7 @@
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
-            { name: 'Resources', location: 'Source/Resources' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
@@ -157,7 +157,7 @@ require([
         addBaseLayerOption(
                 'Single Image',
                 new Cesium.SingleTileImageryProvider({
-                    url : require.toUrl('Resources/Imagery/NE2_50M_SR_W_4096.jpg')
+                    url : require.toUrl('Assets/Imagery/NE2_50M_SR_W_4096.jpg')
                 }));
 
         // Create the additional layers

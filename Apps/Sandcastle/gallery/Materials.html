@@ -18,7 +18,7 @@
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
-            { name: 'Resources', location: 'Source/Resources' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
@@ -195,14 +195,14 @@ require([
                 context: scene.getContext(),
                 fabric: {
                     uniforms : {
-                        image: require.toUrl('Resources/Imagery/earthspec1k.jpg'),
-                        heightField : require.toUrl('Resources/Imagery/earthbump1k.jpg')
+                        image: require.toUrl('Assets/Imagery/earthspec1k.jpg'),
+                        heightField : require.toUrl('Assets/Imagery/earthbump1k.jpg')
                     },
                     materials: {
                         bumpMap: {
                             type : 'BumpMap',
                             uniforms : {
-                                image : require.toUrl('Resources/Imagery/earthbump1k.jpg')
+                                image : require.toUrl('Assets/Imagery/earthbump1k.jpg')
                             }
                         }
                     },
@@ -282,7 +282,7 @@ require([
             context : scene.getContext(),
             fabric : {
                 uniforms : {
-                    image : require.toUrl('Resources/Imagery/earthspec1k.jpg')
+                    image : require.toUrl('Assets/Imagery/earthspec1k.jpg')
                 },
                 materials : {
                     fresnel : {
@@ -377,7 +377,7 @@ require([
             context : scene.getContext(),
             fabric : {
                 uniforms : {
-                    image : require.toUrl('Resources/Imagery/earthspec1k.jpg')
+                    image : require.toUrl('Assets/Imagery/earthspec1k.jpg')
                 },
                 materials : {
                     reflection: {
@@ -409,7 +409,7 @@ require([
             context : scene.getContext(),
             fabric : {
                 uniforms : {
-                    image : require.toUrl('Resources/Imagery/earthspec1k.jpg')
+                    image : require.toUrl('Assets/Imagery/earthspec1k.jpg')
                 },
                 materials : {
                     refraction: {
