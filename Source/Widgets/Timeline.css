@@ -107,7 +107,7 @@
 	position: absolute;
 	width: 16px;
 	height: 16px;
-	background-image: url("TimelineIcons.png");
+	background-image: url("Images/TimelineIcons.png");
 	background-repeat: no-repeat;
 	z-index: 10;
 }

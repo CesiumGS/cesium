@@ -1,0 +1,6 @@
+{
+	"name": "Resources",
+	"description": "Cesium Resources",
+	"version": "0.6.0",
+	"dojoBuild": "Resources.profile.js"
+}
