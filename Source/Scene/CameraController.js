@@ -855,10 +855,8 @@ define([
     }
 
     var viewExtentCVCartographic = new Cartographic();
-    var viewExtentCVCartographicHeight = new Cartographic();
     var viewExtentCVNorthEast = Cartesian4.UNIT_W.clone();
     var viewExtentCVSouthWest = Cartesian4.UNIT_W.clone();
-    var viewExtentCVPosition = Cartesian4.UNIT_W.clone();
     var viewExtentCVTransform = new Matrix4();
     function viewExtentColumbusView(camera, extent, projection) {
         var north = extent.north;
@@ -888,15 +886,10 @@ define([
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
 
-        cart = viewExtentCVCartographicHeight;
-        cart.longitude = 0.5 * (west + east);
-        cart.latitude = 0.5 * (north + south);
-        cart.height = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
-        position = projection.project(cart);
-        position = Cartesian3.clone(position, viewExtentCVPosition);
-        Matrix4.multiplyByVector(transform, position, position);
-        Matrix4.multiplyByVector(invTransform, position, position);
-        Cartesian3.clone(position, camera.position);
+        position = camera.position;
+        position.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
+        position.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
+        position.z = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
 
         var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
         Cartesian3.negate(direction, direction);
@@ -938,10 +931,8 @@ define([
         camera.frustum.top = top;
         camera.frustum.bottom = -top;
 
-        cart.longitude = 0.5 * (west + east);
-        cart.latitude = 0.5 * (north + south);
-        var position = projection.project(cart);
-        Cartesian2.clone(position, camera.position);
+        camera.position.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
+        camera.position.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
 
         //Orient the camera north.
         var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
