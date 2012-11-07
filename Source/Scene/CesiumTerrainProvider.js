@@ -79,7 +79,7 @@ define([
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 1
         });
-        this.maxLevel = 17;
+        //this.maxLevel = 17;
         this.heightmapWidth = 65;
         this.levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this.tilingScheme.getEllipsoid(), this.heightmapWidth, this.tilingScheme.getNumberOfXTilesAtLevel(0));
 
@@ -150,7 +150,7 @@ define([
 
             var yTiles = this.tilingScheme.getNumberOfYTilesAtLevel(tile.level);
 
-            var url = this.url + '/' + tile.level + '/' + tile.x + '/' + (yTiles - tile.y - 1) + '.bilgz';
+            var url = this.url + '/' + tile.level + '/' + tile.x + '/' + (yTiles - tile.y - 1) + '.terrain';
 
             if (typeof this._proxy !== 'undefined') {
                 url = this._proxy.getURL(url);
@@ -182,17 +182,6 @@ define([
             var width = 65;
             var height = 65;
 
-            // We can support the following level differences without interpolating:
-            // 1 - 33x33 posts
-            // 2 - 17x17 posts
-            // 3 - 9x9 posts
-            // 4 - 5x5 posts
-            // 5 - 3x3 posts
-            // 6 - 2x2 posts
-            if (levelDifference > 6) {
-                // TODO: interpolate
-            }
-
             // Compute the post indices of the corners of this tile within its own level.
             var leftPostIndex = tile.x * (width - 1);
             var rightPostIndex = leftPostIndex + width - 1;
@@ -206,12 +195,6 @@ define([
             topPostIndex /= twoToTheLevelDifference;
             bottomPostIndex /= twoToTheLevelDifference;
 
-            // Make sure the post indices are integers.
-            leftPostIndex |= 0;
-            rightPostIndex |= 0;
-            topPostIndex |= 0;
-            bottomPostIndex |= 0;
-
             // Adjust the indices to be relative to the northwest corner of the source tile.
             var sourceLeft = sourceTile.x * (width - 1);
             var sourceTop = sourceTile.y * (height - 1);
@@ -220,24 +203,88 @@ define([
             topPostIndex -= sourceTop;
             bottomPostIndex -= sourceTop;
 
-            // Copy the relevant posts.
-            var sourceHeights = new Float32Array(sourceTile.geometry, 0, (sourceTile.geometry.byteLength - 1) / 4);
-            var numberOfFloats = (rightPostIndex - leftPostIndex + 1) * (bottomPostIndex - topPostIndex + 1);
-            var buffer = new ArrayBuffer(numberOfFloats * 4);
-            var heights = new Float32Array(buffer, 0, numberOfFloats);
+            var leftInteger = leftPostIndex | 0;
+            var rightInteger = rightPostIndex | 0;
+            var topInteger = topPostIndex | 0;
+            var bottomInteger = bottomPostIndex | 0;
 
-            var outputIndex = 0;
-            for (var j = topPostIndex; j <= bottomPostIndex; ++j) {
-                for (var i = leftPostIndex; i <= rightPostIndex; ++i) {
-                    heights[outputIndex++] = sourceHeights[j * width + i];
+            var sourceHeights = new Float32Array(sourceTile.geometry, 0, (sourceTile.geometry.byteLength - 1) / 4);
+
+            var buffer;
+            var heights;
+
+            // We can support the following level differences without interpolating:
+            // 1 - 33x33 posts
+            // 2 - 17x17 posts
+            // 3 - 9x9 posts
+            // 4 - 5x5 posts
+            // 5 - 3x3 posts
+            // 6 - 2x2 posts
+            // Beyond that, let's use 2x2 interpolated posts
+            if (levelDifference > 6) {
+                // Interpolate the four posts
+                if (leftInteger === rightInteger) {
+                    ++rightInteger;
+                }
+                if (topInteger === bottomInteger) {
+                    ++bottomInteger;
+                }
+
+                var southwestHeight = sourceHeights[bottomInteger * width + leftInteger];
+                var southeastHeight = sourceHeights[bottomInteger * width + rightInteger];
+                var northwestHeight = sourceHeights[topInteger * width + leftInteger];
+                var northeastHeight = sourceHeights[topInteger * width + rightInteger];
+
+                var westFraction = leftPostIndex - leftInteger;
+                var southFraction = bottomInteger - bottomPostIndex;
+                var eastFraction = rightPostIndex - leftInteger;
+                var northFraction = bottomInteger - topPostIndex;
+
+                var southwestResult = triangleInterpolateHeight(westFraction, southFraction, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
+                var southeastResult = triangleInterpolateHeight(eastFraction, southFraction, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
+                var northwestResult = triangleInterpolateHeight(westFraction, northFraction, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
+                var northeastResult = triangleInterpolateHeight(eastFraction, northFraction, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
+
+                buffer = new ArrayBuffer(4 * 4 + 1);
+                heights = new Float32Array(buffer, 0, 4);
+                heights[0] = northwestResult;
+                heights[1] = northeastResult;
+                heights[2] = southwestResult;
+                heights[3] = southeastResult;
+            } else {
+                // Copy the relevant posts.
+                var numberOfFloats = (rightInteger - leftInteger + 1) * (bottomInteger - topInteger + 1);
+                buffer = new ArrayBuffer(numberOfFloats * 4 + 1);
+                heights = new Float32Array(buffer, 0, numberOfFloats);
+
+                var outputIndex = 0;
+                for (var j = topInteger; j <= bottomInteger; ++j) {
+                    for (var i = leftInteger; i <= rightInteger; ++i) {
+                        heights[outputIndex++] = sourceHeights[j * width + i];
+                    }
                 }
             }
 
-            tile.geometry = heights;
+            // Missing tiles do not have any children.
+            var childBitsArray = new Uint8Array(buffer, buffer.byteLength - 1, 1);
+            childBitsArray[0] = 0;
+
+            tile.geometry = buffer;
             tile.state = TileState.RECEIVED;
         }
 
     };
+
+    function triangleInterpolateHeight(dX, dY, southwestHeight, southeastHeight, northwestHeight, northeastHeight) {
+        // The HeightmapTessellator bisects the quad from southwest to northeast.
+        if (dY < dX) {
+            // Lower right triangle
+            return southwestHeight + (dX * (southeastHeight - southwestHeight)) + (dY * (northeastHeight - southeastHeight));
+        }
+
+        // Upper left triangle
+        return southwestHeight + (dX * (northeastHeight - northwestHeight)) + (dY * (northwestHeight - southwestHeight));
+    }
 
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
 
@@ -258,13 +305,6 @@ define([
 
         var childTileBits = new Uint8Array(tile.geometry, width * height * 4, 1);
         tile.childTileBits = childTileBits[0];
-
-        // TODO: use the data from the downloaded tile instead of making this assumption.
-        if (tile.level < 11) {
-            tile.childTileBits = 15;
-        } else {
-            tile.childTileBits = 0;
-        }
 
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();

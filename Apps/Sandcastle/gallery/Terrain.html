@@ -127,7 +127,7 @@ require([
     function keydownHandler(e) {
         switch (e.keyCode) {
         case 'F'.charCodeAt(0):
-            cb._surface.toggleLodUpdate();
+            cb._surface.debugToggleLodUpdate();
             break;
         case 'B'.charCodeAt(0):
             var camera = scene.getCamera();
@@ -178,7 +178,7 @@ require([
     cb = scene.getPrimitives().getCentralBody();
 
     var terrainProvider = new Cesium.CesiumTerrainProvider({
-        url : 'http://cesium.cloudapp.net/terrain'
+        url : 'http://108.16.61.27/terrain'
     });
 
     cb._surface._terrainProvider = terrainProvider;
