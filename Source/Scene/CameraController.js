@@ -688,7 +688,7 @@ define([
         if (this._mode === SceneMode.SCENE3D) {
             return camera.position.magnitude();
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            return camera.position.z;
+            return Math.abs(camera.position.z);
         } else if (this._mode === SceneMode.SCENE2D) {
             return  Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
         }
@@ -898,11 +898,8 @@ define([
         Matrix4.multiplyByVector(invTransform, position, position);
         Cartesian3.clone(position, camera.position);
 
-        // Not exactly -z direction because that would lock the camera in place with a constrained z axis.
-        var direction = camera.direction;
-        direction.x = 0.0;
-        direction.y = 0.0001;
-        direction.z = -0.999;
+        var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
+        Cartesian3.negate(direction, direction);
         var right = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
         Cartesian3.cross(right, direction, camera.up);
     }
