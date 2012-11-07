@@ -82,14 +82,17 @@
     function createScene(canvas) {
         var scene = new Cesium.Scene(canvas);
         var primitives = scene.getPrimitives();
-        var imagery = new Cesium.SingleTileImageryProvider({
-            url : '../../../Images/NE2_50M_SR_W_2048.jpg'
+
+        var imageryUrl = '../../../Source/Assets/Imagery/';
+        var imageryProvider = new Cesium.SingleTileImageryProvider({
+            url : imageryUrl + 'NE2_50M_SR_W_2048.jpg'
         });
 
         var cb = new Cesium.CentralBody(ellipsoid);
-        cb.getImageryLayers().addImageryProvider(imagery);
-        cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
-        cb.specularMapSource = '../../../Images/earthspec1k.jpg';
+        cb.getImageryLayers().addImageryProvider(imageryProvider);
+        cb.nightImageSource = imageryUrl + 'land_ocean_ice_lights_2048.jpg';
+        cb.specularMapSource = imageryUrl + 'earthspec1k.jpg';
+
         cb.showSkyAtmosphere = (canvas === canvas3D);
         cb.showGroundAtmosphere = false;
         primitives.setCentralBody(cb);

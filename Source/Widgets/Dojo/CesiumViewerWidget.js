@@ -644,18 +644,19 @@ define([
                 context.setThrowOnWebGLError(true);
             }
 
+            var imageryUrl = '../../Assets/Imagery/';
             var maxTextureSize = context.getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_512.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_512.jpg');
             } else {
                 // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl('Images/earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl('Images/earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_2048.jpg');
+                this.specularMapUrl = this.specularMapUrl || require.toUrl(imageryUrl + 'earthspec1k.jpg');
+                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl(imageryUrl + 'earthcloudmaptrans.jpg');
+                this.bumpMapUrl = this.bumpMapUrl || require.toUrl(imageryUrl + 'earthbump1k.jpg');
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
