@@ -195,14 +195,14 @@ require([
                 context: scene.getContext(),
                 fabric: {
                     uniforms : {
-                        image: require.toUrl('Resources/earthspec1k.jpg'),
-                        heightField : require.toUrl('Resources/earthbump1k.jpg')
+                        image: require.toUrl('Resources/Imagery/earthspec1k.jpg'),
+                        heightField : require.toUrl('Resources/Imagery/earthbump1k.jpg')
                     },
                     materials: {
                         bumpMap: {
                             type : 'BumpMap',
                             uniforms : {
-                                image : require.toUrl('Resources/earthbump1k.jpg')
+                                image : require.toUrl('Resources/Imagery/earthbump1k.jpg')
                             }
                         }
                     },
@@ -282,7 +282,7 @@ require([
             context : scene.getContext(),
             fabric : {
                 uniforms : {
-                    image : require.toUrl('Resources/earthspec1k.jpg')
+                    image : require.toUrl('Resources/Imagery/earthspec1k.jpg')
                 },
                 materials : {
                     fresnel : {
@@ -377,7 +377,7 @@ require([
             context : scene.getContext(),
             fabric : {
                 uniforms : {
-                    image : require.toUrl('Resources/earthspec1k.jpg')
+                    image : require.toUrl('Resources/Imagery/earthspec1k.jpg')
                 },
                 materials : {
                     reflection: {
@@ -409,7 +409,7 @@ require([
             context : scene.getContext(),
             fabric : {
                 uniforms : {
-                    image : require.toUrl('Resources/earthspec1k.jpg')
+                    image : require.toUrl('Resources/Imagery/earthspec1k.jpg')
                 },
                 materials : {
                     refraction: {

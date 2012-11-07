@@ -83,15 +83,15 @@
         var scene = new Cesium.Scene(canvas);
         var primitives = scene.getPrimitives();
 
-        var resourcesUrl = '../../../Source/Resources/';
+        var imageryUrl = '../../../Source/Resources/Imagery/';
         var imageryProvider = new Cesium.SingleTileImageryProvider({
-            url : resourcesUrl + 'NE2_50M_SR_W_2048.jpg'
+            url : imageryUrl + 'NE2_50M_SR_W_2048.jpg'
         });
 
         var cb = new Cesium.CentralBody(ellipsoid);
         cb.getImageryLayers().addImageryProvider(imageryProvider);
-        cb.nightImageSource = resourcesUrl + 'land_ocean_ice_lights_2048.jpg';
-        cb.specularMapSource = resourcesUrl + 'earthspec1k.jpg';
+        cb.nightImageSource = imageryUrl + 'land_ocean_ice_lights_2048.jpg';
+        cb.specularMapSource = imageryUrl + 'earthspec1k.jpg';
 
         cb.showSkyAtmosphere = (canvas === canvas3D);
         cb.showGroundAtmosphere = false;
