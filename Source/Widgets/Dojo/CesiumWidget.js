@@ -166,7 +166,13 @@ define([
             }
         },
 
-        startWidget : function() {
+        _started : false,
+
+        startup : function() {
+            if (this._started) {
+                return;
+            }
+
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
@@ -177,6 +183,7 @@ define([
                 }
                 return;
             }
+            this._started = true;
 
             this.resize();
 
@@ -226,6 +233,10 @@ define([
             }
 
             this.defaultCamera = camera.clone();
+
+            if (this.autoStartRenderLoop) {
+                this.startRenderLoop();
+            }
         },
 
         viewHome : function() {
@@ -317,6 +328,8 @@ define([
             centralBody.cloudsMapSource = this.cloudsMapUrl;
             centralBody.bumpMapSource = this.bumpMapUrl;
         },
+
+        autoStartRenderLoop : true,
 
         startRenderLoop : function() {
             var widget = this;

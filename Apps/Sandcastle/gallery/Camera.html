@@ -85,19 +85,19 @@ require([
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
             positions: Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                new Cesium.Cartographic(west, south), 
-                new Cesium.Cartographic(west, north), 
-                new Cesium.Cartographic(east, north), 
-                new Cesium.Cartographic(east, south), 
+                new Cesium.Cartographic(west, south),
+                new Cesium.Cartographic(west, north),
+                new Cesium.Cartographic(east, north),
+                new Cesium.Cartographic(east, south),
                 new Cesium.Cartographic(west, south)])
         });
-        scene.getPrimitives().add(polylines);        
+        scene.getPrimitives().add(polylines);
     }
     
     function createButtons(scene) {
         new ToggleButton({
             label: "View an Extent",
-            onClick: function() { 
+            onClick: function() {
                 viewAnExtent(scene);
                 Sandcastle.highlight(viewAnExtent);
             }
@@ -106,11 +106,10 @@ require([
 
     var widget = new CesiumWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
-    widget.startWidget();
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
 
     createButtons(widget.scene);
-    widget.startRenderLoop();
 });
 </script>
 </body>

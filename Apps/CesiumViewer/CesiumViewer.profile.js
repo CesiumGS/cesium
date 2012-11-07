@@ -29,7 +29,6 @@ var profile = {
         'dojo-sync-loader' : 0,
         'dojo-xhr-factory' : 0,
         'dojo-test-sniff' : 0,
-        'dom-addeventlistener' : 1,
         'dojo-firebug' : 0
     },
 
