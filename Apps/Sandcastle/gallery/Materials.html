@@ -18,6 +18,7 @@
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
@@ -83,7 +84,7 @@ require([
                     alphaMaterial : {
                         type : 'AlphaMap',
                         uniforms : {
-                            image : '../../../Images/Cesium_Logo_Color.jpg',
+                            image : '../images/Cesium_Logo_Color.jpg',
                             channel : 'r'
                         }
                     }
@@ -120,13 +121,13 @@ require([
                     diffuseMaterial : {
                         type : 'DiffuseMap',
                         uniforms : {
-                            image : '../../../Images/bumpmap.png'
+                            image : '../images/bumpmap.png'
                         }
                     },
                     bumpMaterial : {
                         type : 'BumpMap',
                         uniforms : {
-                            image : '../../../Images/bumpmap.png',
+                            image : '../images/bumpmap.png',
                             strength : 0.8
                         }
                     }
@@ -194,14 +195,14 @@ require([
                 context: scene.getContext(),
                 fabric: {
                     uniforms : {
-                        image: '../../../Images/earthspec1k.jpg',
-                        heightField : '../../../Images/earthbump1k.jpg'
+                        image: require.toUrl('Assets/Imagery/earthspec1k.jpg'),
+                        heightField : require.toUrl('Assets/Imagery/earthbump1k.jpg')
                     },
                     materials: {
                         bumpMap: {
                             type : 'BumpMap',
                             uniforms : {
-                                image : '../../../Images/earthbump1k.jpg'
+                                image : require.toUrl('Assets/Imagery/earthbump1k.jpg')
                             }
                         }
                     },
@@ -231,7 +232,7 @@ require([
             fabric : {
                 type : 'DiffuseMap',
                 uniforms : {
-                    image : '../../../Images/Cesium_Logo_Color.jpg'
+                    image : '../images/Cesium_Logo_Color.jpg'
                 }
             }
         });
@@ -246,13 +247,13 @@ require([
                     diffuseMaterial : {
                         type : 'DiffuseMap',
                         uniforms : {
-                            image : '../../../Images/Cesium_Logo_Color.jpg'
+                            image : '../images/Cesium_Logo_Color.jpg'
                         }
                     },
                     emissionMaterial : {
                         type : 'EmissionMap',
                         uniforms : {
-                            image : '../../../Images/checkerboard.png',
+                            image : '../images/checkerboard.png',
                             repeat : {
                                 x : 1,
                                 y : 0.5
@@ -276,12 +277,12 @@ require([
     function applyFresnelMaterial(primitive, scene) {
         Sandcastle.declare(applyFresnelMaterial);   // For highlighting in Sandcastle.
         
-        var imagePath = '../../../Images/checkerboard.png';
+        var imagePath = '../images/checkerboard.png';
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
             fabric : {
                 uniforms : {
-                    image : '../../../Images/earthspec1k.jpg'
+                    image : require.toUrl('Assets/Imagery/earthspec1k.jpg')
                 },
                 materials : {
                     fresnel : {
@@ -334,7 +335,7 @@ require([
             fabric : {
                 type : 'Image',
                 uniforms : {
-                    image : '../../../Images/Cesium_Logo_Color.jpg'
+                    image : '../images/Cesium_Logo_Color.jpg'
                 }
             }
          });
@@ -349,13 +350,13 @@ require([
                     diffuseMaterial : {
                         type : 'DiffuseMap',
                         uniforms : {
-                            image : '../../../Images/bumpmap.png'
+                            image : '../images/bumpmap.png'
                         }
                     },
                     normalMap : {
                         type : 'NormalMap',
                         uniforms : {
-                            image : '../../../Images/normalmap.png',
+                            image : '../images/normalmap.png',
                             strength : 0.6
                         }
                     }
@@ -371,12 +372,12 @@ require([
     
     function applyReflectionMaterial(primitive, scene) {
         Sandcastle.declare(applyReflectionMaterial);    // For highlighting in Sandcastle.
-        var imagePath = '../../../Images/checkerboard.png';
+        var imagePath = '../images/checkerboard.png';
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
             fabric : {
                 uniforms : {
-                    image : '../../../Images/earthspec1k.jpg'
+                    image : require.toUrl('Assets/Imagery/earthspec1k.jpg')
                 },
                 materials : {
                     reflection: {
@@ -403,12 +404,12 @@ require([
     
     function applyRefractionMaterial(primitive, scene) {
         Sandcastle.declare(applyRefractionMaterial);    // For highlighting in Sandcastle.
-        var imagePath = '../../../Images/checkerboard.png';
+        var imagePath = '../images/checkerboard.png';
         primitive.material = new Cesium.Material({
             context : scene.getContext(),
             fabric : {
                 uniforms : {
-                    image : '../../../Images/earthspec1k.jpg'
+                    image : require.toUrl('Assets/Imagery/earthspec1k.jpg')
                 },
                 materials : {
                     refraction: {
@@ -441,7 +442,7 @@ require([
             fabric : {
                 type : 'SpecularMap',
                 uniforms : {
-                    image : '../../../Images/Cesium_Logo_Color.jpg',
+                    image : '../images/Cesium_Logo_Color.jpg',
                     channel : 'r'
                 }
             }

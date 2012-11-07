@@ -18,6 +18,7 @@
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
@@ -84,7 +85,7 @@ require([
             });
             scene.getPrimitives().add(billboards);
         };
-        image.src = '../../../Images/Cesium_Logo_overlay.png';
+        image.src = '../images/Cesium_Logo_overlay.png';
     }
     
     function setBillboardPropertiesAtCreation(scene, ellipsoid) {
@@ -107,7 +108,7 @@ require([
             });
             scene.getPrimitives().add(billboards);
         };
-        image.src = '../../../Images/Cesium_Logo_overlay.png';
+        image.src = '../images/Cesium_Logo_overlay.png';
     }
     
     function setBillboardProperties(scene, ellipsoid) {
@@ -130,14 +131,14 @@ require([
 
             scene.getPrimitives().add(billboards);
         };
-        image.src = '../../../Images/Cesium_Logo_overlay.png';
+        image.src = '../images/Cesium_Logo_overlay.png';
     }
     
     function addMultipleBillboards(scene, ellipsoid) {
         Sandcastle.declare(addMultipleBillboards);  // For highlighting in Sandcastle.
         Cesium.when.all([
-                         Cesium.loadImage('../../../Images/Cesium_Logo_overlay.png'),
-                         Cesium.loadImage('../../../Images/facility.gif')
+                         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
+                         Cesium.loadImage('../images/facility.gif')
                         ])
                    .then(function(images) {
             // Once both images are downloaded, they are combined into one image,
@@ -306,7 +307,7 @@ require([
             });
             scene.getPrimitives().add(billboards);
         };
-        image.src = '../../../Images/whiteShapes.png';
+        image.src = '../images/whiteShapes.png';
     }
     
     function addBillboardsInReferenceframe(scene, ellipsoid) {
@@ -326,7 +327,7 @@ require([
             billboards.add({ imageIndex : 0, position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
             scene.getPrimitives().add(billboards);
         };
-        image.src = '../../../Images/facility.gif';
+        image.src = '../images/facility.gif';
     }
     
     function createButtons(widget) {
