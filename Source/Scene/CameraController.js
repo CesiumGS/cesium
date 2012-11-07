@@ -95,7 +95,7 @@ define([
          * The maximum height, in meters, above the surface of the ellipsoid of the camera position. Defaults to 20.0.
          * @type Number
          */
-        this.maximumHeightAboveSurface = 20.0;
+        this.minimumHeightAboveSurface = 20.0;
 
         this._maxCoord = undefined;
         this._frustum = undefined;
@@ -437,8 +437,8 @@ define([
 
             var ellipsoid = controller._projection.getEllipsoid();
             var positionCart = ellipsoid.cartesianToCartographic(position, revertTransformPositionCart);
-            if (positionCart.height < controller.maximumHeightAboveSurface + 1.0) {
-                positionCart.height = controller.maximumHeightAboveSurface + 1.0;
+            if (positionCart.height < controller.minimumHeightAboveSurface + 1.0) {
+                positionCart.height = controller.minimumHeightAboveSurface + 1.0;
                 ellipsoid.cartographicToCartesian(positionCart, position);
 
                 Cartesian3.subtract(center, position, direction);

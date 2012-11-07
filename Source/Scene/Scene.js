@@ -259,7 +259,7 @@ define([
     function update(scene) {
         var us = scene.getUniformState();
         var camera = scene._camera;
-        var cameraController = scene._cameraMouseController;
+        var cameraMouseController = scene._cameraMouseController;
 
         // Destroy released shaders once every 120 frames to avoid thrashing the cache
         if (scene._shaderFrameCount++ === 120) {
@@ -274,7 +274,7 @@ define([
         scene._frameState.passes.overlay = true;
 
         camera.controller.update(scene._frameState);
-        cameraController.update(scene._frameState);
+        cameraMouseController.update(scene._frameState);
 
         if (scene._animate) {
             scene._animate();
