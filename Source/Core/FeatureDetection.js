@@ -113,13 +113,30 @@ define([
     /**
      * Detects whether the current browser supports the full screen standard.
      *
-     * @returns true if the supports the full screen standard, false if not.
+     * @returns true if the current browser supports the full screen standard, false if not.
      *
      * @see FullScreen
      * @see <a href='http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html'>W3C Fullscreen Living Specification</a>
      */
     FeatureDetection.supportsFullScreen = function() {
         return FullScreen.supportsFullScreen();
+    };
+
+    var _supportsWebGL;
+
+    /**
+     * Detects whether the current browser supports WebGL.  Note that even if the
+     * browser supports the WebGL API, it may not be able to create a context
+     * due to driver problems.
+     *
+     * @returns true if the browser supports the WebGL API, false if not.
+     */
+    FeatureDetection.supportsWebGL = function() {
+        if (typeof _supportsWebGL === 'undefined') {
+            _supportsWebGL = typeof window.WebGLRenderingContext !== 'undefined';
+        }
+
+        return _supportsWebGL;
     };
 
     return FeatureDetection;

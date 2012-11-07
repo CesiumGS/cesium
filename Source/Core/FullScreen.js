@@ -18,7 +18,7 @@ define([
         /**
          * Detects whether the browser supports the full screen standard.
          *
-         * @returns <code>true</code> if the supports the full screen standard, <code>false</code> if otherwise.
+         * @returns <code>true</code> if the browser supports the full screen standard, <code>false</code> if not.
          */
         supportsFullScreen : function() {
             if (typeof _supportsFullScreen === 'undefined') {

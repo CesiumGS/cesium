@@ -12,4 +12,9 @@ defineSuite(['Core/FeatureDetection'], function(FeatureDetection) {
         //just make sure the function runs, the test can't expect a value of true or false
         expect(FeatureDetection.supportsFullScreen()).toBeDefined();
     });
+
+    it('detects WebGL support', function() {
+        //just make sure the function runs, the test can't expect a particular result
+        expect(FeatureDetection.supportsWebGL()).toBeDefined();
+    });
 });

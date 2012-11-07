@@ -4,6 +4,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
+        '../Core/FeatureDetection',
         '../Core/IndexDatatype',
         '../Core/RuntimeError',
         '../Core/PrimitiveType',
@@ -42,6 +43,7 @@ define([
         DeveloperError,
         destroyObject,
         Color,
+        FeatureDetection,
         IndexDatatype,
         RuntimeError,
         PrimitiveType,
@@ -158,41 +160,46 @@ define([
         return glWrapper;
     }
 
+    var webGLContextID;
+
     /**
      * DOC_TBA
      *
      * @alias Context
      * @constructor
      *
-     * @exception {RuntimeError} The browser does not support WebGL.  Visit http://get.webgl.org.
-     * @exception {RuntimeError} The browser supports WebGL, but initialization failed.
      * @exception {DeveloperError} canvas is required.
+     * @exception {RuntimeError} The browser does not support WebGL, or initialization failed.
      */
     var Context = function(canvas, options) {
-        if (!window.WebGLRenderingContext) {
-            throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
+        if (typeof canvas === 'undefined') {
+            throw new DeveloperError('canvas is required.');
         }
 
-        if (!canvas) {
-            throw new DeveloperError('canvas is required.');
+        if (!FeatureDetection.supportsWebGL()) {
+            throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org/.');
         }
 
         this._canvas = canvas;
 
-        if (typeof options === 'undefined') {
-            options = {};
-        }
-        if (typeof options.stencil === 'undefined') {
-            options.stencil = true;
-        }
-        if (typeof options.alpha === 'undefined') {
-            options.alpha = false;
+        options = defaultValue(options, {});
+        options.stencil = defaultValue(options.stencil, true);
+        options.alpha = defaultValue(options.alpha, false);
+
+        var gl;
+        if (typeof webGLContextID === 'undefined') {
+            webGLContextID = 'webgl';
+            gl = canvas.getContext(webGLContextID, options);
+            if (!gl) {
+                webGLContextID = 'experimental-webgl';
+                gl = canvas.getContext(webGLContextID, options);
+            }
+        } else {
+            gl = canvas.getContext(webGLContextID, options);
         }
 
-        this._originalGLContext = canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options);
-
-        if (!this._originalGLContext) {
-            throw new RuntimeError('The browser supports WebGL, but initialization failed.');
+        if (!gl) {
+            throw new RuntimeError('The browser supports WebGL, but initialization failed.  Visit http://get.webgl.org/troubleshooting for troubleshooting options.');
         }
 
         this._id = createGuid();
@@ -207,7 +214,8 @@ define([
         // TODO:  Also need sample_alpha_to_coverage_enable for ColladaFX
         this._shaderCache = new ShaderCache(this);
 
-        var gl = this._gl = this._originalGLContext;
+        this._gl = gl;
+        this._originalGLContext = gl;
 
         this._version = gl.getParameter(gl.VERSION);
         this._shadingLanguageVersion = gl.getParameter(gl.SHADING_LANGUAGE_VERSION);
