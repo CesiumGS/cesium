@@ -240,17 +240,6 @@ define([
                 return;
             }
 
-            var constrainedAxis = object._cameraController.constrainedAxis;
-            if (typeof constrainedAxis !== 'undefined') {
-                var cameraPosition = object._cameraController._camera.position.normalize();
-                var northParallel = cameraPosition.equalsEpsilon(constrainedAxis, CesiumMath.EPSILON2);
-                var southParallel = cameraPosition.equalsEpsilon(constrainedAxis.negate(), CesiumMath.EPSILON2);
-                if (northParallel || southParallel) {
-                    object[lastMovementName] = undefined;
-                    return;
-                }
-            }
-
             if (!handler.isButtonDown()) {
                 action(object, object[lastMovementName]);
             }
