@@ -52,6 +52,26 @@ defineSuite([
         expect(callbackCalled).toEqual(false);
     });
 
+    it('getNumberOfListeners returns the correct number', function() {
+        var callBack1 = function() {
+        };
+
+        var callBack2 = function() {
+        };
+
+        var e = new Event();
+        expect(e.getNumberOfListeners()).toEqual(0);
+
+        e.addEventListener(callBack1);
+        expect(e.getNumberOfListeners()).toEqual(1);
+
+        e.addEventListener(callBack2);
+        expect(e.getNumberOfListeners()).toEqual(2);
+
+        e.removeEventListener(callBack2);
+        expect(e.getNumberOfListeners()).toEqual(1);
+    });
+
     it('Event works with no listeners', function() {
         var e = new Event();
         e.raiseEvent(123);

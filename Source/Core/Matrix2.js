@@ -124,6 +124,33 @@ define([
     };
 
     /**
+     * Computes the array index of the element at the provided row and column.
+     * @memberof Matrix2
+     *
+     * @param {Number} row The zero-based index of the row.
+     * @param {Number} column The zero-based index of the column.
+     * @return {Number} The index of the element at the provided row and column.
+     *
+     * @exception {DeveloperError} row is required and must be 0 or 1.
+     * @exception {DeveloperError} column is required and must be 0 or 1.
+     *
+     * @example
+     * var myMatrix = new Matrix2();
+     * var row1Column0Index = Matrix2.getElementIndex(1, 0);
+     * var row1Column0 = myMatrix[row1Column0Index]
+     * myMatrix[row1Column0Index] = 10.0;
+     */
+    Matrix2.getElementIndex = function(row, column) {
+        if (typeof row !== 'number' || row < 0 || row > 1) {
+            throw new DeveloperError('row is required and must be 0 or 1.');
+        }
+        if (typeof column !== 'number' || column < 0 || column > 1) {
+            throw new DeveloperError('column is required and must be 0 or 1.');
+        }
+        return column * 2 + row;
+    };
+
+    /**
      * Retrieves a copy of the matrix column at the provided index as a Cartesian2 instance.
      * @memberof Matrix2
      *
