@@ -11,17 +11,14 @@ require({
         name : 'Core',
         location : 'Source/Core'
     }, {
-        name : 'Widgets',
-        location : 'Source/Widgets'
-    }, {
-        name : 'Workers',
-        location : 'Source/Workers'
-    }, {
         name : 'DynamicScene',
         location : 'Source/DynamicScene'
     }, {
         name : 'Renderer',
         location : 'Source/Renderer'
+    }, {
+        name : 'Assets',
+        location : 'Source/Assets'
     }, {
         name : 'Scene',
         location : 'Source/Scene'
@@ -31,6 +28,12 @@ require({
     }, {
         name : 'ThirdParty',
         location : 'Source/ThirdParty'
+    }, {
+        name : 'Widgets',
+        location : 'Source/Widgets'
+    }, {
+        name : 'Workers',
+        location : 'Source/Workers'
     }, {
         name : 'CesiumViewer',
         location : 'Apps/CesiumViewer'
