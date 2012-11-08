@@ -105,14 +105,19 @@ define([
      * @private
      */
     CameraController.prototype.update = function(frameState) {
-        this._mode = frameState.mode;
+        var updateFrustum = false;
+        if (frameState.mode !== this._mode) {
+            this._mode = frameState.mode;
+            updateFrustum = this._mode === SceneMode.SCENE2D;
+        }
+
         var projection = frameState.scene2D.projection;
         if (projection !== this._projection) {
             this._projection = projection;
             this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         }
 
-        if (this._mode === SceneMode.SCENE2D) {
+        if (updateFrustum) {
             var frustum = this._frustum = this._camera.frustum.clone();
             if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' ||
                typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
