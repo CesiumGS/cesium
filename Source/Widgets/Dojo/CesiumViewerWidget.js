@@ -1212,6 +1212,7 @@ define([
          * var animationController = widget.animationController;
          * function updateAndRender() {
          *     var currentTime = animationController.update();
+         *     widget.initializeFrame();
          *     widget.update(currentTime);
          *     widget.render();
          *     requestAnimationFrame(updateAndRender);
@@ -1224,6 +1225,8 @@ define([
          *
          * function updateAndRender() {
          *     var currentTime = animationController.update();
+         *     widget1.initializeFrame();
+         *     widget2.initializeFrame();
          *     widget1.update(currentTime);
          *     widget2.update(currentTime);
          *     widget1.render();
@@ -1238,6 +1241,8 @@ define([
          * function updateAndRender() {
          *     var time1 = widget1.animationController.update();
          *     var time2 = widget2.animationController.update();
+         *     widget1.initializeFrame();
+         *     widget2.initializeFrame();
          *     widget1.update(time1);
          *     widget2.update(time2);
          *     widget1.render();
