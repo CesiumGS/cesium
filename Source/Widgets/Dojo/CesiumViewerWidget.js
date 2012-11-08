@@ -600,16 +600,21 @@ define([
             reader.readAsText(f);
         },
 
+        _started : false,
+
         /**
          * Call this after placing the widget in the DOM, to initialize the WebGL context,
-         * wire up event callbacks, begin requesting CZML, imagery, etc.  Note this does
-         * not start a render loop (because you may need a custom render loop).
+         * wire up event callbacks, begin requesting CZML, imagery, etc.
          *
          * @function
          * @memberof CesiumViewerWidget.prototype
-         * @see CesiumViewerWidget#startRenderLoop
+         * @see CesiumViewerWidget#autoStartRenderLoop
          */
-        startWidget : function() {
+        startup : function() {
+            if (this._started) {
+                return;
+            }
+
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
@@ -620,6 +625,7 @@ define([
                 }
                 return;
             }
+            this._started = true;
 
             this.resize();
 
@@ -638,18 +644,19 @@ define([
                 context.setThrowOnWebGLError(true);
             }
 
+            var imageryUrl = '../../Assets/Imagery/';
             var maxTextureSize = context.getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_512.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_512.jpg');
             } else {
                 // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl('Images/earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl('Images/earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_2048.jpg');
+                this.specularMapUrl = this.specularMapUrl || require.toUrl(imageryUrl + 'earthspec1k.jpg');
+                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl(imageryUrl + 'earthcloudmaptrans.jpg');
+                this.bumpMapUrl = this.bumpMapUrl || require.toUrl(imageryUrl + 'earthbump1k.jpg');
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
@@ -696,7 +703,8 @@ define([
                         this.centerCameraOnPick(selectedObject);
                     }
                 };
-                                }
+            }
+
             if (this.enableDragDrop) {
                 var dropBox = this.cesiumNode;
                 on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));
@@ -893,6 +901,10 @@ define([
             }
 
             this._camera3D = this.scene.getCamera().clone();
+
+            if (this.autoStartRenderLoop) {
+                this.startRenderLoop();
+            }
         },
 
         /**
@@ -1181,13 +1193,23 @@ define([
         },
 
         /**
+         * If true, {@link CesiumViewerWidget#startRenderLoop} will be called automatically
+         * at the end of {@link CesiumViewerWidget#startup}.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         */
+        autoStartRenderLoop : true,
+
+        /**
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
          * on your page.  If you wish to customize your render loop, avoid this function and instead
          * use code similar to one of the following examples.
          * @function
          * @memberof CesiumViewerWidget.prototype
          * @see requestAnimationFrame
-         * @see CesiumViewerWidget#startWidget
+         * @see CesiumViewerWidget#autoStartRenderLoop
          * @example
          * // This takes the place of startRenderLoop for a single widget.
          *
