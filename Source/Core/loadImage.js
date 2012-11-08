@@ -17,11 +17,11 @@ define([
      *
      * @exports loadImage
      *
-     * @param {String} url The source of the image.
+     * @param {String|Promise} url The source of the image, or a promise for the URL.
      * @param {Boolean} [crossOrigin=true] Whether to request the image using Cross-Origin
-     * Resource Sharing (CORS).  Data URIs are never requested using CORS.
+     *        Resource Sharing (CORS).  Data URIs are never requested using CORS.
      *
-     * @returns {Object} a promise that will resolve to the requested data when loaded.
+     * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
@@ -46,30 +46,40 @@ define([
 
         crossOrigin = defaultValue(crossOrigin, true);
 
-        // data URIs can't have crossOrigin set.
-        if (dataUriRegex.test(url)) {
-            crossOrigin = false;
-        }
+        return when(url, function(url) {
+            // data URIs can't have crossOrigin set.
+            if (dataUriRegex.test(url)) {
+                crossOrigin = false;
+            }
 
-        var deferred = when.defer();
+            var deferred = when.defer();
+
+            loadImage.createImage(url, crossOrigin, deferred);
+
+            return deferred.promise;
+        });
+    };
+
+    // This is broken out into a separate function so that it can be mocked for testing purposes.
+    loadImage.createImage = function(url, crossOrigin, deferred) {
         var image = new Image();
-
-        if (crossOrigin) {
-            image.crossOrigin = '';
-        }
 
         image.onload = function(e) {
             deferred.resolve(image);
         };
 
         image.onerror = function(e) {
-            deferred.reject();
+            deferred.reject(e);
         };
 
-        image.src = url;
+        if (crossOrigin) {
+            image.crossOrigin = '';
+        }
 
-        return deferred.promise;
+        image.src = url;
     };
+
+    loadImage.defaultCreateImage = loadImage.createImage;
 
     return loadImage;
 });

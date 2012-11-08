@@ -95,7 +95,7 @@ define([
          * The maximum height, in meters, above the surface of the ellipsoid of the camera position. Defaults to 20.0.
          * @type Number
          */
-        this.maximumHeightAboveSurface = 20.0;
+        this.minimumHeightAboveSurface = 20.0;
 
         this._maxCoord = undefined;
         this._frustum = undefined;
@@ -105,14 +105,19 @@ define([
      * @private
      */
     CameraController.prototype.update = function(frameState) {
-        this._mode = frameState.mode;
+        var updateFrustum = false;
+        if (frameState.mode !== this._mode) {
+            this._mode = frameState.mode;
+            updateFrustum = this._mode === SceneMode.SCENE2D;
+        }
+
         var projection = frameState.scene2D.projection;
         if (projection !== this._projection) {
             this._projection = projection;
-            this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+            this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         }
 
-        if (this._mode === SceneMode.SCENE2D) {
+        if (updateFrustum) {
             var frustum = this._frustum = this._camera.frustum.clone();
             if (typeof frustum.left === 'undefined' || typeof frustum.right === 'undefined' ||
                typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined') {
@@ -437,8 +442,8 @@ define([
 
             var ellipsoid = controller._projection.getEllipsoid();
             var positionCart = ellipsoid.cartesianToCartographic(position, revertTransformPositionCart);
-            if (positionCart.height < controller.maximumHeightAboveSurface + 1.0) {
-                positionCart.height = controller.maximumHeightAboveSurface + 1.0;
+            if (positionCart.height < controller.minimumHeightAboveSurface + 1.0) {
+                positionCart.height = controller.minimumHeightAboveSurface + 1.0;
                 ellipsoid.cartographicToCartesian(positionCart, position);
 
                 Cartesian3.subtract(center, position, direction);
@@ -539,14 +544,20 @@ define([
 
         var position = camera.position;
         var p = Cartesian3.normalize(position, rotateVertScratchP);
-        if (typeof controller.constrainedAxis !== 'undefined' &&
-                !p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2) &&
-                !p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2)) {
-            var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
-            var dot = p.dot(constrainedAxis);
-            if (!(CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0)) {
+        if (typeof controller.constrainedAxis !== 'undefined') {
+            var northParallel = p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2);
+            var southParallel = p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2);
+            if ((!northParallel && !southParallel)) {
+                var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
+                var dot = p.dot(constrainedAxis);
                 var angleToAxis = Math.acos(dot);
-                if (Math.abs(angle) > Math.abs(angleToAxis)) {
+                if (angle < 0 && -angle > angleToAxis) {
+                    angle = -angleToAxis;
+                }
+
+                dot = p.dot(constrainedAxis.negate());
+                angleToAxis = Math.acos(dot);
+                if (angle > 0 && angle > angleToAxis) {
                     angle = angleToAxis;
                 }
 
@@ -554,6 +565,8 @@ define([
                 var bitangent = Cartesian3.cross(camera.up, tangent, rotateVertScratchBit);
                 Cartesian3.cross(bitangent, camera.up, tangent);
                 controller.rotate(tangent, angle);
+            } else if ((northParallel && angle > 0) || (southParallel && angle < 0)) {
+                controller.rotate(camera.right, angle);
             }
         } else {
             controller.rotate(camera.right, angle);
@@ -680,7 +693,7 @@ define([
         if (this._mode === SceneMode.SCENE3D) {
             return camera.position.magnitude();
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            return camera.position.z;
+            return Math.abs(camera.position.z);
         } else if (this._mode === SceneMode.SCENE2D) {
             return  Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
         }
@@ -764,6 +777,7 @@ define([
      * @exception {DeveloperError} target is required.
      * @exception {DeveloperError} up is required.
      * @exception {DeveloperError} lookAt is not supported in 2D mode because there is only one direction to look.
+     * @exception {DeveloperError} lookAt is not supported while morphing.
      */
     CameraController.prototype.lookAt = function(eye, target, up) {
         if (typeof eye === 'undefined') {
@@ -778,14 +792,15 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             throw new DeveloperError('lookAt is not supported in 2D mode because there is only one direction to look.');
         }
-
-        if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
-            var camera = this._camera;
-            camera.position = Cartesian3.clone(eye, camera.position);
-            camera.direction = Cartesian3.subtract(target, eye, camera.direction).normalize(camera.direction);
-            camera.right = Cartesian3.cross(camera.direction, up, camera.right).normalize(camera.right);
-            camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
+        if (this._mode === SceneMode.MORPHING) {
+            throw new DeveloperError('lookAt is not supported while morphing.');
         }
+
+        var camera = this._camera;
+        camera.position = Cartesian3.clone(eye, camera.position);
+        camera.direction = Cartesian3.subtract(target, eye, camera.direction).normalize(camera.direction);
+        camera.right = Cartesian3.cross(camera.direction, up, camera.right).normalize(camera.right);
+        camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
     };
 
     var viewExtent3DCartographic = new Cartographic();
@@ -817,9 +832,7 @@ define([
         var northWest = ellipsoid.cartographicToCartesian(cart, viewExtent3DNorthWest);
 
         var center = Cartesian3.subtract(northEast, southWest, viewExtent3DCenter);
-        var scalar = center.magnitude() * 0.5;
-        Cartesian3.normalize(center, center);
-        Cartesian3.multiplyByScalar(center, scalar, center);
+        Cartesian3.multiplyByScalar(center, 0.5, center);
         Cartesian3.add(southWest, center, center);
 
         Cartesian3.subtract(northWest, center, northWest);
@@ -827,7 +840,8 @@ define([
         Cartesian3.subtract(northEast, center, northEast);
         Cartesian3.subtract(southWest, center, southWest);
 
-        var direction = Cartesian3.negate(center, camera.direction);
+        var direction = ellipsoid.geodeticSurfaceNormal(center, camera.direction);
+        Cartesian3.negate(direction, direction);
         Cartesian3.normalize(direction, direction);
         var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, camera.right);
         Cartesian3.normalize(right, right);
@@ -840,16 +854,14 @@ define([
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
         var d = Math.max(width / tanTheta, height / tanPhi);
 
-        scalar = center.magnitude() + d;
+        var scalar = center.magnitude() + d;
         Cartesian3.normalize(center, center);
         Cartesian3.multiplyByScalar(center, scalar, camera.position);
     }
 
     var viewExtentCVCartographic = new Cartographic();
-    var viewExtentCVCartographicHeight = new Cartographic();
     var viewExtentCVNorthEast = Cartesian4.UNIT_W.clone();
     var viewExtentCVSouthWest = Cartesian4.UNIT_W.clone();
-    var viewExtentCVPosition = Cartesian4.UNIT_W.clone();
     var viewExtentCVTransform = new Matrix4();
     function viewExtentColumbusView(camera, extent, projection) {
         var north = extent.north;
@@ -879,21 +891,13 @@ define([
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
 
-        cart = viewExtentCVCartographicHeight;
-        cart.longitude = 0.5 * (west + east);
-        cart.latitude = 0.5 * (north + south);
-        cart.height = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
-        position = projection.project(cart);
-        position = Cartesian3.clone(position, viewExtentCVPosition);
-        Matrix4.multiplyByVector(transform, position, position);
-        Matrix4.multiplyByVector(invTransform, position, position);
-        Cartesian3.clone(position, camera.position);
+        position = camera.position;
+        position.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
+        position.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
+        position.z = Math.max((northEast.x - southWest.x) / tanTheta, (northEast.y - southWest.y) / tanPhi) * 0.5;
 
-        // Not exactly -z direction because that would lock the camera in place with a constrained z axis.
-        var direction = camera.direction;
-        direction.x = 0.0;
-        direction.y = 0.0001;
-        direction.z = -0.999;
+        var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
+        Cartesian3.negate(direction, direction);
         var right = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
         Cartesian3.cross(right, direction, camera.up);
     }
@@ -932,10 +936,8 @@ define([
         camera.frustum.top = top;
         camera.frustum.bottom = -top;
 
-        cart.longitude = 0.5 * (west + east);
-        cart.latitude = 0.5 * (north + south);
-        var position = projection.project(cart);
-        Cartesian2.clone(position, camera.position);
+        camera.position.x = (northEast.x - southWest.x) * 0.5 + southWest.x;
+        camera.position.y = (northEast.y - southWest.y) * 0.5 + southWest.y;
 
         //Orient the camera north.
         var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);

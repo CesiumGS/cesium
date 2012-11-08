@@ -91,10 +91,6 @@ define([
         return result;
     };
 
-    function getMatrixElement(matrix, column, row) {
-        return matrix[column * 3 + row];
-    }
-
     var fromRotationMatrixNext = [1, 2, 0];
     var fromRotationMatrixQuat = new Array(3);
     /**
@@ -125,12 +121,11 @@ define([
         var m22 = matrix[Matrix3.COLUMN2ROW2];
         var trace = m00 + m11 + m22;
 
-        if (trace > 0.0)
-        {
+        if (trace > 0.0) {
             // |w| > 1/2, may as well choose w > 1/2
-            root = Math.sqrt(trace + 1.0);  // 2w
+            root = Math.sqrt(trace + 1.0); // 2w
             w = 0.5 * root;
-            root = 0.5 / root;  // 1/(4w)
+            root = 0.5 / root; // 1/(4w)
 
             x = (matrix[Matrix3.COLUMN2ROW1] - matrix[Matrix3.COLUMN1ROW2]) * root;
             y = (matrix[Matrix3.COLUMN0ROW2] - matrix[Matrix3.COLUMN2ROW0]) * root;
@@ -140,23 +135,23 @@ define([
             var next = fromRotationMatrixNext;
 
             var i = 0;
-            if( m11 > m00 ) {
+            if (m11 > m00) {
                 i = 1;
             }
-            if(m22 > m00 && m22 > m11) {
+            if (m22 > m00 && m22 > m11) {
                 i = 2;
             }
             var j = next[i];
             var k = next[j];
 
-            root = Math.sqrt(getMatrixElement(matrix, i, i) - getMatrixElement(matrix, j, j) - getMatrixElement(matrix, k, k) + 1.0);
+            root = Math.sqrt(matrix[Matrix3.getElementIndex(i, i)] - matrix[Matrix3.getElementIndex(j, j)] - matrix[Matrix3.getElementIndex(k, k)] + 1.0);
 
             var quat = fromRotationMatrixQuat;
             quat[i] = 0.5 * root;
             root = 0.5 / root;
-            w = (getMatrixElement(matrix, k, j) - getMatrixElement(matrix, j, k)) * root;
-            quat[j] = (getMatrixElement(matrix, j, i) + getMatrixElement(matrix, i, j)) * root;
-            quat[k] = (getMatrixElement(matrix, k, i) + getMatrixElement(matrix, i, k)) * root;
+            w = (matrix[Matrix3.getElementIndex(k, j)] - matrix[Matrix3.getElementIndex(j, k)]) * root;
+            quat[j] = (matrix[Matrix3.getElementIndex(j, i)] + matrix[Matrix3.getElementIndex(i, j)]) * root;
+            quat[k] = (matrix[Matrix3.getElementIndex(k, i)] + matrix[Matrix3.getElementIndex(i, k)]) * root;
 
             x = quat[0];
             y = quat[1];

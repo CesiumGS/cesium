@@ -21,13 +21,11 @@ define([
             endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
         }
 
-        new CesiumViewerWidget({
+        var widget = new CesiumViewerWidget({
             endUserOptions : endUserOptions,
-            enableDragDrop : true,
-
-            postSetup : function(widget) {
-                widget.startRenderLoop();
-            }
-        }).placeAt(dom.byId('cesiumContainer'));
+            enableDragDrop : true
+        });
+        widget.placeAt(dom.byId('cesiumContainer'));
+        widget.startup();
     });
 });

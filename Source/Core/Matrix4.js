@@ -778,6 +778,33 @@ define([
     };
 
     /**
+     * Computes the array index of the element at the provided row and column.
+     * @memberof Matrix4
+     *
+     * @param {Number} row The zero-based index of the row.
+     * @param {Number} column The zero-based index of the column.
+     * @return {Number} The index of the element at the provided row and column.
+     *
+     * @exception {DeveloperError} row is required and must be 0, 1, 2, or 3.
+     * @exception {DeveloperError} column is required and must be 0, 1, 2, or 3.
+     *
+     * @example
+     * var myMatrix = new Matrix4();
+     * var row1Column0Index = Matrix4.getElementIndex(1, 0);
+     * var row1Column0 = myMatrix[row1Column0Index]
+     * myMatrix[row1Column0Index] = 10.0;
+     */
+    Matrix4.getElementIndex = function(row, column) {
+        if (typeof row !== 'number' || row < 0 || row > 3) {
+            throw new DeveloperError('row is required and must be 0, 1, 2, or 3.');
+        }
+        if (typeof column !== 'number' || column < 0 || column > 3) {
+            throw new DeveloperError('column is required and must be 0, 1, 2, or 3.');
+        }
+        return column * 4 + row;
+    };
+
+    /**
      * Retrieves a copy of the matrix column at the provided index as a Cartesian4 instance.
      * @memberof Matrix4
      *

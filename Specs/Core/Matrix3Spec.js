@@ -133,7 +133,6 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
-
     it('toArray works without a result parameter', function() {
         var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
         var returnedResult = Matrix3.fromColumnMajorArray(expected).toArray();
@@ -148,6 +147,17 @@ defineSuite([
         expect(returnedResult).toBe(result);
         expect(returnedResult).toNotBe(expected);
         expect(returnedResult).toEqual(expected);
+    });
+
+    it('getElementIndex works', function() {
+        var i = 0;
+        for ( var col = 0; col < 3; col++) {
+            for ( var row = 0; row < 3; row++) {
+                var index = Matrix3.getElementIndex(row, col);
+                expect(index).toEqual(i);
+                i++;
+            }
+        }
     });
 
     it('getColumn works without a result parameter', function() {
@@ -536,6 +546,22 @@ defineSuite([
     it('static toArray throws without matrix parameter', function() {
         expect(function() {
             Matrix3.toArray(undefined);
+        }).toThrow();
+    });
+
+    it('static getElement throws without row parameter', function() {
+        var row;
+        var col = 0.0;
+        expect(function() {
+            Matrix3.getElementIndex(row, col);
+        }).toThrow();
+    });
+
+    it('static getElement throws without col parameter', function() {
+        var row = 0.0;
+        var col;
+        expect(function() {
+            Matrix3.getElementIndex(row, col);
         }).toThrow();
     });
 

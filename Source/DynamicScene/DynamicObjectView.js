@@ -101,9 +101,10 @@ define([
 
         var mouseController = that.scene.getCameraMouseController();
         mouseController.enableTranslate = false;
-        mouseController.constrainedAxis = Cartesian3.UNIT_Z;
         mouseController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
         mouseController.columbusViewMode = CameraColumbusViewMode.LOCKED;
+
+        camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         var position = camera.position;
         Cartesian3.clone(position, that._lastOffset);
@@ -114,7 +115,7 @@ define([
     var update3DControllerMatrix3 = new Matrix3();
 
     function update3DController(that, camera, objectChanged, offset) {
-        that.scene.getCameraMouseController().constrainedAxis = Cartesian3.UNIT_Z;
+        camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         if (objectChanged) {
             camera.controller.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);

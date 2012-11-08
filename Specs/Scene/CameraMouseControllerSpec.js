@@ -4,7 +4,7 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Ellipsoid',
-         'Core/EquidistantCylindricalProjection',
+         'Core/GeographicProjection',
          'Core/IntersectionTests',
          'Core/Math',
          'Core/Matrix4',
@@ -19,7 +19,7 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Ellipsoid,
-         EquidistantCylindricalProjection,
+         GeographicProjection,
          IntersectionTests,
          CesiumMath,
          Matrix4,
@@ -164,7 +164,7 @@ defineSuite([
 
     function setUp2D() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.SCENE2D,
             scene2D : {
@@ -436,7 +436,7 @@ defineSuite([
 
     function setUpCV() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.COLUMBUS_VIEW,
             scene2D : {
@@ -656,7 +656,7 @@ defineSuite([
 
     function setUp3D() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection(ellipsoid);
+        var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.SCENE3D,
             scene2D : {
@@ -698,7 +698,7 @@ defineSuite([
         var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(3 * canvas.clientWidth / 8, canvas.clientHeight / 2);
-        controller.constrainedAxis = Cartesian3.UNIT_Z;
+        camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         moveMouse(MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);

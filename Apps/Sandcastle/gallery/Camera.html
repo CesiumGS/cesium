@@ -21,7 +21,8 @@
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' }
+            { name: 'Widgets', location: 'Source/Widgets' },
+            { name: 'Workers', location: 'Source/Workers' }
         ]
     });
     </script>
@@ -102,13 +103,13 @@ require([
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
             positions: Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                new Cesium.Cartographic(west, south), 
-                new Cesium.Cartographic(west, north), 
-                new Cesium.Cartographic(east, north), 
-                new Cesium.Cartographic(east, south), 
+                new Cesium.Cartographic(west, south),
+                new Cesium.Cartographic(west, north),
+                new Cesium.Cartographic(east, north),
+                new Cesium.Cartographic(east, south),
                 new Cesium.Cartographic(west, south)])
         });
-        scene.getPrimitives().add(polylines);        
+        scene.getPrimitives().add(polylines);
     }
     
     function createButtons(scene) {
@@ -130,21 +131,19 @@ require([
         
         new ToggleButton({
             label: "View an Extent",
-            onClick: function() { 
+            onClick: function() {
                 viewAnExtent(scene);
                 Sandcastle.highlight(viewAnExtent);
             }
         }).placeAt('toolbar');
     }
-    
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget.scene);
-            widget.startRenderLoop();
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
 
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget.scene);
 });
 </script>
 </body>

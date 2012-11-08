@@ -21,7 +21,8 @@
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
-            { name: 'Widgets', location: 'Source/Widgets' }
+            { name: 'Widgets', location: 'Source/Widgets' },
+            { name: 'Workers', location: 'Source/Workers' }
         ]
     });
     </script>
@@ -174,14 +175,14 @@ require([
                     'czm_material czm_getMaterial(czm_materialInput materialInput) {' +
                         'czm_material material = czm_getDefaultMaterial(materialInput);' +
                         'float distanceFromCenter = abs(materialInput.st - vec2(0.5)).x;' +
-                        'if (distanceFromCenter > 0.3) { ' + 
-                            'material.diffuse = grass.diffuse;' + 
-                        '} else if (distanceFromCenter > 0.2) { ' + 
+                        'if (distanceFromCenter > 0.3) { ' +
+                            'material.diffuse = grass.diffuse;' +
+                        '} else if (distanceFromCenter > 0.2) { ' +
                             'material.diffuse = cement.diffuse;' +
-                        '} else {' + 
-                            'material.diffuse = asphalt.diffuse;' + 
+                        '} else {' +
+                            'material.diffuse = asphalt.diffuse;' +
                         '}' +
-                        'return material;' + 
+                        'return material;' +
                     '}'
             }
         });
@@ -212,7 +213,7 @@ require([
                             'material.alpha = (1.0 - texture2D(image, materialInput.st).r) * 0.7;' +
                             'material.normal = bumpMap.normal;' +
                             'material.specular = (1.0 - texture2D(image, materialInput.st).r) / 100.0;' +
-                            'return material;' + 
+                            'return material;' +
                         '}'
                 }
             });
@@ -475,12 +476,12 @@ require([
         
         function togglePolygonVisibility(polygonToShow, polygonToHide) {
             polygonToShow.show = true;
-            polygonToHide.show = false;   
+            polygonToHide.show = false;
         }
         
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Alpha Map',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyAlphaMapMaterial(polygon, scene);
                 Sandcastle.highlight(applyAlphaMapMaterial);
@@ -489,7 +490,7 @@ require([
         
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Asphalt',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyAsphaltMaterial(polygon, scene);
                 Sandcastle.highlight(applyAsphaltMaterial);
@@ -498,7 +499,7 @@ require([
         
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Blob',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyBlobMaterial(polygon, scene);
                 Sandcastle.highlight(applyBlobMaterial);
@@ -507,7 +508,7 @@ require([
         
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Brick',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyBrickMaterial(polygon, scene);
                 Sandcastle.highlight(applyBrickMaterial);
@@ -516,7 +517,7 @@ require([
         
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Bump Map',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyBumpMapMaterial(polygon, scene);
                 Sandcastle.highlight(applyBumpMapMaterial);
@@ -525,7 +526,7 @@ require([
         
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Cement',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyCementMaterial(polygon, scene);
                 Sandcastle.highlight(applyCementMaterial);
@@ -534,7 +535,7 @@ require([
         
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Checkerboard',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyCheckerboardMaterial(polygon, scene);
                 Sandcastle.highlight(applyCheckerboardMaterial);
@@ -543,7 +544,7 @@ require([
         
         compositeMaterialMenu.addChild(new MenuItem({
             label: 'Composite Example 1',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyCompositeMaterial1(polygon, scene);
                 Sandcastle.highlight(applyCompositeMaterial1);
@@ -552,7 +553,7 @@ require([
         
         compositeMaterialMenu.addChild(new MenuItem({
             label: 'Composite Example 2',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(worldPolygon, polygon);
                 applyCompositeMaterial2(worldPolygon, scene);
                 Sandcastle.highlight(applyCompositeMaterial2);
@@ -561,7 +562,7 @@ require([
         
         commonMaterialMenu.addChild(new MenuItem({
             label: 'Color',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyColorMaterial(polygon, scene);
                 Sandcastle.highlight(applyColorMaterial);
@@ -570,7 +571,7 @@ require([
         
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Diffuse',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyDiffuseMaterial(polygon, scene);
                 Sandcastle.highlight(applyDiffuseMaterial);
@@ -579,7 +580,7 @@ require([
         
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Dot',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyDotMaterial(polygon, scene);
                 Sandcastle.highlight(applyDotMaterial);
@@ -588,7 +589,7 @@ require([
         
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Emission Map',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyEmissionMapMaterial(polygon, scene);
                 Sandcastle.highlight(applyEmissionMapMaterial);
@@ -597,7 +598,7 @@ require([
         
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Facet',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyFacetMaterial(polygon, scene);
                 Sandcastle.highlight(applyFacetMaterial);
@@ -606,16 +607,16 @@ require([
         
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Fresnel',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(worldPolygon, polygon);
                 applyFresnelMaterial(worldPolygon, scene);
                 Sandcastle.highlight(applyFresnelMaterial);
             }
-        }));        
+        }));
         
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Grass',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyGrassMaterial(polygon, scene);
                 Sandcastle.highlight(applyGrassMaterial);
@@ -624,7 +625,7 @@ require([
         
         commonMaterialMenu.addChild(new MenuItem({
             label: 'Image',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyImageMaterial(polygon, scene);
                 Sandcastle.highlight(applyImageMaterial);
@@ -633,7 +634,7 @@ require([
         
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Normal Map',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyNormalMapMaterial(polygon, scene);
                 Sandcastle.highlight(applyNormalMapMaterial);
@@ -642,7 +643,7 @@ require([
         
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Reflection',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(worldPolygon, polygon);
                 applyReflectionMaterial(worldPolygon, scene);
                 Sandcastle.highlight(applyReflectionMaterial);
@@ -651,7 +652,7 @@ require([
         
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Refraction',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(worldPolygon, polygon);
                 applyRefractionMaterial(worldPolygon, scene);
                 Sandcastle.highlight(applyRefractionMaterial);
@@ -660,7 +661,7 @@ require([
         
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Specular Map',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applySpecularMapMaterial(polygon, scene);
                 Sandcastle.highlight(applySpecularMapMaterial);
@@ -669,7 +670,7 @@ require([
         
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Stripe',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyStripeMaterial(polygon, scene);
                 Sandcastle.highlight(applyStripeMaterial);
@@ -678,7 +679,7 @@ require([
         
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'TieDye',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyTieDyeMaterial(polygon, scene);
                 Sandcastle.highlight(applyTieDyeMaterial);
@@ -687,7 +688,7 @@ require([
         
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Wood',
-            onClick: function() { 
+            onClick: function() {
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyWoodMaterial(polygon, scene);
                 Sandcastle.highlight(applyWoodMaterial);
@@ -725,9 +726,9 @@ require([
         
         polygon = new Cesium.Polygon();
         polygon.configureExtent(new Cesium.Extent(
-            Cesium.Math.toRadians(-120.0), 
-            Cesium.Math.toRadians(20.0), 
-            Cesium.Math.toRadians(-60.0), 
+            Cesium.Math.toRadians(-120.0),
+            Cesium.Math.toRadians(20.0),
+            Cesium.Math.toRadians(-60.0),
             Cesium.Math.toRadians(40.0)));
         primitives.add(polygon);
         
@@ -740,16 +741,14 @@ require([
         worldPolygon.show = false;
         primitives.add(worldPolygon);
     }
-    
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createPrimitives(widget);
-            createButtons(widget);
-            widget.startRenderLoop();
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
 
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    createPrimitives(widget);
+    createButtons(widget);
 });
 </script>
 </body>

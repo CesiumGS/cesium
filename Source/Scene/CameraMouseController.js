@@ -67,7 +67,7 @@ define([
 
         /**
          * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
-         * This flag is only valid in 2D and Columbus view modes.
+         * This flag only applies in 2D and Columbus view modes.
          * @type Boolean
          */
         this.enableTranslate = true;
@@ -78,26 +78,25 @@ define([
         this.enableZoom = true;
         /**
          * If true, allows the user to rotate the camera.  If false, the camera is locked to the current heading.
-         * This flag is only valid in 2D and 3D.
+         * This flag only applies in 2D and 3D.
          * @type Boolean
          */
         this.enableRotate = true;
         /**
          * If true, allows the user to tilt the camera.  If false, the camera is locked to the current heading.
-         * This flag is only valid in 3D and Columbus view.
+         * This flag only applies in 3D and Columbus view.
          * @type Boolean
          */
         this.enableTilt = true;
         /**
          * If true, allows the user to use free-look. If false, the camera view direction can only be changed through translating
-         * or rotating. This flag is only valid in 3D and Columbus view modes.
+         * or rotating. This flag only applies in 3D and Columbus view modes.
          */
         this.enableLook = true;
         /**
-         * A parameter in the range <code>[0, 1]</code> used to determine how long
+         * A parameter in the range <code>[0, 1)</code> used to determine how long
          * the camera will continue to spin because of inertia.
-         * With a value of one, the camera will spin forever and
-         * with value of zero, the camera will have no inertia.
+         * With value of zero, the camera will have no inertia.
          * @type Number
          */
         this.inertiaSpin = 0.9;
@@ -115,13 +114,6 @@ define([
          * @type Number
          */
         this.inertiaZoom = 0.8;
-        /**
-         * If set, the camera will not be able to rotate past this axis in either direction.
-         * If this is set while in pan mode, the position clicked on the ellipsoid
-         * will not always map directly to the cursor.
-         * @type Cartesian3
-         */
-        this.constrainedAxis = undefined;
         /**
          * Sets the behavior in Columbus view.
          * @type CameraColumbusViewMode
@@ -142,12 +134,13 @@ define([
         this._lookHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG, EventModifier.SHIFT);
         this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
         this._zoomHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
-        this._zoomWheel = new CameraEventHandler(canvas, CameraEventType.WHEEL);
+        this._zoomWheelHandler = new CameraEventHandler(canvas, CameraEventType.WHEEL);
 
         this._lastInertiaSpinMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
         this._lastInertiaTranslateMovement = undefined;
         this._lastInertiaWheelZoomMovement = undefined;
+        this._lastInertiaTiltMovement = undefined;
 
         this._animationCollection = new AnimationCollection();
         this._animation = undefined;
@@ -207,7 +200,6 @@ define([
     // This value is probably dependent on the browser and/or the
     // hardware. Should be investigated further.
     var inertiaMaxClickTimeThreshold = 0.4;
-    var inertiaMaxTimeThreshold = 2.0;
 
     function maintainInertia(handler, decayCoef, action, object, lastMovementName) {
         var ts = handler.getButtonPressTime();
@@ -215,10 +207,10 @@ define([
         var threshold = ts && tr && ((tr.getTime() - ts.getTime()) / 1000.0);
         var now = new Date();
         var fromNow = tr && ((now.getTime() - tr.getTime()) / 1000.0);
-        if (ts && tr && threshold < inertiaMaxClickTimeThreshold && fromNow <= inertiaMaxTimeThreshold) {
+        if (ts && tr && threshold < inertiaMaxClickTimeThreshold) {
             var d = decay(fromNow, decayCoef);
 
-            if (!object[lastMovementName]) {
+            if (typeof object[lastMovementName] === 'undefined') {
                 var lastMovement = handler.getLastMovement();
                 if (!lastMovement || sameMousePosition(lastMovement)) {
                     return;
@@ -248,6 +240,17 @@ define([
                 return;
             }
 
+            var constrainedAxis = object._cameraController.constrainedAxis;
+            if (typeof constrainedAxis !== 'undefined') {
+                var cameraPosition = object._cameraController._camera.position.normalize();
+                var northParallel = cameraPosition.equalsEpsilon(constrainedAxis, CesiumMath.EPSILON2);
+                var southParallel = cameraPosition.equalsEpsilon(constrainedAxis.negate(), CesiumMath.EPSILON2);
+                if (northParallel || southParallel) {
+                    object[lastMovementName] = undefined;
+                    return;
+                }
+            }
+
             if (!handler.isButtonDown()) {
                 action(object, object[lastMovementName]);
             }
@@ -256,11 +259,11 @@ define([
         }
     }
 
-    var maxHeight = 20.0;
     function handleZoom(object, movement, zoomFactor, distanceMeasure) {
         // distanceMeasure should be the height above the ellipsoid.
-        // The zoomRate slows as it approaches the surface and stops maxHeight above it.
-        var zoomRate = zoomFactor * (distanceMeasure - maxHeight);
+        // The zoomRate slows as it approaches the surface and stops minHeight above it.
+        var minHeight = object._cameraController.minimumHeightAboveSurface;
+        var zoomRate = zoomFactor * (distanceMeasure - minHeight);
 
         if (zoomRate > object._maximumZoomRate) {
             zoomRate = object._maximumZoomRate;
@@ -274,12 +277,12 @@ define([
         var rangeWindowRatio = diff / object._canvas.clientHeight;
         var dist = zoomRate * rangeWindowRatio;
 
-        if (dist > 0.0 && Math.abs(distanceMeasure - maxHeight) < 1.0) {
+        if (dist > 0.0 && Math.abs(distanceMeasure - minHeight) < 1.0) {
             return;
         }
 
-        if (distanceMeasure - dist < maxHeight) {
-            dist = distanceMeasure - maxHeight - 1.0;
+        if (distanceMeasure - dist < minHeight) {
+            dist = distanceMeasure - minHeight - 1.0;
         }
 
         if (dist > 0.0) {
@@ -336,7 +339,7 @@ define([
     function update2D(controller) {
         var translate = controller._translateHandler;
         var rightZoom = controller._zoomHandler;
-        var wheelZoom = controller._zoomWheel;
+        var wheelZoom = controller._zoomWheelHandler;
         var translating = translate.isMoving() && translate.getMovement();
         var rightZooming = rightZoom.isMoving();
         var wheelZooming = wheelZoom.isMoving();
@@ -445,14 +448,10 @@ define([
         var transform = Matrix4.fromTranslation(center, rotateTransform);
 
         var oldEllipsoid = controller._ellipsoid;
-        var oldAxis = controller.constrainedAxis;
-
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-        controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-        rotate3D(controller, movement, transform);
+        rotate3D(controller, movement, transform, Cartesian3.UNIT_Z);
 
-        controller.constrainedAxis = oldAxis;
         controller.setEllipsoid(oldEllipsoid);
     }
 
@@ -463,7 +462,7 @@ define([
     function updateCV(controller) {
         var zoom = controller._zoomHandler;
         var zoomimg = zoom && zoom.isMoving();
-        var wheelZoom = controller._zoomWheel;
+        var wheelZoom = controller._zoomWheelHandler;
         var wheelZooming = wheelZoom.isMoving();
         var translate = controller._translateHandler;
         var translating = translate.isMoving() && translate.getMovement();
@@ -478,7 +477,7 @@ define([
                     rotate3D(controller, spin.getMovement());
                 }
 
-                if (spin && !spinning && controller.inertiaSpin < 1.0) {
+                if (spin && !spinning && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
                     maintainInertia(spin, controller.inertiaSpin, rotate3D, controller, '_lastInertiaSpinMovement');
                 }
             }
@@ -490,11 +489,11 @@ define([
                     zoom3D(controller, wheelZoom.getMovement());
                 }
 
-                if (zoom && !zoomimg && controller.inertiaZoom < 1.0) {
+                if (zoom && !zoomimg && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(zoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
                 }
 
-                if (wheelZoom && !wheelZooming && controller.inertiaZoom < 1.0) {
+                if (wheelZoom && !wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
                 }
             }
@@ -515,7 +514,7 @@ define([
                     translateCV(controller, translate.getMovement());
                 }
 
-                if (!translating && controller.inertiaTranslate < 1.0) {
+                if (!translating && controller.inertiaTranslate >= 0.0 && controller.inertiaTranslate < 1.0) {
                     maintainInertia(translate, controller.inertiaTranslate, translateCV, controller, '_lastInertiaTranslateMovement');
                 }
             }
@@ -527,11 +526,11 @@ define([
                     zoomCV(controller, wheelZoom.getMovement());
                 }
 
-                if (zoom && !zoomimg && controller.inertiaZoom < 1.0) {
+                if (zoom && !zoomimg && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
                 }
 
-                if (!wheelZooming && controller.inertiaZoom < 1.0) {
+                if (!wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(wheelZoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaWheelZoomMovement');
                 }
             }
@@ -563,9 +562,13 @@ define([
         }
     }
 
-    function rotate3D(controller, movement, transform) {
+    function rotate3D(controller, movement, transform, constrainedAxis) {
         var cameraController = controller._cameraController;
-        cameraController.constrainedAxis = controller.constrainedAxis;
+        var oldAxis = cameraController.constrainedAxis;
+        if (typeof constrainedAxis !== 'undefined') {
+            cameraController.constrainedAxis = constrainedAxis;
+        }
+
         // CAMERA TODO: remove access to camera, fixes a problem in Columbus view
         //var rho = cameraController.getMagnitude();
         var rho = controller._cameraController._camera.position.magnitude();
@@ -587,6 +590,8 @@ define([
 
         cameraController.rotateRight(deltaPhi, transform);
         cameraController.rotateUp(deltaTheta, transform);
+
+        cameraController.constrainedAxis = oldAxis;
     }
 
     var pan3DP0 = Cartesian4.UNIT_W.clone();
@@ -594,7 +599,6 @@ define([
     var pan3DAxis = new Cartesian3();
     function pan3D(controller, movement) {
         var cameraController = controller._cameraController;
-        cameraController.constrainedAxis = controller.constrainedAxis;
         var p0 = cameraController.pickEllipsoid(movement.startPosition, controller._ellipsoid, pan3DP0);
         var p1 = cameraController.pickEllipsoid(movement.endPosition, controller._ellipsoid, pan3DP1);
 
@@ -606,7 +610,7 @@ define([
         p0 = cameraController._camera.worldToCameraCoordinates(p0, p0);
         p1 = cameraController._camera.worldToCameraCoordinates(p1, p1);
 
-        if (typeof controller.constrainedAxis === 'undefined') {
+        if (typeof cameraController.constrainedAxis === 'undefined') {
             Cartesian3.normalize(p0, p0);
             Cartesian3.normalize(p1, p1);
             var dot = Cartesian3.dot(p0, p1);
@@ -649,8 +653,9 @@ define([
         var cameraController = controller._cameraController;
 
         var ellipsoid = controller._ellipsoid;
+        var minHeight = cameraController.minimumHeightAboveSurface;
         var height = ellipsoid.cartesianToCartographic(controller._cameraController._camera.position).height;
-        if (height - maxHeight - 1.0 < CesiumMath.EPSILON3 &&
+        if (height - minHeight - 1.0 < CesiumMath.EPSILON3 &&
                 movement.endPosition.y - movement.startPosition.y < 0) {
             return;
         }
@@ -670,10 +675,7 @@ define([
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
 
         var oldEllipsoid = controller._ellipsoid;
-        var oldAxis = controller.constrainedAxis;
-
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-        controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         // CAMERA TODO: Remove the need for camera access
         var yDiff = movement.startPosition.y - movement.endPosition.y;
@@ -686,9 +688,8 @@ define([
             movement.endPosition.y = movement.startPosition.y;
         }
 
-        rotate3D(controller, movement, transform);
+        rotate3D(controller, movement, transform, Cartesian3.UNIT_Z);
 
-        controller.constrainedAxis = oldAxis;
         controller.setEllipsoid(oldEllipsoid);
     }
 
@@ -740,8 +741,8 @@ define([
     function update3D(controller) {
         var spin = controller._spinHandler;
         var rightZoom = controller._zoomHandler;
-        var wheelZoom = controller._zoomWheel;
-        var spinning = spin && spin.isMoving() && spin.getMovement();
+        var wheelZoom = controller._zoomWheelHandler;
+        var spinning = spin && spin.isMoving();
         var rightZooming = rightZoom && rightZoom.isMoving();
         var wheelZooming = wheelZoom && wheelZoom.isMoving();
         var rotate = controller._rotateHandler;
@@ -752,14 +753,20 @@ define([
                 spin3D(controller, spin.getMovement());
             }
 
-            if (spin && !spinning && controller.inertiaSpin < 1.0) {
+            if (spin && !spinning && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
                 maintainInertia(spin, controller.inertiaSpin, spin3D, controller, '_lastInertiaSpinMovement');
             }
 
         }
 
-        if (controller.enableTilt && rotating) {
-            tilt3D(controller, rotate.getMovement());
+        if (controller.enableTilt) {
+            if (rotating) {
+                tilt3D(controller, rotate.getMovement());
+            }
+
+            if (rotate && !rotating && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
+                maintainInertia(rotate, controller.inertiaSpin, tilt3D, controller, '_lastInertiaTiltMovement');
+            }
         }
 
         if (controller.enableZoom) {
@@ -769,11 +776,11 @@ define([
                 zoom3D(controller, wheelZoom.getMovement());
             }
 
-            if (rightZoom && !rightZooming && controller.inertiaZoom < 1.0) {
+            if (rightZoom && !rightZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                 maintainInertia(rightZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
             }
 
-            if (wheelZoom && !wheelZooming && controller.inertiaZoom < 1.0) {
+            if (wheelZoom && !wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                 maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
             }
         }
@@ -843,7 +850,7 @@ define([
         this._lookHandler = this._lookHandler && this._lookHandler.destroy();
         this._rotateHandler = this._rotateHandler && this._rotateHandler.destroy();
         this._zoomHandler = this._zoomHandler && this._zoomHandler.destroy();
-        this._zoomWheel = this._zoomWheel && this._zoomWheel.destroy();
+        this._zoomWheelHandler = this._zoomWheelHandler && this._zoomWheelHandler.destroy();
         return destroyObject(this);
     };
 
