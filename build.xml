@@ -37,7 +37,7 @@
 		</antcall>
 	</target>
 
-	<target name="release" description="A full release build that creates a shippable product, including documentation.">
+	<target name="release" description="A full release build that creates a shippable product, including building apps and generating documentation.">
 		<antcall target="combine">
 			<param name="build.minification" value="true" />
 		</antcall>
@@ -57,7 +57,6 @@
 			<include name="Build/**" />
 			<include name="Apps/**" />
 			<include name="Examples/**" />
-			<include name="Images/**" />
 			<include name="Source/**" />
 			<include name="Specs/**" />
 			<include name="ThirdParty/**" />
@@ -89,7 +88,6 @@
 	<property name="examplesDirectory" location="Examples" />
 	<property name="galleryDirectory" location="Apps/Sandcastle/gallery" />
 	<property name="specsDirectory" location="Specs" />
-	<property name="imagesDirectory" location="Images" />
 	<property name="toolsDirectory" location="Tools" />
 	<property name="tasksDirectory" location="${toolsDirectory}/buildTasks" />
 	<property name="thirdPartyDirectory" location="ThirdParty" />
@@ -208,10 +206,6 @@
 
 	<target name="combineJavaScript" depends="combineJavaScript.createUnminified,combineJavaScript.createMinified" />
 
-	<target name="copyIndexHtml">
-		<copy file="index.html" todir="${buildDirectory}" />
-	</target>
-
 	<target name="generateDocumentation">
 		<extractShaderComments>
 			<glslfiles dir="${shadersDirectory}" includes="**/*.glsl" />
@@ -238,7 +232,7 @@
 		</copy>
 	</target>
 
-	<target name="runServer">
+	<target name="runServer" description="Runs a local web server ">
 		<taskdef name="server" classname="com.agi.ServerTask">
 			<classpath>
 				<fileset dir="${webProxyDirectory}" includes="**/*.jar" />
@@ -255,7 +249,7 @@
 		<server proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" allowedHostList="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,mesonet.agron.iastate.edu" port="8080" baseDir="${basedir}" />
 	</target>
 
-	<target name="buildApps" depends="build">
+	<target name="buildApps" depends="build" description="Create built versions of all example applications.">
 		<antcall target="buildApp">
 			<param name="app.path" value="Apps/CesiumViewer" />
 		</antcall>
@@ -278,12 +272,6 @@
 		<delete>
 			<fileset dir="${buildDirectory}/${app.path}" includes="**/*.uncompressed.js" />
 		</delete>
-
-		<copy todir="${buildDirectory}/${app.path}">
-			<fileset dir=".">
-				<include name="Images/*" />
-			</fileset>
-		</copy>
 
 		<replace dir="${buildDirectory}/${app.path}" summary="true">
 			<include name="index.html" />

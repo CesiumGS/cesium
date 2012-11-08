@@ -18,6 +18,7 @@
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Scene', location: 'Source/Scene' },
             { name: 'Shaders', location: 'Source/Shaders' },
             { name: 'ThirdParty', location: 'Source/ThirdParty' },
@@ -61,7 +62,7 @@ body {
 }
 
 .upArrow {
-	background-image: url("../../../Images/UpArrow.png");
+	background-image: url("../images/UpArrow.png");
 	background-repeat: no-repeat;
 	width: 16px;
 	height: 16px;
@@ -69,7 +70,7 @@ body {
 }
 
 .downArrow {
-	background-image: url("../../../Images/DownArrow.png");
+	background-image: url("../images/DownArrow.png");
 	background-repeat: no-repeat;
 	width: 16px;
 	height: 16px;
@@ -153,8 +154,12 @@ require([
                     proxy: new Cesium.DefaultProxy('/proxy/'),
                     credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 }));
-        addBaseLayerOption('Single Image', new Cesium.SingleTileImageryProvider({url : '../../../Images/NE2_50M_SR_W_4096.jpg'}));
-        
+        addBaseLayerOption(
+                'Single Image',
+                new Cesium.SingleTileImageryProvider({
+                    url : require.toUrl('Assets/Imagery/NE2_50M_SR_W_4096.jpg')
+                }));
+
         // Create the additional layers
         addAdditionalLayerOption(
                 'United States GOES infrared',
@@ -183,7 +188,7 @@ require([
         addAdditionalLayerOption(
                 'Single image',
                 new Cesium.SingleTileImageryProvider({
-                    url : '../../../Images/Cesium_Logo_overlay.png',
+                    url : '../images/Cesium_Logo_overlay.png',
                     extent : new Cesium.Extent(
                             Cesium.Math.toRadians(-115.0),
                             Cesium.Math.toRadians(38.0),
