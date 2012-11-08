@@ -249,6 +249,33 @@ define([
     };
 
     /**
+     * Computes the array index of the element at the provided row and column.
+     * @memberof Matrix3
+     *
+     * @param {Number} row The zero-based index of the row.
+     * @param {Number} column The zero-based index of the column.
+     * @return {Number} The index of the element at the provided row and column.
+     *
+     * @exception {DeveloperError} row is required and must be 0, 1, or 2.
+     * @exception {DeveloperError} column is required and must be 0, 1, or 2.
+     *
+     * @example
+     * var myMatrix = new Matrix3();
+     * var row1Column0Index = Matrix3.getElementIndex(1, 0);
+     * var row1Column0 = myMatrix[row1Column0Index]
+     * myMatrix[row1Column0Index] = 10.0;
+     */
+    Matrix3.getElementIndex = function(row, column) {
+        if (typeof row !== 'number' || row < 0 || row > 2) {
+            throw new DeveloperError('row is required and must be 0, 1, or 2.');
+        }
+        if (typeof column !== 'number' || column < 0 || column > 2) {
+            throw new DeveloperError('column is required and must be 0, 1, or 2.');
+        }
+        return column * 3 + row;
+    };
+
+    /**
      * Retrieves a copy of the matrix column at the provided index as a Cartesian3 instance.
      * @memberof Matrix3
      *

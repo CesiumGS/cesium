@@ -3,13 +3,13 @@ define([
         './defaultValue',
         './DeveloperError',
         './Cartographic',
-        './EquidistantCylindricalProjection',
+        './GeographicProjection',
         './Intersect'
     ], function(
         defaultValue,
         DeveloperError,
         Cartographic,
-        EquidistantCylindricalProjection,
+        GeographicProjection,
         Intersect) {
     "use strict";
 
@@ -99,7 +99,7 @@ define([
         return result;
     };
 
-    var defaultProjection = new EquidistantCylindricalProjection();
+    var defaultProjection = new GeographicProjection();
     var fromExtentLowerLeft = new Cartographic();
     var fromExtentUpperRight = new Cartographic();
     /**
@@ -107,7 +107,7 @@ define([
      * @memberof BoundingRectangle
      *
      * @param {Extent} extent The valid extent used to create a bounding rectangle.
-     * @param {Object} [projection=EquidistantCylindricalProjection] The projection used to project the extent into 2D.
+     * @param {Object} [projection=GeographicProjection] The projection used to project the extent into 2D.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
      * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      */

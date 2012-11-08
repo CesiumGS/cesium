@@ -256,6 +256,16 @@ defineSuite([
         expect(extent.contains(new Cartographic(east + 0.1, north))).toEqual(false);
     });
 
+    it('isEmpty reports an empty extent', function() {
+        var extent = new Extent(2.0, 2.0, 2.0, 2.0);
+        expect(extent.isEmpty()).toEqual(true);
+    });
+
+    it('isEmpty reports a non-empty extent', function() {
+        var extent = new Extent(1.0, 1.0, 2.0, 2.0);
+        expect(extent.isEmpty()).toEqual(false);
+    });
+
     it('subsample works south of the equator', function() {
         var west = 0.1;
         var south = -0.3;

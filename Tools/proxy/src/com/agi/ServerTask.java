@@ -17,6 +17,7 @@ import org.eclipse.jetty.server.nio.SelectChannelConnector;
 
 public class ServerTask extends Task {
 	private String proxyContextPath;
+	private String terrainTranscodingContextPath;
 	private String allowedHostList;
 	private int port;
 	private File baseDir;
@@ -60,6 +61,10 @@ public class ServerTask extends Task {
 			ContextHandler proxyContextHandler = new ContextHandler(this.proxyContextPath);
 			proxyContextHandler.setHandler(proxyHandler);
 
+			TerrainTranscodingHandler terrainTranscodingHandler = new TerrainTranscodingHandler(hostChecker, client);
+			ContextHandler terrainTranscodingContextHandler = new ContextHandler(this.terrainTranscodingContextPath);
+			terrainTranscodingContextHandler.setHandler(terrainTranscodingHandler);
+
 			ResourceHandler resourceHandler = new ResourceHandler();
 			resourceHandler.setDirectoriesListed(true);
 			resourceHandler.setWelcomeFiles(new String[] {
@@ -73,6 +78,7 @@ public class ServerTask extends Task {
 			ContextHandlerCollection contexts = new ContextHandlerCollection();
 			contexts.setHandlers(new Handler[] {
 					proxyContextHandler,
+					terrainTranscodingContextHandler,
 					resourceContextHandler
 			});
 
@@ -89,6 +95,10 @@ public class ServerTask extends Task {
 
 	public void setProxyContextPath(String value) {
 		this.proxyContextPath = value;
+	}
+
+	public void setTerrainTranscodingContextPath(String value) {
+		this.terrainTranscodingContextPath = value;
 	}
 
 	public void setAllowedHostList(String value) {

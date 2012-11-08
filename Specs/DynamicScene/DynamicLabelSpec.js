@@ -132,47 +132,59 @@ defineSuite([
     });
 
     it('mergeProperties does not change a fully configured label', function() {
+        var expectedText = 12;
+        var expectedFont = 13;
+        var expectedStyle = 14;
+        var expectedFillColor = 15;
+        var expectedOutlineColor = 16;
+        var expectedHorizontalOrigin = 17;
+        var expectedVerticalOrigin = 18;
+        var expectedEyeOffset = 19;
+        var expectedPixelOffset = 20;
+        var expectedScale = 21;
+        var expectedShow = 22;
+
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.label = new DynamicLabel();
-        objectToMerge.text = 1;
-        objectToMerge.font = 2;
-        objectToMerge.style = 3;
-        objectToMerge.fillColor = 4;
-        objectToMerge.outlineColor = 5;
-        objectToMerge.horizontalOrigin = 6;
-        objectToMerge.verticalOrigin = 7;
-        objectToMerge.eyeOffset = 8;
-        objectToMerge.pixelOffset = 9;
-        objectToMerge.scale = 10;
-        objectToMerge.show = 11;
+        objectToMerge.label.text = 1;
+        objectToMerge.label.font = 2;
+        objectToMerge.label.style = 3;
+        objectToMerge.label.fillColor = 4;
+        objectToMerge.label.outlineColor = 5;
+        objectToMerge.label.horizontalOrigin = 6;
+        objectToMerge.label.verticalOrigin = 7;
+        objectToMerge.label.eyeOffset = 8;
+        objectToMerge.label.pixelOffset = 9;
+        objectToMerge.label.scale = 10;
+        objectToMerge.label.show = 11;
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.label = new DynamicLabel();
-        targetObject.text = 12;
-        targetObject.font = 13;
-        targetObject.style = 14;
-        targetObject.fillColor = 15;
-        targetObject.outlineColor = 16;
-        targetObject.horizontalOrigin = 17;
-        targetObject.verticalOrigin = 18;
-        targetObject.eyeOffset = 19;
-        targetObject.pixelOffset = 20;
-        targetObject.scale = 21;
-        targetObject.show = 22;
+        targetObject.label.text = expectedText;
+        targetObject.label.font = expectedFont;
+        targetObject.label.style = expectedStyle;
+        targetObject.label.fillColor = expectedFillColor;
+        targetObject.label.outlineColor = expectedOutlineColor;
+        targetObject.label.horizontalOrigin = expectedHorizontalOrigin;
+        targetObject.label.verticalOrigin = expectedVerticalOrigin;
+        targetObject.label.eyeOffset = expectedEyeOffset;
+        targetObject.label.pixelOffset = expectedPixelOffset;
+        targetObject.label.scale = expectedScale;
+        targetObject.label.show = expectedShow;
 
         DynamicLabel.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.label.text).toEqual(targetObject.label.text);
-        expect(targetObject.label.font).toEqual(targetObject.label.font);
-        expect(targetObject.label.style).toEqual(targetObject.label.style);
-        expect(targetObject.label.fillColor).toEqual(targetObject.label.fillColor);
-        expect(targetObject.label.outlineColor).toEqual(targetObject.label.outlineColor);
-        expect(targetObject.label.horizontalOrigin).toEqual(targetObject.label.horizontalOrigin);
-        expect(targetObject.label.verticalOrigin).toEqual(targetObject.label.verticalOrigin);
-        expect(targetObject.label.eyeOffset).toEqual(targetObject.label.eyeOffset);
-        expect(targetObject.label.pixelOffset).toEqual(targetObject.label.pixelOffset);
-        expect(targetObject.label.scale).toEqual(targetObject.label.scale);
-        expect(targetObject.label.show).toEqual(targetObject.label.show);
+        expect(targetObject.label.text).toEqual(expectedText);
+        expect(targetObject.label.font).toEqual(expectedFont);
+        expect(targetObject.label.style).toEqual(expectedStyle);
+        expect(targetObject.label.fillColor).toEqual(expectedFillColor);
+        expect(targetObject.label.outlineColor).toEqual(expectedOutlineColor);
+        expect(targetObject.label.horizontalOrigin).toEqual(expectedHorizontalOrigin);
+        expect(targetObject.label.verticalOrigin).toEqual(expectedVerticalOrigin);
+        expect(targetObject.label.eyeOffset).toEqual(expectedEyeOffset);
+        expect(targetObject.label.pixelOffset).toEqual(expectedPixelOffset);
+        expect(targetObject.label.scale).toEqual(expectedScale);
+        expect(targetObject.label.show).toEqual(expectedShow);
     });
 
     it('mergeProperties creates and configures an undefined label', function() {
@@ -208,35 +220,47 @@ defineSuite([
     });
 
     it('mergeProperties does not change when used with an undefined label', function() {
+        var expectedText = 12;
+        var expectedFont = 13;
+        var expectedStyle = 14;
+        var expectedFillColor = 15;
+        var expectedOutlineColor = 16;
+        var expectedHorizontalOrigin = 17;
+        var expectedVerticalOrigin = 18;
+        var expectedEyeOffset = 19;
+        var expectedPixelOffset = 20;
+        var expectedScale = 21;
+        var expectedShow = 22;
+
         var objectToMerge = new DynamicObject('objectToMerge');
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.label = new DynamicLabel();
-        targetObject.text = 1;
-        targetObject.font = 2;
-        targetObject.style = 3;
-        targetObject.fillColor = 4;
-        targetObject.outlineColor = 5;
-        targetObject.horizontalOrigin = 6;
-        targetObject.verticalOrigin = 7;
-        targetObject.eyeOffset = 8;
-        targetObject.pixelOffset = 9;
-        targetObject.scale = 10;
-        targetObject.show = 11;
+        targetObject.label.text = expectedText;
+        targetObject.label.font = expectedFont;
+        targetObject.label.style = expectedStyle;
+        targetObject.label.fillColor = expectedFillColor;
+        targetObject.label.outlineColor = expectedOutlineColor;
+        targetObject.label.horizontalOrigin = expectedHorizontalOrigin;
+        targetObject.label.verticalOrigin = expectedVerticalOrigin;
+        targetObject.label.eyeOffset = expectedEyeOffset;
+        targetObject.label.pixelOffset = expectedPixelOffset;
+        targetObject.label.scale = expectedScale;
+        targetObject.label.show = expectedShow;
 
         DynamicLabel.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.label.text).toEqual(targetObject.label.text);
-        expect(targetObject.label.font).toEqual(targetObject.label.font);
-        expect(targetObject.label.style).toEqual(targetObject.label.style);
-        expect(targetObject.label.fillColor).toEqual(targetObject.label.fillColor);
-        expect(targetObject.label.outlineColor).toEqual(targetObject.label.outlineColor);
-        expect(targetObject.label.horizontalOrigin).toEqual(targetObject.label.horizontalOrigin);
-        expect(targetObject.label.verticalOrigin).toEqual(targetObject.label.verticalOrigin);
-        expect(targetObject.label.eyeOffset).toEqual(targetObject.label.eyeOffset);
-        expect(targetObject.label.pixelOffset).toEqual(targetObject.label.pixelOffset);
-        expect(targetObject.label.scale).toEqual(targetObject.label.scale);
-        expect(targetObject.label.show).toEqual(targetObject.label.show);
+        expect(targetObject.label.text).toEqual(expectedText);
+        expect(targetObject.label.font).toEqual(expectedFont);
+        expect(targetObject.label.style).toEqual(expectedStyle);
+        expect(targetObject.label.fillColor).toEqual(expectedFillColor);
+        expect(targetObject.label.outlineColor).toEqual(expectedOutlineColor);
+        expect(targetObject.label.horizontalOrigin).toEqual(expectedHorizontalOrigin);
+        expect(targetObject.label.verticalOrigin).toEqual(expectedVerticalOrigin);
+        expect(targetObject.label.eyeOffset).toEqual(expectedEyeOffset);
+        expect(targetObject.label.pixelOffset).toEqual(expectedPixelOffset);
+        expect(targetObject.label.scale).toEqual(expectedScale);
+        expect(targetObject.label.show).toEqual(expectedShow);
     });
 
     it('undefineProperties works', function() {

@@ -96,19 +96,19 @@ defineSuite([
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.point = new DynamicPoint();
-        objectToMerge.point.color = 6;
-        objectToMerge.point.pixelSize = 7;
-        objectToMerge.point.outlineColor = 8;
-        objectToMerge.point.outlineWidth = 9;
-        objectToMerge.point.show = 10;
+        targetObject.point.color = 6;
+        targetObject.point.pixelSize = 7;
+        targetObject.point.outlineColor = 8;
+        targetObject.point.outlineWidth = 9;
+        targetObject.point.show = 10;
 
         DynamicPoint.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.point.color).toEqual(targetObject.point.color);
-        expect(targetObject.point.pixelSize).toEqual(targetObject.point.pixelSize);
-        expect(targetObject.point.outlineColor).toEqual(targetObject.point.outlineColor);
-        expect(targetObject.point.outlineWidth).toEqual(targetObject.point.outlineWidth);
-        expect(targetObject.point.show).toEqual(targetObject.point.show);
+        expect(targetObject.point.color).toEqual(6);
+        expect(targetObject.point.pixelSize).toEqual(7);
+        expect(targetObject.point.outlineColor).toEqual(8);
+        expect(targetObject.point.outlineWidth).toEqual(9);
+        expect(targetObject.point.show).toEqual(10);
     });
 
     it('mergeProperties creates and configures an undefined point', function() {
@@ -136,22 +136,19 @@ defineSuite([
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.point = new DynamicPoint();
-        targetObject.point = new DynamicPoint();
-        targetObject.point.color = 1;
-        targetObject.point.pixelSize = 2;
-        targetObject.point.outlineColor = 3;
-        targetObject.point.outlineWidth = 4;
-        targetObject.point.show = 5;
+        targetObject.point.color = 6;
+        targetObject.point.pixelSize = 7;
+        targetObject.point.outlineColor = 8;
+        targetObject.point.outlineWidth = 9;
+        targetObject.point.show = 10;
 
         DynamicPoint.mergeProperties(targetObject, objectToMerge);
 
-        expect(targetObject.point.scale).toEqual(targetObject.point.scale);
-        expect(targetObject.point.horizontalOrigin).toEqual(targetObject.point.horizontalOrigin);
-        expect(targetObject.point.verticalOrigin).toEqual(targetObject.point.verticalOrigin);
-        expect(targetObject.point.color).toEqual(targetObject.point.color);
-        expect(targetObject.point.eyeOffset).toEqual(targetObject.point.eyeOffset);
-        expect(targetObject.point.pixelOffset).toEqual(targetObject.point.pixelOffset);
-        expect(targetObject.point.show).toEqual(targetObject.point.show);
+        expect(targetObject.point.color).toEqual(6);
+        expect(targetObject.point.pixelSize).toEqual(7);
+        expect(targetObject.point.outlineColor).toEqual(8);
+        expect(targetObject.point.outlineWidth).toEqual(9);
+        expect(targetObject.point.show).toEqual(10);
     });
 
     it('undefineProperties works', function() {

@@ -43,7 +43,7 @@ define([
 
         var planes = this.planes;
         var intersecting = false;
-        for ( var k = 0; k < planes.length; k++) {
+        for (var k = 0, len = planes.length; k < len; ++k) {
             var result = boundingVolume.intersect(planes[k]);
             if (result === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
