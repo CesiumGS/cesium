@@ -76,6 +76,8 @@ define([
 
         this._sunDirectionWCDirty = true;
         this._sunDirectionWC = new Cartesian3();
+
+        this._frameNumber = 0.0;
     };
 
     /**
@@ -604,6 +606,33 @@ define([
         this._cleanSunDirectionWC();
         return this._sunDirectionWC;
     };
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @param {number} [frameNumber] DOC_TBA.
+     *
+     * @see UniformState#getFrameNumber
+     * @see czm_frameNumber
+     */
+    UniformState.prototype.setFrameNumber = function(frameNumber) {
+        this._frameNumber = frameNumber;
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @return {number} A number representing the current frame number.
+     *
+     * @see czm_frameNumber
+     */
+     UniformState.prototype.getFrameNumber = function() {
+         return this._frameNumber;
+     };
 
     UniformState.prototype.getHighResolutionSnapScale = function() {
         return 1.0;

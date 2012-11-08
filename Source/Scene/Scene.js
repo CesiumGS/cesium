@@ -255,6 +255,15 @@ define([
             scene._context.getShaderCache().destroyReleasedShaderPrograms();
         }
 
+        // increment the frame number
+        var frameNumber = us.getFrameNumber();
+        frameNumber++;
+        if(frameNumber >= 15000000.0) {
+            // keep number in a range that won't introduce floating point errors
+            frameNumber = 0.0;
+        }
+        us.setFrameNumber(frameNumber);
+
         scene._animations.update();
         camera.update();
         us.setView(camera.getViewMatrix());

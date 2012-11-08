@@ -838,6 +838,35 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseView().getTranslation();
             }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the frame number. This uniform is automatically incremented
+         * every frame.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_frameNumber</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_frameNumber
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform float czm_frameNumber;
+         */
+        czm_frameNumber : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getFrameNumber();
+            }
         }
     };
 
