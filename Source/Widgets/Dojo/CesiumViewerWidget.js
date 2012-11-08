@@ -1096,6 +1096,15 @@ define([
         _sunPosition : new Cartesian3(),
 
         /**
+         * Initialize the current frame.
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
+        initializeFrame : function() {
+            this.scene.initializeFrame();
+        },
+
+        /**
          * Call this function prior to rendering each animation frame, to prepare
          * all CZML objects and other settings for the next frame.
          *
@@ -1241,12 +1250,10 @@ define([
             var widget = this;
             var animationController = widget.animationController;
 
-            this.scene.setAnimation(function() {
-                var currentTime = animationController.update();
-                widget.update(currentTime);
-            });
-
             function updateAndRender() {
+                var currentTime = animationController.update();
+                widget.initializeFrame();
+                widget.update(currentTime);
                 widget.render();
                 requestAnimationFrame(updateAndRender);
             }

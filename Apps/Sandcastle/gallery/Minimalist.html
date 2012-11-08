@@ -64,11 +64,13 @@
     cb.showGroundAtmosphere = false;
     primitives.setCentralBody(cb);
 
-    scene.setAnimation(function () {
+    function animate() {
         scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
-    });
+    };
 
     function tick() {
+        scene.initializeFrame();
+        animate();
         scene.render();
         Cesium.requestAnimationFrame(tick);
     }

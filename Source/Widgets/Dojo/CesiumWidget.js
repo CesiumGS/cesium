@@ -300,6 +300,10 @@ define([
 
         _sunPosition : new Cartesian3(),
 
+        initializeFrame : function() {
+            this.scene.initializeFrame();
+        },
+
         update : function(currentTime) {
             this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
         },
@@ -339,6 +343,7 @@ define([
 
             function updateAndRender() {
                 var currentTime = new JulianDate();
+                widget.initializeFrame();
                 widget.update(currentTime);
                 widget.render();
                 requestAnimationFrame(updateAndRender);

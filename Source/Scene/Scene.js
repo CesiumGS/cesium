@@ -76,7 +76,6 @@ define([
         this._camera = new Camera(canvas);
         this._cameraMouseController = new CameraMouseController(canvas, this._camera.controller);
 
-        this._animate = undefined; // Animation callback
         this._animations = new AnimationCollection();
 
         this._shaderFrameCount = 0;
@@ -212,22 +211,6 @@ define([
         return this.getUniformState().getSunPosition();
     };
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.setAnimation = function(animationCallback) {
-        this._animate = animationCallback;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getAnimation = function() {
-        return this._animate;
-    };
-
     function clearPasses(passes) {
         passes.color = false;
         passes.pick = false;
@@ -259,27 +242,6 @@ define([
     function update(scene) {
         var us = scene.getUniformState();
         var camera = scene._camera;
-        var cameraMouseController = scene._cameraMouseController;
-
-        // Destroy released shaders once every 120 frames to avoid thrashing the cache
-        if (scene._shaderFrameCount++ === 120) {
-            scene._shaderFrameCount = 0;
-            scene._context.getShaderCache().destroyReleasedShaderPrograms();
-        }
-
-        scene._animations.update();
-
-        updateFrameState(scene);
-        scene._frameState.passes.color = true;
-        scene._frameState.passes.overlay = true;
-
-        camera.controller.update(scene._frameState);
-        cameraMouseController.update(scene._frameState);
-
-        if (scene._animate) {
-            scene._animate();
-        }
-
         us.setView(camera.getViewMatrix());
         us.setProjection(camera.frustum.getProjectionMatrix());
         if (camera.frustum.getInfiniteProjectionMatrix) {
@@ -456,6 +418,27 @@ define([
             }
         }
     }
+
+    /**
+     * DOC_TBA
+     * @memberof Scene
+     */
+    Scene.prototype.initializeFrame = function() {
+        // Destroy released shaders once every 120 frames to avoid thrashing the cache
+        if (this._shaderFrameCount++ === 120) {
+            this._shaderFrameCount = 0;
+            this._context.getShaderCache().destroyReleasedShaderPrograms();
+        }
+
+        this._animations.update();
+
+        updateFrameState(this);
+        this._frameState.passes.color = true;
+        this._frameState.passes.overlay = true;
+
+        this._camera.controller.update(this._frameState);
+        this._cameraMouseController.update(this._frameState);
+    };
 
     /**
      * DOC_TBA
