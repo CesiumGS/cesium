@@ -21,9 +21,9 @@ define([
         '../../Core/requestAnimationFrame',
         '../../Scene/Scene',
         '../../Scene/CentralBody',
-        '../../Scene/BingMapsTileProvider',
+        '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
-        '../../Scene/SingleTileProvider',
+        '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
         'dojo/text!./CesiumWidget.html'
     ], function (
@@ -48,9 +48,9 @@ define([
         requestAnimationFrame,
         Scene,
         CentralBody,
-        BingMapsTileProvider,
+        BingMapsImageryProvider,
         BingMapsStyle,
-        SingleTileProvider,
+        SingleTileImageryProvider,
         PerformanceDisplay,
         template) {
     "use strict";
@@ -72,10 +72,8 @@ define([
         },
 
         postCreate : function() {
-            ready(this, '_setupCesium');
+            this.cesiumLogo.style.backgroundImage = 'url(' + require.toUrl('../Images/Cesium_Logo_overlay.png') + ')';
         },
-
-        postSetup : undefined,
 
         onSetupError : function(widget, error) {
             console.error(error);
@@ -172,7 +170,13 @@ define([
             }
         },
 
-        _setupCesium : function() {
+        _started : false,
+
+        startup : function() {
+            if (this._started) {
+                return;
+            }
+
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
@@ -183,24 +187,28 @@ define([
                 }
                 return;
             }
+            this._started = true;
 
             this.resize();
 
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
-            var maxTextureSize = scene.getContext().getMaximumTextureSize();
+            var context = scene.getContext();
+
+            var imageryUrl = '../../Assets/Imagery/';
+            var maxTextureSize = context.getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_512.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_512.jpg');
             } else {
                 // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl('Images/earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl('Images/earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_2048.jpg');
+                this.specularMapUrl = this.specularMapUrl || require.toUrl(imageryUrl + 'earthspec1k.jpg');
+                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl(imageryUrl + 'earthcloudmaptrans.jpg');
+                this.bumpMapUrl = this.bumpMapUrl || require.toUrl(imageryUrl + 'earthbump1k.jpg');
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
@@ -233,11 +241,11 @@ define([
                 });
             }
 
-            if (typeof this.postSetup !== 'undefined') {
-                this.postSetup(this);
-            }
-
             this.defaultCamera = camera.clone();
+
+            if (this.autoStartRenderLoop) {
+                this.startRenderLoop();
+            }
         },
 
         viewHome : function() {
@@ -317,15 +325,15 @@ define([
             var centralBody = this.centralBody;
 
             if (this.useStreamingImagery) {
-                centralBody.dayTileProvider = new BingMapsTileProvider({
+                centralBody.getImageryLayers().addImageryProvider(new BingMapsImageryProvider({
                     server : 'dev.virtualearth.net',
                     mapStyle : this.mapStyle,
                     // Some versions of Safari support WebGL, but don't correctly implement
                     // cross-origin image loading, so we need to load Bing imagery using a proxy.
                     proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('/proxy/')
-                });
+                }));
             } else {
-                centralBody.dayTileProvider = new SingleTileProvider(this.dayImageUrl);
+                centralBody.getImageryLayers().addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
             }
 
             centralBody.nightImageSource = this.nightImageUrl;
@@ -333,6 +341,8 @@ define([
             centralBody.cloudsMapSource = this.cloudsMapUrl;
             centralBody.bumpMapSource = this.bumpMapUrl;
         },
+
+        autoStartRenderLoop : true,
 
         startRenderLoop : function() {
             var widget = this;

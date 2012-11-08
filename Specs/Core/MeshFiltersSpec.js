@@ -7,7 +7,7 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/Cartesian3',
          'Core/Tipsify',
-         'Core/EquidistantCylindricalProjection'
+         'Core/GeographicProjection'
      ], function(
          MeshFilters,
          PrimitiveType,
@@ -16,7 +16,7 @@ defineSuite([
          Ellipsoid,
          Cartesian3,
          Tipsify,
-         EquidistantCylindricalProjection) {
+         GeographicProjection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -412,7 +412,7 @@ defineSuite([
         mesh = MeshFilters.projectTo2D(mesh);
 
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new EquidistantCylindricalProjection();
+        var projection = new GeographicProjection();
         var projectedP1 = projection.project(ellipsoid.cartesianToCartographic(p1));
         var projectedP2 = projection.project(ellipsoid.cartesianToCartographic(p2));
 
