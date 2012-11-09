@@ -29,6 +29,7 @@ define([
         '../Shaders/Materials/RefractionMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/TieDyeMaterial',
+        '../Shaders/Materials/Water',
         '../Shaders/Materials/WoodMaterial'
     ], function(
         when,
@@ -60,6 +61,7 @@ define([
         RefractionMaterial,
         StripeMaterial,
         TieDyeMaterial,
+        WaterMaterial,
         WoodMaterial) {
     "use strict";
 
@@ -1215,6 +1217,26 @@ define([
             frequency : 10.0
         },
         source : BlobMaterial
+    });
+
+    Material.WaterType = 'Water';
+    Material._materialCache.addMaterial(Material.WaterType, {
+        type : Material.WaterType,
+        uniforms : {
+            baseWaterColor : {
+                red : 0.2,
+                green : 0.3,
+                blue : 0.6,
+                alpha : 1.0
+            },
+            specularMap: Material.DefaultImageId,
+            normalMap: '../../../Images/waterNormals.png',
+            frequency: 10.0,
+            animationSpeed: 1.0,
+            amplitude: 1.0,
+            specularIntensity: 0.01
+        },
+        source : WaterMaterial
     });
 
     return Material;
