@@ -7,6 +7,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/EncodedCartesian3',
         '../Core/Matrix4',
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
@@ -30,6 +31,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        EncodedCartesian3,
         Matrix4,
         ComponentDatatype,
         IndexDatatype,
@@ -61,14 +63,15 @@ define([
     // PERFORMANCE_IDEA:  Use vertex compression so we don't run out of
     // vec4 attributes (WebGL minimum: 8)
     var attributeIndices = {
-        position : 0,
-        pixelOffset : 1,
-        eyeOffsetAndScale : 2,
-        textureCoordinatesAndImageSize : 3,
-        pickColor : 4,
-        color : 5,
-        originAndShow : 6,
-        direction : 7
+        positionHigh : 0,
+        positionLow : 1,
+        pixelOffset : 2,
+        eyeOffsetAndScale : 3,
+        textureCoordinatesAndImageSize : 4,
+        pickColor : 5,
+        color : 6,
+        originAndShow : 7,
+        direction : 8
     };
 
     /**
@@ -625,7 +628,12 @@ define([
         var directionVertexBuffer = getDirectionsVertexBuffer(context);
 
         return new VertexArrayFacade(context, [{
-            index : attributeIndices.position,
+            index : attributeIndices.positionHigh,
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[POSITION_INDEX]
+        }, {
+            index : attributeIndices.positionLow,
             componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[POSITION_INDEX]
@@ -678,6 +686,8 @@ define([
     // PERFORMANCE_IDEA:  Save memory if a property is the same for all billboards, use a latched attribute state,
     // instead of storing it in a vertex buffer.
 
+    var writePositionScratch = new EncodedCartesian3();
+
     function writePosition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = (billboard._index * 4);
         var position = billboard._getActualPosition();
@@ -686,10 +696,21 @@ define([
             billboardCollection._baseVolume.expand(position, billboardCollection._baseVolume);
         }
 
-        vafWriters[attributeIndices.position](i + 0, position.x, position.y, position.z);
-        vafWriters[attributeIndices.position](i + 1, position.x, position.y, position.z);
-        vafWriters[attributeIndices.position](i + 2, position.x, position.y, position.z);
-        vafWriters[attributeIndices.position](i + 3, position.x, position.y, position.z);
+        EncodedCartesian3.fromCartesian(position, writePositionScratch);
+
+        var positionHighWriter = vafWriters[attributeIndices.positionHigh];
+        var high = writePositionScratch.high;
+        positionHighWriter(i + 0, high.x, high.y, high.z);
+        positionHighWriter(i + 1, high.x, high.y, high.z);
+        positionHighWriter(i + 2, high.x, high.y, high.z);
+        positionHighWriter(i + 3, high.x, high.y, high.z);
+
+        var positionLowWriter = vafWriters[attributeIndices.positionLow];
+        var low = writePositionScratch.low;
+        positionLowWriter(i + 0, low.x, low.y, low.z);
+        positionLowWriter(i + 1, low.x, low.y, low.z);
+        positionLowWriter(i + 2, low.x, low.y, low.z);
+        positionLowWriter(i + 3, low.x, low.y, low.z);
     }
 
     function writePixelOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {

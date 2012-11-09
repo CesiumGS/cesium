@@ -1,4 +1,5 @@
-attribute vec3 position;
+attribute vec3 positionHigh;
+attribute vec3 positionLow;
 attribute vec2 direction;                       // in screen space
 attribute vec4 textureCoordinatesAndImageSize;  // size in normalized texture coordinates
 attribute vec4 color;
@@ -30,7 +31,7 @@ void main()
     
     ///////////////////////////////////////////////////////////////////////////     
 
-    vec4 positionEC = czm_modelView * vec4(position, 1.0);
+    vec4 positionEC = czm_modelViewRelativeToEye * vec4(czm_translateRelativeToEye(positionHigh, positionLow), 1.0);
     positionEC = czm_eyeOffset(positionEC, eyeOffset);
     positionEC.xyz *= show;
     
