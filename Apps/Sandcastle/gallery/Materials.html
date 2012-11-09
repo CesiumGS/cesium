@@ -281,6 +281,18 @@ require([
             fabric : {
                 type : 'Water',
                 uniforms : {
+                    baseWaterColor : {
+                        red : 0.2,
+                        green : 0.3,
+                        blue : 0.6,
+                        alpha : 1.0
+                    },
+                    nonWaterColor : {
+                        red : 0.0,
+                        green : 1.0,
+                        blue : 0.699,
+                        alpha : 1.0
+                    },
                     specularMap: '../../../Images/earthspec1k.jpg',
                     frequency: 10000.0,
                     animationSpeed: 1.0,

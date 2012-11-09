@@ -1229,6 +1229,12 @@ define([
                 blue : 0.6,
                 alpha : 1.0
             },
+            nonWaterColor : {
+                red : 0.0,
+                green : 1.0,
+                blue : 0.699,
+                alpha : 1.0
+            },
             specularMap: Material.DefaultImageId,
             normalMap: '../../../Images/waterNormals.png',
             frequency: 10.0,
