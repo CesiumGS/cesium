@@ -77,7 +77,7 @@ define([
         this._sunDirectionWCDirty = true;
         this._sunDirectionWC = new Cartesian3();
 
-        this._frameNumber = 0.0;
+        this._frameNumber = 1.0;
     };
 
     /**
@@ -608,11 +608,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Sets the current frame number.
      *
      * @memberof UniformState
      *
-     * @param {number} [frameNumber] DOC_TBA.
+     * @param {number} frameNumber The current frame number.
      *
      * @see UniformState#getFrameNumber
      * @see czm_frameNumber
@@ -622,7 +622,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Gets the current frame number.
      *
      * @memberof UniformState
      *

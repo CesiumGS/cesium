@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Math',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/destroyObject',
@@ -28,6 +29,7 @@ define([
         './PerspectiveOffCenterFrustum',
         './FrustumCommands'
     ], function(
+        CesiumMath,
         Color,
         defaultValue,
         destroyObject,
@@ -255,19 +257,12 @@ define([
             scene._context.getShaderCache().destroyReleasedShaderPrograms();
         }
 
-        // increment the frame number
-        var frameNumber = us.getFrameNumber();
-        frameNumber++;
-        if(frameNumber >= 15000000.0) {
-            // keep number in a range that won't introduce floating point errors
-            frameNumber = 0.0;
-        }
-        us.setFrameNumber(frameNumber);
-
         scene._animations.update();
         camera.update();
         us.setView(camera.getViewMatrix());
         us.setProjection(camera.frustum.getProjectionMatrix());
+        us.setFrameNumber(CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0));
+
         if (camera.frustum.getInfiniteProjectionMatrix) {
             us.setInfiniteProjection(camera.frustum.getInfiniteProjectionMatrix());
         }
