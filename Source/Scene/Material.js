@@ -1236,7 +1236,7 @@ define([
                 alpha : 1.0
             },
             specularMap: Material.DefaultImageId,
-            normalMap: '../../../Images/waterNormals.png',
+            normalMap: require.toUrl('Assets/Imagery/waterNormals.png'),
             frequency: 10.0,
             animationSpeed: 1.0,
             amplitude: 1.0,
