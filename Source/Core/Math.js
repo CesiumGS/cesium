@@ -448,7 +448,7 @@ define([
     };
 
     /**
-     * Increments a number with a wrapping to a min value if the number exceeds the maximum value.
+     * Increments a number with a wrapping to a minimum value if the number exceeds the maximum value.
      *
      * @memberof CesiumMath
      *
