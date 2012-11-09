@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Math',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/destroyObject',
@@ -28,6 +29,7 @@ define([
         './PerspectiveOffCenterFrustum',
         './FrustumCommands'
     ], function(
+        CesiumMath,
         Color,
         defaultValue,
         destroyObject,
@@ -258,6 +260,7 @@ define([
         scene._animations.update();
         camera.update();
         us.update(camera);
+        us.setFrameNumber(CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0));
 
         if (scene._animate) {
             scene._animate();
