@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        './defaultValue',
         './DeveloperError'
        ], function(
+         defaultValue,
          DeveloperError) {
     "use strict";
 
@@ -448,11 +450,13 @@ define([
     };
 
     /**
-     * Increments a number with a wrapping to a min value if the number exceeds the maximum value.
+     * Increments a number with a wrapping to a minimum value if the number exceeds the maximum value.
      *
      * @memberof CesiumMath
      *
-     * @param {Number} n The number to be incremented.
+     * @param {Number} [n] The number to be incremented.
+     * @param {Number} [maximumValue] The maximum incremented value before rolling over to the minimum value.
+     * @param {Number} [minimumValue=0.0] The number reset to after the maximum value has been exceeded.
      *
      * @return {Number} The incremented number.
      *
@@ -460,14 +464,21 @@ define([
      * var n = CesiumMath.incrementWrap(5, 10, 0); // returns 6
      * var n = CesiumMath.incrementWrap(10, 10, 0); // returns 0
      *
+     * @exception {DeveloperError} Maximum value must be greater than minimum value.
      */
-    CesiumMath.incrementWrap = function(n, maxValue, minValue) {
+    CesiumMath.incrementWrap = function(n, maximumValue, minimumValue) {
+        minimumValue = defaultValue(minimumValue, 0.0);
+
+        if (maximumValue <= minimumValue) {
+            throw new DeveloperError('Maximum value must be greater than minimum value.');
+        }
+
         ++n;
-        if(n > maxValue) {
-            n = minValue;
+        if(n > maximumValue) {
+            n = minimumValue;
         }
         return n;
-    }
+    };
 
     /**
      * Determines if a positive integer is a power of two.
