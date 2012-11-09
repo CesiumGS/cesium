@@ -401,4 +401,12 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(czm_viewerPositionWC == vec3(0.0)); }';
         verifyDraw(fs);
     });
+
+    it('has czm_frameNumber', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_frameNumber != 0.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
 });
