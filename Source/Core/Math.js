@@ -448,6 +448,28 @@ define([
     };
 
     /**
+     * Increments a number with a wrapping to a min value if the number exceeds the maximum value.
+     *
+     * @memberof CesiumMath
+     *
+     * @param {Number} n The number to be incremented.
+     *
+     * @return {Number} The incremented number.
+     *
+     * @example
+     * var n = CesiumMath.incrementWrap(5, 10, 0); // returns 6
+     * var n = CesiumMath.incrementWrap(10, 10, 0); // returns 0
+     *
+     */
+    CesiumMath.incrementWrap = function(n, maxValue, minValue) {
+        ++n;
+        if(n > maxValue) {
+            n = minValue;
+        }
+        return n;
+    }
+
+    /**
      * Determines if a positive integer is a power of two.
      *
      * @memberof CesiumMath
