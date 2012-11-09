@@ -8,6 +8,9 @@ require({
         name : 'dijit',
         location : 'ThirdParty/dojo-release-1.7.2-src/dijit'
     }, {
+        name : 'Assets',
+        location : 'Source/Assets'
+    }, {
         name : 'Core',
         location : 'Source/Core'
     }, {
@@ -16,9 +19,6 @@ require({
     }, {
         name : 'Renderer',
         location : 'Source/Renderer'
-    }, {
-        name : 'Assets',
-        location : 'Source/Assets'
     }, {
         name : 'Scene',
         location : 'Source/Scene'
