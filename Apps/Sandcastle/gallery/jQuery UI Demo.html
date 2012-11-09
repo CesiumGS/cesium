@@ -80,11 +80,13 @@
 
     var cb = new Cesium.CentralBody(ellipsoid);
     cb.getImageryLayers().addImageryProvider(bing);
-    cb.nightImageSource = '../../../Images/land_ocean_ice_lights_2048.jpg';
-    cb.specularMapSource = '../../../Images/earthspec1k.jpg';
+
+    var imageryUrl = '../../../Source/Assets/Imagery/';
+    cb.nightImageSource = imageryUrl + 'land_ocean_ice_lights_2048.jpg';
+    cb.specularMapSource = imageryUrl + 'earthspec1k.jpg';
     if (scene.getContext().getMaximumTextureSize() > 2048) {
-        cb.cloudsMapSource = '../../../Images/earthcloudmaptrans.jpg';
-        cb.bumpMapSource = '../../../Images/earthbump1k.jpg';
+        cb.cloudsMapSource = imageryUrl + 'earthcloudmaptrans.jpg';
+        cb.bumpMapSource = imageryUrl + 'earthbump1k.jpg';
     }
     cb.showSkyAtmosphere = true;
     cb.showGroundAtmosphere = true;
