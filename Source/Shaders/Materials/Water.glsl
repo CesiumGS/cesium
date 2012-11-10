@@ -4,23 +4,16 @@
 uniform sampler2D specularMap;
 uniform sampler2D normalMap;
 uniform vec4 baseWaterColor;
-uniform vec4 nonWaterColor;
+uniform vec4 blendColor;
 uniform float frequency;
 uniform float animationSpeed;
 uniform float amplitude;
 uniform float specularIntensity;
 
-vec4 getNoise(vec2 uv, float time, vec2 direction) {
+vec4 getNoise(vec2 uv, float time, float angleInRad) {
 
-    // atan is undefined at x == 0
-    if(direction.x == 0.0) {
-        direction.x = 0.001;
-    }
-    
-    // angle between direction vector and x axis
-    float angle = atan(direction.y, direction.x);
-    float cosAngle = cos(angle);
-    float sinAngle = sin(angle);
+    float cosAngle = cos(angleInRad);
+    float sinAngle = sin(angleInRad);
     
     // time dependent sampling directions
     vec2 s0 = vec2(1.0/17.0, 0.0  );
@@ -57,13 +50,12 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
 
-    float speedFactor = animationSpeed / 500.0;
-    float time = czm_frameNumber * speedFactor;
+    float time = czm_frameNumber * animationSpeed;
     
     float specularMapValue = texture2D(specularMap, materialInput.st).r;
     
-    // note: not using directional motion at this time, just set the direction to (1.0, 0.0);
-    vec4 noise = getNoise(materialInput.st * frequency, time, vec2(1.0, 0.0));
+    // note: not using directional motion at this time, just set the angle to 0.0;
+    vec4 noise = getNoise(materialInput.st * frequency, time, 0.0);
     vec3 normalTangentSpace = normalize(noise.yxz * vec3(1.0, 1.0, 1.0 / amplitude));
     
     // attempt to fad out the normal perturbation as we approach non water areas (low specular map value)
@@ -77,7 +69,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     
     // base color is a blend of the water and non-water color based on the value from the specular map
     // may need a uniform blend factor to better control this
-    material.diffuse = mix(nonWaterColor.rgb, baseWaterColor.rgb, specularMapValue);
+    material.diffuse = mix(blendColor.rgb, baseWaterColor.rgb, specularMapValue);
     
     // diffuse highlights are based on how perturbed the normal is
     material.diffuse += (0.1 * tsPerturbationRatio);
