@@ -213,6 +213,9 @@ define([
             },
             u_clampToPixel : function() {
                 return that.clampToPixel ? 1.0 : 0.0;
+            },
+            u_morphTime : function() {
+                return that.morphTime;
             }
         };
     };
@@ -854,6 +857,7 @@ define([
             billboardCollection._mode = mode;
             billboardCollection._projection = projection;
             billboardCollection.modelMatrix.clone(modelMatrix);
+            billboardCollection._createVertexArray = true;
 
             if (mode === SceneMode.SCENE3D || mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
                 recomputeActualPositions(billboardCollection, billboards, frameState, morphTime, modelMatrix, true);

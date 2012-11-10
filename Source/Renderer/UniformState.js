@@ -280,7 +280,7 @@ define([
      */
      UniformState.prototype.getInverseModel = function() {
          if (this._inverseModelDirty) {
-             this._inverseModelDirty = true;
+             this._inverseModelDirty = false;
 
              // PERFORMANCE_IDEA: if the model matrix has scale, Matrix4.inverseTransformation would still work, right?
              this._model.inverse(this._inverseModel);

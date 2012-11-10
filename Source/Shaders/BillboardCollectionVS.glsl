@@ -11,6 +11,8 @@ attribute vec4 pickColor;
 uniform vec2 u_atlasSize;
 uniform float u_clampToPixel; // clamp is 1.0 (true) or 0.0 (false)
 
+uniform float u_morphTime;
+
 const vec2 czm_highResolutionSnapScale = vec2(1.0, 1.0);    // TODO
 
 varying vec2 v_textureCoordinates;
@@ -29,9 +31,19 @@ void main()
     vec2 origin = originAndShow.xy;
     float show = originAndShow.z;
     
-    ///////////////////////////////////////////////////////////////////////////     
+    ///////////////////////////////////////////////////////////////////////////
+    
+    vec4 p;
+    if (u_morphTime != 1.0)
+    {
+        p = vec4(czm_translateRelativeToEye(positionHigh.yzx, positionLow.yzx), 1.0).zxyw;
+    }
+	else
+	{
+    	p = vec4(czm_translateRelativeToEye(positionHigh, positionLow), 1.0);
+	}  
 
-    vec4 positionEC = czm_modelViewRelativeToEye * vec4(czm_translateRelativeToEye(positionHigh, positionLow), 1.0);
+    vec4 positionEC = czm_modelViewRelativeToEye * p;
     positionEC = czm_eyeOffset(positionEC, eyeOffset);
     positionEC.xyz *= show;
     
