@@ -327,9 +327,7 @@ define([
     }
 
     function singleAxisTwist2D(controller, movement) {
-        // CAMERA TODO: remove access to camera, fixes a problem in Columbus view
-        var rho = controller._cameraController._camera.position.magnitude();
-        var rotateRate = controller._rotateFactor * (rho - controller._rotateRateRangeAdjustment);
+        var rotateRate = controller._rotateFactor * controller._rotateRateRangeAdjustment;
 
         if (rotateRate > controller._maximumRotateRate) {
             rotateRate = controller._maximumRotateRate;
@@ -341,7 +339,7 @@ define([
 
         var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / controller._canvas.clientWidth;
 
-        var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
+        var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 4.0;
 
         controller._cameraController.twistRight(deltaPhi);
     }

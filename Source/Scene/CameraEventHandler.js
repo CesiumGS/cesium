@@ -71,7 +71,6 @@ define([
                     // Aggregate several input events into a single animation frame.
                     if (!that._update) {
                         that._movement.distance.endPosition = movement.distance.endPosition.clone();
-                        that._movement.center.endPosition = movement.center.endPosition.clone();
                         that._movement.angleAndHeight.endPosition = movement.angleAndHeight.endPosition.clone();
                     } else {
                         //that._lastMovement = that._movement;
