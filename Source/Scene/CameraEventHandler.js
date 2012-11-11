@@ -68,14 +68,29 @@ define([
 
             this._eventHandler.setMouseAction(function(movement) {
                 if (that._isDown) {
+                    // Aggregate several input events into a single animation frame.
                     if (!that._update) {
                         that._movement.distance.endPosition = movement.distance.endPosition.clone();
                         that._movement.center.endPosition = movement.center.endPosition.clone();
+                        that._movement.angleAndHeight.endPosition = movement.angleAndHeight.endPosition.clone();
                     } else {
                         //that._lastMovement = that._movement;
                         that._movement = movement;
                         that._update = false;
+                        that._movement.prevAngle = that._movement.angleAndHeight.startPosition.x;
                     }
+                    // Make sure our aggregation of angles does not "flip" over 360 degrees.
+                    var angle = that._movement.angleAndHeight.endPosition.x;
+                    var prevAngle = that._movement.prevAngle;
+                    var TwoPI = Math.PI * 2;
+                    while (angle >= (prevAngle + Math.PI)) {
+                        angle -= TwoPI;
+                    }
+                    while (angle < (prevAngle - Math.PI)) {
+                        angle += TwoPI;
+                    }
+                    that._movement.angleAndHeight.endPosition.x = -angle * canvas.clientWidth / 12;
+                    that._movement.angleAndHeight.startPosition.x = -prevAngle * canvas.clientWidth / 12;
                 }
             }, MouseEventType.PINCH_MOVE, moveModifier);
 

@@ -448,16 +448,18 @@ define([
 
             action = this.getMouseAction(MouseEventType.PINCH_MOVE, modifier);
             if (action) {
-                var dX = Math.abs(pos2.x - pos.x);
-                var dY = Math.abs(pos2.y - pos.y);
+                var dX = pos2.x - pos.x;
+                var dY = pos2.y - pos.y;
                 var dist = Math.sqrt(dX * dX + dY * dY);
-                var prevDX = Math.abs(this._lastTouch2X - this._lastMouseX);
-                var prevDY = Math.abs(this._lastTouch2Y - this._lastMouseY);
+                var prevDX = this._lastTouch2X - this._lastMouseX;
+                var prevDY = this._lastTouch2Y - this._lastMouseY;
                 var prevDist = Math.sqrt(prevDX * prevDX + prevDY * prevDY);
                 var cX = (pos2.x + pos.x) * 0.5;
                 var cY = (pos2.y + pos.y) * 0.5;
                 var prevCX = (this._lastTouch2X + this._lastMouseX) * 0.5;
                 var prevCY = (this._lastTouch2Y + this._lastMouseY) * 0.5;
+                var angle = Math.atan2(dY, dX);
+                var prevAngle = Math.atan2(prevDY, prevDX);
                 movement = {
                     'distance' : {
                         startPosition : new Cartesian2(0, prevDist),
@@ -469,8 +471,10 @@ define([
                         endPosition : new Cartesian2(cX, cY),
                         motion : new Cartesian2(0.0, 0.0)
                     },
-                    'angle' : {
-                        // TODO: Calculate change in angle between two touches, apply as rotation about look vector maybe.
+                    'angleAndHeight' : {
+                        startPosition : new Cartesian2(prevAngle, prevCY),
+                        endPosition : new Cartesian2(angle, cY),
+                        motion : new Cartesian2(0.0, 0.0)
                     }
                 };
                 action(movement);

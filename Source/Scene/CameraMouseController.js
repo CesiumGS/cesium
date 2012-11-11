@@ -377,7 +377,7 @@ define([
                 twist2D(controller, controller._rotateHandler.getMovement());
             }
             if (controller._pinchHandler.isMoving()) {
-                // TODO: Pinch angle changes
+                twist2D(controller, controller._pinchHandler.getMovement().angleAndHeight);
             }
         }
 
@@ -517,7 +517,7 @@ define([
                     rotateCV(controller, rotate.getMovement());
                 }
                 if (pinching) {
-                    rotateCV(controller, pinch.getMovement().center);
+                    rotateCV(controller, pinch.getMovement().angleAndHeight);
                 }
             }
 
@@ -537,7 +537,7 @@ define([
                 } else if (wheelZooming) {
                     zoomCV(controller, wheelZoom.getMovement());
                 } else if (pinching) {
-                    zoom3D(controller, pinch.getMovement().distance);
+                    zoomCV(controller, pinch.getMovement().distance);
                 }
 
                 if (zoom && !zoomimg && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
@@ -784,7 +784,7 @@ define([
                 tilt3D(controller, rotate.getMovement());
             }
             if (pinching) {
-                tilt3D(controller, pinch.getMovement().center);
+                tilt3D(controller, pinch.getMovement().angleAndHeight);
             }
 
             if (rotate && !rotating && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
