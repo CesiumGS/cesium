@@ -1179,6 +1179,8 @@ define([
      * @private
      */
     PolylineBucket.prototype.writeForMorph = function(positionArray, positionIndex) {
+        var modelMatrix = this.modelMatrix;
+        var position;
         var polylines = this.polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
@@ -1194,14 +1196,18 @@ define([
                     var segment = segments[j];
                     var segmentLength = segment.length;
                     for ( var n = 0; n < segmentLength; ++n) {
-                        EncodedCartesian3.writeElements(positions[segment[n].index], positionArray, positionIndex);
+                        position = positions[segment[n].index];
+                        position = modelMatrix.multiplyByPoint(position);
+                        EncodedCartesian3.writeElements(position, positionArray, positionIndex);
                         positionIndex += 6;
                     }
                 }
             } else {
                 numberOfSegments = positions.length;
                 for ( j = 0; j < numberOfSegments; ++j) {
-                    EncodedCartesian3.writeElements(positions[j], positionArray, positionIndex);
+                    var position = positions[j];
+                    position = modelMatrix.multiplyByPoint(position);
+                    EncodedCartesian3.writeElements(position, positionArray, positionIndex);
                     positionIndex += 6;
                 }
             }
@@ -1448,7 +1454,7 @@ define([
         if (newPositions.length > 0) {
             polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions, polyline._boundingVolume2D);
             var center2D = polyline._boundingVolume2D.center;
-            polyline._boundingVolume2D.center = new Cartesian3( center2D.z,  center2D.x, center2D.y);
+            polyline._boundingVolume2D.center = new Cartesian3(center2D.z,  center2D.x, center2D.y);
             if (typeof polyline._polylineCollection._boundingVolume2D === 'undefined') {
                 polyline._polylineCollection._boundingVolume2D = BoundingSphere.clone(polyline._boundingVolume2D);
             } else {
