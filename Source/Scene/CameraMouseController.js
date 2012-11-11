@@ -135,6 +135,7 @@ define([
         this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
         this._zoomHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
         this._zoomWheelHandler = new CameraEventHandler(canvas, CameraEventType.WHEEL);
+        this._pinchHandler = new CameraEventHandler(canvas, CameraEventType.PINCH);
 
         this._lastInertiaSpinMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
@@ -329,9 +330,11 @@ define([
         var translate = controller._translateHandler;
         var rightZoom = controller._zoomHandler;
         var wheelZoom = controller._zoomWheelHandler;
+        var pinch = controller._pinchHandler;
         var translating = translate.isMoving() && translate.getMovement();
         var rightZooming = rightZoom.isMoving();
         var wheelZooming = wheelZoom.isMoving();
+        var pinching = pinch.isMoving();
 
         if (translate.isButtonDown() || rightZoom.isButtonDown() || wheelZooming) {
             controller._animationCollection.removeAll();
@@ -352,6 +355,8 @@ define([
                 zoom2D(controller, rightZoom.getMovement());
             } else if (wheelZooming) {
                 zoom2D(controller, wheelZoom.getMovement());
+            } else if (pinching) {
+                zoom2D(controller, pinch.getMovement().distance);
             }
 
             if (!rightZooming && controller.inertiaZoom < 1.0) {
@@ -360,6 +365,10 @@ define([
 
             if (!wheelZooming && controller.inertiaZoom < 1.0) {
                 maintainInertia(wheelZoom, controller.inertiaZoom, zoom2D, controller, '_lastInertiaWheelZoomMovement');
+            }
+
+            if (!pinching && controller.inertiaZoom < 1.0) {
+                maintainInertia(pinch, controller.inertiaZoom, zoom2D, controller, '_lastInertiaZoomMovement');
             }
         }
 
@@ -453,6 +462,8 @@ define([
         var zoomimg = zoom && zoom.isMoving();
         var wheelZoom = controller._zoomWheelHandler;
         var wheelZooming = wheelZoom.isMoving();
+        var pinch = controller._pinchHandler;
+        var pinching = pinch.isMoving();
         var translate = controller._translateHandler;
         var translating = translate.isMoving() && translate.getMovement();
         var rotate = controller._rotateHandler;
@@ -476,6 +487,8 @@ define([
                     zoom3D(controller, zoom.getMovement());
                 } else if (wheelZooming) {
                     zoom3D(controller, wheelZoom.getMovement());
+                } else if (pinching) {
+                    zoom3D(controller, pinch.getMovement().distance);
                 }
 
                 if (zoom && !zoomimg && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
@@ -484,6 +497,10 @@ define([
 
                 if (wheelZoom && !wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
+                }
+
+                if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                    maintainInertia(pinch, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
                 }
             }
         } else {
@@ -513,6 +530,8 @@ define([
                     zoomCV(controller, zoom.getMovement());
                 } else if (wheelZooming) {
                     zoomCV(controller, wheelZoom.getMovement());
+                } else if (pinching) {
+                    zoom3D(controller, pinch.getMovement().distance);
                 }
 
                 if (zoom && !zoomimg && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
@@ -521,6 +540,10 @@ define([
 
                 if (!wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(wheelZoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaWheelZoomMovement');
+                }
+
+                if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                    maintainInertia(pinch, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
                 }
             }
 
@@ -731,9 +754,11 @@ define([
         var spin = controller._spinHandler;
         var rightZoom = controller._zoomHandler;
         var wheelZoom = controller._zoomWheelHandler;
+        var pinch = controller._pinchHandler;
         var spinning = spin && spin.isMoving();
         var rightZooming = rightZoom && rightZoom.isMoving();
         var wheelZooming = wheelZoom && wheelZoom.isMoving();
+        var pinching = pinch && pinch.isMoving();
         var rotate = controller._rotateHandler;
         var rotating = rotate.isMoving() && rotate.getMovement();
 
@@ -763,6 +788,8 @@ define([
                 zoom3D(controller, rightZoom.getMovement());
             } else if (wheelZooming) {
                 zoom3D(controller, wheelZoom.getMovement());
+            } else if (pinching) {
+                zoom3D(controller, pinch.getMovement().distance);
             }
 
             if (rightZoom && !rightZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
@@ -771,6 +798,10 @@ define([
 
             if (wheelZoom && !wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                 maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
+            }
+
+            if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                maintainInertia(pinch, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
             }
         }
 
@@ -840,6 +871,7 @@ define([
         this._rotateHandler = this._rotateHandler && this._rotateHandler.destroy();
         this._zoomHandler = this._zoomHandler && this._zoomHandler.destroy();
         this._zoomWheelHandler = this._zoomWheelHandler && this._zoomWheelHandler.destroy();
+        this._pinchHandler = this._pinchHandler && this._pinchHandler.destroy();
         return destroyObject(this);
     };
 

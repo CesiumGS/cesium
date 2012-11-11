@@ -118,7 +118,31 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        WHEEL : new Enumeration(16, 'WHEEL')
+        WHEEL : new Enumeration(16, 'WHEEL'),
+
+        /**
+         * Represents the start of a two-finger event on a touch surface.
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        PINCH_START : new Enumeration(17, 'PINCH_START'),
+
+        /**
+         * Represents the end of a two-finger event on a touch surface.
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        PINCH_END : new Enumeration(18, 'PINCH_END'),
+
+        /**
+         * Represents a change of a two-finger event on a touch surface.
+         *
+         * @constant
+         * @type {Enumeration}
+         */
+        PINCH_MOVE : new Enumeration(19, 'PINCH_MOVE')
     };
 
     return MouseEventType;

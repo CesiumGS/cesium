@@ -47,10 +47,15 @@ define([
         this._leftMouseButtonDown = false;
         this._middleMouseButtonDown = false;
         this._rightMouseButtonDown = false;
+        this._isPinching = false;
         this._seenAnyTouchEvents = false;
         this._lastMouseX = 0;
         this._lastMouseY = 0;
+        this._lastTouch2X = 0;
+        this._lastTouch2Y = 0;
         this._totalPixels = 0;
+        this._touchID1 = 0;
+        this._touchID2 = 0;
 
         // TODO: Revisit when doing mobile development. May need to be configurable
         // or determined based on the platform?
@@ -299,17 +304,17 @@ define([
     };
 
     EventHandler.prototype._handleTouchStart = function(event) {
-        var pos, numberOfTouches = event.touches.length;
+        var pos, pos2, numberOfTouches = event.touches.length;
         this._seenAnyTouchEvents = true;
+        var modifier = this._getModifier(event);
+        var action;
+
+        pos = this._getPosition(event.touches[0]);
 
         if (numberOfTouches === 1) {
-            pos = this._getPosition(event.touches[0]);
             this._lastMouseX = pos.x;
             this._lastMouseY = pos.y;
             this._totalPixels = 0;
-
-            var modifier = this._getModifier(event);
-            var action;
 
             this._leftMouseButtonDown = true;
             action = this.getMouseAction(MouseEventType.LEFT_DOWN, modifier);
@@ -321,7 +326,38 @@ define([
             }
             event.preventDefault();
         } else if (this._leftMouseButtonDown) {
-            this._handleTouchEnd(event);
+            // Release "mouse" without clicking, because we are adding more touches.
+            this._leftMouseButtonDown = false;
+            action = this.getMouseAction(MouseEventType.LEFT_UP, modifier);
+            if (action) {
+                action({
+                    position : new Cartesian2(pos.x, pos.y)
+                });
+            }
+        }
+
+        if (numberOfTouches === 2) {
+            this._isPinching = true;
+            pos2 = this._getPosition(event.touches[1]);
+            this._touchID1 = event.touches[0].identifier;
+            this._touchID2 = event.touches[1].identifier;
+            this._lastMouseX = pos.x;
+            this._lastMouseY = pos.y;
+            this._lastTouch2X = pos2.x;
+            this._lastTouch2Y = pos2.y;
+            action = this.getMouseAction(MouseEventType.PINCH_START, modifier);
+            if (action) {
+                action({
+                    position1 : new Cartesian2(pos.x, pos.y),
+                    position2 : new Cartesian2(pos2.x, pos2.y)
+                });
+            }
+        } else if (this._isPinching) {
+            this._isPinching = false;
+            action = this.getMouseAction(MouseEventType.PINCH_END, modifier);
+            if (action) {
+                action();
+            }
         }
     };
 
@@ -335,49 +371,59 @@ define([
             this._leftMouseButtonDown = false;
             action = this.getMouseAction(MouseEventType.LEFT_UP, modifier);
             clickAction = this.getMouseAction(MouseEventType.LEFT_CLICK, modifier);
+
+            if (numberOfTargetTouches > 0) {
+                var pos = this._getPosition(event.targetTouches[0]);
+
+                var xDiff = this._lastMouseX - pos.x;
+                var yDiff = this._lastMouseY - pos.y;
+                this._totalPixels += Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+
+                if (action) {
+                    action({
+                        position : new Cartesian2(pos.x, pos.y)
+                    });
+                }
+
+                if (clickAction && this._totalPixels < this._clickPixelTolerance) {
+                    clickAction({
+                        position : new Cartesian2(pos.x, pos.y)
+                    });
+                }
+            }
         }
 
-        if (numberOfTargetTouches > 0) {
-            var pos = this._getPosition(event.targetTouches[0]);
-
-            var xDiff = this._lastMouseX - pos.x;
-            var yDiff = this._lastMouseY - pos.y;
-            this._totalPixels += Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-
+        if (this._isPinching) {
+            this._isPinching = false;
+            action = this.getMouseAction(MouseEventType.PINCH_END, modifier);
             if (action) {
-                action({
-                    position : new Cartesian2(pos.x, pos.y)
-                });
-            }
-
-            if (clickAction && this._totalPixels < this._clickPixelTolerance) {
-                clickAction({
-                    position : new Cartesian2(pos.x, pos.y)
-                });
+                action();
             }
         }
 
-        if (numberOfTouches === 1) {
+        if (numberOfTouches === 1 || numberOfTouches === 2) {
             this._handleTouchStart(event);
         }
     };
 
     EventHandler.prototype._handleTouchMove = function(event) {
+        var modifier = this._getModifier(event);
+        var pos, pos2, action, movement;
+
         if (this._leftMouseButtonDown && (event.touches.length === 1)) {
-            var pos = this._getPosition(event.touches[0]);
+            pos = this._getPosition(event.touches[0]);
 
             var xDiff = this._lastMouseX - pos.x;
             var yDiff = this._lastMouseY - pos.y;
             this._totalPixels += Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 
-            var movement = {
+            movement = {
                 startPosition : new Cartesian2(this._lastMouseX, this._lastMouseY),
                 endPosition : new Cartesian2(pos.x, pos.y),
                 motion : new Cartesian2(0.0, 0.0)
             };
 
-            var modifier = this._getModifier(event);
-            var action = this.getMouseAction(MouseEventType.MOVE, modifier);
+            action = this.getMouseAction(MouseEventType.MOVE, modifier);
             if (action) {
                 action(movement);
             }
@@ -388,6 +434,46 @@ define([
             if (this._leftMouseButtonDown || this._middleMouseButtonDown || this._rightMouseButtonDown) {
                 event.preventDefault();
             }
+        }
+
+        if (this._isPinching && (event.touches.length === 2)) {
+            // Check the touch identifier to make sure the order is correct.
+            if (event.touches[0].identifier === this._touchID2) {
+                pos = this._getPosition(event.touches[1]);
+                pos2 = this._getPosition(event.touches[0]);
+            } else {
+                pos = this._getPosition(event.touches[0]);
+                pos2 = this._getPosition(event.touches[1]);
+            }
+
+            action = this.getMouseAction(MouseEventType.PINCH_MOVE, modifier);
+            if (action) {
+                var dX = Math.abs(pos2.x - pos.x);
+                var dY = Math.abs(pos2.y - pos.y);
+                var dist = Math.sqrt(dX * dX + dY * dY);
+                var prevDX = Math.abs(this._lastTouch2X - this._lastMouseX);
+                var prevDY = Math.abs(this._lastTouch2Y - this._lastMouseY);
+                var prevDist = Math.sqrt(prevDX * prevDX + prevDY * prevDY);
+                movement = {
+                    'distance' : {
+                        startPosition : new Cartesian2(0, prevDist),
+                        endPosition : new Cartesian2(0, dist),
+                        motion : new Cartesian2(0.0, 0.0)
+                    },
+                    'center' : {
+                        // TODO: Calculate change in center point between two touches, apply similar to CameraMouseController._rotateHandler.
+                    },
+                    'angle' : {
+                        // TODO: Calculate change in angle between two touches, apply as rotation about look vector maybe.
+                    }
+                };
+                action(movement);
+            }
+
+            this._lastMouseX = pos.x;
+            this._lastMouseY = pos.y;
+            this._lastTouch2X = pos2.x;
+            this._lastTouch2Y = pos2.y;
         }
     };
 

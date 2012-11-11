@@ -53,7 +53,32 @@ define([
 
         var that = this;
 
-        if (moveType !== CameraEventType.WHEEL) {
+        if (moveType === CameraEventType.PINCH) {
+
+            this._eventHandler.setMouseAction(function(movement) {
+                //that._lastMovement = null;
+                that._isDown = true;
+                that._pressTime = new Date();
+            }, MouseEventType.PINCH_START, moveModifier);
+
+            this._eventHandler.setMouseAction(function(movement) {
+                that._isDown = false;
+                that._releaseTime = new Date();
+            }, MouseEventType.PINCH_END, moveModifier);
+
+            this._eventHandler.setMouseAction(function(movement) {
+                if (that._isDown) {
+                    if (!that._update) {
+                        that._movement.distance.endPosition = movement.distance.endPosition.clone();
+                    } else {
+                        //that._lastMovement = that._movement;
+                        that._movement = movement;
+                        that._update = false;
+                    }
+                }
+            }, MouseEventType.PINCH_MOVE, moveModifier);
+
+        } else if (moveType !== CameraEventType.WHEEL) {
             var down;
             var up;
             if (moveType === CameraEventType.LEFT_DRAG) {
