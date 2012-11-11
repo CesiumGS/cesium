@@ -326,6 +326,26 @@ define([
         controller._cameraController.twistRight(theta);
     }
 
+    function singleAxisTwist2D(controller, movement) {
+        // CAMERA TODO: remove access to camera, fixes a problem in Columbus view
+        var rho = controller._cameraController._camera.position.magnitude();
+        var rotateRate = controller._rotateFactor * (rho - controller._rotateRateRangeAdjustment);
+
+        if (rotateRate > controller._maximumRotateRate) {
+            rotateRate = controller._maximumRotateRate;
+        }
+
+        if (rotateRate < controller._minimumRotateRate) {
+            rotateRate = controller._minimumRotateRate;
+        }
+
+        var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / controller._canvas.clientWidth;
+
+        var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
+
+        controller._cameraController.twistRight(deltaPhi);
+    }
+
     function update2D(controller) {
         var translate = controller._translateHandler;
         var rightZoom = controller._zoomHandler;
@@ -375,9 +395,10 @@ define([
         if (controller.enableRotate) {
             if (controller._rotateHandler.isMoving()) {
                 twist2D(controller, controller._rotateHandler.getMovement());
+                //singleAxisTwist2D(controller, controller._rotateHandler.getMovement());
             }
-            if (controller._pinchHandler.isMoving()) {
-                twist2D(controller, controller._pinchHandler.getMovement().angleAndHeight);
+            if (pinching) {
+                singleAxisTwist2D(controller, pinch.getMovement().angleAndHeight);
             }
         }
 
