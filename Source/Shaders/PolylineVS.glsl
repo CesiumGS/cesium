@@ -24,7 +24,7 @@ void main()
     else
     {
         p = czm_columbusViewMorph(
-        	czm_translateRelativeToEye(position2DHigh, position2DLow).zxy,
+        	czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),
             czm_translateRelativeToEye(position3DHigh, position3DLow), 
             u_morphTime);
     }

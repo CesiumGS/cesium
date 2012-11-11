@@ -158,7 +158,7 @@ define([
      */
     UniformState.prototype.update = function(camera) {
         setView(this, camera.getViewMatrix());
-        setCameraPosition(this, camera.position);
+        setCameraPosition(this, camera.getPositionWC());
 
         this.updateFrustum(camera.frustum);
     };
