@@ -19,7 +19,7 @@ void main()
     }
     else if (u_morphTime == 0.0)
     {
-        p = vec4(czm_translateRelativeToEye(position2DHigh, position2DLow).zxy, 1.0);
+        p = vec4(czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy), 1.0);
     }
     else
     {

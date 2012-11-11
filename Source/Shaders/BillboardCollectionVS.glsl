@@ -36,7 +36,7 @@ void main()
     vec4 p;
     if (u_morphTime != 1.0)
     {
-        p = vec4(czm_translateRelativeToEye(positionHigh.yzx, positionLow.yzx), 1.0).zxyw;
+        p = vec4(czm_translateRelativeToEye(positionHigh, positionLow), 1.0);
     }
 	else
 	{
