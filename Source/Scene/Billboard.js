@@ -558,17 +558,17 @@ define([
         var projection = frameState.scene2D.projection;
         var cartographic, projectedPosition;
 
+        modelMatrix.multiplyByPoint(position, tempCartesian4);
+
         if (mode === SceneMode.MORPHING) {
-            cartographic = projection.getEllipsoid().cartesianToCartographic(position);
+            cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian4);
             projectedPosition = projection.project(cartographic);
 
-            var x = CesiumMath.lerp(projectedPosition.z, position.x, morphTime);
-            var y = CesiumMath.lerp(projectedPosition.x, position.y, morphTime);
-            var z = CesiumMath.lerp(projectedPosition.y, position.z, morphTime);
+            var x = CesiumMath.lerp(projectedPosition.z, tempCartesian4.x, morphTime);
+            var y = CesiumMath.lerp(projectedPosition.x, tempCartesian4.y, morphTime);
+            var z = CesiumMath.lerp(projectedPosition.y, tempCartesian4.z, morphTime);
             return new Cartesian3(x, y, z);
         }
-
-        modelMatrix.multiplyByPoint(position, tempCartesian4);
 
         cartographic = projection.getEllipsoid().cartesianToCartographic(tempCartesian4);
         projectedPosition = projection.project(cartographic);
