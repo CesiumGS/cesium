@@ -376,6 +376,9 @@ define([
             if (controller._rotateHandler.isMoving()) {
                 twist2D(controller, controller._rotateHandler.getMovement());
             }
+            if (controller._pinchHandler.isMoving()) {
+                // TODO: Pinch angle changes
+            }
         }
 
         if (!translate.isButtonDown() && !rightZoom.isButtonDown() &&
@@ -504,7 +507,7 @@ define([
                 }
             }
         } else {
-            var buttonDown = translate.isButtonDown() || zoom.isButtonDown() || wheelZooming || rotate.isButtonDown() || controller._lookHandler.isButtonDown();
+            var buttonDown = translate.isButtonDown() || zoom.isButtonDown() || wheelZooming || pinching || rotate.isButtonDown() || controller._lookHandler.isButtonDown();
             if (buttonDown) {
                 controller._animationCollection.removeAll();
             }
@@ -512,6 +515,9 @@ define([
             if (controller.enableTilt) {
                 if (rotating) {
                     rotateCV(controller, rotate.getMovement());
+                }
+                if (pinching) {
+                    rotateCV(controller, pinch.getMovement().center);
                 }
             }
 
@@ -777,9 +783,16 @@ define([
             if (rotating) {
                 tilt3D(controller, rotate.getMovement());
             }
+            if (pinching) {
+                tilt3D(controller, pinch.getMovement().center);
+            }
 
             if (rotate && !rotating && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
                 maintainInertia(rotate, controller.inertiaSpin, tilt3D, controller, '_lastInertiaTiltMovement');
+            }
+
+            if (pinch && !pinch && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
+                maintainInertia(pinch, controller.inertiaSpin, tilt3D, controller, '_lastInertiaTiltMovement');
             }
         }
 

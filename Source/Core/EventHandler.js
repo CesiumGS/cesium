@@ -454,6 +454,10 @@ define([
                 var prevDX = Math.abs(this._lastTouch2X - this._lastMouseX);
                 var prevDY = Math.abs(this._lastTouch2Y - this._lastMouseY);
                 var prevDist = Math.sqrt(prevDX * prevDX + prevDY * prevDY);
+                var cX = (pos2.x + pos.x) * 0.5;
+                var cY = (pos2.y + pos.y) * 0.5;
+                var prevCX = (this._lastTouch2X + this._lastMouseX) * 0.5;
+                var prevCY = (this._lastTouch2Y + this._lastMouseY) * 0.5;
                 movement = {
                     'distance' : {
                         startPosition : new Cartesian2(0, prevDist),
@@ -461,7 +465,9 @@ define([
                         motion : new Cartesian2(0.0, 0.0)
                     },
                     'center' : {
-                        // TODO: Calculate change in center point between two touches, apply similar to CameraMouseController._rotateHandler.
+                        startPosition : new Cartesian2(prevCX, prevCY),
+                        endPosition : new Cartesian2(cX, cY),
+                        motion : new Cartesian2(0.0, 0.0)
                     },
                     'angle' : {
                         // TODO: Calculate change in angle between two touches, apply as rotation about look vector maybe.
