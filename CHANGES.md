@@ -9,6 +9,8 @@ Beta Releases
 * Breaking changes:
    * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
    * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
+   * Renamed `MouseEventType` to `InputEventType`.
+   * Renamed `CameraMouseController` to `CameraInputController`.
 
 ### b10 - 11/02/2012
 

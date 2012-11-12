@@ -35,7 +35,7 @@ define([
 
         if (modeChanged) {
             that._mode = that.scene.mode;
-            that.scene.getCameraMouseController().enableTranslate = false;
+            that.scene.getCameraInputController().enableTranslate = false;
             viewDistance = offset.magnitude();
         } else if (objectChanged) {
             viewDistance = offset.magnitude();
@@ -78,7 +78,7 @@ define([
 
         var cartesian = positionProperty.getValueCartesian(time, that._lastCartesian);
         camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
-        that.scene.getCameraMouseController().setEllipsoid(Ellipsoid.UNIT_SPHERE);
+        that.scene.getCameraInputController().setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
         var position = camera.position;
         Cartesian3.clone(position, that._lastOffset);
@@ -99,7 +99,7 @@ define([
         var tranform = camera.transform;
         tranform.setColumn(3, updateColumbusCartesian4, tranform);
 
-        var mouseController = that.scene.getCameraMouseController();
+        var mouseController = that.scene.getCameraInputController();
         mouseController.enableTranslate = false;
         mouseController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
         mouseController.columbusViewMode = CameraColumbusViewMode.LOCKED;

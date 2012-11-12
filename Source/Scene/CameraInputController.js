@@ -47,7 +47,7 @@ define([
 
     /**
      * Modifies the camera position and orientation based on mouse input to a canvas.
-     * @alias CameraMouseController
+     * @alias CameraInputController
      * @constructor
      *
      * @param {HTMLCanvasElement} canvas The canvas to listen for events.
@@ -56,7 +56,7 @@ define([
      * @exception {DeveloperError} canvas is required.
      * @exception {DeveloperError} cameraController is required.
      */
-    var CameraMouseController = function(canvas, cameraController) {
+    var CameraInputController = function(canvas, cameraController) {
         if (typeof canvas === 'undefined') {
             throw new DeveloperError('canvas is required.');
         }
@@ -173,7 +173,7 @@ define([
      * as well as how fast to rotate the camera based on the distance to its surface.
      * @returns {Ellipsoid} The ellipsoid.
      */
-    CameraMouseController.prototype.getEllipsoid = function() {
+    CameraInputController.prototype.getEllipsoid = function() {
         return this._ellipsoid;
     };
 
@@ -182,7 +182,7 @@ define([
      * as well as how fast to rotate the camera based on the distance to its surface.
      * @param {Ellipsoid} [ellipsoid=WGS84] The ellipsoid.
      */
-    CameraMouseController.prototype.setEllipsoid = function(ellipsoid) {
+    CameraInputController.prototype.setEllipsoid = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var radius = ellipsoid.getMaximumRadius();
         this._ellipsoid = ellipsoid;
@@ -860,7 +860,7 @@ define([
     /**
      * @private
      */
-    CameraMouseController.prototype.update = function(frameState) {
+    CameraInputController.prototype.update = function(frameState) {
         var mode = frameState.mode;
         if (mode === SceneMode.SCENE2D) {
             update2D(this);
@@ -879,13 +879,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof CameraMouseController
+     * @memberof CameraInputController
      *
      * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see CameraMouseController#destroy
+     * @see CameraInputController#destroy
      */
-    CameraMouseController.prototype.isDestroyed = function() {
+    CameraInputController.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -896,18 +896,18 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof CameraMouseController
+     * @memberof CameraInputController
      *
      * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CameraMouseController#isDestroyed
+     * @see CameraInputController#isDestroyed
      *
      * @example
      * controller = controller && controller.destroy();
      */
-    CameraMouseController.prototype.destroy = function() {
+    CameraInputController.prototype.destroy = function() {
         this._spinHandler = this._spinHandler && this._spinHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._lookHandler = this._lookHandler && this._lookHandler.destroy();
@@ -918,5 +918,5 @@ define([
         return destroyObject(this);
     };
 
-    return CameraMouseController;
+    return CameraInputController;
 });
