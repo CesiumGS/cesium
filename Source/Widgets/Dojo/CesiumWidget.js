@@ -217,14 +217,14 @@ define([
             camera.position = camera.position.multiplyByScalar(1.5);
 
             var handler = new EventHandler(canvas);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), InputEventType.LEFT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleRightClick'), InputEventType.RIGHT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), InputEventType.MOUSE_MOVE);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), InputEventType.LEFT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), InputEventType.LEFT_UP);
-            handler.setMouseAction(lang.hitch(this, '_handleWheel'), InputEventType.WHEEL);
-            handler.setMouseAction(lang.hitch(this, '_handleRightDown'), InputEventType.RIGHT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleRightUp'), InputEventType.RIGHT_UP);
+            handler.setInputAction(lang.hitch(this, '_handleLeftClick'), InputEventType.LEFT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleRightClick'), InputEventType.RIGHT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleMouseMove'), InputEventType.MOUSE_MOVE);
+            handler.setInputAction(lang.hitch(this, '_handleLeftDown'), InputEventType.LEFT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleLeftUp'), InputEventType.LEFT_UP);
+            handler.setInputAction(lang.hitch(this, '_handleWheel'), InputEventType.WHEEL);
+            handler.setInputAction(lang.hitch(this, '_handleRightDown'), InputEventType.RIGHT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleRightUp'), InputEventType.RIGHT_UP);
 
             if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {

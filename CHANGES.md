@@ -12,6 +12,7 @@ Beta Releases
    * Renamed `MouseEventType` to `InputEventType`.
    * Renamed `MouseEventType.MOVE` to `InputEventType.MOUSE_MOVE`.
    * Renamed `CameraMouseController` to `CameraInputController`.
+   * Renamed all `*MouseAction` to `*InputAction` (including get, set, remove, etc).
 
 ### b10 - 11/02/2012
 

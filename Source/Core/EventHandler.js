@@ -82,22 +82,22 @@ define([
     };
 
     /**
-     * Set a function to be executed on a mouse event.
+     * Set a function to be executed on an input event.
      *
      * @memberof EventHandler
      *
-     * @param {Function} action Function to be executed when the mouse event occurs.
-     * @param {Enumeration} type The InputEventType of mouse event.
+     * @param {Function} action Function to be executed when the input event occurs.
+     * @param {Enumeration} type The InputEventType of input event.
      * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @exception {DeveloperError} action is required.
      * @exception {DeveloperError} type is required.
      *
-     * @see EventHandler#getMouseAction
-     * @see EventHandler#removeMouseAction
+     * @see EventHandler#getInputAction
+     * @see EventHandler#removeInputAction
      */
-    EventHandler.prototype.setMouseAction = function(action, type, modifier) {
+    EventHandler.prototype.setInputAction = function(action, type, modifier) {
         if (!action) {
             throw new DeveloperError('action is required.');
         }
@@ -119,20 +119,20 @@ define([
     };
 
     /**
-     * Returns the function to be executed on a mouse event.
+     * Returns the function to be executed on an input event.
      *
      * @memberof EventHandler
      *
-     * @param {Enumeration} type The InputEventType of mouse event.
+     * @param {Enumeration} type The InputEventType of input event.
      * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @exception {DeveloperError} type is required.
      *
-     * @see EventHandler#setMouseAction
-     * @see EventHandler#removeMouseAction
+     * @see EventHandler#setInputAction
+     * @see EventHandler#removeInputAction
      */
-    EventHandler.prototype.getMouseAction = function(type, modifier) {
+    EventHandler.prototype.getInputAction = function(type, modifier) {
         if (!type) {
             throw new DeveloperError('type is required.');
         }
@@ -152,20 +152,20 @@ define([
     };
 
     /**
-     * Removes the function to be executed on a mouse event.
+     * Removes the function to be executed on an input event.
      *
      * @memberof EventHandler
      *
-     * @param {Enumeration} type The InputEventType of mouse event.
+     * @param {Enumeration} type The InputEventType of input event.
      * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @exception {DeveloperError} type is required.
      *
-     * @see EventHandler#getMouseAction
-     * @see EventHandler#setMouseAction
+     * @see EventHandler#getInputAction
+     * @see EventHandler#setInputAction
      */
-    EventHandler.prototype.removeMouseAction = function(type, modifier) {
+    EventHandler.prototype.removeInputAction = function(type, modifier) {
         if (!type) {
             throw new DeveloperError('type is required.');
         }
@@ -212,13 +212,13 @@ define([
         // constants somewhere?
         if (event.button === 0) {
             this._leftMouseButtonDown = true;
-            action = this.getMouseAction(InputEventType.LEFT_DOWN, modifier);
+            action = this.getInputAction(InputEventType.LEFT_DOWN, modifier);
         } else if (event.button === 1) {
             this._middleMouseButtonDown = true;
-            action = this.getMouseAction(InputEventType.MIDDLE_DOWN, modifier);
+            action = this.getInputAction(InputEventType.MIDDLE_DOWN, modifier);
         } else if (event.button === 2) {
             this._rightMouseButtonDown = true;
-            action = this.getMouseAction(InputEventType.RIGHT_DOWN, modifier);
+            action = this.getInputAction(InputEventType.RIGHT_DOWN, modifier);
         }
 
         if (action) {
@@ -242,16 +242,16 @@ define([
         // constants somewhere?
         if (event.button === 0) {
             this._leftMouseButtonDown = false;
-            action = this.getMouseAction(InputEventType.LEFT_UP, modifier);
-            clickAction = this.getMouseAction(InputEventType.LEFT_CLICK, modifier);
+            action = this.getInputAction(InputEventType.LEFT_UP, modifier);
+            clickAction = this.getInputAction(InputEventType.LEFT_CLICK, modifier);
         } else if (event.button === 1) {
             this._middleMouseButtonDown = false;
-            action = this.getMouseAction(InputEventType.MIDDLE_UP, modifier);
-            clickAction = this.getMouseAction(InputEventType.MIDDLE_CLICK, modifier);
+            action = this.getInputAction(InputEventType.MIDDLE_UP, modifier);
+            clickAction = this.getInputAction(InputEventType.MIDDLE_CLICK, modifier);
         } else if (event.button === 2) {
             this._rightMouseButtonDown = false;
-            action = this.getMouseAction(InputEventType.RIGHT_UP, modifier);
-            clickAction = this.getMouseAction(InputEventType.RIGHT_CLICK, modifier);
+            action = this.getInputAction(InputEventType.RIGHT_UP, modifier);
+            clickAction = this.getInputAction(InputEventType.RIGHT_CLICK, modifier);
         }
 
         var pos = this._getPosition(event);
@@ -290,7 +290,7 @@ define([
         };
 
         var modifier = this._getModifier(event);
-        var action = this.getMouseAction(InputEventType.MOUSE_MOVE, modifier);
+        var action = this.getInputAction(InputEventType.MOUSE_MOVE, modifier);
         if (action) {
             action(movement);
         }
@@ -317,7 +317,7 @@ define([
             this._totalPixels = 0;
 
             this._leftMouseButtonDown = true;
-            action = this.getMouseAction(InputEventType.LEFT_DOWN, modifier);
+            action = this.getInputAction(InputEventType.LEFT_DOWN, modifier);
 
             if (action) {
                 action({
@@ -328,7 +328,7 @@ define([
         } else if (this._leftMouseButtonDown) {
             // Release "mouse" without clicking, because we are adding more touches.
             this._leftMouseButtonDown = false;
-            action = this.getMouseAction(InputEventType.LEFT_UP, modifier);
+            action = this.getInputAction(InputEventType.LEFT_UP, modifier);
             if (action) {
                 action({
                     position : new Cartesian2(pos.x, pos.y)
@@ -345,7 +345,7 @@ define([
             this._lastMouseY = pos.y;
             this._lastTouch2X = pos2.x;
             this._lastTouch2Y = pos2.y;
-            action = this.getMouseAction(InputEventType.PINCH_START, modifier);
+            action = this.getInputAction(InputEventType.PINCH_START, modifier);
             if (action) {
                 action({
                     position1 : new Cartesian2(pos.x, pos.y),
@@ -354,7 +354,7 @@ define([
             }
         } else if (this._isPinching) {
             this._isPinching = false;
-            action = this.getMouseAction(InputEventType.PINCH_END, modifier);
+            action = this.getInputAction(InputEventType.PINCH_END, modifier);
             if (action) {
                 action();
             }
@@ -369,8 +369,8 @@ define([
 
         if (this._leftMouseButtonDown) {
             this._leftMouseButtonDown = false;
-            action = this.getMouseAction(InputEventType.LEFT_UP, modifier);
-            clickAction = this.getMouseAction(InputEventType.LEFT_CLICK, modifier);
+            action = this.getInputAction(InputEventType.LEFT_UP, modifier);
+            clickAction = this.getInputAction(InputEventType.LEFT_CLICK, modifier);
 
             if (numberOfTargetTouches > 0) {
                 var pos = this._getPosition(event.targetTouches[0]);
@@ -395,7 +395,7 @@ define([
 
         if (this._isPinching) {
             this._isPinching = false;
-            action = this.getMouseAction(InputEventType.PINCH_END, modifier);
+            action = this.getInputAction(InputEventType.PINCH_END, modifier);
             if (action) {
                 action();
             }
@@ -423,7 +423,7 @@ define([
                 motion : new Cartesian2(0.0, 0.0)
             };
 
-            action = this.getMouseAction(InputEventType.MOUSE_MOVE, modifier);
+            action = this.getInputAction(InputEventType.MOUSE_MOVE, modifier);
             if (action) {
                 action(movement);
             }
@@ -446,7 +446,7 @@ define([
                 pos2 = this._getPosition(event.touches[1]);
             }
 
-            action = this.getMouseAction(InputEventType.PINCH_MOVE, modifier);
+            action = this.getInputAction(InputEventType.PINCH_MOVE, modifier);
             if (action) {
                 var dX = pos2.x - pos.x;
                 var dY = pos2.y - pos.y;
@@ -490,7 +490,7 @@ define([
 
         var modifier = this._getModifier(event);
         var type = InputEventType.WHEEL;
-        var action = this.getMouseAction(type, modifier);
+        var action = this.getInputAction(type, modifier);
 
         if (action) {
             event.preventDefault();
@@ -508,11 +508,11 @@ define([
         // This is not the case in Chrome Frame, so we are OK for now, but are there
         // constants somewhere?
         if (event.button === 0) {
-            action = this.getMouseAction(InputEventType.LEFT_DOUBLE_CLICK, modifier);
+            action = this.getInputAction(InputEventType.LEFT_DOUBLE_CLICK, modifier);
         } else if (event.button === 1) {
-            action = this.getMouseAction(InputEventType.MIDDLE_DOUBLE_CLICK, modifier);
+            action = this.getInputAction(InputEventType.MIDDLE_DOUBLE_CLICK, modifier);
         } else if (event.button === 2) {
-            action = this.getMouseAction(InputEventType.RIGHT_DOUBLE_CLICK, modifier);
+            action = this.getInputAction(InputEventType.RIGHT_DOUBLE_CLICK, modifier);
         }
 
         if (action) {
@@ -634,7 +634,7 @@ define([
     };
 
     /**
-     * Removes mouse listeners held by this object.
+     * Removes listeners held by this object.
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,

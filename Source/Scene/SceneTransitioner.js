@@ -299,10 +299,10 @@ define([
                 that._morphCancelled = true;
                 endMorphFunction.call(that);
             };
-            this._morphHandler.setMouseAction(cancelMorph, InputEventType.LEFT_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, InputEventType.MIDDLE_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, InputEventType.RIGHT_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, InputEventType.WHEEL);
+            this._morphHandler.setInputAction(cancelMorph, InputEventType.LEFT_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, InputEventType.MIDDLE_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, InputEventType.RIGHT_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, InputEventType.WHEEL);
         }
     };
 

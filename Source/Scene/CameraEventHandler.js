@@ -55,18 +55,18 @@ define([
 
         if (moveType === CameraEventType.PINCH) {
 
-            this._eventHandler.setMouseAction(function(movement) {
+            this._eventHandler.setInputAction(function(movement) {
                 //that._lastMovement = null;
                 that._isDown = true;
                 that._pressTime = new Date();
             }, InputEventType.PINCH_START, moveModifier);
 
-            this._eventHandler.setMouseAction(function(movement) {
+            this._eventHandler.setInputAction(function(movement) {
                 that._isDown = false;
                 that._releaseTime = new Date();
             }, InputEventType.PINCH_END, moveModifier);
 
-            this._eventHandler.setMouseAction(function(movement) {
+            this._eventHandler.setInputAction(function(movement) {
                 if (that._isDown) {
                     // Aggregate several input events into a single animation frame.
                     if (!that._update) {
@@ -110,18 +110,18 @@ define([
                 throw new DeveloperError('moveType must be of type CameraEventType.');
             }
 
-            this._eventHandler.setMouseAction(function(movement) {
+            this._eventHandler.setInputAction(function(movement) {
                 that._lastMovement = null;
                 that._isDown = true;
                 that._pressTime = new Date();
             }, down, moveModifier);
 
-            this._eventHandler.setMouseAction(function(movement) {
+            this._eventHandler.setInputAction(function(movement) {
                 that._isDown = false;
                 that._releaseTime = new Date();
             }, up, moveModifier);
 
-            this._eventHandler.setMouseAction(function(movement) {
+            this._eventHandler.setInputAction(function(movement) {
                 if (that._isDown) {
                     if (!that._update) {
                         that._movement.endPosition = movement.endPosition.clone();
@@ -133,7 +133,7 @@ define([
                 }
             }, InputEventType.MOUSE_MOVE, moveModifier);
         } else {
-            this._eventHandler.setMouseAction(function(delta) {
+            this._eventHandler.setInputAction(function(delta) {
                 // TODO: magic numbers
                 var arcLength = 2 * CesiumMath.toRadians(delta);
                 if (!that._update) {
