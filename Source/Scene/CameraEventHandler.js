@@ -93,7 +93,28 @@ define([
                 }
             }, InputEventType.PINCH_MOVE, moveModifier);
 
-        } else if (moveType !== CameraEventType.WHEEL) {
+        } else if (moveType === CameraEventType.WHEEL) {
+
+            this._eventHandler.setInputAction(function(delta) {
+                // TODO: magic numbers
+                var arcLength = 2 * CesiumMath.toRadians(delta);
+                if (!that._update) {
+                    that._movement.endPosition.y = that._movement.endPosition.y + arcLength;
+                } else {
+                    that._movement = {
+                        startPosition : new Cartesian2(0.0, 0.0),
+                        endPosition : new Cartesian2(0.0, arcLength),
+                        motion : new Cartesian2(0.0, 0.0)
+                    };
+                    that._lastMovement = that._movement; // This looks unusual, but its needed for wheel inertia.
+                    that._update = false;
+                }
+                that._pressTime = new Date();
+                that._releaseTime = new Date(that._pressTime.getTime() + Math.abs(arcLength) * 5.0);
+            }, InputEventType.WHEEL, moveModifier);
+
+        } else {  // General mouse buttons
+
             var down;
             var up;
             if (moveType === CameraEventType.LEFT_DRAG) {
@@ -132,24 +153,6 @@ define([
                     }
                 }
             }, InputEventType.MOUSE_MOVE, moveModifier);
-        } else {
-            this._eventHandler.setInputAction(function(delta) {
-                // TODO: magic numbers
-                var arcLength = 2 * CesiumMath.toRadians(delta);
-                if (!that._update) {
-                    that._movement.endPosition.y = that._movement.endPosition.y + arcLength;
-                } else {
-                    that._movement = {
-                        startPosition : new Cartesian2(0.0, 0.0),
-                        endPosition : new Cartesian2(0.0, arcLength),
-                        motion : new Cartesian2(0.0, 0.0)
-                    };
-                    that._lastMovement = that._movement; // This looks unusual, but its needed for wheel inertia.
-                    that._update = false;
-                }
-                that._pressTime = new Date();
-                that._releaseTime = new Date(that._pressTime.getTime() + Math.abs(arcLength) * 5.0);
-            }, InputEventType.WHEEL, moveModifier);
         }
     };
 
