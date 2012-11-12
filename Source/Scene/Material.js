@@ -240,7 +240,8 @@ define([
      *      <li><code>blendColor</code>:  rgba color object used when blending from water to non-water areas.</li>
      *      <li><code>specularMap</code>:  Single channel texture used to indicate areas of water.</li>
      *      <li><code>normalMap</code>:  Normal map for water normal perturbation.</li>
-     *      <li><code>frequency</code>:  Number that controls the number of waves<li><code>normalMap</code>:  Normal map for water normal perturbation.</li>.</li>
+     *      <li><code>frequency</code>:  Number that controls the number of waves
+     *      <li><code>normalMap</code>:  Normal map for water normal perturbation.</li>.</li>
      *      <li><code>animationSpeed</code>:  Number that controls the animations speed of the water.</li>
      *      <li><code>amplitude</code>:  Number that controls the amplitude of water waves.</li>
      *      <li><code>specularIntensity</code>:  Number that controls the intensity of specular reflections.</li>
