@@ -115,6 +115,13 @@ define([
          */
         this.inertiaZoom = 0.8;
         /**
+         * A parameter in the range <code>[0, 1)</code> used to limit the range
+         * of various user inputs to a percentage of the window width/height per animation frame.
+         * This helps keep the camera under control in low-frame-rate situations.
+         * @type Number
+         */
+        this.maximumMovementRatio = 0.1;
+        /**
          * Sets the behavior in Columbus view.
          * @type CameraColumbusViewMode
          */
@@ -265,6 +272,7 @@ define([
         }
 
         var rangeWindowRatio = diff / object._canvas.clientHeight;
+        rangeWindowRatio = Math.min(rangeWindowRatio, object.maximumMovementRatio);
         var dist = zoomRate * rangeWindowRatio;
 
         if (dist > 0.0 && Math.abs(distanceMeasure - minHeight) < 1.0) {
@@ -338,6 +346,7 @@ define([
         }
 
         var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / controller._canvas.clientWidth;
+        phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
 
         var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 4.0;
 
@@ -621,6 +630,8 @@ define([
 
         var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / controller._canvas.clientWidth;
         var thetaWindowRatio = (movement.endPosition.y - movement.startPosition.y) / controller._canvas.clientHeight;
+        phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
+        thetaWindowRatio = Math.min(thetaWindowRatio, controller.maximumMovementRatio);
 
         var deltaPhi = -rotateRate * phiWindowRatio * Math.PI * 2.0;
         var deltaTheta = -rotateRate * thetaWindowRatio * Math.PI;
