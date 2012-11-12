@@ -290,7 +290,7 @@ define([
         };
 
         var modifier = this._getModifier(event);
-        var action = this.getMouseAction(InputEventType.MOVE, modifier);
+        var action = this.getMouseAction(InputEventType.MOUSE_MOVE, modifier);
         if (action) {
             action(movement);
         }
@@ -423,7 +423,7 @@ define([
                 motion : new Cartesian2(0.0, 0.0)
             };
 
-            action = this.getMouseAction(InputEventType.MOVE, modifier);
+            action = this.getMouseAction(InputEventType.MOUSE_MOVE, modifier);
             if (action) {
                 action(movement);
             }

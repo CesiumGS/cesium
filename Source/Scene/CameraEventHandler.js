@@ -131,7 +131,7 @@ define([
                         that._update = false;
                     }
                 }
-            }, InputEventType.MOVE, moveModifier);
+            }, InputEventType.MOUSE_MOVE, moveModifier);
         } else {
             this._eventHandler.setMouseAction(function(delta) {
                 // TODO: magic numbers

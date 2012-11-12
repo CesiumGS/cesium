@@ -110,7 +110,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @constant
          * @type {Enumeration}
          */
-        MOVE : new Enumeration(15, 'MOVE'),
+        MOUSE_MOVE : new Enumeration(15, 'MOUSE_MOVE'),
 
         /**
          * Represents a mouse wheel event.

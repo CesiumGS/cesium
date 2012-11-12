@@ -511,7 +511,7 @@ defineSuite([
             actualMove.endPosition = movement.endPosition.clone();
         };
 
-        handler.setMouseAction(mouseMove, InputEventType.MOVE);
+        handler.setMouseAction(mouseMove, InputEventType.MOUSE_MOVE);
         element.fireEvents('mousemove', {
             button : 1,
             clientX : 1,
@@ -524,9 +524,9 @@ defineSuite([
         });
         expect(actualMove).toEqual(expectedMove);
 
-        expect(handler.getMouseAction(InputEventType.MOVE) === mouseMove).toEqual(true);
+        expect(handler.getMouseAction(InputEventType.MOUSE_MOVE) === mouseMove).toEqual(true);
 
-        handler.removeMouseAction(InputEventType.MOVE);
+        handler.removeMouseAction(InputEventType.MOUSE_MOVE);
         element.fireEvents('mousemove', {
             button : 1,
             clientX : 2,
@@ -976,7 +976,7 @@ defineSuite([
             actualMove.endPosition = movement.endPosition.clone();
         };
 
-        handler.setMouseAction(mouseMove, InputEventType.MOVE, EventModifier.CTRL);
+        handler.setMouseAction(mouseMove, InputEventType.MOUSE_MOVE, EventModifier.CTRL);
         element.fireEvents('mousemove', {
             button : 1,
             clientX : 1,
@@ -991,9 +991,9 @@ defineSuite([
         });
         expect(actualMove).toEqual(expectedMove);
 
-        expect(handler.getMouseAction(InputEventType.MOVE, EventModifier.CTRL) === mouseMove).toEqual(true);
+        expect(handler.getMouseAction(InputEventType.MOUSE_MOVE, EventModifier.CTRL) === mouseMove).toEqual(true);
 
-        handler.removeMouseAction(InputEventType.MOVE, EventModifier.CTRL);
+        handler.removeMouseAction(InputEventType.MOUSE_MOVE, EventModifier.CTRL);
         element.fireEvents('mousemove', {
             button : 1,
             clientX : 2,

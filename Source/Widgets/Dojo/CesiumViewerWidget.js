@@ -663,7 +663,7 @@ define([
             handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), InputEventType.LEFT_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleRightClick'), InputEventType.RIGHT_CLICK);
             handler.setMouseAction(lang.hitch(this, '_handleLeftDoubleClick'), InputEventType.LEFT_DOUBLE_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), InputEventType.MOVE);
+            handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), InputEventType.MOUSE_MOVE);
             handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), InputEventType.LEFT_DOWN);
             handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), InputEventType.LEFT_UP);
             handler.setMouseAction(lang.hitch(this, '_handleWheel'), InputEventType.WHEEL);
