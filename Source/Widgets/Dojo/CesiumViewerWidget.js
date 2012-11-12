@@ -27,7 +27,7 @@ define([
         '../../Core/computeSunPosition',
         '../../Core/EventHandler',
         '../../Core/FeatureDetection',
-        '../../Core/MouseEventType',
+        '../../Core/InputEventType',
         '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/JulianDate',
@@ -81,7 +81,7 @@ define([
         computeSunPosition,
         EventHandler,
         FeatureDetection,
-        MouseEventType,
+        InputEventType,
         Cartesian2,
         Cartesian3,
         JulianDate,
@@ -660,15 +660,15 @@ define([
             camera.position = camera.position.multiplyByScalar(1.5);
 
             var handler = new EventHandler(canvas);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleRightClick'), MouseEventType.RIGHT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftDoubleClick'), MouseEventType.LEFT_DOUBLE_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), MouseEventType.MOVE);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), MouseEventType.LEFT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), MouseEventType.LEFT_UP);
-            handler.setMouseAction(lang.hitch(this, '_handleWheel'), MouseEventType.WHEEL);
-            handler.setMouseAction(lang.hitch(this, '_handleRightDown'), MouseEventType.RIGHT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleRightUp'), MouseEventType.RIGHT_UP);
+            handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), InputEventType.LEFT_CLICK);
+            handler.setMouseAction(lang.hitch(this, '_handleRightClick'), InputEventType.RIGHT_CLICK);
+            handler.setMouseAction(lang.hitch(this, '_handleLeftDoubleClick'), InputEventType.LEFT_DOUBLE_CLICK);
+            handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), InputEventType.MOVE);
+            handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), InputEventType.LEFT_DOWN);
+            handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), InputEventType.LEFT_UP);
+            handler.setMouseAction(lang.hitch(this, '_handleWheel'), InputEventType.WHEEL);
+            handler.setMouseAction(lang.hitch(this, '_handleRightDown'), InputEventType.RIGHT_DOWN);
+            handler.setMouseAction(lang.hitch(this, '_handleRightUp'), InputEventType.RIGHT_UP);
 
             //////////////////////////////////////////////////////////////////////////////////////////////////
 

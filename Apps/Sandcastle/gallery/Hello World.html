@@ -115,13 +115,13 @@ require([
     handler.setMouseAction(function(movement) {
         // INSERT CODE HERE: Handler for left-click
         // ...
-    }, Cesium.MouseEventType.LEFT_CLICK);
+    }, Cesium.InputEventType.LEFT_CLICK);
 
     handler.setMouseAction(function (movement) {
         // INSERT CODE HERE: Handler for mouse move
         // Use movement.startPosition, movement.endPosition
         // ...
-    }, Cesium.MouseEventType.MOVE);
+    }, Cesium.InputEventType.MOVE);
 
     // To use this in Sandcastle, you must set focus manually,
     // or click on a toolbar inside the iframe.

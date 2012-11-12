@@ -2,11 +2,11 @@
 defineSuite([
          'Scene/CameraEventHandler',
          'Scene/CameraEventType',
-         'Core/MouseEventType'
+         'Core/InputEventType'
      ], function(
          CameraEventHandler,
          CameraEventType,
-         MouseEventType) {
+         InputEventType) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -36,7 +36,7 @@ defineSuite([
 
     it('throws if the event type is not of CameraEventType', function() {
         expect(function() {
-            handler2 = new CameraEventHandler(document, MouseEventType.LEFT_CLICK);
+            handler2 = new CameraEventHandler(document, InputEventType.LEFT_CLICK);
         }).toThrow();
     });
 

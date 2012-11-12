@@ -3,7 +3,7 @@ define([
         '../Core/destroyObject',
         '../Core/Math',
         '../Core/EventHandler',
-        '../Core/MouseEventType',
+        '../Core/InputEventType',
         '../Core/Ellipsoid',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -18,7 +18,7 @@ define([
         destroyObject,
         CesiumMath,
         EventHandler,
-        MouseEventType,
+        InputEventType,
         Ellipsoid,
         Cartesian2,
         Cartesian3,
@@ -299,10 +299,10 @@ define([
                 that._morphCancelled = true;
                 endMorphFunction.call(that);
             };
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.LEFT_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.MIDDLE_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.RIGHT_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.WHEEL);
+            this._morphHandler.setMouseAction(cancelMorph, InputEventType.LEFT_DOWN);
+            this._morphHandler.setMouseAction(cancelMorph, InputEventType.MIDDLE_DOWN);
+            this._morphHandler.setMouseAction(cancelMorph, InputEventType.RIGHT_DOWN);
+            this._morphHandler.setMouseAction(cancelMorph, InputEventType.WHEEL);
         }
     };
 

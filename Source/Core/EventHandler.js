@@ -4,14 +4,14 @@ define([
         './destroyObject',
         './Cartesian2',
         './JulianDate',
-        './MouseEventType',
+        './InputEventType',
         './EventModifier'
     ], function(
         DeveloperError,
         destroyObject,
         Cartesian2,
         JulianDate,
-        MouseEventType,
+        InputEventType,
         EventModifier) {
     "use strict";
 
@@ -26,8 +26,8 @@ define([
      */
     var EventHandler = function(element) {
         this._mouseEvents = {};
-        for ( var button in MouseEventType) {
-            if (MouseEventType.hasOwnProperty(button)) {
+        for ( var button in InputEventType) {
+            if (InputEventType.hasOwnProperty(button)) {
                 this._mouseEvents[button] = 0;
             }
         }
@@ -36,8 +36,8 @@ define([
         for ( var modifier in EventModifier) {
             if (EventModifier.hasOwnProperty(modifier)) {
                 this._modifiedMouseEvents[modifier] = {};
-                for (button in MouseEventType) {
-                    if (MouseEventType.hasOwnProperty(button)) {
+                for (button in InputEventType) {
+                    if (InputEventType.hasOwnProperty(button)) {
                         this._modifiedMouseEvents[modifier][button] = 0;
                     }
                 }
@@ -87,7 +87,7 @@ define([
      * @memberof EventHandler
      *
      * @param {Function} action Function to be executed when the mouse event occurs.
-     * @param {Enumeration} type The MouseEventType of mouse event.
+     * @param {Enumeration} type The InputEventType of mouse event.
      * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
      * event occurs.
      *
@@ -123,7 +123,7 @@ define([
      *
      * @memberof EventHandler
      *
-     * @param {Enumeration} type The MouseEventType of mouse event.
+     * @param {Enumeration} type The InputEventType of mouse event.
      * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
      * event occurs.
      *
@@ -156,7 +156,7 @@ define([
      *
      * @memberof EventHandler
      *
-     * @param {Enumeration} type The MouseEventType of mouse event.
+     * @param {Enumeration} type The InputEventType of mouse event.
      * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
      * event occurs.
      *
@@ -212,13 +212,13 @@ define([
         // constants somewhere?
         if (event.button === 0) {
             this._leftMouseButtonDown = true;
-            action = this.getMouseAction(MouseEventType.LEFT_DOWN, modifier);
+            action = this.getMouseAction(InputEventType.LEFT_DOWN, modifier);
         } else if (event.button === 1) {
             this._middleMouseButtonDown = true;
-            action = this.getMouseAction(MouseEventType.MIDDLE_DOWN, modifier);
+            action = this.getMouseAction(InputEventType.MIDDLE_DOWN, modifier);
         } else if (event.button === 2) {
             this._rightMouseButtonDown = true;
-            action = this.getMouseAction(MouseEventType.RIGHT_DOWN, modifier);
+            action = this.getMouseAction(InputEventType.RIGHT_DOWN, modifier);
         }
 
         if (action) {
@@ -242,16 +242,16 @@ define([
         // constants somewhere?
         if (event.button === 0) {
             this._leftMouseButtonDown = false;
-            action = this.getMouseAction(MouseEventType.LEFT_UP, modifier);
-            clickAction = this.getMouseAction(MouseEventType.LEFT_CLICK, modifier);
+            action = this.getMouseAction(InputEventType.LEFT_UP, modifier);
+            clickAction = this.getMouseAction(InputEventType.LEFT_CLICK, modifier);
         } else if (event.button === 1) {
             this._middleMouseButtonDown = false;
-            action = this.getMouseAction(MouseEventType.MIDDLE_UP, modifier);
-            clickAction = this.getMouseAction(MouseEventType.MIDDLE_CLICK, modifier);
+            action = this.getMouseAction(InputEventType.MIDDLE_UP, modifier);
+            clickAction = this.getMouseAction(InputEventType.MIDDLE_CLICK, modifier);
         } else if (event.button === 2) {
             this._rightMouseButtonDown = false;
-            action = this.getMouseAction(MouseEventType.RIGHT_UP, modifier);
-            clickAction = this.getMouseAction(MouseEventType.RIGHT_CLICK, modifier);
+            action = this.getMouseAction(InputEventType.RIGHT_UP, modifier);
+            clickAction = this.getMouseAction(InputEventType.RIGHT_CLICK, modifier);
         }
 
         var pos = this._getPosition(event);
@@ -290,7 +290,7 @@ define([
         };
 
         var modifier = this._getModifier(event);
-        var action = this.getMouseAction(MouseEventType.MOVE, modifier);
+        var action = this.getMouseAction(InputEventType.MOVE, modifier);
         if (action) {
             action(movement);
         }
@@ -317,7 +317,7 @@ define([
             this._totalPixels = 0;
 
             this._leftMouseButtonDown = true;
-            action = this.getMouseAction(MouseEventType.LEFT_DOWN, modifier);
+            action = this.getMouseAction(InputEventType.LEFT_DOWN, modifier);
 
             if (action) {
                 action({
@@ -328,7 +328,7 @@ define([
         } else if (this._leftMouseButtonDown) {
             // Release "mouse" without clicking, because we are adding more touches.
             this._leftMouseButtonDown = false;
-            action = this.getMouseAction(MouseEventType.LEFT_UP, modifier);
+            action = this.getMouseAction(InputEventType.LEFT_UP, modifier);
             if (action) {
                 action({
                     position : new Cartesian2(pos.x, pos.y)
@@ -345,7 +345,7 @@ define([
             this._lastMouseY = pos.y;
             this._lastTouch2X = pos2.x;
             this._lastTouch2Y = pos2.y;
-            action = this.getMouseAction(MouseEventType.PINCH_START, modifier);
+            action = this.getMouseAction(InputEventType.PINCH_START, modifier);
             if (action) {
                 action({
                     position1 : new Cartesian2(pos.x, pos.y),
@@ -354,7 +354,7 @@ define([
             }
         } else if (this._isPinching) {
             this._isPinching = false;
-            action = this.getMouseAction(MouseEventType.PINCH_END, modifier);
+            action = this.getMouseAction(InputEventType.PINCH_END, modifier);
             if (action) {
                 action();
             }
@@ -369,8 +369,8 @@ define([
 
         if (this._leftMouseButtonDown) {
             this._leftMouseButtonDown = false;
-            action = this.getMouseAction(MouseEventType.LEFT_UP, modifier);
-            clickAction = this.getMouseAction(MouseEventType.LEFT_CLICK, modifier);
+            action = this.getMouseAction(InputEventType.LEFT_UP, modifier);
+            clickAction = this.getMouseAction(InputEventType.LEFT_CLICK, modifier);
 
             if (numberOfTargetTouches > 0) {
                 var pos = this._getPosition(event.targetTouches[0]);
@@ -395,7 +395,7 @@ define([
 
         if (this._isPinching) {
             this._isPinching = false;
-            action = this.getMouseAction(MouseEventType.PINCH_END, modifier);
+            action = this.getMouseAction(InputEventType.PINCH_END, modifier);
             if (action) {
                 action();
             }
@@ -423,7 +423,7 @@ define([
                 motion : new Cartesian2(0.0, 0.0)
             };
 
-            action = this.getMouseAction(MouseEventType.MOVE, modifier);
+            action = this.getMouseAction(InputEventType.MOVE, modifier);
             if (action) {
                 action(movement);
             }
@@ -446,7 +446,7 @@ define([
                 pos2 = this._getPosition(event.touches[1]);
             }
 
-            action = this.getMouseAction(MouseEventType.PINCH_MOVE, modifier);
+            action = this.getMouseAction(InputEventType.PINCH_MOVE, modifier);
             if (action) {
                 var dX = pos2.x - pos.x;
                 var dY = pos2.y - pos.y;
@@ -489,7 +489,7 @@ define([
         var delta = event.detail ? event.detail * -120 : event.wheelDelta;
 
         var modifier = this._getModifier(event);
-        var type = MouseEventType.WHEEL;
+        var type = InputEventType.WHEEL;
         var action = this.getMouseAction(type, modifier);
 
         if (action) {
@@ -508,11 +508,11 @@ define([
         // This is not the case in Chrome Frame, so we are OK for now, but are there
         // constants somewhere?
         if (event.button === 0) {
-            action = this.getMouseAction(MouseEventType.LEFT_DOUBLE_CLICK, modifier);
+            action = this.getMouseAction(InputEventType.LEFT_DOUBLE_CLICK, modifier);
         } else if (event.button === 1) {
-            action = this.getMouseAction(MouseEventType.MIDDLE_DOUBLE_CLICK, modifier);
+            action = this.getMouseAction(InputEventType.MIDDLE_DOUBLE_CLICK, modifier);
         } else if (event.button === 2) {
-            action = this.getMouseAction(MouseEventType.RIGHT_DOUBLE_CLICK, modifier);
+            action = this.getMouseAction(InputEventType.RIGHT_DOUBLE_CLICK, modifier);
         }
 
         if (action) {

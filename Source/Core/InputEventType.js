@@ -5,9 +5,9 @@ define(['./Enumeration'], function(Enumeration) {
     /**
      * This enumerated type is for classifying mouse events: down, up, click, double click, move and move while a button is held down.
      *
-     * @exports MouseEventType
+     * @exports InputEventType
      */
-    var MouseEventType = {
+    var InputEventType = {
         /**
          * Represents a mouse left button down event.
          *
@@ -145,5 +145,5 @@ define(['./Enumeration'], function(Enumeration) {
         PINCH_MOVE : new Enumeration(19, 'PINCH_MOVE')
     };
 
-    return MouseEventType;
+    return InputEventType;
 });
