@@ -68,11 +68,17 @@ define([
         pixelOffset : 2,
         eyeOffsetAndScale : 3,
         textureCoordinatesAndImageSize : 4,
-        pickColor : 5,
-        color : 6,
-        originAndShow : 7,
-        direction : 8
+        originAndShow : 5,
+        direction : 6,
+        pickColor : 7,
+        color : 7
     };
+
+    // Identifies to the VertexArrayFacade the attributes that are used only for the pick
+    // pass or only for the color pass.
+    var allPassPurpose = 'all';
+    var colorPassPurpose = 'color';
+    var pickPassPurpose = 'pick';
 
     /**
      * A renderable collection of billboards.  Billboards are viewport-aligned
@@ -661,13 +667,15 @@ define([
             componentsPerAttribute : 4,
             normalize : true,
             componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            usage : BufferUsage.STATIC_DRAW
+            usage : BufferUsage.STATIC_DRAW,
+            purpose : pickPassPurpose
         }, {
             index : attributeIndices.color,
             componentsPerAttribute : 4,
             normalize : true,
             componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            usage : buffersUsage[COLOR_INDEX]
+            usage : buffersUsage[COLOR_INDEX],
+            purpose : colorPassPurpose
         }, {
             index : attributeIndices.originAndShow,
             componentsPerAttribute : 3,
@@ -701,14 +709,15 @@ define([
 
         EncodedCartesian3.fromCartesian(position, writePositionScratch);
 
-        var positionHighWriter = vafWriters[attributeIndices.positionHigh];
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var positionHighWriter = allPurposeWriters[attributeIndices.positionHigh];
         var high = writePositionScratch.high;
         positionHighWriter(i + 0, high.x, high.y, high.z);
         positionHighWriter(i + 1, high.x, high.y, high.z);
         positionHighWriter(i + 2, high.x, high.y, high.z);
         positionHighWriter(i + 3, high.x, high.y, high.z);
 
-        var positionLowWriter = vafWriters[attributeIndices.positionLow];
+        var positionLowWriter = allPurposeWriters[attributeIndices.positionLow];
         var low = writePositionScratch.low;
         positionLowWriter(i + 0, low.x, low.y, low.z);
         positionLowWriter(i + 1, low.x, low.y, low.z);
@@ -721,10 +730,12 @@ define([
         var pixelOffset = billboard.getPixelOffset();
         billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, pixelOffset.x, pixelOffset.y);
 
-        vafWriters[attributeIndices.pixelOffset](i + 0, pixelOffset.x, pixelOffset.y);
-        vafWriters[attributeIndices.pixelOffset](i + 1, pixelOffset.x, pixelOffset.y);
-        vafWriters[attributeIndices.pixelOffset](i + 2, pixelOffset.x, pixelOffset.y);
-        vafWriters[attributeIndices.pixelOffset](i + 3, pixelOffset.x, pixelOffset.y);
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeIndices.pixelOffset];
+        writer(i + 0, pixelOffset.x, pixelOffset.y);
+        writer(i + 1, pixelOffset.x, pixelOffset.y);
+        writer(i + 2, pixelOffset.x, pixelOffset.y);
+        writer(i + 3, pixelOffset.x, pixelOffset.y);
     }
 
     function writeEyeOffsetAndScale(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -734,30 +745,36 @@ define([
         billboardCollection._maxEyeOffset = Math.max(billboardCollection._maxEyeOffset, Math.abs(eyeOffset.x), Math.abs(eyeOffset.y), Math.abs(eyeOffset.z));
         billboardCollection._maxScale = Math.max(billboardCollection._maxScale, scale);
 
-        vafWriters[attributeIndices.eyeOffsetAndScale](i + 0, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
-        vafWriters[attributeIndices.eyeOffsetAndScale](i + 1, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
-        vafWriters[attributeIndices.eyeOffsetAndScale](i + 2, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
-        vafWriters[attributeIndices.eyeOffsetAndScale](i + 3, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeIndices.eyeOffsetAndScale];
+        writer(i + 0, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
+        writer(i + 1, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
+        writer(i + 2, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
+        writer(i + 3, eyeOffset.x, eyeOffset.y, eyeOffset.z, scale);
     }
 
     function writePickColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = (billboard._index * 4);
         var pickColor = billboard.getPickId(context).unnormalizedRgb;
 
-        vafWriters[attributeIndices.pickColor](i + 0, pickColor.red, pickColor.green, pickColor.blue, 255);
-        vafWriters[attributeIndices.pickColor](i + 1, pickColor.red, pickColor.green, pickColor.blue, 255);
-        vafWriters[attributeIndices.pickColor](i + 2, pickColor.red, pickColor.green, pickColor.blue, 255);
-        vafWriters[attributeIndices.pickColor](i + 3, pickColor.red, pickColor.green, pickColor.blue, 255);
+        var pickWriters = vafWriters[pickPassPurpose];
+        var writer = pickWriters[attributeIndices.pickColor];
+        writer(i + 0, pickColor.red, pickColor.green, pickColor.blue, 255);
+        writer(i + 1, pickColor.red, pickColor.green, pickColor.blue, 255);
+        writer(i + 2, pickColor.red, pickColor.green, pickColor.blue, 255);
+        writer(i + 3, pickColor.red, pickColor.green, pickColor.blue, 255);
     }
 
     function writeColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = (billboard._index * 4);
         var color = billboard.getColor();
 
-        vafWriters[attributeIndices.color](i + 0, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
-        vafWriters[attributeIndices.color](i + 1, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
-        vafWriters[attributeIndices.color](i + 2, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
-        vafWriters[attributeIndices.color](i + 3, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
+        var colorWriters = vafWriters[colorPassPurpose];
+        var writer = colorWriters[attributeIndices.color];
+        writer(i + 0, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
+        writer(i + 1, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
+        writer(i + 2, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
+        writer(i + 3, color.red * 255, color.green * 255, color.blue * 255, color.alpha * 255);
     }
 
     function writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -768,10 +785,12 @@ define([
 
         billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER.value;
 
-        vafWriters[attributeIndices.originAndShow](i + 0, horizontalOrigin, verticalOrigin, show);
-        vafWriters[attributeIndices.originAndShow](i + 1, horizontalOrigin, verticalOrigin, show);
-        vafWriters[attributeIndices.originAndShow](i + 2, horizontalOrigin, verticalOrigin, show);
-        vafWriters[attributeIndices.originAndShow](i + 3, horizontalOrigin, verticalOrigin, show);
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeIndices.originAndShow];
+        writer(i + 0, horizontalOrigin, verticalOrigin, show);
+        writer(i + 1, horizontalOrigin, verticalOrigin, show);
+        writer(i + 2, horizontalOrigin, verticalOrigin, show);
+        writer(i + 3, horizontalOrigin, verticalOrigin, show);
     }
 
     function writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -796,10 +815,12 @@ define([
 
         billboardCollection._maxSize = Math.max(billboardCollection._maxSize, width, height);
 
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 0, bottomLeftX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Left
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 1, topRightX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 2, topRightX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Right
-        vafWriters[attributeIndices.textureCoordinatesAndImageSize](i + 3, bottomLeftX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Left
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeIndices.textureCoordinatesAndImageSize];
+        writer(i + 0, bottomLeftX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Left
+        writer(i + 1, topRightX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Right
+        writer(i + 2, topRightX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Right
+        writer(i + 3, bottomLeftX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Left
     }
 
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -1026,7 +1047,7 @@ define([
             properties[k] = 0;
         }
 
-        if (typeof this._vaf === 'undefined' || typeof this._vaf.va === 'undefined') {
+        if (typeof this._vaf === 'undefined' || typeof this._vaf.vaByPurpose === 'undefined') {
             return;
         }
 
@@ -1041,8 +1062,8 @@ define([
         updateBoundingVolume(this, context, frameState, boundingVolume);
 
         var pass = frameState.passes;
-        var va = this._vaf.va;
-        var vaLength = va.length;
+        var va;
+        var vaLength;
         var commands;
         var command;
         var j;
@@ -1058,6 +1079,9 @@ define([
 
                 this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
             }
+
+            va = this._vaf.vaByPurpose[colorPassPurpose];
+            vaLength = va.length;
 
             commands = this._commandLists.colorList;
             commands.length = vaLength;
@@ -1086,10 +1110,13 @@ define([
                 });
 
                 this._spPick = context.getShaderCache().getShaderProgram(
-                        BillboardCollectionVS,
+                        '#define RENDER_FOR_PICK 1\n' + BillboardCollectionVS,
                         '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
                         attributeIndices);
             }
+
+            va = this._vaf.vaByPurpose[pickPassPurpose];
+            vaLength = va.length;
 
             commands = this._commandLists.pickList;
             commands.length = vaLength;

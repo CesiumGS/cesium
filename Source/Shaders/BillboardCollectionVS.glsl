@@ -2,11 +2,15 @@ attribute vec3 positionHigh;
 attribute vec3 positionLow;
 attribute vec2 direction;                       // in screen space
 attribute vec4 textureCoordinatesAndImageSize;  // size in normalized texture coordinates
-attribute vec4 color;
 attribute vec3 originAndShow;                   // show is 0.0 (false) or 1.0 (true)
 attribute vec2 pixelOffset;
 attribute vec4 eyeOffsetAndScale;                       // eye offset in meters
+
+#ifdef RENDER_FOR_PICK
 attribute vec4 pickColor;
+#else
+attribute vec4 color;
+#endif
 
 uniform vec2 u_atlasSize;
 uniform float u_clampToPixel; // clamp is 1.0 (true) or 0.0 (false)
@@ -16,8 +20,12 @@ uniform float u_morphTime;
 const vec2 czm_highResolutionSnapScale = vec2(1.0, 1.0);    // TODO
 
 varying vec2 v_textureCoordinates;
-varying vec4 v_color;
+
+#ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
+#else
+varying vec4 v_color;
+#endif
 
 void main() 
 {
@@ -60,6 +68,10 @@ void main()
 
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
-    v_color = color;
+
+#ifdef RENDER_FOR_PICK
     v_pickColor = pickColor;
+#else
+    v_color = color;
+#endif
 }
