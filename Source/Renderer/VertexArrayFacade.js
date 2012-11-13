@@ -194,7 +194,7 @@ define([
             var index = currentAttr.index;
             var purpose = currentAttr.purpose;
 
-            if (typeof purpose !== 'undefined') {
+            if (purpose !== 'all') {
                 var uniqueIndex = uniqueIndices[index];
                 if (uniqueIndex === true) {
                     throw new DeveloperError('Index ' + index + ' is used by more than one attribute.');

@@ -220,6 +220,94 @@ defineSuite([
         expect(vaf.vaByPurpose.all[0].va.getAttribute(1).strideInBytes).toEqual(1 * 4);
     });
 
+    it('creates different vertex arrays for different purposes', function() {
+        var positionIndex = 0;
+        var temperatureIndex = 1;
+        var heightIndex = 1;
+        var vaf = new VertexArrayFacade(context, [{
+            index : positionIndex,
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : BufferUsage.STATIC_DRAW
+        }, {
+            index : temperatureIndex,
+            componentsPerAttribute : 1,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : BufferUsage.STREAM_DRAW,
+            purpose : 'foo'
+        }, {
+            index : heightIndex,
+            componentsPerAttribute : 1,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : BufferUsage.STREAM_DRAW,
+            purpose : 'bar'
+        }], 2);
+
+        var positionWriter = vaf.writers.all[positionIndex];
+        var fooTemperatureWriter = vaf.writers.foo[temperatureIndex];
+        var barHeightWriter = vaf.writers.bar[heightIndex];
+
+        expect(fooTemperatureWriter).not.toEqual(barHeightWriter);
+
+        positionWriter(0, 1.0, 2.0, 3.0);
+        fooTemperatureWriter(0, 98.6);
+        barHeightWriter(0, 1.23);
+        vaf.commit();
+
+        var fooVA = vaf.vaByPurpose.foo[0].va;
+        expect(fooVA).toBeDefined();
+        expect(fooVA.getNumberOfAttributes()).toEqual(2);
+
+        var barVA = vaf.vaByPurpose.bar[0].va;
+        expect(barVA).toBeDefined();
+        expect(barVA.getNumberOfAttributes()).toEqual(2);
+
+        expect(fooVA).not.toEqual(barVA);
+
+        // The vertex arrays for the two purposes should share their first vertex buffer.
+        expect(fooVA.getAttribute(0).vertexBuffer).toBe(barVA.getAttribute(0).vertexBuffer);
+
+        // The second vertex buffer should be unique to each.
+        expect(fooVA.getAttribute(1).vertexBuffer).not.toBe(barVA.getAttribute(1).vertexBuffer);
+    });
+
+    it('destroys previous vertex buffers when number of vertices grows', function() {
+        var positionIndex = 0;
+        var vaf = new VertexArrayFacade(context, [{
+            index : positionIndex,
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : BufferUsage.STATIC_DRAW
+        }], 1);
+
+        var writer = vaf.writers.all[positionIndex];
+        expect(writer).toBeDefined();
+
+        writer(0, 1.0, 2.0, 3.0); // Write [1.0, 2.0, 3.0] at index zero.
+        vaf.commit(); // Commit writes
+
+        // Grab the vertex buffer
+        var vbBeforeResize = vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer;
+
+        vaf.resize(2); // Two vertices
+        writer(1, 1.0, 2.0, 3.0); // Write [4.0, 5.0, 6.0] at index one.
+        vaf.commit(); // Commit writes
+
+        expect(vbBeforeResize.isDestroyed()).toBe(true);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer).not.toBe(vbBeforeResize);
+    });
+
+    it('is not initially destroyed', function () {
+        var positionIndex = 0;
+        var vaf = new VertexArrayFacade(context, [{
+            index : positionIndex,
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : BufferUsage.STATIC_DRAW
+        }], 1);
+        expect(vaf.isDestroyed()).toBe(false);
+    });
+
     it('throws when constructed without a context', function() {
         expect(function() {
             return new VertexArrayFacade(undefined, undefined, undefined);
@@ -274,54 +362,63 @@ defineSuite([
         }).toThrow();
     });
 
-    it('creates different vertex arrays for different purposes', function() {
+    it('throws when constructed with attributes with duplicate indices for the same purpose.', function() {
+        expect(function() {
+            return new VertexArrayFacade(context, [{
+                index : 0,
+                componentsPerAttribute : 1,
+                purpose : 'foo'
+            }, {
+                index : 0,
+                componentsPerAttribute : 1,
+                purpose : 'foo'
+            }]);
+        }).toThrow();
+    });
+
+    it('throws when constructed with attributes with duplicate indices and only one specifies a purpose.', function() {
+        expect(function() {
+            return new VertexArrayFacade(context, [{
+                index : 0,
+                componentsPerAttribute : 1,
+                purpose : 'foo'
+            }, {
+                index : 0,
+                componentsPerAttribute : 1
+            }]);
+        }).toThrow();
+
+        expect(function() {
+            return new VertexArrayFacade(context, [{
+                index : 0,
+                componentsPerAttribute : 1
+            }, {
+                index : 0,
+                componentsPerAttribute : 1,
+                purpose : 'foo'
+            }]);
+        }).toThrow();
+    });
+
+    it('subCommit throws when passed an invalid offsetInVertices', function() {
         var positionIndex = 0;
-        var temperatureIndex = 1;
-        var heightIndex = 1;
         var vaf = new VertexArrayFacade(context, [{
             index : positionIndex,
             componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : BufferUsage.STATIC_DRAW
-        }, {
-            index : temperatureIndex,
-            componentsPerAttribute : 1,
-            componentDatatype : ComponentDatatype.FLOAT,
-            usage : BufferUsage.STREAM_DRAW,
-            purpose : 'foo'
-        }, {
-            index : heightIndex,
-            componentsPerAttribute : 1,
-            componentDatatype : ComponentDatatype.FLOAT,
-            usage : BufferUsage.STREAM_DRAW,
-            purpose : 'bar'
-        }], 2);
+        }], 10);
 
-        var positionWriter = vaf.writers.all[positionIndex];
-        var fooTemperatureWriter = vaf.writers.foo[temperatureIndex];
-        var barHeightWriter = vaf.writers.bar[heightIndex];
+        expect(function() {
+            vaf.subCommit(-1, 1);
+        }).toThrow();
 
-        expect(fooTemperatureWriter).not.toEqual(barHeightWriter);
+        expect(function() {
+            vaf.subCommit(10, 1);
+        }).toThrow();
 
-        positionWriter(0, 1.0, 2.0, 3.0);
-        fooTemperatureWriter(0, 98.6);
-        barHeightWriter(0, 1.23);
-        vaf.commit();
-
-        var fooVA = vaf.vaByPurpose.foo[0].va;
-        expect(fooVA).toBeDefined();
-        expect(fooVA.getNumberOfAttributes()).toEqual(2);
-
-        var barVA = vaf.vaByPurpose.bar[0].va;
-        expect(barVA).toBeDefined();
-        expect(barVA.getNumberOfAttributes()).toEqual(2);
-
-        expect(fooVA).not.toEqual(barVA);
-
-        // The vertex arrays for the two purposes should share their first vertex buffer.
-        expect(fooVA.getAttribute(0).vertexBuffer).toBe(barVA.getAttribute(0).vertexBuffer);
-
-        // The second vertex buffer should be unique to each.
-        expect(fooVA.getAttribute(1).vertexBuffer).not.toBe(barVA.getAttribute(1).vertexBuffer);
+        expect(function() {
+            vaf.subCommit(1, 10);
+        }).toThrow();
     });
 });
