@@ -237,6 +237,8 @@ define(['./TimelineTrack',
                 twoDigits(date.getUTCSeconds()) + milString + ampm;
     };
 
+    Timeline.prototype.smallestTicInPixels = 7.0;
+
     Timeline.prototype._makeTics = function() {
         var timeBar = this._timeBarEle;
 
@@ -351,7 +353,7 @@ define(['./TimelineTrack',
             if ((sc > idealTic) && (sc > minSize)) {
                 break;
             }
-            if ((smallestIndex < 0) && ((timeBarWidth * (sc / this._timeBarSecondsSpan)) >= 3.0)) {
+            if ((smallestIndex < 0) && ((timeBarWidth * (sc / this._timeBarSecondsSpan)) >= this.smallestTicInPixels)) {
                 smallestIndex = ticIndex;
             }
         }
