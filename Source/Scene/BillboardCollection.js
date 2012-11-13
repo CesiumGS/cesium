@@ -70,8 +70,8 @@ define([
         textureCoordinatesAndImageSize : 4,
         originAndShow : 5,
         direction : 6,
-        pickColor : 7,
-        color : 7
+        pickColor : 7,  // pickColor and color shared an index because pickColor is only used during
+        color : 7       // the 'pick' pass and 'color' is only used during the 'color' pass.
     };
 
     // Identifies to the VertexArrayFacade the attributes that are used only for the pick

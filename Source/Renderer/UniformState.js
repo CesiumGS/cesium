@@ -28,7 +28,7 @@ define([
      *
      * @internalConstructor
      */
-    var UniformState = function(context) {
+    var UniformState = function() {
         this._viewport = new BoundingRectangle();
         this._viewportDirty = false;
         this._viewportOrthographicMatrix = Matrix4.IDENTITY.clone();
