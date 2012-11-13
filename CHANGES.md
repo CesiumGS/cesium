@@ -13,6 +13,7 @@ Beta Releases
    * `positionToEyeEC` in `czm_materialInput` is no longer normalized by default.
 * Added `Water` material.  See the Materials Sandbox example.
 * Added `czm_frameNumber` automatic GLSL uniform.
+* Added `shininess` to `czm_materialInput`.
 
 ### b10 - 11/02/2012
 

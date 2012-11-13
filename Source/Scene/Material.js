@@ -1252,7 +1252,7 @@ define([
             frequency: 10.0,
             animationSpeed: 0.01,
             amplitude: 1.0,
-            specularIntensity: 0.01,
+            specularIntensity: 0.5,
             fadeFactor: 1.0
         },
         source : WaterMaterial

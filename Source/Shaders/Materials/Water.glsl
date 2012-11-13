@@ -84,8 +84,8 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     
     material.normal = normalize(materialInput.tangentToEyeMatrix * normalTangentSpace);
     
-    // may need a specific uniform to control the specular falloff instead of hard-coded to 3
-    material.specular = specularIntensity * pow(specularMapValue, 3.0);
+    material.specular = specularIntensity;
+    material.shininess = 10.0;
     
     return material;
 }
