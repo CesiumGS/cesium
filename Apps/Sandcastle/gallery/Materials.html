@@ -274,6 +274,23 @@ require([
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Facet');
     }
     
+    function applyWaterMaterial(primitive, scene) {
+        Sandcastle.declare(applyWaterMaterial); // For highlighting in Sandcastle.
+        
+        primitive.material = new Cesium.Material({
+            context : scene.getContext(),
+            fabric : {
+                type : 'Water',
+                uniforms : {
+                    specularMap: require.toUrl('Assets/Imagery/earthspec1k.jpg'),
+                    frequency: 10000.0,
+                    animationSpeed: 0.01,
+                    amplitude: 1.0
+                }
+            }
+        });
+    }
+    
     function applyFresnelMaterial(primitive, scene) {
         Sandcastle.declare(applyFresnelMaterial);   // For highlighting in Sandcastle.
         
@@ -684,6 +701,15 @@ require([
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyTieDyeMaterial(polygon, scene);
                 Sandcastle.highlight(applyTieDyeMaterial);
+            }
+        }));
+        
+        commonMaterialMenu.addChild(new MenuItem({
+            label: 'Water',
+            onClick: function() { 
+                togglePolygonVisibility(worldPolygon, polygon);
+                applyWaterMaterial(worldPolygon, scene);
+                Sandcastle.highlight(applyWaterMaterial);
             }
         }));
         

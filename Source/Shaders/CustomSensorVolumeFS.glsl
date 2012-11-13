@@ -29,6 +29,7 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     
     vec3 positionToEyeEC = normalize(-v_positionEC);
     materialInput.positionToEyeEC = positionToEyeEC;
+    materialInput.distancePositionToEye = length(v_positionEC);
     
     vec3 normalEC = normalize(v_normalEC);
     normalEC = mix(normalEC, -normalEC, step(normalEC.z, 0.0));  // Normal facing viewer
