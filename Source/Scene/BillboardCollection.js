@@ -783,6 +783,12 @@ define([
         var verticalOrigin = billboard.getVerticalOrigin().value;
         var show = billboard.getShow();
 
+        // If the color alpha is zero, do not show this billboard.  This lets us avoid providing
+        // color during the pick pass and also eliminates a discard in the fragment shader.
+        if (billboard.getColor().alpha === 0.0) {
+            show = false;
+        }
+
         billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER.value;
 
         var allPurposeWriters = vafWriters[allPassPurpose];

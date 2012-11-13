@@ -41,7 +41,8 @@ defineSuite([
                     return defaultValue(infiniteProjection, Matrix4.IDENTITY.clone());
                 }
             },
-            position : defaultValue(position, Cartesian3.ZERO.clone())
+            position : defaultValue(position, Cartesian3.ZERO.clone()),
+            getPositionWC : function() { return this.position; }
         };
     }
 
