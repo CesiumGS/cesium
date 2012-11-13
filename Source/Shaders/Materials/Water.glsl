@@ -56,7 +56,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     
     // note: not using directional motion at this time, just set the angle to 0.0;
     vec4 noise = getNoise(materialInput.st * frequency, time, 0.0);
-    vec3 normalTangentSpace = normalize(noise.yxz * vec3(1.0, 1.0, 1.0 / amplitude));
+    vec3 normalTangentSpace = normalize(noise.xyz * vec3(1.0, 1.0, 1.0 / amplitude));
     
     // attempt to fad out the normal perturbation as we approach non water areas (low specular map value)
     normalTangentSpace = mix(vec3(0.0, 0.0, 50.0), normalTangentSpace, specularMapValue);
