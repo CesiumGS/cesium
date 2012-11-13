@@ -9,6 +9,7 @@ uniform float frequency;
 uniform float animationSpeed;
 uniform float amplitude;
 uniform float specularIntensity;
+uniform float fadeFactor;
 
 vec4 getNoise(vec2 uv, float time, float angleInRad) {
 
@@ -52,14 +53,22 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 
     float time = czm_frameNumber * animationSpeed;
     
+    // fade is a function of the distance from the fragment and the frequency of the waves
+    float fade = max( 1.0, (materialInput.distancePositionToEye / 10000000000.0) * frequency * fadeFactor);
+        
     float specularMapValue = texture2D(specularMap, materialInput.st).r;
     
     // note: not using directional motion at this time, just set the angle to 0.0;
     vec4 noise = getNoise(materialInput.st * frequency, time, 0.0);
-    vec3 normalTangentSpace = normalize(noise.xyz * vec3(1.0, 1.0, 1.0 / amplitude));
+    vec3 normalTangentSpace = noise.xyz * vec3(1.0, 1.0, (1.0 / amplitude));
     
-    // attempt to fad out the normal perturbation as we approach non water areas (low specular map value)
+    // fade out the normal perturbation as we move further from the water surface
+    normalTangentSpace.xy /= fade;
+        
+    // attempt to fade out the normal perturbation as we approach non water areas (low specular map value)
     normalTangentSpace = mix(vec3(0.0, 0.0, 50.0), normalTangentSpace, specularMapValue);
+    
+    normalTangentSpace = normalize(normalTangentSpace);
     
     // get ratios for alignment of the new normal vector with a vector perpendicular to the tangent plane
     float tsPerturbationRatio = clamp(dot(normalTangentSpace, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
