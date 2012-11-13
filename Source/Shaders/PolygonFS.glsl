@@ -35,16 +35,15 @@ void main()
     materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, materialInput.normalEC);
     
     //Convert view vector to world space
-    vec3 positionToEyeEC = normalize(-v_positionEC); 
+    vec3 positionToEyeEC = -v_positionEC; 
     materialInput.positionToEyeEC = positionToEyeEC;
-    materialInput.distancePositionToEye = length(v_positionEC);
 
     erode(materialInput.str);
     czm_material material = czm_getMaterial(materialInput);
     
     vec4 color; 
     #ifdef AFFECTED_BY_LIGHTING
-    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+    color = czm_lightValuePhong(czm_sunDirectionEC, normalize(positionToEyeEC), material);
     #else
     color = vec4(material.diffuse, material.alpha);
     #endif

@@ -11,13 +11,13 @@ uniform float amplitude;
 uniform float specularIntensity;
 uniform float fadeFactor;
 
-vec4 getNoise(vec2 uv, float time, float angleInRad) {
+vec4 getNoise(vec2 uv, float time, float angleInRadians) {
 
-    float cosAngle = cos(angleInRad);
-    float sinAngle = sin(angleInRad);
+    float cosAngle = cos(angleInRadians);
+    float sinAngle = sin(angleInRadians);
     
     // time dependent sampling directions
-    vec2 s0 = vec2(1.0/17.0, 0.0  );
+    vec2 s0 = vec2(1.0/17.0, 0.0);
     vec2 s1 = vec2(-1.0/29.0, 0.0);
     vec2 s2 = vec2(1.0/101.0, 1.0/59.0);
     vec2 s3 = vec2(-1.0/109.0, -1.0/57.0);
@@ -46,7 +46,6 @@ vec4 getNoise(vec2 uv, float time, float angleInRad) {
     return ((noise / 4.0) - 0.5) * 2.0;
 }
 
-
 czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
@@ -54,8 +53,8 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float time = czm_frameNumber * animationSpeed;
     
     // fade is a function of the distance from the fragment and the frequency of the waves
-    float fade = max( 1.0, (materialInput.distancePositionToEye / 10000000000.0) * frequency * fadeFactor);
-        
+    float fade = max(1.0, (length(materialInput.positionToEyeEC) / 10000000000.0) * frequency * fadeFactor);
+            
     float specularMapValue = texture2D(specularMap, materialInput.st).r;
     
     // note: not using directional motion at this time, just set the angle to 0.0;
