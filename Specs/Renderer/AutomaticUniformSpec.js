@@ -33,6 +33,10 @@ defineSuite([
             getViewMatrix : function() {
                 return defaultValue(view, Matrix4.IDENTITY.clone());
             },
+            getInverseViewMatrix : function() {
+                var m = defaultValue(view, Matrix4.IDENTITY.clone());
+                return Matrix4.inverseTransformation(m);
+            },
             frustum : {
                 getProjectionMatrix : function() {
                     return defaultValue(projection, Matrix4.IDENTITY.clone());
@@ -131,17 +135,17 @@ defineSuite([
     it('has czm_inverseModel', function() {
         var fs =
             'void main() { ' +
-            '  bool b0 = (czm_inverseModel[0][0] == 1.0) && (czm_inverseModel[1][0] == 0.0) && (czm_inverseModel[2][0] == 0.0) && (czm_inverseModel[3][0] == -1.0); ' +
-            '  bool b1 = (czm_inverseModel[0][1] == 0.0) && (czm_inverseModel[1][1] == 1.0) && (czm_inverseModel[2][1] == 0.0) && (czm_inverseModel[3][1] == -2.0); ' +
-            '  bool b2 = (czm_inverseModel[0][2] == 0.0) && (czm_inverseModel[1][2] == 0.0) && (czm_inverseModel[2][2] == 1.0) && (czm_inverseModel[3][2] == -3.0); ' +
-            '  bool b3 = (czm_inverseModel[0][3] == 0.0) && (czm_inverseModel[1][3] == 0.0) && (czm_inverseModel[2][3] == 0.0) && (czm_inverseModel[3][3] == 1.0); ' +
+            '  bool b0 = (czm_inverseModel[0][0] ==  0.0) && (czm_inverseModel[1][0] == 1.0) && (czm_inverseModel[2][0] == 0.0) && (czm_inverseModel[3][0] == -2.0); ' +
+            '  bool b1 = (czm_inverseModel[0][1] == -1.0) && (czm_inverseModel[1][1] == 0.0) && (czm_inverseModel[2][1] == 0.0) && (czm_inverseModel[3][1] ==  1.0); ' +
+            '  bool b2 = (czm_inverseModel[0][2] ==  0.0) && (czm_inverseModel[1][2] == 0.0) && (czm_inverseModel[2][2] == 1.0) && (czm_inverseModel[3][2] ==  0.0); ' +
+            '  bool b3 = (czm_inverseModel[0][3] ==  0.0) && (czm_inverseModel[1][3] == 0.0) && (czm_inverseModel[2][3] == 0.0) && (czm_inverseModel[3][3] ==  1.0); ' +
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
             '}';
         verifyDraw(fs, new Matrix4(
-            1.0, 0.0, 0.0, 1.0,
-            0.0, 1.0, 0.0, 2.0,
-            0.0, 0.0, 1.0, 3.0,
-            0.0, 0.0, 0.0, 1.0));
+            0.0, -1.0, 0.0, 1.0,
+            1.0,  0.0, 0.0, 2.0,
+            0.0,  0.0, 1.0, 0.0,
+            0.0,  0.0, 0.0, 1.0));
     });
 
     it('has czm_view', function() {
@@ -187,17 +191,17 @@ defineSuite([
         var us = context.getUniformState();
         us.update(createMockCamera(
             new Matrix4(
-               1.0, 0.0, 0.0, 7.0,
-               0.0, 1.0, 0.0, 8.0,
-               0.0, 0.0, 1.0, 9.0,
-               0.0, 0.0, 0.0, 1.0)));
+               0.0, -1.0, 0.0, 7.0,
+               1.0,  0.0, 0.0, 8.0,
+               0.0,  0.0, 1.0, 0.0,
+               0.0,  0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    (czm_inverseView[0][0] == 1.0) && (czm_inverseView[1][0] == 0.0) && (czm_inverseView[2][0] == 0.0) && (czm_inverseView[3][0] == -7.0) &&' +
-            '    (czm_inverseView[0][1] == 0.0) && (czm_inverseView[1][1] == 1.0) && (czm_inverseView[2][1] == 0.0) && (czm_inverseView[3][1] == -8.0) &&' +
-            '    (czm_inverseView[0][2] == 0.0) && (czm_inverseView[1][2] == 0.0) && (czm_inverseView[2][2] == 1.0) && (czm_inverseView[3][2] == -9.0)' +
+            '    (czm_inverseView[0][0] ==  0.0) && (czm_inverseView[1][0] == 1.0) && (czm_inverseView[2][0] == 0.0) && (czm_inverseView[3][0] == -8.0) &&' +
+            '    (czm_inverseView[0][1] == -1.0) && (czm_inverseView[1][1] == 0.0) && (czm_inverseView[2][1] == 0.0) && (czm_inverseView[3][1] ==  7.0) &&' +
+            '    (czm_inverseView[0][2] ==  0.0) && (czm_inverseView[1][2] == 0.0) && (czm_inverseView[2][2] == 1.0) && (czm_inverseView[3][2] ==  0.0)' +
             '  ); ' +
             '}';
         verifyDraw(fs);
@@ -207,17 +211,17 @@ defineSuite([
         var us = context.getUniformState();
         us.update(createMockCamera(
             new Matrix4(
-               1.0, 0.0, 0.0, 7.0,
-               0.0, 1.0, 0.0, 8.0,
-               0.0, 0.0, 1.0, 9.0,
-               0.0, 0.0, 0.0, 1.0)));
+               0.0, -1.0, 0.0, 7.0,
+               1.0,  0.0, 0.0, 8.0,
+               0.0,  0.0, 1.0, 9.0,
+               0.0,  0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    (czm_inverseViewRotation[0][0] == 1.0) && (czm_inverseViewRotation[1][0] == 0.0) && (czm_inverseViewRotation[2][0] == 0.0) && ' +
-            '    (czm_inverseViewRotation[0][1] == 0.0) && (czm_inverseViewRotation[1][1] == 1.0) && (czm_inverseViewRotation[2][1] == 0.0) && ' +
-            '    (czm_inverseViewRotation[0][2] == 0.0) && (czm_inverseViewRotation[1][2] == 0.0) && (czm_inverseViewRotation[2][2] == 1.0) ' +
+            '    (czm_inverseViewRotation[0][0] ==  0.0) && (czm_inverseViewRotation[1][0] == 1.0) && (czm_inverseViewRotation[2][0] == 0.0) && ' +
+            '    (czm_inverseViewRotation[0][1] == -1.0) && (czm_inverseViewRotation[1][1] == 0.0) && (czm_inverseViewRotation[2][1] == 0.0) && ' +
+            '    (czm_inverseViewRotation[0][2] ==  0.0) && (czm_inverseViewRotation[1][2] == 0.0) && (czm_inverseViewRotation[2][2] == 1.0) ' +
             '  ); ' +
             '}';
         verifyDraw(fs);
@@ -249,17 +253,17 @@ defineSuite([
         us.update(createMockCamera(
             undefined,
             new Matrix4(
-               1.0, 0.0, 0.0, 1.0,
-               0.0, 1.0, 0.0, 2.0,
-               0.0, 0.0, 1.0, 3.0,
-               0.0, 0.0, 0.0, 1.0)));
+               0.0, -1.0, 0.0, 1.0,
+               1.0,  0.0, 0.0, 2.0,
+               0.0,  0.0, 1.0, 0.0,
+               0.0,  0.0, 0.0, 1.0)));
 
         var fs =
             'void main() { ' +
-            '  bool b0 = (czm_inverseProjection[0][0] == 1.0) && (czm_inverseProjection[1][0] == 0.0) && (czm_inverseProjection[2][0] == 0.0) && (czm_inverseProjection[3][0] == -1.0); ' +
-            '  bool b1 = (czm_inverseProjection[0][1] == 0.0) && (czm_inverseProjection[1][1] == 1.0) && (czm_inverseProjection[2][1] == 0.0) && (czm_inverseProjection[3][1] == -2.0); ' +
-            '  bool b2 = (czm_inverseProjection[0][2] == 0.0) && (czm_inverseProjection[1][2] == 0.0) && (czm_inverseProjection[2][2] == 1.0) && (czm_inverseProjection[3][2] == -3.0); ' +
-            '  bool b3 = (czm_inverseProjection[0][3] == 0.0) && (czm_inverseProjection[1][3] == 0.0) && (czm_inverseProjection[2][3] == 0.0) && (czm_inverseProjection[3][3] ==  1.0); ' +
+            '  bool b0 = (czm_inverseProjection[0][0] ==  0.0) && (czm_inverseProjection[1][0] == 1.0) && (czm_inverseProjection[2][0] == 0.0) && (czm_inverseProjection[3][0] == -2.0); ' +
+            '  bool b1 = (czm_inverseProjection[0][1] == -1.0) && (czm_inverseProjection[1][1] == 0.0) && (czm_inverseProjection[2][1] == 0.0) && (czm_inverseProjection[3][1] ==  1.0); ' +
+            '  bool b2 = (czm_inverseProjection[0][2] ==  0.0) && (czm_inverseProjection[1][2] == 0.0) && (czm_inverseProjection[2][2] == 1.0) && (czm_inverseProjection[3][2] ==  0.0); ' +
+            '  bool b3 = (czm_inverseProjection[0][3] ==  0.0) && (czm_inverseProjection[1][3] == 0.0) && (czm_inverseProjection[2][3] == 0.0) && (czm_inverseProjection[3][3] ==  1.0); ' +
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
             '}';
         verifyDraw(fs);
@@ -334,26 +338,21 @@ defineSuite([
 
     it('has czm_inverseModelView', function() {
         var us = context.getUniformState();
-        us.update(createMockCamera(
-            new Matrix4(
-               1.0, 0.0, 0.0, 0.0,
-               0.0, 1.0, 0.0, 0.0,
-               0.0, 0.0, 1.0, 0.0,
-               0.0, 0.0, 0.0, 1.0)));
+        us.update(createMockCamera(Matrix4.IDENTITY.clone()));
 
         var fs =
             'void main() { ' +
-            '  bool b0 = (czm_inverseModelView[0][0] == 1.0) && (czm_inverseModelView[1][0] == 0.0) && (czm_inverseModelView[2][0] == 0.0) && (czm_inverseModelView[3][0] == -1.0); ' +
-            '  bool b1 = (czm_inverseModelView[0][1] == 0.0) && (czm_inverseModelView[1][1] == 1.0) && (czm_inverseModelView[2][1] == 0.0) && (czm_inverseModelView[3][1] == -2.0); ' +
-            '  bool b2 = (czm_inverseModelView[0][2] == 0.0) && (czm_inverseModelView[1][2] == 0.0) && (czm_inverseModelView[2][2] == 1.0) && (czm_inverseModelView[3][2] == -3.0); ' +
-            '  bool b3 = (czm_inverseModelView[0][3] == 0.0) && (czm_inverseModelView[1][3] == 0.0) && (czm_inverseModelView[2][3] == 0.0) && (czm_inverseModelView[3][3] ==  1.0); ' +
+            '  bool b0 = (czm_inverseModelView[0][0] ==  0.0) && (czm_inverseModelView[1][0] == 1.0) && (czm_inverseModelView[2][0] == 0.0) && (czm_inverseModelView[3][0] == -2.0); ' +
+            '  bool b1 = (czm_inverseModelView[0][1] == -1.0) && (czm_inverseModelView[1][1] == 0.0) && (czm_inverseModelView[2][1] == 0.0) && (czm_inverseModelView[3][1] ==  1.0); ' +
+            '  bool b2 = (czm_inverseModelView[0][2] ==  0.0) && (czm_inverseModelView[1][2] == 0.0) && (czm_inverseModelView[2][2] == 1.0) && (czm_inverseModelView[3][2] ==  0.0); ' +
+            '  bool b3 = (czm_inverseModelView[0][3] ==  0.0) && (czm_inverseModelView[1][3] == 0.0) && (czm_inverseModelView[2][3] == 0.0) && (czm_inverseModelView[3][3] ==  1.0); ' +
             '  gl_FragColor = vec4(b0 && b1 && b2 && b3); ' +
             '}';
         verifyDraw(fs, new Matrix4(
-                1.0, 0.0, 0.0, 1.0,
-                0.0, 1.0, 0.0, 2.0,
-                0.0, 0.0, 1.0, 3.0,
-                0.0, 0.0, 0.0, 1.0));
+                0.0, -1.0, 0.0, 1.0,
+                1.0,  0.0, 0.0, 2.0,
+                0.0,  0.0, 1.0, 0.0,
+                0.0,  0.0, 0.0, 1.0));
     });
 
     it('has czm_viewProjection', function() {
@@ -485,16 +484,16 @@ defineSuite([
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(' +
-            '    (czm_inverseNormal[0][0] == 1.0) && (czm_inverseNormal[1][0] == 0.0) && (czm_inverseNormal[2][0] == 0.0) && ' +
-            '    (czm_inverseNormal[0][1] == 0.0) && (czm_inverseNormal[1][1] == 1.0) && (czm_inverseNormal[2][1] == 0.0) && ' +
-            '    (czm_inverseNormal[0][2] == 0.0) && (czm_inverseNormal[1][2] == 0.0) && (czm_inverseNormal[2][2] == 1.0) ' +
+            '    (czm_inverseNormal[0][0] ==  0.0) && (czm_inverseNormal[1][0] == 1.0) && (czm_inverseNormal[2][0] == 0.0) && ' +
+            '    (czm_inverseNormal[0][1] == -1.0) && (czm_inverseNormal[1][1] == 0.0) && (czm_inverseNormal[2][1] == 0.0) && ' +
+            '    (czm_inverseNormal[0][2] ==  0.0) && (czm_inverseNormal[1][2] == 0.0) && (czm_inverseNormal[2][2] == 1.0) ' +
             '  ); ' +
             '}';
         verifyDraw(fs, new Matrix4(
-                1.0, 0.0, 0.0, 7.0,
-                0.0, 1.0, 0.0, 8.0,
-                0.0, 0.0, 1.0, 9.0,
-                0.0, 0.0, 0.0, 1.0));
+                0.0, -1.0, 0.0, 7.0,
+                1.0,  0.0, 0.0, 8.0,
+                0.0,  0.0, 1.0, 9.0,
+                0.0,  0.0, 0.0, 1.0));
     });
 
     it('has czm_encodedCameraPositionMCHigh and czm_encodedCameraPositionMCLow', function() {

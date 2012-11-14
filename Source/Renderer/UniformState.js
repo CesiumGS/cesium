@@ -36,6 +36,7 @@ define([
 
         this._model = Matrix4.IDENTITY.clone();
         this._view = Matrix4.IDENTITY.clone();
+        this._inverseView = Matrix4.IDENTITY.clone();
         this._projection = Matrix4.IDENTITY.clone();
         this._infiniteProjection = Matrix4.IDENTITY.clone();
         // Arbitrary.  The user will explicitly set this later.
@@ -47,9 +48,6 @@ define([
 
         this._viewRotation = new Matrix3();
         this._inverseViewRotation = new Matrix3();
-
-        this._inverseViewDirty = true;
-        this._inverseView = new Matrix4();
 
         this._inverseProjectionDirty = true;
         this._inverseProjection = new Matrix4();
@@ -98,7 +96,6 @@ define([
         Matrix4.clone(matrix, uniformState._view);
         Matrix4.getRotation(matrix, uniformState._viewRotation);
 
-        uniformState._inverseViewDirty = true;
         uniformState._modelViewDirty = true;
         uniformState._modelViewRelativeToEyeDirty = true;
         uniformState._inverseModelViewDirty = true;
@@ -109,6 +106,11 @@ define([
         uniformState._normalDirty = true;
         uniformState._inverseNormalDirty = true;
         uniformState._sunDirectionECDirty = true;
+    }
+
+    function setInverseView(uniformState, matrix) {
+        Matrix4.clone(matrix, uniformState._inverseView);
+        Matrix4.getRotation(matrix, uniformState._inverseViewRotation);
     }
 
     function setProjection(uniformState, matrix) {
@@ -158,6 +160,7 @@ define([
      */
     UniformState.prototype.update = function(camera) {
         setView(this, camera.getViewMatrix());
+        setInverseView(this, camera.getInverseViewMatrix());
         setCameraPosition(this, camera.getPositionWC());
 
         this.updateFrustum(camera.frustum);
@@ -295,7 +298,6 @@ define([
      *
      * @return {Matrix4} DOC_TBA.
      *
-     * @see UniformState#setView
      * @see czm_view
      */
     UniformState.prototype.getView = function() {
@@ -316,27 +318,16 @@ define([
         return this._viewRotation;
     };
 
-    function cleanInverseView(uniformState) {
-        if (uniformState._inverseViewDirty) {
-            uniformState._inverseViewDirty = false;
-
-            var v = uniformState.getView();
-            Matrix4.inverse(v, uniformState._inverseView);
-            Matrix4.getRotation(uniformState._inverseView, uniformState._inverseViewRotation);
-        }
-    }
-
     /**
-     * DOC_TBA
+     * Returns the 4x4 inverse-view matrix that transforms from eye to world coordinates.
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} DOC_TBA.
+     * @return {Matrix4} The 4x4 inverse-view matrix that transforms from eye to world coordinates.
      *
      * @see czm_inverseView
      */
     UniformState.prototype.getInverseView = function() {
-        cleanInverseView(this);
         return this._inverseView;
     };
 
@@ -600,8 +591,6 @@ define([
         cleanNormal(this);
         return this._normal;
     };
-
-    var inverseNormalScratch = new Matrix4();
 
     function cleanInverseNormal(uniformState) {
         if (uniformState._inverseNormalDirty) {
