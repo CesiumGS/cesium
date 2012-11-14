@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -88,11 +89,11 @@ require([
             });
             primitives.add(billboards);
         };
-        image.src = '../../../Images/Cesium_Logo_overlay.png';
+        image.src = '../images/Cesium_Logo_overlay.png';
     }
     
     function cleanup() {
-        cesiumWidget.scene.getPrimitives().removeAll();
+        widget.scene.getPrimitives().removeAll();
         handler = handler && handler.destroy();
     }
     
@@ -115,7 +116,7 @@ require([
             } else {
                 label.setText('');
             }
-        }, Cesium.MouseEventType.MOVE);        
+        }, Cesium.MouseEventType.MOVE);
     }
 
     function pickBillboard(scene, ellipsoid) {
@@ -261,7 +262,7 @@ require([
 
         // Construct the primitives.
         var redPolygon = new Cesium.Polygon(undefined);
-            redPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-70.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 40.0), Cesium.Cartographic.fromDegrees(-70.0, 40.0)]));
+        redPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-70.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 40.0), Cesium.Cartographic.fromDegrees(-70.0, 40.0)]));
         redPolygon.material.uniforms.color = {
             red : 1.0,
             green : 0.0,
@@ -270,7 +271,7 @@ require([
         };
 
         var bluePolygon = new Cesium.Polygon(undefined);
-            bluePolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-75.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 40.0), Cesium.Cartographic.fromDegrees(-75.0, 40.0)]));
+        bluePolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-75.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 40.0), Cesium.Cartographic.fromDegrees(-75.0, 40.0)]));
         bluePolygon.material.uniforms.color = {
             red : 0.0,
             green : 0.0,
@@ -279,7 +280,7 @@ require([
         };
 
         var greenPolygon = new Cesium.Polygon(undefined);
-            greenPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-67.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 30.0), Cesium.Cartographic.fromDegrees(-67.0, 30.0)]));
+        greenPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-67.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 30.0), Cesium.Cartographic.fromDegrees(-67.0, 30.0)]));
         greenPolygon.material.uniforms.color = {
             red : 0.0,
             green : 1.0,
@@ -301,7 +302,7 @@ require([
             label: 'Show Cartographic Position on Mouse Over',
             onClick: function() {
                 cleanup();
-                pickCartographicPosition(scene, ellipsoid); 
+                pickCartographicPosition(scene, ellipsoid);
                 Sandcastle.highlight(pickCartographicPosition);
             }
         }).placeAt('toolbar');
@@ -311,7 +312,7 @@ require([
             onClick: function() {
                 cleanup();
                 widget.viewHome();
-                pickBillboard(scene, ellipsoid); 
+                pickBillboard(scene, ellipsoid);
                 Sandcastle.highlight(pickBillboard);
             }
         }).placeAt('toolbar');
@@ -321,7 +322,7 @@ require([
             onClick: function() {
                 cleanup();
                 widget.viewHome();
-                animateBillboardOnPick(scene, ellipsoid); 
+                animateBillboardOnPick(scene, ellipsoid);
                 Sandcastle.highlight(animateBillboardOnPick);
             }
         }).placeAt('toolbar');
@@ -331,7 +332,7 @@ require([
             onClick: function() {
                 cleanup();
                 widget.viewHome();
-                erodeSensorOnClick(scene, ellipsoid); 
+                erodeSensorOnClick(scene, ellipsoid);
                 Sandcastle.highlight(erodeSensorOnClick);
             }
         }).placeAt('toolbar');
@@ -341,21 +342,19 @@ require([
             onClick: function() {
                 cleanup();
                 widget.viewHome();
-                layerCompositePrimitive(scene, ellipsoid); 
+                layerCompositePrimitive(scene, ellipsoid);
                 Sandcastle.highlight(layerCompositePrimitive);
             }
-        }).placeAt('toolbar');        
+        }).placeAt('toolbar');
     }
 
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget);
-            widget.startRenderLoop();
-            pickCartographicPosition(widget.scene, widget.ellipsoid); 
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
-
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget);
+    pickCartographicPosition(widget.scene, widget.ellipsoid);
 });
 </script>
 </body>

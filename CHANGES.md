@@ -4,7 +4,19 @@ Change Log
 Beta Releases
 -------------
 
-### b10 - xx/xx/2012
+### b11 - xx/xx/2012
+
+* Breaking changes:
+   * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
+   * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
+   * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
+* Fixed jitter artifacts with billboards and polylines.
+* Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
+* Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
+* Added new automatic GLSL uniforms: 'czm_frameNumber', `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
+* Added `czm_translateRelativeToEye` GLSL function.
+
+### b10 - 11/02/2012
 
 * Breaking changes:
    * Renamed `Texture2DPool` to `TexturePool`.
@@ -17,6 +29,7 @@ Beta Releases
    * The `description.generateTextureCoords` parameter passed to `ExtentTessellator.compute` is now called `description.generateTextureCoordinates`.
    * Renamed `bringForward`, `sendBackward`, `bringToFront`, and `sendToBack` methods on `CompositePrimitive` to `raise`, `lower`, `raiseToTop`, and `lowerToBottom`, respectively.
    * `Cache` and `CachePolicy` are no longer used and have been removed.
+   * Fixed problem with Dojo widget startup, and removed "postSetup" callback in the process.  See Sandcastle examples and update your startup code.
 * `CentralBody` now allows imagery from multiple sources to be layered and alpha blended on the globe.  See the new `Imagery Layers` and `Map Projections` Sandcastle examples.
 * Added `WebMapServiceImageryProvider`.
 * Improved middle mouse click behavior to always tilt in the same direction.

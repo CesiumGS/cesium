@@ -9,6 +9,8 @@ var moduleIds = [];
 var parameters = [];
 var assignments = [];
 
+var nonIdentifierRegexp = /[^0-9a-zA-Z_$]/g;
+
 var sourceFilesets = elements.get('sourcefiles');
 for ( var i = 0, len = sourceFilesets.size(); i < len; ++i) {
     var sourceFileset = sourceFilesets.get(i);
@@ -24,11 +26,12 @@ for ( var i = 0, len = sourceFilesets.size(); i < len; ++i) {
 
         var baseName = file.getName();
         var assignmentName = baseName.substring(0, baseName.lastIndexOf('.'));
+        assignmentName = String(assignmentName).replace(nonIdentifierRegexp, '_');
         if (/Shaders\//.test(moduleId)) {
             assignmentName = '_shaders.' + assignmentName;
         }
 
-        var parameterName = moduleId.replace('/', '_');
+        var parameterName = String(moduleId).replace(nonIdentifierRegexp, '_');
 
         moduleIds.push("'" + moduleId + "'");
         parameters.push(parameterName);

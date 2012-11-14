@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -115,18 +116,17 @@ require([
 
     }
 
-    var cesiumViewerWidget = new CesiumViewerWidget({
+    var widget = new CesiumViewerWidget({
         onObjectMousedOver : function(mousedOverObject) {
-            cesiumViewerWidget.highlightObject(mousedOverObject);
+            widget.highlightObject(mousedOverObject);
             Sandcastle.highlight(mousedOverObject);
-        },
-        postSetup : function(widget) {
-            createPrimitives(widget);
-            widget.startRenderLoop();
         }
-    }).placeAt(dom.byId("cesiumContainer"));
-    
+    });
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    createPrimitives(widget);
 });
 </script>
 </body>

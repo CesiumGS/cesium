@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -77,7 +78,7 @@ require([
             destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
                 Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0)),
             duration: 3.0
-        });        
+        });
     }
     
     function flyToMyLocation(scene) {
@@ -87,7 +88,7 @@ require([
                 destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
                     Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 10000.0)),
                 duration: 3.0
-            });        
+            });
         }
         
         navigator.geolocation.getCurrentPosition(fly);
@@ -107,19 +108,19 @@ require([
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
             positions: Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                new Cesium.Cartographic(west, south), 
-                new Cesium.Cartographic(west, north), 
-                new Cesium.Cartographic(east, north), 
-                new Cesium.Cartographic(east, south), 
+                new Cesium.Cartographic(west, south),
+                new Cesium.Cartographic(west, north),
+                new Cesium.Cartographic(east, north),
+                new Cesium.Cartographic(east, south),
                 new Cesium.Cartographic(west, south)])
         });
-        scene.getPrimitives().add(polylines);        
+        scene.getPrimitives().add(polylines);
     }
     
     function createButtons(scene) {
         new ToggleButton({
             label: "Fly to San Diego",
-            onClick: function() { 
+            onClick: function() {
                 flyToSanDiego(scene);
                 Sandcastle.highlight(flyToSanDiego);
             }
@@ -127,7 +128,7 @@ require([
         
         new ToggleButton({
             label: "Fly to My Location",
-            onClick: function() { 
+            onClick: function() {
                 flyToMyLocation(scene);
                 Sandcastle.highlight(flyToMyLocation);
             }
@@ -135,21 +136,19 @@ require([
 
         new ToggleButton({
             label: "View an Extent",
-            onClick: function() { 
+            onClick: function() {
                 viewAnExtent(scene);
                 Sandcastle.highlight(viewAnExtent);
             }
         }).placeAt('toolbar');
     }
-    
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget.scene);
-            widget.startRenderLoop();
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
 
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget.scene);
 });
 </script>
 </body>

@@ -13,8 +13,8 @@ define([
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/TooltipDialog',
-        './getJson',
         './TimelineWidget',
+        '../../Core/loadJson',
         '../../Core/BoundingRectangle',
         '../../Core/Clock',
         '../../Core/ClockStep',
@@ -66,8 +66,8 @@ define([
         ToggleButton,
         DropDownButton,
         TooltipDialog,
-        getJson,
         TimelineWidget,
+        loadJson,
         BoundingRectangle,
         Clock,
         ClockStep,
@@ -239,20 +239,6 @@ define([
         constructor : function() {
             this.ellipsoid = Ellipsoid.WGS84;
         },
-
-        // for Dojo use only
-        postCreate : function() {
-            ready(this, '_setupCesium');
-        },
-
-        /**
-         * If supplied, this function will be called at the end of widget setup.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @see CesiumViewerWidget#startRenderLoop
-         */
-        postSetup : undefined,
 
         /**
          * This function will get a callback in the event of setup failure, likely indicating
@@ -539,6 +525,60 @@ define([
         },
 
         /**
+         * Removes all CZML data from the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         */
+        removeAllCzml : function() {
+            this.centerCameraOnObject(undefined);
+            //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
+            //cache data indefinitely and removeAll is the only way to get rid of it.
+            //while there are no visual differences, removeAll cleans the cache and improves performance
+            this.visualizers.removeAllPrimitives();
+            this.dynamicObjectCollection.clear();
+        },
+
+        /**
+         * Add CZML data to the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {CZML} czml - The CZML (as objects) to be processed and added to the viewer.
+         * @param {string} source - The filename or URI that was the source of the CZML collection.
+         * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
+         * @see CesiumViewerWidget#loadCzml
+         */
+        addCzml : function(czml, source, lookAt) {
+            processCzml(czml, this.dynamicObjectCollection, source);
+            this.setTimeFromBuffer();
+            if (typeof lookAt !== 'undefined') {
+                var lookAtObject = this.dynamicObjectCollection.getObject(lookAt);
+                this.centerCameraOnObject(lookAtObject);
+            }
+        },
+
+        /**
+         * Asynchronously load and add CZML data to the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {string} source - The URI to load the CZML from.
+         * @param {string} lookAt - Optional.  The ID of the object to center the camera on.
+         * @see CesiumViewerWidget#addCzml
+         */
+        loadCzml : function(source, lookAt) {
+            var widget = this;
+            loadJson(source).then(function(czml) {
+                widget.addCzml(czml, source, lookAt);
+            },
+            function(error) {
+                console.error(error);
+                window.alert(error);
+            });
+        },
+
+        /**
          * This function is called when files are dropped on the widget, if drag-and-drop is enabled.
          *
          * @function
@@ -553,19 +593,28 @@ define([
             var f = files[0];
             var reader = new FileReader();
             var widget = this;
+            widget.removeAllCzml();
             reader.onload = function(evt) {
-                //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
-                //cache data indefinitely and removeAll is the only way to get rid of it.
-                //while there are no visual differences, removeAll cleans the cache and improves performance
-                widget.visualizers.removeAllPrimitives();
-                widget.dynamicObjectCollection.clear();
-                processCzml(JSON.parse(evt.target.result), widget.dynamicObjectCollection, f.name);
-                widget.setTimeFromBuffer();
+                widget.addCzml(JSON.parse(evt.target.result), f.name);
             };
             reader.readAsText(f);
         },
 
-        _setupCesium : function() {
+        _started : false,
+
+        /**
+         * Call this after placing the widget in the DOM, to initialize the WebGL context,
+         * wire up event callbacks, begin requesting CZML, imagery, etc.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @see CesiumViewerWidget#autoStartRenderLoop
+         */
+        startup : function() {
+            if (this._started) {
+                return;
+            }
+
             var canvas = this.canvas, ellipsoid = this.ellipsoid, scene, widget = this;
 
             try {
@@ -576,6 +625,7 @@ define([
                 }
                 return;
             }
+            this._started = true;
 
             this.resize();
 
@@ -594,18 +644,19 @@ define([
                 context.setThrowOnWebGLError(true);
             }
 
+            var imageryUrl = '../../Assets/Imagery/';
             var maxTextureSize = context.getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_512.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_512.jpg');
             } else {
                 // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl('Images/earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl('Images/earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_2048.jpg');
+                this.specularMapUrl = this.specularMapUrl || require.toUrl(imageryUrl + 'earthspec1k.jpg');
+                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl(imageryUrl + 'earthcloudmaptrans.jpg');
+                this.bumpMapUrl = this.bumpMapUrl || require.toUrl(imageryUrl + 'earthbump1k.jpg');
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
@@ -652,7 +703,8 @@ define([
                         this.centerCameraOnPick(selectedObject);
                     }
                 };
-                                }
+            }
+
             if (this.enableDragDrop) {
                 var dropBox = this.cesiumNode;
                 on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));
@@ -684,16 +736,11 @@ define([
             this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
-                getJson(widget.endUserOptions.source).then(function(czmlData) {
-                    processCzml(czmlData, widget.dynamicObjectCollection, widget.endUserOptions.source);
-                    widget.setTimeFromBuffer();
-                    if (typeof widget.endUserOptions.lookAt !== 'undefined') {
-                        widget.centerCameraOnObject(widget.dynamicObjectCollection.getObject(widget.endUserOptions.lookAt));
-                    }
-                },
-                function(error) {
-                    window.alert(error);
-                });
+                if (typeof widget.endUserOptions.lookAt !== 'undefined') {
+                    widget.loadCzml(widget.endUserOptions.source, widget.endUserOptions.lookAt);
+                } else {
+                    widget.loadCzml(widget.endUserOptions.source);
+                }
             }
 
             if (typeof widget.endUserOptions.stats !== 'undefined' && widget.endUserOptions.stats) {
@@ -855,8 +902,8 @@ define([
 
             this._camera3D = this.scene.getCamera().clone();
 
-            if (typeof this.postSetup !== 'undefined') {
-                this.postSetup(this);
+            if (this.autoStartRenderLoop) {
+                this.startRenderLoop();
             }
         },
 
@@ -1146,12 +1193,24 @@ define([
         },
 
         /**
+         * If true, {@link CesiumViewerWidget#startRenderLoop} will be called automatically
+         * at the end of {@link CesiumViewerWidget#startup}.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         */
+        autoStartRenderLoop : true,
+
+        /**
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
-         * on your page.  Typically it is started from {@link CesiumViewerWidget.postSetup}.  If you wish to
-         * customize your render loop, avoid this function and instead use code similar to the following example.
+         * on your page.  If you wish to customize your render loop, avoid this function and instead
+         * use code similar to one of the following examples.
+         *
          * @function
          * @memberof CesiumViewerWidget.prototype
          * @see requestAnimationFrame
+         * @see CesiumViewerWidget#autoStartRenderLoop
          * @example
          * // This takes the place of startRenderLoop for a single widget.
          *
@@ -1162,7 +1221,7 @@ define([
          *     widget.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          * @example
          * // This example requires widget1 and widget2 to share an animationController
          * // (for example, widget2's constructor was called with a copy of widget1's
@@ -1176,7 +1235,7 @@ define([
          *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          * @example
          * // This example uses separate animationControllers for widget1 and widget2.
          * // These widgets can animate at different rates and pause individually.
@@ -1190,7 +1249,7 @@ define([
          *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          */
         startRenderLoop : function() {
             var widget = this;
@@ -1202,7 +1261,8 @@ define([
                 widget.render();
                 requestAnimationFrame(updateAndRender);
             }
-            updateAndRender();
+
+            requestAnimationFrame(updateAndRender);
         }
     });
 });

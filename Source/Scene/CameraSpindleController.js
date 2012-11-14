@@ -392,8 +392,8 @@ define([
         }
 
         var transform = camera.getInverseTransform();
-        p0 = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(p0.x, p0.y, p0.z, 1.0)));
-        p1 = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(p1.x, p1.y, p1.z, 1.0)));
+        p0 = Cartesian3.fromCartesian4(transform.multiplyByPoint(p0));
+        p1 = Cartesian3.fromCartesian4(transform.multiplyByPoint(p1));
 
         if (typeof this.constrainedAxis === 'undefined') {
             p0 = p0.normalize();
