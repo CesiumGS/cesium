@@ -1119,7 +1119,7 @@ define([
      * @memberof Matrix4
      *
      * @param {Matrix4} matrix The matrix.
-     * @param {Cartesian4} cartesian The column.
+     * @param {Cartesian4} cartesian The vector.
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
@@ -1152,6 +1152,41 @@ define([
         result.z = z;
         result.w = w;
         return result;
+    };
+
+    var scratchPoint = new Cartesian4(0.0, 0.0, 0.0, 1.0);
+
+    /**
+     * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4.multiplyByVector}
+     * with a {@link Cartesian4} with a <code>w</code> component of one.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix.
+     * @param {Cartesian3} cartesian The point.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} matrix is required.
+     *
+     * @example
+     * Cartesian3 p = new Cartesian3(1.0, 2.0, 3.0);
+     * Matrix4.multiplyByPoint(matrix, p, result);
+     * // A shortcut for
+     * //   Cartesian3 p = ...
+     * //   Matrix4.multiplyByVector(matrix, new Cartesian4(p.x, p.y, p.z, 1.0), result);
+     */
+    Matrix4.multiplyByPoint = function(matrix, cartesian, result) {
+        if (typeof cartesian === 'undefined') {
+            throw new DeveloperError('cartesian is required');
+        }
+
+        scratchPoint.x = cartesian.x;
+        scratchPoint.y = cartesian.y;
+        scratchPoint.z = cartesian.z;
+        // scratchPoint.w is one.  See above.
+
+        return Matrix4.multiplyByVector(matrix, scratchPoint, result);
     };
 
     /**
@@ -1833,7 +1868,7 @@ define([
      * Computes the product of this matrix and a column vector.
      * @memberof Matrix4
      *
-     * @param {Cartesian4} cartesian The column.
+     * @param {Cartesian4} cartesian The vector.
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
@@ -1841,6 +1876,21 @@ define([
      */
     Matrix4.prototype.multiplyByVector = function(cartesian, result) {
         return Matrix4.multiplyByVector(this, cartesian, result);
+    };
+
+    /**
+     * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4#multiplyByVector}
+     * with a {@link Cartesian4} with a <code>w</code> component of one.
+     * @memberof Matrix4
+     *
+     * @param {Cartesian3} cartesian The point.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Matrix4.prototype.multiplyByPoint = function(cartesian, result) {
+        return Matrix4.multiplyByPoint(this, cartesian, result);
     };
 
     /**

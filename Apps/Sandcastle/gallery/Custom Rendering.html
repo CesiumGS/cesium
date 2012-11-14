@@ -282,17 +282,17 @@ require([
                 var projectedPositions = [];
                 var projectedPositionsFlat = [];
                 for (var i = 0; i < positions.length; i += 3) {
-                    var p = new Cesium.Cartesian4(positions[i], positions[i + 1], positions[i + 2], 1.0);
-                    p = this._modelMatrix.multiplyByVector(p);
+                    var modelPosition = new Cesium.Cartesian3(positions[i], positions[i + 1], positions[i + 2]);
+                    var worldPosition = this._modelMatrix.multiplyByPoint(modelPosition);
 
-                    positions[i] = p.x;
-                    positions[i + 1] = p.y;
-                    positions[i + 2] = p.z;
+                    positions[i] = worldPosition.x;
+                    positions[i + 1] = worldPosition.y;
+                    positions[i + 2] = worldPosition.z;
 
-                    p = projection.project(this._ellipsoid.cartesianToCartographic(Cesium.Cartesian3.fromCartesian4(p)));
+                    var projectedPosition = projection.project(this._ellipsoid.cartesianToCartographic(worldPosition));
 
-                    projectedPositions.push(p);
-                    projectedPositionsFlat.push(p.z, p.x, p.y);
+                    projectedPositions.push(projectedPosition);
+                    projectedPositionsFlat.push(projectedPosition.z, projectedPosition.x, projectedPosition.y);
                 }
 
                 if (mode === Cesium.SceneMode.SCENE2D || mode === Cesium.SceneMode.COLUMBUS_VIEW) {
