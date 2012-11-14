@@ -27,7 +27,7 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     materialInput.str = pointMC / sensorRadius;
     materialInput.positionMC = pointMC;               
     
-    vec3 positionToEyeEC = normalize(-v_positionEC);
+    vec3 positionToEyeEC = -v_positionEC;
     materialInput.positionToEyeEC = positionToEyeEC;
     
     vec3 normalEC = normalize(v_normalEC);
@@ -38,7 +38,7 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     
     vec4 color; 
     #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
+    color = czm_lightValuePhong(czm_sunDirectionEC, normalize(positionToEyeEC), material);
     #else
     color = vec4(material.diffuse, material.alpha);
     #endif

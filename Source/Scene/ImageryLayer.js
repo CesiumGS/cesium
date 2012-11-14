@@ -115,15 +115,6 @@ define([
         this._requestImageError = undefined;
     };
 
-    ImageryLayer.prototype.update = function() {
-        if (this._currentLayerIndex === -1) {
-
-        }
-        if (this.show !== this._show) {
-
-        }
-    };
-
     /**
      * Gets the imagery provider for this layer.
      *

@@ -10,7 +10,10 @@ Beta Releases
    * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
    * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
    * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
-* Added 'czm_frameNumber' automatic GLSL uniform.
+   * `positionToEyeEC` in `czm_materialInput` is no longer normalized by default.
+* Added `Water` material.  See the Materials Sandbox example.
+* Added `czm_frameNumber` automatic GLSL uniform.
+* Added `shininess` to `czm_materialInput`.
 
 ### b10 - 11/02/2012
 
