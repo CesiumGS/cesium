@@ -57,13 +57,46 @@ vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);
 
 void main()
 {
+#if defined(SHOW_OCEAN) || defined(AFFECTED_BY_LIGHTING)
+    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
+    vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
+#endif
+
 #ifdef SHOW_DAY
+    vec3 startDayColor;
+
+#ifdef SHOW_OCEAN
+    czm_materialInput oceanInput;
+
+    // TODO: Real 1D distance, and better 3D coordinate
+    oceanInput.st = czm_ellipsoidWgs84TextureCoordinates(normalMC);
+    oceanInput.str = vec3(oceanInput.st, 0.0);
+    oceanInput.positionMC = v_positionMC;
+    
+    //Convert tangent space material normal to eye space
+    oceanInput.normalEC = normalEC;  
+    oceanInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, oceanInput.normalEC);
+    
+    //Convert view vector to world space
+    vec3 positionToEyeEC = -v_positionEC; 
+    oceanInput.positionToEyeEC = positionToEyeEC;
+
+    czm_material material = czm_getMaterial(oceanInput);
+    
+    vec4 oceanColor = czm_lightValuePhong(czm_sunDirectionEC, normalize(positionToEyeEC), material);
+#endif
+
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
     vec3 initialColor = vec3(0.0, 0.0, 0.5);
-    vec3 startDayColor = computeDayColor(initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
+    startDayColor = computeDayColor(initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
+    
+#ifdef SHOW_OCEAN
+    startDayColor = mix(startDayColor, oceanColor.rgb, oceanColor.a);
+#endif
+
 #else
     vec3 startDayColor = vec3(0.0, 0.0, 0.5);
 #endif
@@ -77,8 +110,6 @@ void main()
 #endif
 
 #ifdef AFFECTED_BY_LIGHTING
-    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
-    vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
     vec3 rgb = getCentralBodyColor(v_positionMC, v_positionEC, normalMC, normalEC, startDayColor, v_rayleighColor, v_mieColor);
 #else
     vec3 rgb = startDayColor;

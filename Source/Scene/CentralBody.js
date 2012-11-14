@@ -650,6 +650,8 @@ define([
         // http://jsperf.com/object-property-access-propcount
         this._drawUniforms = combine([uniforms, atmosphereUniforms], false, false);
         this._skyCommand.uniformMap = this._drawUniforms;
+
+        this.oceanMaterial = undefined;
     };
 
     var attributeIndices = {
@@ -1145,7 +1147,8 @@ define([
             this._showTerminator !== this.showTerminator ||
             this._affectedByLighting !== this.affectedByLighting) {
 
-            var fsPrepend = ((this.showDay && this._imageryLayerCollection.getLength() > 0) ? '#define SHOW_DAY 1\n' : '') +
+            var fsPrepend =
+                ((this.showDay && this._imageryLayerCollection.getLength() > 0) ? '#define SHOW_DAY 1\n' : '') +
                 ((this.showNight && this._nightTexture) ? '#define SHOW_NIGHT 1\n' : '') +
                 ((this.showClouds && this._cloudsTexture) ? '#define SHOW_CLOUDS 1\n' : '') +
                 ((this.showCloudShadows && this._cloudsTexture) ? '#define SHOW_CLOUD_SHADOWS 1\n' : '') +
@@ -1153,6 +1156,7 @@ define([
                 ((this.showBumps && this._bumpTexture) ? '#define SHOW_BUMPS 1\n' : '') +
                 (this.showTerminator ? '#define SHOW_TERMINATOR 1\n' : '') +
                 (this.affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
+                (typeof this.oceanMaterial !== 'undefined' ? ('#define SHOW_OCEAN 1\n' + this.oceanMaterial.shaderSource) : '') +
                 '#line 0\n' +
                 CentralBodyFSCommon;
 
@@ -1313,10 +1317,15 @@ define([
                 }
             }
 
+            var drawUniforms = this._drawUniforms;
+            if (typeof this.oceanMaterial !== 'undefined') {
+                drawUniforms = combine([this._drawUniforms, this.oceanMaterial._uniforms]);
+            }
+
             this._surface.update(context,
                     frameState,
                     colorCommandList,
-                    this._drawUniforms,
+                    drawUniforms,
                     this._activeSurfaceShaderSet,
                     this._rsColor,
                     this._mode,
