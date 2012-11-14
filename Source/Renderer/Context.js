@@ -248,7 +248,7 @@ define([
         this._defaultClearDepth = this._clearDepth;
         this._defaultClearStencil = this._clearStencil;
 
-        this._us = new UniformState(this);
+        this._us = new UniformState();
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
 

@@ -10,7 +10,11 @@ Beta Releases
    * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
    * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
    * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
-* Added 'czm_frameNumber' automatic GLSL uniform.
+* Fixed jitter artifacts with billboards and polylines.
+* Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
+* Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
+* Added new automatic GLSL uniforms: 'czm_frameNumber', `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
+* Added `czm_translateRelativeToEye` GLSL function.
 
 ### b10 - 11/02/2012
 
