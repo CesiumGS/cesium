@@ -219,7 +219,7 @@ define([
          * uniform mat4 czm_inverseModel;
          *
          * // Example
-         * vec4 modelPosition = czm_model * worldPosition;
+         * vec4 modelPosition = czm_inverseModel * worldPosition;
          */
         czm_inverseModel : {
             getSize : function() {

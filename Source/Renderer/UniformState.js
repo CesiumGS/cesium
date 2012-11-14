@@ -282,7 +282,6 @@ define([
          if (this._inverseModelDirty) {
              this._inverseModelDirty = false;
 
-             // PERFORMANCE_IDEA: if the model matrix has scale, Matrix4.inverseTransformation would still work, right?
              this._model.inverse(this._inverseModel);
          }
 
@@ -583,9 +582,7 @@ define([
         if (uniformState._normalDirty) {
             uniformState._normalDirty = false;
 
-            // TODO:  Inverse, transpose of the whole 4x4?  Or we can just do the 3x3?
-            Matrix4.inverse(uniformState.getModelView(), normalScratch);
-            Matrix4.transpose(normalScratch, normalScratch);
+            Matrix4.transpose(uniformState.getInverseModelView(), normalScratch);
             Matrix4.getRotation(normalScratch, uniformState._normal);
         }
     }
@@ -610,9 +607,7 @@ define([
         if (uniformState._inverseNormalDirty) {
             uniformState._inverseNormalDirty = false;
 
-            // TODO:  Inverse of the whole 4x4?  Or we can just do the 3x3?
-            Matrix4.inverse(uniformState.getModelView(), inverseNormalScratch);
-            Matrix4.getRotation(inverseNormalScratch, uniformState._inverseNormal);
+            Matrix4.getRotation(uniformState.getInverseModelView(), uniformState._inverseNormal);
         }
     }
 
