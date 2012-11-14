@@ -41,16 +41,7 @@ void main()
     
     ///////////////////////////////////////////////////////////////////////////
     
-    vec4 p;
-    if (u_morphTime != 1.0)
-    {
-        p = vec4(czm_translateRelativeToEye(positionHigh, positionLow), 1.0);
-    }
-	else
-	{
-    	p = vec4(czm_translateRelativeToEye(positionHigh, positionLow), 1.0);
-	}  
-
+    vec4 p = vec4(czm_translateRelativeToEye(positionHigh, positionLow), 1.0);
     vec4 positionEC = czm_modelViewRelativeToEye * p;
     positionEC = czm_eyeOffset(positionEC, eyeOffset);
     positionEC.xyz *= show;
