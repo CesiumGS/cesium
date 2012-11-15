@@ -16,6 +16,8 @@ varying vec3 v_mieColor;
 
 varying vec2 v_textureCoordinates;
 
+varying float v_waterMask;
+
 vec3 sampleAndBlend(
     vec3 previousColor,
     sampler2D texture,
@@ -86,7 +88,7 @@ void main()
     vec3 positionToEyeEC = -v_positionEC; 
     oceanInput.positionToEyeEC = positionToEyeEC;
 
-    czm_material material = czm_getMaterial(oceanInput, startDayColor);
+    czm_material material = czm_getSurfaceMaterial(oceanInput, startDayColor, startDayColor, v_waterMask);
     
     vec4 oceanColor = czm_lightValuePhong(czm_sunDirectionEC, normalize(positionToEyeEC), material);
 

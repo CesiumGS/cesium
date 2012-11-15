@@ -11,8 +11,6 @@ uniform float amplitude;
 uniform float specularIntensity;
 uniform float fadeFactor;
 
-varying float v_waterMask;
-
 vec4 getNoise(vec2 uv, float time, float angleInRadians) {
 
     float cosAngle = cos(angleInRadians);
@@ -48,7 +46,7 @@ vec4 getNoise(vec2 uv, float time, float angleInRadians) {
     return ((noise / 4.0) - 0.5) * 2.0;
 }
 
-czm_material czm_getMaterial(czm_materialInput materialInput, vec3 surfaceColor)
+czm_material czm_getSurfaceMaterial(czm_materialInput materialInput, vec3 baseColor, vec3 blendColor, float mask)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
 
@@ -57,8 +55,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput, vec3 surfaceColor)
     // fade is a function of the distance from the fragment and the frequency of the waves
     float fade = max(1.0, (length(materialInput.positionToEyeEC) / 10000000000.0) * frequency * fadeFactor);
             
-    //float specularMapValue = texture2D(specularMap, materialInput.st).r;
-    float specularMapValue = v_waterMask;
+    float specularMapValue = mask;
     
     // note: not using directional motion at this time, just set the angle to 0.0;
     vec4 noise = getNoise(materialInput.st * frequency, time, 0.0);
@@ -80,7 +77,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput, vec3 surfaceColor)
     
     // base color is a blend of the water and non-water color based on the value from the specular map
     // may need a uniform blend factor to better control this
-    material.diffuse = surfaceColor; //mix(blendColor.rgb, baseWaterColor.rgb, specularMapValue);
+    material.diffuse = mix(blendColor.rgb, baseColor.rgb, specularMapValue);
     
     // diffuse highlights are based on how perturbed the normal is
     material.diffuse += (0.1 * tsPerturbationRatio);
@@ -91,4 +88,10 @@ czm_material czm_getMaterial(czm_materialInput materialInput, vec3 surfaceColor)
     material.shininess = 10.0;
     
     return material;
+}
+
+czm_material czm_getMaterial(czm_materialInput materialInput)
+{
+    float waterMask = texture2D(specularMap, materialInput.st).r;
+    return czm_getSurfaceMaterial(materialInput, baseWaterColor.rgb, blendColor.rgb, waterMask); 
 }
