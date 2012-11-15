@@ -113,7 +113,12 @@ define([
         var datatype = ComponentDatatype.FLOAT;
         var typedArray = buffers.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
-        var stride = 6 * datatype.sizeInBytes;
+        var stride = 5 * datatype.sizeInBytes;
+
+        if (typeof tile.waterMask !== 'undefined') {
+            stride += datatype.sizeInBytes;
+        }
+
         var attributes = [{
             index : TerrainProvider.attributeIndices.position3D,
             vertexBuffer : buffer,
@@ -128,14 +133,26 @@ define([
             componentsPerAttribute : 2,
             offsetInBytes : 3 * datatype.sizeInBytes,
             strideInBytes : stride
-        }, {
-            index : TerrainProvider.attributeIndices.waterMask,
-            vertexBuffer : buffer,
-            componentDatatype : datatype,
-            componentsPerAttribute : 1,
-            offsetInBytes : 5 * datatype.sizeInBytes,
-            strideInBytes : stride
         }];
+
+
+        if (typeof tile.waterMask !== 'undefined') {
+            attributes.push({
+                index : TerrainProvider.attributeIndices.waterMask,
+                vertexBuffer : buffer,
+                componentDatatype : datatype,
+                componentsPerAttribute : 1,
+                offsetInBytes : 5 * datatype.sizeInBytes,
+                strideInBytes : stride
+            });
+        } else {
+            attributes.push({
+                index : TerrainProvider.attributeIndices.waterMask,
+                value : [0.0],
+                componentDatatype : datatype,
+                componentsPerAttribute : 1
+            });
+        }
 
         var indexBuffers = buffers.indices.indexBuffers || {};
         var indexBuffer = indexBuffers[context.getId()];
