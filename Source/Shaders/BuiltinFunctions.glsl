@@ -334,7 +334,7 @@ mat3 czm_eastNorthUpToEyeCoordinates(vec3 positionMC, vec3 normalEC)
  * @property {vec3} str 3D texture coordinates.
  * @property {vec3} normalEC Unperturbed surface normal in eye coordinates.
  * @property {mat3} tangentToEyeMatrix Matrix for converting a tangent space normal to eye space.
- * @property {vec3} positionToEyeEC Direction from the fragment to the eye in eye coordinates.
+ * @property {vec3} positionToEyeEC Vector from the fragment to the eye in eye coordinates.  The magnitude is the distance in meters from the fragment to the eye.
  * @property {vec3} positionMC Position in model coordinates.
  */
 struct czm_materialInput
@@ -356,6 +356,7 @@ struct czm_materialInput
  *
  * @property {vec3} diffuse Incoming light that scatters evenly in all directions.
  * @property {float} specular Intensity of incoming light reflecting in a single direction.
+ * @property {float} shininess The sharpness of the specular reflection.  Higher values create a smaller, more focused specular highlight.
  * @property {vec3} normal Surface's normal in tangent coordinates. It is used for effects such as normal mapping. The default is the surface's unmodified normal.
  * @property {vec3} emission Light emitted by the material equally in all directions. The default is vec3(0.0), which emits no light.
  * @property {float} alpha Opacity of this material. 0.0 is completely transparent; 1.0 is completely opaque.
@@ -364,6 +365,7 @@ struct czm_material
 {
     vec3 diffuse;
     float specular;
+    float shininess;
     vec3 normal;
     vec3 emission;
     float alpha;
@@ -390,6 +392,7 @@ czm_material czm_getDefaultMaterial(czm_materialInput materialInput)
     czm_material material;
     material.diffuse = vec3(0.0);
     material.specular = 0.0;
+    material.shininess = 1.0;
     material.normal = materialInput.normalEC;
     material.emission = vec3(0.0);
     material.alpha = 1.0;
@@ -413,30 +416,17 @@ czm_material czm_getDefaultMaterial(czm_materialInput materialInput)
 
 vec4 czm_lightValuePhong(vec3 toLight, vec3 toEye, czm_material material)
 {
-    vec3 diffuseColor = material.diffuse;
-    float specularIntensity = material.specular;
     vec3 normal = material.normal;
-    vec3 emissionColor = material.emission;
-    float alpha = material.alpha;
-
-    float cosAngIncidence = clamp(dot(normal, toLight), 0.0, 1.0);    
+    float diffuse = max(dot(toLight, normal), 0.0);
     vec3 toReflectedLight = reflect(-toLight, normal);
-    float diffuseAmount = clamp(dot(toLight, normal), 0.0, 1.0);
-    float specularAmount = clamp(dot(toReflectedLight, toEye), 0.0, 1.0);
-    specularAmount = cosAngIncidence != 0.0 ? specularAmount : 0.0;
-    specularAmount = specularIntensity != 0.0 ? pow(specularAmount, 1.0/specularIntensity) : 0.0;
+    float specular = max(dot(toReflectedLight, toEye), 0.0);
 
-    //x, y, z : diffuse ambient
-    //w : specular strength
-    vec4 ambientLight = vec4(0.0, 0.0, 0.0, 1.0);
-    
-    vec3 lighting = ambientLight.xyz + emissionColor;
-    lighting += diffuseColor * diffuseAmount;
-    lighting += specularAmount * ambientLight.w;
-    lighting = clamp(lighting, 0.0, 1.0);
-    
-    vec4 finalLighting = vec4(lighting, alpha);
-    return finalLighting;
+    vec3 ambient = vec3(0.0);
+    vec3 color = ambient + material.emission;
+    color += material.diffuse * diffuse;
+    color += material.specular * pow(specular, material.shininess);
+
+    return vec4(color, material.alpha);
 }
 
 /**
