@@ -169,6 +169,10 @@ defineSuite([
         verifyMaterial('Facet');
     });
 
+    it('draws Water built-in material', function() {
+        verifyMaterial('Water');
+    });
+
     it('draws Blob built-in material', function() {
         verifyMaterial('Blob');
     });
