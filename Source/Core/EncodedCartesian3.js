@@ -1,7 +1,7 @@
 /*global define*/
 define([
         './Cartesian3',
-        './DeveloperError',
+        './DeveloperError'
     ], function(
         Cartesian3,
         DeveloperError) {
