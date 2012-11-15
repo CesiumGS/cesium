@@ -18,7 +18,9 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
-        '../Scene/SceneMode'
+        '../Scene/SceneMode',
+        '../Shaders/SkyBoxVS',
+        '../Shaders/SkyBoxFS'
     ], function(
         BoundingSphere,
         BoxTessellator,
@@ -38,7 +40,9 @@ define([
         DrawCommand,
         PixelDatatype,
         PixelFormat,
-        SceneMode) {
+        SceneMode,
+        SkyBoxVS,
+        SkyBoxFS) {
     "use strict";
 
     /**
@@ -121,23 +125,6 @@ define([
                 setupTextures(i);
             }
 
-            var vsColor = '';
-            vsColor += 'attribute vec4 position;';
-            vsColor += 'varying vec3 texCoord;';
-            vsColor += 'void main()';
-            vsColor += '{';
-            vsColor += '    vec3 p = czm_viewRotation * (czm_model * position).xyz;';
-            vsColor += '    gl_Position = czm_projection * vec4(p, 1.0);';
-            vsColor += '    texCoord = position.xyz;';
-            vsColor += '}';
-            var fsColor = '';
-            fsColor += 'uniform samplerCube u_cubeMap;';
-            fsColor += 'varying vec3 texCoord;';
-            fsColor += 'void main()';
-            fsColor += '{';
-            fsColor += '    gl_FragColor = textureCube(u_cubeMap, normalize(texCoord));';
-            fsColor += '}';
-
             // TODO: Determine size of box based on the size of the scene.
             var dimensions = new Cartesian3(100000000.0, 100000000.0, 100000000.0);
             var maximumCorner = dimensions.multiplyByScalar(0.5);
@@ -156,7 +143,7 @@ define([
                 bufferUsage: BufferUsage.STATIC_DRAW
             });
 
-            colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(vsColor, fsColor, attributeIndices);
+            colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(SkyBoxVS, SkyBoxFS, attributeIndices);
             colorCommand.renderState = context.createRenderState({
                 depthTest : {
                     enabled : true
