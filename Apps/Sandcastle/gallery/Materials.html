@@ -213,7 +213,8 @@ require([
                             'material.diffuse = mix(vec3(0.2, 0.6, 0.2), vec3(1.0, 0.5, 0.2), heightValue);' +
                             'material.alpha = (1.0 - texture2D(image, materialInput.st).r) * 0.7;' +
                             'material.normal = bumpMap.normal;' +
-                            'material.specular = (1.0 - texture2D(image, materialInput.st).r) / 100.0;' +
+                            'material.specular = step(0.1, heightValue);' + // Specular mountain tops
+                            'material.shininess = 8.0;' + // Sharpen highlight
                             'return material;' +
                         '}'
                 }
@@ -272,6 +273,23 @@ require([
     function applyFacetMaterial(primitive, scene) {
         Sandcastle.declare(applyFacetMaterial); // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Facet');
+    }
+    
+    function applyWaterMaterial(primitive, scene) {
+        Sandcastle.declare(applyWaterMaterial); // For highlighting in Sandcastle.
+        
+        primitive.material = new Cesium.Material({
+            context : scene.getContext(),
+            fabric : {
+                type : 'Water',
+                uniforms : {
+                    specularMap: require.toUrl('Assets/Imagery/earthspec1k.jpg'),
+                    frequency: 10000.0,
+                    animationSpeed: 0.01,
+                    amplitude: 1.0
+                }
+            }
+        });
     }
     
     function applyFresnelMaterial(primitive, scene) {
@@ -684,6 +702,15 @@ require([
                 togglePolygonVisibility(polygon, worldPolygon);
                 applyTieDyeMaterial(polygon, scene);
                 Sandcastle.highlight(applyTieDyeMaterial);
+            }
+        }));
+        
+        commonMaterialMenu.addChild(new MenuItem({
+            label: 'Water',
+            onClick: function() { 
+                togglePolygonVisibility(worldPolygon, polygon);
+                applyWaterMaterial(worldPolygon, scene);
+                Sandcastle.highlight(applyWaterMaterial);
             }
         }));
         
