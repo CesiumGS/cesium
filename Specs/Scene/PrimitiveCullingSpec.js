@@ -76,8 +76,7 @@ defineSuite([
         camera.frustum.aspectRatio = 1.0;
 
         us = context.getUniformState();
-        us.setView(camera.getViewMatrix());
-        us.setProjection(camera.frustum.getProjectionMatrix());
+        us.update(camera);
         us.setSunPosition(new Cartesian3(-2.0, 0.0, 0.0));
     });
 

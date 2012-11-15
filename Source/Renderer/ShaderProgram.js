@@ -174,6 +174,7 @@ define([
          * @glslUniform
          *
          * @see UniformState#getModel
+         * @see czm_inverseModel
          * @see czm_modelView
          * @see czm_modelViewProjection
          *
@@ -195,6 +196,42 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getModel();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 model transformation matrix that
+         * transforms world coordinates to model coordinates.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_inverseModel</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_inverseModel
+         * @glslUniform
+         *
+         * @see UniformState#getInverseModel
+         * @see czm_model
+         * @see czm_inverseModelView
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_inverseModel;
+         *
+         * // Example
+         * vec4 modelPosition = czm_inverseModel * worldPosition;
+         */
+        czm_inverseModel : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseModel();
             }
         },
 
@@ -505,6 +542,50 @@ define([
         },
 
         /**
+         * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
+         * transforms model coordinates, relative to the eye, to eye coordinates.  This is used
+         * in conjunction with {@link czm_translateRelativeToEye}.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_modelViewRelativeToEye</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_modelViewRelativeToEye
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_modelViewRelativeToEye;
+         *
+         * // Example
+         * attribute vec3 positionHigh;
+         * attribute vec3 positionLow;
+         *
+         * void main()
+         * {
+         *   vec3 p = czm_translateRelativeToEye(positionHigh, positionLow);
+         *   gl_Position = czm_projection * (czm_modelViewRelativeToEye * vec4(p, 1.0));
+         * }
+         *
+         * @see czm_modelViewProjectionRelativeToEye
+         * @see czm_translateRelativeToEye
+         * @see EncodedCartesian3
+         */
+        czm_modelViewRelativeToEye : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getModelViewRelativeToEye();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
          * transforms from eye coordinates to model coordinates.
          * <br /><br />
@@ -621,6 +702,51 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getModelViewProjection();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
+         * transforms model coordinates, relative to the eye, to clip coordinates.  Clip coordinates is the
+         * coordinate system for a vertex shader's <code>gl_Position</code> output.  This is used in
+         * conjunction with {@link czm_translateRelativeToEye}.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_modelViewProjectionRelativeToEye</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_modelViewProjectionRelativeToEye
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_modelViewProjectionRelativeToEye;
+         *
+         * // Example
+         * attribute vec3 positionHigh;
+         * attribute vec3 positionLow;
+         *
+         * void main()
+         * {
+         *   vec3 p = czm_translateRelativeToEye(positionHigh, positionLow);
+         *   gl_Position = czm_modelViewProjectionRelativeToEye * vec4(p, 1.0);
+         * }
+         *
+         * @see czm_modelViewRelativeToEye
+         * @see czm_translateRelativeToEye
+         * @see EncodedCartesian3
+         */
+        czm_modelViewProjectionRelativeToEye : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getModelViewProjectionRelativeToEye();
             }
         },
 
@@ -813,6 +939,74 @@ define([
         },
 
         /**
+         * An automatic GLSL uniform representing the high bits of the camera position in model
+         * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
+         * as described in <a href="http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/">Precisions, Precisions</a>.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_encodedCameraPositionMCHigh</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_encodedCameraPositionMCHigh
+         * @glslUniform
+         *
+         * @see czm_encodedCameraPositionMCLow
+         * @see czm_modelViewRelativeToEye
+         * @see czm_modelViewProjectionRelativeToEye
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_encodedCameraPositionMCHigh;
+         */
+        czm_encodedCameraPositionMCHigh : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getEncodedCameraPositionMCHigh();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the low bits of the camera position in model
+         * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
+         * as described in <a href="http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/">Precisions, Precisions</a>.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_encodedCameraPositionMCHigh</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_encodedCameraPositionMCLow
+         * @glslUniform
+         *
+         * @see czm_encodedCameraPositionMCHigh
+         * @see czm_modelViewRelativeToEye
+         * @see czm_modelViewProjectionRelativeToEye
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_encodedCameraPositionMCLow;
+         */
+        czm_encodedCameraPositionMCLow : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getEncodedCameraPositionMCLow();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform representing the position of the viewer (camera) in world coordinates.
          * <br /><br />
          * Like all automatic uniforms, <code>czm_sunDirectionWC</code> does not need to be explicitly declared.
@@ -837,6 +1031,35 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getInverseView().getTranslation();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the frame number. This uniform is automatically incremented
+         * every frame.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_frameNumber</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_frameNumber
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform float czm_frameNumber;
+         */
+        czm_frameNumber : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getFrameNumber();
             }
         }
     };
