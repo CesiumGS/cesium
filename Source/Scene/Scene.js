@@ -259,13 +259,8 @@ define([
 
         scene._animations.update();
         camera.update();
-        us.setView(camera.getViewMatrix());
-        us.setProjection(camera.frustum.getProjectionMatrix());
+        us.update(camera);
         us.setFrameNumber(CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0));
-
-        if (camera.frustum.getInfiniteProjectionMatrix) {
-            us.setInfiniteProjection(camera.frustum.getInfiniteProjectionMatrix());
-        }
 
         if (scene._animate) {
             scene._animate();
@@ -420,10 +415,7 @@ define([
             frustum.near = frustumCommands.near;
             frustum.far = frustumCommands.far;
 
-            us.setProjection(frustum.getProjectionMatrix());
-            if (frustum.getInfiniteProjectionMatrix) {
-                us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
-            }
+            us.updateFrustum(frustum);
 
             var commands = frustumCommands.commands;
             var length = commands.length;
