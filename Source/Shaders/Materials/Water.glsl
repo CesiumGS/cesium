@@ -48,7 +48,7 @@ vec4 getNoise(vec2 uv, float time, float angleInRadians) {
     return ((noise / 4.0) - 0.5) * 2.0;
 }
 
-czm_material czm_getMaterial(czm_materialInput materialInput)
+czm_material czm_getMaterial(czm_materialInput materialInput, vec3 surfaceColor)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
 
@@ -76,11 +76,11 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float tsPerturbationRatio = clamp(dot(normalTangentSpace, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
     
     // fade out water effect as specular map value decreases
-    material.alpha = specularMapValue * 0.5;
+    material.alpha = specularMapValue;
     
     // base color is a blend of the water and non-water color based on the value from the specular map
     // may need a uniform blend factor to better control this
-    material.diffuse = mix(blendColor.rgb, baseWaterColor.rgb, specularMapValue);
+    material.diffuse = surfaceColor; //mix(blendColor.rgb, baseWaterColor.rgb, specularMapValue);
     
     // diffuse highlights are based on how perturbed the normal is
     material.diffuse += (0.1 * tsPerturbationRatio);

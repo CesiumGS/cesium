@@ -63,7 +63,12 @@ void main()
 #endif
 
 #ifdef SHOW_DAY
-    vec3 startDayColor;
+    // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
+    // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
+    // fragments on the edges of tiles even though the vertex shader is outputting
+    // coordinates strictly in the 0-1 range.
+    vec3 initialColor = vec3(0.0, 0.0, 0.5);
+    vec3 startDayColor = computeDayColor(initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
 
 #ifdef SHOW_OCEAN
     czm_materialInput oceanInput;
@@ -81,22 +86,13 @@ void main()
     vec3 positionToEyeEC = -v_positionEC; 
     oceanInput.positionToEyeEC = positionToEyeEC;
 
-    czm_material material = czm_getMaterial(oceanInput);
+    czm_material material = czm_getMaterial(oceanInput, startDayColor);
     
     vec4 oceanColor = czm_lightValuePhong(czm_sunDirectionEC, normalize(positionToEyeEC), material);
-#endif
 
-    // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
-    // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
-    // fragments on the edges of tiles even though the vertex shader is outputting
-    // coordinates strictly in the 0-1 range.
-    vec3 initialColor = vec3(0.0, 0.0, 0.5);
-    startDayColor = computeDayColor(initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
-    
-#ifdef SHOW_OCEAN
     startDayColor = mix(startDayColor, oceanColor.rgb, oceanColor.a);
 #endif
-
+    
 #else
     vec3 startDayColor = vec3(0.0, 0.0, 0.5);
 #endif
