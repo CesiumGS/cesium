@@ -41,6 +41,12 @@ define([
         SceneMode) {
     "use strict";
 
+    /**
+     * DOC_TBA
+     *
+     * @alias SkyBox
+     * @constructor
+     */
     var SkyBox = function(source) {
         this._colorCommand = new DrawCommand();
         this._colorCommand.primitiveType = PrimitiveType.TRIANGLES;
@@ -65,6 +71,9 @@ define([
         };
     };
 
+    /**
+     * @private
+     */
     SkyBox.prototype.update = function(context, frameState, commandList) {
         // TODO: Only supports 3D, add Columbus view support.
         if (frameState.mode !== SceneMode.SCENE3D) {
@@ -175,10 +184,41 @@ define([
         }
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof SkyBox
+     *
+     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see SkyBox#destroy
+     */
     SkyBox.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof SkyBox
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see SkyBox#isDestroyed
+     *
+     * @example
+     * skyBox = skyBox && skyBox.destroy();
+     */
     SkyBox.prototype.destroy = function() {
         var colorCommand = this._colorCommand;
         colorCommand.vertexArray = colorCommand.vertexArray && colorCommand.vertexArray.destroy();
