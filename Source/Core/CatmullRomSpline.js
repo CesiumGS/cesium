@@ -197,7 +197,7 @@ define([
         var i = this._findIndex(time);
         var u = (time - this._points[i].time) / (this._points[i + 1].time - this._points[i].time);
 
-        var timeVec = new Cartesian4(0.0, u * u, u, 1.0);
+        var timeVec = new Cartesian3(0.0, u * u, u);
         timeVec.x = timeVec.y * u;
 
         var p0, p1, p2, p3, coefs;
@@ -206,19 +206,19 @@ define([
             p1 = this._points[1].point;
             p2 = this._ti;
             p3 = this._points[2].point.subtract(p0).multiplyByScalar(0.5);
-            coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByVector(timeVec);
+            coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByPoint(timeVec);
         } else if (i === this._points.length - 2) {
             p0 = this._points[i].point;
             p1 = this._points[i + 1].point;
             p2 = p1.subtract(this._points[i - 1].point).multiplyByScalar(0.5);
             p3 = this._to;
-            coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByVector(timeVec);
+            coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByPoint(timeVec);
         } else {
             p0 = this._points[i - 1].point;
             p1 = this._points[i].point;
             p2 = this._points[i + 1].point;
             p3 = this._points[i + 2].point;
-            coefs = CatmullRomSpline.catmullRomCoefficientMatrix.multiplyByVector(timeVec);
+            coefs = CatmullRomSpline.catmullRomCoefficientMatrix.multiplyByPoint(timeVec);
         }
         p0 = p0.multiplyByScalar(coefs.x);
         p1 = p1.multiplyByScalar(coefs.y);

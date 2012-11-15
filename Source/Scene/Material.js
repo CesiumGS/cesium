@@ -29,6 +29,7 @@ define([
         '../Shaders/Materials/RefractionMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/TieDyeMaterial',
+        '../Shaders/Materials/Water',
         '../Shaders/Materials/WoodMaterial'
     ], function(
         when,
@@ -60,6 +61,7 @@ define([
         RefractionMaterial,
         StripeMaterial,
         TieDyeMaterial,
+        WaterMaterial,
         WoodMaterial) {
     "use strict";
 
@@ -231,6 +233,18 @@ define([
      *      <li><code>lightColor</code>:  rgba color object for the light color.</li>
      *      <li><code>darkColor</code>:  rgba color object for the dark color.</li>
      *      <li><code>frequency</code>:  Number that controls the frequency of the pattern.</li>
+     *  </ul>
+     *  <li>Water</li>
+     *  <ul>
+     *      <li><code>baseWaterColor</code>:  rgba color object base color of the water.</li>
+     *      <li><code>blendColor</code>:  rgba color object used when blending from water to non-water areas.</li>
+     *      <li><code>specularMap</code>:  Single channel texture used to indicate areas of water.</li>
+     *      <li><code>normalMap</code>:  Normal map for water normal perturbation.</li>
+     *      <li><code>frequency</code>:  Number that controls the number of waves.</li>
+     *      <li><code>normalMap</code>:  Normal map for water normal perturbation.</li>
+     *      <li><code>animationSpeed</code>:  Number that controls the animations speed of the water.</li>
+     *      <li><code>amplitude</code>:  Number that controls the amplitude of water waves.</li>
+     *      <li><code>specularIntensity</code>:  Number that controls the intensity of specular reflections.</li>
      *  </ul>
      * </ul>
      * </div>
@@ -1215,6 +1229,33 @@ define([
             frequency : 10.0
         },
         source : BlobMaterial
+    });
+
+    Material.WaterType = 'Water';
+    Material._materialCache.addMaterial(Material.WaterType, {
+        type : Material.WaterType,
+        uniforms : {
+            baseWaterColor : {
+                red : 0.2,
+                green : 0.3,
+                blue : 0.6,
+                alpha : 1.0
+            },
+            blendColor : {
+                red : 0.0,
+                green : 1.0,
+                blue : 0.699,
+                alpha : 1.0
+            },
+            specularMap: Material.DefaultImageId,
+            normalMap: require.toUrl('Assets/Imagery/waterNormals.jpg'),
+            frequency: 10.0,
+            animationSpeed: 0.01,
+            amplitude: 1.0,
+            specularIntensity: 0.5,
+            fadeFactor: 1.0
+        },
+        source : WaterMaterial
     });
 
     return Material;

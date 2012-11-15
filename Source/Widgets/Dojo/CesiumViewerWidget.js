@@ -1206,6 +1206,7 @@ define([
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
          * on your page.  If you wish to customize your render loop, avoid this function and instead
          * use code similar to one of the following examples.
+         *
          * @function
          * @memberof CesiumViewerWidget.prototype
          * @see requestAnimationFrame
@@ -1220,7 +1221,7 @@ define([
          *     widget.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          * @example
          * // This example requires widget1 and widget2 to share an animationController
          * // (for example, widget2's constructor was called with a copy of widget1's
@@ -1234,7 +1235,7 @@ define([
          *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          * @example
          * // This example uses separate animationControllers for widget1 and widget2.
          * // These widgets can animate at different rates and pause individually.
@@ -1248,7 +1249,7 @@ define([
          *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          */
         startRenderLoop : function() {
             var widget = this;
@@ -1260,7 +1261,8 @@ define([
                 widget.render();
                 requestAnimationFrame(updateAndRender);
             }
-            updateAndRender();
+
+            requestAnimationFrame(updateAndRender);
         }
     });
 });
