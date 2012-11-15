@@ -1156,7 +1156,6 @@ define([
                 ((this.showBumps && this._bumpTexture) ? '#define SHOW_BUMPS 1\n' : '') +
                 (this.showTerminator ? '#define SHOW_TERMINATOR 1\n' : '') +
                 (this.affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
-                (typeof this.oceanMaterial !== 'undefined' ? ('#define SHOW_OCEAN 1\n' + this.oceanMaterial.shaderSource) : '') +
                 '#line 0\n' +
                 CentralBodyFSCommon;
 
@@ -1202,6 +1201,7 @@ define([
                  get2DYPositionFraction;
             this._surfaceShaderSetWithoutAtmosphere.baseFragmentShaderString =
                 fsPrepend +
+                (typeof this.oceanMaterial !== 'undefined' ? ('#define SHOW_OCEAN 1\n' + this.oceanMaterial.shaderSource) : '') +
                 '#line 0\n' +
                 CentralBodyFS;
             this._surfaceShaderSetWithoutAtmosphere.invalidateShaders();

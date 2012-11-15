@@ -1,5 +1,6 @@
 attribute vec3 position3D;
 attribute vec2 textureCoordinates;
+attribute float waterMask;
 
 uniform float u_morphTime;
 uniform int u_mode;
@@ -19,6 +20,7 @@ varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 
 varying vec2 v_textureCoordinates;
+varying float v_waterMask;
 
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position3DWC);
@@ -93,4 +95,5 @@ void main()
     v_mieColor = atmosphereColor.mie;
     v_rayleighColor = atmosphereColor.rayleigh;
     v_textureCoordinates = textureCoordinates;
+    v_waterMask = waterMask;
 }

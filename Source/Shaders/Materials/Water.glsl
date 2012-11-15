@@ -11,6 +11,8 @@ uniform float amplitude;
 uniform float specularIntensity;
 uniform float fadeFactor;
 
+varying float v_waterMask;
+
 vec4 getNoise(vec2 uv, float time, float angleInRadians) {
 
     float cosAngle = cos(angleInRadians);
@@ -55,7 +57,8 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     // fade is a function of the distance from the fragment and the frequency of the waves
     float fade = max(1.0, (length(materialInput.positionToEyeEC) / 10000000000.0) * frequency * fadeFactor);
             
-    float specularMapValue = texture2D(specularMap, materialInput.st).r;
+    //float specularMapValue = texture2D(specularMap, materialInput.st).r;
+    float specularMapValue = v_waterMask;
     
     // note: not using directional motion at this time, just set the angle to 0.0;
     vec4 noise = getNoise(materialInput.st * frequency, time, 0.0);
@@ -73,7 +76,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float tsPerturbationRatio = clamp(dot(normalTangentSpace, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
     
     // fade out water effect as specular map value decreases
-    material.alpha = specularMapValue;
+    material.alpha = specularMapValue * 0.5;
     
     // base color is a blend of the water and non-water color based on the value from the specular map
     // may need a uniform blend factor to better control this

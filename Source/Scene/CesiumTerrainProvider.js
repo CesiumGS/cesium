@@ -158,16 +158,48 @@ define([
 
             when(loadArrayBuffer(url), function(buffer) {
                 tile.geometry = buffer;
-                tile.state = TileState.RECEIVED;
                 --requestsInFlight;
+
+                if (typeof tile.waterMask !== 'undefined') {
+                    tile.state = TileState.RECEIVED;
+                }
             }, function(e) {
                 /*global console*/
                 // This shouldn't happen in the absence of network problems.  Log it and then use 0 heights.
                 // TODO: retry?
                 console.error('failed to load tile geometry: ' + e);
                 tile.geometry = new Float32Array(65 * 65).buffer;
-                tile.state = TileState.RECEIVED;
                 --requestsInFlight;
+
+                if (typeof tile.waterMask !== 'undefined') {
+                    tile.state = TileState.RECEIVED;
+                }
+            });
+
+            url = 'http://108.16.61.27/watermask/' + tile.level + '/' + tile.x + '/' + (yTiles - tile.y - 1) + '.water';
+
+            if (typeof this._proxy !== 'undefined') {
+                url = this._proxy.getURL(url);
+            }
+
+            when(loadArrayBuffer(url), function(buffer) {
+                tile.waterMask = buffer;
+                --requestsInFlight;
+
+                if (typeof tile.geometry !== 'undefined') {
+                    tile.state = TileState.RECEIVED;
+                }
+            }, function(e) {
+                /*global console*/
+                // This shouldn't happen in the absence of network problems.  Log it and then assume it's all land.
+                // TODO: retry?
+                console.error('failed to load tile water mask: ' + e);
+                tile.waterMask = new Uint8Array(65 * 65).buffer;
+                --requestsInFlight;
+
+                if (typeof tile.geometry !== 'undefined') {
+                    tile.state = TileState.RECEIVED;
+                }
             });
         } else {
             // Find the nearest ancestor with data.
@@ -209,9 +241,13 @@ define([
             var bottomInteger = bottomPostIndex | 0;
 
             var sourceHeights = new Float32Array(sourceTile.geometry, 0, (sourceTile.geometry.byteLength - 1) / 4);
+            var sourceWaterMask = new Uint8Array(sourceTile.waterMask);
 
             var buffer;
             var heights;
+
+            var waterMaskBuffer;
+            var waterMask;
 
             // We can support the following level differences without interpolating:
             // 1 - 33x33 posts
@@ -251,15 +287,36 @@ define([
                 heights[1] = northeastResult;
                 heights[2] = southwestResult;
                 heights[3] = southeastResult;
+
+                var southwestWaterMask = sourceWaterMask[bottomInteger * width + leftInteger];
+                var southeastWaterMask = sourceWaterMask[bottomInteger * width + rightInteger];
+                var northwestWaterMask = sourceWaterMask[topInteger * width + leftInteger];
+                var northeastWaterMask = sourceWaterMask[topInteger * width + rightInteger];
+
+                var southwestWaterResult = triangleInterpolateHeight(westFraction, southFraction, southwestWaterMask, southeastWaterMask, northwestWaterMask, northeastWaterMask);
+                var southeastWaterResult = triangleInterpolateHeight(eastFraction, southFraction, southwestWaterMask, southeastWaterMask, northwestWaterMask, northeastWaterMask);
+                var northwestWaterResult = triangleInterpolateHeight(westFraction, northFraction, southwestWaterMask, southeastWaterMask, northwestWaterMask, northeastWaterMask);
+                var northeastWaterResult = triangleInterpolateHeight(eastFraction, northFraction, southwestWaterMask, southeastWaterMask, northwestWaterMask, northeastWaterMask);
+
+                waterMaskBuffer = new ArrayBuffer(4 * 4);
+                waterMask = new Uint8Array(waterMaskBuffer);
+                waterMask[0] = northwestWaterResult;
+                waterMask[1] = northeastWaterResult;
+                waterMask[2] = southwestWaterResult;
+                waterMask[3] = southeastWaterResult;
             } else {
                 // Copy the relevant posts.
                 var numberOfFloats = (rightInteger - leftInteger + 1) * (bottomInteger - topInteger + 1);
                 buffer = new ArrayBuffer(numberOfFloats * 4 + 1);
                 heights = new Float32Array(buffer, 0, numberOfFloats);
 
+                waterMaskBuffer = new ArrayBuffer(numberOfFloats);
+                waterMask = new Uint8Array(waterMaskBuffer);
+
                 var outputIndex = 0;
                 for (var j = topInteger; j <= bottomInteger; ++j) {
                     for (var i = leftInteger; i <= rightInteger; ++i) {
+                        waterMask[outputIndex] = sourceWaterMask[j * width + i];
                         heights[outputIndex++] = sourceHeights[j * width + i];
                     }
                 }
@@ -270,6 +327,7 @@ define([
             childBitsArray[0] = 0;
 
             tile.geometry = buffer;
+            tile.waterMask = waterMaskBuffer;
             tile.state = TileState.RECEIVED;
         }
 
@@ -302,6 +360,7 @@ define([
         var pixels = new Float32Array(tile.geometry, 0, (tile.geometry.byteLength - 1) / 4);
         var width = Math.sqrt(pixels.length) | 0;
         var height = width;
+        var waterMask = new Uint8Array(tile.waterMask);
 
         var childTileBits = new Uint8Array(tile.geometry, width * height * 4, 1);
         tile.childTileBits = childTileBits[0];
@@ -331,7 +390,8 @@ define([
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
             skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
-            isGeographic : true
+            isGeographic : true,
+            waterMask : waterMask
         }, transfer);
 
         if (typeof verticesPromise === 'undefined') {
