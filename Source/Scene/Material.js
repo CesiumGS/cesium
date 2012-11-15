@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        'require',
         '../ThirdParty/when',
         '../Core/loadImage',
         '../Core/DeveloperError',
@@ -32,6 +33,7 @@ define([
         '../Shaders/Materials/Water',
         '../Shaders/Materials/WoodMaterial'
     ], function(
+        require,
         when,
         loadImage,
         DeveloperError,
@@ -1231,6 +1233,11 @@ define([
         source : BlobMaterial
     });
 
+    var normalsUrl = '../Assets/Imagery/waterNormals.jpg';
+    if (typeof require.toUrl !== 'undefined') {
+        normalsUrl = require.toUrl('Assets/Imagery/waterNormals.jpg');
+    }
+
     Material.WaterType = 'Water';
     Material._materialCache.addMaterial(Material.WaterType, {
         type : Material.WaterType,
@@ -1248,7 +1255,7 @@ define([
                 alpha : 1.0
             },
             specularMap: Material.DefaultImageId,
-            normalMap: require.toUrl('Assets/Imagery/waterNormals.jpg'),
+            normalMap: normalsUrl,
             frequency: 10.0,
             animationSpeed: 0.01,
             amplitude: 1.0,
