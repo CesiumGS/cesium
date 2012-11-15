@@ -164,4 +164,48 @@ defineSuite([
         intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
         expect(intersections).not.toBeDefined();
     });
+
+    it('grazingAltitudeLocation throws without ray', function() {
+        expect(function() {
+            IntersectionTests.grazingAltitudeLocation();
+        }).toThrow();
+    });
+
+    it('grazingAltitudeLocation throws without ellipsoid', function() {
+        expect(function() {
+            IntersectionTests.grazingAltitudeLocation(new Ray());
+        }).toThrow();
+    });
+
+    it('grazingAltitudeLocation is origin of ray', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var ray = new Ray(new Cartesian3(3.0, 0.0, 0.0), Cartesian3.UNIT_X);
+        expect(IntersectionTests.grazingAltitudeLocation(ray, ellipsoid)).toEqual(ray.origin);
+    });
+
+    it('grazingAltitudeLocation outside ellipsoid', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var ray = new Ray(new Cartesian3(-2.0, -2.0, 0.0), Cartesian3.UNIT_X);
+        var expected = new Cartesian3(0.0, -2.0, 0.0);
+        var actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+
+        ray = new Ray(new Cartesian3(0.0, 2.0, 2.0), Cartesian3.UNIT_Y.negate());
+        expected = new Cartesian3(0.0, 0.0, 2.0);
+        actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('grazingAltitudeLocation inside ellipsoid', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var ray = new Ray(new Cartesian3(0.5, 0.0, 0.0), Cartesian3.UNIT_Z);
+        var actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
+        expect(actual).toEqual(ray.origin);
+    });
+
+    it('grazingAltitudeLocation is undefined', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var ray = new Ray(Cartesian3.ZERO, Cartesian3.UNIT_Z);
+        expect(IntersectionTests.grazingAltitudeLocation(ray, ellipsoid)).not.toBeDefined();
+    });
 });
