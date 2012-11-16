@@ -23,7 +23,7 @@ define([
         '../../Core/AnimationController',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
-        '../../Core/FullScreen',
+        '../../Core/Fullscreen',
         '../../Core/computeSunPosition',
         '../../Core/EventHandler',
         '../../Core/FeatureDetection',
@@ -76,7 +76,7 @@ define([
         AnimationController,
         Ellipsoid,
         Iso8601,
-        FullScreen,
+        Fullscreen,
         computeSunPosition,
         EventHandler,
         FeatureDetection,
@@ -812,17 +812,17 @@ define([
             var view2D = widget.view2D;
             var view3D = widget.view3D;
             var viewColumbus = widget.viewColumbus;
-            var viewFullScreen = widget.viewFullScreen;
+            var viewFullscreen = widget.viewFullscreen;
 
             view2D.set('checked', false);
             view3D.set('checked', true);
             viewColumbus.set('checked', false);
 
-            on(viewFullScreen, 'Click', function() {
-                if (FullScreen.isFullscreenEnabled()) {
-                    FullScreen.exitFullscreen();
+            on(viewFullscreen, 'Click', function() {
+                if (Fullscreen.isFullscreen()) {
+                    Fullscreen.exitFullscreen();
                 } else {
-                    FullScreen.requestFullScreen(document.body);
+                    Fullscreen.requestFullscreen(document.body);
                 }
             });
 
