@@ -52,12 +52,15 @@ define([
      * @constructor
      */
     var SkyBox = function(source) {
-        this._colorCommand = new DrawCommand();
-        this._colorCommand.primitiveType = PrimitiveType.TRIANGLES;
-        this._colorCommand.boundingVolume = new BoundingSphere();
+        var command = new DrawCommand();
+        command.primitiveType = PrimitiveType.TRIANGLES;
+        command.boundingVolume = new BoundingSphere();
 
-        this._commandLists = new CommandLists();
+        var commandLists = new CommandLists();
+        commandLists.colorList.push(command);
 
+        this._command = command;
+        this._commandLists = commandLists;
         this._cubeMap = undefined;
 
         if(Array.isArray(source) && source.length === 6) {
@@ -68,7 +71,7 @@ define([
         }
 
         var that = this;
-        this._colorCommand.uniformMap = {
+        command.uniformMap = {
             u_cubeMap: function() {
                 return that._cubeMap;
             }
@@ -84,9 +87,14 @@ define([
             return;
         }
 
-        var colorCommand = this._colorCommand;
+        // The sky box is only rendered during the color pass
+        if (!frameState.passes.color) {
+            return;
+        }
 
-        if (typeof colorCommand.vertexArray === 'undefined') {
+        var command = this._command;
+
+        if (typeof command.vertexArray === 'undefined') {
             var that = this;
 
             // Setup Cubemap
@@ -129,7 +137,7 @@ define([
             var dimensions = new Cartesian3(100000000.0, 100000000.0, 100000000.0);
             var maximumCorner = dimensions.multiplyByScalar(0.5);
             var minimumCorner = maximumCorner.negate();
-            BoundingSphere.fromPoints([minimumCorner, maximumCorner], colorCommand.boundingVolume);
+            BoundingSphere.fromPoints([minimumCorner, maximumCorner], command.boundingVolume);
 
             var mesh = BoxTessellator.compute({
                             minimumCorner: minimumCorner,
@@ -137,14 +145,14 @@ define([
                         });
             var attributeIndices = MeshFilters.createAttributeIndices(mesh);
 
-            colorCommand.vertexArray = context.createVertexArrayFromMesh({
+            command.vertexArray = context.createVertexArrayFromMesh({
                 mesh: mesh,
                 attributeIndices: attributeIndices,
                 bufferUsage: BufferUsage.STATIC_DRAW
             });
 
-            colorCommand.shaderProgram = context.getShaderCache().getShaderProgram(SkyBoxVS, SkyBoxFS, attributeIndices);
-            colorCommand.renderState = context.createRenderState({
+            command.shaderProgram = context.getShaderCache().getShaderProgram(SkyBoxVS, SkyBoxFS, attributeIndices);
+            command.renderState = context.createRenderState({
                 depthTest : {
                     enabled : true
                 },
@@ -159,13 +167,7 @@ define([
         if (typeof this._cubeMap !== 'undefined') {
             // TODO: Use scene time
             var time = JulianDate.fromDate(new Date(), TimeStandard.UTC);
-            this._colorCommand.modelMatrix = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(time), Cartesian3.ZERO);
-
-            var pass = frameState.passes;
-            this._commandLists.removeAll();
-            if (pass.color) {
-                this._commandLists.colorList.push(colorCommand);
-            }
+            this._command.modelMatrix = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(time), Cartesian3.ZERO);
 
             commandList.push(this._commandLists);
         }
@@ -207,9 +209,9 @@ define([
      * skyBox = skyBox && skyBox.destroy();
      */
     SkyBox.prototype.destroy = function() {
-        var colorCommand = this._colorCommand;
-        colorCommand.vertexArray = colorCommand.vertexArray && colorCommand.vertexArray.destroy();
-        colorCommand.shaderProgram = colorCommand.shaderProgram && colorCommand.shaderProgram.release();
+        var command = this._command;
+        command.vertexArray = command.vertexArray && command.vertexArray.destroy();
+        command.shaderProgram = command.shaderProgram && command.shaderProgram.release();
         return destroyObject(this);
     };
 
