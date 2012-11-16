@@ -1,8 +1,8 @@
 /*global define*/
 define([
-        './FullScreen'
+        './Fullscreen'
     ], function(
-        FullScreen) {
+        Fullscreen) {
     "use strict";
 
     /**
@@ -115,11 +115,11 @@ define([
      *
      * @returns true if the supports the full screen standard, false if not.
      *
-     * @see FullScreen
+     * @see Fullscreen
      * @see <a href='http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html'>W3C Fullscreen Living Specification</a>
      */
-    FeatureDetection.supportsFullScreen = function() {
-        return FullScreen.supportsFullScreen();
+    FeatureDetection.supportsFullscreen = function() {
+        return Fullscreen.supportsFullscreen();
     };
 
     return FeatureDetection;

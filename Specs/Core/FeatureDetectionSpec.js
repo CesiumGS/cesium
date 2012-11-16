@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/FeatureDetection'], function(FeatureDetection) {
+defineSuite([
+             'Core/FeatureDetection'
+         ], function(
+             FeatureDetection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -8,8 +11,8 @@ defineSuite(['Core/FeatureDetection'], function(FeatureDetection) {
         expect(FeatureDetection.supportsCrossOriginImagery()).toBeDefined();
     });
 
-    it('detects full screen support', function() {
+    it('detects fullscreen support', function() {
         //just make sure the function runs, the test can't expect a value of true or false
-        expect(FeatureDetection.supportsFullScreen()).toBeDefined();
+        expect(FeatureDetection.supportsFullscreen()).toBeDefined();
     });
 });
