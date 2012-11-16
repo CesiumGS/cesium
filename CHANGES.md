@@ -18,6 +18,9 @@ Beta Releases
 * Added new automatic GLSL uniforms: 'czm_frameNumber', `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
 * Added `czm_translateRelativeToEye` GLSL function.
 * Added `shininess` to `czm_materialInput`.
+* Added `QuadraticRealPolynomial`, `CubicRealPolynomial`, and `QuarticRealPolynomial` for finding the roots of quadratic, cubic, and quartic polynomials.
+* Added `IntersectionTests.grazingAltitudeLocation` for finding a point on a ray nearest to an ellipsoid.
+* Added `mostOrthogonalAxis` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 
 ### b10 - 11/02/2012
 

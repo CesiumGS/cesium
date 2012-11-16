@@ -359,6 +359,38 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
+    it('most orthogonal angle is x', function() {
+        var v = new Cartesian4(0.0, 1.0, 2.0, 3.0);
+        expect(v.mostOrthogonalAxis()).toEqual(Cartesian4.UNIT_X);
+    });
+
+    it('most orthogonal angle is y', function() {
+        var v = new Cartesian4(1.0, 0.0, 2.0, 3.0);
+        expect(v.mostOrthogonalAxis()).toEqual(Cartesian4.UNIT_Y);
+    });
+
+    it('most orthogonal angle is z', function() {
+        var v = new Cartesian4(2.0, 3.0, 0.0, 1.0);
+        expect(v.mostOrthogonalAxis()).toEqual(Cartesian4.UNIT_Z);
+
+        v = new Cartesian4(3.0, 2.0, 0.0, 1.0);
+        expect(v.mostOrthogonalAxis()).toEqual(Cartesian4.UNIT_Z);
+    });
+
+    it('most orthogonal angle is w', function() {
+        var v = new Cartesian4(1.0, 2.0, 3.0, 0.0);
+        expect(v.mostOrthogonalAxis()).toEqual(Cartesian4.UNIT_W);
+
+        v = new Cartesian4(2.0, 3.0, 1.0, 0.0);
+        expect(v.mostOrthogonalAxis()).toEqual(Cartesian4.UNIT_W);
+
+        v = new Cartesian4(3.0, 1.0, 2.0, 0.0);
+        expect(v.mostOrthogonalAxis()).toEqual(Cartesian4.UNIT_W);
+
+        v = new Cartesian4(3.0, 2.0, 1.0, 0.0);
+        expect(v.mostOrthogonalAxis()).toEqual(Cartesian4.UNIT_W);
+    });
+
     it('equals', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         expect(cartesian.equals(new Cartesian4(1.0, 2.0, 3.0, 4.0))).toEqual(true);
@@ -532,6 +564,12 @@ defineSuite([
         var end = new Cartesian4(8.0, 20.0, 6.0, 7.0);
         expect(function() {
             Cartesian4.lerp(start, end, undefined);
+        }).toThrow();
+    });
+
+    it('static mostOrthogonalAxis throws with no cartesian parameter', function() {
+        expect(function() {
+            Cartesian4.mostOrthogonalAxis(undefined);
         }).toThrow();
     });
 

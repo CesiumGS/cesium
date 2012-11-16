@@ -288,7 +288,7 @@ define([
             throw new DeveloperError('e is a required number.');
         }
 
-        if (a === 0)
+        if (Math.abs(a) < CesiumMath.EPSILON15)
         {
             return CubicRealPolynomial.realRoots(b, c, d, e);
         }
