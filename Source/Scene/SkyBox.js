@@ -12,8 +12,6 @@ define([
         '../Core/Transforms',
         '../Renderer/loadCubeMap',
         '../Renderer/BufferUsage',
-        '../Renderer/CommandLists',
-        '../Renderer/CullFace',
         '../Renderer/DrawCommand',
         '../Scene/SceneMode',
         '../Shaders/SkyBoxVS',
@@ -31,8 +29,6 @@ define([
         Transforms,
         loadCubeMap,
         BufferUsage,
-        CommandLists,
-        CullFace,
         DrawCommand,
         SceneMode,
         SkyBoxVS,
@@ -92,14 +88,8 @@ define([
                 };
             });
 
-            // TODO: Determine size of box based on the size of the scene.
-            var dimensions = new Cartesian3(100000000.0, 100000000.0, 100000000.0);
-            var maximumCorner = dimensions.multiplyByScalar(0.5);
-            var minimumCorner = maximumCorner.negate();
-
             var mesh = BoxTessellator.compute({
-                minimumCorner: minimumCorner,
-                maximumCorner: maximumCorner
+                dimensions : new Cartesian3(2.0, 2.0, 2.0)
             });
             var attributeIndices = MeshFilters.createAttributeIndices(mesh);
 

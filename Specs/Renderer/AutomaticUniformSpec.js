@@ -38,6 +38,8 @@ defineSuite([
                 return Matrix4.inverseTransformation(m);
             },
             frustum : {
+                near : 1.0,
+                far : 1000.0,
                 getProjectionMatrix : function() {
                     return defaultValue(projection, Matrix4.IDENTITY.clone());
                 },
@@ -506,6 +508,14 @@ defineSuite([
             '  gl_FragColor = vec4(b); ' +
             '}';
 
+        verifyDraw(fs);
+    });
+
+    it('has czm_entireFrustum', function() {
+        var us = context.getUniformState();
+        us.update(createMockCamera());
+
+        var fs = 'void main() { gl_FragColor = vec4((czm_entireFrustum.x == 1.0) && (czm_entireFrustum.y == 1000.0)); }';
         verifyDraw(fs);
     });
 

@@ -5,6 +5,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/EncodedCartesian3',
@@ -15,6 +16,7 @@ define([
         Ellipsoid,
         Matrix3,
         Matrix4,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         EncodedCartesian3,
@@ -39,6 +41,7 @@ define([
         this._inverseView = Matrix4.IDENTITY.clone();
         this._projection = Matrix4.IDENTITY.clone();
         this._infiniteProjection = Matrix4.IDENTITY.clone();
+        this._entireFrustum = new Cartesian2();
         // Arbitrary.  The user will explicitly set this later.
         this._sunPosition = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().x, 0.0, 0.0);
 
@@ -162,6 +165,9 @@ define([
         setView(this, camera.getViewMatrix());
         setInverseView(this, camera.getInverseViewMatrix());
         setCameraPosition(this, camera.getPositionWC());
+
+        this._entireFrustum.x = camera.frustum.near;
+        this._entireFrustum.y = camera.frustum.far;
 
         this.updateFrustum(camera.frustum);
     };
@@ -612,6 +618,19 @@ define([
     UniformState.prototype.getInverseNormal = function() {
         cleanInverseNormal(this);
         return this._inverseNormal;
+    };
+
+    /**
+     * Returns the near distance (<code>x</code>) and the far distance (<code>y</code>) of the frustum defined by the camera.
+     *
+     * @memberof UniformState
+     *
+     * @return {Cartesian2} Returns the near distance and the far distance of the frustum defined by the camera.
+     *
+     * @see czm_entireFrustum
+     */
+    UniformState.prototype.getEntireFrustum = function() {
+        return this._entireFrustum;
     };
 
     var sunPositionScratch = new Cartesian3();

@@ -19,7 +19,7 @@ Beta Releases
 * Added `SkyBox` to draw stars.
 * Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
 * Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
-* Added new automatic GLSL uniforms: 'czm_frameNumber', `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
+* Added new automatic GLSL uniforms: 'czm_frameNumber', `czm_entireFrustum`, `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
 * Added `czm_translateRelativeToEye` GLSL function.
 * Added `shininess` to `czm_materialInput`.
 

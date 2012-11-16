@@ -4,7 +4,7 @@ varying vec3 texCoord;
 
 void main()
 {
-    vec3 p = czm_viewRotation * (czm_model * position).xyz;
+    vec3 p = czm_viewRotation * (czm_model * (czm_entireFrustum.y * position)).xyz;
     gl_Position = czm_projection * vec4(p, 1.0);
     texCoord = position.xyz;
 }

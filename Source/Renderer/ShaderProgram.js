@@ -872,6 +872,41 @@ define([
         },
 
         /**
+         * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
+         * of the frustum defined by the camera.  This is the largest possible frustum, not an individual
+         * frustum used for mult-frustum rendering.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_entireFrustum</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_entireFrustum
+         * @glslUniform
+         *
+         * @see UniformState#getEntireFrustum
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec2 czm_entireFrustum;
+         *
+         * // Example
+         * float frustumLength = czm_entireFrustum.y - czm_entireFrustum.x;
+         */
+        czm_entireFrustum : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR2;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getEntireFrustum();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform representing the direction of the sun in eye coordinates.
          * This is commonly used for directional lighting computations.
          * <br /><br />
