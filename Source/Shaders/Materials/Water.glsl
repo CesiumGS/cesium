@@ -65,7 +65,7 @@ czm_material czm_getSurfaceMaterial(czm_materialInput materialInput, vec3 baseCo
     normalTangentSpace.xy /= fade;
         
     // attempt to fade out the normal perturbation as we approach non water areas (low specular map value)
-    normalTangentSpace = mix(vec3(0.0, 0.0, 50.0), normalTangentSpace, specularMapValue);
+    //normalTangentSpace = mix(vec3(0.0, 0.0, 50.0), normalTangentSpace, specularMapValue);
     
     normalTangentSpace = normalize(normalTangentSpace);
     
@@ -73,7 +73,7 @@ czm_material czm_getSurfaceMaterial(czm_materialInput materialInput, vec3 baseCo
     float tsPerturbationRatio = clamp(dot(normalTangentSpace, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
     
     // fade out water effect as specular map value decreases
-    material.alpha = specularMapValue;
+    material.alpha = 1.0; //specularMapValue;
     
     // base color is a blend of the water and non-water color based on the value from the specular map
     // may need a uniform blend factor to better control this
@@ -84,7 +84,7 @@ czm_material czm_getSurfaceMaterial(czm_materialInput materialInput, vec3 baseCo
     
     material.normal = normalize(materialInput.tangentToEyeMatrix * normalTangentSpace);
     
-    material.specular = specularIntensity;
+    material.specular = mix(0.0, specularIntensity, specularMapValue);
     material.shininess = 10.0;
     
     return material;

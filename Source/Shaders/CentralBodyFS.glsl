@@ -64,13 +64,20 @@ void main()
     vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
 #endif
 
-#ifdef SHOW_DAY
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
     vec3 initialColor = vec3(0.0, 0.0, 0.5);
     vec3 startDayColor = computeDayColor(initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
+
+#ifdef SHOW_TILE_BOUNDARIES
+    if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
+        v_textureCoordinates.y < (1.0/256.0) || v_textureCoordinates.y > (255.0/256.0))
+    {
+        startDayColor = vec3(1.0, 0.0, 0.0);
+    }
+#endif
 
 #ifdef SHOW_OCEAN
     czm_materialInput oceanInput;
@@ -90,28 +97,12 @@ void main()
 
     czm_material material = czm_getSurfaceMaterial(oceanInput, startDayColor, startDayColor, v_waterMask);
     
-    vec4 oceanColor = czm_lightValuePhong(czm_sunDirectionEC, normalize(positionToEyeEC), material);
-
-    startDayColor = mix(startDayColor, oceanColor.rgb, oceanColor.a);
-#endif
+    material.emission = startDayColor;
+    material.diffuse -= startDayColor; 
     
-#else
-    vec3 startDayColor = vec3(0.0, 0.0, 0.5);
-#endif
-    
-#ifdef SHOW_TILE_BOUNDARIES
-    if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
-        v_textureCoordinates.y < (1.0/256.0) || v_textureCoordinates.y > (255.0/256.0))
-    {
-        startDayColor = vec3(1.0, 0.0, 0.0);
-    }
-#endif
-
-#ifdef AFFECTED_BY_LIGHTING
-    vec3 rgb = getCentralBodyColor(v_positionMC, v_positionEC, normalMC, normalEC, startDayColor, v_rayleighColor, v_mieColor);
-#else
-    vec3 rgb = startDayColor;
-#endif
-    
-    gl_FragColor = vec4(rgb, 1.0);
+    gl_FragColor = czm_lightValuePhong(czm_sunDirectionEC, normalize(positionToEyeEC), material);
+    //gl_FragColor = vec4(startDayColor, 1.0);
+    //vec4 foo = czm_lightValuePhong(czm_sunDirectionEC, normalize(positionToEyeEC), material);
+    //gl_FragColor = vec4(mix(vec3(1.0, 0.0, 0.0), foo.rgb, v_waterMask), 1.0);
+#endif // SHOW_OCEAN
 }
