@@ -537,7 +537,6 @@ define([
     var rotateVertScratchP = new Cartesian3();
     var rotateVertScratchA = new Cartesian3();
     var rotateVertScratchTan = new Cartesian3();
-    var rotateVertScratchBit = new Cartesian3();
     function rotateVertical(controller, angle, transform) {
         var camera = controller._camera;
         var oldTransform = appendTransform(controller, transform);
@@ -562,8 +561,6 @@ define([
                 }
 
                 var tangent = Cartesian3.cross(constrainedAxis, p, rotateVertScratchTan);
-                var bitangent = Cartesian3.cross(camera.up, tangent, rotateVertScratchBit);
-                Cartesian3.cross(bitangent, camera.up, tangent);
                 controller.rotate(tangent, angle);
             } else if ((northParallel && angle > 0) || (southParallel && angle < 0)) {
                 controller.rotate(camera.right, angle);
