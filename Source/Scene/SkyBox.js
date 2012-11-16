@@ -1,17 +1,17 @@
 /*global define*/
 define([
-        '../Core/BoundingSphere',
         '../Core/BoxTessellator',
         '../Core/Cartesian3',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Ellipsoid',
+        '../Core/RuntimeError',
         '../Core/JulianDate',
         '../Core/Matrix4',
         '../Core/MeshFilters',
         '../Core/PrimitiveType',
         '../Core/TimeStandard',
         '../Core/Transforms',
+        '../Renderer/loadCubeMap',
         '../Renderer/BufferUsage',
         '../Renderer/CommandLists',
         '../Renderer/CullFace',
@@ -22,18 +22,18 @@ define([
         '../Shaders/SkyBoxVS',
         '../Shaders/SkyBoxFS'
     ], function(
-        BoundingSphere,
         BoxTessellator,
         Cartesian3,
         destroyObject,
         DeveloperError,
-        Ellipsoid,
+        RuntimeError,
         JulianDate,
         Matrix4,
         MeshFilters,
         PrimitiveType,
         TimeStandard,
         Transforms,
+        loadCubeMap,
         BufferUsage,
         CommandLists,
         CullFace,
@@ -50,32 +50,28 @@ define([
      *
      * @alias SkyBox
      * @constructor
+     *
+     * @exception {DeveloperError} cubeMapUrls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      */
-    var SkyBox = function(source) {
-        var command = new DrawCommand();
-        command.primitiveType = PrimitiveType.TRIANGLES;
-        command.boundingVolume = new BoundingSphere();
+    var SkyBox = function(cubeMapUrls) {
+        if ((typeof cubeMapUrls === 'undefined') ||
+            (typeof cubeMapUrls.positiveX === 'undefined') ||
+            (typeof cubeMapUrls.negativeX === 'undefined') ||
+            (typeof cubeMapUrls.positiveY === 'undefined') ||
+            (typeof cubeMapUrls.negativeY === 'undefined') ||
+            (typeof cubeMapUrls.positiveZ === 'undefined') ||
+            (typeof cubeMapUrls.negativeZ === 'undefined')) {
+            throw new DeveloperError('cubeMapUrls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
+        }
 
+        var command = new DrawCommand();
         var commandLists = new CommandLists();
         commandLists.colorList.push(command);
 
         this._command = command;
         this._commandLists = commandLists;
         this._cubeMap = undefined;
-
-        if(Array.isArray(source) && source.length === 6) {
-            this._source = source;
-        }
-        else {
-            throw new DeveloperError('source must have 6 images.');
-        }
-
-        var that = this;
-        command.uniformMap = {
-            u_cubeMap: function() {
-                return that._cubeMap;
-            }
-        };
+        this._cubeMapUrls = cubeMapUrls;
     };
 
     /**
@@ -97,60 +93,33 @@ define([
         if (typeof command.vertexArray === 'undefined') {
             var that = this;
 
-            // Setup Cubemap
-            var facesLoaded = 0;
-            var images = new Array(6);
-            var setupTextures = function(index) {
-                var img = new Image();
-                img.onload =
-                    function() {
-                        images[index] = img;
-                        if( ++facesLoaded === 6 ) {
-                            that._cubeMap = that._cubeMap && that._cubeMap.destroy();
-                            that._cubeMap = context.createCubeMap({
-                                source: {
-                                    positiveX: images[0],
-                                    negativeX: images[1],
-                                    positiveY: images[2],
-                                    negativeY: images[3],
-                                    positiveZ: images[4],
-                                    negativeZ: images[5]
-                                },
-                                width: images[0].width,
-                                height: images[0].height,
-                                pixelFormat: PixelFormat.RGBA,
-                                pixelDatatype: PixelDatatype.UNSIGNED_BYTE
-                             });
-                        }
-                    };
-                img.onerror = function() {
-                    that._exception = 'Could not load image: ' + that._source[index] + '.';
-                };
-                img.src = that._source[index];
-            };
+            loadCubeMap(context, this._cubeMapUrls).then(function(cubeMap) {
+                that._cubeMap = cubeMap;
 
-            for(var i=0;i<6;++i) {
-                setupTextures(i);
-            }
+                command.uniformMap = {
+                    u_cubeMap: function() {
+                        return cubeMap;
+                    }
+                };
+            });
 
             // TODO: Determine size of box based on the size of the scene.
             var dimensions = new Cartesian3(100000000.0, 100000000.0, 100000000.0);
             var maximumCorner = dimensions.multiplyByScalar(0.5);
             var minimumCorner = maximumCorner.negate();
-            BoundingSphere.fromPoints([minimumCorner, maximumCorner], command.boundingVolume);
 
             var mesh = BoxTessellator.compute({
-                            minimumCorner: minimumCorner,
-                            maximumCorner: maximumCorner
-                        });
+                minimumCorner: minimumCorner,
+                maximumCorner: maximumCorner
+            });
             var attributeIndices = MeshFilters.createAttributeIndices(mesh);
 
+            command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = context.createVertexArrayFromMesh({
                 mesh: mesh,
                 attributeIndices: attributeIndices,
                 bufferUsage: BufferUsage.STATIC_DRAW
             });
-
             command.shaderProgram = context.getShaderCache().getShaderProgram(SkyBoxVS, SkyBoxFS, attributeIndices);
             command.renderState = context.createRenderState({
                 depthTest : {
@@ -212,6 +181,7 @@ define([
         var command = this._command;
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
         command.shaderProgram = command.shaderProgram && command.shaderProgram.release();
+        this._cubeMap = this._cubeMap && this._cubeMap.destroy();
         return destroyObject(this);
     };
 

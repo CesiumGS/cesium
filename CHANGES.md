@@ -8,7 +8,7 @@ Beta Releases
 
 * Breaking changes:
    * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
-   * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
+   * Changed `Timeline.makeLabel` to take a `JulianDate` instead of a JavaScript date parameter.
    * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
    * `positionToEyeEC` in `czm_materialInput` is no longer normalized by default.
    * `FullScreen` and related functions have been renamed to `Fullscreen` to match the W3C standard name.
@@ -16,6 +16,7 @@ Beta Releases
    * `Fullscreen.getFullScreenChangeEventName` and `Fullscreen.getFullScreenChangeEventName` now return the proper event name, suitable for use with the `addEventListener` API, instead prefixing them with "on".
 * Added `Water` material.  See the Materials Sandbox example.
 * Fixed jitter artifacts with billboards and polylines.
+* Added `SkyBox` to draw stars.
 * Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
 * Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
 * Added new automatic GLSL uniforms: 'czm_frameNumber', `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
