@@ -918,6 +918,7 @@ define([
 
             var mouseHandler = scene.getCameraMouseController();
             mouseHandler.enableTranslate = true;
+            mouseHandler.enableTilt = true;
             mouseHandler.setEllipsoid(Ellipsoid.WGS84);
             mouseHandler.columbusViewMode = CameraColumbusViewMode.FREE;
 
