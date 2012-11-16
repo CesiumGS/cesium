@@ -1096,6 +1096,41 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getFrameNumber();
             }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
+         * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_temeToPseudoFixed</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_temeToPseudoFixed
+         * @glslUniform
+         *
+         * @see UniformState#getTemeToPseudoFixedMatrix
+         * @see Transforms.computeTemeToPseudoFixedMatrix
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat3 czm_temeToPseudoFixed;
+         *
+         * // Example
+         * vec3 pseudoFixed = czm_temeToPseudoFixed * teme;
+         */
+        czm_temeToPseudoFixed : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getTemeToPseudoFixedMatrix();
+            }
         }
     };
 

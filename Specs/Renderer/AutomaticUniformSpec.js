@@ -6,6 +6,7 @@ defineSuite([
          'Core/Matrix4',
          'Core/PrimitiveType',
          'Core/defaultValue',
+         'Core/JulianDate',
          'Renderer/BufferUsage'
      ], 'Renderer/AutomaticUniforms', function(
          createContext,
@@ -14,6 +15,7 @@ defineSuite([
          Matrix4,
          PrimitiveType,
          defaultValue,
+         JulianDate,
          BufferUsage) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -157,7 +159,7 @@ defineSuite([
                 1.0,  2.0,  3.0,  4.0,
                 5.0,  6.0,  7.0,  8.0,
                 9.0, 10.0, 11.0, 12.0,
-               13.0, 14.0, 15.0, 16.0)));
+               13.0, 14.0, 15.0, 16.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -177,7 +179,7 @@ defineSuite([
                 1.0,  2.0,  3.0,  4.0,
                 5.0,  6.0,  7.0,  8.0,
                 9.0, 10.0, 11.0, 12.0,
-               13.0, 14.0, 15.0, 16.0)));
+               13.0, 14.0, 15.0, 16.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -196,7 +198,7 @@ defineSuite([
                0.0, -1.0, 0.0, 7.0,
                1.0,  0.0, 0.0, 8.0,
                0.0,  0.0, 1.0, 0.0,
-               0.0,  0.0, 0.0, 1.0)));
+               0.0,  0.0, 0.0, 1.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -216,7 +218,7 @@ defineSuite([
                0.0, -1.0, 0.0, 7.0,
                1.0,  0.0, 0.0, 8.0,
                0.0,  0.0, 1.0, 9.0,
-               0.0,  0.0, 0.0, 1.0)));
+               0.0,  0.0, 0.0, 1.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -237,7 +239,7 @@ defineSuite([
                1.0,  2.0,  3.0,  4.0,
                5.0,  6.0,  7.0,  8.0,
                9.0, 10.0, 11.0, 12.0,
-              13.0, 14.0, 15.0, 16.0)));
+              13.0, 14.0, 15.0, 16.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -258,7 +260,7 @@ defineSuite([
                0.0, -1.0, 0.0, 1.0,
                1.0,  0.0, 0.0, 2.0,
                0.0,  0.0, 1.0, 0.0,
-               0.0,  0.0, 0.0, 1.0)));
+               0.0,  0.0, 0.0, 1.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -277,7 +279,7 @@ defineSuite([
             new Matrix4(1.0,  2.0,  3.0,  4.0,
                         5.0,  6.0,  7.0,  8.0,
                         9.0, 10.0, 11.0, 12.0,
-                       13.0, 14.0, 15.0, 16.0)));
+                       13.0, 14.0, 15.0, 16.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -297,7 +299,7 @@ defineSuite([
                1.0, 0.0, 0.0, 1.0,
                0.0, 1.0, 0.0, 1.0,
                0.0, 0.0, 1.0, 1.0,
-               0.0, 0.0, 0.0, 1.0)));
+               0.0, 0.0, 0.0, 1.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -321,7 +323,7 @@ defineSuite([
                1.0, 0.0, 0.0, 1.0,
                0.0, 1.0, 0.0, 1.0,
                0.0, 0.0, 1.0, 1.0,
-               0.0, 0.0, 0.0, 1.0)));
+               0.0, 0.0, 0.0, 1.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -340,7 +342,7 @@ defineSuite([
 
     it('has czm_inverseModelView', function() {
         var us = context.getUniformState();
-        us.update(createMockCamera(Matrix4.IDENTITY.clone()));
+        us.update(createMockCamera(Matrix4.IDENTITY.clone()), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -367,7 +369,7 @@ defineSuite([
             new Matrix4(1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, 1.0, 9.0,
-                        0.0, 0.0, 0.0, 1.0)));
+                        0.0, 0.0, 0.0, 1.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -391,7 +393,7 @@ defineSuite([
             new Matrix4(1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, 1.0, 9.0,
-                        0.0, 0.0, 0.0, 1.0)));
+                        0.0, 0.0, 0.0, 1.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -419,7 +421,7 @@ defineSuite([
             new Matrix4(1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, 1.0, 9.0,
-                        0.0, 0.0, 0.0, 1.0)));
+                        0.0, 0.0, 0.0, 1.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -448,7 +450,7 @@ defineSuite([
             new Matrix4(1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, 1.0, 9.0,
-                        0.0, 0.0, 0.0, 1.0)));
+                        0.0, 0.0, 0.0, 1.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -500,7 +502,7 @@ defineSuite([
 
     it('has czm_encodedCameraPositionMCHigh and czm_encodedCameraPositionMCLow', function() {
         var us = context.getUniformState();
-        us.update(createMockCamera(undefined, undefined, undefined, new Cartesian3(-1000.0, 0.0, 100000.0)));
+        us.update(createMockCamera(undefined, undefined, undefined, new Cartesian3(-1000.0, 0.0, 100000.0)), 1.0, new JulianDate());
 
         var fs =
             'void main() { ' +
@@ -513,7 +515,7 @@ defineSuite([
 
     it('has czm_entireFrustum', function() {
         var us = context.getUniformState();
-        us.update(createMockCamera());
+        us.update(createMockCamera(), 1.0, new JulianDate());
 
         var fs = 'void main() { gl_FragColor = vec4((czm_entireFrustum.x == 1.0) && (czm_entireFrustum.y == 1000.0)); }';
         verifyDraw(fs);
@@ -531,7 +533,7 @@ defineSuite([
 
     it('has czm_viewerPositionWC', function() {
         var us = context.getUniformState();
-        us.update(createMockCamera());
+        us.update(createMockCamera(), 1.0, new JulianDate());
 
         var fs = 'void main() { gl_FragColor = vec4(czm_viewerPositionWC == vec3(0.0)); }';
         verifyDraw(fs);
@@ -541,6 +543,22 @@ defineSuite([
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(czm_frameNumber != 0.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_temeToPseudoFixed', function() {
+        var us = context.getUniformState();
+        var time = JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST'));
+        us.update(createMockCamera(), 1.0, time);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(' +
+            '    (czm_temeToPseudoFixed[0][0] != 0.0) && (czm_temeToPseudoFixed[1][0] != 0.0) && (czm_temeToPseudoFixed[2][0] == 0.0) && ' +
+            '    (czm_temeToPseudoFixed[0][1] != 0.0) && (czm_temeToPseudoFixed[1][1] != 0.0) && (czm_temeToPseudoFixed[2][1] == 0.0) && ' +
+            '    (czm_temeToPseudoFixed[0][2] == 0.0) && (czm_temeToPseudoFixed[1][2] == 0.0) && (czm_temeToPseudoFixed[2][2] == 1.0) ' +
+            '  ); ' +
             '}';
         verifyDraw(fs);
     });

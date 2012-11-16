@@ -4,12 +4,9 @@ define([
         '../Core/Cartesian3',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/JulianDate',
         '../Core/Matrix4',
         '../Core/MeshFilters',
         '../Core/PrimitiveType',
-        '../Core/TimeStandard',
-        '../Core/Transforms',
         '../Renderer/loadCubeMap',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -22,12 +19,9 @@ define([
         Cartesian3,
         destroyObject,
         DeveloperError,
-        JulianDate,
         Matrix4,
         MeshFilters,
         PrimitiveType,
-        TimeStandard,
-        Transforms,
         loadCubeMap,
         BufferUsage,
         DrawCommand,
@@ -132,7 +126,6 @@ define([
             return undefined;
         }
 
-        Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(context.getUniformState().getTime()), Cartesian3.ZERO, command.modelMatrix);
         return command;
     };
 

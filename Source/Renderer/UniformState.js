@@ -9,7 +9,8 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/EncodedCartesian3',
-        '../Core/BoundingRectangle'
+        '../Core/BoundingRectangle',
+        '../Core/Transforms',
     ], function(
         DeveloperError,
         defaultValue,
@@ -20,7 +21,8 @@ define([
         Cartesian3,
         Cartesian4,
         EncodedCartesian3,
-        BoundingRectangle) {
+        BoundingRectangle,
+        Transforms) {
     "use strict";
 
     /**
@@ -47,6 +49,7 @@ define([
 
         this._frameNumber = 1.0;
         this._time = undefined;
+        this._temeToPseudoFixed = Matrix3.IDENTITY.clone();
 
         // Derived members
         this._inverseModelDirty = true;
@@ -162,9 +165,9 @@ define([
      *
      * @param {Camera} camera The camera to synchronize with.
      * @param {Number} frameNumber The current frame number.
-     * @param {JulianDate} currentTime The current time in the scene; not necessarily the real wall time.
+     * @param {JulianDate} time The current time in the scene; not necessarily the real wall time.
      */
-    UniformState.prototype.update = function(camera, frameNumber, currentTime) {
+    UniformState.prototype.update = function(camera, frameNumber, time) {
         setView(this, camera.getViewMatrix());
         setInverseView(this, camera.getInverseViewMatrix());
         setCameraPosition(this, camera.getPositionWC());
@@ -174,7 +177,8 @@ define([
         this.updateFrustum(camera.frustum);
 
         this._frameNumber = frameNumber;
-        this._time = currentTime;
+        this._time = time;
+        this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(time);
     };
 
     /**
@@ -765,20 +769,34 @@ define([
      *
      * @see czm_frameNumber
      */
-     UniformState.prototype.getFrameNumber = function() {
-         return this._frameNumber;
-     };
+    UniformState.prototype.getFrameNumber = function() {
+        return this._frameNumber;
+    };
 
-     /**
-      * Gets the scene's current time.
-      *
-      * @memberof UniformState
-      *
-      * @return {JulianDate} The scene's current time.
-      */
-      UniformState.prototype.getTime = function() {
-          return this._time;
-      };
+    /**
+     * Gets the scene's current time.
+     *
+     * @memberof UniformState
+     *
+     * @return {JulianDate} The scene's current time.
+     */
+    UniformState.prototype.getTime = function() {
+        return this._time;
+    };
+
+    /**
+     * Returns a 3x3 matrix that transforms from True Equator Mean Equinox (TEME) axes to the
+     * pseudo-fixed axes at the Scene's current time.
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix3} The transform from TEME to pseudo-fixed.
+     *
+     * @see czm_temeToPseudoFixed
+     */
+    UniformState.prototype.getTemeToPseudoFixedMatrix = function() {
+        return this._temeToPseudoFixed;
+    };
 
     UniformState.prototype.getHighResolutionSnapScale = function() {
         return 1.0;
