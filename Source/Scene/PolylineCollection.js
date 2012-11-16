@@ -1205,7 +1205,7 @@ define([
             } else {
                 numberOfSegments = positions.length;
                 for ( j = 0; j < numberOfSegments; ++j) {
-                    var position = positions[j];
+                    position = positions[j];
                     position = modelMatrix.multiplyByPoint(position);
                     EncodedCartesian3.writeElements(position, positionArray, positionIndex);
                     positionIndex += 6;
