@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian3',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/RuntimeError',
         '../Core/JulianDate',
         '../Core/Matrix4',
         '../Core/MeshFilters',
@@ -16,8 +15,6 @@ define([
         '../Renderer/CommandLists',
         '../Renderer/CullFace',
         '../Renderer/DrawCommand',
-        '../Renderer/PixelDatatype',
-        '../Renderer/PixelFormat',
         '../Scene/SceneMode',
         '../Shaders/SkyBoxVS',
         '../Shaders/SkyBoxFS'
@@ -26,7 +23,6 @@ define([
         Cartesian3,
         destroyObject,
         DeveloperError,
-        RuntimeError,
         JulianDate,
         Matrix4,
         MeshFilters,
@@ -38,8 +34,6 @@ define([
         CommandLists,
         CullFace,
         DrawCommand,
-        PixelDatatype,
-        PixelFormat,
         SceneMode,
         SkyBoxVS,
         SkyBoxFS) {
@@ -64,12 +58,7 @@ define([
             throw new DeveloperError('cubeMapUrls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
         }
 
-        var command = new DrawCommand();
-        var commandLists = new CommandLists();
-        commandLists.colorList.push(command);
-
-        this._command = command;
-        this._commandLists = commandLists;
+        this._command = new DrawCommand();
         this._cubeMap = undefined;
         this._cubeMapUrls = cubeMapUrls;
     };
@@ -77,15 +66,15 @@ define([
     /**
      * @private
      */
-    SkyBox.prototype.update = function(context, frameState, commandList) {
+    SkyBox.prototype.update = function(context, frameState) {
         // TODO: Only supports 3D, add Columbus view support.
         if (frameState.mode !== SceneMode.SCENE3D) {
-            return;
+            return undefined;
         }
 
-        // The sky box is only rendered during the color pass
+        // The sky box is only rendered during the color pass; it is not pickable, it doesn't cast shadows, etc.
         if (!frameState.passes.color) {
-            return;
+            return undefined;
         }
 
         var command = this._command;
@@ -121,25 +110,17 @@ define([
                 bufferUsage: BufferUsage.STATIC_DRAW
             });
             command.shaderProgram = context.getShaderCache().getShaderProgram(SkyBoxVS, SkyBoxFS, attributeIndices);
-            command.renderState = context.createRenderState({
-                depthTest : {
-                    enabled : true
-                },
-                depthMask : false,
-                cull : {
-                    enabled : true,
-                    face : CullFace.FRONT
-                }
-            });
+            command.renderState = context.createRenderState();
         }
 
-        if (typeof this._cubeMap !== 'undefined') {
-            // TODO: Use scene time
-            var time = JulianDate.fromDate(new Date(), TimeStandard.UTC);
-            this._command.modelMatrix = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(time), Cartesian3.ZERO);
-
-            commandList.push(this._commandLists);
+        if (typeof this._cubeMap === 'undefined') {
+            return undefined;
         }
+
+        // TODO: Use scene time
+        var time = JulianDate.fromDate(new Date(), TimeStandard.UTC);
+        command.modelMatrix = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(time), Cartesian3.ZERO);
+        return command;
     };
 
     /**

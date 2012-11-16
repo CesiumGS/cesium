@@ -38,6 +38,6 @@ define([
             positiveZ: '/SkyBox/TychoSkymapII_4096b_pz_r.png',
             negativeZ: '/SkyBox/TychoSkymapII_4096b_mz_r.png'
         };
-        widget.scene.getPrimitives().add(new SkyBox(source));
+        widget.scene.skyBox = new SkyBox(source);
     });
 });

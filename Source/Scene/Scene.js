@@ -94,6 +94,13 @@ define([
         });
 
         /**
+         * DOC_TBA
+         *
+         * @type SkyBox
+         */
+        this.skyBox = undefined;
+
+        /**
          * The current mode of the scene.
          *
          * @type SceneMode
@@ -400,10 +407,21 @@ define([
     function executeCommands(scene, framebuffer) {
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
-
         var context = scene._context;
         var us = context.getUniformState();
+        var skyBoxCommand = (typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, scene._frameState) : undefined;
+
         scene._clearColorCommand.execute(context, framebuffer);
+
+        if (typeof skyBoxCommand !== 'undefined') {
+            frustum.near = camera.frustum.near;
+            frustum.far = camera.frustum.far;
+            us.updateFrustum(frustum);
+
+            // Ideally, we would render the sky box last for early-z, but
+            // we would have to draw it in each frustum
+            skyBoxCommand.execute(context, framebuffer);
+        }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
 
@@ -632,6 +650,7 @@ define([
         this._camera = this._camera && this._camera.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
+        this.skyBox = this.skyBox && this.skyBox.destroy();
         this._context = this._context && this._context.destroy();
         return destroyObject(this);
     };
