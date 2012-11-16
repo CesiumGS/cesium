@@ -1261,7 +1261,7 @@ define([
                 alpha : 1.0
             },
             specularMap : Material.DefaultImageId,
-            normalMap : undefined,
+            normalMap : Material.DefaultImageId,
             frequency : 10.0,
             animationSpeed : 0.01,
             amplitude : 1.0,
