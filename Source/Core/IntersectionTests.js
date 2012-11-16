@@ -235,8 +235,8 @@ define([
         var l2Squared = l2 * l2;
         var r0r1 = r0 * r1;
 
-        var c4 = l2Squared * r1Squared;
-        var c3 = 2.0 * (l1 * l2 * r0r1);
+        var c4 = l2Squared + r1Squared;
+        var c3 = 2.0 * (l1 * l2 + r0r1);
         var c2 = 2.0 * l0 * l2 + l1 * l1 - r1Squared + r0Squared;
         var c1 = 2.0 * (l0 * l1 - r0r1);
         var c0 = l0 * l0 - r0Squared;
@@ -348,11 +348,12 @@ define([
 
         var s;
         var altitude;
-        if (solutions.length === 4) {
+        var length = solutions.length;
+        if(length > 0) {
             var closest = Cartesian3.ZERO;
             var maximumValue = Number.NEGATIVE_INFINITY;
 
-            for (var i = 0; i < 4; ++i) {
+            for (var i = 0; i < length; ++i) {
                 s = D_I.multiplyByVector(B.multiplyByVector(solutions[i]));
                 var v = s.subtract(position).normalize();
                 var dotProduct = v.dot(direction);
@@ -364,33 +365,10 @@ define([
             }
 
             var surfacePoint = ellipsoid.cartesianToCartographic(closest);
+            maximumValue = CesiumMath.clamp(maximumValue, 0.0, 1.0);
             altitude = closest.subtract(position).magnitude() * Math.sqrt(1.0 - maximumValue * maximumValue);
             altitude = intersects ? -altitude : altitude;
             return ellipsoid.cartographicToCartesian(new Cartographic(surfacePoint.longitude, surfacePoint.latitude, altitude));
-        } else if (solutions.length === 2) {
-            var s0 = D_I.multiplyByVector(B.multiplyByVector(solutions[0]));
-            var v0 = s0.subtract(position);
-            var v0Magnitude = v0.magnitude();
-            var v0Unit = v0.normalize();
-            var dotProduct0 = v0Unit.dot(direction);
-
-            var s1 = D_I.multiplyByVector(B.multiplyByVector(solutions[1]));
-            var v1 = s1.subtract(position);
-            var v1Magnitude = v1.magnitude();
-            var v1Unit = v1.normalize();
-            var dotProduct1 = v1Unit.dot(direction);
-
-            if (dotProduct0 > dotProduct1) {
-                s = ellipsoid.cartesianToCartographic(s0);
-                altitude = v0Magnitude * Math.sqrt(1.0 - dotProduct0 * dotProduct0);
-                altitude = intersects ? -altitude : altitude;
-                return ellipsoid.cartographicToCartesian(new Cartographic(s.longitude, s.latitude, altitude));
-            }
-
-            s = ellipsoid.cartesianToCartographic(s1);
-            altitude = v1Magnitude * Math.sqrt(1.0 - dotProduct1 * dotProduct1);
-            altitude = intersects ? -altitude : altitude;
-            return ellipsoid.cartographicToCartesian(new Cartographic(s.longitude, s.latitude, altitude));
         }
 
         return undefined;

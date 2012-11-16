@@ -196,6 +196,26 @@ defineSuite([
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
+    it('grazingAltitudeLocation outside ellipsoid 2', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var origin = new Cartesian3(6502435.411150063, -6350860.759819263, -7230794.954832983);
+        var direction = new Cartesian3(-0.6053473557455881, 0.002372596412575323, 0.7959578818493397);
+        var ray = new Ray(origin, direction);
+        var expected = new Cartesian3(628106.8386515155, -6327836.936616249, 493230.07552381355);
+        var actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
+        expect(actual).toEqual(expected);
+    });
+
+    it('grazingAltitudeLocation outside ellipsoid 3', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var origin = new Cartesian3(-6546204.940468501, -10625195.62660887, -6933745.82875373);
+        var direction = new Cartesian3(0.5130076305689283, 0.38589525779680295, 0.766751603185799);
+        var ray = new Ray(origin, direction);
+        var expected = new Cartesian3(-125.9063174739769, -5701095.640722358, 2850156.57342018);
+        var actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
+        expect(actual).toEqual(expected);
+    });
+
     it('grazingAltitudeLocation inside ellipsoid', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var ray = new Ray(new Cartesian3(0.5, 0.0, 0.0), Cartesian3.UNIT_Z);
