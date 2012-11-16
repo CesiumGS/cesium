@@ -22,7 +22,7 @@ czm_materialInput getMaterialInput(float sensorRadius, vec3 pointEC, vec3 normal
     czm_materialInput materialInput;
 
     vec3 pointMC = (czm_inverseModelView * vec4(pointEC, 1.0)).xyz;
-    materialInput.positionToEyeEC = normalize(-v_positionEC); 
+    materialInput.positionToEyeEC = -v_positionEC; 
     materialInput.normalEC = normalEC;
     
     materialInput.st = sensor2dTextureCoordinates(sensorRadius, pointMC);

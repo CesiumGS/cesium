@@ -616,11 +616,7 @@ define([
             result = new BoundingSphere();
         }
 
-        var center = sphere.center;
-        transformCart4.x = center.x;
-        transformCart4.y = center.y;
-        transformCart4.z = center.z;
-        Matrix4.multiplyByVector(transform, transformCart4, transformCart4);
+        Matrix4.multiplyByPoint(transform, sphere.center, transformCart4);
 
         Cartesian3.clone(transformCart4, result.center);
         result.radius = sphere.radius;
