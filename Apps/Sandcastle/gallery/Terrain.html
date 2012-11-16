@@ -142,9 +142,9 @@ require([
             console.log('position: ' + camera.getPositionWC() + ' direction: ' + camera.getDirectionWC() + ' up: ' + camera.getUpWC());
             break;
         case 'L'.charCodeAt(0):
-            var position = new Cesium.Cartesian3(-2444822.7410362503, -4495391.442027786, 3800016.0770029235);
-            var direction = new Cesium.Cartesian3(0.2306406390807245, 0.8212545213405562, 0.5218677100397503);
-            var up = new Cesium.Cartesian3(-0.31881470184216937, -0.44294118336776583, 0.8379500545772692);
+            var position = new Cesium.Cartesian3(-968215.0435636333, -5491027.91260907, 3089687.212102063);
+            var direction = new Cesium.Cartesian3(-0.02381678074226254, -0.030719208241390263, -0.999244260028582);
+            var up = new Cesium.Cartesian3(-0.18191233872211413, -0.9827077022794729, 0.03454667713717775);
             var camera = scene.getCamera();
             camera.lookAt(position, position.add(direction), up);
             break;
@@ -178,7 +178,7 @@ require([
     cb = scene.getPrimitives().getCentralBody();
 
     var terrainProvider = new Cesium.CesiumTerrainProvider({
-        url : 'http://cesium.cloudapp.net/terrain'
+        url : 'http://108.16.61.27/gtopo30'
     });
     
     /*var terrainProvider = new Cesium.TileMapServiceTerrainProvider({

@@ -109,13 +109,13 @@ define([
         return lines;
     }
 
-    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, tile, buffers) {
+    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, tile, buffers, includesWaterMask) {
         var datatype = ComponentDatatype.FLOAT;
         var typedArray = buffers.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
         var stride = 5 * datatype.sizeInBytes;
 
-        if (typeof tile.waterMask !== 'undefined') {
+        if (includesWaterMask) {
             stride += datatype.sizeInBytes;
         }
 
@@ -136,7 +136,7 @@ define([
         }];
 
 
-        if (typeof tile.waterMask !== 'undefined') {
+        if (includesWaterMask) {
             attributes.push({
                 index : TerrainProvider.attributeIndices.waterMask,
                 vertexBuffer : buffer,

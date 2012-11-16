@@ -176,7 +176,7 @@ define([
                 }
             });
 
-            url = 'http://108.16.61.27/watermask/' + tile.level + '/' + tile.x + '/' + (yTiles - tile.y - 1) + '.water';
+            url = this.url + '/' + tile.level + '/' + tile.x + '/' + (yTiles - tile.y - 1) + '.water';
 
             if (typeof this._proxy !== 'undefined') {
                 url = this._proxy.getURL(url);
@@ -376,6 +376,10 @@ define([
         var transfer = [];
         if (tile.childTileBits === 15 || pixels.length !== this.heightmapWidth * this.heightmapWidth) {
             transfer.push(pixels.buffer);
+            transfer.push(waterMask.buffer);
+
+            // TODO: remove this.  It's only here to help track down an intermittent bug.
+            tile.transferredBuffer = true;
         }
 
         var verticesPromise = taskProcessor.scheduleTask({
@@ -404,6 +408,7 @@ define([
         when(verticesPromise, function(result) {
             if (tile.childTileBits === 15 || pixels.length !== that.heightmapWidth * that.heightmapWidth) {
                 tile.geometry = undefined;
+                tile.waterMask = undefined;
             }
             tile.transformedGeometry = {
                 vertices : result.vertices,
@@ -433,7 +438,7 @@ define([
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
 
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, true);
         tile.maxHeight = buffers.statistics.maxHeight;
         tile.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);
 
