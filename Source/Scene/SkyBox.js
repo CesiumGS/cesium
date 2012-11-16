@@ -13,6 +13,7 @@ define([
         '../Renderer/loadCubeMap',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/BlendingState',
         '../Scene/SceneMode',
         '../Shaders/SkyBoxVS',
         '../Shaders/SkyBoxFS'
@@ -30,6 +31,7 @@ define([
         loadCubeMap,
         BufferUsage,
         DrawCommand,
+        BlendingState,
         SceneMode,
         SkyBoxVS,
         SkyBoxFS) {
@@ -57,14 +59,31 @@ define([
         this._command = new DrawCommand();
         this._cubeMap = undefined;
         this._cubeMapUrls = cubeMapUrls;
+
+        /**
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
+         */
+        this.morphTime = 1.0;
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof SkyBox
+     */
+    SkyBox.prototype.getCubeMapUrls = function() {
+        return this._cubeMapUrls;
     };
 
     /**
      * @private
      */
     SkyBox.prototype.update = function(context, frameState) {
-        // TODO: Only supports 3D, add Columbus view support.
-        if (frameState.mode !== SceneMode.SCENE3D) {
+        if ((frameState.mode !== SceneMode.SCENE3D) &&
+            (frameState.mode !== SceneMode.MORPHING)) {
             return undefined;
         }
 
@@ -84,6 +103,9 @@ define([
                 command.uniformMap = {
                     u_cubeMap: function() {
                         return cubeMap;
+                    },
+                    u_morphTime : function() {
+                        return that.morphTime;
                     }
                 };
             });
@@ -100,7 +122,9 @@ define([
                 bufferUsage: BufferUsage.STATIC_DRAW
             });
             command.shaderProgram = context.getShaderCache().getShaderProgram(SkyBoxVS, SkyBoxFS, attributeIndices);
-            command.renderState = context.createRenderState();
+            command.renderState = context.createRenderState({
+                blending : BlendingState.ALPHA_BLEND
+            });
         }
 
         if (typeof this._cubeMap === 'undefined') {
