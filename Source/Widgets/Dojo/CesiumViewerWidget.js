@@ -631,18 +631,19 @@ define([
                 context.setThrowOnWebGLError(true);
             }
 
+            var imageryUrl = '../../Assets/Imagery/';
             var maxTextureSize = context.getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_512.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_512.jpg');
             } else {
                 // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl('Images/earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl('Images/earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_2048.jpg');
+                this.specularMapUrl = this.specularMapUrl || require.toUrl(imageryUrl + 'earthspec1k.jpg');
+                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl(imageryUrl + 'earthcloudmaptrans.jpg');
+                this.bumpMapUrl = this.bumpMapUrl || require.toUrl(imageryUrl + 'earthbump1k.jpg');
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
@@ -687,7 +688,8 @@ define([
                         this.centerCameraOnPick(selectedObject);
                     }
                 };
-                                }
+            }
+
             if (this.enableDragDrop) {
                 var dropBox = this.cesiumNode;
                 on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));
@@ -1202,6 +1204,7 @@ define([
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
          * on your page.  If you wish to customize your render loop, avoid this function and instead
          * use code similar to one of the following examples.
+         *
          * @function
          * @memberof CesiumViewerWidget.prototype
          * @see requestAnimationFrame
@@ -1217,7 +1220,7 @@ define([
          *     widget.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          * @example
          * // This example requires widget1 and widget2 to share an animationController
          * // (for example, widget2's constructor was called with a copy of widget1's
@@ -1233,7 +1236,7 @@ define([
          *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          * @example
          * // This example uses separate animationControllers for widget1 and widget2.
          * // These widgets can animate at different rates and pause individually.
@@ -1249,7 +1252,7 @@ define([
          *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          */
         startRenderLoop : function() {
             var widget = this;
@@ -1262,7 +1265,8 @@ define([
                 widget.render();
                 requestAnimationFrame(updateAndRender);
             }
-            updateAndRender();
+
+            requestAnimationFrame(updateAndRender);
         }
     });
 });

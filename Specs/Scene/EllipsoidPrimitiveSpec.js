@@ -3,6 +3,7 @@ defineSuite([
          'Scene/EllipsoidPrimitive',
          'Specs/createContext',
          'Specs/destroyContext',
+         'Specs/createCamera',
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
@@ -15,6 +16,7 @@ defineSuite([
          EllipsoidPrimitive,
          createContext,
          destroyContext,
+         createCamera,
          frameState,
          pick,
          render,
@@ -41,15 +43,8 @@ defineSuite([
     beforeEach(function() {
         ellipsoid = new EllipsoidPrimitive();
 
-        var camera = {
-            eye : new Cartesian3(1.02, 0.0, 0.0),
-            target : Cartesian3.ZERO,
-            up : Cartesian3.UNIT_Z
-        };
-
         us = context.getUniformState();
-        us.setView(Matrix4.fromCamera(camera));
-        us.setProjection(Matrix4.computePerspectiveFieldOfView(CesiumMath.toRadians(60.0), 1.0, 0.01, 10.0));
+        us.update(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z));
     });
 
     afterEach(function() {
