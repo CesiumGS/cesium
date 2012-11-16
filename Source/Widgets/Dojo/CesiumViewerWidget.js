@@ -822,7 +822,7 @@ define([
                 if (Fullscreen.isFullscreen()) {
                     Fullscreen.exitFullscreen();
                 } else {
-                    Fullscreen.requestFullscreen(document.body);
+                    Fullscreen.requestFullscreen(widget.cesiumNode);
                 }
             });
 
