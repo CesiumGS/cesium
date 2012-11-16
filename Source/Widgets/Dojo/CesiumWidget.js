@@ -317,8 +317,8 @@ define([
             this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
         },
 
-        render : function() {
-            this.scene.render();
+        render : function(currentTime) {
+            this.scene.render(currentTime);
         },
 
         _configureCentralBodyImagery : function() {
@@ -353,7 +353,7 @@ define([
             function updateAndRender() {
                 var currentTime = new JulianDate();
                 widget.update(currentTime);
-                widget.render();
+                widget.render(currentTime);
                 requestAnimationFrame(updateAndRender);
             }
             updateAndRender();

@@ -17,6 +17,7 @@ define([
         '../Core/IntersectionTests',
         '../Core/Interval',
         '../Core/Matrix4',
+        '../Core/JulianDate',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         './Camera',
@@ -46,6 +47,7 @@ define([
         IntersectionTests,
         Interval,
         Matrix4,
+        JulianDate,
         Context,
         ClearCommand,
         Camera,
@@ -254,7 +256,7 @@ define([
         clearPasses(frameState.passes);
     }
 
-    function update(scene) {
+    function update(scene, time) {
         var us = scene.getUniformState();
         var camera = scene._camera;
 
@@ -266,8 +268,9 @@ define([
 
         scene._animations.update();
         camera.update();
-        us.update(camera);
-        us.setFrameNumber(CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0));
+
+        var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
+        us.update(camera, frameNumber, time);
 
         if (scene._animate) {
             scene._animate();
@@ -462,8 +465,12 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.render = function() {
-        update(this);
+    Scene.prototype.render = function(time) {
+        if (typeof time === 'undefined') {
+            time = new JulianDate();
+        }
+
+        update(this, time);
         createPotentiallyVisibleSet(this, 'colorList');
         executeCommands(this);
         executeOverlayCommands(this);

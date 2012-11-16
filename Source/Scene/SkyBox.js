@@ -116,6 +116,7 @@ define([
             var attributeIndices = MeshFilters.createAttributeIndices(mesh);
 
             command.primitiveType = PrimitiveType.TRIANGLES;
+            command.modelMatrix = Matrix4.IDENTITY.clone();
             command.vertexArray = context.createVertexArrayFromMesh({
                 mesh: mesh,
                 attributeIndices: attributeIndices,
@@ -131,9 +132,7 @@ define([
             return undefined;
         }
 
-        // TODO: Use scene time
-        var time = JulianDate.fromDate(new Date(), TimeStandard.UTC);
-        command.modelMatrix = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(time), Cartesian3.ZERO);
+        Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(context.getUniformState().getTime()), Cartesian3.ZERO, command.modelMatrix);
         return command;
     };
 

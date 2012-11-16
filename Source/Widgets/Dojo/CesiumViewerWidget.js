@@ -1141,9 +1141,10 @@ define([
          * Render the widget's scene.
          * @function
          * @memberof CesiumViewerWidget.prototype
+         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
-        render : function() {
-            this.scene.render();
+        render : function(currentTime) {
+            this.scene.render(currentTime);
         },
 
         _configureCentralBodyImagery : function() {
@@ -1218,7 +1219,7 @@ define([
          * function updateAndRender() {
          *     var currentTime = animationController.update();
          *     widget.update(currentTime);
-         *     widget.render();
+         *     widget.render(currentTime);
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1231,8 +1232,8 @@ define([
          *     var currentTime = animationController.update();
          *     widget1.update(currentTime);
          *     widget2.update(currentTime);
-         *     widget1.render();
-         *     widget2.render();
+         *     widget1.render(currentTime);
+         *     widget2.render(currentTime);
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1245,8 +1246,8 @@ define([
          *     var time2 = widget2.animationController.update();
          *     widget1.update(time1);
          *     widget2.update(time2);
-         *     widget1.render();
-         *     widget2.render();
+         *     widget1.render(currentTime);
+         *     widget2.render(currentTime);
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1258,7 +1259,7 @@ define([
             function updateAndRender() {
                 var currentTime = animationController.update();
                 widget.update(currentTime);
-                widget.render();
+                widget.render(currentTime);
                 requestAnimationFrame(updateAndRender);
             }
 

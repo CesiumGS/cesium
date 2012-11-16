@@ -45,6 +45,9 @@ define([
         // Arbitrary.  The user will explicitly set this later.
         this._sunPosition = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().x, 0.0, 0.0);
 
+        this._frameNumber = 1.0;
+        this._time = undefined;
+
         // Derived members
         this._inverseModelDirty = true;
         this._inverseModel = new Matrix4();
@@ -91,8 +94,6 @@ define([
 
         this._sunDirectionWCDirty = true;
         this._sunDirectionWC = new Cartesian3();
-
-        this._frameNumber = 1.0;
     };
 
     function setView(uniformState, matrix) {
@@ -153,23 +154,27 @@ define([
     };
 
     /**
-     * Synchronizes the camera's state with the uniform state.  This is called
+     * Synchronizes scene state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
      * are set to the right value.
      *
      * @memberof UniformState
      *
      * @param {Camera} camera The camera to synchronize with.
+     * @param {Number} frameNumber The current frame number.
+     * @param {JulianDate} currentTime The current time in the scene; not necessarily the real wall time.
      */
-    UniformState.prototype.update = function(camera) {
+    UniformState.prototype.update = function(camera, frameNumber, currentTime) {
         setView(this, camera.getViewMatrix());
         setInverseView(this, camera.getInverseViewMatrix());
         setCameraPosition(this, camera.getPositionWC());
 
         this._entireFrustum.x = camera.frustum.near;
         this._entireFrustum.y = camera.frustum.far;
-
         this.updateFrustum(camera.frustum);
+
+        this._frameNumber = frameNumber;
+        this._time = currentTime;
     };
 
     /**
@@ -752,20 +757,6 @@ define([
     };
 
     /**
-     * Sets the current frame number.
-     *
-     * @memberof UniformState
-     *
-     * @param {number} frameNumber The current frame number.
-     *
-     * @see UniformState#getFrameNumber
-     * @see czm_frameNumber
-     */
-    UniformState.prototype.setFrameNumber = function(frameNumber) {
-        this._frameNumber = frameNumber;
-    };
-
-    /**
      * Gets the current frame number.
      *
      * @memberof UniformState
@@ -777,6 +768,17 @@ define([
      UniformState.prototype.getFrameNumber = function() {
          return this._frameNumber;
      };
+
+     /**
+      * Gets the scene's current time.
+      *
+      * @memberof UniformState
+      *
+      * @return {JulianDate} The scene's current time.
+      */
+      UniformState.prototype.getTime = function() {
+          return this._time;
+      };
 
     UniformState.prototype.getHighResolutionSnapScale = function() {
         return 1.0;
