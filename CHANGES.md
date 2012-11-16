@@ -14,6 +14,7 @@ Beta Releases
    * `FullScreen` and related functions have been renamed to `Fullscreen` to match the W3C standard name.
    * `Fullscreen.isFullscreenEnabled` was incorrectly implemented in certain browsers.  `isFullscreenEnabled` now correctly determines whether the browser will allow an element to go fullscreen.  A new `isFullscreen` function is available to determine if the browser is currently in fullscreen mode.
    * `Fullscreen.getFullScreenChangeEventName` and `Fullscreen.getFullScreenChangeEventName` now return the proper event name, suitable for use with the `addEventListener` API, instead prefixing them with "on".
+   * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera mouse handler is the 'CameraMouseController` object on the `Scene`.
 * Added `Water` material.  See the Materials Sandbox example.
 * Fixed jitter artifacts with billboards and polylines.
 * Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
@@ -53,7 +54,6 @@ Beta Releases
    * Passing `undefined` to any of the set functions on `Billboard` now throws an exception.
    * Passing `undefined` to any of the set functions on `Polyline` now throws an exception.
    * `PolygonPipeline.scaleToGeodeticHeight` now takes ellipsoid as the last parameter, instead of the first.  It also now defaults to `Ellipsoid.WGS84` if no parameter is provided.
-   * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera mouse handler is the 'CameraMouseController` object on the `Scene`.
 * The new Sandcastle live editor and demo gallery replace the Sandbox and Skeleton examples.
 * Improved picking performance and accuracy.
 * Added EllipsoidPrimitive for visualizing ellipsoids and spheres.  Currently, this is only supported in 3D, not 2D or Columbus view.
