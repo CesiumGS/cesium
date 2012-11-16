@@ -44,12 +44,13 @@ define([
     };
 
     function spilt(value, result) {
+        var doubleHigh;
         if (value >= 0.0) {
-            var doubleHigh = Math.floor(value / 65536.0) * 65536.0;
+            doubleHigh = Math.floor(value / 65536.0) * 65536.0;
             result.high = doubleHigh;
             result.low = value - doubleHigh;
         } else {
-            var doubleHigh = Math.floor(-value / 65536.0) * 65536.0;
+            doubleHigh = Math.floor(-value / 65536.0) * 65536.0;
             result.high = -doubleHigh;
             result.low = value + doubleHigh;
         }
