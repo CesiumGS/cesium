@@ -9,16 +9,15 @@ Beta Releases
 * Breaking changes:
    * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
    * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
-   * Renamed `MouseEventType` to `InputEventType`.
-   * Renamed `MouseEventType.MOVE` to `InputEventType.MOUSE_MOVE`.
-   * Renamed `CameraMouseController` to `ScreenSpaceCameraController`.
+   * Renamed `MouseEventType` to `ScreenSpaceEventType`.
+   * Renamed `MouseEventType.MOVE` to `ScreenSpaceEventType.MOUSE_MOVE`.
    * Renamed all `*MouseAction` to `*InputAction` (including get, set, remove, etc).
    * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
    * `positionToEyeEC` in `czm_materialInput` is no longer normalized by default.
    * `FullScreen` and related functions have been renamed to `Fullscreen` to match the W3C standard name.
    * `Fullscreen.isFullscreenEnabled` was incorrectly implemented in certain browsers.  `isFullscreenEnabled` now correctly determines whether the browser will allow an element to go fullscreen.  A new `isFullscreen` function is available to determine if the browser is currently in fullscreen mode.
    * `Fullscreen.getFullScreenChangeEventName` and `Fullscreen.getFullScreenChangeEventName` now return the proper event name, suitable for use with the `addEventListener` API, instead prefixing them with "on".
-   * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera mouse handler is the 'CameraMouseController` object on the `Scene`.
+   * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera handler is the 'ScreenSpaceCameraController` object on the `Scene`.
 * Added `Water` material.  See the Materials Sandbox example.
 * Fixed jitter artifacts with billboards and polylines.
 * Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.

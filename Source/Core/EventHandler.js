@@ -4,14 +4,14 @@ define([
         './destroyObject',
         './Cartesian2',
         './JulianDate',
-        './InputEventType',
+        './ScreenSpaceEventType',
         './EventModifier'
     ], function(
         DeveloperError,
         destroyObject,
         Cartesian2,
         JulianDate,
-        InputEventType,
+        ScreenSpaceEventType,
         EventModifier) {
     "use strict";
 
@@ -26,8 +26,8 @@ define([
      */
     var EventHandler = function(element) {
         this._mouseEvents = {};
-        for ( var button in InputEventType) {
-            if (InputEventType.hasOwnProperty(button)) {
+        for ( var button in ScreenSpaceEventType) {
+            if (ScreenSpaceEventType.hasOwnProperty(button)) {
                 this._mouseEvents[button] = 0;
             }
         }
@@ -36,8 +36,8 @@ define([
         for ( var modifier in EventModifier) {
             if (EventModifier.hasOwnProperty(modifier)) {
                 this._modifiedMouseEvents[modifier] = {};
-                for (button in InputEventType) {
-                    if (InputEventType.hasOwnProperty(button)) {
+                for (button in ScreenSpaceEventType) {
+                    if (ScreenSpaceEventType.hasOwnProperty(button)) {
                         this._modifiedMouseEvents[modifier][button] = 0;
                     }
                 }
@@ -87,7 +87,7 @@ define([
      * @memberof EventHandler
      *
      * @param {Function} action Function to be executed when the input event occurs.
-     * @param {Enumeration} type The InputEventType of input event.
+     * @param {Enumeration} type The ScreenSpaceEventType of input event.
      * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
      * event occurs.
      *
@@ -123,7 +123,7 @@ define([
      *
      * @memberof EventHandler
      *
-     * @param {Enumeration} type The InputEventType of input event.
+     * @param {Enumeration} type The ScreenSpaceEventType of input event.
      * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
      * event occurs.
      *
@@ -156,7 +156,7 @@ define([
      *
      * @memberof EventHandler
      *
-     * @param {Enumeration} type The InputEventType of input event.
+     * @param {Enumeration} type The ScreenSpaceEventType of input event.
      * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
      * event occurs.
      *
@@ -212,13 +212,13 @@ define([
         // constants somewhere?
         if (event.button === 0) {
             this._leftMouseButtonDown = true;
-            action = this.getInputAction(InputEventType.LEFT_DOWN, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.LEFT_DOWN, modifier);
         } else if (event.button === 1) {
             this._middleMouseButtonDown = true;
-            action = this.getInputAction(InputEventType.MIDDLE_DOWN, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.MIDDLE_DOWN, modifier);
         } else if (event.button === 2) {
             this._rightMouseButtonDown = true;
-            action = this.getInputAction(InputEventType.RIGHT_DOWN, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.RIGHT_DOWN, modifier);
         }
 
         if (action) {
@@ -242,16 +242,16 @@ define([
         // constants somewhere?
         if (event.button === 0) {
             this._leftMouseButtonDown = false;
-            action = this.getInputAction(InputEventType.LEFT_UP, modifier);
-            clickAction = this.getInputAction(InputEventType.LEFT_CLICK, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.LEFT_UP, modifier);
+            clickAction = this.getInputAction(ScreenSpaceEventType.LEFT_CLICK, modifier);
         } else if (event.button === 1) {
             this._middleMouseButtonDown = false;
-            action = this.getInputAction(InputEventType.MIDDLE_UP, modifier);
-            clickAction = this.getInputAction(InputEventType.MIDDLE_CLICK, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.MIDDLE_UP, modifier);
+            clickAction = this.getInputAction(ScreenSpaceEventType.MIDDLE_CLICK, modifier);
         } else if (event.button === 2) {
             this._rightMouseButtonDown = false;
-            action = this.getInputAction(InputEventType.RIGHT_UP, modifier);
-            clickAction = this.getInputAction(InputEventType.RIGHT_CLICK, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.RIGHT_UP, modifier);
+            clickAction = this.getInputAction(ScreenSpaceEventType.RIGHT_CLICK, modifier);
         }
 
         var pos = this._getPosition(event);
@@ -290,7 +290,7 @@ define([
         };
 
         var modifier = this._getModifier(event);
-        var action = this.getInputAction(InputEventType.MOUSE_MOVE, modifier);
+        var action = this.getInputAction(ScreenSpaceEventType.MOUSE_MOVE, modifier);
         if (action) {
             action(movement);
         }
@@ -317,7 +317,7 @@ define([
             this._totalPixels = 0;
 
             this._leftMouseButtonDown = true;
-            action = this.getInputAction(InputEventType.LEFT_DOWN, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.LEFT_DOWN, modifier);
 
             if (action) {
                 action({
@@ -328,7 +328,7 @@ define([
         } else if (this._leftMouseButtonDown) {
             // Release "mouse" without clicking, because we are adding more touches.
             this._leftMouseButtonDown = false;
-            action = this.getInputAction(InputEventType.LEFT_UP, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.LEFT_UP, modifier);
             if (action) {
                 action({
                     position : new Cartesian2(pos.x, pos.y)
@@ -345,7 +345,7 @@ define([
             this._lastMouseY = pos.y;
             this._lastTouch2X = pos2.x;
             this._lastTouch2Y = pos2.y;
-            action = this.getInputAction(InputEventType.PINCH_START, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.PINCH_START, modifier);
             if (action) {
                 action({
                     position1 : new Cartesian2(pos.x, pos.y),
@@ -354,7 +354,7 @@ define([
             }
         } else if (this._isPinching) {
             this._isPinching = false;
-            action = this.getInputAction(InputEventType.PINCH_END, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.PINCH_END, modifier);
             if (action) {
                 action();
             }
@@ -369,8 +369,8 @@ define([
 
         if (this._leftMouseButtonDown) {
             this._leftMouseButtonDown = false;
-            action = this.getInputAction(InputEventType.LEFT_UP, modifier);
-            clickAction = this.getInputAction(InputEventType.LEFT_CLICK, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.LEFT_UP, modifier);
+            clickAction = this.getInputAction(ScreenSpaceEventType.LEFT_CLICK, modifier);
 
             if (numberOfTargetTouches > 0) {
                 var pos = this._getPosition(event.targetTouches[0]);
@@ -395,7 +395,7 @@ define([
 
         if (this._isPinching) {
             this._isPinching = false;
-            action = this.getInputAction(InputEventType.PINCH_END, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.PINCH_END, modifier);
             if (action) {
                 action();
             }
@@ -423,7 +423,7 @@ define([
                 motion : new Cartesian2(0.0, 0.0)
             };
 
-            action = this.getInputAction(InputEventType.MOUSE_MOVE, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.MOUSE_MOVE, modifier);
             if (action) {
                 action(movement);
             }
@@ -446,7 +446,7 @@ define([
                 pos2 = this._getPosition(event.touches[1]);
             }
 
-            action = this.getInputAction(InputEventType.PINCH_MOVE, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.PINCH_MOVE, modifier);
             if (action) {
                 var dX = pos2.x - pos.x;
                 var dY = pos2.y - pos.y;
@@ -489,7 +489,7 @@ define([
         var delta = event.detail ? event.detail * -120 : event.wheelDelta;
 
         var modifier = this._getModifier(event);
-        var type = InputEventType.WHEEL;
+        var type = ScreenSpaceEventType.WHEEL;
         var action = this.getInputAction(type, modifier);
 
         if (action) {
@@ -508,11 +508,11 @@ define([
         // This is not the case in Chrome Frame, so we are OK for now, but are there
         // constants somewhere?
         if (event.button === 0) {
-            action = this.getInputAction(InputEventType.LEFT_DOUBLE_CLICK, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK, modifier);
         } else if (event.button === 1) {
-            action = this.getInputAction(InputEventType.MIDDLE_DOUBLE_CLICK, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK, modifier);
         } else if (event.button === 2) {
-            action = this.getInputAction(InputEventType.RIGHT_DOUBLE_CLICK, modifier);
+            action = this.getInputAction(ScreenSpaceEventType.RIGHT_DOUBLE_CLICK, modifier);
         }
 
         if (action) {

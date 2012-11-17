@@ -116,7 +116,7 @@ require([
             } else {
                 label.setText('');
             }
-        }, Cesium.InputEventType.MOUSE_MOVE);
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     }
 
     function pickBillboard(scene, ellipsoid) {
@@ -137,7 +137,7 @@ require([
                     billboard.setColor({ red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 });
                 }
             },
-            Cesium.InputEventType.MOUSE_MOVE
+            Cesium.ScreenSpaceEventType.MOUSE_MOVE
         );
     }
     
@@ -210,7 +210,7 @@ require([
                 }
             }
         },
-        Cesium.InputEventType.MOUSE_MOVE);
+        Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     }
     
     function erodeSensorOnClick(scene, ellipsoid) {
@@ -245,7 +245,7 @@ require([
                         }
                     });
                 }
-            }, Cesium.InputEventType.LEFT_CLICK);
+            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }
     
     function layerCompositePrimitive(scene, ellipsoid) {
@@ -258,7 +258,7 @@ require([
                 if (primitives.contains(p)) {
                     primitives.raiseToTop(p);
                 }
-            }, Cesium.InputEventType.MOUSE_MOVE);
+            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
         // Construct the primitives.
         var redPolygon = new Cesium.Polygon(undefined);

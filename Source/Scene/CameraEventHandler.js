@@ -4,7 +4,7 @@ define([
         '../Core/destroyObject',
         '../Core/Math',
         '../Core/EventHandler',
-        '../Core/InputEventType',
+        '../Core/ScreenSpaceEventType',
         '../Core/Cartesian2',
         './CameraEventType'
     ], function(
@@ -12,7 +12,7 @@ define([
         destroyObject,
         CesiumMath,
         EventHandler,
-        InputEventType,
+        ScreenSpaceEventType,
         Cartesian2,
         CameraEventType) {
     "use strict";
@@ -59,12 +59,12 @@ define([
                 //that._lastMovement = null;
                 that._isDown = true;
                 that._pressTime = new Date();
-            }, InputEventType.PINCH_START, moveModifier);
+            }, ScreenSpaceEventType.PINCH_START, moveModifier);
 
             this._eventHandler.setInputAction(function(movement) {
                 that._isDown = false;
                 that._releaseTime = new Date();
-            }, InputEventType.PINCH_END, moveModifier);
+            }, ScreenSpaceEventType.PINCH_END, moveModifier);
 
             this._eventHandler.setInputAction(function(movement) {
                 if (that._isDown) {
@@ -91,7 +91,7 @@ define([
                     that._movement.angleAndHeight.endPosition.x = -angle * canvas.clientWidth / 12;
                     that._movement.angleAndHeight.startPosition.x = -prevAngle * canvas.clientWidth / 12;
                 }
-            }, InputEventType.PINCH_MOVE, moveModifier);
+            }, ScreenSpaceEventType.PINCH_MOVE, moveModifier);
 
         } else if (moveType === CameraEventType.WHEEL) {
 
@@ -111,21 +111,21 @@ define([
                 }
                 that._pressTime = new Date();
                 that._releaseTime = new Date(that._pressTime.getTime() + Math.abs(arcLength) * 5.0);
-            }, InputEventType.WHEEL, moveModifier);
+            }, ScreenSpaceEventType.WHEEL, moveModifier);
 
         } else {  // General mouse buttons
 
             var down;
             var up;
             if (moveType === CameraEventType.LEFT_DRAG) {
-                down = InputEventType.LEFT_DOWN;
-                up = InputEventType.LEFT_UP;
+                down = ScreenSpaceEventType.LEFT_DOWN;
+                up = ScreenSpaceEventType.LEFT_UP;
             } else if (moveType === CameraEventType.RIGHT_DRAG) {
-                down = InputEventType.RIGHT_DOWN;
-                up = InputEventType.RIGHT_UP;
+                down = ScreenSpaceEventType.RIGHT_DOWN;
+                up = ScreenSpaceEventType.RIGHT_UP;
             } else if (moveType === CameraEventType.MIDDLE_DRAG) {
-                down = InputEventType.MIDDLE_DOWN;
-                up = InputEventType.MIDDLE_UP;
+                down = ScreenSpaceEventType.MIDDLE_DOWN;
+                up = ScreenSpaceEventType.MIDDLE_UP;
             } else {
                 this._eventHandler = this._eventHandler && this._eventHandler.destroy();
                 throw new DeveloperError('moveType must be of type CameraEventType.');
@@ -152,7 +152,7 @@ define([
                         that._update = false;
                     }
                 }
-            }, InputEventType.MOUSE_MOVE, moveModifier);
+            }, ScreenSpaceEventType.MOUSE_MOVE, moveModifier);
         }
     };
 

@@ -3,7 +3,7 @@ define([
         '../Core/destroyObject',
         '../Core/Math',
         '../Core/EventHandler',
-        '../Core/InputEventType',
+        '../Core/ScreenSpaceEventType',
         '../Core/Ellipsoid',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -18,7 +18,7 @@ define([
         destroyObject,
         CesiumMath,
         EventHandler,
-        InputEventType,
+        ScreenSpaceEventType,
         Ellipsoid,
         Cartesian2,
         Cartesian3,
@@ -299,10 +299,10 @@ define([
                 that._morphCancelled = true;
                 endMorphFunction.call(that);
             };
-            this._morphHandler.setInputAction(cancelMorph, InputEventType.LEFT_DOWN);
-            this._morphHandler.setInputAction(cancelMorph, InputEventType.MIDDLE_DOWN);
-            this._morphHandler.setInputAction(cancelMorph, InputEventType.RIGHT_DOWN);
-            this._morphHandler.setInputAction(cancelMorph, InputEventType.WHEEL);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.LEFT_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.MIDDLE_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.RIGHT_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.WHEEL);
         }
     };
 

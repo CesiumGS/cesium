@@ -99,10 +99,10 @@ define([
         var tranform = camera.transform;
         tranform.setColumn(3, updateColumbusCartesian4, tranform);
 
-        var inputController = that.scene.getScreenSpaceCameraController();
-        inputController.enableTranslate = false;
-        inputController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-        inputController.columbusViewMode = CameraColumbusViewMode.LOCKED;
+        var controller = that.scene.getScreenSpaceCameraController();
+        controller.enableTranslate = false;
+        controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+        controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
 
         camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 

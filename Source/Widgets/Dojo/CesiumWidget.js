@@ -13,7 +13,7 @@ define([
         '../../Core/computeSunPosition',
         '../../Core/EventHandler',
         '../../Core/FeatureDetection',
-        '../../Core/InputEventType',
+        '../../Core/ScreenSpaceEventType',
         '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/JulianDate',
@@ -40,7 +40,7 @@ define([
         computeSunPosition,
         EventHandler,
         FeatureDetection,
-        InputEventType,
+        ScreenSpaceEventType,
         Cartesian2,
         Cartesian3,
         JulianDate,
@@ -224,14 +224,14 @@ define([
             camera.position = camera.position.multiplyByScalar(1.5);
 
             var handler = new EventHandler(canvas);
-            handler.setInputAction(lang.hitch(this, '_handleLeftClick'), InputEventType.LEFT_CLICK);
-            handler.setInputAction(lang.hitch(this, '_handleRightClick'), InputEventType.RIGHT_CLICK);
-            handler.setInputAction(lang.hitch(this, '_handleMouseMove'), InputEventType.MOUSE_MOVE);
-            handler.setInputAction(lang.hitch(this, '_handleLeftDown'), InputEventType.LEFT_DOWN);
-            handler.setInputAction(lang.hitch(this, '_handleLeftUp'), InputEventType.LEFT_UP);
-            handler.setInputAction(lang.hitch(this, '_handleWheel'), InputEventType.WHEEL);
-            handler.setInputAction(lang.hitch(this, '_handleRightDown'), InputEventType.RIGHT_DOWN);
-            handler.setInputAction(lang.hitch(this, '_handleRightUp'), InputEventType.RIGHT_UP);
+            handler.setInputAction(lang.hitch(this, '_handleLeftClick'), ScreenSpaceEventType.LEFT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleRightClick'), ScreenSpaceEventType.RIGHT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleMouseMove'), ScreenSpaceEventType.MOUSE_MOVE);
+            handler.setInputAction(lang.hitch(this, '_handleLeftDown'), ScreenSpaceEventType.LEFT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleLeftUp'), ScreenSpaceEventType.LEFT_UP);
+            handler.setInputAction(lang.hitch(this, '_handleWheel'), ScreenSpaceEventType.WHEEL);
+            handler.setInputAction(lang.hitch(this, '_handleRightDown'), ScreenSpaceEventType.RIGHT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleRightUp'), ScreenSpaceEventType.RIGHT_UP);
 
             if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
