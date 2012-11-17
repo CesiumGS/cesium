@@ -9,8 +9,10 @@ Beta Releases
 * Breaking changes:
    * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
    * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
+   * Renamed `EventHandler` to `ScreenSpaceEventHandler`.
    * Renamed `MouseEventType` to `ScreenSpaceEventType`.
    * Renamed `MouseEventType.MOVE` to `ScreenSpaceEventType.MOUSE_MOVE`.
+   * Renamed `CameraEventHandler` to `CameraEventAggregator`.
    * Renamed all `*MouseAction` to `*InputAction` (including get, set, remove, etc).
    * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
    * `positionToEyeEC` in `czm_materialInput` is no longer normalized by default.

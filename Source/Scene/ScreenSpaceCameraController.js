@@ -17,7 +17,7 @@ define([
         '../Core/Ray',
         '../Core/Transforms',
         './AnimationCollection',
-        './CameraEventHandler',
+        './CameraEventAggregator',
         './CameraEventType',
         './CameraColumbusViewMode',
         './SceneMode'
@@ -39,7 +39,7 @@ define([
         Ray,
         Transforms,
         AnimationCollection,
-        CameraEventHandler,
+        CameraEventAggregator,
         CameraEventType,
         CameraColumbusViewMode,
         SceneMode) {
@@ -136,13 +136,13 @@ define([
         this._cameraController = cameraController;
         this._ellipsoid = Ellipsoid.WGS84;
 
-        this._spinHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
-        this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
-        this._lookHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG, EventModifier.SHIFT);
-        this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
-        this._zoomHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
-        this._zoomWheelHandler = new CameraEventHandler(canvas, CameraEventType.WHEEL);
-        this._pinchHandler = new CameraEventHandler(canvas, CameraEventType.PINCH);
+        this._spinHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG);
+        this._translateHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG);
+        this._lookHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG, EventModifier.SHIFT);
+        this._rotateHandler = new CameraEventAggregator(canvas, CameraEventType.MIDDLE_DRAG);
+        this._zoomHandler = new CameraEventAggregator(canvas, CameraEventType.RIGHT_DRAG);
+        this._zoomWheelHandler = new CameraEventAggregator(canvas, CameraEventType.WHEEL);
+        this._pinchHandler = new CameraEventAggregator(canvas, CameraEventType.PINCH);
 
         this._lastInertiaSpinMovement = undefined;
         this._lastInertiaZoomMovement = undefined;

@@ -2,7 +2,7 @@
 define([
         '../Core/destroyObject',
         '../Core/Math',
-        '../Core/EventHandler',
+        '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
         '../Core/Ellipsoid',
         '../Core/Cartesian2',
@@ -17,7 +17,7 @@ define([
     ], function(
         destroyObject,
         CesiumMath,
-        EventHandler,
+        ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         Ellipsoid,
         Cartesian2,
@@ -293,7 +293,7 @@ define([
         var that = this;
 
         if (this.endMorphOnMouseInput) {
-            this._morphHandler = new EventHandler(this._scene.getCanvas());
+            this._morphHandler = new ScreenSpaceEventHandler(this._scene.getCanvas());
 
             var cancelMorph = function() {
                 that._morphCancelled = true;

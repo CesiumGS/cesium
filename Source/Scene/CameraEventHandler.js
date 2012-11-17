@@ -3,7 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Math',
-        '../Core/EventHandler',
+        '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
         '../Core/Cartesian2',
         './CameraEventType'
@@ -11,7 +11,7 @@ define([
         DeveloperError,
         destroyObject,
         CesiumMath,
-        EventHandler,
+        ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         Cartesian2,
         CameraEventType) {
@@ -20,7 +20,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @alias CameraEventHandler
+     * @alias CameraEventAggregator
      *
      * @param {HTMLCanvasElement} canvas DOC_TBA
      * @param {CameraEventType} moveType DOC_TBA
@@ -31,9 +31,9 @@ define([
      *
      * @constructor
      *
-     * @see EventHandler
+     * @see ScreenSpaceEventHandler
      */
-    var CameraEventHandler = function(canvas, moveType, moveModifier) {
+    var CameraEventAggregator = function(canvas, moveType, moveModifier) {
         if (typeof canvas === 'undefined') {
             throw new DeveloperError('description.canvas is required.');
         }
@@ -42,7 +42,7 @@ define([
             throw new DeveloperError('moveType is required.');
         }
 
-        this._eventHandler = new EventHandler(canvas);
+        this._eventHandler = new ScreenSpaceEventHandler(canvas);
 
         this._update = true;
         this._movement = undefined;
@@ -159,22 +159,22 @@ define([
     /**
      * DOC_TBA
      *
-     * @memberof CameraEventHandler
+     * @memberof CameraEventAggregator
      *
      * @return {Boolean} DOC_TBA
      */
-    CameraEventHandler.prototype.isMoving = function() {
+    CameraEventAggregator.prototype.isMoving = function() {
         return !this._update;
     };
 
     /**
      * DOC_TBA
      *
-     * @memberof CameraEventHandler
+     * @memberof CameraEventAggregator
      *
      * @return {Object} DOC_TBA
      */
-    CameraEventHandler.prototype.getMovement = function() {
+    CameraEventAggregator.prototype.getMovement = function() {
         var movement = this._movement;
         this._update = true;
         return movement;
@@ -183,47 +183,47 @@ define([
     /**
      * DOC_TBA
      *
-     * @memberof CameraEventHandler
+     * @memberof CameraEventAggregator
      *
      * @return {Object} DOC_TBA
      */
-    CameraEventHandler.prototype.getLastMovement = function() {
+    CameraEventAggregator.prototype.getLastMovement = function() {
         return this._lastMovement;
     };
 
     /**
      * DOC_TBA
      *
-     * @memberof CameraEventHandler
+     * @memberof CameraEventAggregator
      *
      * @return {Boolean} DOC_TBA
      *
      */
-    CameraEventHandler.prototype.isButtonDown = function() {
+    CameraEventAggregator.prototype.isButtonDown = function() {
         return this._isDown;
     };
 
     /**
      * DOC_TBA
      *
-     * @memberof CameraEventHandler
+     * @memberof CameraEventAggregator
      *
      * @return {Date} DOC_TBA
      *
      */
-    CameraEventHandler.prototype.getButtonPressTime = function() {
+    CameraEventAggregator.prototype.getButtonPressTime = function() {
         return this._pressTime;
     };
 
     /**
      * DOC_TBA
      *
-     * @memberof CameraEventHandler
+     * @memberof CameraEventAggregator
      *
      * @return {Date} DOC_TBA
      *
      */
-    CameraEventHandler.prototype.getButtonReleaseTime = function() {
+    CameraEventAggregator.prototype.getButtonReleaseTime = function() {
         return this._releaseTime;
     };
 
@@ -233,13 +233,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof CameraEventHandler
+     * @memberof CameraEventAggregator
      *
      * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see CameraEventHandler#destroy
+     * @see CameraEventAggregator#destroy
      */
-    CameraEventHandler.prototype.isDestroyed = function() {
+    CameraEventAggregator.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -250,21 +250,21 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof CameraEventHandler
+     * @memberof CameraEventAggregator
      *
      * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CameraEventHandler#isDestroyed
+     * @see CameraEventAggregator#isDestroyed
      *
      * @example
      * handler = handler && handler.destroy();
      */
-    CameraEventHandler.prototype.destroy = function() {
+    CameraEventAggregator.prototype.destroy = function() {
         this._eventHandler = this._eventHandler && this._eventHandler.destroy();
         return destroyObject(this);
     };
 
-    return CameraEventHandler;
+    return CameraEventAggregator;
 });

@@ -19,12 +19,12 @@ define([
      * Handles user input events. Custom functions can be added to be executed on
      * when the user enters input.
      *
-     * @alias EventHandler
+     * @alias ScreenSpaceEventHandler
      *
      * @param {DOC_TBA} element The element to add events to. Defaults to document.
      * @constructor
      */
-    var EventHandler = function(element) {
+    var ScreenSpaceEventHandler = function(element) {
         this._mouseEvents = {};
         for ( var button in ScreenSpaceEventType) {
             if (ScreenSpaceEventType.hasOwnProperty(button)) {
@@ -66,7 +66,7 @@ define([
         this._register();
     };
 
-    EventHandler.prototype._getPosition = function(event) {
+    ScreenSpaceEventHandler.prototype._getPosition = function(event) {
         if (this._element === document) {
             return {
                 x : event.clientX,
@@ -84,7 +84,7 @@ define([
     /**
      * Set a function to be executed on an input event.
      *
-     * @memberof EventHandler
+     * @memberof ScreenSpaceEventHandler
      *
      * @param {Function} action Function to be executed when the input event occurs.
      * @param {Enumeration} type The ScreenSpaceEventType of input event.
@@ -94,10 +94,10 @@ define([
      * @exception {DeveloperError} action is required.
      * @exception {DeveloperError} type is required.
      *
-     * @see EventHandler#getInputAction
-     * @see EventHandler#removeInputAction
+     * @see ScreenSpaceEventHandler#getInputAction
+     * @see ScreenSpaceEventHandler#removeInputAction
      */
-    EventHandler.prototype.setInputAction = function(action, type, modifier) {
+    ScreenSpaceEventHandler.prototype.setInputAction = function(action, type, modifier) {
         if (!action) {
             throw new DeveloperError('action is required.');
         }
@@ -121,7 +121,7 @@ define([
     /**
      * Returns the function to be executed on an input event.
      *
-     * @memberof EventHandler
+     * @memberof ScreenSpaceEventHandler
      *
      * @param {Enumeration} type The ScreenSpaceEventType of input event.
      * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
@@ -129,10 +129,10 @@ define([
      *
      * @exception {DeveloperError} type is required.
      *
-     * @see EventHandler#setInputAction
-     * @see EventHandler#removeInputAction
+     * @see ScreenSpaceEventHandler#setInputAction
+     * @see ScreenSpaceEventHandler#removeInputAction
      */
-    EventHandler.prototype.getInputAction = function(type, modifier) {
+    ScreenSpaceEventHandler.prototype.getInputAction = function(type, modifier) {
         if (!type) {
             throw new DeveloperError('type is required.');
         }
@@ -154,7 +154,7 @@ define([
     /**
      * Removes the function to be executed on an input event.
      *
-     * @memberof EventHandler
+     * @memberof ScreenSpaceEventHandler
      *
      * @param {Enumeration} type The ScreenSpaceEventType of input event.
      * @param {Enumeration} modifier A EventModifier key that is held when a <code>type</code>
@@ -162,10 +162,10 @@ define([
      *
      * @exception {DeveloperError} type is required.
      *
-     * @see EventHandler#getInputAction
-     * @see EventHandler#setInputAction
+     * @see ScreenSpaceEventHandler#getInputAction
+     * @see ScreenSpaceEventHandler#setInputAction
      */
-    EventHandler.prototype.removeInputAction = function(type, modifier) {
+    ScreenSpaceEventHandler.prototype.removeInputAction = function(type, modifier) {
         if (!type) {
             throw new DeveloperError('type is required.');
         }
@@ -182,7 +182,7 @@ define([
         }
     };
 
-    EventHandler.prototype._getModifier = function(event) {
+    ScreenSpaceEventHandler.prototype._getModifier = function(event) {
         if (event.shiftKey) {
             return EventModifier.SHIFT;
         } else if (event.ctrlKey) {
@@ -194,7 +194,7 @@ define([
         return undefined;
     };
 
-    EventHandler.prototype._handleMouseDown = function(event) {
+    ScreenSpaceEventHandler.prototype._handleMouseDown = function(event) {
         var pos = this._getPosition(event);
         this._lastMouseX = pos.x;
         this._lastMouseY = pos.y;
@@ -229,7 +229,7 @@ define([
         event.preventDefault();
     };
 
-    EventHandler.prototype._handleMouseUp = function(event) {
+    ScreenSpaceEventHandler.prototype._handleMouseUp = function(event) {
         var modifier = this._getModifier(event);
         var action, clickAction;
         if (this._seenAnyTouchEvents) {
@@ -273,7 +273,7 @@ define([
         }
     };
 
-    EventHandler.prototype._handleMouseMove = function(event) {
+    ScreenSpaceEventHandler.prototype._handleMouseMove = function(event) {
         var pos = this._getPosition(event);
         if (this._seenAnyTouchEvents) {
             return;
@@ -303,7 +303,7 @@ define([
         }
     };
 
-    EventHandler.prototype._handleTouchStart = function(event) {
+    ScreenSpaceEventHandler.prototype._handleTouchStart = function(event) {
         var pos, pos2, numberOfTouches = event.touches.length;
         this._seenAnyTouchEvents = true;
         var modifier = this._getModifier(event);
@@ -361,7 +361,7 @@ define([
         }
     };
 
-    EventHandler.prototype._handleTouchEnd = function(event) {
+    ScreenSpaceEventHandler.prototype._handleTouchEnd = function(event) {
         var numberOfTouches = event.touches.length;
         var numberOfTargetTouches = event.targetTouches.length;
         var modifier = this._getModifier(event);
@@ -406,7 +406,7 @@ define([
         }
     };
 
-    EventHandler.prototype._handleTouchMove = function(event) {
+    ScreenSpaceEventHandler.prototype._handleTouchMove = function(event) {
         var modifier = this._getModifier(event);
         var pos, pos2, action, movement;
 
@@ -482,7 +482,7 @@ define([
         }
     };
 
-    EventHandler.prototype._handleMouseWheel = function(event) {
+    ScreenSpaceEventHandler.prototype._handleMouseWheel = function(event) {
         // Some browsers use event.detail to count the number of clicks. The sign
         // of the integer is the direction the wheel is scrolled. In that case, convert
         // to the angle it was rotated in degrees.
@@ -498,7 +498,7 @@ define([
         }
     };
 
-    EventHandler.prototype._handleMouseDblClick = function(event) {
+    ScreenSpaceEventHandler.prototype._handleMouseDblClick = function(event) {
         var modifier = this._getModifier(event);
         var action;
         var pos = this._getPosition(event);
@@ -522,7 +522,7 @@ define([
         }
     };
 
-    EventHandler.prototype._register = function() {
+    ScreenSpaceEventHandler.prototype._register = function() {
         var that = this, useDoc = true;
 
         this._callbacks = [];
@@ -606,7 +606,7 @@ define([
         }
     };
 
-    EventHandler.prototype._unregister = function() {
+    ScreenSpaceEventHandler.prototype._unregister = function() {
         for ( var i = 0; i < this._callbacks.length; i++) {
             var cback = this._callbacks[i];
             if (cback.onDoc) {
@@ -623,13 +623,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof EventHandler
+     * @memberof ScreenSpaceEventHandler
      *
      * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see EventHandler#destroy
+     * @see ScreenSpaceEventHandler#destroy
      */
-    EventHandler.prototype.isDestroyed = function() {
+    ScreenSpaceEventHandler.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -640,21 +640,21 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof EventHandler
+     * @memberof ScreenSpaceEventHandler
      *
      * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see EventHandler#isDestroyed
+     * @see ScreenSpaceEventHandler#isDestroyed
      *
      * @example
      * handler = handler && handler.destroy();
      */
-    EventHandler.prototype.destroy = function() {
+    ScreenSpaceEventHandler.prototype.destroy = function() {
         this._unregister();
         return destroyObject(this);
     };
 
-    return EventHandler;
+    return ScreenSpaceEventHandler;
 });

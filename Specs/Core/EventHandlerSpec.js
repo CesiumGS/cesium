@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/EventHandler',
+         'Core/ScreenSpaceEventHandler',
          'Core/EventModifier',
          'Core/ScreenSpaceEventType',
          'Core/Cartesian2'
      ], function(
-         EventHandler,
+         ScreenSpaceEventHandler,
          EventModifier,
          ScreenSpaceEventType,
          Cartesian2) {
@@ -98,7 +98,7 @@ defineSuite([
 
     beforeEach(function() {
         element = new MockDoc();
-        handler = new EventHandler(element);
+        handler = new ScreenSpaceEventHandler(element);
     });
 
     afterEach(function() {

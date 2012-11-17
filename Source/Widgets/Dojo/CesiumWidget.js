@@ -11,7 +11,7 @@ define([
         '../../Core/BoundingRectangle',
         '../../Core/Ellipsoid',
         '../../Core/computeSunPosition',
-        '../../Core/EventHandler',
+        '../../Core/ScreenSpaceEventHandler',
         '../../Core/FeatureDetection',
         '../../Core/ScreenSpaceEventType',
         '../../Core/Cartesian2',
@@ -38,7 +38,7 @@ define([
         BoundingRectangle,
         Ellipsoid,
         computeSunPosition,
-        EventHandler,
+        ScreenSpaceEventHandler,
         FeatureDetection,
         ScreenSpaceEventType,
         Cartesian2,
@@ -223,7 +223,7 @@ define([
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
 
-            var handler = new EventHandler(canvas);
+            var handler = new ScreenSpaceEventHandler(canvas);
             handler.setInputAction(lang.hitch(this, '_handleLeftClick'), ScreenSpaceEventType.LEFT_CLICK);
             handler.setInputAction(lang.hitch(this, '_handleRightClick'), ScreenSpaceEventType.RIGHT_CLICK);
             handler.setInputAction(lang.hitch(this, '_handleMouseMove'), ScreenSpaceEventType.MOUSE_MOVE);
