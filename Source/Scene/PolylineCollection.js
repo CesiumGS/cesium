@@ -136,8 +136,8 @@ define([
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
          */
-        this.modelMatrix = Matrix4.IDENTITY;
-        this._modelMatrix = Matrix4.IDENTITY;
+        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this._modelMatrix = Matrix4.IDENTITY.clone();
         this._sp = undefined;
 
         this._boundingVolume = undefined;
