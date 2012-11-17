@@ -916,7 +916,7 @@ define([
             var camera = scene.getCamera();
             camera.controller.constrainedAxis = undefined;
 
-            var inputController = scene.getCameraInputController();
+            var inputController = scene.getScreenSpaceCameraController();
             inputController.enableTranslate = true;
             inputController.setEllipsoid(Ellipsoid.WGS84);
             inputController.columbusViewMode = CameraColumbusViewMode.FREE;

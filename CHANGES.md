@@ -11,7 +11,7 @@ Beta Releases
    * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
    * Renamed `MouseEventType` to `InputEventType`.
    * Renamed `MouseEventType.MOVE` to `InputEventType.MOUSE_MOVE`.
-   * Renamed `CameraMouseController` to `CameraInputController`.
+   * Renamed `CameraMouseController` to `ScreenSpaceCameraController`.
    * Renamed all `*MouseAction` to `*InputAction` (including get, set, remove, etc).
    * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
    * `positionToEyeEC` in `czm_materialInput` is no longer normalized by default.

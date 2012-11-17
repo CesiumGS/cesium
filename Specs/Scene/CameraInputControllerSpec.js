@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/CameraInputController',
+         'Scene/ScreenSpaceCameraController',
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Ellipsoid',
@@ -15,7 +15,7 @@ defineSuite([
          'Scene/SceneMode',
          'ThirdParty/Tween'
      ], function(
-         CameraInputController,
+         ScreenSpaceCameraController,
          Cartesian2,
          Cartesian3,
          Ellipsoid,
@@ -118,7 +118,7 @@ defineSuite([
     beforeEach(function() {
         canvas = new MockCanvas();
         camera = new Camera(canvas);
-        controller = new CameraInputController(canvas, camera.controller);
+        controller = new ScreenSpaceCameraController(canvas, camera.controller);
     });
 
     afterEach(function() {
@@ -127,13 +127,13 @@ defineSuite([
 
     it('constructor throws without a canvas', function() {
         expect(function() {
-            return new CameraInputController();
+            return new ScreenSpaceCameraController();
         }).toThrow();
     });
 
     it('constructor throws without a camera', function() {
         expect(function() {
-            return new CameraInputController(new MockCanvas());
+            return new ScreenSpaceCameraController(new MockCanvas());
         }).toThrow();
     });
 

@@ -20,7 +20,7 @@ define([
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         './Camera',
-        './CameraInputController',
+        './ScreenSpaceCameraController',
         './CompositePrimitive',
         './CullingVolume',
         './AnimationCollection',
@@ -50,7 +50,7 @@ define([
         Context,
         ClearCommand,
         Camera,
-        CameraInputController,
+        ScreenSpaceCameraController,
         CompositePrimitive,
         CullingVolume,
         AnimationCollection,
@@ -76,7 +76,7 @@ define([
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(canvas);
-        this._cameraInputController = new CameraInputController(canvas, this._camera.controller);
+        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera.controller);
 
         this._animations = new AnimationCollection();
 
@@ -168,8 +168,8 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.getCameraInputController = function() {
-        return this._cameraInputController;
+    Scene.prototype.getScreenSpaceCameraController = function() {
+        return this._screenSpaceCameraController;
     };
 
     /**
@@ -433,7 +433,7 @@ define([
         this._frameState.passes.overlay = true;
 
         this._camera.controller.update(this._frameState);
-        this._cameraInputController.update(this._frameState);
+        this._screenSpaceCameraController.update(this._frameState);
     };
 
     /**
@@ -567,7 +567,7 @@ define([
      * @memberof Scene
      */
     Scene.prototype.destroy = function() {
-        this._cameraInputController = this._cameraInputController && this._cameraInputController.destroy();
+        this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
         this._context = this._context && this._context.destroy();
