@@ -5,6 +5,7 @@ define([
         'dojo/ready',
         'dojo/_base/lang',
         'dojo/_base/event',
+        'dojo/dom-style',
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
@@ -58,6 +59,7 @@ define([
         ready,
         lang,
         event,
+        domStyle,
         on,
         _WidgetBase,
         _TemplatedMixin,
@@ -818,13 +820,21 @@ define([
             view3D.set('checked', true);
             viewColumbus.set('checked', false);
 
-            on(viewFullscreen, 'Click', function() {
-                if (Fullscreen.isFullscreen()) {
-                    Fullscreen.exitFullscreen();
-                } else {
-                    Fullscreen.requestFullscreen(widget.cesiumNode);
-                }
-            });
+            if (Fullscreen.isFullscreenEnabled()) {
+                on(document, Fullscreen.getFullscreenChangeEventName(), function() {
+                    widget.resize();
+                });
+
+                on(viewFullscreen, 'Click', function() {
+                    if (Fullscreen.isFullscreen()) {
+                        Fullscreen.exitFullscreen();
+                    } else {
+                        Fullscreen.requestFullscreen(widget.cesiumNode);
+                    }
+                });
+            } else {
+                domStyle.set(viewFullscreen.domNode, 'display', 'none');
+            }
 
             on(viewHomeButton, 'Click', function() {
                 widget.viewHome();

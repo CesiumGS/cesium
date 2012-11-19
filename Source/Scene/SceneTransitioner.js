@@ -297,7 +297,7 @@ define([
             controllers.addCentralBody();
 
             updateFrustums(this);
-            camera.transform = Matrix4.IDENTITY;
+            camera.transform = Matrix4.IDENTITY.clone();
 
             if (previousMode !== SceneMode.MORPHING || this._morphCancelled) {
                 this._morphCancelled = false;
