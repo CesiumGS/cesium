@@ -338,6 +338,29 @@ define([
         });
         shuttleRingG.appendChild(shuttleRingGlow);
 
+        var maxShuttleAngle = 105;
+        function shuttleAngletoSpeed(angle) {
+            if (Math.abs(angle) < 5) {
+                return 0;
+            }
+            var speed = Math.round(Math.exp(((Math.abs(angle) - 5) * 0.15)));
+            if (angle < 0) {
+                speed *= -1.0;
+            }
+console.log('angle ' + angle + ' = speed ' + speed);
+            return speed;
+        }
+
+        function shuttleSpeedtoAngle(speed) {
+            var angle = Math.log(Math.abs(speed)) / 0.15 + 5;
+            angle = Math.max(Math.min(angle, maxShuttleAngle), 0);
+            if (speed < 0) {
+                angle *= -1.0;
+            }
+console.log('speed ' + speed + ' = angle ' + angle);
+            return angle;
+        }
+
         this._shuttleRingVisible = false;
         var shuttleRingDragging = false;
         function setShuttleRingGlow(angle) {
@@ -353,7 +376,22 @@ define([
                 var x = e.clientX - 101 - rect.left;
                 var y = e.clientY - 96 - rect.top;
                 var angle = Math.atan2(y, x) * 180 / Math.PI + 90;
+                if (angle > 180) {
+                    angle -= 360;
+                }
+                angle = Math.max(Math.min(angle, maxShuttleAngle), -maxShuttleAngle);
                 setShuttleRingGlow(angle);
+                var speed = shuttleAngletoSpeed(angle);
+                if (speed !== 0) {
+                    widget.clock.multiplier = speed;
+                    if (!widget.animationController.isAnimating()) {
+                        widget.animationController.unpause();
+                    }
+                } else {
+                    if (widget.animationController.isAnimating()) {
+                        widget.animationController.pause();
+                    }
+                }
             } else {
                 shuttleRingDragging = false;
             }
@@ -479,6 +517,11 @@ define([
         }, true);
 
         showShuttleRingSVG.addEventListener('click', function () {
+            if (widget.animationController.isAnimating()) {
+                setShuttleRingGlow(shuttleSpeedtoAngle(widget.clock.multiplier));
+            } else {
+                setShuttleRingGlow(0);
+            }
             shuttleRingDismiss.beginElementAt(0);  // Show ring
             shuttleRingDismiss.endElementAt(0.5);
             widget._setSizeBig();
