@@ -99,8 +99,17 @@ define([
         /**
          * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
          * the contrast while greater than 1.0 increases it.
+         *
+         * @type {Number}
          */
         this.contrast = defaultValue(description.contrast, 1.0);
+
+        /**
+         * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
+         *
+         * @type {Number}
+         */
+        this.gamma = defaultValue(description.gamma, 1.0);
 
         /**
          * Determines if this layer is shown.

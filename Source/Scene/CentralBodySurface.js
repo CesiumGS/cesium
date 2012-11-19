@@ -852,6 +852,9 @@ define([
             u_dayTextureContrast : function() {
                 return this.dayTextureContrast;
             },
+            u_dayTextureOneOverGamma : function() {
+                return this.dayTextureOneOverGamma;
+            },
             u_dayIntensity : function() {
                 return this.dayIntensity;
             },
@@ -872,6 +875,7 @@ define([
             dayTextureAlpha : [],
             dayTextureBrightness : [],
             dayTextureContrast : [],
+            dayTextureOneOverGamma : [],
             dayIntensity : 0.0,
 
             southAndNorthLatitude : new Cartesian2(0.0, 0.0),
@@ -1034,6 +1038,7 @@ define([
                         uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
                         uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness;
                         uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
+                        uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
 
                         ++numberOfDayTextures;
                     }
