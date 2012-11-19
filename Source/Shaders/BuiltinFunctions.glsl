@@ -399,13 +399,25 @@ czm_material czm_getDefaultMaterial(czm_materialInput materialInput)
     return material;
 }
 
+float getDiffuse(vec3 lightDirection, czm_material material)
+{
+    return max(dot(lightDirection, material.normal), 0.0);
+}
+
+float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
+{
+    vec3 toReflectedLight = reflect(-lightDirection, material.normal);
+    float specular = max(dot(toReflectedLight, toEye), 0.0);
+
+    return pow(specular, material.shininess);
+}
+
 /**
  * Fast phong light computation.
  *
  * @name czm_lightValuePhong
  * @glslFunction
  *
- * @param {vec3} toLight Direction to light in eye coordinates.
  * @param {vec3} toEye Direction to eye in eye coordinates.
  * @param {czm_material} material Material value used for light computation.
  *
@@ -413,18 +425,33 @@ czm_material czm_getDefaultMaterial(czm_materialInput materialInput)
  *
  * @see czm_material
  */
-
-vec4 czm_lightValuePhong(vec3 toLight, vec3 toEye, czm_material material)
+vec4 czm_lightValuePhong(vec3 toEye, czm_material material)
 {
-    vec3 normal = material.normal;
-    float diffuse = max(dot(toLight, normal), 0.0);
-    vec3 toReflectedLight = reflect(-toLight, normal);
-    float specular = max(dot(toReflectedLight, toEye), 0.0);
+    // Diffuse from directional light source at eye
+    // Specular from sun and pseudo-moon
+    float diffuse = getDiffuse(toEye, material);
+    float specular = getSpecular(czm_sunDirectionEC, toEye, material) + getSpecular(-czm_sunDirectionEC, toEye, material);
 
     vec3 ambient = vec3(0.0);
     vec3 color = ambient + material.emission;
     color += material.diffuse * diffuse;
-    color += material.specular * pow(specular, material.shininess);
+    color += material.specular * specular;
+
+    return vec4(color, material.alpha);
+}
+
+// LIGHTING_TODO Better name/organization
+vec4 czm_lightValuePhong2(vec3 toEye, czm_material material)
+{
+    // Diffuse from directional light source at eye, sun, and pseudo-moon
+    // Specular from sun and pseudo-moon
+    float diffuse = getDiffuse(toEye, material) + getDiffuse(czm_sunDirectionEC, material) + getDiffuse(-czm_sunDirectionEC, material);
+    float specular = getSpecular(czm_sunDirectionEC, toEye, material) + getSpecular(-czm_sunDirectionEC, toEye, material);
+
+    vec3 ambient = vec3(0.0);
+    vec3 color = ambient + material.emission;
+    color += material.diffuse * diffuse;
+    color += material.specular * specular;
 
     return vec4(color, material.alpha);
 }
