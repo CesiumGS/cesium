@@ -25,9 +25,8 @@ define(['dojo',
     var startDatePart, endDatePart, startTimePart, endTimePart;
     var timeline, clock, animationController, playback;
 
-    function updateDateDisplay(currentTime) {
-        var date = currentTime.toDate();
-        document.getElementById('mousePos').innerHTML = date.toUTCString();
+    function updateScrubTime(julianDate) {
+        document.getElementById('mousePos').innerHTML = timeline.makeLabel(julianDate) + ' UTC';
     }
 
     function handleSetTime(e) {
@@ -35,12 +34,12 @@ define(['dojo',
             animationController.pause();
             var scrubJulian = e.timeJulian;
             clock.currentTime = scrubJulian;
-            updateDateDisplay(scrubJulian);
+            updateScrubTime(scrubJulian);
         }
     }
 
-    function handleSetZoom(e) {
-        var span = timeline._timeBarSecondsSpan, spanUnits = 'sec';
+    function spanToString(span) {
+        var spanUnits = 'sec';
         if (span > 31536000) {
             span /= 31536000;
             spanUnits = 'years';
@@ -60,9 +59,17 @@ define(['dojo',
             span /= 60;
             spanUnits = 'minutes';
         }
+        return span.toString() + ' ' + spanUnits;
+    }
 
-        dojo.byId('formatted').innerHTML = '<br/>Start: ' + e.startJulian.toDate().toUTCString() + '<br/>Stop: ' + e.endJulian.toDate().toUTCString() + '<br/>Span: ' + span + ' ' + spanUnits;
-        document.getElementById('mousePos').innerHTML = clock.currentTime.toDate().toUTCString();
+    function handleSetZoom(e) {
+        dojo.byId('formatted').innerHTML =
+            //'<br/>Epoch: ' + timeline.makeLabel(e.epochJulian) + ' UTC' +
+            '<br/>Start: ' + timeline.makeLabel(e.startJulian) + ' UTC' +
+            '<br/>&nbsp;Stop: ' + timeline.makeLabel(e.endJulian) + ' UTC' +
+            '<br/>Span: ' + spanToString(e.totalSpan) +
+            '<br/>Tic: ' + spanToString(e.mainTicSpan);
+        updateScrubTime(clock.currentTime);
     }
 
     function makeTimeline(startJulian, scrubJulian, endJulian) {
@@ -89,7 +96,7 @@ define(['dojo',
         function tick() {
             var currentTime = animationController.update();
             timeline.updateFromClock();
-            updateDateDisplay(currentTime);
+            updateScrubTime(currentTime);
             requestAnimationFrame(tick);
         }
         tick();

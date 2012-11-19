@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -99,11 +100,37 @@ require([
     // separate animationControllers to show a scene at
     // different times.
 
-    var widget1, widget2, animationController;
     var endUserOptions = {
         'source' : '../../CesiumViewer/Gallery/simple.czml'
     };
 
+    // First, create widget1 (the top widget).
+    var widget1 = new CesiumViewerWidget({
+        endUserOptions : endUserOptions,
+        autoStartRenderLoop : false
+    });
+    widget1.placeAt(dom.byId("cesiumContainerTop"));
+    widget1.startup();
+    dom.byId('topbar').innerHTML = '';
+    
+    // Save off a copy of widget1's animationController
+    var animationController = widget1.animationController;
+
+    // Now create widget2, passing in the
+    // existing animationController to be shared.
+    var widget2 = new CesiumViewerWidget({
+        animationController : animationController,
+        endUserOptions : endUserOptions,
+        autoStartRenderLoop : false
+    });
+    widget2.placeAt(dom.byId("cesiumContainerBottom"));
+    widget2.startup();
+
+    // Switch widget2 to Columbus View.
+    widget2.viewColumbus.onClick();
+
+    // Now both widgets are created.  A custom render loop is
+    // needed to drive them both from requestAnimationFrame.
     function updateAndRender() {
         // Get the time from the shared controller, then
         // update and render both widgets.
@@ -115,34 +142,8 @@ require([
         requestAnimationFrame(updateAndRender);
     }
 
-    function createWidget2() {
-        // Save off a copy of widget1's animationController
-        animationController = widget1.animationController;
-
-        // Now create widget2, passing in the
-        // existing animationController to be shared.
-        widget2 = new CesiumViewerWidget({
-            animationController : animationController,
-            endUserOptions : endUserOptions,
-            postSetup : function(widget) {
-                // Switch to columbus view
-                widget2.viewColumbus.onClick();
-
-                // Once 2nd widget created, start loop.
-                updateAndRender();
-            }
-        }).placeAt(dom.byId("cesiumContainerBottom"));
-    }
-
-    // First thing: Create widget1 (the top widget).
-    widget1 = new CesiumViewerWidget({
-        endUserOptions : endUserOptions,
-        postSetup : function(widget) {
-            createWidget2();
-        }
-    }).placeAt(dom.byId("cesiumContainerTop"));
-
-    dom.byId('topbar').innerHTML = '';
+    // Call the render loop once manually, to prime the pump.
+    updateAndRender();
 });
 </script>
 </body>

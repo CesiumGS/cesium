@@ -4,7 +4,28 @@ Change Log
 Beta Releases
 -------------
 
-### b10 - xx/xx/2012
+### b11 - xx/xx/2012
+
+* Breaking changes:
+   * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
+   * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
+   * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
+   * `positionToEyeEC` in `czm_materialInput` is no longer normalized by default.
+   * `FullScreen` and related functions have been renamed to `Fullscreen` to match the W3C standard name.
+   * `Fullscreen.isFullscreenEnabled` was incorrectly implemented in certain browsers.  `isFullscreenEnabled` now correctly determines whether the browser will allow an element to go fullscreen.  A new `isFullscreen` function is available to determine if the browser is currently in fullscreen mode.
+   * `Fullscreen.getFullScreenChangeEventName` and `Fullscreen.getFullScreenChangeEventName` now return the proper event name, suitable for use with the `addEventListener` API, instead prefixing them with "on".
+* Added `Water` material.  See the Materials Sandbox example.
+* Fixed jitter artifacts with billboards and polylines.
+* Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
+* Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
+* Added new automatic GLSL uniforms: 'czm_frameNumber', `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
+* Added `czm_translateRelativeToEye` GLSL function.
+* Added `QuadraticRealPolynomial`, `CubicRealPolynomial`, and `QuarticRealPolynomial` for finding the roots of quadratic, cubic, and quartic polynomials.
+* Added `IntersectionTests.grazingAltitudeLocation` for finding a point on a ray nearest to an ellipsoid.
+* Added `mostOrthogonalAxis` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
+* Added `shininess` to `czm_materialInput`.
+
+### b10 - 11/02/2012
 
 * Breaking changes:
    * Renamed `Texture2DPool` to `TexturePool`.
@@ -17,6 +38,7 @@ Beta Releases
    * The `description.generateTextureCoords` parameter passed to `ExtentTessellator.compute` is now called `description.generateTextureCoordinates`.
    * Renamed `bringForward`, `sendBackward`, `bringToFront`, and `sendToBack` methods on `CompositePrimitive` to `raise`, `lower`, `raiseToTop`, and `lowerToBottom`, respectively.
    * `Cache` and `CachePolicy` are no longer used and have been removed.
+   * Fixed problem with Dojo widget startup, and removed "postSetup" callback in the process.  See Sandcastle examples and update your startup code.
 * `CentralBody` now allows imagery from multiple sources to be layered and alpha blended on the globe.  See the new `Imagery Layers` and `Map Projections` Sandcastle examples.
 * Added `WebMapServiceImageryProvider`.
 * Improved middle mouse click behavior to always tilt in the same direction.

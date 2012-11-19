@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -142,25 +143,25 @@ require([
             label: 'Add label',
             onClick: function() {
                 primitives.removeAll();
-                addLabel(scene, ellipsoid); 
+                addLabel(scene, ellipsoid);
                 Sandcastle.highlight(addLabel);
             }
-        }).placeAt('toolbar');    
+        }).placeAt('toolbar');
         
         new Button({
             label: 'Set font',
             onClick: function() {
                 primitives.removeAll();
-                setLabelFont(scene, ellipsoid); 
+                setLabelFont(scene, ellipsoid);
                 Sandcastle.highlight(setLabelFont);
             }
-        }).placeAt('toolbar');   
+        }).placeAt('toolbar');
         
         new Button({
             label: 'Set properties',
             onClick: function() {
                 primitives.removeAll();
-                setLabelProperties(scene, ellipsoid); 
+                setLabelProperties(scene, ellipsoid);
                 Sandcastle.highlight(setLabelProperties);
             }
         }).placeAt('toolbar');
@@ -169,21 +170,19 @@ require([
             label: 'Add labels in reference frame',
             onClick: function() {
                 primitives.removeAll();
-                addLabelsInReferenceFrame(scene, ellipsoid); 
+                addLabelsInReferenceFrame(scene, ellipsoid);
                 Sandcastle.highlight(addLabelsInReferenceFrame);
             }
         }).placeAt('toolbar');
     }
 
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            createButtons(widget);
-            widget.startRenderLoop();
-            addLabel(widget.scene, widget.ellipsoid);
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
-    
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    createButtons(widget);
+    addLabel(widget.scene, widget.ellipsoid);
 });
 </script>
 </body>

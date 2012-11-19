@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Math',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/destroyObject',
@@ -28,6 +29,7 @@ define([
         './PerspectiveOffCenterFrustum',
         './FrustumCommands'
     ], function(
+        CesiumMath,
         Color,
         defaultValue,
         destroyObject,
@@ -257,11 +259,8 @@ define([
 
         scene._animations.update();
         camera.update();
-        us.setView(camera.getViewMatrix());
-        us.setProjection(camera.frustum.getProjectionMatrix());
-        if (camera.frustum.getInfiniteProjectionMatrix) {
-            us.setInfiniteProjection(camera.frustum.getInfiniteProjectionMatrix());
-        }
+        us.update(camera);
+        us.setFrameNumber(CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0));
 
         if (scene._animate) {
             scene._animate();
@@ -389,8 +388,10 @@ define([
         // last frame, else compute the new frustums and sort them by frustum again.
         var farToNearRatio = scene.farToNearRatio;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-        if (near !== Number.MAX_VALUE && (numFrustums !== frustumsLength ||
-                near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)) {
+        if (near !== Number.MAX_VALUE &&
+            (numFrustums !== frustumsLength ||
+             (frustumCommandsList.length !== 0 &&
+              (near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
             createPotentiallyVisibleSet(scene, listName);
         }
@@ -416,10 +417,7 @@ define([
             frustum.near = frustumCommands.near;
             frustum.far = frustumCommands.far;
 
-            us.setProjection(frustum.getProjectionMatrix());
-            if (frustum.getInfiniteProjectionMatrix) {
-                us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
-            }
+            us.updateFrustum(frustum);
 
             var commands = frustumCommands.commands;
             var length = commands.length;

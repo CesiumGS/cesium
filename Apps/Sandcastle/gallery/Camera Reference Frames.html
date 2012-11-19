@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -97,7 +98,7 @@ require([
         var xAxis = {
                 color : new Cesium.Color(1.0, 0.0, 0.0, 1.0),
                 positions : [
-                    Cesium.Cartesian3.ZERO, 
+                    Cesium.Cartesian3.ZERO,
                     new Cesium.Cartesian3(100000.0, 0.0, 0.0)
                 ]
         };
@@ -106,7 +107,7 @@ require([
         var yAxis = {
                 color : new Cesium.Color(0.0, 1.0, 0.0, 1.0),
                 positions : [
-                    Cesium.Cartesian3.ZERO, 
+                    Cesium.Cartesian3.ZERO,
                     new Cesium.Cartesian3(0.0, 100000.0, 0.0)
                 ]
         };
@@ -115,23 +116,21 @@ require([
         var zAxis = {
                 color : new Cesium.Color(0.0, 0.0, 1.0, 1.0),
                 positions : [
-                    Cesium.Cartesian3.ZERO, 
+                    Cesium.Cartesian3.ZERO,
                     new Cesium.Cartesian3(0.0, 0.0, 100000.0)
-                ]        
+                ]
         };
         polylines.add(zAxis);
         
-        primitives.add(polylines);        
+        primitives.add(polylines);
     }
     
-    var cesiumWidget = new CesiumWidget({
-        postSetup : function(widget) {
-            widget.startRenderLoop();
-            eastNorthUp(widget.scene);
-        }
-    }).placeAt(dom.byId('cesiumContainer'));
-
+    var widget = new CesiumWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    eastNorthUp(widget.scene);
 });
 </script>
 </body>

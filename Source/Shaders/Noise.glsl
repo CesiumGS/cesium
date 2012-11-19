@@ -75,7 +75,7 @@ vec4 _czm_grad4(float j, vec4 ip)
  *
  * Implemented by Ian McEwan, Ashima Arts, and distributed under the MIT License.  {@link https://github.com/ashima/webgl-noise}
  *
- * @name snoise
+ * @name czm_snoise
  * @glslFunction
  *
  * @see <a href="https://github.com/ashima/webgl-noise">https://github.com/ashima/webgl-noise</a>

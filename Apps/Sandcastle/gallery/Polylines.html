@@ -15,6 +15,7 @@
             { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
             { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
             { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
             { name: 'Core', location: 'Source/Core' },
             { name: 'DynamicScene', location: 'Source/DynamicScene' },
             { name: 'Renderer', location: 'Source/Renderer' },
@@ -77,7 +78,7 @@ require([
         var primitives = widget.scene.getPrimitives();
         var polylines = new Cesium.PolylineCollection();
 
-        // A simple polyline with two points. 
+        // A simple polyline with two points.
         var polyline = polylines.add();
         Sandcastle.declare(polyline);   // For highlighting on mouseover in Sandcastle.
         polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
@@ -107,7 +108,7 @@ require([
             new Cesium.Cartographic.fromDegrees(-105.0, 40.0),
             new Cesium.Cartographic.fromDegrees(-100.0, 38.0),
             new Cesium.Cartographic.fromDegrees(-105.0, 35.0),
-            new Cesium.Cartographic.fromDegrees(-100.0, 32.0)            
+            new Cesium.Cartographic.fromDegrees(-100.0, 32.0)
         ]));
         widePolyline.setWidth(5); // Request 5 pixels interior
         widePolyline.setOutlineWidth(10); // Request 10 pixels total
@@ -137,18 +138,17 @@ require([
         primitives.add(localPolylines);
     }
 
-    var cesiumViewerWidget = new CesiumViewerWidget({
+    var widget = new CesiumViewerWidget({
         onObjectMousedOver : function(mousedOverObject) {
-            cesiumViewerWidget.highlightObject(mousedOverObject);
+            widget.highlightObject(mousedOverObject);
             Sandcastle.highlight(mousedOverObject);
-        },
-        postSetup : function(widget) {
-            createPrimitives(widget);
-            widget.startRenderLoop();
         }
-    }).placeAt(dom.byId('cesiumContainer'));
-    
+    });
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
     dom.byId('toolbar').innerHTML = '';
+
+    createPrimitives(widget);
 });
 </script>
 </body>
