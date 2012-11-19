@@ -846,6 +846,12 @@ define([
             u_dayTextureAlpha : function() {
                 return this.dayTextureAlpha;
             },
+            u_dayTextureBrightness : function() {
+                return this.dayTextureBrightness;
+            },
+            u_dayTextureContrast : function() {
+                return this.dayTextureContrast;
+            },
             u_dayIntensity : function() {
                 return this.dayIntensity;
             },
@@ -864,6 +870,8 @@ define([
             dayTextureTranslationAndScale : [],
             dayTextureTexCoordsExtent : [],
             dayTextureAlpha : [],
+            dayTextureBrightness : [],
+            dayTextureContrast : [],
             dayIntensity : 0.0,
 
             southAndNorthLatitude : new Cartesian2(0.0, 0.0),
@@ -1024,6 +1032,8 @@ define([
                         uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
                         uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = tileImagery.textureCoordinateExtent;
                         uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
+                        uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness;
+                        uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
 
                         ++numberOfDayTextures;
                     }

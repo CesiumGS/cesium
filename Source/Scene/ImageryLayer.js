@@ -66,6 +66,10 @@ define([
      * @param {Extent} [description.extent=imageryProvider.extent] The extent of the layer.  This extent
      *        can limit the visible portion of the imagery provider.
      * @param {Number} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
+     * @param {Number} [description.brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
+     *                 color.  Less than 1.0 makes the imagery darker while greater than 1.0 makes it brighter.
+     * @param {Number} [description.contrast=1.0] The contrast of this layer.  1.0 uses the unmodified imagery color.
+     *        Less than 1.0 reduces the contrast while greater than 1.0 increases it.
      * @param {Boolean} [description.show=true] True if the layer is shown; otherwise, false.
      * @param {Number} [description.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
      *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
@@ -78,11 +82,25 @@ define([
         description = defaultValue(description, {});
 
         /**
-         * The alpha blending value of this layer, from 0.0 to 1.0.
+         * The alpha blending value of this layer, usually from 0.0 to 1.0.
          *
          * @type {Number}
          */
         this.alpha = defaultValue(description.alpha, 1.0);
+
+        /**
+         * The brightness of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0
+         * makes the imagery darker while greater than 1.0 makes it brighter.
+         *
+         * @type {Number}
+         */
+        this.brightness = defaultValue(description.brightness, 1.0);
+
+        /**
+         * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+         * the contrast while greater than 1.0 increases it.
+         */
+        this.contrast = defaultValue(description.contrast, 1.0);
 
         /**
          * Determines if this layer is shown.
