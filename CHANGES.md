@@ -4,6 +4,11 @@ Change Log
 Beta Releases
 -------------
 
+TODO
+
+* Breaking changes:
+   * Removed `Scene.setSunPosition` and `Scene.getSunPosition`.
+
 ### b11 - xx/xx/2012
 
 * Breaking changes:

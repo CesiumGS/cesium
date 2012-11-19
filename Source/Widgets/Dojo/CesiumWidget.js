@@ -311,10 +311,7 @@ define([
             }
         },
 
-        _sunPosition : new Cartesian3(),
-
         update : function(currentTime) {
-            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
         },
 
         render : function(currentTime) {

@@ -200,22 +200,6 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.setSunPosition = function(sunPosition) {
-        this.getUniformState().setSunPosition(sunPosition);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getSunPosition = function() {
-        return this.getUniformState().getSunPosition();
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
     Scene.prototype.setAnimation = function(animationCallback) {
         this._animate = animationCallback;
     };

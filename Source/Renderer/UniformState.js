@@ -11,6 +11,7 @@ define([
         '../Core/EncodedCartesian3',
         '../Core/BoundingRectangle',
         '../Core/Transforms',
+        '../Core/computeSunPosition'
     ], function(
         DeveloperError,
         defaultValue,
@@ -22,7 +23,8 @@ define([
         Cartesian4,
         EncodedCartesian3,
         BoundingRectangle,
-        Transforms) {
+        Transforms,
+        computeSunPosition) {
     "use strict";
 
     /**
@@ -44,8 +46,6 @@ define([
         this._projection = Matrix4.IDENTITY.clone();
         this._infiniteProjection = Matrix4.IDENTITY.clone();
         this._entireFrustum = new Cartesian2();
-        // Arbitrary.  The user will explicitly set this later.
-        this._sunPosition = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().x, 0.0, 0.0);
 
         this._frameNumber = 1.0;
         this._time = undefined;
@@ -92,11 +92,10 @@ define([
         this._encodedCameraPositionMC = new EncodedCartesian3();
         this._cameraPosition = new Cartesian3();
 
-        this._sunDirectionECDirty = true;
-        this._sunDirectionEC = new Cartesian3();
-
-        this._sunDirectionWCDirty = true;
+        this._sunDirty = true;
+        this._sunPositionWC = new Cartesian3();
         this._sunDirectionWC = new Cartesian3();
+        this._sunDirectionEC = new Cartesian3();
     };
 
     function setView(uniformState, matrix) {
@@ -112,7 +111,6 @@ define([
         uniformState._modelViewInfiniteProjectionDirty = true;
         uniformState._normalDirty = true;
         uniformState._inverseNormalDirty = true;
-        uniformState._sunDirectionECDirty = true;
     }
 
     function setInverseView(uniformState, matrix) {
@@ -179,6 +177,7 @@ define([
         this._frameNumber = frameNumber;
         this._time = time;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(time);
+        this._sunDirty = true;
     };
 
     /**
@@ -268,7 +267,6 @@ define([
         this._normalDirty = true;
         this._inverseNormalDirty = true;
         this._encodedCameraPositionMCDirty = true;
-        this._sunDirectionWCDirty = true;
     };
 
     /**
@@ -644,81 +642,43 @@ define([
 
     var sunPositionScratch = new Cartesian3();
 
-    function cleanSunDirectionEC(uniformState) {
-        if (uniformState._sunDirectionECDirty) {
-            uniformState._sunDirectionECDirty = false;
+    function cleanSun(uniformState) {
+        if (uniformState._sunDirty) {
+            uniformState._sunDirty = false;
+            computeSunPosition(uniformState._time, uniformState._sunPositionWC);
+            Cartesian3.normalize(uniformState._sunPositionWC, uniformState._sunDirectionWC);
 
-            Matrix3.multiplyByVector(uniformState.getViewRotation(), uniformState._sunPosition, sunPositionScratch);
+            Matrix3.multiplyByVector(uniformState.getViewRotation(), uniformState._sunPositionWC, sunPositionScratch);
             Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
         }
     }
 
     /**
-     * DOC_TBA
+     * Returns a normalized vector to the sun in world coordinates at the current scene time.
      *
      * @memberof UniformState
      *
-     * @param {Matrix4} sunPosition The position of the sun in the sun's reference frame.
-     *
-     * @exception {DeveloperError} sunPosition is required.
-     *
-     * @see UniformState#getSunPosition
-     */
-    UniformState.prototype.setSunPosition = function(sunPosition) {
-        if (!sunPosition) {
-            throw new DeveloperError('sunPosition is required.');
-        }
-
-        Cartesian3.clone(sunPosition, this._sunPosition);
-        this._sunDirectionECDirty = true;
-        this._sunDirectionWCDirty = true;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @see UniformState#setSunPosition
-     */
-    UniformState.prototype.getSunPosition = function() {
-        return this._sunPosition;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @return {Cartesian3} The sun's direction in eye coordinates.
-     *
-     * @see czm_sunDirectionEC
-     * @see UniformState#getSunDirectionEC
-     */
-    UniformState.prototype.getSunDirectionEC = function() {
-        cleanSunDirectionEC(this);
-        return this._sunDirectionEC;
-    };
-
-    function cleanSunDirectionWC(uniformState) {
-        if (uniformState._sunDirectionWCDirty) {
-            uniformState._sunDirectionWCDirty = false;
-            Cartesian3.normalize(uniformState._sunPosition, uniformState._sunDirectionWC);
-        }
-    }
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @return {Cartesian3} A normalized vector from the model's origin to the sun in model coordinates.
+     * @return {Cartesian3} A normalized vector to the sun in world coordinates at the current scene time.
      *
      * @see czm_sunDirectionWC
      */
     UniformState.prototype.getSunDirectionWC = function() {
-        cleanSunDirectionWC(this);
+        cleanSun(this);
         return this._sunDirectionWC;
+    };
+
+    /**
+     * Returns a normalized vector to the sun in eye coordinates at the current scene time.
+     *
+     * @memberof UniformState
+     *
+     * @return {Cartesian3} A normalized vector to the sun in eye coordinates at the current scene time.
+     *
+     * @see czm_sunDirectionEC
+     */
+    UniformState.prototype.getSunDirectionEC = function() {
+        cleanSun(this);
+        return this._sunDirectionEC;
     };
 
     var cameraPositionMC = new Cartesian3();

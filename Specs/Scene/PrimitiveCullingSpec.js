@@ -79,7 +79,6 @@ defineSuite([
 
         us = context.getUniformState();
         us.update(camera, 1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
-        us.setSunPosition(new Cartesian3(-2.0, 0.0, 0.0));
     });
 
     afterEach(function() {

@@ -425,10 +425,10 @@ defineSuite([
         expect(material1.shaderSource).toEqual(material2.shaderSource);
 
         var pixel = renderMaterial(material2);
-        expect(pixel).toEqual([0, 0, 255, 255]);
+        expect(pixel).toEqual([0, 0, 64, 255]);
 
         pixel = renderMaterial(material1);
-        expect(pixel).toEqual([0, 255, 0, 255]);
+        expect(pixel).toEqual([0, 64, 0, 255]);
     });
 
     it('create material with sub-materials of the same type', function() {
@@ -456,7 +456,7 @@ defineSuite([
         });
 
         var pixel = renderMaterial(material);
-        expect(pixel).toEqual([0, 255, 255, 255]);
+        expect(pixel).toEqual([0, 64, 64, 255]);
     });
 
     it('throws without context for material that uses images', function() {

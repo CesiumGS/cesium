@@ -1116,8 +1116,6 @@ define([
             }
         },
 
-        _sunPosition : new Cartesian3(),
-
         /**
          * Call this function prior to rendering each animation frame, to prepare
          * all CZML objects and other settings for the next frame.
@@ -1130,7 +1128,6 @@ define([
 
             this._updateSpeedIndicator();
             this.timelineControl.updateFromClock();
-            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
             this.visualizers.update(currentTime);
 
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||
