@@ -1,0 +1,80 @@
+.svgText {
+    fill: #edffff;
+    font-family: Sans-Serif;
+    font-size: 15px;
+    text-anchor: middle;
+}
+.rectButton {
+    cursor: pointer;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.rectButton .buttonPath {
+    fill: #edffff;
+}
+.rectButton .playbackMode {
+    fill: #edffff;
+    fill-opacity: 0.2;
+}
+.rectButton:hover .playbackMode {
+    fill-opacity: 0.5;
+}
+.rectButton .buttonGlow {
+    fill: #fff;
+    stroke: none;
+    filter: url(#blurred);
+    display: none;
+}
+.rectButton .buttonMain {
+    fill: url(#buttonNormal);
+    stroke: #444;
+    stroke-width: 1;
+}
+.buttonSelected .buttonGlow {
+    display: block;
+    fill: #2E2;
+}
+.buttonSelected .buttonMain {
+    fill: url(#buttonSelected);
+    stroke: #2E2;
+}
+.rectButton:hover .buttonGlow {
+    display: block;
+}
+.rectButton:hover .buttonMain {
+    fill: url(#buttonHovered);
+    stroke: #AEF;
+}
+.buttonSelected:hover .buttonGlow {
+    fill: #fff;
+}
+.buttonSelected:hover .buttonMain {
+    stroke: #2E2;
+}
+.rectButton:active .buttonMain {
+    fill: #ABD6FF;
+}
+.shuttleRingPath {
+    fill: url(#buttonRadialNormal);
+    stroke: #444;
+    stroke-width: 2;
+}
+.shuttleRingBack {
+    fill: #222;
+    fill-opacity: 0.8;
+}
+.shuttleRing .rectButton .buttonPath {
+    fill-opacity: 0.5;
+}
+.shuttleRing .buttonSelected .buttonPath {
+    fill-opacity: 1;
+}
+.shuttleRingLabels {
+    fill: #edffff;
+    fill-opacity: 0.7;
+}
+.shuttleRingGlow {
+    fill: url(#shuttleRingGlowGradient);
+    cursor: pointer;
+}
