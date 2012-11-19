@@ -786,7 +786,7 @@ defineSuite([
         expect(intersection).toBeDefined();
     });
 
-    it('does not tilt when the view direction does not intersect the ellipsoid', function() {
+    it('tilts when the view direction does not intersect the ellipsoid', function() {
         var frameState = setUp3D();
         var position = camera.position.clone();
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
@@ -799,7 +799,7 @@ defineSuite([
 
         moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
-        expect(camera.position).toEqual(position);
+        expect(camera.position).not.toEqual(position);
         expect(camera.direction.equalsEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15)).toEqual(false);
         expect(camera.direction.cross(camera.up).equalsEpsilon(camera.right, CesiumMath.EPSILON14)).toEqual(true);
         expect(camera.right.cross(camera.direction).equalsEpsilon(camera.up, CesiumMath.EPSILON15)).toEqual(true);
