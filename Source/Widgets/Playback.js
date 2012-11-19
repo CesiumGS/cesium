@@ -78,18 +78,18 @@ define([
 
     Playback.prototype._setSizeBig = function () {
         var svg = this.svgNode;
-        svg.style.cssText = 'width: 200px; height: 133px;';
+        svg.style.cssText = 'width: 200px; height: 131px; position: absolute; bottom: 0; left: 0;';
         svg.setAttribute('width', 200);
-        svg.setAttribute('height', 133);
-        svg.setAttribute('viewBox', '0 0 200 133');
+        svg.setAttribute('height', 131);
+        svg.setAttribute('viewBox', '0 0 200 131');
     };
 
     Playback.prototype._setSizeSmall = function () {
         var svg = this.svgNode;
-        svg.style.cssText = 'width: 200px; height: 74px;';
+        svg.style.cssText = 'width: 200px; height: 74px; position: absolute; bottom: 0; left: 0;';
         svg.setAttribute('width', 200);
         svg.setAttribute('height', 74);
-        svg.setAttribute('viewBox', '0 59 200 74');
+        svg.setAttribute('viewBox', '0 57 200 74');
     };
 
     Playback.prototype._createNodes = function(parentNode) {
@@ -161,7 +161,7 @@ define([
                     'children' : [
                         {
                             'tagName' : 'feGaussianBlur',
-                            'stdDeviation' : 5,
+                            'stdDeviation' : 4,
                             'in' : 'SourceGraphic'
                         }
                     ]
@@ -398,7 +398,7 @@ define([
             'attributeName' : 'transform',
             'attributeType' : 'XML',
             'type' : 'scale',
-            'values' : '1;0.1;1',
+            'values' : '0.1;1;0.1',
             'calcMode' : 'spline',
             'keyTimes' : '0;0.5;1',
             'keySplines' : '0.5 0.5 0.5 1;0.5 0.5 0.5 1',
@@ -469,16 +469,17 @@ define([
         }, true);
 
         showShuttleRingSVG.addEventListener('click', function () {
-                shuttleRingDismiss.endElementAt(1);
-                shuttleRingDismiss.beginElementAt(-0.5);  // Show ring
+                shuttleRingDismiss.beginElementAt(0);  // Show ring
+                shuttleRingDismiss.endElementAt(0.5);
                 widget._setSizeBig();
                 window.setTimeout(hideButtons, 200);
         }, true);
 
         svg.appendChild(topG);
         parentNode.appendChild(svg);
-        shuttleRingDismiss.beginElementAt(0);  // Hide ring
-        shuttleRingDismiss.endElementAt(0.5);
+        shuttleRingDismiss.endElementAt(1);
+        //shuttleRingDismiss.beginElementAt(-0.5);  // Hide ring
+        shuttleRingDismiss.beginElementAt(-0.9);  // Hide ring instantly
     };
 
     /**
