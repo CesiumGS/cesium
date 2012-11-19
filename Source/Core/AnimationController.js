@@ -68,6 +68,15 @@ define([
     };
 
     /**
+     * Begin or resume animating in the most recent direction or mode.
+     * @memberof AnimationController
+     */
+    AnimationController.prototype.unpause = function() {
+        this._animating = true;
+        this.clock.tick(0);
+    };
+
+    /**
      * Begin or resume animating in a forward direction.
      * @memberof AnimationController
      */

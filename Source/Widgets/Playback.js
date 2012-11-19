@@ -54,6 +54,8 @@ define([
                     }
                 } else if (field.indexOf('xlink:') === 0) {
                     ele.setAttributeNS(this._xlinkNS, field.substring(6), obj[field]);
+                } else if (field === 'textContent') {
+                    ele.textContent = obj[field];
                 } else {
                     ele.set(field, obj[field]);
                 }
@@ -224,7 +226,7 @@ define([
 
         var topG = this._svg('g');
 
-        var rectButton = function (x, y, path) {
+        var rectButton = function (x, y, path, tooltip) {
             var button = {
                 'tagName' : 'g',
                 'class' : 'rectButton',
@@ -248,6 +250,9 @@ define([
                         'tagName': 'use',
                         'class' : 'buttonPath',
                         'xlink:href' : path
+                    }, {
+                        'tagName': 'title',
+                        'textContent' : tooltip
                     }
                 ]
             };
@@ -258,21 +263,30 @@ define([
         topG.appendChild(buttonsG);
 
         // ShowShuttleRing
-        var showShuttleRingSVG = rectButton(5, 63, '#pathShuttleRing');
+        var showShuttleRingSVG = rectButton(5, 63, '#pathShuttleRing', 'Shuttle ring');
         showShuttleRingSVG.childNodes[2].setAttribute('transform', 'scale(0.12) translate(30,75)');
         buttonsG.appendChild(showShuttleRingSVG);
 
         // Reset
-        var resetSVG = rectButton(5, 97, '#pathReset');
+        var resetSVG = rectButton(5, 97, '#pathReset', 'Reset');
         buttonsG.appendChild(resetSVG);
+        resetSVG.addEventListener('click', function () {
+            widget.animationController.reset();
+        }, true);
 
         // Speed up
-        var upSVG = rectButton(165, 63, '#pathSpeedUp');
+        var upSVG = rectButton(165, 63, '#pathSpeedUp', 'Faster');
         buttonsG.appendChild(upSVG);
+        upSVG.addEventListener('click', function () {
+            widget.animationController.faster();
+        }, true);
 
         // Slow down
-        var downSVG = rectButton(165, 97, '#pathSlowDown');
+        var downSVG = rectButton(165, 97, '#pathSlowDown', 'Slower');
         buttonsG.appendChild(downSVG);
+        downSVG.addEventListener('click', function () {
+            widget.animationController.slower();
+        }, true);
 
         var shuttleRingOuterG = this._svg('g').set('transform', 'translate(101,120)').set('class', 'shuttleRing');
         var shuttleRingG = this._svg('g').set('transform', 'translate(-101,-103)'); // leave y += 17
@@ -288,7 +302,7 @@ define([
         shuttleRingG.appendChild(shuttleRingBack);
 
         // Realtime
-        var realtimeSVG = rectButton(85, 18, '#pathClock');
+        var realtimeSVG = rectButton(85, 18, '#pathClock', 'Realtime');
         shuttleRingG.appendChild(realtimeSVG);
 
         var shuttleRingPath = this._svgFromObject({
@@ -447,6 +461,11 @@ define([
         }
 
         largeButtonG.addEventListener('click', function () {
+            if (widget.animationController.isAnimating()) {
+                widget.animationController.pause();
+            } else {
+                widget.animationController.unpause();
+            }
         }, true);
 
         showShuttleRingSVG.addEventListener('click', function () {
@@ -484,7 +503,7 @@ define([
 
         if (this.animationController.isAnimating()) {
             var speed = this.clock.multiplier;
-            this._updateSvgText(this.largeButtonStatus, speed + 'x realtime');
+            this._updateSvgText(this.largeButtonStatus, 'speed ' + speed + 'x');
             this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathPlay');
         } else {
             this._updateSvgText(this.largeButtonStatus, 'paused');
