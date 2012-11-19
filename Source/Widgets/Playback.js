@@ -70,6 +70,10 @@ define([
         return text;
     };
 
+    Playback.prototype._updateSvgText = function(svgText, msg) {
+        svgText.childNodes[0].textContent = msg;
+    };
+
     Playback.prototype._setSizeBig = function () {
         var svg = this.svgNode;
         svg.style.cssText = 'width: 200px; height: 133px;';
@@ -415,7 +419,7 @@ define([
             ]
         });
 
-        var largeButtonMode = this._svgFromObject({
+        this.largeButtonMode = this._svgFromObject({
             'tagName' : 'use',
             'xlink:href' : '#pathPlay',
             'x' : 5.666, // (halfWidth 65 / scale 3.0) - halfIcon 16
@@ -423,14 +427,14 @@ define([
             'transform' : 'scale(3)',
             'class' : 'playbackMode'
         });
-        largeButtonG.appendChild(largeButtonMode);
+        largeButtonG.appendChild(this.largeButtonMode);
 
-        var largeButtonDate = this._svgText(65, 25, '18 Nov 2012');
-        largeButtonG.appendChild(largeButtonDate);
-        var largeButtonTime = this._svgText(65, 43, '00:00:00 UTC');
-        largeButtonG.appendChild(largeButtonTime);
-        var largeButtonStatus = this._svgText(65, 62, 'speed 1x');
-        largeButtonG.appendChild(largeButtonStatus);
+        this.largeButtonDate = this._svgText(65, 25, '');
+        largeButtonG.appendChild(this.largeButtonDate);
+        this.largeButtonTime = this._svgText(65, 43, '');
+        largeButtonG.appendChild(this.largeButtonTime);
+        this.largeButtonStatus = this._svgText(65, 62, '');
+        largeButtonG.appendChild(this.largeButtonStatus);
 
         topG.appendChild(largeButtonG);
 
@@ -456,6 +460,36 @@ define([
         parentNode.appendChild(svg);
         shuttleRingDismiss.beginElementAt(0);  // Hide ring
         shuttleRingDismiss.endElementAt(0.5);
+    };
+
+    /**
+     * Update the widget to reflect the current state of animation.
+     *
+     * @function
+     * @memberof Playback.prototype
+     */
+    Playback.prototype.update = function () {
+        var currentTime = this.clock.currentTime;
+        var currentTimeLabel = currentTime.toDate().toUTCString();
+        var currentDateLabel = currentTimeLabel.substring(5, 16);
+        currentTimeLabel = currentTimeLabel.substring(17);
+        if (currentDateLabel !== this._currentDateLabel) {
+            this._currentDateLabel = currentDateLabel;
+            this._updateSvgText(this.largeButtonDate, currentDateLabel);
+        }
+        if (currentTimeLabel !== this._currentTimeLabel) {
+            this._currentTimeLabel = currentTimeLabel;
+            this._updateSvgText(this.largeButtonTime, currentTimeLabel);
+        }
+
+        if (this.animationController.isAnimating()) {
+            var speed = this.clock.multiplier;
+            this._updateSvgText(this.largeButtonStatus, speed + 'x realtime');
+            this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathPlay');
+        } else {
+            this._updateSvgText(this.largeButtonStatus, 'paused');
+            this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathPause');
+        }
     };
 
     return Playback;

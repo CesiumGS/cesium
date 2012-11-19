@@ -53,8 +53,9 @@ body {
     top: 0;
     left: 0;
     width: 90%;
-    height: 102px;
+    height: 140px;
     margin: 20px auto;
+    border: 1px solid #888;
 }
 
 .myPlayback {
@@ -62,14 +63,14 @@ body {
     position: absolute;
     bottom: 0;
     left: 0;
-    border: 1px solid #888;
+    z-index: 500;
 }
 
 .myTimeline {
 	display: block;
     position: absolute;
-    top: 49px;
-    left: 201px;
+    bottom: 0;
+    left: 198px;
     right: 0;
 	height: 51px;
 }
@@ -156,8 +157,8 @@ tr {
 
     <div class="widgetBackground">
         <div class="timelineAndPlayback">
-            <div id="playbackTest" class="myPlayback"></div>
             <div id="time1" class="myTimeline"></div>
+            <div id="playbackTest" class="myPlayback"></div>
         </div>
     </div>
 
