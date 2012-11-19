@@ -12,6 +12,7 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/Math',
          'Core/Occluder',
+         'Core/JulianDate',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
          'Scene/BillboardCollection',
@@ -36,6 +37,7 @@ defineSuite([
          Ellipsoid,
          CesiumMath,
          Occluder,
+         JulianDate,
          TextureMinificationFilter,
          TextureMagnificationFilter,
          BillboardCollection,
@@ -76,7 +78,7 @@ defineSuite([
         camera.frustum.aspectRatio = 1.0;
 
         us = context.getUniformState();
-        us.update(camera);
+        us.update(camera, 1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
         us.setSunPosition(new Cartesian3(-2.0, 0.0, 0.0));
     });
 

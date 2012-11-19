@@ -12,6 +12,7 @@ defineSuite([
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Math',
+         'Core/JulianDate',
          'Scene/Camera',
          'Scene/CentralBody',
          'Scene/LabelCollection',
@@ -31,6 +32,7 @@ defineSuite([
          Cartographic,
          Ellipsoid,
          CesiumMath,
+         JulianDate,
          Camera,
          CentralBody,
          LabelCollection,
@@ -62,7 +64,7 @@ defineSuite([
         camera.direction = camera.position.normalize().negate();
 
         us = context.getUniformState();
-        us.update(camera);
+        us.update(camera, 1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
         us.setSunPosition(new Cartesian3(-2.0, 0.0, 0.0));
     });
 

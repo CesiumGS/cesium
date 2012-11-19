@@ -12,7 +12,8 @@ defineSuite([
         'Core/Color',
         'Core/Ellipsoid',
         'Core/Matrix4',
-        'Core/Math'
+        'Core/Math',
+        'Core/JulianDate'
     ], function(
         Material,
         Polygon,
@@ -26,7 +27,8 @@ defineSuite([
         Color,
         Ellipsoid,
         Matrix4,
-        CesiumMath) {
+        CesiumMath,
+        JulianDate) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -44,7 +46,8 @@ defineSuite([
 
     beforeEach(function() {
         us = context.getUniformState();
-        us.update(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z));
+        us.update(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z),
+            1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon = new Polygon();

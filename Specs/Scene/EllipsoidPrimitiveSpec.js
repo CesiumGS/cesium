@@ -11,6 +11,7 @@ defineSuite([
          'Core/Cartographic',
          'Core/Matrix4',
          'Core/Math',
+         'Core/JulianDate',
          'Scene/Material'
      ], function(
          EllipsoidPrimitive,
@@ -24,6 +25,7 @@ defineSuite([
          Cartographic,
          Matrix4,
          CesiumMath,
+         JulianDate,
          Material) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -44,7 +46,8 @@ defineSuite([
         ellipsoid = new EllipsoidPrimitive();
 
         us = context.getUniformState();
-        us.update(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z));
+        us.update(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z),
+            1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
     });
 
     afterEach(function() {

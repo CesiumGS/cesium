@@ -14,6 +14,7 @@ defineSuite([
          'Core/Color',
          'Core/Matrix4',
          'Core/Math',
+         'Core/JulianDate',
          'Renderer/BufferUsage',
          'Scene/HorizontalOrigin',
          'Scene/VerticalOrigin',
@@ -35,6 +36,7 @@ defineSuite([
          Color,
          Matrix4,
          CesiumMath,
+         JulianDate,
          BufferUsage,
          HorizontalOrigin,
          VerticalOrigin,
@@ -62,7 +64,7 @@ defineSuite([
         labels = new LabelCollection();
 
         us = context.getUniformState();
-        us.update(createCamera(context));
+        us.update(createCamera(context), 1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
     });
 
     afterEach(function() {

@@ -14,6 +14,7 @@ defineSuite([
          'Core/Cartographic',
          'Core/Matrix4',
          'Core/Math',
+         'Core/JulianDate',
          'Renderer/BufferUsage',
          'Scene/SceneMode'
      ], function(
@@ -31,6 +32,7 @@ defineSuite([
          Cartographic,
          Matrix4,
          CesiumMath,
+         JulianDate,
          BufferUsage,
          SceneMode) {
     "use strict";
@@ -52,7 +54,7 @@ defineSuite([
         polylines = new PolylineCollection();
 
         us = context.getUniformState();
-        us.update(createCamera(context));
+        us.update(createCamera(context), 1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
     });
 
     afterEach(function() {
