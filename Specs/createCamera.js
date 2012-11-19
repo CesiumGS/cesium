@@ -17,12 +17,11 @@ define([
         up = defaultValue(up, Cartesian3.UNIT_Z);
 
         var camera = new Camera(context.getCanvas());
-        camera.lookAt(eye, target, up);
+        camera.controller.lookAt(eye, target, up);
         camera.frustum.fovy = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
         camera.frustum.near = 0.01;
         camera.frustum.far = 10.0;
-        camera.update();
 
         return camera;
     }
