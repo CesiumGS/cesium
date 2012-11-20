@@ -9,7 +9,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/EncodedCartesian3',
-        '../Core/Cartographic',
         '../Core/BoundingRectangle',
         '../Core/Transforms',
         '../Core/computeSunPosition',
@@ -24,7 +23,6 @@ define([
         Cartesian3,
         Cartesian4,
         EncodedCartesian3,
-        Cartographic,
         BoundingRectangle,
         Transforms,
         computeSunPosition,
@@ -142,11 +140,9 @@ define([
     }
 
     var sunPositionWC = new Cartesian3();
-//    var sunPositionCartographic = new Cartographic();
     var sunPositionScratch = new Cartesian3();
 
     function setSunAndMoonDirections(uniformState, frameState) {
-
         if (frameState.mode === SceneMode.SCENE3D) {
             computeSunPosition(frameState.time, sunPositionWC);
 
@@ -157,7 +153,7 @@ define([
             // Pseudo direction for now just for lighting
             Cartesian3.negate(uniformState._sunDirectionEC, uniformState._moonDirectionEC);
         } else {
-            // Pseudo direction for now just for lighting
+            // Made up direction for now just for lighting
 
             sunPositionWC.x = 1000000.0;   // height
             sunPositionWC.y = -10000000.0; // x
@@ -167,8 +163,6 @@ define([
             Matrix3.multiplyByVector(uniformState._viewRotation, sunPositionWC, sunPositionScratch);
             Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
 
-
-
             sunPositionWC.x = 1000000.0;   // height
             sunPositionWC.y = 10000000.0;  // x
             sunPositionWC.z = 0.0;         // y
@@ -176,23 +170,6 @@ define([
             Cartesian3.normalize(sunPositionWC, sunPositionScratch);
             Matrix3.multiplyByVector(uniformState._viewRotation, sunPositionScratch, sunPositionScratch);
             Cartesian3.normalize(sunPositionScratch, uniformState._moonDirectionEC);
-
-//            var projection = frameState.scene2D.projection;
-//
-//            sunPositionCartographic = projection.getEllipsoid().cartesianToCartographic(sunPositionWC);
-//
-//
-//            sunPositionScratch.x = sunPositionCartographic.longitude;
-//            sunPositionScratch.y = sunPositionCartographic.latitude;
-//            sunPositionScratch.z = Math.PI;
-//            Cartesian3.normalize(sunPositionScratch, sunPositionScratch);
-
-//            sunPositionScratch = projection.project(sunPositionCartographic);
-//            sunPositionScratch = projection.project(new Cartographic(3.14159 / 2.0, 0.0, 4000000.0));
-
-//            sunPositionWC.x = sunPositionScratch.z;
-//            sunPositionWC.y = sunPositionScratch.x;
-//            sunPositionWC.z = sunPositionScratch.y;
         }
     }
 

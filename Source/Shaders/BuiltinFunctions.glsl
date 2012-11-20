@@ -413,10 +413,22 @@ float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
 }
 
 /**
- * DOC_TBA
+ * Computes a color using the Phong lighting model.
  *
  * @name czm_phong
  * @glslFunction
+ *
+ * @param {vec3} toEye A normalized vector from the fragment to the eye in eye coordinates.
+ * @param {czm_material} material The fragment's material.
+ * 
+ * @returns {vec4} The computed color.
+ * 
+ * @example
+ * vec3 positionToEyeEC = // ...
+ * czm_material material = // ...
+ * gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
+ *
+ * @see czm_getMaterial
  */
 vec4 czm_phong(vec3 toEye, czm_material material)
 {
