@@ -92,6 +92,38 @@ define([
         svg.setAttribute('viewBox', '0 57 200 74');
     };
 
+    Playback.prototype._maxShuttleAngle = 105;
+
+    Playback.prototype._shuttleAngletoSpeed = function (angle) {
+        if (Math.abs(angle) < 5) {
+            return 0;
+        }
+        angle = Math.max(Math.min(angle, this._maxShuttleAngle), -this._maxShuttleAngle);
+        var speed = Math.round(Math.exp(((Math.abs(angle) - 5) * 0.15)));
+        if (angle < 0) {
+            speed *= -1.0;
+        }
+console.log('angle ' + angle + ' = speed ' + speed);
+        return speed;
+    };
+
+    Playback.prototype._shuttleSpeedtoAngle = function (speed) {
+        var angle = Math.log(Math.abs(speed)) / 0.15 + 5;
+        angle = Math.max(Math.min(angle, this._maxShuttleAngle), 0);
+        if (speed < 0) {
+            angle *= -1.0;
+        }
+console.log('speed ' + speed + ' = angle ' + angle);
+        return angle;
+    };
+
+    Playback.prototype._setShuttleRingGlow = function (angle) {
+        var clip = this.shuttleRingGlow.childNodes[0];
+        var glow = this.shuttleRingGlow.childNodes[1];
+        clip.setAttribute('transform', 'translate(101,80) rotate(' + (-angle) + ') translate(-101,-80)');
+        glow.setAttribute('transform', 'translate(101,80) rotate(' + angle + ') translate(-101,-80)');
+    };
+
     Playback.prototype._createNodes = function(parentNode) {
         var widget = this;
         var svg = this.svgNode = this._svg('svg:svg');
@@ -312,7 +344,7 @@ define([
         });
         shuttleRingG.appendChild(shuttleRingPath);
 
-        var shuttleRingGlow = this._svgFromObject({
+        this.shuttleRingGlow = this._svgFromObject({
             'tagName' : 'g',
             'clip-rule' : 'nonzero',
             'children' : [
@@ -336,39 +368,12 @@ define([
                 }
             ]
         });
-        shuttleRingG.appendChild(shuttleRingGlow);
-
-        var maxShuttleAngle = 105;
-        function shuttleAngletoSpeed(angle) {
-            if (Math.abs(angle) < 5) {
-                return 0;
-            }
-            var speed = Math.round(Math.exp(((Math.abs(angle) - 5) * 0.15)));
-            if (angle < 0) {
-                speed *= -1.0;
-            }
-console.log('angle ' + angle + ' = speed ' + speed);
-            return speed;
-        }
-
-        function shuttleSpeedtoAngle(speed) {
-            var angle = Math.log(Math.abs(speed)) / 0.15 + 5;
-            angle = Math.max(Math.min(angle, maxShuttleAngle), 0);
-            if (speed < 0) {
-                angle *= -1.0;
-            }
-console.log('speed ' + speed + ' = angle ' + angle);
-            return angle;
-        }
+        shuttleRingG.appendChild(this.shuttleRingGlow);
 
         this._shuttleRingVisible = false;
+        this._shuttleRingAngle = 0;
         var shuttleRingDragging = false;
-        function setShuttleRingGlow(angle) {
-            var clip = shuttleRingGlow.childNodes[0];
-            var glow = shuttleRingGlow.childNodes[1];
-            clip.setAttribute('transform', 'translate(101,80) rotate(' + (-angle) + ') translate(-101,-80)');
-            glow.setAttribute('transform', 'translate(101,80) rotate(' + angle + ') translate(-101,-80)');
-        }
+
         function setShuttleRingFromMouse(e) {
             if (e.type === 'mousedown' || (shuttleRingDragging && e.type === 'mousemove')) {
                 shuttleRingDragging = true;
@@ -379,9 +384,7 @@ console.log('speed ' + speed + ' = angle ' + angle);
                 if (angle > 180) {
                     angle -= 360;
                 }
-                angle = Math.max(Math.min(angle, maxShuttleAngle), -maxShuttleAngle);
-                setShuttleRingGlow(angle);
-                var speed = shuttleAngletoSpeed(angle);
+                var speed = widget._shuttleAngletoSpeed(angle);
                 if (speed !== 0) {
                     widget.clock.multiplier = speed;
                     if (!widget.animationController.isAnimating()) {
@@ -400,7 +403,7 @@ console.log('speed ' + speed + ' = angle ' + angle);
         }
         shuttleRingPath.addEventListener('mousedown', setShuttleRingFromMouse, true);
         document.addEventListener('mousemove', setShuttleRingFromMouse, true);
-        shuttleRingGlow.addEventListener('mousedown', setShuttleRingFromMouse, true);
+        this.shuttleRingGlow.addEventListener('mousedown', setShuttleRingFromMouse, true);
         document.addEventListener('mouseup', setShuttleRingFromMouse, true);
 
         var shuttleRingLabelsG = this._svgFromObject({
@@ -519,11 +522,6 @@ console.log('speed ' + speed + ' = angle ' + angle);
         }, true);
 
         showShuttleRingSVG.addEventListener('click', function () {
-            if (widget.animationController.isAnimating()) {
-                setShuttleRingGlow(shuttleSpeedtoAngle(widget.clock.multiplier));
-            } else {
-                setShuttleRingGlow(0);
-            }
             shuttleRingDismiss.beginElementAt(0);  // Show ring
             shuttleRingDismiss.endElementAt(0.5);
             widget._setSizeBig();
@@ -556,8 +554,10 @@ console.log('speed ' + speed + ' = angle ' + angle);
             this._updateSvgText(this.largeButtonTime, currentTimeLabel);
         }
 
+        var speed = 0, angle = 0;
         if (this.animationController.isAnimating()) {
-            var speed = this.clock.multiplier;
+            speed = this.clock.multiplier;
+            angle = this._shuttleSpeedtoAngle(speed);
             this._updateSvgText(this.largeButtonStatus, 'speed ' + speed + 'x');
             this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathPlay');
             this.largeButtonTooltip.textContent = 'Pause';
@@ -565,6 +565,11 @@ console.log('speed ' + speed + ' = angle ' + angle);
             this._updateSvgText(this.largeButtonStatus, 'paused');
             this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathPause');
             this.largeButtonTooltip.textContent = 'Play';
+        }
+
+        if (this._shuttleRingAngle !== angle) {
+            this._shuttleRingAngle = angle;
+            this._setShuttleRingGlow(angle);
         }
 
         if (this._shuttleRingVisible) {
