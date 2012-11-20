@@ -1005,19 +1005,6 @@ define([
                     uniformMap.southMercatorYLowAndHighAndOneOverHeight.z = oneOverMercatorHeight;
                     Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
-                    // The first TileImagery's provider select the itensity for the entire tile.
-                    // This needs improvement, but that's part of a bigger lighting overhaul.
-                    var intensity = 0.2;
-                    if (tileImageryCollection.length > 0) {
-                        var firstImagery = tileImageryCollection[0].imagery;
-                        var firstImageryProvider = firstImagery.imageryLayer.getImageryProvider();
-                        if (typeof firstImageryProvider.getIntensity !== 'undefined') {
-                            intensity = firstImageryProvider.getIntensity(firstImagery.x, firstImagery.y, firstImagery.level);
-                        }
-
-                    }
-                    uniformMap.dayIntensity = intensity;
-
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                         var tileImagery = tileImageryCollection[imageryIndex];
                         var imagery = tileImagery.imagery;
