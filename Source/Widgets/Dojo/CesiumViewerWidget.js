@@ -15,6 +15,7 @@ define([
         'dijit/form/DropDownButton',
         'dijit/TooltipDialog',
         './TimelineWidget',
+        '../Playback',
         '../../Core/loadJson',
         '../../Core/BoundingRectangle',
         '../../Core/Clock',
@@ -69,6 +70,7 @@ define([
         DropDownButton,
         TooltipDialog,
         TimelineWidget,
+        Playback,
         loadJson,
         BoundingRectangle,
         Clock,
@@ -490,14 +492,6 @@ define([
             }
         },
 
-        _updateSpeedIndicator : function() {
-            if (this.animationController.isAnimating()) {
-                this.speedIndicator.innerHTML = this.clock.multiplier + 'x realtime';
-            } else {
-                this.speedIndicator.innerHTML = this.clock.multiplier + 'x realtime (paused)';
-            }
-        },
-
         /**
          * Apply the animation settings from a CZML buffer.
          * @function
@@ -505,10 +499,6 @@ define([
          */
         setTimeFromBuffer : function() {
             var clock = this.clock;
-
-            this.animReverse.set('checked', false);
-            this.animPause.set('checked', true);
-            this.animPlay.set('checked', false);
 
             var availability = this.dynamicObjectCollection.computeAvailability();
             if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
@@ -730,6 +720,7 @@ define([
             } else {
                 this.clock = this.animationController.clock;
             }
+            this.playback = new Playback(this.playbackWidget, this.animationController);
 
             var animationController = this.animationController;
             var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
@@ -749,56 +740,9 @@ define([
                 widget.enableStatistics(true);
             }
 
-            this._lastTimeLabelClock = clock.currentTime;
-            this._lastTimeLabelDate = Date.now();
-            this.timeLabelElement = this.timeLabel.containerNode;
-            this.timeLabelElement.innerHTML = clock.currentTime.toDate().toUTCString();
-
-            var animReverse = this.animReverse;
-            var animPause = this.animPause;
-            var animPlay = this.animPlay;
-
-            on(this.animReset, 'Click', function() {
-                animationController.reset();
-                animReverse.set('checked', false);
-                animPause.set('checked', true);
-                animPlay.set('checked', false);
-            });
-
-            function onAnimPause() {
-                animationController.pause();
-                animReverse.set('checked', false);
-                animPause.set('checked', true);
-                animPlay.set('checked', false);
-            }
-
-            on(animPause, 'Click', onAnimPause);
-
-            on(animReverse, 'Click', function() {
-                animationController.playReverse();
-                animReverse.set('checked', true);
-                animPause.set('checked', false);
-                animPlay.set('checked', false);
-            });
-
-            on(animPlay, 'Click', function() {
-                animationController.play();
-                animReverse.set('checked', false);
-                animPause.set('checked', false);
-                animPlay.set('checked', true);
-            });
-
-            on(widget.animSlow, 'Click', function() {
-                animationController.slower();
-            });
-
-            on(widget.animFast, 'Click', function() {
-                animationController.faster();
-            });
-
             function onTimelineScrub(e) {
                 widget.clock.currentTime = e.timeJulian;
-                onAnimPause();
+                animationController.pause();
             }
 
             var timelineWidget = widget.timelineWidget;
@@ -1128,17 +1072,10 @@ define([
          */
         update : function(currentTime) {
 
-            this._updateSpeedIndicator();
+            this.playback.update();
             this.timelineControl.updateFromClock();
             this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
             this.visualizers.update(currentTime);
-
-            if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||
-                    ((Date.now() - this._lastTimeLabelDate) > 200)) {
-                this.timeLabelElement.innerHTML = currentTime.toDate().toUTCString();
-                this._lastTimeLabelClock = currentTime;
-                this._lastTimeLabelDate = Date.now();
-            }
 
             // Update the camera to stay centered on the selected object, if any.
             var viewFromTo = this._viewFromTo;

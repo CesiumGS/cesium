@@ -1,7 +1,5 @@
 <div data-dojo-attach-point="cesiumNode" class="cw-node">
     <canvas data-dojo-attach-point="canvas" class="cw-canvas"></canvas>
-    <div data-dojo-type="dijit.form.Button" data-dojo-attach-point="timeLabel"
-        data-dojo-props="'class':'cw-timeLabel', showLabel: true, label:''"></div>
     <div class="cw-viewButtons">
         <div data-dojo-attach-point="viewHomeButton" data-dojo-type="dijit.form.Button"
             data-dojo-props="iconClass: 'cw-viewIcon', showLabel: false, label:'Home View'"></div>
@@ -31,20 +29,8 @@
     <div class="cw-timelineContainer">
         <div data-dojo-attach-point="timelineWidget" data-dojo-type="Cesium.TimelineWidget" data-dojo-props="'class':'cw-timeline'"></div>
     </div>
-    <div class="cw-animButtons">
-        <div data-dojo-attach-point="animReset" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'cw-animationIcon', showLabel: false, label:'Reset'"></div>
-        <div data-dojo-attach-point="animReverse" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'cw-animationIcon cw-animReverse', showLabel: false, label:'Play Reverse'"></div>
-        <div data-dojo-attach-point="animPause" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'cw-animationIcon cw-animPause', showLabel: false, label:'Pause'"></div>
-        <div data-dojo-attach-point="animPlay" data-dojo-type="dijit.form.ToggleButton"
-            data-dojo-props="iconClass: 'cw-animationIcon cw-animPlay', showLabel: false, checked: true, label:'Play'"></div>
-        <div data-dojo-attach-point="animSlow" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'cw-animationIcon cw-animSlow', showLabel: false, label:'Play Slower'"></div>
-        <div data-dojo-attach-point="animFast" data-dojo-type="dijit.form.Button"
-            data-dojo-props="iconClass: 'cw-animationIcon cw-animFast', showLabel: false, label:'Play Faster'"></div>
-        <span data-dojo-attach-point="speedIndicator" class="cw-speedIndicator"></span>
+    <div class="cw-playbackContainer">
+        <div data-dojo-attach-point="playbackWidget"></div>
     </div>
     <a class="cw-cesiumLogo" data-dojo-attach-point="cesiumLogo" href="http://cesium.agi.com/" target="_blank"></a>
     <span data-dojo-attach-point="containerNode"></span>
