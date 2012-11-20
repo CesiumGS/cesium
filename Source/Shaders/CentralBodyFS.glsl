@@ -104,5 +104,7 @@ void main()
     //gl_FragColor = vec4(startDayColor, 1.0);
     //vec4 foo = czm_lightValuePhong(czm_sunDirectionEC, normalize(positionToEyeEC), material);
     //gl_FragColor = vec4(mix(vec3(1.0, 0.0, 0.0), foo.rgb, v_waterMask), 1.0);
-#endif // SHOW_OCEAN
+#else
+    gl_FragColor = vec4(startDayColor, 1.0);
+#endif
 }

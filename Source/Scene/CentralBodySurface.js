@@ -1060,7 +1060,7 @@ define([
         }
 
         // trim command list to the number actually needed
-        tileCommands.length = Math.max(0, tileCommandIndex);
+        tileCommands.length = Math.max(0, tileCommandIndex + 1);
     }
 
     return CentralBodySurface;
