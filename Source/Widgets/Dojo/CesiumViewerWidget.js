@@ -681,7 +681,6 @@ define([
             centralBody.logoOffset = new Cartesian2(-100, -100);
 
             this.showSkyAtmosphere(true);
-            this.showGroundAtmosphere(true);
             this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
@@ -858,7 +857,6 @@ define([
                 view3D.set('checked', false);
                 viewColumbus.set('checked', false);
                 widget.showSkyAtmosphere(false);
-                widget.showGroundAtmosphere(false);
                 transitioner.morphTo2D();
             });
             on(view3D, 'Click', function() {
@@ -867,22 +865,18 @@ define([
                 viewColumbus.set('checked', false);
                 transitioner.morphTo3D();
                 widget.showSkyAtmosphere(true);
-                widget.showGroundAtmosphere(true);
             });
             on(viewColumbus, 'Click', function() {
                 view2D.set('checked', false);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', true);
                 widget.showSkyAtmosphere(false);
-                widget.showGroundAtmosphere(false);
                 transitioner.morphToColumbusView();
             });
 
             var cbLighting = widget.cbLighting;
             on(cbLighting, 'Change', function(value) {
-                widget.centralBody.affectedByLighting = !value;
                 widget.centralBody.showSkyAtmosphere = widget._showSkyAtmosphere && !value;
-                widget.centralBody.showGroundAtmosphere = widget._showGroundAtmosphere && !value;
             });
 
             var imagery = widget.imagery;
@@ -1035,20 +1029,7 @@ define([
          */
         showSkyAtmosphere : function(show) {
             this._showSkyAtmosphere = show;
-            this.centralBody.showSkyAtmosphere = show && this.centralBody.affectedByLighting;
-        },
-
-        /**
-         * Enable or disable the "ground atmosphere" effect, which makes the surface of
-         * the globe look pale at a distance.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {Boolean} show - <code>true</code> to enable the effect.
-         */
-        showGroundAtmosphere : function(show) {
-            this._showGroundAtmosphere = show;
-            this.centralBody.showGroundAtmosphere = show && this.centralBody.affectedByLighting;
+            this.centralBody.showSkyAtmosphere = show;
         },
 
         /**

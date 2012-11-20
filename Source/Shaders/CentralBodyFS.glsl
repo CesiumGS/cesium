@@ -14,9 +14,6 @@ uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 
-varying vec3 v_rayleighColor;
-varying vec3 v_mieColor;
-
 varying vec2 v_textureCoordinates;
 
 vec3 sampleAndBlend(
@@ -71,16 +68,12 @@ vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);
 
 void main()
 {
-#ifdef SHOW_DAY
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
     // coordinates strictly in the 0-1 range.
     vec3 initialColor = vec3(0.0, 0.0, 0.5);
     vec3 startDayColor = computeDayColor(initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
-#else
-    vec3 startDayColor = vec3(0.0, 0.0, 0.5);
-#endif
     
 #ifdef SHOW_TILE_BOUNDARIES
     if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
@@ -90,13 +83,5 @@ void main()
     }
 #endif
 
-#ifdef AFFECTED_BY_LIGHTING
-    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
-    vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
-    vec3 rgb = getCentralBodyColor(v_positionMC, v_positionEC, normalMC, normalEC, startDayColor, v_rayleighColor, v_mieColor);
-#else
-    vec3 rgb = startDayColor;
-#endif
-    
-    gl_FragColor = vec4(rgb, 1.0);
+    gl_FragColor = vec4(startDayColor, 1.0);
 }
