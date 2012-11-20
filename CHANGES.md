@@ -8,6 +8,7 @@ TODO
 
 * Breaking changes:
    * Removed `Scene.setSunPosition` and `Scene.getSunPosition`.
+* Improved lighting on polygons, ellipsoids, and sensors.
 
 ### b11 - xx/xx/2012
 

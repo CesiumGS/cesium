@@ -43,7 +43,7 @@ void main()
     
     vec4 color; 
     #ifdef AFFECTED_BY_LIGHTING
-    color = czm_lightValuePhong2(normalize(positionToEyeEC), material);
+    color = czm_lightValuePhong(normalize(positionToEyeEC), material);
     #else
     color = vec4(material.diffuse, material.alpha);
     #endif
