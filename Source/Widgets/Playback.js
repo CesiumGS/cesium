@@ -103,7 +103,6 @@ define([
         if (angle < 0) {
             speed *= -1.0;
         }
-console.log('angle ' + angle + ' = speed ' + speed);
         return speed;
     };
 
@@ -113,7 +112,6 @@ console.log('angle ' + angle + ' = speed ' + speed);
         if (speed < 0) {
             angle *= -1.0;
         }
-console.log('speed ' + speed + ' = angle ' + angle);
         return angle;
     };
 
