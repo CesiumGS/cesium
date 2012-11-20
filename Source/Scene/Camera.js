@@ -66,7 +66,7 @@ define([
          */
         this.transform = Matrix4.IDENTITY.clone();
         this._transform = this.transform.clone();
-        this._invTransform = Matrix4.IDENTITY;
+        this._invTransform = Matrix4.IDENTITY.clone();
 
         var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
         var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * maxRadii);
