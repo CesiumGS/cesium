@@ -932,6 +932,7 @@ define([
 
             var controller = scene.getScreenSpaceCameraController();
             controller.enableTranslate = true;
+            controller.enableTilt = true;
             controller.setEllipsoid(Ellipsoid.WGS84);
             controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
