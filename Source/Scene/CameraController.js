@@ -7,6 +7,7 @@ define([
         '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/GeographicProjection',
         '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
@@ -23,6 +24,7 @@ define([
         Cartographic,
         DeveloperError,
         Ellipsoid,
+        GeographicProjection,
         IntersectionTests,
         CesiumMath,
         Matrix3,
@@ -48,7 +50,7 @@ define([
 
         this._camera = camera;
         this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
+        this._projection = new GeographicProjection();
 
         /**
          * The default amount to move the camera when an argument is not
@@ -634,9 +636,21 @@ define([
             newLeft = -maxRight;
         }
 
-        var diff = newRight - newLeft;
-        if (diff < controller.minimumHeightAboveSurface || diff > controller.minimumHeightAboveSurface) {
-            return;
+        var height = newRight - newLeft;
+        var diff;
+
+        var minHeight = controller.minimumHeightAboveSurface;
+        if (height < minHeight) {
+            diff = (minHeight - height) * 0.5;
+            newRight -= diff;
+            newLeft += diff;
+        }
+
+        var maxHeight = controller.maximumHeightAboveSurface;
+        if (height > maxHeight) {
+            diff = (height - maxHeight) * 0.5;
+            newRight -= diff;
+            newLeft += diff;
         }
 
         var ratio = frustum.top / frustum.right;

@@ -74,6 +74,7 @@ defineSuite([
         camera.right = right.clone();
 
         controller = camera.controller;
+        controller.minimumHeightAboveSurface = 0.0;
     });
 
     it('constructor throws without a camera', function() {
@@ -401,6 +402,35 @@ defineSuite([
         expect(camera.frustum.bottom).toEqual(-1.5, CesiumMath.EPSILON10);
     });
 
+    it('zooms out with maximum height in 2D', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new GeographicProjection(ellipsoid);
+        var frameState = {
+            mode : SceneMode.SCENE2D,
+            scene2D : {
+                projection : projection
+            }
+        };
+        controller.update(frameState);
+
+        var maxZoom = 10.0;
+        controller.maximumHeightAboveSurface = maxZoom;
+        controller.zoomOut(maxZoom + 100.0);
+        expect(camera.frustum.right).toEqualEpsilon(maxZoom * 0.5, CesiumMath.EPSILON10);
+        expect(camera.frustum.left).toEqual(-camera.frustum.right);
+        expect(camera.frustum.top).toEqualEpsilon(maxZoom * 0.25, CesiumMath.EPSILON10);
+        expect(camera.frustum.bottom).toEqual(-camera.frustum.top);
+    });
+
     it('zooms in 2D', function() {
         var frustum = new OrthographicFrustum();
         frustum.near = 1.0;
@@ -469,11 +499,21 @@ defineSuite([
     });
 
     it('zooms out in 3D', function() {
+        controller._projection._ellipsoid = Ellipsoid.UNIT_SPHERE; // This test hangs with a default WGS84 ellipsoid.
         controller.zoomOut(zoomAmount);
         expect(camera.position.equalsEpsilon(new Cartesian3(0.0, 0.0, 1.0 + zoomAmount), CesiumMath.EPSILON10)).toEqual(true);
         expect(camera.up).toEqual(up);
         expect(camera.direction).toEqual(dir);
         expect(camera.right).toEqual(right);
+    });
+
+    it('zooms out to maximum height in 3D', function() {
+        var maxHeight = 100.0;
+        controller.maximumHeightAboveSurface = maxHeight;
+        controller.zoomOut(maxHeight * 1e12);
+        var ellipsoid = controller._projection.getEllipsoid();
+        var height = ellipsoid.cartesianToCartographic(camera.position).height;
+        expect(height).toEqualEpsilon(maxHeight, CesiumMath.EPSILON2);
     });
 
     it('zooms in throws with undefined OrthogrphicFrustum properties 2D', function() {
