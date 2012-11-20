@@ -107,6 +107,12 @@ define([
 
         /**
          * The alpha blending value of this layer, usually from 0.0 to 1.0.
+         * This can either be a simple number or a function with the signature
+         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+         * imagery tile for which the alpha is required, and it is expected to return
+         * the alpha value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
          *
          * @type {Number}
          */
