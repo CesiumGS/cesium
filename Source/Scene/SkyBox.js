@@ -55,6 +55,16 @@ define([
         this._cubeMapUrls = cubeMapUrls;
 
         /**
+         * Determines if the sky box will be shown.
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
+         *
+         * @type Boolean
+         */
+        this.show = true;
+
+        /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
@@ -76,6 +86,10 @@ define([
      * @private
      */
     SkyBox.prototype.update = function(context, frameState) {
+        if (!this.show) {
+            return undefined;
+        }
+
         if ((frameState.mode !== SceneMode.SCENE3D) &&
             (frameState.mode !== SceneMode.MORPHING)) {
             return undefined;
