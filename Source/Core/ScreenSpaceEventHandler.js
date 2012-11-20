@@ -450,14 +450,12 @@ define([
             if (action) {
                 var dX = pos2.x - pos.x;
                 var dY = pos2.y - pos.y;
-                var dist = Math.sqrt(dX * dX + dY * dY);
+                var dist = Math.sqrt(dX * dX + dY * dY) * 0.25;
                 var prevDX = this._lastTouch2X - this._lastMouseX;
                 var prevDY = this._lastTouch2Y - this._lastMouseY;
-                var prevDist = Math.sqrt(prevDX * prevDX + prevDY * prevDY);
-                //var cX = (pos2.x + pos.x) * 0.5;
-                var cY = (pos2.y + pos.y) * 0.5;
-                //var prevCX = (this._lastTouch2X + this._lastMouseX) * 0.5;
-                var prevCY = (this._lastTouch2Y + this._lastMouseY) * 0.5;
+                var prevDist = Math.sqrt(prevDX * prevDX + prevDY * prevDY) * 0.25;
+                var cY = (pos2.y + pos.y) * 0.125;
+                var prevCY = (this._lastTouch2Y + this._lastMouseY) * 0.125;
                 var angle = Math.atan2(dY, dX);
                 var prevAngle = Math.atan2(prevDY, prevDX);
                 movement = {
