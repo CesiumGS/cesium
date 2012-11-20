@@ -5,6 +5,7 @@ defineSuite([
         'Specs/createContext',
         'Specs/destroyContext',
         'Specs/createCamera',
+        'Specs/createFrameState',
         'Specs/frameState',
         'Specs/render',
         'Core/Cartesian3',
@@ -20,6 +21,7 @@ defineSuite([
         createContext,
         destroyContext,
         createCamera,
+        createFrameState,
         frameState,
         render,
         Cartesian3,
@@ -46,8 +48,7 @@ defineSuite([
 
     beforeEach(function() {
         us = context.getUniformState();
-        us.update(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z),
-            1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
+        us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon = new Polygon();

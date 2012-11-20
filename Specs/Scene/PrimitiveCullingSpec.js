@@ -3,6 +3,7 @@ defineSuite([
          'Scene/CompositePrimitive',
          'Specs/createContext',
          'Specs/destroyContext',
+         'Specs/createFrameState',
          'Specs/frameState',
          'Specs/render',
          'Core/BoundingSphere',
@@ -12,7 +13,6 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/Math',
          'Core/Occluder',
-         'Core/JulianDate',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
          'Scene/BillboardCollection',
@@ -28,6 +28,7 @@ defineSuite([
          CompositePrimitive,
          createContext,
          destroyContext,
+         createFrameState,
          frameState,
          render,
          BoundingSphere,
@@ -37,7 +38,6 @@ defineSuite([
          Ellipsoid,
          CesiumMath,
          Occluder,
-         JulianDate,
          TextureMinificationFilter,
          TextureMagnificationFilter,
          BillboardCollection,
@@ -78,7 +78,7 @@ defineSuite([
         camera.frustum.aspectRatio = 1.0;
 
         us = context.getUniformState();
-        us.update(camera, 1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
+        us.update(createFrameState(camera));
     });
 
     afterEach(function() {

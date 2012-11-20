@@ -43,7 +43,7 @@ vec4 getOuterColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     
     vec4 color; 
     #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(positionToEyeEC, material);
+    color = czm_phong(positionToEyeEC, material);
     #else
     color = vec4(material.diffuse, material.alpha);
     #endif
@@ -63,7 +63,7 @@ vec4 getInnerColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 
     vec4 color; 
     #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(positionToEyeEC, material);
+    color = czm_phong(positionToEyeEC, material);
     #else
     color = vec4(material.diffuse, material.alpha);
     #endif
@@ -83,7 +83,7 @@ vec4 getCapColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 
     vec4 color; 
     #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(positionToEyeEC, material);
+    color = czm_phong(positionToEyeEC, material);
     #else
     color = vec4(material.diffuse, material.alpha);
     #endif
@@ -103,7 +103,7 @@ vec4 getSilhouetteColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
 
     vec4 color; 
     #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(positionToEyeEC, material);
+    color = czm_phong(positionToEyeEC, material);
     #else
     color = vec4(material.diffuse, material.alpha);
     #endif

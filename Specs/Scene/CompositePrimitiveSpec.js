@@ -4,6 +4,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/equals',
          'Specs/frameState',
          'Specs/pick',
@@ -12,7 +13,6 @@ defineSuite([
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Math',
-         'Core/JulianDate',
          'Scene/Camera',
          'Scene/CentralBody',
          'Scene/LabelCollection',
@@ -24,6 +24,7 @@ defineSuite([
          createContext,
          destroyContext,
          createCamera,
+         createFrameState,
          equals,
          frameState,
          pick,
@@ -32,7 +33,6 @@ defineSuite([
          Cartographic,
          Ellipsoid,
          CesiumMath,
-         JulianDate,
          Camera,
          CentralBody,
          LabelCollection,
@@ -64,7 +64,7 @@ defineSuite([
         camera.direction = camera.position.normalize().negate();
 
         us = context.getUniformState();
-        us.update(camera, 1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
+        us.update(createFrameState(camera));
     });
 
     afterEach(function() {

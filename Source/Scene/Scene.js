@@ -218,12 +218,15 @@ define([
         passes.overlay = false;
     }
 
-    function updateFrameState(scene) {
+    function updateFrameState(scene, frameNumber, time) {
         var camera = scene._camera;
 
         var frameState = scene._frameState;
         frameState.mode = scene.mode;
+        frameState.morphTime = scene.morphTime;
         frameState.scene2D = scene.scene2D;
+        frameState.frameNumber = frameNumber;
+        frameState.time = time;
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
         frameState.occluder = undefined;
@@ -254,15 +257,15 @@ define([
         camera.update();
 
         var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
-        us.update(camera, frameNumber, time);
+        updateFrameState(scene, frameNumber, time);
+        scene._frameState.passes.color = true;
+        scene._frameState.passes.overlay = true;
+
+        us.update(scene._frameState);
 
         if (scene._animate) {
             scene._animate();
         }
-
-        updateFrameState(scene);
-        scene._frameState.passes.color = true;
-        scene._frameState.passes.overlay = true;
 
         scene._commandList.length = 0;
         scene._primitives.update(scene._context, scene._frameState, scene._commandList);

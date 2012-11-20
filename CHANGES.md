@@ -7,8 +7,9 @@ Beta Releases
 TODO
 
 * Breaking changes:
-   * Removed `Scene.setSunPosition` and `Scene.getSunPosition`.
-* Improved lighting on polygons, ellipsoids, and sensors.
+   * Removed `Scene.setSunPosition` and `Scene.getSunPosition`.  The sun position used for lighting is automatically computed based on the scene's time.
+* Improved lighting in Columbus view and on polygons, ellipsoids, and sensors.
+* Added `czm_moonDirectionEC` automatic GLSL uniform.
 
 ### b11 - xx/xx/2012
 

@@ -3,25 +3,25 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createCamera',
+         'Specs/createFrameState',
          'Core/BoundingRectangle',
          'Core/Math',
          'Core/Matrix4',
          'Core/PrimitiveType',
          'Core/Cartesian3',
          'Core/EncodedCartesian3',
-         'Core/JulianDate',
          'Renderer/BufferUsage'
      ], 'Renderer/BuiltinFunctions', function(
          createContext,
          destroyContext,
          createCamera,
+         createFrameState,
          BoundingRectangle,
          CesiumMath,
          Matrix4,
          PrimitiveType,
          Cartesian3,
          EncodedCartesian3,
-         JulianDate,
          BufferUsage) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -105,7 +105,7 @@ defineSuite([
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.getUniformState().setViewport(vp);
-        context.getUniformState().update(camera, 1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
+        context.getUniformState().update(createFrameState(camera));
 
         var fs =
             'void main() { ' +
@@ -132,7 +132,7 @@ defineSuite([
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.getUniformState().setViewport(vp);
-        context.getUniformState().update(camera, 1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
+        context.getUniformState().update(createFrameState(camera));
 
         var fs =
             'void main() { ' +
@@ -151,7 +151,7 @@ defineSuite([
 
     it('has czm_translateRelativeToEye', function() {
         var camera = createCamera(context, new Cartesian3(1.0, 2.0, 3.0));
-        context.getUniformState().update(camera, 1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
+        context.getUniformState().update(createFrameState(camera));
 
         var p = new Cartesian3(6.0, 5.0, 4.0);
         var encoded = EncodedCartesian3.fromCartesian(p);

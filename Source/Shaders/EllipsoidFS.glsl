@@ -37,7 +37,7 @@ void main()
     czm_material material = czm_getMaterial(materialInput);
 
 #ifdef AFFECTED_BY_LIGHTING
-	gl_FragColor = czm_lightValuePhong(normalize(positionToEyeEC), material);
+	gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
 #else
 	gl_FragColor = vec4(material.diffuse, material.alpha);
 #endif

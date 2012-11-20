@@ -9,9 +9,11 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/EncodedCartesian3',
+        '../Core/Cartographic',
         '../Core/BoundingRectangle',
         '../Core/Transforms',
-        '../Core/computeSunPosition'
+        '../Core/computeSunPosition',
+        '../Scene/SceneMode'
     ], function(
         DeveloperError,
         defaultValue,
@@ -22,9 +24,11 @@ define([
         Cartesian3,
         Cartesian4,
         EncodedCartesian3,
+        Cartographic,
         BoundingRectangle,
         Transforms,
-        computeSunPosition) {
+        computeSunPosition,
+        SceneMode) {
     "use strict";
 
     /**
@@ -92,10 +96,9 @@ define([
         this._encodedCameraPositionMC = new EncodedCartesian3();
         this._cameraPosition = new Cartesian3();
 
-        this._sunDirty = true;
-        this._sunPositionWC = new Cartesian3();
         this._sunDirectionWC = new Cartesian3();
         this._sunDirectionEC = new Cartesian3();
+        this._moonDirectionEC = new Cartesian3();
     };
 
     function setView(uniformState, matrix) {
@@ -138,6 +141,61 @@ define([
         uniformState._encodedCameraPositionMCDirty = true;
     }
 
+    var sunPositionWC = new Cartesian3();
+//    var sunPositionCartographic = new Cartographic();
+    var sunPositionScratch = new Cartesian3();
+
+    function setSunAndMoonDirections(uniformState, frameState) {
+
+        if (frameState.mode === SceneMode.SCENE3D) {
+            computeSunPosition(frameState.time, sunPositionWC);
+
+            Cartesian3.normalize(sunPositionWC, uniformState._sunDirectionWC);
+            Matrix3.multiplyByVector(uniformState._viewRotation, sunPositionWC, sunPositionScratch);
+            Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
+
+            // Pseudo direction for now just for lighting
+            Cartesian3.negate(uniformState._sunDirectionEC, uniformState._moonDirectionEC);
+        } else {
+            // Pseudo direction for now just for lighting
+
+            sunPositionWC.x = 1000000.0;   // height
+            sunPositionWC.y = -10000000.0; // x
+            sunPositionWC.z = 0.0;         // y
+
+            Cartesian3.normalize(sunPositionWC, uniformState._sunDirectionWC);
+            Matrix3.multiplyByVector(uniformState._viewRotation, sunPositionWC, sunPositionScratch);
+            Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
+
+
+
+            sunPositionWC.x = 1000000.0;   // height
+            sunPositionWC.y = 10000000.0;  // x
+            sunPositionWC.z = 0.0;         // y
+
+            Cartesian3.normalize(sunPositionWC, sunPositionScratch);
+            Matrix3.multiplyByVector(uniformState._viewRotation, sunPositionScratch, sunPositionScratch);
+            Cartesian3.normalize(sunPositionScratch, uniformState._moonDirectionEC);
+
+//            var projection = frameState.scene2D.projection;
+//
+//            sunPositionCartographic = projection.getEllipsoid().cartesianToCartographic(sunPositionWC);
+//
+//
+//            sunPositionScratch.x = sunPositionCartographic.longitude;
+//            sunPositionScratch.y = sunPositionCartographic.latitude;
+//            sunPositionScratch.z = Math.PI;
+//            Cartesian3.normalize(sunPositionScratch, sunPositionScratch);
+
+//            sunPositionScratch = projection.project(sunPositionCartographic);
+//            sunPositionScratch = projection.project(new Cartographic(3.14159 / 2.0, 0.0, 4000000.0));
+
+//            sunPositionWC.x = sunPositionScratch.z;
+//            sunPositionWC.y = sunPositionScratch.x;
+//            sunPositionWC.z = sunPositionScratch.y;
+        }
+    }
+
     /**
      * Synchronizes the frustum's state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
@@ -155,29 +213,29 @@ define([
     };
 
     /**
-     * Synchronizes scene state with the uniform state.  This is called
+     * Synchronizes frame state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
      * are set to the right value.
      *
      * @memberof UniformState
      *
-     * @param {Camera} camera The camera to synchronize with.
-     * @param {Number} frameNumber The current frame number.
-     * @param {JulianDate} time The current time in the scene; not necessarily the real wall time.
+     * @param {FrameState} frameState The frameState to synchronize with.
      */
-    UniformState.prototype.update = function(camera, frameNumber, time) {
+    UniformState.prototype.update = function(frameState) {
+        var camera = frameState.camera;
+
         setView(this, camera.getViewMatrix());
         setInverseView(this, camera.getInverseViewMatrix());
         setCameraPosition(this, camera.getPositionWC());
+        setSunAndMoonDirections(this, frameState);
 
         this._entireFrustum.x = camera.frustum.near;
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
 
-        this._frameNumber = frameNumber;
-        this._time = time;
-        this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(time);
-        this._sunDirty = true;
+        this._frameNumber = frameState.frameNumber;
+        this._time = frameState.time;
+        this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time);
     };
 
     /**
@@ -640,19 +698,6 @@ define([
         return this._entireFrustum;
     };
 
-    var sunPositionScratch = new Cartesian3();
-
-    function cleanSun(uniformState) {
-        if (uniformState._sunDirty) {
-            uniformState._sunDirty = false;
-            computeSunPosition(uniformState._time, uniformState._sunPositionWC);
-            Cartesian3.normalize(uniformState._sunPositionWC, uniformState._sunDirectionWC);
-
-            Matrix3.multiplyByVector(uniformState.getViewRotation(), uniformState._sunPositionWC, sunPositionScratch);
-            Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
-        }
-    }
-
     /**
      * Returns a normalized vector to the sun in world coordinates at the current scene time.
      *
@@ -663,7 +708,6 @@ define([
      * @see czm_sunDirectionWC
      */
     UniformState.prototype.getSunDirectionWC = function() {
-        cleanSun(this);
         return this._sunDirectionWC;
     };
 
@@ -677,8 +721,20 @@ define([
      * @see czm_sunDirectionEC
      */
     UniformState.prototype.getSunDirectionEC = function() {
-        cleanSun(this);
         return this._sunDirectionEC;
+    };
+
+    /**
+     * Returns a normalized vector to the moon in eye coordinates at the current scene time.
+     *
+     * @memberof UniformState
+     *
+     * @return {Cartesian3} A normalized vector to the moon in eye coordinates at the current scene time.
+     *
+     * @see czm_sunDirectionEC
+     */
+    UniformState.prototype.getMoonDirectionEC = function() {
+        return this._moonDirectionEC;
     };
 
     var cameraPositionMC = new Cartesian3();

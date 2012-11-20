@@ -5,6 +5,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
@@ -23,6 +24,7 @@ defineSuite([
          createContext,
          destroyContext,
          createCamera,
+         createFrameState,
          frameState,
          pick,
          render,
@@ -54,7 +56,7 @@ defineSuite([
         polylines = new PolylineCollection();
 
         us = context.getUniformState();
-        us.update(createCamera(context), 1.0, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
+        us.update(createFrameState(createCamera(context)));
     });
 
     afterEach(function() {

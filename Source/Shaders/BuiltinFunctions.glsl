@@ -413,25 +413,18 @@ float getSpecular(vec3 lightDirection, vec3 toEye, czm_material material)
 }
 
 /**
- * Fast phong light computation.
+ * DOC_TBA
  *
- * @name czm_lightValuePhong
+ * @name czm_phong
  * @glslFunction
- *
- * @param {vec3} toEye Direction to eye in eye coordinates.
- * @param {czm_material} material Material value used for light computation.
- *
- * @returns {vec4} Final rgba light value.
- *
- * @see czm_material
  */
-vec4 czm_lightValuePhong(vec3 toEye, czm_material material)
+vec4 czm_phong(vec3 toEye, czm_material material)
 {
     // Diffuse from directional light sources at eye (for top-down and horizon views)
     float diffuse = getLambertDiffuse(vec3(0.0, 0.0, 1.0), material) + getLambertDiffuse(vec3(0.0, 1.0, 0.0), material);
 
     // Specular from sun and pseudo-moon
-    float specular = getSpecular(czm_sunDirectionEC, toEye, material) + getSpecular(-czm_sunDirectionEC, toEye, material);
+    float specular = getSpecular(czm_sunDirectionEC, toEye, material) + getSpecular(czm_moonDirectionEC, toEye, material);
 
     vec3 ambient = vec3(0.0);
     vec3 color = ambient + material.emission;

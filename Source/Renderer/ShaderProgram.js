@@ -907,7 +907,7 @@ define([
         },
 
         /**
-         * An automatic GLSL uniform representing the direction of the sun in eye coordinates.
+         * An automatic GLSL uniform representing the normalized direction to the sun in eye coordinates.
          * This is commonly used for directional lighting computations.
          * <br /><br />
          * Like all automatic uniforms, <code>czm_sunDirectionEC</code> does not need to be explicitly declared.
@@ -918,6 +918,7 @@ define([
          * @glslUniform
          *
          * @see UniformState#getSunDirectionEC
+         * @see czm_moonDirectionEC
          * @see czm_sunDirectionWC
          *
          * @example
@@ -942,8 +943,8 @@ define([
         },
 
         /**
-         * An automatic GLSL uniform representing a normalized vector from the origin
-         * in world coordinates to the sun.  This is commonly used for lighting computations.
+         * An automatic GLSL uniform representing the normalized direction to the sun in world coordinates.
+         * This is commonly used for directional lighting computations.
          * <br /><br />
          * Like all automatic uniforms, <code>czm_sunDirectionWC</code> does not need to be explicitly declared.
          * However, it can be explicitly declared when a shader is also used by other applications such
@@ -970,6 +971,41 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getSunDirectionWC();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the normalized direction to the moon in eye coordinates.
+         * This is commonly used for directional lighting computations.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_moonDirectionEC</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_moonDirectionEC
+         * @glslUniform
+         *
+         * @see UniformState#getMoonDirectionEC
+         * @see czm_sunDirectionEC
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_moonDirectionEC;
+         *
+         * // Example
+         * float diffuse = max(dot(czm_moonDirectionEC, normalEC), 0.0);
+         */
+        czm_moonDirectionEC : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getMoonDirectionEC();
             }
         },
 

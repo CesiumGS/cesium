@@ -1,4 +1,5 @@
 uniform float u_erosion;
+uniform float u_morphTime;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -31,7 +32,7 @@ void main()
     materialInput.positionMC = v_positionMC;
     
     //Convert tangent space material normal to eye space
-    materialInput.normalEC = normalize(czm_normal * czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));  
+    materialInput.normalEC = mix(czm_normal[0], normalize(czm_normal * czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0))), u_morphTime); // +x is up in Columbus view   
     materialInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, materialInput.normalEC);
     
     //Convert view vector to world space
@@ -43,7 +44,7 @@ void main()
     
     vec4 color; 
     #ifdef AFFECTED_BY_LIGHTING
-    color = czm_lightValuePhong(normalize(positionToEyeEC), material);
+    color = czm_phong(normalize(positionToEyeEC), material);
     #else
     color = vec4(material.diffuse, material.alpha);
     #endif
