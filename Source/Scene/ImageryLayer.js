@@ -70,6 +70,7 @@ define([
      *                 color.  Less than 1.0 makes the imagery darker while greater than 1.0 makes it brighter.
      * @param {Number} [description.contrast=1.0] The contrast of this layer.  1.0 uses the unmodified imagery color.
      *        Less than 1.0 reduces the contrast while greater than 1.0 increases it.
+     * @param {Number} [description.gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
      * @param {Boolean} [description.show=true] True if the layer is shown; otherwise, false.
      * @param {Number} [description.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
      *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
