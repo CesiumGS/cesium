@@ -31,7 +31,7 @@ define([
             throw new DeveloperError('urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties');
         }
 
-        var cubeMap = undefined;
+        var cubeMap;
 
         function getCubeMap(image) {
             if (typeof cubeMap === 'undefined') {

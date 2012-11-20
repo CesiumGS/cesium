@@ -30,7 +30,7 @@ define([
         frameState.frameNumber = defaultValue(frameNumber, 1.0);
         frameState.time = defaultValue(time, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
 
-        var camera = defaultValue(camera, new Camera({
+        camera = defaultValue(camera, new Camera({
             clientHeight : 1,
             clientWidth : 1
         }));
