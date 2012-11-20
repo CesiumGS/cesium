@@ -243,7 +243,7 @@ define(['./TimelineTrack',
         var timeBar = this._timeBarEle;
 
         var seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
-        var xPos = seconds * this._topElement.clientWidth / this._timeBarSecondsSpan;
+        var xPos = Math.round(seconds * this._topElement.clientWidth / this._timeBarSecondsSpan);
         var scrubX = xPos - 8, tic;
         var widget = this;
 
@@ -446,7 +446,7 @@ define(['./TimelineTrack',
         this._scrubJulian = this._clock.currentTime;
 
         var seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
-        var xPos = seconds * this._topElement.clientWidth / this._timeBarSecondsSpan;
+        var xPos = Math.round(seconds * this._topElement.clientWidth / this._timeBarSecondsSpan);
 
         if (this._scrubElement) {
             var scrubX = xPos - 8;
@@ -456,6 +456,7 @@ define(['./TimelineTrack',
     };
 
     Timeline.prototype._setTimeBarTime = function(xPos, seconds) {
+        xPos = Math.round(xPos);
         this._scrubJulian = this._startJulian.addSeconds(seconds);
         if (this._scrubElement) {
             var scrubX = xPos - 8;
@@ -532,7 +533,7 @@ define(['./TimelineTrack',
         this._mouseMode = timelineMouseMode.touchOnly;
         if (len === 1) {
             seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
-            xPos = seconds * this._topElement.clientWidth / this._timeBarSecondsSpan + leftX;
+            xPos = Math.round(seconds * this._topElement.clientWidth / this._timeBarSecondsSpan + leftX);
             if (Math.abs(e.touches[0].clientX - xPos) < 50) {
                 this._touchMode = timelineTouchMode.scrub;
                 if (this._scrubElement) {

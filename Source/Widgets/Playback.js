@@ -392,6 +392,8 @@ console.log('speed ' + speed + ' = angle ' + angle);
                         widget.animationController.pause();
                     }
                 }
+                e.preventDefault();
+                e.stopPropagation();
             } else {
                 shuttleRingDragging = false;
             }

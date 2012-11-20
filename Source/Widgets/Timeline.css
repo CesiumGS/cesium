@@ -25,9 +25,9 @@
 .timelineNeedle {
 	position: absolute;
 	left: 0;
-	top: 0;
+	top: 1.7em;
+	bottom: 0;
 	width: 1px;
-	height: 100%;
 	z-index: 50;
 	background: #F00;
 }
