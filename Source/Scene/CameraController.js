@@ -92,10 +92,15 @@ define([
          */
         this.maximumZoomFactor = 2.5;
         /**
-         * The maximum height, in meters, above the surface of the ellipsoid of the camera position. Defaults to 20.0.
+         * The minimum height, in meters, above the surface of the ellipsoid of the camera position. Defaults to 20.0.
          * @type Number
          */
         this.minimumHeightAboveSurface = 20.0;
+        /**
+         * The maximum height, in meters, above the surface of the ellipsoid of the camera position. Defaults to positive infinity.
+         * @type Number
+         */
+        this.maximumHeightAboveSurface = Number.POSITIVE_INFINITY;
 
         this._maxCoord = undefined;
         this._frustum = undefined;
@@ -629,17 +634,39 @@ define([
             newLeft = -maxRight;
         }
 
-        if (newRight > newLeft) {
-            var ratio = frustum.top / frustum.right;
-            frustum.right = newRight;
-            frustum.left = newLeft;
-            frustum.top = frustum.right * ratio;
-            frustum.bottom = -frustum.top;
+        var diff = newRight - newLeft;
+        if (diff < controller.minimumHeightAboveSurface || diff > controller.minimumHeightAboveSurface) {
+            return;
         }
+
+        var ratio = frustum.top / frustum.right;
+        frustum.right = newRight;
+        frustum.left = newLeft;
+        frustum.top = frustum.right * ratio;
+        frustum.bottom = -frustum.top;
     }
 
     function zoom3D(controller, amount) {
-        controller.move(controller._camera.direction, amount);
+        var camera = controller._camera;
+        controller.move(camera.direction, amount);
+
+        var height;
+        if (controller._mode === SceneMode.SCENE3D) {
+            var ellipsoid = controller._projection.getEllipsoid();
+            height = ellipsoid.cartesianToCartographic(camera.position).height;
+        } else {
+            height = Math.abs(camera.position.z);
+        }
+
+        var min = controller.minimumHeightAboveSurface;
+        if (height < min) {
+            controller.move(camera.direction, -(min - height));
+        }
+
+        var max = controller.maximumHeightAboveSurface;
+        if (height > max) {
+            controller.move(camera.direction, height - max);
+        }
     }
 
     /**
