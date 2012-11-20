@@ -251,7 +251,7 @@ define([
     function handleZoom(object, movement, zoomFactor, distanceMeasure) {
         // distanceMeasure should be the height above the ellipsoid.
         // The zoomRate slows as it approaches the surface and stops minHeight above it.
-        var minHeight = object._cameraController.minimumHeightAboveSurface;
+        var minHeight = object._cameraController.minimumZoomDistance;
         var zoomRate = zoomFactor * (distanceMeasure - minHeight);
 
         if (zoomRate > object._maximumZoomRate) {

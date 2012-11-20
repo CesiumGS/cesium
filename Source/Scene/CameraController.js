@@ -94,15 +94,15 @@ define([
          */
         this.maximumZoomFactor = 2.5;
         /**
-         * The minimum height, in meters, above the surface of the ellipsoid of the camera position. Defaults to 20.0.
+         * The minimum magnitude, in meters, of the camera position when zooming. Defaults to 20.0.
          * @type Number
          */
-        this.minimumHeightAboveSurface = 20.0;
+        this.minimumZoomDistance = 20.0;
         /**
-         * The maximum height, in meters, above the surface of the ellipsoid of the camera position. Defaults to positive infinity.
+         * The maximum magnitude, in meters, of the camera position when zooming. Defaults to positive infinity.
          * @type Number
          */
-        this.maximumHeightAboveSurface = Number.POSITIVE_INFINITY;
+        this.maximumZoomDistance = Number.POSITIVE_INFINITY;
 
         this._maxCoord = undefined;
         this._frustum = undefined;
@@ -428,8 +428,6 @@ define([
     var revertTransformUp = Cartesian4.ZERO.clone();
     var revertTransformRight = Cartesian4.ZERO.clone();
     var revertTransformDirection = Cartesian4.ZERO.clone();
-    var revertTransformCenter = new Cartesian3();
-    var revertTransformPositionCart = new Cartographic();
     function revertTransform(controller, transform) {
         if (typeof transform !== 'undefined') {
             var camera = controller._camera;
@@ -438,7 +436,6 @@ define([
             var right = Cartesian3.clone(camera.getRightWC(), revertTransformRight);
             var direction = Cartesian3.clone(camera.getDirectionWC(), revertTransformDirection);
 
-            var center = camera.transform.getColumn(3, revertTransformCenter);
             camera.transform = transform;
             transform = camera.getInverseTransform();
 
@@ -446,22 +443,6 @@ define([
             up = Cartesian3.clone(Matrix4.multiplyByVector(transform, up, up), camera.up);
             right = Cartesian3.clone(Matrix4.multiplyByVector(transform, right, right), camera.right);
             direction = Cartesian3.clone(Matrix4.multiplyByVector(transform, direction, direction), camera.direction);
-
-            var ellipsoid = controller._projection.getEllipsoid();
-            var positionCart = ellipsoid.cartesianToCartographic(position, revertTransformPositionCart);
-            if (positionCart.height < controller.minimumHeightAboveSurface + 1.0) {
-                positionCart.height = controller.minimumHeightAboveSurface + 1.0;
-                ellipsoid.cartographicToCartesian(positionCart, position);
-
-                Cartesian3.subtract(center, position, direction);
-                Cartesian3.normalize(direction, direction);
-
-                Cartesian3.negate(position, right);
-                Cartesian3.cross(right, direction, right);
-                Cartesian3.normalize(right, right);
-
-                Cartesian3.cross(right, direction, up);
-            }
         }
     }
 
@@ -639,14 +620,14 @@ define([
         var height = newRight - newLeft;
         var diff;
 
-        var minHeight = controller.minimumHeightAboveSurface;
+        var minHeight = controller.minimumZoomDistance;
         if (height < minHeight) {
             diff = (minHeight - height) * 0.5;
             newRight -= diff;
             newLeft += diff;
         }
 
-        var maxHeight = controller.maximumHeightAboveSurface;
+        var maxHeight = controller.maximumZoomDistance;
         if (height > maxHeight) {
             diff = (height - maxHeight) * 0.5;
             newRight -= diff;
@@ -666,18 +647,17 @@ define([
 
         var height;
         if (controller._mode === SceneMode.SCENE3D) {
-            var ellipsoid = controller._projection.getEllipsoid();
-            height = ellipsoid.cartesianToCartographic(camera.position).height;
+            height = camera.position.magnitude();
         } else {
             height = Math.abs(camera.position.z);
         }
 
-        var min = controller.minimumHeightAboveSurface;
+        var min = controller.minimumZoomDistance;
         if (height < min) {
             controller.move(camera.direction, -(min - height));
         }
 
-        var max = controller.maximumHeightAboveSurface;
+        var max = controller.maximumZoomDistance;
         if (height > max) {
             controller.move(camera.direction, height - max);
         }
