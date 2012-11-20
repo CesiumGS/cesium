@@ -148,6 +148,19 @@ define([
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
 
+        /**
+         * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
+         * By default, this is set to 1.3 for the "aerial" and "aerial with labels" map styles and 1.0 for
+         * all others.  Changing this value after creating an {@link ImageryLayer} for this provider will have
+         * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
+         *
+         * @type {Number}
+         */
+        this.defaultGamma = 1.0;
+        if (this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) {
+            this.defaultGamma = 1.3;
+        }
+
         this._tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 2
@@ -204,24 +217,6 @@ define([
 
         requestMetadata();
     };
-
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var imageUrl = imageryProvider._imageUrlTemplate;
-
-        var quadkey = BingMapsImageryProvider.tileXYToQuadKey(x, y, level);
-        imageUrl = imageUrl.replace('{quadkey}', quadkey);
-
-        var subdomains = imageryProvider._imageUrlSubdomains;
-        var subdomainIndex = (x + y + level) % subdomains.length;
-        imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
-
-        var proxy = imageryProvider._proxy;
-        if (typeof proxy !== 'undefined') {
-            imageUrl = proxy.getURL(imageUrl);
-        }
-
-        return imageUrl;
-    }
 
     /**
      * Gets the name of the Bing Maps server hosting the imagery.
@@ -541,6 +536,24 @@ define([
 
         return result;
     };
+
+    function buildImageUrl(imageryProvider, x, y, level) {
+        var imageUrl = imageryProvider._imageUrlTemplate;
+
+        var quadkey = BingMapsImageryProvider.tileXYToQuadKey(x, y, level);
+        imageUrl = imageUrl.replace('{quadkey}', quadkey);
+
+        var subdomains = imageryProvider._imageUrlSubdomains;
+        var subdomainIndex = (x + y + level) % subdomains.length;
+        imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
+
+        var proxy = imageryProvider._proxy;
+        if (typeof proxy !== 'undefined') {
+            imageUrl = proxy.getURL(imageUrl);
+        }
+
+        return imageUrl;
+    }
 
     return BingMapsImageryProvider;
 });

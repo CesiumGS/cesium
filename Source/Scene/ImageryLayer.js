@@ -116,7 +116,7 @@ define([
          *
          * @type {Number}
          */
-        this.alpha = defaultValue(description.alpha, 1.0);
+        this.alpha = defaultValue(description.alpha, defaultValue(imageryProvider.defaultAlpha, 1.0));
 
         /**
          * The brightness of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0
@@ -130,7 +130,7 @@ define([
          *
          * @type {Number}
          */
-        this.brightness = defaultValue(description.brightness, 1.0);
+        this.brightness = defaultValue(description.brightness, defaultValue(imageryProvider.defaultBrightness, 1.0));
 
         /**
          * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
@@ -144,7 +144,7 @@ define([
          *
          * @type {Number}
          */
-        this.contrast = defaultValue(description.contrast, 1.0);
+        this.contrast = defaultValue(description.contrast, defaultValue(imageryProvider.defaultContrast, 1.0));
 
         /**
          * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
@@ -157,7 +157,7 @@ define([
          *
          * @type {Number}
          */
-        this.gamma = defaultValue(description.gamma, 1.0);
+        this.gamma = defaultValue(description.gamma, defaultValue(imageryProvider.defaultGamma, 1.0));
 
         /**
          * Determines if this layer is shown.

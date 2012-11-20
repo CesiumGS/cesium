@@ -84,32 +84,25 @@ body {
 	<script id="cesium_sandcastle_script">
 require([
     'Source/Cesium',
-    'Widgets/Dojo/CesiumWidget',
+    'Widgets/Dojo/CesiumViewerWidget',
     'dojo/on',
     'dojo/dom',
     'dojo/dom-construct',
-    'dijit/DropDownMenu',
-    'dijit/MenuItem',
-    'dijit/form/Button',
-    'dijit/form/CheckBox',
-    'dijit/form/DropDownButton',
     'dijit/form/HorizontalSlider'
 ], function(
     Cesium,
-    CesiumWidget,
+    CesiumViewerWidget,
     on,
     dom,
     domConstruct,
-    DropDownMenu,
-    MenuItem,
-    Button,
-    CheckBox,
-    DropDownButton,
     HorizontalSlider)
 {
     "use strict";
 
     var imageryLayerCollection;
+    var brightnessSlider;
+    var contrastSlider;
+    var gammaSlider;
     
     function createAdjustmentUserInterface() {
         domConstruct.place(
@@ -119,7 +112,7 @@ require([
                   '<tr><td>Gamma</td><td id="gammaSlider"></td></tr>' +
                 '</table>', 'toolbar');
         
-        new HorizontalSlider({
+        brightnessSlider = new HorizontalSlider({
             value: imageryLayerCollection.get(0).brightness,
             minimum: 0.0,
             maximum: 3.0,
@@ -128,9 +121,10 @@ require([
             onChange: function(value) {
                 imageryLayerCollection.get(0).brightness = value;
             }
-        }).placeAt('brightnessSlider');
+        });
+        brightnessSlider.placeAt('brightnessSlider');
 
-        new HorizontalSlider({
+        contrastSlider = new HorizontalSlider({
             value: imageryLayerCollection.get(0).contrast,
             minimum: 0.0,
             maximum: 3.0,
@@ -139,9 +133,10 @@ require([
             onChange: function(value) {
                 imageryLayerCollection.get(0).contrast = value;
             }
-        }).placeAt('contrastSlider');
+        });
+        contrastSlider.placeAt('contrastSlider');
 
-        new HorizontalSlider({
+        gammaSlider = new HorizontalSlider({
             value: imageryLayerCollection.get(0).gamma,
             minimum: 0.0,
             maximum: 3.0,
@@ -150,10 +145,20 @@ require([
             onChange: function(value) {
                 imageryLayerCollection.get(0).gamma = value;
             }
-        }).placeAt('gammaSlider');
+        });
+        gammaSlider.placeAt('gammaSlider');
     }
     
-    var widget = new CesiumWidget();
+    function updateSliders() {
+        if (imageryLayerCollection.getLength() > 0) {
+            var layer = imageryLayerCollection.get(0);
+            brightnessSlider.set('value', layer.brightness);
+            contrastSlider.set('value', layer.contrast);
+            gammaSlider.set('value', layer.gamma);
+        }
+    }
+    
+    var widget = new CesiumViewerWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
     widget.startup();
     dom.byId('toolbar').innerHTML = '';
@@ -166,6 +171,10 @@ require([
     imageryLayerCollection = centralBody.getImageryLayers();
 
     createAdjustmentUserInterface();
+    
+    imageryLayerCollection.layerAdded.addEventListener(updateSliders);
+    imageryLayerCollection.layerRemoved.addEventListener(updateSliders);
+    imageryLayerCollection.layerMoved.addEventListener(updateSliders);
 });
 </script>
 </body>
