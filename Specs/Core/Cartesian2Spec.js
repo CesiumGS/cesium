@@ -367,6 +367,16 @@ defineSuite([
         expect(x.angleBetween(x)).toEqual(0.0);
     });
 
+    it('most orthogonal angle is x', function() {
+        var v = new Cartesian2(0.0, 1.0);
+        expect(v.mostOrthogonalAxis()).toEqual(Cartesian2.UNIT_X);
+    });
+
+    it('most orthogonal angle is y', function() {
+        var v = new Cartesian2(1.0, 0.0);
+        expect(v.mostOrthogonalAxis()).toEqual(Cartesian2.UNIT_Y);
+    });
+
     it('equals', function() {
         var cartesian = new Cartesian2(1.0, 2.0);
         expect(cartesian.equals(new Cartesian2(1.0, 2.0))).toEqual(true);
@@ -548,6 +558,12 @@ defineSuite([
         var left = new Cartesian2(4.0, 8.0);
         expect(function() {
             Cartesian2.angleBetween(left, undefined);
+        }).toThrow();
+    });
+
+    it('static mostOrthogonalAxis throws with no cartesian parameter', function() {
+        expect(function() {
+            Cartesian2.mostOrthogonalAxis(undefined);
         }).toThrow();
     });
 
