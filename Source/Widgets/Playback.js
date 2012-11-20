@@ -440,7 +440,7 @@ define([
             'attributeName' : 'transform',
             'attributeType' : 'XML',
             'type' : 'scale',
-            'values' : '0.1;1;0.1',
+            'values' : '0.4;1;0.4',
             'calcMode' : 'spline',
             'keyTimes' : '0;0.5;1',
             'keySplines' : '0.5 0.5 0.5 1;0.5 0.5 0.5 1',
@@ -509,7 +509,10 @@ define([
             if (widget._shuttleRingVisible) {
                 shuttleRingDismiss.endElementAt(1);
                 shuttleRingDismiss.beginElementAt(-0.5);  // Hide ring
-                window.setTimeout(function() { widget._setSizeSmall(); }, 200);
+                window.setTimeout(function() {
+                    widget._setSizeSmall();
+                    shuttleRingOuterG.style.display = 'none';
+                }, 450);
                 showButtons();
                 widget._shuttleRingVisible = false;
             } else if (widget.animationController.isAnimating()) {
@@ -522,14 +525,14 @@ define([
         showShuttleRingSVG.addEventListener('click', function () {
             shuttleRingDismiss.beginElementAt(0);  // Show ring
             shuttleRingDismiss.endElementAt(0.5);
+            shuttleRingOuterG.style.display = 'block';
             widget._setSizeBig();
             window.setTimeout(hideButtons, 200);
         }, true);
 
         svg.appendChild(topG);
         parentNode.appendChild(svg);
-        shuttleRingDismiss.endElementAt(1);
-        shuttleRingDismiss.beginElementAt(-0.9);  // Hide ring instantly
+        shuttleRingOuterG.style.display = 'none';
     };
 
     /**
