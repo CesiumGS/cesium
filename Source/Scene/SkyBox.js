@@ -38,6 +38,7 @@ define([
      * @constructor
      *
      * @exception {DeveloperError} cubeMapUrls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
+     * @exception {DeveloperError} cubeMapUrls properties must all be the same type.
      */
     var SkyBox = function(cubeMapUrls) {
         if ((typeof cubeMapUrls === 'undefined') ||
@@ -48,6 +49,14 @@ define([
             (typeof cubeMapUrls.positiveZ === 'undefined') ||
             (typeof cubeMapUrls.negativeZ === 'undefined')) {
             throw new DeveloperError('cubeMapUrls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
+        }
+
+        if ((typeof cubeMapUrls.positiveX !== typeof cubeMapUrls.negativeX) ||
+            (typeof cubeMapUrls.positiveX !== typeof cubeMapUrls.positiveY) ||
+            (typeof cubeMapUrls.positiveX !== typeof cubeMapUrls.negativeY) ||
+            (typeof cubeMapUrls.positiveX !== typeof cubeMapUrls.positiveZ) ||
+            (typeof cubeMapUrls.positiveX !== typeof cubeMapUrls.negativeZ)) {
+            throw new DeveloperError('cubeMapUrls properties must all be the same type.');
         }
 
         this._command = new DrawCommand();
@@ -103,10 +112,27 @@ define([
         var command = this._command;
 
         if (typeof command.vertexArray === 'undefined') {
-            var that = this;
+            var cubeMapUrls = this._cubeMapUrls;
 
-            loadCubeMap(context, this._cubeMapUrls).then(function(cubeMap) {
-                that._cubeMap = cubeMap;
+            if (typeof cubeMapUrls.positiveX === 'string') {
+                // Given urls for cube-map images.  Load them.
+                var that = this;
+                loadCubeMap(context, this._cubeMapUrls).then(function(cubeMap) {
+                    that._cubeMap = cubeMap;
+
+                    command.uniformMap = {
+                        u_cubeMap: function() {
+                            return cubeMap;
+                        },
+                        u_morphTime : function() {
+                            return that.morphTime;
+                        }
+                    };
+                });
+            } else {
+                this._cubeMap = context.createCubeMap({
+                    source : cubeMapUrls
+                });
 
                 command.uniformMap = {
                     u_cubeMap: function() {
@@ -116,7 +142,7 @@ define([
                         return that.morphTime;
                     }
                 };
-            });
+            }
 
             var mesh = BoxTessellator.compute({
                 dimensions : new Cartesian3(2.0, 2.0, 2.0)
