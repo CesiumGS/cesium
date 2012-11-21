@@ -124,6 +124,18 @@ define([
 
     Playback.prototype._createNodes = function(parentNode) {
         var widget = this;
+
+        // This is a workaround for a bug or security feature in Firefox.
+        var cssStyle = document.createElement('style');
+        cssStyle.textContent =
+            '.rectButton .buttonGlow { filter: url(#blurred); }\n' +
+            '.rectButton .buttonMain { fill: url(#buttonNormal); }\n' +
+            '.buttonSelected .buttonMain { fill: url(#buttonSelected); }\n' +
+            '.rectButton:hover .buttonMain { fill: url(#buttonHovered); }\n' +
+            '.shuttleRingPath { fill: url(#buttonRadialNormal); }\n' +
+            '.shuttleRingGlow { fill: url(#shuttleRingGlowGradient); }\n';
+        document.head.appendChild(cssStyle);
+
         var svg = this.svgNode = this._svg('svg:svg');
 
         // Define the XLink namespace that SVG uses
