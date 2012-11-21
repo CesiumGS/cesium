@@ -203,7 +203,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveDown = function(angle) {
-        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
+        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         this._moveVertical(angle);
     };
 
@@ -218,29 +218,38 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveUp = function(angle) {
-        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
+        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
         this._moveVertical(angle);
     };
 
     CameraSpindleController.prototype._moveVertical = function(angle) {
-        var p = this._camera.position.normalize();
-        if (typeof this.constrainedAxis !== 'undefined' && !p.equalsEpsilon(this.constrainedAxis, CesiumMath.EPSILON2)) {
-            var dot = p.dot(this.constrainedAxis.normalize());
-            if (CesiumMath.equalsEpsilon(1.0, Math.abs(dot), CesiumMath.EPSILON3) && dot * angle < 0.0) {
-                return;
-            }
+        var camera = this._camera;
+        var position = camera.position;
+        var p = Cartesian3.normalize(position);
+        if (typeof this.constrainedAxis !== 'undefined') {
+            var northParallel = p.equalsEpsilon(this.constrainedAxis, CesiumMath.EPSILON2);
+            var southParallel = p.equalsEpsilon(this.constrainedAxis.negate(), CesiumMath.EPSILON2);
+            if ((!northParallel && !southParallel)) {
+                var constrainedAxis = Cartesian3.normalize(this.constrainedAxis);
+                var dot = p.dot(constrainedAxis);
+                var angleToAxis = Math.acos(dot);
+                if (angle < 0 && -angle > angleToAxis) {
+                    angle = -angleToAxis;
+                }
 
-            var angleToAxis = Math.acos(dot);
-            if (Math.abs(angle) > Math.abs(angleToAxis)) {
-                angle = angleToAxis;
-            }
+                dot = p.dot(constrainedAxis.negate());
+                angleToAxis = Math.acos(dot);
+                if (angle > 0 && angle > angleToAxis) {
+                    angle = angleToAxis;
+                }
 
-            var tangent = this.constrainedAxis.cross(p).normalize();
-            var bitangent = this._camera.up.cross(tangent);
-            tangent = bitangent.cross(this._camera.up);
-            this.rotate(tangent, angle);
+                var tangent = Cartesian3.cross(constrainedAxis, p);
+                this.rotate(tangent, angle);
+            } else if ((northParallel && angle > 0) || (southParallel && angle < 0)) {
+                this.rotate(camera.right, angle);
+            }
         } else {
-            this.rotate(this._camera.right, angle);
+            this.rotate(camera.right, angle);
         }
     };
 
@@ -255,7 +264,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveRight = function(angle) {
-        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
+        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
         this._moveHorizontal(angle);
     };
 
@@ -270,7 +279,7 @@ define([
      * @see CameraSpindleController#rotate
      */
     CameraSpindleController.prototype.moveLeft = function(angle) {
-        angle = (typeof angle !== 'undefined') ? -angle : -this._moveRate;
+        angle = (typeof angle !== 'undefined') ? angle : this._moveRate;
         this._moveHorizontal(angle);
     };
 
@@ -375,8 +384,8 @@ define([
         var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / this._canvas.clientWidth;
         var thetaWindowRatio = (movement.endPosition.y - movement.startPosition.y) / this._canvas.clientHeight;
 
-        var deltaPhi = -rotateRate * phiWindowRatio * Math.PI * 2.0;
-        var deltaTheta = -rotateRate * thetaWindowRatio * Math.PI;
+        var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
+        var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
 
         this._moveHorizontal(deltaPhi);
         this._moveVertical(deltaTheta);
@@ -402,7 +411,7 @@ define([
             var axis = p0.cross(p1);
 
             if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
-                var angle = -Math.acos(dot);
+                var angle = Math.acos(dot);
                 this.rotate(axis, angle);
             }
         } else {
@@ -414,8 +423,8 @@ define([
             var endPhi = Math.atan2(p1.y, p1.x);
             var endTheta = Math.acos(p1.z / endRho);
 
-            var deltaPhi = startPhi - endPhi;
-            var deltaTheta = startTheta - endTheta;
+            var deltaPhi = endPhi - startPhi;
+            var deltaTheta = endTheta - startTheta;
 
             var theta = Math.acos(camera.position.z / camera.position.magnitude()) + deltaTheta;
             if (theta < 0 || theta > Math.PI) {
