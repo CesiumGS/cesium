@@ -82,7 +82,7 @@ require([
     function flyToMyLocation(scene) {
         Sandcastle.declare(flyToMyLocation);    // For highlighting in Sandcastle.
         function fly(position) {
-            var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 10000.0);
+            var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 100.0);
             var flight = Cesium.CameraFlightPath.createAnimation(scene.getCamera(), destination);
             scene.getAnimations().add(flight);        
         }
@@ -142,6 +142,7 @@ require([
     var widget = new CesiumWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
     widget.startup();
+    widget.scene.getPrimitives().getCentralBody().affectedByLighting = false;
     dom.byId('toolbar').innerHTML = '';
 
     createButtons(widget.scene);

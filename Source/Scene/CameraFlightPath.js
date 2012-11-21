@@ -30,6 +30,7 @@ define([
 
     function createQuaternion(direction, up) {
         var right = direction.cross(up);
+        up = right.cross(direction);
         var viewMat = new Matrix3( right.x,      right.y,      right.z,
                                    up.x,         up.y,         up.z,
                                   -direction.x, -direction.y, -direction.z);
@@ -88,7 +89,7 @@ define([
             }];
 
             angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
-            axis = aboveEnd.cross(afterStart);
+            axis = afterStart.cross(aboveEnd);
 
             var increment = incrementPercentage * angle;
             var startCondition = angle - increment;
@@ -150,18 +151,10 @@ define([
             var orientation = orientations.evaluate(time);
             var rotationMatrix = Matrix3.fromQuaternion(orientation);
 
-            /*
             camera.position = path.evaluate(time);
-            camera.right = rotationMatrix.getColumn(0);
-            camera.up = rotationMatrix.getColumn(1);
-            camera.direction = rotationMatrix.getColumn(2).negate();
-            */
-
-            camera.position = path.evaluate(time);
-            camera.direction = camera.position.negate().normalize();
-            camera.right = camera.direction.cross(Cartesian3.UNIT_Z).normalize();
-            camera.up = camera.position.cross(camera.right).normalize();
-            camera.right = camera.direction.cross(camera.up);
+            camera.right = rotationMatrix.getRow(0);
+            camera.up = rotationMatrix.getRow(1);
+            camera.direction = rotationMatrix.getRow(2).negate();
         };
 
         return {
