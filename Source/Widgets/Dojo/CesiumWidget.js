@@ -193,14 +193,7 @@ define([
             var context = scene.getContext();
 
             var imageryUrl = '../../Assets/Textures/';
-            var maxTextureSize = context.getMaximumTextureSize();
-            if (maxTextureSize < 4095) {
-                // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
-            } else {
-                // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
-            }
+            this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
             centralBody.showSkyAtmosphere = true;
