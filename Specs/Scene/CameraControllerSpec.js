@@ -74,6 +74,7 @@ defineSuite([
         camera.right = right.clone();
 
         controller = camera.controller;
+        controller.minimumZoomDistance = 0.0;
     });
 
     it('constructor throws without a camera', function() {
@@ -401,6 +402,35 @@ defineSuite([
         expect(camera.frustum.bottom).toEqual(-1.5, CesiumMath.EPSILON10);
     });
 
+    it('zooms out with maximum distance in 2D', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new GeographicProjection(ellipsoid);
+        var frameState = {
+            mode : SceneMode.SCENE2D,
+            scene2D : {
+                projection : projection
+            }
+        };
+        controller.update(frameState);
+
+        var maxZoom = 10.0;
+        controller.maximumZoomDistance = maxZoom;
+        controller.zoomOut(maxZoom + 100.0);
+        expect(camera.frustum.right).toEqualEpsilon(maxZoom * 0.5, CesiumMath.EPSILON10);
+        expect(camera.frustum.left).toEqual(-camera.frustum.right);
+        expect(camera.frustum.top).toEqualEpsilon(maxZoom * 0.25, CesiumMath.EPSILON10);
+        expect(camera.frustum.bottom).toEqual(-camera.frustum.top);
+    });
+
     it('zooms in 2D', function() {
         var frustum = new OrthographicFrustum();
         frustum.near = 1.0;
@@ -474,6 +504,14 @@ defineSuite([
         expect(camera.up).toEqual(up);
         expect(camera.direction).toEqual(dir);
         expect(camera.right).toEqual(right);
+    });
+
+    it('zooms out to maximum height in 3D', function() {
+        var maxDist = 100.0;
+        controller.maximumZoomDistance = maxDist;
+        controller.zoomOut(maxDist * 1e12);
+        var magnitude = camera.position.magnitude();
+        expect(magnitude).toEqualEpsilon(maxDist, CesiumMath.EPSILON2);
     });
 
     it('zooms in throws with undefined OrthogrphicFrustum properties 2D', function() {
@@ -1047,33 +1085,5 @@ defineSuite([
         expect(camera.position.x).toEqualEpsilon(-max.x, CesiumMath.EPSILON6);
         expect(camera.position.y).toBeLessThan(-max.y);
         expect(camera.position.y).toBeGreaterThan(-max.x);
-    });
-
-    it('will not rotate through the earth when rotating about a point on the surface', function() {
-        var ellipsoid = Ellipsoid.WGS84;
-        var maxRadii = ellipsoid.getMaximumRadius();
-        controller._projection = new GeographicProjection(ellipsoid);
-
-        var frustum = new PerspectiveFrustum();
-        frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
-        frustum.near = 100;
-        frustum.far = 60.0 * maxRadii;
-        camera.frustum = frustum;
-        camera.position = Cartesian3.UNIT_X.multiplyByScalar(maxRadii + 1000.0);
-        camera.direction = camera.position.negate().normalize();
-        camera.up = Cartesian3.UNIT_Z.clone();
-        camera.right = camera.direction.cross(camera.up);
-
-        var center = ellipsoid.cartesianToCartographic(camera.position);
-        center.height = 0.0;
-        center = ellipsoid.cartographicToCartesian(center);
-        var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid);
-
-        controller.rotateDown(Math.PI, transform);
-
-        expect(camera.transform).toEqual(Matrix4.IDENTITY);
-        expect(ellipsoid.cartesianToCartographic(camera.position).height).toBeGreaterThan(0.0);
-        expect(camera.direction).toEqual(center.subtract(camera.position).normalize());
     });
 });

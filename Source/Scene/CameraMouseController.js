@@ -240,17 +240,6 @@ define([
                 return;
             }
 
-            var constrainedAxis = object._cameraController.constrainedAxis;
-            if (typeof constrainedAxis !== 'undefined') {
-                var cameraPosition = object._cameraController._camera.position.normalize();
-                var northParallel = cameraPosition.equalsEpsilon(constrainedAxis, CesiumMath.EPSILON2);
-                var southParallel = cameraPosition.equalsEpsilon(constrainedAxis.negate(), CesiumMath.EPSILON2);
-                if (northParallel || southParallel) {
-                    object[lastMovementName] = undefined;
-                    return;
-                }
-            }
-
             if (!handler.isButtonDown()) {
                 action(object, object[lastMovementName]);
             }
@@ -262,7 +251,7 @@ define([
     function handleZoom(object, movement, zoomFactor, distanceMeasure) {
         // distanceMeasure should be the height above the ellipsoid.
         // The zoomRate slows as it approaches the surface and stops minHeight above it.
-        var minHeight = object._cameraController.minimumHeightAboveSurface;
+        var minHeight = object._cameraController.minimumZoomDistance;
         var zoomRate = zoomFactor * (distanceMeasure - minHeight);
 
         if (zoomRate > object._maximumZoomRate) {
@@ -562,7 +551,8 @@ define([
         }
     }
 
-    function rotate3D(controller, movement, transform, constrainedAxis) {
+    var rotate3DRestrictedDirection = Cartesian4.ZERO.clone();
+    function rotate3D(controller, movement, transform, constrainedAxis, restrictedAngle) {
         var cameraController = controller._cameraController;
         var oldAxis = cameraController.constrainedAxis;
         if (typeof constrainedAxis !== 'undefined') {
@@ -590,6 +580,19 @@ define([
 
         cameraController.rotateRight(deltaPhi, transform);
         cameraController.rotateUp(deltaTheta, transform);
+
+        if (typeof restrictedAngle !== 'undefined') {
+            var direction = Cartesian3.clone(cameraController._camera.getDirectionWC(), rotate3DRestrictedDirection);
+            var invTransform = transform.inverseTransformation();
+            Matrix4.multiplyByVector(invTransform, direction, direction);
+
+            var dot = -Cartesian3.dot(direction, constrainedAxis);
+            var angle = Math.acos(dot);
+            if (angle > restrictedAngle) {
+                angle -= restrictedAngle;
+                cameraController.rotateUp(-angle, transform);
+            }
+        }
 
         cameraController.constrainedAxis = oldAxis;
     }
@@ -646,6 +649,7 @@ define([
 
     var tilt3DWindowPos = new Cartesian2();
     var tilt3DRay = new Ray();
+    var tilt3DCart = new Cartographic();
     var tilt3DCenter = Cartesian4.UNIT_W.clone();
     var tilt3DTransform = new Matrix4();
     var tilt3DPosition = new Cartesian3(); // CAMERA TODO: remove access to camera
@@ -664,13 +668,22 @@ define([
         windowPosition.x = controller._canvas.clientWidth / 2;
         windowPosition.y = controller._canvas.clientHeight / 2;
         var ray = cameraController.getPickRay(windowPosition, tilt3DRay);
+
+        var center;
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
-        if (typeof intersection === 'undefined') {
-            return;
+        if (typeof intersection !== 'undefined') {
+            center = ray.getPoint(intersection.start, tilt3DCenter);
+        } else {
+            var grazingAltitudeLocation = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
+            if (typeof grazingAltitudeLocation === 'undefined') {
+                return;
+            }
+            var grazingAltitudeCart = ellipsoid.cartesianToCartographic(grazingAltitudeLocation, tilt3DCart);
+            grazingAltitudeCart.height = 0.0;
+            center = ellipsoid.cartographicToCartesian(grazingAltitudeCart, tilt3DCenter);
         }
 
         // CAMERA TODO: Remove the need for camera access
-        var center = ray.getPoint(intersection.start, tilt3DCenter);
         center = cameraController._camera.worldToCameraCoordinates(center, center);
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
 
@@ -688,7 +701,7 @@ define([
             movement.endPosition.y = movement.startPosition.y;
         }
 
-        rotate3D(controller, movement, transform, Cartesian3.UNIT_Z);
+        rotate3D(controller, movement, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO);
 
         controller.setEllipsoid(oldEllipsoid);
     }

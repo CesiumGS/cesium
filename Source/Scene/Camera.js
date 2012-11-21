@@ -51,7 +51,7 @@ define([
      * camera.frustum.far = 2.0;
      */
     var Camera = function(canvas) {
-        if (!canvas) {
+        if (typeof canvas === 'undefined') {
             throw new DeveloperError('canvas is required.');
         }
 
@@ -181,7 +181,7 @@ define([
         }
 
         if (positionChanged || transformChanged) {
-            camera._positionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(position.x, position.y, position.z, 1.0)));
+            camera._positionWC = Cartesian3.fromCartesian4(transform.multiplyByPoint(position));
         }
 
         if (directionChanged || upChanged || rightChanged) {

@@ -5,6 +5,7 @@ define([
         'dojo/ready',
         'dojo/_base/lang',
         'dojo/_base/event',
+        'dojo/dom-style',
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
@@ -14,6 +15,7 @@ define([
         'dijit/form/DropDownButton',
         'dijit/TooltipDialog',
         './TimelineWidget',
+        '../../Core/defaultValue',
         '../../Core/loadJson',
         '../../Core/BoundingRectangle',
         '../../Core/Clock',
@@ -23,7 +25,7 @@ define([
         '../../Core/AnimationController',
         '../../Core/Ellipsoid',
         '../../Core/Iso8601',
-        '../../Core/FullScreen',
+        '../../Core/Fullscreen',
         '../../Core/computeSunPosition',
         '../../Core/EventHandler',
         '../../Core/FeatureDetection',
@@ -59,6 +61,7 @@ define([
         ready,
         lang,
         event,
+        domStyle,
         on,
         _WidgetBase,
         _TemplatedMixin,
@@ -68,6 +71,7 @@ define([
         DropDownButton,
         TooltipDialog,
         TimelineWidget,
+        defaultValue,
         loadJson,
         BoundingRectangle,
         Clock,
@@ -77,7 +81,7 @@ define([
         AnimationController,
         Ellipsoid,
         Iso8601,
-        FullScreen,
+        Fullscreen,
         computeSunPosition,
         EventHandler,
         FeatureDetection,
@@ -236,6 +240,18 @@ define([
          * @see CesiumViewerWidget#resize
          */
         resizeWidgetOnWindowResize: true,
+        /**
+         * The HTML element to place into fullscreen mode when the corresponding
+         * button is pressed.  If undefined, only the widget itself will
+         * go into fullscreen mode.  By specifying another container, such
+         * as document.body, this property allows an application to retain
+         * any overlaid or surrounding elements when in fullscreen.
+         *
+         * @type {Object}
+         * @memberof CesiumViewerWidget.prototype
+         * @default undefined
+         */
+        fullscreenElement : undefined,
 
         // for Dojo use only
         constructor : function() {
@@ -631,18 +647,19 @@ define([
                 context.setThrowOnWebGLError(true);
             }
 
+            var imageryUrl = '../../Assets/Imagery/';
             var maxTextureSize = context.getMaximumTextureSize();
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_512.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_512.jpg');
             } else {
                 // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl('Images/NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl('Images/land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl('Images/earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl('Images/earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl('Images/earthbump1k.jpg');
+                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
+                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_2048.jpg');
+                this.specularMapUrl = this.specularMapUrl || require.toUrl(imageryUrl + 'earthspec1k.jpg');
+                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl(imageryUrl + 'earthcloudmaptrans.jpg');
+                this.bumpMapUrl = this.bumpMapUrl || require.toUrl(imageryUrl + 'earthbump1k.jpg');
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
@@ -687,7 +704,8 @@ define([
                         this.centerCameraOnPick(selectedObject);
                     }
                 };
-                                }
+            }
+
             if (this.enableDragDrop) {
                 var dropBox = this.cesiumNode;
                 on(dropBox, 'drop', lang.hitch(widget, 'handleDrop'));
@@ -795,19 +813,27 @@ define([
             var view2D = widget.view2D;
             var view3D = widget.view3D;
             var viewColumbus = widget.viewColumbus;
-            var viewFullScreen = widget.viewFullScreen;
+            var viewFullscreen = widget.viewFullscreen;
 
             view2D.set('checked', false);
             view3D.set('checked', true);
             viewColumbus.set('checked', false);
 
-            on(viewFullScreen, 'Click', function() {
-                if (FullScreen.isFullscreenEnabled()) {
-                    FullScreen.exitFullscreen();
-                } else {
-                    FullScreen.requestFullScreen(document.body);
-                }
-            });
+            if (Fullscreen.isFullscreenEnabled()) {
+                on(document, Fullscreen.getFullscreenChangeEventName(), function() {
+                    widget.resize();
+                });
+
+                on(viewFullscreen, 'Click', function() {
+                    if (Fullscreen.isFullscreen()) {
+                        Fullscreen.exitFullscreen();
+                    } else {
+                        Fullscreen.requestFullscreen(defaultValue(widget.fullscreenElement, widget.cesiumNode));
+                    }
+                });
+            } else {
+                domStyle.set(viewFullscreen.domNode, 'display', 'none');
+            }
 
             on(viewHomeButton, 'Click', function() {
                 widget.viewHome();
@@ -906,6 +932,7 @@ define([
 
             var mouseHandler = scene.getCameraMouseController();
             mouseHandler.enableTranslate = true;
+            mouseHandler.enableTilt = true;
             mouseHandler.setEllipsoid(Ellipsoid.WGS84);
             mouseHandler.columbusViewMode = CameraColumbusViewMode.FREE;
 
@@ -1202,6 +1229,7 @@ define([
          * This is a simple render loop that can be started if there is only one <code>CesiumViewerWidget</code>
          * on your page.  If you wish to customize your render loop, avoid this function and instead
          * use code similar to one of the following examples.
+         *
          * @function
          * @memberof CesiumViewerWidget.prototype
          * @see requestAnimationFrame
@@ -1217,7 +1245,7 @@ define([
          *     widget.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          * @example
          * // This example requires widget1 and widget2 to share an animationController
          * // (for example, widget2's constructor was called with a copy of widget1's
@@ -1233,7 +1261,7 @@ define([
          *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          * @example
          * // This example uses separate animationControllers for widget1 and widget2.
          * // These widgets can animate at different rates and pause individually.
@@ -1249,7 +1277,7 @@ define([
          *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }
-         * updateAndRender();
+         * requestAnimationFrame(updateAndRender);
          */
         startRenderLoop : function() {
             var widget = this;
@@ -1262,7 +1290,8 @@ define([
                 widget.render();
                 requestAnimationFrame(updateAndRender);
             }
-            updateAndRender();
+
+            requestAnimationFrame(updateAndRender);
         }
     });
 });

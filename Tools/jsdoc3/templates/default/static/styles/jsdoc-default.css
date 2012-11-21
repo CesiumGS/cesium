@@ -4,9 +4,17 @@ body
     font-family: Arial, Geneva, sans serif;
     padding: 15px 0;
     color: #000;
-    background: #EEE;
-    background-image: -moz-linear-gradient(left, #dddddd, #f9f9f9) fixed;
-    background-image: -webkit-gradient(linear,left bottom,right bottom,color-stop(0, #dddddd),color-stop(1, #f9f9f9)) fixed;
+    height: 100%;
+    background-attachment: fixed !important;
+    background-repeat: no-repeat;
+    background-repeat: no-repeat;
+    background: #67addf; /* Old browsers */
+    background: -moz-linear-gradient(top,  #67addf 3%, #ffffff 50%, #5c8727 100%); /* FF3.6+ */
+    background: -webkit-gradient(linear, left top, left bottom, color-stop(3%,#67addf), color-stop(50%,#ffffff), color-stop(100%,#5c8727)); /* Chrome,Safari4+ */
+    background: -webkit-linear-gradient(top,  #67addf 3%,#ffffff 50%,#5c8727 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-linear-gradient(top,  #67addf 3%,#ffffff 50%,#5c8727 100%); /* Opera 11.10+ */
+    background: -ms-linear-gradient(top,  #67addf 3%,#ffffff 50%,#5c8727 100%); /* IE10+ */
+    background: linear-gradient(to bottom,  #67addf 3%,#ffffff 50%,#5c8727 100%); /* W3C */
 }
 
 div.hr {
@@ -48,7 +56,7 @@ header
     float: left;
     width: 70%;
     min-width: 300px;
-    max-width: 750px;
+    max-width: 850px;
 }
 
 .embedded #main {
@@ -116,17 +124,29 @@ div.menu
     padding: 15px;
 }
 
+.menuLogo {
+	width: 100%;
+	margin: 0 auto 10px auto;
+	display: block;
+}
+
+.indexLogo {
+	display: block;
+	margin: 0 auto;
+	width: 250px;
+}
+
 div.nav 
 {
     position: fixed;
     top: 0;
     bottom: 0;
+    left: 0;
     float: left;
     width: 30%;
     min-width: 100px;
     max-width: 300px;
     padding: 0 0 10px 0;
-    height: 98%;
     overflow: auto;
 }
 
@@ -194,6 +214,7 @@ div.navStatic
 {
     position: static;
     min-height: 1em;
+    background: transparent;
 }
 
 div.nav input.classFilter {
@@ -276,6 +297,7 @@ footer {
     margin-top: 12px;
     font-style: italic;
     font-size: 90%;
+    text-align: center;
 }
 
 #mainIndex footer {

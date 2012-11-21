@@ -8,14 +8,11 @@ require({
         name : 'dijit',
         location : 'ThirdParty/dojo-release-1.7.2-src/dijit'
     }, {
+        name : 'Assets',
+        location : 'Source/Assets'
+    }, {
         name : 'Core',
         location : 'Source/Core'
-    }, {
-        name : 'Widgets',
-        location : 'Source/Widgets'
-    }, {
-        name : 'Workers',
-        location : 'Source/Workers'
     }, {
         name : 'DynamicScene',
         location : 'Source/DynamicScene'
@@ -31,6 +28,12 @@ require({
     }, {
         name : 'ThirdParty',
         location : 'Source/ThirdParty'
+    }, {
+        name : 'Widgets',
+        location : 'Source/Widgets'
+    }, {
+        name : 'Workers',
+        location : 'Source/Workers'
     }, {
         name : 'CesiumViewer',
         location : 'Apps/CesiumViewer'

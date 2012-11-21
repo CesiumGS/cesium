@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Math',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/destroyObject',
@@ -29,6 +30,7 @@ define([
         './PerspectiveOffCenterFrustum',
         './FrustumCommands'
     ], function(
+        CesiumMath,
         Color,
         defaultValue,
         destroyObject,
@@ -242,11 +244,8 @@ define([
     function update(scene) {
         var us = scene.getUniformState();
         var camera = scene._camera;
-        us.setView(camera.getViewMatrix());
-        us.setProjection(camera.frustum.getProjectionMatrix());
-        if (camera.frustum.getInfiniteProjectionMatrix) {
-            us.setInfiniteProjection(camera.frustum.getInfiniteProjectionMatrix());
-        }
+        us.update(camera);
+        us.setFrameNumber(CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0));
 
         scene._commandList.length = 0;
         scene._primitives.update(scene._context, scene._frameState, scene._commandList);
@@ -393,10 +392,7 @@ define([
             frustum.near = frustumCommands.near;
             frustum.far = frustumCommands.far;
 
-            us.setProjection(frustum.getProjectionMatrix());
-            if (frustum.getInfiniteProjectionMatrix) {
-                us.setInfiniteProjection(frustum.getInfiniteProjectionMatrix());
-            }
+            us.updateFrustum(frustum);
 
             var commands = frustumCommands.commands;
             var length = commands.length;
