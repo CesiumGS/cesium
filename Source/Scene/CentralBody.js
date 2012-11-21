@@ -29,6 +29,7 @@ define([
         '../Renderer/DepthFunction',
         '../Renderer/DrawCommand',
         '../Renderer/PixelFormat',
+        '../Renderer/BlendingState',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
         './EllipsoidTerrainProvider',
@@ -73,6 +74,7 @@ define([
         DepthFunction,
         DrawCommand,
         PixelFormat,
+        BlendingState,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
         EllipsoidTerrainProvider,
@@ -582,7 +584,8 @@ define([
                 depthTest : {
                     enabled : true
                 },
-                depthMask : false
+                depthMask : false,
+                blending : BlendingState.ALPHA_BLEND
             });
             this._skyCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMaximumRadius() * 1.025);
         }

@@ -61,5 +61,7 @@ void main (void)
     const float fExposure = 2.0;
     
     vec3 rgb = fRayleighPhase * v_rayleighColor + fMiePhase * v_mieColor;
-    gl_FragColor = vec4(vec3(1.0) - exp(-fExposure * rgb), 1.0);
+    rgb = vec3(1.0) - exp(-fExposure * rgb);
+    float l = czm_luminance(rgb);
+    gl_FragColor = vec4(rgb, min(smoothstep(0.0, 0.1, l), 1.0));
 }

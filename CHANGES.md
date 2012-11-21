@@ -25,7 +25,7 @@ TODO
 * Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
 * Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
 * Added new automatic GLSL uniforms: 'czm_frameNumber', `czm_temeToPseudoFixed, `czm_entireFrustum`, `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
-* Added `czm_translateRelativeToEye` GLSL function.
+* Added `czm_translateRelativeToEye` and `czm_luminance` GLSL functions.
 * Added `shininess` to `czm_materialInput`.
 * Added `QuadraticRealPolynomial`, `CubicRealPolynomial`, and `QuarticRealPolynomial` for finding the roots of quadratic, cubic, and quartic polynomials.
 * Added `IntersectionTests.grazingAltitudeLocation` for finding a point on a ray nearest to an ellipsoid.
