@@ -116,9 +116,7 @@ define([
     };
 
     Playback.prototype._setShuttleRingGlow = function (angle) {
-        var clip = this.shuttleRingGlow.childNodes[0];
-        var glow = this.shuttleRingGlow.childNodes[1];
-        clip.setAttribute('transform', 'translate(101,80) rotate(' + (-angle) + ') translate(-101,-80)');
+        var glow = this.shuttleRingGlow.childNodes[1].childNodes[0];
         glow.setAttribute('transform', 'translate(101,80) rotate(' + angle + ') translate(-101,-80)');
     };
 
@@ -368,13 +366,18 @@ define([
                         }
                     ]
                 }, {
-                    'tagName' : 'rect',
-                    'class' : 'shuttleRingGlow',
+                    'tagName' : 'g',
                     'clip-path' : 'url(#clipShuttleRing)',
-                    'x' : 81,
-                    'y' : -25,
-                    'width' : 40,
-                    'height' : 100
+                    'children' : [
+                        {
+                            'tagName' : 'rect',
+                            'class' : 'shuttleRingGlow',
+                            'x' : 81,
+                            'y' : -25,
+                            'width' : 40,
+                            'height' : 100
+                        }
+                    ]
                 }
             ]
         });
