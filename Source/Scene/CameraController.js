@@ -550,7 +550,7 @@ define([
 
                 var tangent = Cartesian3.cross(constrainedAxis, p, rotateVertScratchTan);
                 controller.rotate(tangent, angle);
-            } else if ((northParallel && angle > 0) || (southParallel && angle < 0)) {
+            } else if ((northParallel && angle < 0) || (southParallel && angle > 0)) {
                 controller.rotate(camera.right, angle);
             }
         } else {

@@ -575,11 +575,11 @@ define([
         var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / controller._canvas.clientWidth;
         var thetaWindowRatio = (movement.endPosition.y - movement.startPosition.y) / controller._canvas.clientHeight;
 
-        var deltaPhi = -rotateRate * phiWindowRatio * Math.PI * 2.0;
-        var deltaTheta = -rotateRate * thetaWindowRatio * Math.PI;
+        var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
+        var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
 
-        cameraController.rotateRight(deltaPhi, transform);
-        cameraController.rotateUp(deltaTheta, transform);
+        cameraController.rotateLeft(deltaPhi, transform);
+        cameraController.rotateDown(deltaTheta, transform);
 
         if (typeof restrictedAngle !== 'undefined') {
             var direction = Cartesian3.clone(cameraController._camera.getDirectionWC(), rotate3DRestrictedDirection);
@@ -620,7 +620,7 @@ define([
             var axis = Cartesian3.cross(p0, p1, pan3DAxis);
 
             if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
-                var angle = -Math.acos(dot);
+                var angle = Math.acos(dot);
                 cameraController.rotate(axis, angle);
             }
         } else {
@@ -632,8 +632,8 @@ define([
             var endPhi = Math.atan2(p1.y, p1.x);
             var endTheta = Math.acos(p1.z / endRho);
 
-            var deltaPhi = startPhi - endPhi;
-            var deltaTheta = startTheta - endTheta;
+            var deltaPhi = endPhi - startPhi;
+            var deltaTheta = endTheta - startTheta;
 
             cameraController.rotateRight(deltaPhi);
             cameraController.rotateUp(deltaTheta);
