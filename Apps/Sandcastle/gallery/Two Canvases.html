@@ -90,8 +90,6 @@
 
         var cb = new Cesium.CentralBody(ellipsoid);
         cb.getImageryLayers().addImageryProvider(imageryProvider);
-        cb.nightImageSource = imageryUrl + 'land_ocean_ice_lights_2048.jpg';
-        cb.specularMapSource = imageryUrl + 'earthspec1k.jpg';
 
         cb.showSkyAtmosphere = (canvas === canvas3D);
         primitives.setCentralBody(cb);

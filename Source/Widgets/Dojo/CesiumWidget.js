@@ -61,10 +61,6 @@ define([
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
         dayImageUrl : undefined,
-        nightImageUrl : undefined,
-        specularMapUrl : undefined,
-        cloudsMapUrl : undefined,
-        bumpMapUrl : undefined,
         resizeWidgetOnWindowResize : true,
 
         constructor : function() {
@@ -201,14 +197,9 @@ define([
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
                 this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_512.jpg');
             } else {
                 // Desktop
                 this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl(imageryUrl + 'earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl(imageryUrl + 'earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl(imageryUrl + 'earthbump1k.jpg');
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
@@ -258,17 +249,6 @@ define([
             var controllers = camera.getControllers();
             controllers.removeAll();
             this.centralBodyCameraController = controllers.addCentralBody();
-        },
-
-        areCloudsAvailable : function() {
-            return typeof this.centralBody.cloudsMapSource !== 'undefined';
-        },
-
-        enableClouds : function(useClouds) {
-            if (this.areCloudsAvailable()) {
-                this.centralBody.showClouds = useClouds;
-                this.centralBody.showCloudShadows = useClouds;
-            }
         },
 
         enableStatistics : function(showStatistics) {
@@ -327,11 +307,6 @@ define([
             } else {
                 centralBody.getImageryLayers().addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
             }
-
-            centralBody.nightImageSource = this.nightImageUrl;
-            centralBody.specularMapSource = this.specularMapUrl;
-            centralBody.cloudsMapSource = this.cloudsMapUrl;
-            centralBody.bumpMapSource = this.bumpMapUrl;
         },
 
         autoStartRenderLoop : true,

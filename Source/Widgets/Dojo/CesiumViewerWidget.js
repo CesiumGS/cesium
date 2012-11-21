@@ -149,34 +149,6 @@ define([
          */
         dayImageUrl : undefined,
         /**
-         * The URL for a nighttime image on the globe.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        nightImageUrl : undefined,
-        /**
-         * The URL for a specular map on the globe, typically with white for oceans and black for landmass.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        specularMapUrl : undefined,
-        /**
-         * The URL for the clouds image on the globe.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        cloudsMapUrl : undefined,
-        /**
-         * The URL for a bump map on the globe, showing mountain ranges.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        bumpMapUrl : undefined,
-        /**
          * An object containing settings supplied by the end user, typically from the query string
          * of the URL of the page with the widget.
          *
@@ -665,14 +637,9 @@ define([
             if (maxTextureSize < 4095) {
                 // Mobile, or low-end card
                 this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_512.jpg');
             } else {
                 // Desktop
                 this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl(imageryUrl + 'earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl(imageryUrl + 'earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl(imageryUrl + 'earthbump1k.jpg');
             }
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
@@ -978,31 +945,6 @@ define([
         },
 
         /**
-         * Test if the clouds are configured and available for display.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @returns {Boolean} <code>true</code> if the <code>cloudsMapSource</code> is defined.
-         */
-        areCloudsAvailable : function() {
-            return typeof this.centralBody.cloudsMapSource !== 'undefined';
-        },
-
-        /**
-         * Enable or disable the display of clouds.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {Boolean} useClouds - <code>true</code> to enable clouds, if configured.
-         */
-        enableClouds : function(useClouds) {
-            if (this.areCloudsAvailable()) {
-                this.centralBody.showClouds = useClouds;
-                this.centralBody.showCloudShadows = useClouds;
-            }
-        },
-
-        /**
          * Enable or disable the FPS (Frames Per Second) perfomance display.
          *
          * @function
@@ -1188,11 +1130,6 @@ define([
                     imageLayers.lowerToBottom(newLayer);
                 }
             }
-
-            centralBody.nightImageSource = this.nightImageUrl;
-            centralBody.specularMapSource = this.specularMapUrl;
-            centralBody.cloudsMapSource = this.cloudsMapUrl;
-            centralBody.bumpMapSource = this.bumpMapUrl;
         },
 
         /**

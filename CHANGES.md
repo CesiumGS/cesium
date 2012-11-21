@@ -10,6 +10,7 @@ TODO
    * Removed `Scene.setSunPosition` and `Scene.getSunPosition`.  The sun position used for lighting is automatically computed based on the scene's time.
 * Improved lighting in Columbus view and on polygons, ellipsoids, and sensors.
 * Added `czm_moonDirectionEC` automatic GLSL uniform.
+* Removed a number of rendering options from `CentralBody`, including the ground atmosphere, night texture, specular map, cloud map, cloud shadows, and bump map.  These features weren't really production ready and had a disproportionate cost in terms of shader complexity and compilation time.  They may return in a more polished form in a future release.  
 
 ### b11 - xx/xx/2012
 
