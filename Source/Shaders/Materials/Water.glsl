@@ -80,7 +80,7 @@ czm_material czm_getSurfaceMaterial(czm_materialInput materialInput, vec3 baseCo
     material.diffuse = mix(blendColor.rgb, baseColor.rgb, specularMapValue);
     
     // diffuse highlights are based on how perturbed the normal is
-    material.diffuse += (0.1 * tsPerturbationRatio);
+    material.diffuse += vec3(mix(0.0, 0.2 * tsPerturbationRatio, specularMapValue));
     
     material.normal = normalize(materialInput.tangentToEyeMatrix * normalTangentSpace);
     

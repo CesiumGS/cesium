@@ -735,7 +735,10 @@ define([
                  CentralBodyVS + '\n' +
                  getPositionMode + '\n' +
                  get2DYPositionFraction;
-            this._surfaceShaderSet.baseFragmentShaderString = CentralBodyFS;
+            this._surfaceShaderSet.baseFragmentShaderString =
+                (typeof this.oceanMaterial !== 'undefined' ? '#define SHOW_OCEAN\n' + this.oceanMaterial.shaderSource : '') +
+                '#line 0\n' +
+                CentralBodyFS;
             this._surfaceShaderSet.invalidateShaders();
 
             var poleShaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.release();

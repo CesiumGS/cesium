@@ -111,10 +111,7 @@ void main()
     material.emission = startDayColor;
     material.diffuse -= startDayColor; 
     
-    gl_FragColor = czm_lightValuePhong(czm_sunDirectionEC, normalize(positionToEyeEC), material);
-    //gl_FragColor = vec4(startDayColor, 1.0);
-    //vec4 foo = czm_lightValuePhong(czm_sunDirectionEC, normalize(positionToEyeEC), material);
-    //gl_FragColor = vec4(mix(vec3(1.0, 0.0, 0.0), foo.rgb, v_waterMask), 1.0);
+    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
 #else
     gl_FragColor = vec4(startDayColor, 1.0);
 #endif
