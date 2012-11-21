@@ -261,11 +261,11 @@ define([
      *
      * @example
      * var myMatrix = new Matrix3();
-     * var row1Column0Index = Matrix3.getElementIndex(1, 0);
-     * var row1Column0 = myMatrix[row1Column0Index]
-     * myMatrix[row1Column0Index] = 10.0;
+     * var column1Row0Index = Matrix3.getElementIndex(1, 0);
+     * var column1Row0 = myMatrix[column1Row0Index]
+     * myMatrix[column1Row0Index] = 10.0;
      */
-    Matrix3.getElementIndex = function(row, column) {
+    Matrix3.getElementIndex = function(column, row) {
         if (typeof row !== 'number' || row < 0 || row > 2) {
             throw new DeveloperError('row is required and must be 0, 1, or 2.');
         }
