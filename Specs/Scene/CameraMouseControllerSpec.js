@@ -819,25 +819,6 @@ defineSuite([
         expect(camera.right.cross(camera.direction).equalsEpsilon(camera.up, CesiumMath.EPSILON15)).toEqual(true);
     });
 
-    it('does not tilt into the ellipsoid', function() {
-        var frameState = setUp3D();
-        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
-        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
-
-        var ellipsoid = Ellipsoid.WGS84;
-        var cartPosition = ellipsoid.cartesianToCartographic(camera.position);
-        cartPosition.height = 20.0;
-        camera.position = ellipsoid.cartographicToCartesian(cartPosition);
-        var position = camera.position.clone();
-
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
-        updateController(frameState);
-        expect(camera.position).toEqual(position);
-        expect(camera.direction.equalsEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON2)).toEqual(true);
-        expect(camera.direction.cross(camera.up).equalsEpsilon(camera.right, CesiumMath.EPSILON14)).toEqual(true);
-        expect(camera.right.cross(camera.direction).equalsEpsilon(camera.up, CesiumMath.EPSILON15)).toEqual(true);
-    });
-
     it('looks in 3D', function() {
         var frameState = setUp3D();
         var position = camera.position.clone();
