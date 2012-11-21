@@ -31,13 +31,14 @@ define([
         widget.startup();
 
         var source = {
-            positiveX: '/SkyBox/TychoSkymapII_4096b_px_r.png',
-            negativeX: '/SkyBox/TychoSkymapII_4096b_mx_r.png',
-            positiveY: '/SkyBox/TychoSkymapII_4096b_py_r.png',
-            negativeY: '/SkyBox/TychoSkymapII_4096b_my_r.png',
-            positiveZ: '/SkyBox/TychoSkymapII_4096b_pz_r.png',
-            negativeZ: '/SkyBox/TychoSkymapII_4096b_mz_r.png'
+            positiveX: '/Source/Assets/Textures/SkyBox/tycho8_px_80.jpg',
+            negativeX: '/Source/Assets/Textures/SkyBox/tycho8_mx_80.jpg',
+            positiveY: '/Source/Assets/Textures/SkyBox/tycho8_py_80.jpg',
+            negativeY: '/Source/Assets/Textures/SkyBox/tycho8_my_80.jpg',
+            positiveZ: '/Source/Assets/Textures/SkyBox/tycho8_pz_80.jpg',
+            negativeZ: '/Source/Assets/Textures/SkyBox/tycho8_mz_80.jpg'
         };
+
         widget.scene.skyBox = new SkyBox(source);
     });
 });
