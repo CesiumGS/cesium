@@ -49,6 +49,7 @@ define([
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
         '../../Scene/SceneMode',
+        '../../Scene/SkyBox',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
@@ -104,6 +105,7 @@ define([
         SingleTileImageryProvider,
         PerformanceDisplay,
         SceneMode,
+        SkyBox,
         processCzml,
         DynamicObjectView,
         DynamicObjectCollection,
@@ -148,6 +150,15 @@ define([
          * @memberof CesiumViewerWidget.prototype
          */
         dayImageUrl : undefined,
+        /**
+         * Determines if a sky box with stars is drawn around the globe.  This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see SkyBox
+         */
+        showSkyBox : true,
         /**
          * An object containing settings supplied by the end user, typically from the query string
          * of the URL of the page with the widget.
@@ -633,7 +644,7 @@ define([
             }
 
             var imageryUrl = '../../Assets/Textures/';
-            this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
+            this.dayImageUrl = defaultValue(this.dayImageUrl, require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg'));
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
 
@@ -644,6 +655,17 @@ define([
             this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
+
+            if (this.showSkyBox) {
+                scene.skyBox = new SkyBox({
+                    positiveX: require.toUrl(imageryUrl + 'SkyBox/tycho8_px_80.jpg'),
+                    negativeX: require.toUrl(imageryUrl + 'SkyBox/tycho8_mx_80.jpg'),
+                    positiveY: require.toUrl(imageryUrl + 'SkyBox/tycho8_py_80.jpg'),
+                    negativeY: require.toUrl(imageryUrl + 'SkyBox/tycho8_my_80.jpg'),
+                    positiveZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_pz_80.jpg'),
+                    negativeZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_mz_80.jpg')
+                });
+            }
 
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
