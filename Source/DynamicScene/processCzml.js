@@ -42,7 +42,7 @@ define([
      * @example
      * var url = 'http://someUrl.com/myCzmlFile.czml';
      * var dynamicObjectCollection = new DynamicObjectCollection();
-     * getJson(url).then(function(czml) {
+     * loadJson(url).then(function(czml) {
      *     processCzml(czml, dynamicObjectCollection, url);
      * });
      */
@@ -57,7 +57,6 @@ define([
         var updatedObjects = [];
         var updatedObjectsHash = {};
         updaterFunctions = typeof updaterFunctions !== 'undefined' ? updaterFunctions : CzmlDefaults.updaters;
-
         if (Array.isArray(czml)) {
             for ( var i = 0, len = czml.length; i < len; i++) {
                 processCzmlPacket(czml[i], dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri);

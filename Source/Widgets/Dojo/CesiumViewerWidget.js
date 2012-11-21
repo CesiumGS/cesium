@@ -49,10 +49,8 @@ define([
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
         '../../Scene/SceneMode',
-        '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectView',
-        '../../DynamicScene/DynamicObjectCollection',
-        '../../DynamicScene/VisualizerCollection',
+        '../../DynamicScene/CzmlProcessor',
         'dojo/text!./CesiumViewerWidget.html'
     ], function (
         require,
@@ -104,10 +102,8 @@ define([
         SingleTileImageryProvider,
         PerformanceDisplay,
         SceneMode,
-        processCzml,
         DynamicObjectView,
-        DynamicObjectCollection,
-        VisualizerCollection,
+        CzmlProcessor,
         template) {
     "use strict";
 
@@ -524,7 +520,7 @@ define([
             this.animPause.set('checked', true);
             this.animPlay.set('checked', false);
 
-            var availability = this.dynamicObjectCollection.computeAvailability();
+            var availability = this.czmlProcessor.computeAvailability();
             if (availability.start.equals(Iso8601.MINIMUM_VALUE)) {
                 clock.startTime = new JulianDate();
                 clock.stopTime = clock.startTime.addDays(1);
@@ -548,11 +544,20 @@ define([
          */
         removeAllCzml : function() {
             this.centerCameraOnObject(undefined);
-            //CZML_TODO visualizers.removeAllPrimitives(); is not really needed here, but right now visualizers
-            //cache data indefinitely and removeAll is the only way to get rid of it.
-            //while there are no visual differences, removeAll cleans the cache and improves performance
-            this.visualizers.removeAllPrimitives();
-            this.dynamicObjectCollection.clear();
+            this.czmlProcessor.removeAll();
+        },
+
+        /**
+         * Removes a named CZML stream from the viewer.
+         *
+         * @function
+         * @memberof CesiumViewerWidget.prototype
+         * @param {string} source - The original filename or URI that was supplied to addCZML.
+         */
+        removeCzml : function(source) {
+            // Any easy way to check if the camera is centered on an object that will survive?
+            this.centerCameraOnObject(undefined);
+            this.czmlProcessor.remove(source);
         },
 
         /**
@@ -566,10 +571,10 @@ define([
          * @see CesiumViewerWidget#loadCzml
          */
         addCzml : function(czml, source, lookAt) {
-            processCzml(czml, this.dynamicObjectCollection, source);
+            this.czmlProcessor.add(czml, source);
             this.setTimeFromBuffer();
             if (typeof lookAt !== 'undefined') {
-                var lookAtObject = this.dynamicObjectCollection.getObject(lookAt);
+                var lookAtObject = this.czmlProcessor.getObject(lookAt, source);
                 this.centerCameraOnObject(lookAtObject);
             }
         },
@@ -609,7 +614,6 @@ define([
             var f = files[0];
             var reader = new FileReader();
             var widget = this;
-            widget.removeAllCzml();
             reader.onload = function(evt) {
                 widget.addCzml(JSON.parse(evt.target.result), f.name);
             };
@@ -746,10 +750,11 @@ define([
             }
 
             var animationController = this.animationController;
-            var dynamicObjectCollection = this.dynamicObjectCollection = new DynamicObjectCollection();
+            this.czmlProcessor = new CzmlProcessor(scene);
+
             var clock = this.clock;
             var transitioner = this.sceneTransitioner = new SceneTransitioner(scene);
-            this.visualizers = VisualizerCollection.createCzmlStandardCollection(scene, dynamicObjectCollection);
+
 
             if (typeof widget.endUserOptions.source !== 'undefined') {
                 if (typeof widget.endUserOptions.lookAt !== 'undefined') {
@@ -949,7 +954,7 @@ define([
                 controllers.add2D(scene.scene2D.projection);
                 scene.viewExtent(Extent.MAX_VALUE);
             } else if (mode === SceneMode.SCENE3D) {
-                this.centralBodyCameraController = controllers.addCentralBody();
+            this.centralBodyCameraController = controllers.addCentralBody();
                 var camera3D = this._camera3D;
                 camera3D.position.clone(camera.position);
                 camera3D.direction.clone(camera.direction);
@@ -1145,15 +1150,13 @@ define([
             this._updateSpeedIndicator();
             this.timelineControl.updateFromClock();
             this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
-            this.visualizers.update(currentTime);
-
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||
                     ((Date.now() - this._lastTimeLabelDate) > 200)) {
                 this.timeLabelElement.innerHTML = currentTime.toDate().toUTCString();
                 this._lastTimeLabelClock = currentTime;
                 this._lastTimeLabelDate = Date.now();
             }
-
+            this.czmlProcessor.update(currentTime);
             // Update the camera to stay centered on the selected object, if any.
             var viewFromTo = this._viewFromTo;
             if (typeof viewFromTo !== 'undefined') {

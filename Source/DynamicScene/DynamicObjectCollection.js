@@ -36,6 +36,12 @@ define([
          * An {@link Event} that is fired whenever DynamicObjects are removed from the collection.
          */
         this.objectsRemoved = new Event();
+
+        /**
+         * Function that is called if an updater like {@link EventSourceUpdater} is assigned.
+         */
+        this.updater = undefined;
+
     };
 
     /**

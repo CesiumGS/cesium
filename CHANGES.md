@@ -62,6 +62,8 @@ Beta Releases
 * Added `enableTranslate`, `enableZoom`, and `enableRotate` properties to `Camera2DController` to selectively toggle camera behavior.  All values default to `true`.
 * Added `Camera2DController.setPositionCartographic` to simplify moving the camera programmatically when in 2D mode.
 * Improved near/far plane distances and eliminated z-fighting.
+* Added 'CzmlProcessor' to process multiple CZML fragments/documents. CzmlProcessor also knows how to handle 'external' CZML links and update the documents appropriately based on the CZML properties.
+* Added 'DynamicExternalDocument' to support CZML 'external' property. The external property allows linking with documents that are located at an external url.
 * Added `Matrix4.multiplyByTranslation`, `Matrix4.fromScale`, and `Matrix3.fromScale`.
 
 ### b8 - 09/05/2012

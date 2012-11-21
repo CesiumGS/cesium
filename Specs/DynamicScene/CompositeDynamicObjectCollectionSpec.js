@@ -218,4 +218,5 @@ defineSuite([
         expect(object.billboard.scale.getValue(new JulianDate())).toEqual(3.0);
         expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.TOP);
     });
+
 });

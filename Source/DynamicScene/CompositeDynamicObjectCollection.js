@@ -61,6 +61,16 @@ define([
          */
         this.objectsRemoved = new Event();
 
+        /**
+        *  The name of this composite collection.
+        */
+        this.name = undefined;
+
+        /**
+        * The parent composite collection, if any.
+        */
+        this.parent = undefined;
+
         this.setCollections(collections);
     };
 

@@ -149,6 +149,12 @@ define([
          * @type Cartesian3
          */
         this.viewFrom = undefined;
+
+        /**
+         * Gets or sets the external document.
+         *  @type DynamicExternalDocument
+         */
+        this.external = undefined;
     };
 
     /**

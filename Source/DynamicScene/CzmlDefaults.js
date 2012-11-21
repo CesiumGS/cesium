@@ -4,6 +4,7 @@ define([
         './DynamicBillboard',
         './DynamicEllipsoid',
         './DynamicCone',
+        './DynamicExternalDocument',
         './DynamicLabel',
         './DynamicPath',
         './DynamicPoint',
@@ -24,6 +25,7 @@ define([
         DynamicBillboard,
         DynamicEllipsoid,
         DynamicCone,
+        DynamicExternalDocument,
         DynamicLabel,
         DynamicPath,
         DynamicPoint,
@@ -70,6 +72,7 @@ define([
                     DynamicPolygon.processCzmlPacket,
                     DynamicPolyline.processCzmlPacket,
                     DynamicPyramid.processCzmlPacket,
+                    DynamicExternalDocument.processCzmlPacket,
                     DynamicObject.processCzmlPacketPosition,
                     DynamicObject.processCzmlPacketViewFrom,
                     DynamicObject.processCzmlPacketOrientation,
@@ -91,7 +94,8 @@ define([
                    DynamicPolygon.mergeProperties,
                    DynamicPolyline.mergeProperties,
                    DynamicPyramid.mergeProperties,
-                   DynamicObject.mergeProperties],
+                   DynamicObject.mergeProperties,
+                   DynamicExternalDocument.mergeProperties],
 
        /**
         * The standard set of cleaners for processing CZML.  This array is the default
@@ -108,7 +112,8 @@ define([
                     DynamicPolygon.undefineProperties,
                     DynamicPolyline.undefineProperties,
                     DynamicPyramid.undefineProperties,
-                    DynamicObject.undefineProperties],
+                    DynamicObject.undefineProperties,
+                    DynamicExternalDocument.undefineProperties],
 
         /**
          * Creates an array containing the standard CZML visualizers,
