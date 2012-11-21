@@ -149,34 +149,6 @@ define([
          */
         dayImageUrl : undefined,
         /**
-         * The URL for a nighttime image on the globe.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        nightImageUrl : undefined,
-        /**
-         * The URL for a specular map on the globe, typically with white for oceans and black for landmass.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        specularMapUrl : undefined,
-        /**
-         * The URL for the clouds image on the globe.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        cloudsMapUrl : undefined,
-        /**
-         * The URL for a bump map on the globe, showing mountain ranges.
-         *
-         * @type {String}
-         * @memberof CesiumViewerWidget.prototype
-         */
-        bumpMapUrl : undefined,
-        /**
          * An object containing settings supplied by the end user, typically from the query string
          * of the URL of the page with the widget.
          *
@@ -660,20 +632,8 @@ define([
                 context.setThrowOnWebGLError(true);
             }
 
-            var imageryUrl = '../../Assets/Imagery/';
-            var maxTextureSize = context.getMaximumTextureSize();
-            if (maxTextureSize < 4095) {
-                // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_512.jpg');
-            } else {
-                // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl(imageryUrl + 'earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl(imageryUrl + 'earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl(imageryUrl + 'earthbump1k.jpg');
-            }
+            var imageryUrl = '../../Assets/Textures/';
+            this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
 
@@ -681,7 +641,6 @@ define([
             centralBody.logoOffset = new Cartesian2(-100, -100);
 
             this.showSkyAtmosphere(true);
-            this.showGroundAtmosphere(true);
             this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
@@ -858,7 +817,6 @@ define([
                 view3D.set('checked', false);
                 viewColumbus.set('checked', false);
                 widget.showSkyAtmosphere(false);
-                widget.showGroundAtmosphere(false);
                 transitioner.morphTo2D();
             });
             on(view3D, 'Click', function() {
@@ -867,22 +825,18 @@ define([
                 viewColumbus.set('checked', false);
                 transitioner.morphTo3D();
                 widget.showSkyAtmosphere(true);
-                widget.showGroundAtmosphere(true);
             });
             on(viewColumbus, 'Click', function() {
                 view2D.set('checked', false);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', true);
                 widget.showSkyAtmosphere(false);
-                widget.showGroundAtmosphere(false);
                 transitioner.morphToColumbusView();
             });
 
             var cbLighting = widget.cbLighting;
             on(cbLighting, 'Change', function(value) {
-                widget.centralBody.affectedByLighting = !value;
                 widget.centralBody.showSkyAtmosphere = widget._showSkyAtmosphere && !value;
-                widget.centralBody.showGroundAtmosphere = widget._showGroundAtmosphere && !value;
             });
 
             var imagery = widget.imagery;
@@ -984,31 +938,6 @@ define([
         },
 
         /**
-         * Test if the clouds are configured and available for display.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @returns {Boolean} <code>true</code> if the <code>cloudsMapSource</code> is defined.
-         */
-        areCloudsAvailable : function() {
-            return typeof this.centralBody.cloudsMapSource !== 'undefined';
-        },
-
-        /**
-         * Enable or disable the display of clouds.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {Boolean} useClouds - <code>true</code> to enable clouds, if configured.
-         */
-        enableClouds : function(useClouds) {
-            if (this.areCloudsAvailable()) {
-                this.centralBody.showClouds = useClouds;
-                this.centralBody.showCloudShadows = useClouds;
-            }
-        },
-
-        /**
          * Enable or disable the FPS (Frames Per Second) perfomance display.
          *
          * @function
@@ -1035,20 +964,7 @@ define([
          */
         showSkyAtmosphere : function(show) {
             this._showSkyAtmosphere = show;
-            this.centralBody.showSkyAtmosphere = show && this.centralBody.affectedByLighting;
-        },
-
-        /**
-         * Enable or disable the "ground atmosphere" effect, which makes the surface of
-         * the globe look pale at a distance.
-         *
-         * @function
-         * @memberof CesiumViewerWidget.prototype
-         * @param {Boolean} show - <code>true</code> to enable the effect.
-         */
-        showGroundAtmosphere : function(show) {
-            this._showGroundAtmosphere = show;
-            this.centralBody.showGroundAtmosphere = show && this.centralBody.affectedByLighting;
+            this.centralBody.showSkyAtmosphere = show;
         },
 
         /**
@@ -1130,8 +1046,6 @@ define([
             }
         },
 
-        _sunPosition : new Cartesian3(),
-
         /**
          * Call this function prior to rendering each animation frame, to prepare
          * all CZML objects and other settings for the next frame.
@@ -1144,7 +1058,6 @@ define([
 
             this._updateSpeedIndicator();
             this.timelineControl.updateFromClock();
-            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
             this.visualizers.update(currentTime);
 
             if ((Math.abs(currentTime.getSecondsDifference(this._lastTimeLabelClock)) >= 1.0) ||
@@ -1165,9 +1078,10 @@ define([
          * Render the widget's scene.
          * @function
          * @memberof CesiumViewerWidget.prototype
+         * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
-        render : function() {
-            this.scene.render();
+        render : function(currentTime) {
+            this.scene.render(currentTime);
         },
 
         _configureCentralBodyImagery : function() {
@@ -1209,11 +1123,6 @@ define([
                     imageLayers.lowerToBottom(newLayer);
                 }
             }
-
-            centralBody.nightImageSource = this.nightImageUrl;
-            centralBody.specularMapSource = this.specularMapUrl;
-            centralBody.cloudsMapSource = this.cloudsMapUrl;
-            centralBody.bumpMapSource = this.bumpMapUrl;
         },
 
         /**
@@ -1242,7 +1151,7 @@ define([
          * function updateAndRender() {
          *     var currentTime = animationController.update();
          *     widget.update(currentTime);
-         *     widget.render();
+         *     widget.render(currentTime);
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1255,8 +1164,8 @@ define([
          *     var currentTime = animationController.update();
          *     widget1.update(currentTime);
          *     widget2.update(currentTime);
-         *     widget1.render();
-         *     widget2.render();
+         *     widget1.render(currentTime);
+         *     widget2.render(currentTime);
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1269,8 +1178,8 @@ define([
          *     var time2 = widget2.animationController.update();
          *     widget1.update(time1);
          *     widget2.update(time2);
-         *     widget1.render();
-         *     widget2.render();
+         *     widget1.render(currentTime);
+         *     widget2.render(currentTime);
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1282,7 +1191,7 @@ define([
             function updateAndRender() {
                 var currentTime = animationController.update();
                 widget.update(currentTime);
-                widget.render();
+                widget.render(currentTime);
                 requestAnimationFrame(updateAndRender);
             }
 

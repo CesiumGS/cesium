@@ -389,7 +389,6 @@ require([
             label: '2D',
             onClick: function() {
                 centralBody.showSkyAtmosphere = false;
-                centralBody.showGroundAtmosphere = false;
                 transitioner.morphTo2D();
             }
         }));
@@ -398,7 +397,6 @@ require([
             label: 'Columbus View',
             onClick: function() {
                 centralBody.showSkyAtmosphere = false;
-                centralBody.showGroundAtmosphere = false;
                 transitioner.morphToColumbusView();
             }
         }));
@@ -407,7 +405,6 @@ require([
             label: '3D',
             onClick: function() {
                 centralBody.showSkyAtmosphere = true;
-                centralBody.showGroundAtmosphere = true;
                 transitioner.morphTo3D();
             }
         }));

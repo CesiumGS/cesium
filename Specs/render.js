@@ -11,8 +11,8 @@ define([
          SceneMode) {
     "use strict";
 
-    function render(context, frameState, primitive) {
-        var commandLists = [];
+    function render(context, frameState, primitive, commandLists) {
+        commandLists = defaultValue(commandLists, []);
         primitive.update(context, frameState, commandLists);
 
         var numRendered = 0;

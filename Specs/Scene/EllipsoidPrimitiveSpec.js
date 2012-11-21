@@ -4,6 +4,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
@@ -11,12 +12,14 @@ defineSuite([
          'Core/Cartographic',
          'Core/Matrix4',
          'Core/Math',
+         'Core/JulianDate',
          'Scene/Material'
      ], function(
          EllipsoidPrimitive,
          createContext,
          destroyContext,
          createCamera,
+         createFrameState,
          frameState,
          pick,
          render,
@@ -24,6 +27,7 @@ defineSuite([
          Cartographic,
          Matrix4,
          CesiumMath,
+         JulianDate,
          Material) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -44,7 +48,7 @@ defineSuite([
         ellipsoid = new EllipsoidPrimitive();
 
         us = context.getUniformState();
-        us.update(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z));
+        us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
 
     afterEach(function() {

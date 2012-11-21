@@ -5,14 +5,14 @@
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
+uniform float u_dayTextureBrightness[TEXTURE_UNITS];
+uniform float u_dayTextureContrast[TEXTURE_UNITS];
+uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 #endif
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
-
-varying vec3 v_rayleighColor;
-varying vec3 v_mieColor;
 
 varying vec2 v_textureCoordinates;
 
@@ -24,7 +24,10 @@ vec3 sampleAndBlend(
     vec2 tileTextureCoordinates,
     vec4 textureCoordinateExtent,
     vec4 textureCoordinateTranslationAndScale,
-    float textureAlpha)
+    float textureAlpha,
+    float textureBrightness,
+    float textureContrast,
+    float textureOneOverGamma)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateExtent.s ||
@@ -42,24 +45,32 @@ vec3 sampleAndBlend(
     vec2 translation = textureCoordinateTranslationAndScale.xy;
     vec2 scale = textureCoordinateTranslationAndScale.zw;
     vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
-    vec4 color = texture2D(texture, textureCoordinates);
+    vec4 sample = texture2D(texture, textureCoordinates);
+    vec3 color = sample.rgb;
+    float alpha = sample.a;
+    
+    color = mix(vec3(0.0, 0.0, 0.0), color, textureBrightness);
+    color = mix(vec3(0.5, 0.5, 0.5), color, textureContrast);
+    
+    color = pow(color, vec3(textureOneOverGamma));
 
 #ifdef SHOW_TEXTURE_BOUNDARIES
     if (textureCoordinates.x < (1.0/256.0) || textureCoordinates.x > (255.0/256.0) ||
         textureCoordinates.y < (1.0/256.0) || textureCoordinates.y > (255.0/256.0))
     {
-        color = vec4(1.0, 1.0, 0.0, 1.0);
+        color = vec3(1.0, 1.0, 0.0);
+        alpha = 1.0;
     }
 #endif
 
-    return mix(previousColor, color.rgb, color.a * textureAlpha);
+    return mix(previousColor, color, alpha * textureAlpha);
 }
 
 vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);
 
 void main()
 {
-#if defined(SHOW_OCEAN) || defined(AFFECTED_BY_LIGHTING)
+#if defined(SHOW_OCEAN)
     vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
     vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
 #endif

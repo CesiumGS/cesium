@@ -61,10 +61,6 @@ define([
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
         dayImageUrl : undefined,
-        nightImageUrl : undefined,
-        specularMapUrl : undefined,
-        cloudsMapUrl : undefined,
-        bumpMapUrl : undefined,
         resizeWidgetOnWindowResize : true,
 
         constructor : function() {
@@ -196,24 +192,11 @@ define([
 
             var context = scene.getContext();
 
-            var imageryUrl = '../../Assets/Imagery/';
-            var maxTextureSize = context.getMaximumTextureSize();
-            if (maxTextureSize < 4095) {
-                // Mobile, or low-end card
-                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_512.jpg');
-            } else {
-                // Desktop
-                this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_4096.jpg');
-                this.nightImageUrl = this.nightImageUrl || require.toUrl(imageryUrl + 'land_ocean_ice_lights_2048.jpg');
-                this.specularMapUrl = this.specularMapUrl || require.toUrl(imageryUrl + 'earthspec1k.jpg');
-                this.cloudsMapUrl = this.cloudsMapUrl || require.toUrl(imageryUrl + 'earthcloudmaptrans.jpg');
-                this.bumpMapUrl = this.bumpMapUrl || require.toUrl(imageryUrl + 'earthbump1k.jpg');
-            }
+            var imageryUrl = '../../Assets/Textures/';
+            this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
             centralBody.showSkyAtmosphere = true;
-            centralBody.showGroundAtmosphere = true;
             centralBody.logoOffset = new Cartesian2(125, 0);
 
             this._configureCentralBodyImagery();
@@ -261,17 +244,6 @@ define([
             this.centralBodyCameraController = controllers.addCentralBody();
         },
 
-        areCloudsAvailable : function() {
-            return typeof this.centralBody.cloudsMapSource !== 'undefined';
-        },
-
-        enableClouds : function(useClouds) {
-            if (this.areCloudsAvailable()) {
-                this.centralBody.showClouds = useClouds;
-                this.centralBody.showCloudShadows = useClouds;
-            }
-        },
-
         enableStatistics : function(showStatistics) {
             if (typeof this._performanceDisplay === 'undefined' && showStatistics) {
                 this._performanceDisplay = new PerformanceDisplay();
@@ -284,10 +256,6 @@ define([
 
         showSkyAtmosphere : function(show) {
             this.centralBody.showSkyAtmosphere = show;
-        },
-
-        showGroundAtmosphere : function(show) {
-            this.centralBody.showGroundAtmosphere = show;
         },
 
         enableStreamingImagery : function(value) {
@@ -311,14 +279,11 @@ define([
             }
         },
 
-        _sunPosition : new Cartesian3(),
-
         update : function(currentTime) {
-            this.scene.setSunPosition(computeSunPosition(currentTime, this._sunPosition));
         },
 
-        render : function() {
-            this.scene.render();
+        render : function(currentTime) {
+            this.scene.render(currentTime);
         },
 
         _configureCentralBodyImagery : function() {
@@ -335,11 +300,6 @@ define([
             } else {
                 centralBody.getImageryLayers().addImageryProvider(new SingleTileImageryProvider({url : this.dayImageUrl}));
             }
-
-            centralBody.nightImageSource = this.nightImageUrl;
-            centralBody.specularMapSource = this.specularMapUrl;
-            centralBody.cloudsMapSource = this.cloudsMapUrl;
-            centralBody.bumpMapSource = this.bumpMapUrl;
         },
 
         autoStartRenderLoop : true,
@@ -353,7 +313,7 @@ define([
             function updateAndRender() {
                 var currentTime = new JulianDate();
                 widget.update(currentTime);
-                widget.render();
+                widget.render(currentTime);
                 requestAnimationFrame(updateAndRender);
             }
             updateAndRender();

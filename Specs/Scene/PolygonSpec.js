@@ -4,6 +4,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
@@ -15,6 +16,7 @@ defineSuite([
          'Core/Extent',
          'Core/Matrix4',
          'Core/Math',
+         'Core/JulianDate',
          'Renderer/BufferUsage',
          'Scene/SceneMode'
      ], function(
@@ -22,6 +24,7 @@ defineSuite([
          createContext,
          destroyContext,
          createCamera,
+         createFrameState,
          frameState,
          pick,
          render,
@@ -33,6 +36,7 @@ defineSuite([
          Extent,
          Matrix4,
          CesiumMath,
+         JulianDate,
          BufferUsage,
          SceneMode) {
     "use strict";
@@ -54,7 +58,7 @@ defineSuite([
         polygon = new Polygon();
 
         us = context.getUniformState();
-        us.update(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z));
+        us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
 
     afterEach(function() {

@@ -53,23 +53,20 @@
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.getPrimitives();
 
-    var imageryUrl = '../../../Source/Assets/Imagery/';
+    var imageryUrl = '../../../Source/Assets/Textures/';
     var imageryProvider = new Cesium.SingleTileImageryProvider({
         url : imageryUrl + 'NE2_50M_SR_W_2048.jpg'
     });
 
     var cb = new Cesium.CentralBody(ellipsoid);
     cb.getImageryLayers().addImageryProvider(imageryProvider);
-    cb.nightImageSource = imageryUrl + 'land_ocean_ice_lights_2048.jpg';
-    cb.specularMapSource = imageryUrl + 'earthspec1k.jpg';
     cb.showSkyAtmosphere = true;
-    cb.showGroundAtmosphere = false;
     primitives.setCentralBody(cb);
 
     scene.getCamera().getControllers().addCentralBody();
 
     scene.setAnimation(function () {
-        scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
+        // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
     });
 
     function tick() {

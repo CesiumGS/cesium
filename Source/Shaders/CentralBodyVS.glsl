@@ -3,7 +3,6 @@ attribute vec2 textureCoordinates;
 attribute float waterMask;
 
 uniform float u_morphTime;
-uniform int u_mode;
 
 uniform vec3 u_center3D;
 uniform mat4 u_modifiedModelView;
@@ -15,9 +14,6 @@ uniform vec3 u_southMercatorYLowAndHighAndOneOverHeight;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
-
-varying vec3 v_rayleighColor;
-varying vec3 v_mieColor;
 
 varying vec2 v_textureCoordinates;
 varying float v_waterMask;
@@ -88,12 +84,8 @@ void main()
 
     gl_Position = getPosition(position3DWC);
     
-    AtmosphereColor atmosphereColor = computeGroundAtmosphereFromSpace(position3DWC);
-
     v_positionEC = (czm_modelView * vec4(position3DWC, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
-    v_mieColor = atmosphereColor.mie;
-    v_rayleighColor = atmosphereColor.rayleigh;
     v_textureCoordinates = textureCoordinates;
     v_waterMask = waterMask;
 }
