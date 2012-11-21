@@ -148,10 +148,7 @@ define([
      * @see CameraFreeLookController#lookRight
      */
     CameraFreeLookController.prototype.lookLeft = function(rate) {
-        var turnRate = rate || this._turnRate;
-        var rotated = this._rotateTwoAxes(this._camera.direction, this._camera.right, this._camera.up, turnRate);
-        this._camera.direction = rotated[0];
-        this._camera.right = rotated[1];
+        this.lookRight(-rate || -this._turnRate);
     };
 
     /**
@@ -165,7 +162,10 @@ define([
      * @see CameraFreeLookController#lookLeft
      */
     CameraFreeLookController.prototype.lookRight = function(rate) {
-        this.lookLeft(-rate || -this._turnRate);
+        var turnRate = rate || this._turnRate;
+        var rotated = this._rotateTwoAxes(this._camera.direction, this._camera.right, this._camera.up, turnRate);
+        this._camera.direction = rotated[0];
+        this._camera.right = rotated[1];
     };
 
     /**
@@ -179,10 +179,7 @@ define([
      * @see CameraFreeLookController#lookDown
      */
     CameraFreeLookController.prototype.lookUp = function(rate) {
-        var turnRate = rate || this._turnRate;
-        var rotated = this._rotateTwoAxes(this._camera.direction, this._camera.up, this._camera.right, turnRate);
-        this._camera.direction = rotated[0];
-        this._camera.up = rotated[1];
+        this.lookDown(-rate || -this._turnRate);
     };
 
     /**
@@ -196,7 +193,10 @@ define([
      * @see CameraFreeLookController#lookUp
      */
     CameraFreeLookController.prototype.lookDown = function(rate) {
-        this.lookUp(-rate || -this._turnRate);
+        var turnRate = rate || this._turnRate;
+        var rotated = this._rotateTwoAxes(this._camera.direction, this._camera.up, this._camera.right, turnRate);
+        this._camera.direction = rotated[0];
+        this._camera.up = rotated[1];
     };
 
     CameraFreeLookController.prototype._rotateTwoAxes = function(v0, v1, axis, angle) {
@@ -268,7 +268,7 @@ define([
         axis = (movement.startPosition.x > movement.endPosition.x) ? axis : axis.negate();
         axis = axis.normalize();
         if (dot < 1.0) { // dot is in [0, 1]
-            angle = -Math.acos(dot);
+            angle = Math.acos(dot);
         }
         var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle));
 
@@ -289,7 +289,7 @@ define([
         angle = 0.0;
         axis = startY.cross(endY);
         if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
-            angle = -Math.acos(dot);
+            angle = Math.acos(dot);
         } else { // no rotation
             axis = Cartesian3.UNIT_X;
         }
