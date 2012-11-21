@@ -166,7 +166,7 @@
                 },
 				"normal" : {
 					"type": "string",
-					"description": "A GLSL expression returning the normal component of this material.  The normal component is a vec3 defining the surface's normal in tangent coordinates.  It is used for effects such as normal mapping.  The default is the surface's unmodified normal."
+					"description": "A GLSL expression returning the normal component of this material.  The normal component is a vec3 defining the surface's normal in eye coordinates.  It is used for effects such as normal mapping.  The default is the surface's unmodified normal."
 				},
 				"emission" : {
 					"type": "string",
