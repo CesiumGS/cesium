@@ -790,11 +790,11 @@ define([
      *
      * @example
      * var myMatrix = new Matrix4();
-     * var row1Column0Index = Matrix4.getElementIndex(1, 0);
-     * var row1Column0 = myMatrix[row1Column0Index]
-     * myMatrix[row1Column0Index] = 10.0;
+     * var column1Row0Index = Matrix4.getElementIndex(1, 0);
+     * var column1Row0 = myMatrix[column1Row0Index]
+     * myMatrix[column1Row0Index] = 10.0;
      */
-    Matrix4.getElementIndex = function(row, column) {
+    Matrix4.getElementIndex = function(column, row) {
         if (typeof row !== 'number' || row < 0 || row > 3) {
             throw new DeveloperError('row is required and must be 0, 1, 2, or 3.');
         }
