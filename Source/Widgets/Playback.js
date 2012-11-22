@@ -511,6 +511,11 @@ define([
 
         topG.appendChild(largeButtonG);
 
+        this._lastButtonDate = '';
+        this._lastButtonTime = '';
+        this._lastButtonSpeed = '';
+        this._lastButtonTooltip = '';
+
         function showButtons() {
             buttonsG.style.display = 'block';
         }
@@ -561,26 +566,47 @@ define([
         var currentTimeLabel = currentTime.toDate().toUTCString();
         var currentDateLabel = currentTimeLabel.substring(5, 16);
         currentTimeLabel = currentTimeLabel.substring(17);
-        if (currentDateLabel !== this._currentDateLabel) {
-            this._currentDateLabel = currentDateLabel;
+        if (currentDateLabel !== this._lastButtonDate) {
+            this._lastButtonDate = currentDateLabel;
             this._updateSvgText(this.largeButtonDate, currentDateLabel);
         }
-        if (currentTimeLabel !== this._currentTimeLabel) {
-            this._currentTimeLabel = currentTimeLabel;
+        if (currentTimeLabel !== this._lastButtonTime) {
+            this._lastButtonTime = currentTimeLabel;
             this._updateSvgText(this.largeButtonTime, currentTimeLabel);
         }
 
-        var speed = 0, angle = 0;
+        var speed = 0, angle = 0, tooltip, speedLabel;
         if (this.animationController.isAnimating()) {
             speed = this.clock.multiplier;
             angle = this._shuttleSpeedtoAngle(speed);
-            this._updateSvgText(this.largeButtonStatus, 'speed ' + speed + 'x');
-            this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathPlay');
-            this.largeButtonTooltip.textContent = 'Pause';
+            speedLabel = 'speed ' + speed + 'x';
+            tooltip = 'Pause';
         } else {
-            this._updateSvgText(this.largeButtonStatus, 'paused');
-            this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathPause');
-            this.largeButtonTooltip.textContent = 'Play';
+            speedLabel = 'paused';
+            tooltip = 'Play';
+        }
+
+        if (this._lastButtonSpeed !== speedLabel) {
+            this._lastButtonSpeed = speedLabel;
+            if (this.animationController.isAnimating()) {
+                if (speed < -15000) {
+                    this.largeButtonMode.setAttribute('transform', 'scale(-3,3) translate(-40)');
+                    this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathFastForward');
+                } else if (speed < 0) {
+                    this.largeButtonMode.setAttribute('transform', 'scale(-3,3) translate(-40)');
+                    this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathPlay');
+                } else if (speed < 15000) {
+                    this.largeButtonMode.setAttribute('transform', 'scale(3)');
+                    this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathPlay');
+                } else {
+                    this.largeButtonMode.setAttribute('transform', 'scale(3)');
+                    this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathFastForward');
+                }
+            } else {
+                this.largeButtonMode.setAttribute('transform', 'scale(3)');
+                this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#pathPause');
+            }
+            this._updateSvgText(this.largeButtonStatus, speedLabel);
         }
 
         if (this._shuttleRingAngle !== angle) {
@@ -589,7 +615,12 @@ define([
         }
 
         if (this._shuttleRingVisible) {
-            this.largeButtonTooltip.textContent = 'Hide shuttle ring';
+            tooltip = 'Hide shuttle ring';
+        }
+
+        if (this._lastButtonTooltip !== tooltip) {
+            this._lastButtonTooltip = tooltip;
+            this.largeButtonTooltip.textContent = tooltip;
         }
     };
 
