@@ -287,7 +287,7 @@ defineSuite([
         var i = 0;
         for ( var col = 0; col < 4; col++) {
             for ( var row = 0; row < 4; row++) {
-                var index = Matrix4.getElementIndex(row, col);
+                var index = Matrix4.getElementIndex(col, row);
                 expect(index).toEqual(i);
                 i++;
             }
@@ -1103,15 +1103,15 @@ defineSuite([
         var row;
         var col = 0.0;
         expect(function() {
-            Matrix4.getElementIndex(row, col);
+            Matrix4.getElementIndex(col, row);
         }).toThrow();
     });
 
-    it('static getElement throws without col parameter', function() {
+    it('static getElement throws without column parameter', function() {
         var row = 0.0;
         var col;
         expect(function() {
-            Matrix4.getElementIndex(row, col);
+            Matrix4.getElementIndex(col, row);
         }).toThrow();
     });
 

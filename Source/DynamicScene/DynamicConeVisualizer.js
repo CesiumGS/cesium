@@ -298,7 +298,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, cone.modelMatrix);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, cone.modelMatrix);
             position.clone(cone._visualizerPosition);
             orientation.clone(cone._visualizerOrientation);
         }
