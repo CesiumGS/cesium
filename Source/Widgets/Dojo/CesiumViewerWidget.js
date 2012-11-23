@@ -16,6 +16,7 @@ define([
         'dijit/TooltipDialog',
         './TimelineWidget',
         '../Playback',
+        '../../Core/defaultValue',
         '../../Core/loadJson',
         '../../Core/BoundingRectangle',
         '../../Core/Clock',
@@ -71,6 +72,7 @@ define([
         TooltipDialog,
         TimelineWidget,
         Playback,
+        defaultValue,
         loadJson,
         BoundingRectangle,
         Clock,
@@ -238,6 +240,18 @@ define([
          * @see CesiumViewerWidget#resize
          */
         resizeWidgetOnWindowResize: true,
+        /**
+         * The HTML element to place into fullscreen mode when the corresponding
+         * button is pressed.  If undefined, only the widget itself will
+         * go into fullscreen mode.  By specifying another container, such
+         * as document.body, this property allows an application to retain
+         * any overlaid or surrounding elements when in fullscreen.
+         *
+         * @type {Object}
+         * @memberof CesiumViewerWidget.prototype
+         * @default undefined
+         */
+        fullscreenElement : undefined,
 
         // for Dojo use only
         constructor : function() {
@@ -773,7 +787,7 @@ define([
                     if (Fullscreen.isFullscreen()) {
                         Fullscreen.exitFullscreen();
                     } else {
-                        Fullscreen.requestFullscreen(widget.cesiumNode);
+                        Fullscreen.requestFullscreen(defaultValue(widget.fullscreenElement, widget.cesiumNode));
                     }
                 });
             } else {

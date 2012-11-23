@@ -516,7 +516,7 @@ define([
         if (end.y < 0) {
             endTheta = CesiumMath.TWO_PI - endTheta;
         }
-        var theta = endTheta - startTheta;
+        var theta = startTheta - endTheta;
 
         var camera = this._camera;
         var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(camera.direction, theta));
