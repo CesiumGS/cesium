@@ -51,7 +51,7 @@ define([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
+        frustum.top = frustum.right * (canvas.height / canvas.width);
         frustum.bottom = -frustum.top;
 
         var transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
@@ -74,7 +74,7 @@ define([
 
         frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+        frustum.aspectRatio = canvas.width / canvas.height;
 
         this._cameraCV = {
             position : position,
@@ -178,7 +178,7 @@ define([
         var scene = transitioner._scene;
 
         var canvas = scene.getCanvas();
-        var ratio = canvas.clientHeight / canvas.clientWidth;
+        var ratio = canvas.height / canvas.width;
 
         var frustum = transitioner._camera2D.frustum;
         frustum.top = frustum.right * ratio;

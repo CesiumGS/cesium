@@ -48,10 +48,10 @@ define([
 
         // Initially create or recreate renderbuffers and framebuffer used for picking
         if (!this._fb ||
-            (this._width !== context.getCanvas().clientWidth) ||
-            (this._height !== context.getCanvas().clientHeight)) {
-            this._width = context.getCanvas().clientWidth;
-            this._height = context.getCanvas().clientHeight;
+            (this._width !== context.getCanvas().width) ||
+            (this._height !== context.getCanvas().height)) {
+            this._width = context.getCanvas().width;
+            this._height = context.getCanvas().height;
 
             this._fb = this._fb && this._fb.destroy();
             this._fb = context.createFramebuffer({

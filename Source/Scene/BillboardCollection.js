@@ -915,8 +915,8 @@ define([
         var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
 
         var canvas = context.getCanvas();
-        scratchCanvasDimensions.x = canvas.clientWidth;
-        scratchCanvasDimensions.y = canvas.clientHeight;
+        scratchCanvasDimensions.x = canvas.width;
+        scratchCanvasDimensions.y = canvas.height;
         var pixelSize = frustum.getPixelSize(scratchCanvasDimensions, distance);
         pixelScale = Math.max(pixelSize.x, pixelSize.y);
 

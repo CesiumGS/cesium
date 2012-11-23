@@ -440,8 +440,8 @@ define([
         var camera = frameState.camera;
         var frustum = camera.frustum;
         var canvas = context.getCanvas();
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
+        var width = canvas.width;
+        var height = canvas.height;
 
         var maxGeometricError = surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
