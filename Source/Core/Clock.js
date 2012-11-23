@@ -80,7 +80,7 @@ define([
 
         var clockStep = t.clockStep;
         if (typeof clockStep === 'undefined') {
-            clockStep = ClockStep.SYSTEM_CLOCK_DEPENDENT;
+            clockStep = ClockStep.SPEED_MULTIPLIER;
         }
 
         var clockRange = t.clockRange;
@@ -128,6 +128,7 @@ define([
         this.clockRange = clockRange;
 
         this._lastCpuTime = new Date().getTime();
+        this._isOutOfRange = false;
     };
 
     /**
@@ -154,13 +155,27 @@ define([
         return this._tick(undefined, -this.multiplier);
     };
 
+    /**
+     * This returns true only in {@link ClockRange.CLAMPED} mode after a {@link Clock#tick} or
+     * {@link Clock#reverseTick} has reached a clamp point.  It indicates that pause mode
+     * should be engaged.
+     *
+     * @returns {Boolean}
+     */
+    Clock.prototype.isOutOfRange = function () {
+        return this._isOutOfRange;
+    };
+
     Clock.prototype._tick = function(secondsToTick, multiplier) {
         var startTime = this.startTime;
         var stopTime = this.stopTime;
         var currentTime = this.currentTime;
         var currentCpuTime = new Date().getTime();
+        this._isOutOfRange = false;
 
-        if (typeof secondsToTick === 'undefined') {
+        if (this.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+            currentTime = new JulianDate();
+        } else if (typeof secondsToTick === 'undefined') {
             if (this.clockStep === ClockStep.TICK_DEPENDENT) {
                 currentTime = currentTime.addSeconds(multiplier);
             } else {
@@ -174,15 +189,38 @@ define([
         if (this.clockRange === ClockRange.CLAMPED) {
             if (currentTime.lessThan(startTime)) {
                 currentTime = startTime;
+                // SYSTEM_CLOCK_TIME + CLAMPED at start time, don't report out of range,
+                // just wait at the start time for the realtime event to begin.
+                if (this.clockStep !== ClockStep.SYSTEM_CLOCK_TIME) {
+                    // Other modes pause at the CLAMPED start time.
+                    this._isOutOfRange = true;
+                }
             } else if (currentTime.greaterThan(stopTime)) {
                 currentTime = stopTime;
+                this._isOutOfRange = true;
+                // SYSTEM_CLOCK_TIME + CLAMPED at end time, pause at the end time.
+                if (this.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+                    this.clockStep = ClockStep.SPEED_MULTIPLIER;
+                }
             }
         } else if (this.clockRange === ClockRange.LOOP) {
-            while (currentTime.lessThan(startTime)) {
-                currentTime = stopTime.addSeconds(startTime.getSecondsDifference(currentTime));
-            }
-            while (currentTime.greaterThan(stopTime)) {
-                currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
+            if (this.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+                if (currentTime.lessThan(startTime)) {
+                    // SYSTEM_CLOCK_TIME + LOOP at start time simply waits at the start time to begin.
+                    currentTime = startTime;
+                }
+                if (currentTime.greaterThan(stopTime)) {
+                    // SYSTEM_CLOCK_TIME + LOOP at end time switches to SPEED_MULTIPLIER mode and restarts.
+                    currentTime = startTime;
+                    this.clockStep = ClockStep.SPEED_MULTIPLIER;
+                }
+            } else {
+                while (currentTime.lessThan(startTime)) {
+                    currentTime = stopTime.addSeconds(startTime.getSecondsDifference(currentTime));
+                }
+                while (currentTime.greaterThan(stopTime)) {
+                    currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
+                }
             }
         }
 

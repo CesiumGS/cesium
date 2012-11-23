@@ -195,6 +195,7 @@ define([
          * var endUserOptions = {
          *     'source' : 'file.czml', // The relative URL of the CZML file to load at startup.
          *     'lookAt' : '123abc',    // The CZML ID of the object to track at startup.
+         *     'loop'   : 0,           // Disable looping at end time, pause there instead.
          *     'stats'  : 1,           // Enable the FPS performance display.
          *     'debug'  : 1,           // Full WebGL error reporting at substantial performance cost.
          * };
@@ -522,7 +523,11 @@ define([
             } else {
                 clock.startTime = availability.start;
                 clock.stopTime = availability.stop;
-                clock.clockRange = ClockRange.LOOP;
+                if (typeof this.endUserOptions.loop === 'undefined' || this.endUserOptions.loop === '1') {
+                    clock.clockRange = ClockRange.LOOP;
+                } else {
+                    clock.clockRange = ClockRange.CLAMPED;
+                }
             }
 
             clock.multiplier = 60;
@@ -726,7 +731,7 @@ define([
                         startTime : currentTime.addDays(-0.5),
                         stopTime : currentTime.addDays(0.5),
                         currentTime : currentTime,
-                        clockStep : ClockStep.SYSTEM_CLOCK_DEPENDENT,
+                        clockStep : ClockStep.SPEED_MULTIPLIER,
                         multiplier : 1
                     });
                 }

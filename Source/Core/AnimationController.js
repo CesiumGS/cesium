@@ -56,7 +56,14 @@ define([
      * @returns {JulianDate} The updated time if animating, or <code>currentTime</code> if paused.
      */
     AnimationController.prototype.update = function() {
-        return this._animating ? this.clock.tick() : this.clock.currentTime;
+        var currentTime;
+        if (this._animating) {
+            currentTime = this.clock.tick();
+            this._animating = !this.clock.isOutOfRange();
+        } else {
+            currentTime = this.clock.currentTime;
+        }
+        return currentTime;
     };
 
     /**
@@ -72,8 +79,8 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.unpause = function() {
-        this._animating = true;
         this.clock.tick(0);
+        this._animating = !this.clock.isOutOfRange();
     };
 
     /**
@@ -81,12 +88,12 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.play = function() {
-        this._animating = true;
         var clock = this.clock;
         if (clock.multiplier < 0) {
             clock.multiplier = -clock.multiplier;
         }
         this.clock.tick(0);
+        this._animating = !this.clock.isOutOfRange();
     };
 
     /**
@@ -94,12 +101,12 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.playReverse = function() {
-        this._animating = true;
         var clock = this.clock;
         if (clock.multiplier > 0) {
             clock.multiplier = -clock.multiplier;
         }
         this.clock.tick(0);
+        this._animating = !this.clock.isOutOfRange();
     };
 
     /**

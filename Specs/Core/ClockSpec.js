@@ -16,7 +16,7 @@ defineSuite([
         var clock = new Clock();
         expect(clock.stopTime).toEqual(clock.startTime.addDays(1));
         expect(clock.startTime).toEqual(clock.currentTime);
-        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_DEPENDENT);
+        expect(clock.clockStep).toEqual(ClockStep.SPEED_MULTIPLIER);
         expect(clock.clockRange).toEqual(ClockRange.UNBOUNDED);
         expect(clock.multiplier).toEqual(1.0);
     });
@@ -416,7 +416,7 @@ defineSuite([
         var start = JulianDate.fromTotalDays(0);
         var stop = JulianDate.fromTotalDays(1);
         var currentTime = JulianDate.fromTotalDays(0);
-        var step = ClockStep.SYSTEM_CLOCK_DEPENDENT;
+        var step = ClockStep.SPEED_MULTIPLIER;
         var range = ClockRange.UNBOUNDED;
         var multiplier = 10000;
         var clock = new Clock({

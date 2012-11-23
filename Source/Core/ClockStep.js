@@ -25,7 +25,15 @@ define([
          * {@link Clock#tick} advances the current time by the amount of system
          * time elapsed since the previous call multiplied by {@link Clock#multiplier}.
          */
-        SYSTEM_CLOCK_DEPENDENT : new Enumeration(1, 'SYSTEM_CLOCK_DEPENDENT')
+        SPEED_MULTIPLIER : new Enumeration(1, 'SPEED_MULTIPLIER'),
+
+        /**
+         * {@link Clock#tick} sets the clock to the current system time, unless
+         * the resulting time would fall out of range of {@link ClockRange}, at
+         * which point this mode reverts to SPEED_MULTIPLIER.  To prevent this,
+         * use {@link ClockRange.UNBOUNDED}.
+         */
+        SYSTEM_CLOCK_TIME : new Enumeration(1, 'SYSTEM_CLOCK_TIME')
     };
 
     return ClockStep;
