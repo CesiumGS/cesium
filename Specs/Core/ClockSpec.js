@@ -301,6 +301,7 @@ defineSuite([
         currentTime = currentTime.addSeconds(multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
+        expect(clock.isOutOfRange()).toEqual(false);
     });
 
     it('Tick dependant clock step loops animating backwards.', function() {
@@ -327,6 +328,7 @@ defineSuite([
         currentTime = currentTime.addSeconds(multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
+        expect(clock.isOutOfRange()).toEqual(false);
     });
 
     it('Tick dependant clock step stops at end when animating .', function() {
@@ -349,13 +351,28 @@ defineSuite([
         expect(clock.currentTime).toEqual(currentTime);
         expect(stop).toEqual(clock.tick());
         expect(stop).toEqual(clock.currentTime);
+        expect(clock.isOutOfRange()).toEqual(true);
     });
 
-    it('Ticks in real-time.', function() {
+    it('Ticks in real-time mode.', function() {
         //We can't numerically validate the real-time clock, but we
         //can at least make sure the code executes.
         var clock = new Clock({
-            clockStep : ClockStep.SYSTEM_DEPENDENT
+            clockStep : ClockStep.SYSTEM_CLOCK_TIME
+        });
+        var time1 = clock.tick();
+
+        waitsFor(function() {
+            var time2 = clock.tick();
+            return time2.greaterThan(time1);
+        });
+    });
+
+    it('Ticks in SPEED_MULTIPLIER mode.', function() {
+        //We can't numerically validate the non-fixed tick size clock, but we
+        //can at least make sure the code executes.
+        var clock = new Clock({
+            clockStep : ClockStep.SPEED_MULTIPLIER
         });
         var time1 = clock.tick();
 
@@ -385,6 +402,7 @@ defineSuite([
         expect(clock.currentTime).toEqual(currentTime);
         expect(start).toEqual(clock.tick());
         expect(start).toEqual(clock.currentTime);
+        expect(clock.isOutOfRange()).toEqual(true);
     });
 
     it('Tick followed by tickReverse gets you back to the same time.', function() {
@@ -435,6 +453,94 @@ defineSuite([
         clock.tick(-5);
         currentTime = currentTime.addSeconds(-5);
         expect(clock.currentTime).toEqual(currentTime);
+    });
+
+    it('Realtime clock with CLAMPED waits at start time without entering pause mode.', function() {
+        var currentTime = new JulianDate();
+        var start = currentTime.addSeconds(3600);
+        var stop = currentTime.addSeconds(4800);
+        var step = ClockStep.SYSTEM_CLOCK_TIME;
+        var range = ClockRange.CLAMPED;
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
+        expect(clock.currentTime).toEqual(currentTime);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
+
+        expect(start).toEqual(clock.tick());
+        expect(start).toEqual(clock.currentTime);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
+        expect(clock.isOutOfRange()).toEqual(false);
+    });
+
+    it('Realtime clock with CLAMPED pauses at end time.', function() {
+        var currentTime = new JulianDate();
+        var start = currentTime.addSeconds(-4800);
+        var stop = currentTime.addSeconds(-3600);
+        var step = ClockStep.SYSTEM_CLOCK_TIME;
+        var range = ClockRange.CLAMPED;
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
+        expect(clock.currentTime).toEqual(currentTime);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
+
+        expect(stop).toEqual(clock.tick());
+        expect(stop).toEqual(clock.currentTime);
+        expect(clock.clockStep).toEqual(ClockStep.SPEED_MULTIPLIER);
+        expect(clock.isOutOfRange()).toEqual(true);
+    });
+
+    it('Realtime clock with LOOP waits at start time without entering pause mode.', function() {
+        var currentTime = new JulianDate();
+        var start = currentTime.addSeconds(3600);
+        var stop = currentTime.addSeconds(4800);
+        var step = ClockStep.SYSTEM_CLOCK_TIME;
+        var range = ClockRange.LOOP;
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
+        expect(clock.currentTime).toEqual(currentTime);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
+
+        expect(start).toEqual(clock.tick());
+        expect(start).toEqual(clock.currentTime);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
+        expect(clock.isOutOfRange()).toEqual(false);
+    });
+
+    it('Realtime clock with LOOP loops at end time.', function() {
+        var currentTime = new JulianDate();
+        var start = currentTime.addSeconds(-4800);
+        var stop = currentTime.addSeconds(-3600);
+        var step = ClockStep.SYSTEM_CLOCK_TIME;
+        var range = ClockRange.LOOP;
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
+        expect(clock.currentTime).toEqual(currentTime);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
+
+        expect(start).toEqual(clock.tick());
+        expect(start).toEqual(clock.currentTime);
+        expect(clock.clockStep).toEqual(ClockStep.SPEED_MULTIPLIER);
+        expect(clock.isOutOfRange()).toEqual(false);
     });
 
     it('throws if start time is after stop time.', function() {
