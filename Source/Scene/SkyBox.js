@@ -137,36 +137,27 @@ define([
 
         if (typeof command.vertexArray === 'undefined') {
             var sources = this._sources;
+            var that = this;
 
             if (typeof sources.positiveX === 'string') {
                 // Given urls for cube-map images.  Load them.
-                var that = this;
                 loadCubeMap(context, this._sources).then(function(cubeMap) {
                     that._cubeMap = cubeMap;
-
-                    command.uniformMap = {
-                        u_cubeMap: function() {
-                            return cubeMap;
-                        },
-                        u_morphTime : function() {
-                            return that.morphTime;
-                        }
-                    };
                 });
             } else {
                 this._cubeMap = context.createCubeMap({
                     source : sources
                 });
-
-                command.uniformMap = {
-                    u_cubeMap: function() {
-                        return cubeMap;
-                    },
-                    u_morphTime : function() {
-                        return that.morphTime;
-                    }
-                };
             }
+
+            command.uniformMap = {
+                u_cubeMap: function() {
+                    return that._cubeMap;
+                },
+                u_morphTime : function() {
+                    return that.morphTime;
+                }
+            };
 
             var mesh = BoxTessellator.compute({
                 dimensions : new Cartesian3(2.0, 2.0, 2.0)
