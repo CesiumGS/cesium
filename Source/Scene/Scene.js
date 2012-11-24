@@ -96,9 +96,11 @@ define([
         });
 
         /**
-         * DOC_TBA
+         * The {@link SkyBox} used to draw the stars.
          *
          * @type SkyBox
+         *
+         * @default undefined
          */
         this.skyBox = undefined;
 
