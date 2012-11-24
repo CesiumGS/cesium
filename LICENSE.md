@@ -268,6 +268,14 @@ Free vector and raster map data @ naturalearthdata.com
 
 Terms of use: http://www.naturalearthdata.com/about/terms-of-use/
 
+### Data from JHT's Planetary Pixel Emporium
+
+Copyright (c) by James Hastings-Trew
+
+http://planetpixelemporium.com/
+
+Copyright Information:  http://planetpixelemporium.com/planets.html
+
 ### Sky box images from NASA
 
 http://maps.jpl.nasa.gov/stars.html
