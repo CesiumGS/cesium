@@ -46,7 +46,7 @@ defineSuite([
         });
     });
 
-    it('throws when different size faces are loaded', function() {
+    it('calls error function when different size faces are loaded', function() {
         var exception = false;
         when(loadCubeMap(context, {
             positiveX : './Data/Images/Blue.png',
@@ -55,6 +55,26 @@ defineSuite([
             negativeY : './Data/Images/Blue.png',
             positiveZ : './Data/Images/Blue.png',
             negativeZ : './Data/Images/Blue10x10.png'
+        }), function(cubeMap) {
+        }, function() {
+            exception = true;
+        });
+
+        waitsFor(function() {
+            return exception;
+        }, 'The cube map should load.', 5000);
+    });
+
+
+    it('calls error function when an image does not exist', function() {
+        var exception = false;
+        when(loadCubeMap(context, {
+            positiveX : './Data/Images/Blue.png',
+            negativeX : './Data/Images/Blue.png',
+            positiveY : './Data/Images/Blue.png',
+            negativeY : './Data/Images/Blue.png',
+            positiveZ : './Data/Images/Blue.png',
+            negativeZ : 'not.found'
         }), function(cubeMap) {
         }, function() {
             exception = true;
