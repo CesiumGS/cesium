@@ -247,7 +247,7 @@ define([
             typeof orientation !== 'undefined' &&
             (!position.equals(ellipsoid._visualizerPosition) ||
              !orientation.equals(ellipsoid._visualizerOrientation))) {
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, ellipsoid.modelMatrix);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, ellipsoid.modelMatrix);
             position.clone(ellipsoid._visualizerPosition);
             orientation.clone(ellipsoid._visualizerOrientation);
         }
