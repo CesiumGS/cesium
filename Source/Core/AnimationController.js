@@ -1,10 +1,12 @@
 /*global define*/
 define([
     './binarySearch',
-    './DeveloperError'
+    './DeveloperError',
+    './ClockStep'
 ], function(
     binarySearch,
-    DeveloperError
+    DeveloperError,
+    ClockStep
 ) {
     "use strict";
 
@@ -115,6 +117,11 @@ define([
      */
     AnimationController.prototype.slower = function() {
         var clock = this.clock;
+        if (clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+            clock.clockStep = ClockStep.SPEED_MULTIPLIER;
+            clock.multiplier = 1;
+        }
+        this._animating = true;
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
             return left - right;
@@ -140,6 +147,11 @@ define([
      */
     AnimationController.prototype.faster = function() {
         var clock = this.clock;
+        if (clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+            clock.clockStep = ClockStep.SPEED_MULTIPLIER;
+            clock.multiplier = 1;
+        }
+        this._animating = true;
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
             return left - right;
