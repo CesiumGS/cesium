@@ -226,18 +226,6 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
-    it('renders without lighting', function() {
-        // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
-        polygon = createPolygon();
-        polygon.affectedByLighting = false;
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polygon);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-    });
-
     it('renders extent', function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
 

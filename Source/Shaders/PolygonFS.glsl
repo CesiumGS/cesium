@@ -42,12 +42,5 @@ void main()
     erode(materialInput.str);
     czm_material material = czm_getMaterial(materialInput);
     
-    vec4 color; 
-    #ifdef AFFECTED_BY_LIGHTING
-    color = czm_phong(normalize(positionToEyeEC), material);
-    #else
-    color = vec4(material.diffuse, material.alpha);
-    #endif
-    
-    gl_FragColor = color;
+    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
 }

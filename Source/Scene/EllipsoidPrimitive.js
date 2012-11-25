@@ -147,20 +147,6 @@ define([
         this.show = true;
 
         /**
-         * <p>
-         * Determines if the ellipsoid is affected by lighting, i.e., if the ellipsoid is bright on the
-         * side facing the sun, and dark on the other side.  When <code>true</code>, the ellipsoid
-         * is affected by lighting; when <code>false</code>, the ellipsoid is uniformly shaded regardless
-         * of the sun position.
-         * </p>
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
-         */
-        this.affectedByLighting = true;
-        this._affectedByLighting = true;
-
-        /**
          * The surface appearance of the ellipsoid.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
          * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
          * <p>
@@ -312,18 +298,15 @@ define([
 
             // Recompile shader when material changes
             if (typeof this._material === 'undefined' ||
-                this._material !== this.material ||
-                this._affectedByLighting !== this.affectedByLighting) {
+                this._material !== this.material) {
 
                 this._material = this.material;
-                this._affectedByLighting = this.affectedByLighting;
 
                 var fsSource =
                     '#line 0\n' +
                     Noise +
                     '#line 0\n' +
                     this.material.shaderSource +
-                    (this.affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                     '#line 0\n' +
                     EllipsoidFS;
 
@@ -357,7 +340,6 @@ define([
                     Noise +
                     '#line 0\n' +
                     pickMaterial.shaderSource +
-                    // AFFECTED_BY_LIGHTING is not defined
                     '#line 0\n' +
                     EllipsoidFS;
 

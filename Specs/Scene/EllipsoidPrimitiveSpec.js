@@ -68,11 +68,10 @@ defineSuite([
         expect(ellipsoid.center).toEqual(Cartesian3.ZERO);
         expect(ellipsoid.radii).not.toBeDefined();
         expect(ellipsoid.modelMatrix).toEqual(Matrix4.IDENTITY);
-        expect(ellipsoid.affectedByLighting).toEqual(true);
         expect(ellipsoid.material.type).toEqual(Material.ColorType);
     });
 
-    it('renders with the default material and lighting', function() {
+    it('renders with the default material', function() {
         ellipsoid = createEllipsoid();
 
         context.clear();
@@ -112,17 +111,6 @@ defineSuite([
 
         e0 = e0 && e0.destroy();
         e1 = e1 && e1.destroy();
-    });
-
-    it('renders without lighting', function() {
-        ellipsoid = createEllipsoid();
-        ellipsoid.affectedByLighting = false;
-
-        context.clear();
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, ellipsoid);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {
