@@ -1200,8 +1200,8 @@ define([
          *     var time2 = widget2.animationController.update();
          *     widget1.update(time1);
          *     widget2.update(time2);
-         *     widget1.render(currentTime);
-         *     widget2.render(currentTime);
+         *     widget1.render(time1);
+         *     widget2.render(time2);
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
