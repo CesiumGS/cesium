@@ -108,14 +108,12 @@ void main()
     vec3 positionToEyeEC = -v_positionEC; 
     oceanInput.positionToEyeEC = positionToEyeEC;
 
-    czm_material material = czm_getSurfaceMaterial(oceanInput, startDayColor, startDayColor, texture2D(u_waterMask, v_textureCoordinates).r);
+    czm_material material = czm_getSurfaceMaterial(oceanInput, startDayColor, startDayColor, texture2D(u_waterMask, v_textureCoordinates).r * 255.0);
     
     material.emission = startDayColor;
     material.diffuse -= startDayColor;
     
-    //gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
-    //gl_FragColor = vec4(texture2D(u_waterMask, v_textureCoordinates).a, 0.0, 0.0, 1.0);
-    gl_FragColor = texture2D(u_waterMask, v_textureCoordinates) * 255.0;
+    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
 #else
     gl_FragColor = vec4(startDayColor, 1.0);
 #endif
