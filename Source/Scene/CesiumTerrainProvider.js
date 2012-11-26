@@ -311,7 +311,7 @@ define([
 
             // Use the source tile's water mask.
             // TODO: share the texture rather than independently uploading the data.
-            tile.waterMask = sourceTile.waterMask;
+            tile.waterMaskTexture = sourceTile.waterMaskTexture;
 
             // Compute the water mask translation and scale
             var sourceTileExtent = sourceTile.extent;
