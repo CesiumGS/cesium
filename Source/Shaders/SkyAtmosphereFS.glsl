@@ -32,8 +32,8 @@
  // Code:  http://sponeil.net/
  // GPU Gems 2 Article:  http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html
  
-uniform float g;
-uniform float g2;
+const float g = -0.95;
+const float g2 = g * g;
 
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
