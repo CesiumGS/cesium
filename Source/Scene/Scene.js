@@ -428,12 +428,12 @@ define([
 
         this._animations.update();
 
+        this._camera.controller.update(this._frameState);
+        this._cameraMouseController.update(this._frameState);
+
         updateFrameState(this);
         this._frameState.passes.color = true;
         this._frameState.passes.overlay = true;
-
-        this._camera.controller.update(this._frameState);
-        this._cameraMouseController.update(this._frameState);
     };
 
     /**

@@ -119,7 +119,7 @@ define([
         }
 
         var projection = frameState.scene2D.projection;
-        if (projection !== this._projection) {
+        if (typeof projection !== 'undefined' && projection !== this._projection) {
             this._projection = projection;
             this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         }
@@ -536,16 +536,17 @@ define([
             var southParallel = p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2);
             if ((!northParallel && !southParallel)) {
                 var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
+
                 var dot = p.dot(constrainedAxis);
                 var angleToAxis = Math.acos(dot);
-                if (angle < 0 && -angle > angleToAxis) {
-                    angle = -angleToAxis;
+                if (angle > 0 && angle > angleToAxis) {
+                    angle = angleToAxis;
                 }
 
                 dot = p.dot(constrainedAxis.negate());
                 angleToAxis = Math.acos(dot);
-                if (angle > 0 && angle > angleToAxis) {
-                    angle = angleToAxis;
+                if (angle < 0 && -angle > angleToAxis) {
+                    angle = -angleToAxis;
                 }
 
                 var tangent = Cartesian3.cross(constrainedAxis, p, rotateVertScratchTan);

@@ -632,8 +632,8 @@ define([
             var endPhi = Math.atan2(p1.y, p1.x);
             var endTheta = Math.acos(p1.z / endRho);
 
-            var deltaPhi = endPhi - startPhi;
-            var deltaTheta = endTheta - startTheta;
+            var deltaPhi = startPhi - endPhi;
+            var deltaTheta = startTheta - endTheta;
 
             cameraController.rotateRight(deltaPhi);
             cameraController.rotateUp(deltaTheta);
@@ -652,7 +652,6 @@ define([
     var tilt3DCart = new Cartographic();
     var tilt3DCenter = Cartesian4.UNIT_W.clone();
     var tilt3DTransform = new Matrix4();
-    var tilt3DPosition = new Cartesian3(); // CAMERA TODO: remove access to camera
     function tilt3D(controller, movement) {
         var cameraController = controller._cameraController;
 
@@ -689,17 +688,6 @@ define([
 
         var oldEllipsoid = controller._ellipsoid;
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-
-        // CAMERA TODO: Remove the need for camera access
-        var yDiff = movement.startPosition.y - movement.endPosition.y;
-        var camera = cameraController._camera;
-        var position = Cartesian3.clone(camera.position, tilt3DPosition);
-        Cartesian3.negate(position, position);
-        Cartesian3.normalize(position, position);
-        var direction = camera.direction;
-        if (position.equalsEpsilon(direction, CesiumMath.EPSILON2) && yDiff < 0) {
-            movement.endPosition.y = movement.startPosition.y;
-        }
 
         rotate3D(controller, movement, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO);
 
