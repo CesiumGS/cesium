@@ -11,6 +11,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Extent',
         '../Core/Occluder',
@@ -35,6 +36,7 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         Cartographic,
         Extent,
         Occluder,
@@ -165,6 +167,7 @@ define([
                 tile.geometry = new Float32Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
                 tile.childTileBits = new Uint8Array(buffer, tile.geometry.byteLength, 1)[0];
                 tile.waterMask = new Uint8Array(buffer, tile.geometry.byteLength + 1, 256 * 256);
+                tile.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
                 --requestsInFlight;
                 tile.state = TileState.RECEIVED;
             }, function(e) {
@@ -289,45 +292,41 @@ define([
                 heights[1] = northeastResult;
                 heights[2] = southwestResult;
                 heights[3] = southeastResult;
-
-                /*var southwestWaterMask = sourceWaterMask[bottomInteger * width + leftInteger];
-                var southeastWaterMask = sourceWaterMask[bottomInteger * width + rightInteger];
-                var northwestWaterMask = sourceWaterMask[topInteger * width + leftInteger];
-                var northeastWaterMask = sourceWaterMask[topInteger * width + rightInteger];
-
-                var southwestWaterResult = triangleInterpolateHeight(westFraction, southFraction, southwestWaterMask, southeastWaterMask, northwestWaterMask, northeastWaterMask);
-                var southeastWaterResult = triangleInterpolateHeight(eastFraction, southFraction, southwestWaterMask, southeastWaterMask, northwestWaterMask, northeastWaterMask);
-                var northwestWaterResult = triangleInterpolateHeight(westFraction, northFraction, southwestWaterMask, southeastWaterMask, northwestWaterMask, northeastWaterMask);
-                var northeastWaterResult = triangleInterpolateHeight(eastFraction, northFraction, southwestWaterMask, southeastWaterMask, northwestWaterMask, northeastWaterMask);
-
-                waterMaskBuffer = new ArrayBuffer(4 * 4);
-                waterMask = new Uint8Array(waterMaskBuffer);
-                waterMask[0] = northwestWaterResult;
-                waterMask[1] = northeastWaterResult;
-                waterMask[2] = southwestWaterResult;
-                waterMask[3] = southeastWaterResult;*/
             } else {
                 // Copy the relevant posts.
                 var numberOfFloats = (rightInteger - leftInteger + 1) * (bottomInteger - topInteger + 1);
                 buffer = new ArrayBuffer(numberOfFloats * 4 + 1);
                 heights = new Float32Array(buffer, 0, numberOfFloats);
 
-                //waterMaskBuffer = new ArrayBuffer(numberOfFloats);
-                //waterMask = new Uint8Array(waterMaskBuffer);
-
                 var outputIndex = 0;
                 for (var j = topInteger; j <= bottomInteger; ++j) {
                     for (var i = leftInteger; i <= rightInteger; ++i) {
-                        //waterMask[outputIndex] = sourceWaterMask[j * width + i];
                         heights[outputIndex++] = sourceHeights[j * width + i];
                     }
                 }
             }
 
-            // Missing tiles do not have any children.
-            tile.childTileBits = 0;
             tile.geometry = heights;
-            tile.waterMask = sourceTile.waterMask; // TODO: set water mask texture matrix
+            tile.childTileBits = 0; // Missing tiles do not have any children.
+
+            // Use the source tile's water mask.
+            // TODO: share the texture rather than independently uploading the data.
+            tile.waterMask = sourceTile.waterMask;
+
+            // Compute the water mask translation and scale
+            var sourceTileExtent = sourceTile.extent;
+            var tileExtent = tile.extent;
+            var tileWidth = tileExtent.east - tileExtent.west;
+            var tileHeight = tileExtent.north - tileExtent.south;
+
+            var scaleX = tileWidth / (sourceTileExtent.east - sourceTileExtent.west);
+            var scaleY = tileHeight / (sourceTileExtent.north - sourceTileExtent.south);
+            tile.waterMaskTranslationAndScale = new Cartesian4(
+                    scaleX * (tileExtent.west - sourceTileExtent.west) / tileWidth,
+                    scaleY * (tileExtent.south - sourceTileExtent.south) / tileHeight,
+                    scaleX,
+                    scaleY);
+
             tile.state = TileState.RECEIVED;
         }
 

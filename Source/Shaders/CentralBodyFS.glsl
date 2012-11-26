@@ -12,6 +12,7 @@ uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 #endif
 
 uniform sampler2D u_waterMask;
+uniform vec4 u_waterMaskTranslationAndScale;
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
@@ -108,7 +109,11 @@ void main()
     vec3 positionToEyeEC = -v_positionEC; 
     oceanInput.positionToEyeEC = positionToEyeEC;
 
-    czm_material material = czm_getSurfaceMaterial(oceanInput, startDayColor, startDayColor, texture2D(u_waterMask, v_textureCoordinates).r * 255.0);
+    vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
+    vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
+    vec2 waterMaskTextureCoordinates = v_textureCoordinates * waterMaskScale + waterMaskTranslation;
+
+    czm_material material = czm_getSurfaceMaterial(oceanInput, startDayColor, startDayColor, texture2D(u_waterMask, waterMaskTextureCoordinates).r * 255.0);
     
     material.emission = startDayColor;
     material.diffuse -= startDayColor;

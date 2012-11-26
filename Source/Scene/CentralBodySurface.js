@@ -867,6 +867,9 @@ define([
             u_waterMask : function() {
                 return this.waterMask;
             },
+            u_waterMaskTranslationAndScale : function() {
+                return this.waterMaskTranslationAndScale;
+            },
 
             center3D : undefined,
             modifiedModelView : new Matrix4(),
@@ -884,7 +887,8 @@ define([
             southAndNorthLatitude : new Cartesian2(0.0, 0.0),
             southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(0.0, 0.0, 0.0),
 
-            waterMask : undefined
+            waterMask : undefined,
+            waterMaskTranslationAndScale : new Cartesian4(0.0, 0.0, 0.0, 0.0)
         };
     }
 
@@ -1059,6 +1063,7 @@ define([
                     // which might get destroyed eventually
                     uniformMap.dayTextures.length = numberOfDayTextures;
                     uniformMap.waterMask = tile.waterMaskTexture;
+                    Cartesian4.clone(tile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
                     colorCommandList.push(command);
 
