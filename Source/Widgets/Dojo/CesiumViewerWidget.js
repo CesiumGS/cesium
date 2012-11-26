@@ -856,11 +856,6 @@ define([
                 transitioner.morphToColumbusView();
             });
 
-            var cbLighting = widget.cbLighting;
-            on(cbLighting, 'Change', function(value) {
-                widget.centralBody.showSkyAtmosphere = widget._showSkyAtmosphere && !value;
-            });
-
             var imagery = widget.imagery;
             var imageryAerial = widget.imageryAerial;
             var imageryAerialWithLabels = widget.imageryAerialWithLabels;
