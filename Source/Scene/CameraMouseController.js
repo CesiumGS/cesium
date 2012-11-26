@@ -632,8 +632,8 @@ define([
             var endPhi = Math.atan2(p1.y, p1.x);
             var endTheta = Math.acos(p1.z / endRho);
 
-            var deltaPhi = endPhi - startPhi;
-            var deltaTheta = endTheta - startTheta;
+            var deltaPhi = startPhi - endPhi;
+            var deltaTheta = startTheta - endTheta;
 
             cameraController.rotateRight(deltaPhi);
             cameraController.rotateUp(deltaTheta);
