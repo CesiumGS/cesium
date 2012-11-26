@@ -184,7 +184,7 @@ define([
      */
     UniformState.prototype.updateFrustum = function(frustum) {
         setProjection(this, frustum.getProjectionMatrix());
-        if (frustum.getInfiniteProjectionMatrix) {
+        if (typeof frustum.getInfiniteProjectionMatrix !== 'undefined') {
             setInfiniteProjection(this, frustum.getInfiniteProjectionMatrix());
         }
     };

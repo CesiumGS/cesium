@@ -5,7 +5,6 @@ defineSuite([
          'Specs/destroyContext',
          'Specs/createCamera',
          'Specs/createFrameState',
-//         'Specs/frameState',
          'Core/loadImage',
          'Core/Cartesian3',
          'Scene/SceneMode',
@@ -16,7 +15,6 @@ defineSuite([
          destroyContext,
          createCamera,
          createFrameState,
-//         frameState,
          loadImage,
          Cartesian3,
          SceneMode,
@@ -59,7 +57,7 @@ defineSuite([
 
             var us = context.getUniformState();
             var frameState = createFrameState(createCamera(
-                context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 10000000.0));
+                context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 20000000.0));
             us.update(frameState);
 
             var command = s.update(context, frameState);
