@@ -160,27 +160,26 @@ define([
                 url = this._proxy.getURL(url);
             }
 
+            var that = this;
             when(loadArrayBuffer(url), function(buffer) {
-                tile.geometry = buffer;
+                tile.geometry = new Float32Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
+                tile.childTileBits = new Uint8Array(buffer, tile.geometry.byteLength, 1)[0];
+                tile.waterMask = new Uint8Array(buffer, tile.geometry.byteLength + 1, 256 * 256);
                 --requestsInFlight;
-
-                if (typeof tile.waterMask !== 'undefined') {
-                    tile.state = TileState.RECEIVED;
-                }
+                tile.state = TileState.RECEIVED;
             }, function(e) {
                 /*global console*/
                 // This shouldn't happen in the absence of network problems.  Log it and then use 0 heights.
                 // TODO: retry?
                 console.error('failed to load tile geometry: ' + e);
-                tile.geometry = new Float32Array(65 * 65).buffer;
+                tile.geometry = new Float32Array(65 * 65);
+                tile.childTileBits = 0;
+                tile.waterMask = new Uint8Array(256 * 256);
                 --requestsInFlight;
-
-                if (typeof tile.waterMask !== 'undefined') {
-                    tile.state = TileState.RECEIVED;
-                }
+                tile.state = TileState.RECEIVED;
             });
 
-            url = this.url + '/' + tile.level + '/' + tile.x + '/' + (yTiles - tile.y - 1) + '.water';
+            /*url = this.url + '/' + tile.level + '/' + tile.x + '/' + (yTiles - tile.y - 1) + '.water';
 
             if (typeof this._proxy !== 'undefined') {
                 url = this._proxy.getURL(url);
@@ -194,7 +193,6 @@ define([
                     tile.state = TileState.RECEIVED;
                 }
             }, function(e) {
-                /*global console*/
                 // This shouldn't happen in the absence of network problems.  Log it and then assume it's all land.
                 // TODO: retry?
                 console.error('failed to load tile water mask: ' + e);
@@ -204,7 +202,7 @@ define([
                 if (typeof tile.geometry !== 'undefined') {
                     tile.state = TileState.RECEIVED;
                 }
-            });
+            });*/
         } else {
             // Find the nearest ancestor with data.
             var levelDifference = 1;
@@ -244,7 +242,7 @@ define([
             var topInteger = topPostIndex | 0;
             var bottomInteger = bottomPostIndex | 0;
 
-            var sourceHeights = new Float32Array(sourceTile.geometry, 0, (sourceTile.geometry.byteLength - 1) / 4);
+            var sourceHeights = sourceTile.geometry;
             //var sourceWaterMask = new Uint8Array(sourceTile.waterMask);
 
             var buffer;
@@ -327,10 +325,8 @@ define([
             }
 
             // Missing tiles do not have any children.
-            var childBitsArray = new Uint8Array(buffer, buffer.byteLength - 1, 1);
-            childBitsArray[0] = 0;
-
-            tile.geometry = buffer;
+            tile.childTileBits = 0;
+            tile.geometry = heights;
             tile.waterMask = sourceTile.waterMask; // TODO: set water mask texture matrix
             tile.state = TileState.RECEIVED;
         }
@@ -361,13 +357,10 @@ define([
      * @param {Tile} tile The tile to transform geometry for.
      */
     CesiumTerrainProvider.prototype.transformGeometry = function(context, tile) {
-        var pixels = new Float32Array(tile.geometry, 0, (tile.geometry.byteLength - 1) / 4);
+        var pixels = tile.geometry;
         var width = Math.sqrt(pixels.length) | 0;
         var height = width;
-        var waterMask = new Uint8Array(tile.waterMask);
-
-        var childTileBits = new Uint8Array(tile.geometry, width * height * 4, 1);
-        tile.childTileBits = childTileBits[0];
+        var waterMask = tile.waterMask;
 
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();
@@ -375,12 +368,25 @@ define([
 
         tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
+        if (typeof tile.waterMaskTexture === 'undefined') {
+            var waterMaskSize = Math.sqrt(waterMask.length);
+
+            tile.waterMaskTexture = context.createTexture2D({
+                pixelFormat : PixelFormat.LUMINANCE,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                source : {
+                    width : waterMaskSize,
+                    height : waterMaskSize,
+                    arrayBufferView : waterMask
+                }
+            });
+        }
+
         // If data is not available for any of this tile's children, keep the
         // raw geometry around because the no-data children will use it.
         var transfer = [];
         if (tile.childTileBits === 15 || pixels.length !== this.heightmapWidth * this.heightmapWidth) {
             transfer.push(pixels.buffer);
-            //transfer.push(waterMask.buffer);
 
             // TODO: remove this.  It's only here to help track down an intermittent bug.
             tile.transferredBuffer = true;
@@ -420,17 +426,6 @@ define([
                 indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
             };
 
-            var waterMaskSize = Math.sqrt(waterMask.length);
-
-            tile.waterMaskTexture = context.createTexture2D({
-                pixelFormat : PixelFormat.LUMINANCE,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                source : {
-                    width : waterMaskSize,
-                    height : waterMaskSize,
-                    arrayBufferView : waterMask
-                }
-            });
             tile.state = TileState.TRANSFORMED;
         }, function(e) {
             /*global console*/
