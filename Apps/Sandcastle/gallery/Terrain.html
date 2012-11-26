@@ -76,10 +76,10 @@ body {
 <script id="cesium_sandcastle_script">
 require([
     'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
-    'dojo/on', 'dojo/dom'
+    'dojo/on', 'dojo/dom', 'Shaders/CentralBodyOcean'
 ], function(
     Cesium, CesiumViewerWidget,
-    on, dom)
+    on, dom, CentralBodyOcean)
 {
     "use strict";
 
@@ -190,20 +190,15 @@ require([
     cb.oceanMaterial = new Cesium.Material({
         context : scene.getContext(),
         fabric : {
-            type : 'Water',
             uniforms : {
-                specularMap: '../images/earthspec1k.jpg',
                 normalMap: require.toUrl('Assets/Textures/waterNormalsSmall.jpg'),
                 frequency: 500000.0,
                 animationSpeed: 0.006,
                 amplitude: 1.0,
-                blendColor: {
-                    red: 0,
-                    green: 0,
-                    blue: 0,
-                    alpha: 0
-                }
-            }
+                specularIntensity : 0.5,
+                fadeFactor : 1.0
+            },
+            source : CentralBodyOcean
         }
     });
 

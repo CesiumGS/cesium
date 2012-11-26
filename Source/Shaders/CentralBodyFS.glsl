@@ -73,11 +73,6 @@ vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);
 
 void main()
 {
-#if defined(SHOW_OCEAN)
-    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
-    vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
-#endif
-
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
@@ -93,33 +88,24 @@ void main()
     }
 #endif
 
-#ifdef SHOW_OCEAN
-    czm_materialInput oceanInput;
-
-    // TODO: Real 1D distance, and better 3D coordinate
-    oceanInput.st = czm_ellipsoidWgs84TextureCoordinates(normalMC);
-    oceanInput.str = vec3(oceanInput.st, 0.0);
-    oceanInput.positionMC = v_positionMC;
-    
-    //Convert tangent space material normal to eye space
-    oceanInput.normalEC = normalEC;  
-    oceanInput.tangentToEyeMatrix = czm_eastNorthUpToEyeCoordinates(v_positionMC, oceanInput.normalEC);
-    
-    //Convert view vector to world space
-    vec3 positionToEyeEC = -v_positionEC; 
-    oceanInput.positionToEyeEC = positionToEyeEC;
-
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
     vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
     vec2 waterMaskTextureCoordinates = v_textureCoordinates * waterMaskScale + waterMaskTranslation;
 
-    czm_material material = czm_getSurfaceMaterial(oceanInput, startDayColor, startDayColor, texture2D(u_waterMask, waterMaskTextureCoordinates).r * 255.0);
+    vec4 color = vec4(startDayColor, 1.0);
     
-    material.emission = startDayColor;
-    material.diffuse -= startDayColor;
-    
-    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
-#else
-    gl_FragColor = vec4(startDayColor, 1.0);
+#ifdef SHOW_OCEAN
+    // TODO: remove the clamp and *255.0 once the data is fixed.
+    float mask = clamp(texture2D(u_waterMask, waterMaskTextureCoordinates).r * 255.0, 0.0, 1.0);
+    if (mask > 0.0)
+    {
+	    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
+	    vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
+
+        mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
+        color = computeWaterColor(v_positionEC, czm_ellipsoidWgs84TextureCoordinates(normalMC), enuToEye, startDayColor, mask);
+    }
 #endif
+    
+    gl_FragColor = color;
 }
