@@ -11,6 +11,8 @@ uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 #endif
 
+uniform sampler2D u_waterMask;
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 
@@ -106,12 +108,14 @@ void main()
     vec3 positionToEyeEC = -v_positionEC; 
     oceanInput.positionToEyeEC = positionToEyeEC;
 
-    czm_material material = czm_getSurfaceMaterial(oceanInput, startDayColor, startDayColor, v_waterMask);
+    czm_material material = czm_getSurfaceMaterial(oceanInput, startDayColor, startDayColor, texture2D(u_waterMask, v_textureCoordinates).r);
     
     material.emission = startDayColor;
-    material.diffuse -= startDayColor; 
+    material.diffuse -= startDayColor;
     
-    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
+    //gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
+    //gl_FragColor = vec4(texture2D(u_waterMask, v_textureCoordinates).a, 0.0, 0.0, 1.0);
+    gl_FragColor = texture2D(u_waterMask, v_textureCoordinates) * 255.0;
 #else
     gl_FragColor = vec4(startDayColor, 1.0);
 #endif

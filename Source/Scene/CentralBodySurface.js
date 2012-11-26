@@ -864,6 +864,9 @@ define([
             u_southMercatorYLowAndHighAndOneOverHeight : function() {
                return this.southMercatorYLowAndHighAndOneOverHeight;
             },
+            u_waterMask : function() {
+                return this.waterMask;
+            },
 
             center3D : undefined,
             modifiedModelView : new Matrix4(),
@@ -879,7 +882,9 @@ define([
             dayIntensity : 0.0,
 
             southAndNorthLatitude : new Cartesian2(0.0, 0.0),
-            southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(0.0, 0.0, 0.0)
+            southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(0.0, 0.0, 0.0),
+
+            waterMask : undefined
         };
     }
 
@@ -1053,6 +1058,7 @@ define([
                     // trim texture array to the used length so we don't end up using old textures
                     // which might get destroyed eventually
                     uniformMap.dayTextures.length = numberOfDayTextures;
+                    uniformMap.waterMask = tile.waterMaskTexture;
 
                     colorCommandList.push(command);
 

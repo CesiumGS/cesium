@@ -15,6 +15,8 @@ define([
         '../Core/Extent',
         '../Core/Occluder',
         '../Core/TaskProcessor',
+        '../Renderer/PixelDatatype',
+        '../Renderer/PixelFormat',
         './Projections',
         './TileState',
         './TerrainProvider',
@@ -37,6 +39,8 @@ define([
         Extent,
         Occluder,
         TaskProcessor,
+        PixelDatatype,
+        PixelFormat,
         Projections,
         TileState,
         TerrainProvider,
@@ -194,7 +198,7 @@ define([
                 // This shouldn't happen in the absence of network problems.  Log it and then assume it's all land.
                 // TODO: retry?
                 console.error('failed to load tile water mask: ' + e);
-                tile.waterMask = new Uint8Array(65 * 65).buffer;
+                tile.waterMask = new Uint8Array(1).buffer;
                 --requestsInFlight;
 
                 if (typeof tile.geometry !== 'undefined') {
@@ -241,13 +245,13 @@ define([
             var bottomInteger = bottomPostIndex | 0;
 
             var sourceHeights = new Float32Array(sourceTile.geometry, 0, (sourceTile.geometry.byteLength - 1) / 4);
-            var sourceWaterMask = new Uint8Array(sourceTile.waterMask);
+            //var sourceWaterMask = new Uint8Array(sourceTile.waterMask);
 
             var buffer;
             var heights;
 
-            var waterMaskBuffer;
-            var waterMask;
+            //var waterMaskBuffer;
+            //var waterMask;
 
             // We can support the following level differences without interpolating:
             // 1 - 33x33 posts
@@ -288,7 +292,7 @@ define([
                 heights[2] = southwestResult;
                 heights[3] = southeastResult;
 
-                var southwestWaterMask = sourceWaterMask[bottomInteger * width + leftInteger];
+                /*var southwestWaterMask = sourceWaterMask[bottomInteger * width + leftInteger];
                 var southeastWaterMask = sourceWaterMask[bottomInteger * width + rightInteger];
                 var northwestWaterMask = sourceWaterMask[topInteger * width + leftInteger];
                 var northeastWaterMask = sourceWaterMask[topInteger * width + rightInteger];
@@ -303,20 +307,20 @@ define([
                 waterMask[0] = northwestWaterResult;
                 waterMask[1] = northeastWaterResult;
                 waterMask[2] = southwestWaterResult;
-                waterMask[3] = southeastWaterResult;
+                waterMask[3] = southeastWaterResult;*/
             } else {
                 // Copy the relevant posts.
                 var numberOfFloats = (rightInteger - leftInteger + 1) * (bottomInteger - topInteger + 1);
                 buffer = new ArrayBuffer(numberOfFloats * 4 + 1);
                 heights = new Float32Array(buffer, 0, numberOfFloats);
 
-                waterMaskBuffer = new ArrayBuffer(numberOfFloats);
-                waterMask = new Uint8Array(waterMaskBuffer);
+                //waterMaskBuffer = new ArrayBuffer(numberOfFloats);
+                //waterMask = new Uint8Array(waterMaskBuffer);
 
                 var outputIndex = 0;
                 for (var j = topInteger; j <= bottomInteger; ++j) {
                     for (var i = leftInteger; i <= rightInteger; ++i) {
-                        waterMask[outputIndex] = sourceWaterMask[j * width + i];
+                        //waterMask[outputIndex] = sourceWaterMask[j * width + i];
                         heights[outputIndex++] = sourceHeights[j * width + i];
                     }
                 }
@@ -327,7 +331,7 @@ define([
             childBitsArray[0] = 0;
 
             tile.geometry = buffer;
-            tile.waterMask = waterMaskBuffer;
+            tile.waterMask = sourceTile.waterMask; // TODO: set water mask texture matrix
             tile.state = TileState.RECEIVED;
         }
 
@@ -376,7 +380,7 @@ define([
         var transfer = [];
         if (tile.childTileBits === 15 || pixels.length !== this.heightmapWidth * this.heightmapWidth) {
             transfer.push(pixels.buffer);
-            transfer.push(waterMask.buffer);
+            //transfer.push(waterMask.buffer);
 
             // TODO: remove this.  It's only here to help track down an intermittent bug.
             tile.transferredBuffer = true;
@@ -394,8 +398,8 @@ define([
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
             skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
-            isGeographic : true,
-            waterMask : waterMask
+            isGeographic : true /*,
+            waterMask : waterMask */
         }, transfer);
 
         if (typeof verticesPromise === 'undefined') {
@@ -415,6 +419,18 @@ define([
                 statistics : result.statistics,
                 indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
             };
+
+            var waterMaskSize = Math.sqrt(waterMask.length);
+
+            tile.waterMaskTexture = context.createTexture2D({
+                pixelFormat : PixelFormat.LUMINANCE,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                source : {
+                    width : waterMaskSize,
+                    height : waterMaskSize,
+                    arrayBufferView : waterMask
+                }
+            });
             tile.state = TileState.TRANSFORMED;
         }, function(e) {
             /*global console*/
@@ -438,7 +454,7 @@ define([
         var buffers = tile.transformedGeometry;
         tile.transformedGeometry = undefined;
 
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers, true);
+        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tile, buffers);
         tile.maxHeight = buffers.statistics.maxHeight;
         tile.boundingSphere3D = BoundingSphere.fromVertices(buffers.vertices, tile.center, 5);
 

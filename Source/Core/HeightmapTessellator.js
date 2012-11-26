@@ -56,7 +56,7 @@ define([
         description = defaultValue(description, {});
 
         var heightmap = description.heightmap;
-        var waterMask = description.waterMask;
+        //var waterMask = description.waterMask;
         var heightScale = description.heightScale;
         var heightOffset = description.heightOffset;
         var bytesPerHeight = description.bytesPerHeight;
@@ -221,7 +221,7 @@ define([
                     }
                 }
 
-                vertices[vertexArrayIndex++] = waterMask[terrainOffset];
+                //vertices[vertexArrayIndex++] = waterMask[terrainOffset];
             }
         }
 
