@@ -149,9 +149,9 @@ require([
             camera.lookAt(position, position.add(direction), up);
             break;
         case 'C'.charCodeAt(0):
-            var position = new Cesium.Cartesian3(-2444319.744271441, -4490462.305656268, 3800605.179680734);
-            var direction = new Cesium.Cartesian3(0.3079076572929976, 0.5183187255969877, 0.7978336751954334);
-            var up = new Cesium.Cartesian3(-0.38141711164833125, -0.7009912978668698, 0.6026045031832784);
+            var position = new Cesium.Cartesian3(-2154047.1693888847, -5129769.958774299, 3112753.0357638514);
+            var direction = new Cesium.Cartesian3(-0.6303093658511963, -0.09320311457302291, -0.7707290592381483);
+            var up = new Cesium.Cartesian3(-0.36365569382280133, -0.8416695313076181, 0.3991828358266927);
             var camera = scene.getCamera();
             camera.lookAt(position, position.add(direction), up);
             break;
@@ -193,10 +193,10 @@ require([
             type : 'Water',
             uniforms : {
                 specularMap: '../images/earthspec1k.jpg',
-                normalMap: require.toUrl('Assets/Textures/waterNormals.jpg'),
+                normalMap: require.toUrl('Assets/Textures/waterNormalsSmall.jpg'),
                 frequency: 500000.0,
-                animationSpeed: 0.004,
-                amplitude: 0.5,
+                animationSpeed: 0.006,
+                amplitude: 1.0,
                 blendColor: {
                     red: 0,
                     green: 0,
