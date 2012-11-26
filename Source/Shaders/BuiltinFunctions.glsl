@@ -357,7 +357,7 @@ struct czm_materialInput
  * @property {vec3} diffuse Incoming light that scatters evenly in all directions.
  * @property {float} specular Intensity of incoming light reflecting in a single direction.
  * @property {float} shininess The sharpness of the specular reflection.  Higher values create a smaller, more focused specular highlight.
- * @property {vec3} normal Surface's normal in tangent coordinates. It is used for effects such as normal mapping. The default is the surface's unmodified normal.
+ * @property {vec3} normal Surface's normal in eye coordinates. It is used for effects such as normal mapping. The default is the surface's unmodified normal.
  * @property {vec3} emission Light emitted by the material equally in all directions. The default is vec3(0.0), which emits no light.
  * @property {float} alpha Opacity of this material. 0.0 is completely transparent; 1.0 is completely opaque.
  */
@@ -447,6 +447,27 @@ vec4 czm_phong(vec3 toEye, czm_material material)
 }
 
 /**
+ * Computes the luminance of a color. 
+ *
+ * @name czm_luminance
+ * @glslFunction
+ *
+ * @param {vec3} rgb The color.
+ * 
+ * @returns {float} The luminance.
+ *
+ * @example
+ * float light = luminance(vec3(0.0)); // 0.0
+ * float dark = luminance(vec3(1.0));  // ~1.0 
+ */
+float czm_luminance(vec3 rgb)
+{
+    // Algorithm from Chapter 10 of Graphics Shaders.
+    const vec3 W = vec3(0.2125, 0.7154, 0.0721);
+    return dot(rgb, W);
+}
+
+/**
  * DOC_TBA
  *
  * @name czm_multiplyWithColorBalance
@@ -459,10 +480,10 @@ vec3 czm_multiplyWithColorBalance(vec3 left, vec3 right)
     
     vec3 target = left * right;
     float leftLuminance = dot(left, W);
-    float rightLumiance = dot(right, W);
-    float targetLumiance = dot(target, W);
+    float rightLuminance = dot(right, W);
+    float targetLuminance = dot(target, W);
     
-    return ((leftLuminance + rightLumiance) / (2.0 * targetLumiance)) * target;
+    return ((leftLuminance + rightLuminance) / (2.0 * targetLuminance)) * target;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -7,5 +7,4 @@ void main()
 {
     vec3 rgb = textureCube(u_cubeMap, normalize(v_texCoord)).rgb;
     gl_FragColor = vec4(rgb, u_morphTime);
-
 }

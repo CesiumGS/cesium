@@ -29,6 +29,7 @@ define([
         '../Renderer/DepthFunction',
         '../Renderer/DrawCommand',
         '../Renderer/PixelFormat',
+        '../Renderer/BlendingState',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
         './EllipsoidTerrainProvider',
@@ -73,6 +74,7 @@ define([
         DepthFunction,
         DrawCommand,
         PixelFormat,
+        BlendingState,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
         EllipsoidTerrainProvider,
@@ -205,28 +207,12 @@ define([
         this._fCameraHeight = undefined;
         this._fCameraHeight2 = undefined;
         this._outerRadius = ellipsoid.getRadii().multiplyByScalar(1.025).getMaximumComponent();
-
-        // TODO: Do we want to expose any of these atmosphere constants?
-        var Kr = 0.0025;
-        var Kr4PI = Kr * 4.0 * Math.PI;
-        var Km = 0.0015;
-        var Km4PI = Km * 4.0 * Math.PI;
-        var ESun = 15.0;
-        var g = -0.95;
         var innerRadius = ellipsoid.getMaximumRadius();
         var rayleighScaleDepth = 0.25;
-        var inverseWaveLength = {
-            x : 1.0 / Math.pow(0.650, 4.0), // Red
-            y : 1.0 / Math.pow(0.570, 4.0), // Green
-            z : 1.0 / Math.pow(0.475, 4.0) // Blue
-        };
 
         var that = this;
 
         this._skyCommand.uniformMap = {
-            v3InvWavelength : function() {
-                return inverseWaveLength;
-            },
             fCameraHeight : function() {
                 return that._fCameraHeight;
             },
@@ -245,18 +231,6 @@ define([
             fInnerRadius2 : function() {
                 return innerRadius * innerRadius;
             },
-            fKrESun : function() {
-                return Kr * ESun;
-            },
-            fKmESun : function() {
-                return Km * ESun;
-            },
-            fKr4PI : function() {
-                return Kr4PI;
-            },
-            fKm4PI : function() {
-                return Km4PI;
-            },
             fScale : function() {
                 return 1.0 / (that._outerRadius - innerRadius);
             },
@@ -265,12 +239,6 @@ define([
             },
             fScaleOverScaleDepth : function() {
                 return (1.0 / (that._outerRadius - innerRadius)) / rayleighScaleDepth;
-            },
-            g : function() {
-                return g;
-            },
-            g2 : function() {
-                return g * g;
             }
         };
 
@@ -584,7 +552,8 @@ define([
                 depthTest : {
                     enabled : true
                 },
-                depthMask : false
+                depthMask : false,
+                blending : BlendingState.ALPHA_BLEND
             });
             this._skyCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMaximumRadius() * 1.025);
         }

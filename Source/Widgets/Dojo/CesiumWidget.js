@@ -8,6 +8,7 @@ define([
         'dojo/on',
         'dijit/_WidgetBase',
         'dijit/_TemplatedMixin',
+        '../../Core/defaultValue',
         '../../Core/BoundingRectangle',
         '../../Core/Ellipsoid',
         '../../Core/computeSunPosition',
@@ -25,6 +26,7 @@ define([
         '../../Scene/BingMapsStyle',
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
+        '../../Scene/SkyBox',
         'dojo/text!./CesiumWidget.html'
     ], function (
         require,
@@ -35,6 +37,7 @@ define([
         on,
         _WidgetBase,
         _TemplatedMixin,
+        defaultValue,
         BoundingRectangle,
         Ellipsoid,
         computeSunPosition,
@@ -52,6 +55,7 @@ define([
         BingMapsStyle,
         SingleTileImageryProvider,
         PerformanceDisplay,
+        SkyBox,
         template) {
     "use strict";
 
@@ -61,6 +65,15 @@ define([
         mapStyle : BingMapsStyle.AERIAL,
         defaultCamera : undefined,
         dayImageUrl : undefined,
+        /**
+         * Determines if a sky box with stars is drawn around the globe.  This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see SkyBox
+         */
+        showSkyBox : true,
         resizeWidgetOnWindowResize : true,
 
         constructor : function() {
@@ -190,10 +203,8 @@ define([
             on(canvas, 'contextmenu', event.stop);
             on(canvas, 'selectstart', event.stop);
 
-            var context = scene.getContext();
-
             var imageryUrl = '../../Assets/Textures/';
-            this.dayImageUrl = this.dayImageUrl || require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg');
+            this.dayImageUrl = defaultValue(this.dayImageUrl, require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg'));
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
             centralBody.showSkyAtmosphere = true;
@@ -202,6 +213,17 @@ define([
             this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
+
+            if (this.showSkyBox) {
+                scene.skyBox = new SkyBox({
+                    positiveX: require.toUrl(imageryUrl + 'SkyBox/tycho8_px_80.jpg'),
+                    negativeX: require.toUrl(imageryUrl + 'SkyBox/tycho8_mx_80.jpg'),
+                    positiveY: require.toUrl(imageryUrl + 'SkyBox/tycho8_py_80.jpg'),
+                    negativeY: require.toUrl(imageryUrl + 'SkyBox/tycho8_my_80.jpg'),
+                    positiveZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_pz_80.jpg'),
+                    negativeZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_mz_80.jpg')
+                });
+            }
 
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);

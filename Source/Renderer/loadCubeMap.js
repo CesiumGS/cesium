@@ -12,9 +12,34 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Asynchronously loads six images and creates a cube map.  Returns a promise that
+     * will resolve to a {@link CubeMap} once loaded, or reject if any image fails to load.
      *
      * @exports loadCubeMap
+     *
+     * @param {Context} context The context to use to create the cube map.
+     * @param {Object} urls The source of each image, or a promise for each URL.  See the example below.
+     * @param {Boolean} [crossOrigin=true] Whether to request images using Cross-Origin
+     *        Resource Sharing (CORS).  Data URIs are never requested using CORS.
+     *
+     * @returns {Promise} a promise that will resolve to the requested {@link CubeMap} when loaded.
+     *
+     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
+     *
+     * @example
+     * loadCubeMap(context, {
+     *     positiveX : 'skybox_px.png',
+     *     negativeX : 'skybox_nx.png',
+     *     positiveY : 'skybox_py.png',
+     *     negativeY : 'skybox_ny.png',
+     *     positiveZ : 'skybox_pz.png',
+     *     negativeZ : 'skybox_nz.png'
+     * }).then(function(cubeMap) {
+     *     // use the cubemap
+     * }, function() {
+     *     // an error occurred
+     * });
      */
     var loadCubeMap = function(context, urls, crossOrigin) {
         if (typeof context === 'undefined') {
@@ -40,6 +65,7 @@ define([
                     height: image.height
                 });
             } else if ((cubeMap.getWidth() !== image.width) || (cubeMap.getHeight() !== image.height)) {
+                cubeMap.destroy();
                 deferred.reject('Cube map faces do not have the same dimensions.');
             }
 
@@ -56,6 +82,7 @@ define([
         }
 
         function reject(e) {
+            cubeMap.destroy();
             deferred.reject(e);
         }
 

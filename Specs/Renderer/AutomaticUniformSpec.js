@@ -7,7 +7,6 @@ defineSuite([
          'Core/Matrix4',
          'Core/PrimitiveType',
          'Core/defaultValue',
-         'Core/JulianDate',
          'Renderer/BufferUsage'
      ], 'Renderer/AutomaticUniforms', function(
          createContext,
@@ -17,7 +16,6 @@ defineSuite([
          Matrix4,
          PrimitiveType,
          defaultValue,
-         JulianDate,
          BufferUsage) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

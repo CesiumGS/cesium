@@ -32,27 +32,64 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.
+     * <p>
+     * This is only supported in 3D.  The sky box is faded out when morphing to 2D or Columbus view.
+     * </p>
      *
      * @alias SkyBox
      * @constructor
      *
-     * @exception {DeveloperError} cubeMapUrls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
+     * @param {Object} sources The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
+     *
+     * @exception {DeveloperError} sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
+     * @exception {DeveloperError} sources properties must all be the same type.
+     *
+     * @example
+     * scene.skyBox = new SkyBox({
+     *     positiveX : 'skybox_px.png',
+     *     negativeX : 'skybox_nx.png',
+     *     positiveY : 'skybox_py.png',
+     *     negativeY : 'skybox_ny.png',
+     *     positiveZ : 'skybox_pz.png',
+     *     negativeZ : 'skybox_nz.png'
+     * });
+     *
+     * @see Scene#skyBox
+     * @see Transforms.computeTemeToPseudoFixedMatrix
      */
-    var SkyBox = function(cubeMapUrls) {
-        if ((typeof cubeMapUrls === 'undefined') ||
-            (typeof cubeMapUrls.positiveX === 'undefined') ||
-            (typeof cubeMapUrls.negativeX === 'undefined') ||
-            (typeof cubeMapUrls.positiveY === 'undefined') ||
-            (typeof cubeMapUrls.negativeY === 'undefined') ||
-            (typeof cubeMapUrls.positiveZ === 'undefined') ||
-            (typeof cubeMapUrls.negativeZ === 'undefined')) {
-            throw new DeveloperError('cubeMapUrls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
+    var SkyBox = function(sources) {
+        if ((typeof sources === 'undefined') ||
+            (typeof sources.positiveX === 'undefined') ||
+            (typeof sources.negativeX === 'undefined') ||
+            (typeof sources.positiveY === 'undefined') ||
+            (typeof sources.negativeY === 'undefined') ||
+            (typeof sources.positiveZ === 'undefined') ||
+            (typeof sources.negativeZ === 'undefined')) {
+            throw new DeveloperError('sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
+        }
+
+        if ((typeof sources.positiveX !== typeof sources.negativeX) ||
+            (typeof sources.positiveX !== typeof sources.positiveY) ||
+            (typeof sources.positiveX !== typeof sources.negativeY) ||
+            (typeof sources.positiveX !== typeof sources.positiveZ) ||
+            (typeof sources.positiveX !== typeof sources.negativeZ)) {
+            throw new DeveloperError('sources properties must all be the same type.');
         }
 
         this._command = new DrawCommand();
         this._cubeMap = undefined;
-        this._cubeMapUrls = cubeMapUrls;
+        this._sources = sources;
+
+        /**
+         * Determines if the sky box will be shown.
+         * <p>
+         * The default is <code>true</code>.
+         * </p>
+         *
+         * @type Boolean
+         */
+        this.show = true;
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -64,18 +101,28 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the sources used to create the cube map faces: an object
+     * with <code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>,
+     * <code>negativeY</code>, <code>positiveZ</code>, and <code>negativeZ</code> properties.
+     * These are either URLs or <code>Image</code> objects, depending on how the sky box
+     * was constructed.
      *
      * @memberof SkyBox
+     *
+     * @return {Object} The sources used to create the cube map faces.
      */
-    SkyBox.prototype.getCubeMapUrls = function() {
-        return this._cubeMapUrls;
+    SkyBox.prototype.getSources = function() {
+        return this._sources;
     };
 
     /**
      * @private
      */
     SkyBox.prototype.update = function(context, frameState) {
+        if (!this.show) {
+            return undefined;
+        }
+
         if ((frameState.mode !== SceneMode.SCENE3D) &&
             (frameState.mode !== SceneMode.MORPHING)) {
             return undefined;
@@ -89,20 +136,28 @@ define([
         var command = this._command;
 
         if (typeof command.vertexArray === 'undefined') {
+            var sources = this._sources;
             var that = this;
 
-            loadCubeMap(context, this._cubeMapUrls).then(function(cubeMap) {
-                that._cubeMap = cubeMap;
+            if (typeof sources.positiveX === 'string') {
+                // Given urls for cube-map images.  Load them.
+                loadCubeMap(context, this._sources).then(function(cubeMap) {
+                    that._cubeMap = cubeMap;
+                });
+            } else {
+                this._cubeMap = context.createCubeMap({
+                    source : sources
+                });
+            }
 
-                command.uniformMap = {
-                    u_cubeMap: function() {
-                        return cubeMap;
-                    },
-                    u_morphTime : function() {
-                        return that.morphTime;
-                    }
-                };
-            });
+            command.uniformMap = {
+                u_cubeMap: function() {
+                    return that._cubeMap;
+                },
+                u_morphTime : function() {
+                    return that.morphTime;
+                }
+            };
 
             var mesh = BoxTessellator.compute({
                 dimensions : new Cartesian3(2.0, 2.0, 2.0)
