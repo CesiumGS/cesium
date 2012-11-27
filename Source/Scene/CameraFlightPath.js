@@ -131,7 +131,11 @@ define([
         return new OrientationInterpolator(points);
     }
 
-    CameraFlightPath.createAnimation = function(camera, destination, ellipsoid, duration, onComplete) {
+    CameraFlightPath.createAnimation = function(description) {
+        description = defaultValue(description, {});
+        var camera = description.camera;
+        var destination = description.destination;
+
         if (typeof camera === 'undefined') {
             throw new DeveloperError('camera is required.');
         }
@@ -140,10 +144,11 @@ define([
             throw new DeveloperError('destination is required.');
         }
 
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        duration = defaultValue(duration, 3000.0);
-        var end = ellipsoid.cartographicToCartesian(destination);
+        var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
+        var duration = defaultValue(description.duration, 3000.0);
+        var onComplete = description.onComplete;
 
+        var end = ellipsoid.cartographicToCartesian(destination);
         var path = createPath(camera, ellipsoid, end, duration);
         var orientations = createOrientations(camera, path.getControlPoints());
 
@@ -160,7 +165,7 @@ define([
 
         return {
             duration : duration,
-            easingFunction : Tween.Easing.Cubic.EaseInOut,
+            easingFunction : Tween.Easing.Sinusoidal.EaseInOut,
             startValue : {
                 time : 0.0
             },
