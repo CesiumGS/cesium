@@ -6,10 +6,12 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/HermiteSpline',
+        '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/OrientationInterpolator',
         '../Core/Quaternion',
+        '../Core/Ray',
         '../ThirdParty/Tween'
     ], function(
         defaultValue,
@@ -18,10 +20,12 @@ define([
         DeveloperError,
         Ellipsoid,
         HermiteSpline,
+        IntersectionTests,
         CesiumMath,
         Matrix3,
         OrientationInterpolator,
         Quaternion,
+        Ray,
         Tween) {
     "use strict";
 
@@ -54,59 +58,68 @@ define([
         var maxStartAlt = Math.max(dx, dy);
 
         var dot = start.normalize().dot(end.normalize());
+        var diff = end.subtract(start);
+        var diffMag = diff.magnitude();
+        var ray = new Ray(end, diff.normalize());
+        var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
 
-        var altitude, incrementPercentage;
-        if (start.magnitude() > maxStartAlt) {
-            altitude = radius + 0.6 * (maxStartAlt - radius);
-            incrementPercentage = 0.35;
+        var points;
+        if (dot > 0.9 && (typeof intersection === 'undefined' || intersection.start > diffMag)) {
+            points = [ { point : start }, { point: end }];
         } else {
-            var tanPhi = frustum.aspectRatio * tanTheta;
-            var diff = start.subtract(end);
-            altitude = diff.multiplyByScalar(0.5).add(end).magnitude();
-            var verticalDistance = camera.up.multiplyByScalar(diff.dot(camera.up)).magnitude();
-            var horizontalDistance = camera.right.multiplyByScalar(diff.dot(camera.right)).magnitude();
-            altitude += Math.max(verticalDistance / tanTheta, horizontalDistance / tanPhi);
-            incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
-        }
-
-        var cart = ellipsoid.cartesianToCartographic(end);
-        cart.height = altitude;
-        var aboveEnd = ellipsoid.cartographicToCartesian(cart);
-        cart = ellipsoid.cartesianToCartographic(start);
-        cart.height = altitude;
-        var afterStart = ellipsoid.cartographicToCartesian(cart);
-
-        var points, axis, angle, rotation;
-        if (start.magnitude() > maxStartAlt && dot > 0) {
-            var middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
-
-            points = [{
-                point : start
-            }, {
-                point : middle
-            }, {
-                point : end
-            }];
-        } else {
-            points = [{
-                point : start
-            }];
-
-            angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
-            axis = afterStart.cross(aboveEnd);
-
-            var increment = incrementPercentage * angle;
-            var startCondition = angle - increment;
-            for ( var i = startCondition; i > 0.0; i = i - increment) {
-                rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
-                points.push({
-                    point : rotation.multiplyByVector(aboveEnd)
-                });
+            var altitude, incrementPercentage;
+            if (start.magnitude() > maxStartAlt) {
+                altitude = radius + 0.6 * (maxStartAlt - radius);
+                incrementPercentage = 0.35;
+            } else {
+                var tanPhi = frustum.aspectRatio * tanTheta;
+                diff = start.subtract(end);
+                altitude = diff.multiplyByScalar(0.5).add(end).magnitude();
+                var verticalDistance = camera.up.multiplyByScalar(diff.dot(camera.up)).magnitude();
+                var horizontalDistance = camera.right.multiplyByScalar(diff.dot(camera.right)).magnitude();
+                altitude += Math.max(verticalDistance / tanTheta, horizontalDistance / tanPhi);
+                incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
             }
 
-            points.push({
-                point : end
-            });
+            var cart = ellipsoid.cartesianToCartographic(end);
+            cart.height = altitude;
+            var aboveEnd = ellipsoid.cartographicToCartesian(cart);
+            cart = ellipsoid.cartesianToCartographic(start);
+            cart.height = altitude;
+            var afterStart = ellipsoid.cartographicToCartesian(cart);
+
+            var axis, angle, rotation;
+            if (start.magnitude() > maxStartAlt && dot > 0) {
+                var middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
+
+                points = [{
+                    point : start
+                }, {
+                    point : middle
+                }, {
+                    point : end
+                }];
+            } else {
+                points = [{
+                    point : start
+                }];
+
+                angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
+                axis = afterStart.cross(aboveEnd);
+
+                var increment = incrementPercentage * angle;
+                var startCondition = angle - increment;
+                for ( var i = startCondition; i > 0.0; i = i - increment) {
+                    rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
+                    points.push({
+                        point : rotation.multiplyByVector(aboveEnd)
+                    });
+                }
+
+                points.push({
+                    point : end
+                });
+            }
         }
 
         var scalar = duration / (points.length - 1);
@@ -117,17 +130,33 @@ define([
         return new HermiteSpline(points);
     }
 
-    function createOrientations(camera, points) {
+    function createOrientations(camera, points, endDirection, endUp) {
         points[0].orientation = createQuaternion(camera.direction, camera.up);
 
-        var length = points.length;
+        var point;
+        var direction;
+        var right;
+        var up;
+
+        var length = points.length - 1;
         for (var i = 1; i < length; ++i) {
-            var point = points[i];
-            var direction = point.point.negate().normalize();
-            var right = direction.cross(Cartesian3.UNIT_Z).normalize();
-            var up = right.cross(direction);
+            point = points[i];
+            direction = point.point.negate().normalize();
+            right = direction.cross(Cartesian3.UNIT_Z).normalize();
+            up = right.cross(direction);
             point.orientation = createQuaternion(direction, up);
         }
+
+        point = points[length];
+        if (typeof endDirection !== 'undefined' && typeof up !== 'undefined') {
+            point.orientation = createQuaternion(endDirection, endUp);
+        } else {
+            direction = point.point.negate().normalize();
+            right = direction.cross(Cartesian3.UNIT_Z).normalize();
+            up = right.cross(direction);
+            point.orientation = createQuaternion(direction, up);
+        }
+
         return new OrientationInterpolator(points);
     }
 
@@ -135,6 +164,8 @@ define([
         description = defaultValue(description, {});
         var camera = description.camera;
         var destination = description.destination;
+        var direction = description.direction;
+        var up = description.up;
 
         if (typeof camera === 'undefined') {
             throw new DeveloperError('camera is required.');
@@ -150,7 +181,7 @@ define([
 
         var end = ellipsoid.cartographicToCartesian(destination);
         var path = createPath(camera, ellipsoid, end, duration);
-        var orientations = createOrientations(camera, path.getControlPoints());
+        var orientations = createOrientations(camera, path.getControlPoints(), direction, up);
 
         var update = function(value) {
             var time = value.time;
