@@ -39,7 +39,6 @@ uniform float fCameraHeight2;
 uniform float fOuterRadius;     // The outer (atmosphere) radius
 uniform float fOuterRadius2;    // fOuterRadius^2
 uniform float fInnerRadius;     // The inner (planetary) radius
-uniform float fInnerRadius2;    // fInnerRadius^2
 uniform float fScale;           // 1 / (fOuterRadius - fInnerRadius)
 uniform float fScaleDepth;      // The scale depth (i.e. the altitude at which the atmosphere's average density is found)
 uniform float fScaleOverScaleDepth; // fScale / fScaleDepth
@@ -113,7 +112,8 @@ void main(void)
     {
         float fHeight = length(v3SamplePoint);
         float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));
-        float fLightAngle = dot(czm_sunDirectionWC, v3SamplePoint) / fHeight;
+        vec3 lightPosition = normalize(czm_viewerPositionWC); // czm_sunDirectionWC
+        float fLightAngle = dot(lightPosition, v3SamplePoint) / fHeight;
         float fCameraAngle = dot(v3Ray, v3SamplePoint) / fHeight;
         float fScatter = (fStartOffset + fDepth*(scale(fLightAngle) - scale(fCameraAngle)));
         vec3 v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));

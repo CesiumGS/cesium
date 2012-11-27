@@ -161,15 +161,15 @@ defineSuite([
 
     it('throws when constructed without sources', function() {
         expect(function() {
-            new SkyBox();
+            return new SkyBox();
         }).toThrow();
     });
 
     it('throws when constructed without all source urls', function() {
         expect(function() {
-            new SkyBox({
+            return new SkyBox({
                 positiveX : './Data/Images/Blue.png',
-                negativeX : './Data/Images/Blue.png',
+                negativeX : './Data/Images/Blue.png'
             });
         }).toThrow();
     });
@@ -186,7 +186,7 @@ defineSuite([
 
         runs(function() {
             expect(function() {
-                new SkyBox({
+                return new SkyBox({
                     positiveX : './Data/Images/Blue.png',
                     negativeX : './Data/Images/Blue.png',
                     positiveY : './Data/Images/Blue.png',

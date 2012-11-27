@@ -27,6 +27,7 @@ define([
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
         '../../Scene/SkyBox',
+        '../../Scene/SkyAtmosphere',
         'dojo/text!./CesiumWidget.html'
     ], function (
         require,
@@ -56,6 +57,7 @@ define([
         SingleTileImageryProvider,
         PerformanceDisplay,
         SkyBox,
+        SkyAtmosphere,
         template) {
     "use strict";
 
@@ -207,7 +209,6 @@ define([
             this.dayImageUrl = defaultValue(this.dayImageUrl, require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg'));
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
-            centralBody.showSkyAtmosphere = true;
             centralBody.logoOffset = new Cartesian2(125, 0);
 
             this._configureCentralBodyImagery();
@@ -224,6 +225,8 @@ define([
                     negativeZ: require.toUrl(imageryUrl + 'SkyBox/tycho8_mz_80.jpg')
                 });
             }
+
+            scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
 
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
@@ -277,7 +280,7 @@ define([
         },
 
         showSkyAtmosphere : function(show) {
-            this.centralBody.showSkyAtmosphere = show;
+            this.scene.skyAtmosphere.show = show;
         },
 
         enableStreamingImagery : function(value) {

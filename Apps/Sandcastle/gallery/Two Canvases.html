@@ -91,7 +91,6 @@
         var cb = new Cesium.CentralBody(ellipsoid);
         cb.getImageryLayers().addImageryProvider(imageryProvider);
 
-        cb.showSkyAtmosphere = (canvas === canvas3D);
         primitives.setCentralBody(cb);
 
         scene.getCamera().getControllers().addCentralBody();
@@ -111,6 +110,8 @@
     var scene3D = createScene(canvas3D);
     var scene2D = createScene(canvas2D);
 
+    scene3D.skyAtmosphere = new Cesium.SkyAtmosphere();
+    
     var transitioner = new Cesium.SceneTransitioner(scene2D);
     transitioner.to2D();
 
