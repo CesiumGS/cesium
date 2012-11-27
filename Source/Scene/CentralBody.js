@@ -137,12 +137,6 @@ define([
         this._southPoleCommand = new DrawCommand();
         this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
 
-        // this._northPoleCommand.shaderProgram and this.southPoleCommand.shaderProgram reference
-        // without-atmosphere, ground-from-space, or ground-from-atmosphere
-        this._spPolesWithoutAtmosphere = undefined;
-        this._spPolesGroundFromSpace = undefined;
-        this._spPolesGroundFromAtmosphere = undefined;
-
         this._drawNorthPole = false;
         this._drawSouthPole = false;
 
