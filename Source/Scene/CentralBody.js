@@ -20,7 +20,6 @@ define([
         '../Core/MeshFilters',
         '../Core/Occluder',
         '../Core/PrimitiveType',
-        '../Core/RuntimeError',
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
@@ -65,7 +64,6 @@ define([
         MeshFilters,
         Occluder,
         PrimitiveType,
-        RuntimeError,
         Transforms,
         BufferUsage,
         ClearCommand,
@@ -644,13 +642,6 @@ define([
                     CentralBodyFSDepth, {
                         position : 0
                     });
-        }
-
-        // Throw exception if there was a problem asynchronously loading an image.
-        if (this._exception) {
-            var message = this._exception;
-            this._exception = undefined;
-            throw new RuntimeError(message);
         }
 
         // Initial compile or re-compile if uber-shader parameters changed
