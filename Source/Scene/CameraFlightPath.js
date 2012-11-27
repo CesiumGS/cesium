@@ -58,68 +58,57 @@ define([
         var maxStartAlt = Math.max(dx, dy);
 
         var dot = start.normalize().dot(end.normalize());
-        var diff = end.subtract(start);
-        var diffMag = diff.magnitude();
-        var ray = new Ray(end, diff.normalize());
-        var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
 
         var points;
-        if (dot > 0.9 && (typeof intersection === 'undefined' || intersection.start > diffMag)) {
-            points = [ { point : start }, { point: end }];
+        var altitude;
+        var incrementPercentage;
+        if (start.magnitude() > maxStartAlt) {
+            altitude = radius + 0.6 * (maxStartAlt - radius);
+            incrementPercentage = 0.35;
         } else {
-            var altitude, incrementPercentage;
-            if (start.magnitude() > maxStartAlt) {
-                altitude = radius + 0.6 * (maxStartAlt - radius);
-                incrementPercentage = 0.35;
-            } else {
-                var tanPhi = frustum.aspectRatio * tanTheta;
-                diff = start.subtract(end);
-                altitude = diff.multiplyByScalar(0.5).add(end).magnitude();
-                var verticalDistance = camera.up.multiplyByScalar(diff.dot(camera.up)).magnitude();
-                var horizontalDistance = camera.right.multiplyByScalar(diff.dot(camera.right)).magnitude();
-                altitude += Math.max(verticalDistance / tanTheta, horizontalDistance / tanPhi);
-                incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
-            }
+            var tanPhi = frustum.aspectRatio * tanTheta;
+            var diff = start.subtract(end);
+            altitude = diff.multiplyByScalar(0.5).add(end).magnitude();
+            var verticalDistance = camera.up.multiplyByScalar(diff.dot(camera.up)).magnitude();
+            var horizontalDistance = camera.right.multiplyByScalar(diff.dot(camera.right)).magnitude();
+            altitude += Math.max(verticalDistance / tanTheta, horizontalDistance / tanPhi);
+            incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
+        }
 
-            var cart = ellipsoid.cartesianToCartographic(end);
-            cart.height = altitude;
-            var aboveEnd = ellipsoid.cartographicToCartesian(cart);
-            cart = ellipsoid.cartesianToCartographic(start);
-            cart.height = altitude;
-            var afterStart = ellipsoid.cartographicToCartesian(cart);
+        var aboveEnd = end.normalize().multiplyByScalar(altitude);
+        var afterStart = start.normalize().multiplyByScalar(altitude);
 
-            var axis, angle, rotation;
-            if (start.magnitude() > maxStartAlt && dot > 0) {
-                var middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
+        var axis, angle, rotation;
+        if (start.magnitude() > maxStartAlt && dot > 0) {
+            var middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
 
-                points = [{
-                    point : start
-                }, {
-                    point : middle
-                }, {
-                    point : end
-                }];
-            } else {
-                points = [{
-                    point : start
-                }];
+            points = [{
+                point : start
+            }, {
+                point : middle
+            }, {
+                point : end
+            }];
+        } else {
+            points = [{
+                point : start
+            }];
 
-                angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
-                axis = afterStart.cross(aboveEnd);
+            angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
+            axis = afterStart.cross(aboveEnd);
 
-                var increment = incrementPercentage * angle;
-                var startCondition = angle - increment;
-                for ( var i = startCondition; i > 0.0; i = i - increment) {
-                    rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
-                    points.push({
-                        point : rotation.multiplyByVector(aboveEnd)
-                    });
-                }
-
+            var increment = incrementPercentage * angle;
+            var startCondition = angle - increment;
+            for ( var i = startCondition; i > 0.0; i = i - increment) {
+                rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
                 points.push({
-                    point : end
+                    point : rotation.multiplyByVector(aboveEnd)
                 });
             }
+
+            points.push({
+                point : end
+            });
         }
 
         var scalar = duration / (points.length - 1);
