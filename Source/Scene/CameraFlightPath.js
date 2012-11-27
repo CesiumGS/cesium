@@ -66,11 +66,15 @@ define([
             var verticalDistance = camera.up.multiplyByScalar(diff.dot(camera.up)).magnitude();
             var horizontalDistance = camera.right.multiplyByScalar(diff.dot(camera.right)).magnitude();
             altitude += Math.max(verticalDistance / tanTheta, horizontalDistance / tanPhi);
-            incrementPercentage = 0.5;
+            incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
         }
 
-        var aboveEnd = end.normalize().multiplyByScalar(altitude);
-        var afterStart = start.normalize().multiplyByScalar(altitude);
+        var cart = ellipsoid.cartesianToCartographic(end);
+        cart.height = altitude;
+        var aboveEnd = ellipsoid.cartographicToCartesian(cart);
+        cart = ellipsoid.cartesianToCartographic(start);
+        cart.height = altitude;
+        var afterStart = ellipsoid.cartographicToCartesian(cart);
 
         var points, axis, angle, rotation;
         if (start.magnitude() > maxStartAlt && dot > 0) {
@@ -113,21 +117,18 @@ define([
         return new HermiteSpline(points);
     }
 
-    function createOrientations(camera, end, duration) {
-        var direction = end.negate().normalize();
-        var right = direction.cross(Cartesian3.UNIT_Z).normalize();
-        var up = right.cross(direction);
-        var orientationControlPoints = [
-            {
-                orientation : createQuaternion(camera.direction, camera.up),
-                time : 0.0
-            },
-            {
-                orientation : createQuaternion(direction, up),
-                time : duration
-            }
-        ];
-        return new OrientationInterpolator(orientationControlPoints);
+    function createOrientations(camera, points) {
+        points[0].orientation = createQuaternion(camera.direction, camera.up);
+
+        var length = points.length;
+        for (var i = 1; i < length; ++i) {
+            var point = points[i];
+            var direction = point.point.negate().normalize();
+            var right = direction.cross(Cartesian3.UNIT_Z).normalize();
+            var up = right.cross(direction);
+            point.orientation = createQuaternion(direction, up);
+        }
+        return new OrientationInterpolator(points);
     }
 
     CameraFlightPath.createAnimation = function(camera, destination, ellipsoid, duration, onComplete) {
@@ -144,7 +145,7 @@ define([
         var end = ellipsoid.cartographicToCartesian(destination);
 
         var path = createPath(camera, ellipsoid, end, duration);
-        var orientations = createOrientations(camera, end, duration);
+        var orientations = createOrientations(camera, path.getControlPoints());
 
         var update = function(value) {
             var time = value.time;
