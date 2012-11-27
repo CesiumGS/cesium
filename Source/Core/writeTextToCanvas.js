@@ -54,7 +54,6 @@ define([
 
         // in order for measureText to calculate style, the canvas has to be
         // (temporarily) added to the DOM.
-        canvas.style.display = 'inline';
         canvas.style.visibility = 'hidden';
         document.body.appendChild(canvas);
 
@@ -62,7 +61,7 @@ define([
         canvas.dimensions = dimensions;
 
         document.body.removeChild(canvas);
-        canvas.style.display = 'none';
+        canvas.style.visibility = undefined;
 
         var baseline = dimensions.height - dimensions.ascent;
         canvas.width = dimensions.width;
