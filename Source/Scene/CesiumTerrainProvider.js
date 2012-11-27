@@ -98,6 +98,7 @@ define([
         this._proxy = description.proxy;
 
         this.ready = true;
+        this.hasWaterMask = true;
     }
 
     /**

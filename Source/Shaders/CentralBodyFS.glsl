@@ -11,15 +11,14 @@ uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 #endif
 
+#ifdef SHOW_REFLECTIVE_OCEAN
 uniform sampler2D u_waterMask;
 uniform vec4 u_waterMaskTranslationAndScale;
+#endif
 
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
-
 varying vec2 v_textureCoordinates;
-
-varying float v_waterMask;
 
 vec3 sampleAndBlend(
     vec3 previousColor,
@@ -88,11 +87,12 @@ void main()
     }
 #endif
 
+    vec4 color = vec4(startDayColor, 1.0);
+
+#ifdef SHOW_REFLECTIVE_OCEAN
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
     vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
     vec2 waterMaskTextureCoordinates = v_textureCoordinates * waterMaskScale + waterMaskTranslation;
-
-    vec4 color = vec4(startDayColor, 1.0);
 
     float mask = texture2D(u_waterMask, waterMaskTextureCoordinates).r;
 
@@ -100,7 +100,7 @@ void main()
     {
         vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
         vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
-#ifdef SHOW_OCEAN
+#ifdef SHOW_OCEAN_WAVES
         mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
         color = computeWaterColor(v_positionEC, czm_ellipsoidWgs84TextureCoordinates(normalMC), enuToEye, startDayColor, mask);
 #else
@@ -115,6 +115,7 @@ void main()
 	    color = czm_phong(normalize(v_positionEC), material);
 #endif
     }
+#endif
 
     
     gl_FragColor = color;

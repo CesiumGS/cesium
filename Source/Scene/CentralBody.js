@@ -595,7 +595,8 @@ define([
                  getPositionMode + '\n' +
                  get2DYPositionFraction;
             this._surfaceShaderSet.baseFragmentShaderString =
-                (typeof this.oceanMaterial !== 'undefined' ? '#define SHOW_OCEAN\n' + this.oceanMaterial.shaderSource : '') +
+                (this._surface._terrainProvider.hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
+                (typeof this.oceanMaterial !== 'undefined' ? '#define SHOW_OCEAN_WAVES\n' + this.oceanMaterial.shaderSource : '') +
                 '#line 0\n' +
                 CentralBodyFS;
             this._surfaceShaderSet.invalidateShaders();
