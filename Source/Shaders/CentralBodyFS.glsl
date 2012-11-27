@@ -95,8 +95,7 @@ void main()
     vec4 color = vec4(startDayColor, 1.0);
     
 #ifdef SHOW_OCEAN
-    // TODO: remove the clamp and *255.0 once the data is fixed.
-    float mask = clamp(texture2D(u_waterMask, waterMaskTextureCoordinates).r * 255.0, 0.0, 1.0);
+    float mask = texture2D(u_waterMask, waterMaskTextureCoordinates).r;
     if (mask > 0.0)
     {
 	    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
