@@ -119,7 +119,7 @@ define([
         }
 
         var projection = frameState.scene2D.projection;
-        if (projection !== this._projection) {
+        if (typeof projection !== 'undefined' && projection !== this._projection) {
             this._projection = projection;
             this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         }
@@ -289,7 +289,7 @@ define([
      */
     CameraController.prototype.lookLeft = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.up, amount);
+        this.look(this._camera.up, -amount);
     };
 
     /**
@@ -304,7 +304,7 @@ define([
      */
     CameraController.prototype.lookRight = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.up, -amount);
+        this.look(this._camera.up, amount);
     };
 
     /**
@@ -319,7 +319,7 @@ define([
      */
     CameraController.prototype.lookUp = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.right, amount);
+        this.look(this._camera.right, -amount);
     };
 
     /**
@@ -334,7 +334,7 @@ define([
      */
     CameraController.prototype.lookDown = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.right, -amount);
+        this.look(this._camera.right, amount);
     };
 
     var lookScratchQuaternion = new Quaternion();
@@ -382,7 +382,7 @@ define([
      */
     CameraController.prototype.twistLeft = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.direction, -amount);
+        this.look(this._camera.direction, amount);
     };
 
     /**
@@ -396,7 +396,7 @@ define([
      */
     CameraController.prototype.twistRight = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.direction, amount);
+        this.look(this._camera.direction, -amount);
     };
 
     var appendTransformPosition = Cartesian4.UNIT_W.clone();
@@ -503,7 +503,7 @@ define([
      */
     CameraController.prototype.rotateDown = function(angle, transform) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateVertical(this, -angle, transform);
+        rotateVertical(this, angle, transform);
     };
 
     /**
@@ -519,7 +519,7 @@ define([
      */
     CameraController.prototype.rotateUp = function(angle, transform) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateVertical(this, angle, transform);
+        rotateVertical(this, -angle, transform);
     };
 
     var rotateVertScratchP = new Cartesian3();
@@ -536,21 +536,22 @@ define([
             var southParallel = p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2);
             if ((!northParallel && !southParallel)) {
                 var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
+
                 var dot = p.dot(constrainedAxis);
                 var angleToAxis = Math.acos(dot);
-                if (angle < 0 && -angle > angleToAxis) {
-                    angle = -angleToAxis;
-                }
-
-                dot = p.dot(constrainedAxis.negate());
-                angleToAxis = Math.acos(dot);
                 if (angle > 0 && angle > angleToAxis) {
                     angle = angleToAxis;
                 }
 
+                dot = p.dot(constrainedAxis.negate());
+                angleToAxis = Math.acos(dot);
+                if (angle < 0 && -angle > angleToAxis) {
+                    angle = -angleToAxis;
+                }
+
                 var tangent = Cartesian3.cross(constrainedAxis, p, rotateVertScratchTan);
                 controller.rotate(tangent, angle);
-            } else if ((northParallel && angle > 0) || (southParallel && angle < 0)) {
+            } else if ((northParallel && angle < 0) || (southParallel && angle > 0)) {
                 controller.rotate(camera.right, angle);
             }
         } else {
@@ -573,7 +574,7 @@ define([
      */
     CameraController.prototype.rotateRight = function(angle, transform) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateHorizontal(this, angle, transform);
+        rotateHorizontal(this, -angle, transform);
     };
 
     /**
@@ -589,7 +590,7 @@ define([
      */
     CameraController.prototype.rotateLeft = function(angle, transform) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateHorizontal(this, -angle, transform);
+        rotateHorizontal(this, angle, transform);
     };
 
     function rotateHorizontal(controller, angle, transform) {

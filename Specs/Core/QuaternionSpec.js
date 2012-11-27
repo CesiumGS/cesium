@@ -91,6 +91,17 @@ defineSuite([
         expect(returnedResult).toBe(result);
     });
 
+    it('fromRotationMatrix using a view matrix', function() {
+        var direction = new Cartesian3(-0.2349326833984488, 0.8513513009480378, 0.46904967396353314);
+        var up = new Cartesian3(0.12477198625717335, -0.4521499177166376, 0.8831717858696695);
+        var right = new Cartesian3(0.9639702203483635, 0.26601017702986895, 6.456422901079747e-10);
+        var matrix = new Matrix3( right.x,      right.y,      right.z,
+                                  up.x,         up.y,         up.z,
+                                 -direction.x, -direction.y, -direction.z);
+        var quaternion = Quaternion.fromRotationMatrix(matrix);
+        expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(matrix, CesiumMath.EPSILON12);
+    });
+
     it('clone without a result parameter', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var result = quaternion.clone();

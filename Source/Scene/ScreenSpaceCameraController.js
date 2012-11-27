@@ -634,11 +634,11 @@ define([
         phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
         thetaWindowRatio = Math.min(thetaWindowRatio, controller.maximumMovementRatio);
 
-        var deltaPhi = -rotateRate * phiWindowRatio * Math.PI * 2.0;
-        var deltaTheta = -rotateRate * thetaWindowRatio * Math.PI;
+        var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
+        var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
 
-        cameraController.rotateRight(deltaPhi, transform);
-        cameraController.rotateUp(deltaTheta, transform);
+        cameraController.rotateLeft(deltaPhi, transform);
+        cameraController.rotateDown(deltaTheta, transform);
 
         if (typeof restrictedAngle !== 'undefined') {
             var direction = Cartesian3.clone(cameraController._camera.getDirectionWC(), rotate3DRestrictedDirection);
@@ -679,7 +679,7 @@ define([
             var axis = Cartesian3.cross(p0, p1, pan3DAxis);
 
             if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
-                var angle = -Math.acos(dot);
+                var angle = Math.acos(dot);
                 cameraController.rotate(axis, angle);
             }
         } else {
@@ -711,7 +711,6 @@ define([
     var tilt3DCart = new Cartographic();
     var tilt3DCenter = Cartesian4.UNIT_W.clone();
     var tilt3DTransform = new Matrix4();
-    var tilt3DPosition = new Cartesian3(); // CAMERA TODO: remove access to camera
     function tilt3D(controller, movement) {
         var cameraController = controller._cameraController;
 
@@ -748,17 +747,6 @@ define([
 
         var oldEllipsoid = controller._ellipsoid;
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-
-        // CAMERA TODO: Remove the need for camera access
-        var yDiff = movement.startPosition.y - movement.endPosition.y;
-        var camera = cameraController._camera;
-        var position = Cartesian3.clone(camera.position, tilt3DPosition);
-        Cartesian3.negate(position, position);
-        Cartesian3.normalize(position, position);
-        var direction = camera.direction;
-        if (position.equalsEpsilon(direction, CesiumMath.EPSILON2) && yDiff < 0) {
-            movement.endPosition.y = movement.startPosition.y;
-        }
 
         rotate3D(controller, movement, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO);
 
