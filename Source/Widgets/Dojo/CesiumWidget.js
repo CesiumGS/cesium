@@ -27,6 +27,7 @@ define([
         '../../Scene/SingleTileImageryProvider',
         '../../Scene/PerformanceDisplay',
         '../../Scene/SkyBox',
+        '../../Scene/SkyAtmosphere',
         'dojo/text!./CesiumWidget.html'
     ], function (
         require,
@@ -56,6 +57,7 @@ define([
         SingleTileImageryProvider,
         PerformanceDisplay,
         SkyBox,
+        SkyAtmosphere,
         template) {
     "use strict";
 
@@ -224,6 +226,8 @@ define([
                 });
             }
 
+            scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
+
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
 
@@ -276,7 +280,7 @@ define([
         },
 
         showSkyAtmosphere : function(show) {
-            this.centralBody.showSkyAtmosphere = show;
+            this.scene.skyAtmosphere.show = show;
         },
 
         enableStreamingImagery : function(value) {

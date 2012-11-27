@@ -50,6 +50,7 @@ define([
         '../../Scene/PerformanceDisplay',
         '../../Scene/SceneMode',
         '../../Scene/SkyBox',
+        '../../Scene/SkyAtmosphere',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
@@ -106,6 +107,7 @@ define([
         PerformanceDisplay,
         SceneMode,
         SkyBox,
+        SkyAtmosphere,
         processCzml,
         DynamicObjectView,
         DynamicObjectCollection,
@@ -666,6 +668,8 @@ define([
                 });
             }
 
+            scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
+
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
 
@@ -976,8 +980,7 @@ define([
          * @param {Boolean} show - <code>true</code> to enable the effect.
          */
         showSkyAtmosphere : function(show) {
-            this._showSkyAtmosphere = show;
-            this.centralBody.showSkyAtmosphere = show;
+            this.scene.skyAtmosphere.show = show;
         },
 
         /**

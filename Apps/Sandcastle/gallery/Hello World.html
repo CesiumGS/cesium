@@ -78,7 +78,7 @@ require([
     cb.getImageryLayers().addImageryProvider(bing);
 
     primitives.setCentralBody(cb);
-    
+    scene.skyAtmosphere = new Cesium.SkyAtmosphere();
     scene.getCamera().getControllers().addCentralBody();
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);

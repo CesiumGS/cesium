@@ -40,9 +40,7 @@ define([
         '../Shaders/CentralBodyFSPole',
         '../Shaders/CentralBodyVS',
         '../Shaders/CentralBodyVSDepth',
-        '../Shaders/CentralBodyVSPole',
-        '../Shaders/SkyAtmosphereFS',
-        '../Shaders/SkyAtmosphereVS'
+        '../Shaders/CentralBodyVSPole'
     ], function(
         combine,
         defaultValue,
@@ -84,9 +82,7 @@ define([
         CentralBodyFSPole,
         CentralBodyVS,
         CentralBodyVSDepth,
-        CentralBodyVSPole,
-        SkyAtmosphereFS,
-        SkyAtmosphereVS) {
+        CentralBodyVSPole) {
     "use strict";
 
     /**
@@ -116,13 +112,6 @@ define([
 
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
-
-        this._spSkyFromSpace = undefined;
-        this._spSkyFromAtmosphere = undefined;
-
-        this._skyCommand = new DrawCommand();
-        this._skyCommand.primitiveType = PrimitiveType.TRIANGLES;
-        // this._skyCommand.shaderProgram references sky-from-space or sky-from-atmosphere
 
         this._clearDepthCommand = new ClearCommand();
 
@@ -176,14 +165,6 @@ define([
         this.show = true;
 
         /**
-         * Determines if the sky atmosphere will be shown.
-         *
-         * @type {Boolean}
-         * @default true
-         */
-        this.showSkyAtmosphere = true;
-
-        /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
@@ -196,46 +177,7 @@ define([
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
 
-        this._fCameraHeight = undefined;
-        this._fCameraHeight2 = undefined;
-        this._outerRadius = ellipsoid.getRadii().multiplyByScalar(1.025).getMaximumComponent();
-        var innerRadius = ellipsoid.getMaximumRadius();
-        var rayleighScaleDepth = 0.25;
-
         var that = this;
-
-        this._skyCommand.uniformMap = {
-            fCameraHeight : function() {
-                return that._fCameraHeight;
-            },
-            fCameraHeight2 : function() {
-                return that._fCameraHeight2;
-            },
-            fOuterRadius : function() {
-                return that._outerRadius;
-            },
-            fOuterRadius2 : function() {
-                return that._outerRadius * that._outerRadius;
-            },
-            fInnerRadius : function() {
-                return innerRadius;
-            },
-            fInnerRadius2 : function() {
-                return innerRadius * innerRadius;
-            },
-            fScale : function() {
-                return 1.0 / (that._outerRadius - innerRadius);
-            },
-            fScaleDepth : function() {
-                return rayleighScaleDepth;
-            },
-            fScaleOverScaleDepth : function() {
-                return (1.0 / (that._outerRadius - innerRadius)) / rayleighScaleDepth;
-            },
-            u_morphTime : function() {
-                return that.morphTime;
-            }
-        };
 
         this._drawUniforms = {
             u_mode : function() {
@@ -509,48 +451,6 @@ define([
             return;
         }
 
-        var vs;
-        var fs;
-        var shaderCache = context.getShaderCache();
-
-        if (this.showSkyAtmosphere && !this._skyCommand.vertexArray) {
-            // PERFORMANCE_IDEA:  Is 60 the right amount to tessellate?  I think scaling the original
-            // geometry in a vertex is a bad idea; at least, because it introduces a draw call per tile.
-            var skyMesh = CubeMapEllipsoidTessellator.compute(Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)), 60);
-            this._skyCommand.vertexArray = context.createVertexArrayFromMesh({
-                mesh : skyMesh,
-                attributeIndices : MeshFilters.createAttributeIndices(skyMesh),
-                bufferUsage : BufferUsage.STATIC_DRAW
-            });
-
-            vs = '#define SKY_FROM_SPACE\n' +
-                 '#line 0\n' +
-                 SkyAtmosphereVS;
-
-            fs = '#line 0\n' +
-                 SkyAtmosphereFS;
-
-            this._spSkyFromSpace = shaderCache.getShaderProgram(vs, fs);
-
-            vs = '#define SKY_FROM_ATMOSPHERE\n' +
-                 '#line 0\n' +
-                 SkyAtmosphereVS;
-
-            this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, fs);
-            this._skyCommand.renderState = context.createRenderState({
-                cull : {
-                    enabled : true,
-                    face : CullFace.FRONT
-                },
-                depthTest : {
-                    enabled : true
-                },
-                depthMask : false,
-                blending : BlendingState.ALPHA_BLEND
-            });
-            this._skyCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, this._ellipsoid.getMaximumRadius() * 1.025);
-        }
-
         var mode = frameState.mode;
         var projection = frameState.scene2D.projection;
         var modeChanged = false;
@@ -635,6 +535,8 @@ define([
             this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(depthQuad));
         }
 
+        var shaderCache = context.getShaderCache();
+
         if (!this._depthCommand.shaderProgram) {
             this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
                     CentralBodyVSDepth,
@@ -702,16 +604,6 @@ define([
 
         var cameraPosition = frameState.camera.getPositionWC();
 
-        this._fCameraHeight2 = cameraPosition.magnitudeSquared();
-        this._fCameraHeight = Math.sqrt(this._fCameraHeight2);
-
-        if (this._fCameraHeight > this._outerRadius) {
-            // Viewer in space
-            this._skyCommand.shaderProgram = this._spSkyFromSpace;
-        } else {
-            this._skyCommand.shaderProgram = this._spSkyFromAtmosphere;
-        }
-
         this._occluder.setCameraPosition(cameraPosition);
 
         this._fillPoles(context, frameState);
@@ -754,13 +646,6 @@ define([
                 colorCommandList.push(this._clearDepthCommand);
 
                 colorCommandList.push(this._depthCommand);
-            }
-
-            if (this.showSkyAtmosphere &&
-                ((frameState.mode === SceneMode.SCENE3D) ||
-                 (frameState.mode === SceneMode.MORPHING))) {
-
-                colorCommandList.push(this._skyCommand);
             }
         }
 
@@ -818,10 +703,6 @@ define([
 
         this._northPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.release();
         this._southPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram;
-
-        this._skyCommand.vertexArray = this._skyCommand.vertexArray && this._skyCommand.vertexArray.destroy();
-        this._spSkyFromSpace = this._spSkyFromSpace && this._spSkyFromSpace.release();
-        this._spSkyFromAtmosphere = this._spSkyFromAtmosphere && this._spSkyFromAtmosphere.release();
 
         this._depthCommand.shaderProgram = this._depthCommand.shaderProgram && this._depthCommand.shaderProgram.release();
         this._depthCommand.vertexArray = this._depthCommand.vertexArray && this._depthCommand.vertexArray.destroy();

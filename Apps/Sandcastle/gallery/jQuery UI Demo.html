@@ -82,7 +82,7 @@
     cb.getImageryLayers().addImageryProvider(bing);
 
     primitives.setCentralBody(cb);
-
+    scene.skyAtmosphere = new Cesium.SkyAtmosphere();
     scene.getCamera().frustum.near = 1.0;
     scene.getCamera().getControllers().addCentralBody();
 

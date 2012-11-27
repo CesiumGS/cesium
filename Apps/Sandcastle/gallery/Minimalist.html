@@ -61,7 +61,7 @@
     var cb = new Cesium.CentralBody(ellipsoid);
     cb.getImageryLayers().addImageryProvider(imageryProvider);
     primitives.setCentralBody(cb);
-
+    scene.skyAtmosphere = new Cesium.SkyAtmosphere();
     scene.getCamera().getControllers().addCentralBody();
 
     scene.setAnimation(function () {

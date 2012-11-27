@@ -39,7 +39,6 @@ uniform float fCameraHeight2;
 uniform float fOuterRadius;     // The outer (atmosphere) radius
 uniform float fOuterRadius2;    // fOuterRadius^2
 uniform float fInnerRadius;     // The inner (planetary) radius
-uniform float fInnerRadius2;    // fInnerRadius^2
 uniform float fScale;           // 1 / (fOuterRadius - fInnerRadius)
 uniform float fScaleDepth;      // The scale depth (i.e. the altitude at which the atmosphere's average density is found)
 uniform float fScaleOverScaleDepth; // fScale / fScaleDepth

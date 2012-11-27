@@ -19,11 +19,11 @@ Beta Releases
    * Removed `affectedByLighting` property from `Polygon`, `EllipsoidPrimitive`, `RectangularPyramidSensorVolume`, `CustomSensorVolume`, and `ComplexConicSensorVolume`.  
    * Removed `DistanceIntervalMaterial`.  This was not documented.
    * `Matrix2.getElementIndex`, `Matrix3.getElementIndex`, and `Matrix4.getElementIndex` functions have had their parameters swapped and now take row first and column second.  This is consistent with other class constants, such as Matrix2.COLUMN1ROW2.
-   * `CentralBody.showSkyAtmosphere` now defaults to `true`.  This was already the default when using the Cesium widget.
+   * Replaced `CentralBody.showSkyAtmosphere` with `Scene.skyAtmosphere` and `SkyAtmosphere`.  This has no impact for those using the Cesium widget.
 * Improved lighting in Columbus view and on polygons, ellipsoids, and sensors.
-* Improved atmosphere Columbus view transition.
-* Added `Water` material.  See the Materials Sandbox example.
+* Fixed atmosphere rendering artifacts and improved Columbus view transition.
 * Fixed jitter artifacts with billboards and polylines.
+* Added `Water` material.  See the Materials Sandbox example.
 * Added `SkyBox` to draw stars.  Added `CesiumWidget.showSkyBox` and `CesiumViewerWidget.showSkyBox`.
 * Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
 * Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
