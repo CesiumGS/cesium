@@ -113,7 +113,8 @@ void main(void)
     {
         float fHeight = length(v3SamplePoint);
         float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));
-        float fLightAngle = dot(czm_sunDirectionWC, v3SamplePoint) / fHeight;
+        vec3 lightPosition = normalize(czm_viewerPositionWC); // czm_sunDirectionWC
+        float fLightAngle = dot(lightPosition, v3SamplePoint) / fHeight;
         float fCameraAngle = dot(v3Ray, v3SamplePoint) / fHeight;
         float fScatter = (fStartOffset + fDepth*(scale(fLightAngle) - scale(fCameraAngle)));
         vec3 v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));
