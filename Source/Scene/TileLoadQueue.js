@@ -101,5 +101,18 @@ define(function() {
         }
     };
 
+    TileLoadQueue.prototype.clear = function() {
+        var item = this.head;
+        while (typeof item !== 'undefined') {
+            var next = item.loadNext;
+            item.loadNext = undefined;
+            item.loadPrevious = undefined;
+            item = next;
+        }
+        this.head = undefined;
+        this.tail = undefined;
+        this._insertionPoint = undefined;
+    };
+
     return TileLoadQueue;
 });

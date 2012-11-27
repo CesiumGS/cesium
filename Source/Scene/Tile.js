@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/Cartesian4',
         '../Core/DeveloperError',
         './TileState'
     ], function(
+        Cartesian4,
         DeveloperError,
         TileState) {
     "use strict";
@@ -234,6 +236,12 @@ define([
          * @type {Cartesian3}
          */
         this.occludeePointInScaledSpace = undefined;
+
+        this.waterMaskTexture = undefined;
+
+        this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+
+        this.childTileBits = 15;
     };
 
     /**
@@ -315,6 +323,16 @@ define([
             for (i = 0, len = this.children.length; i < len; ++i) {
                 this.children[i].freeResources();
             }
+        }
+
+        if (typeof this.waterMaskTexture !== 'undefined') {
+            // Only destroy the water texture if the scale values are both 1.0.
+            // If they're not, the water texture is shared with one of this tile's ancestors, so
+            // let that ancestor destroy it.
+            if (this.waterMaskTranslationAndScale.z === 1.0 && this.waterMaskTranslationAndScale.w === 1.0) {
+                this.waterMaskTexture.destroy();
+            }
+            this.waterMaskTexture = undefined;
         }
     };
 

@@ -18,6 +18,9 @@ define([
         '../Core/TaskProcessor',
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
         './Projections',
         './TileState',
         './TerrainProvider',
@@ -43,6 +46,9 @@ define([
         TaskProcessor,
         PixelDatatype,
         PixelFormat,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
         Projections,
         TileState,
         TerrainProvider,
@@ -164,53 +170,45 @@ define([
 
             var that = this;
             when(loadArrayBuffer(url), function(buffer) {
-                tile.geometry = new Float32Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
-                tile.childTileBits = new Uint8Array(buffer, tile.geometry.byteLength, 1)[0];
-                tile.waterMask = new Uint8Array(buffer, tile.geometry.byteLength + 1, 256 * 256);
-                tile.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+
+                var geometry = new Float32Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
+                tile.transientData = {
+                        geometry : geometry,
+                        waterMask : new Uint8Array(buffer, geometry.byteLength + 1, 256 * 256)
+                };
+
+                tile.childTileBits = new Uint8Array(buffer, geometry.byteLength, 1)[0];
+                tile.waterMaskTranslationAndScale.x = 0.0;
+                tile.waterMaskTranslationAndScale.y = 0.0;
+                tile.waterMaskTranslationAndScale.z = 1.0;
+                tile.waterMaskTranslationAndScale.w = 1.0;
+
                 --requestsInFlight;
                 tile.state = TileState.RECEIVED;
             }, function(e) {
                 /*global console*/
                 // This shouldn't happen in the absence of network problems.  Log it and then use 0 heights.
-                // TODO: retry?
+                // TODO: retry?  use parent heights and water mask?
                 console.error('failed to load tile geometry: ' + e);
-                tile.geometry = new Float32Array(65 * 65);
+
+                tile.transientData = {
+                        geometry : new Float32Array(65 * 65),
+                        waterMask : new Uint8Array(1)
+                };
+
                 tile.childTileBits = 0;
-                tile.waterMask = new Uint8Array(256 * 256);
+                tile.waterMaskTranslationAndScale.x = 0.0;
+                tile.waterMaskTranslationAndScale.y = 0.0;
+                tile.waterMaskTranslationAndScale.z = 1.0;
+                tile.waterMaskTranslationAndScale.w = 1.0;
                 --requestsInFlight;
                 tile.state = TileState.RECEIVED;
             });
-
-            /*url = this.url + '/' + tile.level + '/' + tile.x + '/' + (yTiles - tile.y - 1) + '.water';
-
-            if (typeof this._proxy !== 'undefined') {
-                url = this._proxy.getURL(url);
-            }
-
-            when(loadArrayBuffer(url), function(buffer) {
-                tile.waterMask = buffer;
-                --requestsInFlight;
-
-                if (typeof tile.geometry !== 'undefined') {
-                    tile.state = TileState.RECEIVED;
-                }
-            }, function(e) {
-                // This shouldn't happen in the absence of network problems.  Log it and then assume it's all land.
-                // TODO: retry?
-                console.error('failed to load tile water mask: ' + e);
-                tile.waterMask = new Uint8Array(1).buffer;
-                --requestsInFlight;
-
-                if (typeof tile.geometry !== 'undefined') {
-                    tile.state = TileState.RECEIVED;
-                }
-            });*/
         } else {
             // Find the nearest ancestor with data.
             var levelDifference = 1;
             var sourceTile = parent;
-            while (typeof sourceTile.geometry === 'undefined') {
+            while (typeof sourceTile.transientData === 'undefined' || typeof sourceTile.transientData.geometry === 'undefined') {
                 sourceTile = sourceTile.parent;
                 ++levelDifference;
             }
@@ -245,7 +243,7 @@ define([
             var topInteger = topPostIndex | 0;
             var bottomInteger = bottomPostIndex | 0;
 
-            var sourceHeights = sourceTile.geometry;
+            var sourceHeights = sourceTile.transientData.geometry;
             //var sourceWaterMask = new Uint8Array(sourceTile.waterMask);
 
             var buffer;
@@ -306,12 +304,18 @@ define([
                 }
             }
 
-            tile.geometry = heights;
+            tile.transientData = {
+                    geometry : heights,
+                    waterMask : undefined
+            };
+
             tile.childTileBits = 0; // Missing tiles do not have any children.
 
-            // Use the source tile's water mask.
-            // TODO: share the texture rather than independently uploading the data.
+            // Use the source tile's water mask texture.
             tile.waterMaskTexture = sourceTile.waterMaskTexture;
+            if (typeof tile.waterMaskTexture === 'undefined') {
+                console.log('bad');
+            }
 
             // Compute the water mask translation and scale
             var sourceTileExtent = sourceTile.extent;
@@ -321,11 +325,10 @@ define([
 
             var scaleX = tileWidth / (sourceTileExtent.east - sourceTileExtent.west);
             var scaleY = tileHeight / (sourceTileExtent.north - sourceTileExtent.south);
-            tile.waterMaskTranslationAndScale = new Cartesian4(
-                    scaleX * (tileExtent.west - sourceTileExtent.west) / tileWidth,
-                    scaleY * (tileExtent.south - sourceTileExtent.south) / tileHeight,
-                    scaleX,
-                    scaleY);
+            tile.waterMaskTranslationAndScale.x = scaleX * (tileExtent.west - sourceTileExtent.west) / tileWidth;
+            tile.waterMaskTranslationAndScale.y = scaleY * (tileExtent.south - sourceTileExtent.south) / tileHeight;
+            tile.waterMaskTranslationAndScale.z = scaleX;
+            tile.waterMaskTranslationAndScale.w = scaleY;
 
             tile.state = TileState.RECEIVED;
         }
@@ -356,10 +359,10 @@ define([
      * @param {Tile} tile The tile to transform geometry for.
      */
     CesiumTerrainProvider.prototype.transformGeometry = function(context, tile) {
-        var pixels = tile.geometry;
+        var pixels = tile.transientData.geometry;
         var width = Math.sqrt(pixels.length) | 0;
         var height = width;
-        var waterMask = tile.waterMask;
+        var waterMask = tile.transientData.waterMask;
 
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();
@@ -378,6 +381,12 @@ define([
                     height : waterMaskSize,
                     arrayBufferView : waterMask
                 }
+            });
+            tile.waterMaskTexture.setSampler({
+                wrapS : TextureWrap.CLAMP,
+                wrapT : TextureWrap.CLAMP,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
             });
         }
 
@@ -416,8 +425,7 @@ define([
         var that = this;
         when(verticesPromise, function(result) {
             if (tile.childTileBits === 15 || pixels.length !== that.heightmapWidth * that.heightmapWidth) {
-                tile.geometry = undefined;
-                tile.waterMask = undefined;
+                tile.transientData = undefined;
             }
             tile.transformedGeometry = {
                 vertices : result.vertices,

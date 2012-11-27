@@ -313,6 +313,7 @@ define([
         debug.texturesRendered = 0;
         debug.tilesWaitingForChildren = 0;
 
+        surface._tileLoadQueue.clear();
         surface._tileLoadQueue.markInsertionPoint();
         surface._tileReplacementQueue.markStartOfRenderFrame();
 
