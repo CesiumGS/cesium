@@ -12,7 +12,7 @@ define([
         '../Renderer/BlendingState',
         '../Scene/SceneMode',
         '../Shaders/SkyAtmosphereVS',
-        '../Shaders/SkyAtmosphereFS',
+        '../Shaders/SkyAtmosphereFS'
     ], function(
         defaultValue,
         CubeMapEllipsoidTessellator,
