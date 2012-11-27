@@ -268,7 +268,7 @@ define([
         }
 
         point = points[length];
-        if (typeof endDirection !== 'undefined' && typeof up !== 'undefined') {
+        if (typeof endDirection !== 'undefined' && typeof endUp !== 'undefined') {
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
             direction = Cartesian3.UNIT_Z.negate();
@@ -303,8 +303,110 @@ define([
         return update;
     }
 
+    function createPath2D(camera, ellipsoid, end, duration) {
+        var start = camera.position.clone();
+        start.z = camera.frustum.right - camera.frustum.left;
+
+        // get minimum altitude from which the whole ellipsoid is visible
+        var radius = ellipsoid.getMaximumRadius();
+        var maxStartAlt = radius * CesiumMath.TWO_PI;
+
+        var dot = start.normalize().dot(end.normalize());
+
+        var points;
+        var altitude;
+        var incrementPercentage;
+        if (start.z > maxStartAlt) {
+            altitude = radius + 0.6 * (maxStartAlt - radius);
+            incrementPercentage = 0.5;
+        } else {
+            var diff = start.subtract(end);
+            altitude = Math.max(Math.abs(diff.y), Math.abs(diff.x));
+            incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
+        }
+
+        var aboveEnd = end.clone();
+        aboveEnd.z = altitude;
+        var afterStart = start.clone();
+        afterStart.z = altitude;
+
+        var axis, angle, rotation;
+        if (start.z > maxStartAlt && dot > 0) {
+            var middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
+
+            points = [{
+                point : start
+            }, {
+                point : middle
+            }, {
+                point : end
+            }];
+        } else {
+            points = [{
+                point : start
+            }];
+
+            angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
+            axis = afterStart.cross(aboveEnd);
+
+            var increment = incrementPercentage * angle;
+            var startCondition = angle - increment;
+            for ( var i = startCondition; i > 0.0; i = i - increment) {
+                rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
+                points.push({
+                    point : rotation.multiplyByVector(aboveEnd)
+                });
+            }
+
+            points.push({
+                point : end
+            });
+        }
+
+        var scalar = duration / (points.length - 1);
+        for ( var k = 0; k < points.length; ++k) {
+            points[k].time = k * scalar;
+        }
+
+        return new HermiteSpline(points);
+    }
+
     function createUpdate2D(frameState, destination, duration, direction, up) {
-        return function(){};
+        var camera = frameState.camera;
+        var projection = frameState.scene2D.projection;
+        var ellipsoid = projection.getEllipsoid();
+
+        var end = projection.project(destination);
+        var path = createPath2D(camera, ellipsoid, end, duration);
+        var points = path.getControlPoints();
+        var orientations = createOrientationsCV(camera, points, Cartesian3.UNIT_Z.negate(), up);
+
+        var height = camera.position.z;
+
+        var update = function(value) {
+            var time = value.time;
+            var orientation = orientations.evaluate(time);
+            var rotationMatrix = Matrix3.fromQuaternion(orientation);
+
+            camera.position = path.evaluate(time);
+            var zoom = camera.position.z;
+            camera.position.z = height;
+
+            camera.right = rotationMatrix.getRow(0);
+            camera.up = rotationMatrix.getRow(1);
+            camera.direction = rotationMatrix.getRow(2).negate();
+
+            var frustum = camera.frustum;
+            var ratio = frustum.top / frustum.right;
+
+            var incrementAmount = (zoom - (frustum.right - frustum.left)) * 0.5;
+            frustum.right += incrementAmount;
+            frustum.left -= incrementAmount;
+            frustum.top = ratio * frustum.right;
+            frustum.bottom = -frustum.top;
+        };
+
+        return update;
     }
 
     CameraFlightPath.createAnimation = function(frameState, description) {
