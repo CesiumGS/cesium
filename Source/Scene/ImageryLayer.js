@@ -65,7 +65,35 @@ define([
      * @param {ImageryProvider} imageryProvider The imagery provider to use.
      * @param {Extent} [description.extent=imageryProvider.extent] The extent of the layer.  This extent
      *        can limit the visible portion of the imagery provider.
-     * @param {Number} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
+     * @param {Number|Function} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+     *                          imagery tile for which the alpha is required, and it is expected to return
+     *                          the alpha value to use for the tile.
+     * @param {Number|Function} [description.brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
+     *                          color.  Less than 1.0 makes the imagery darker while greater than 1.0 makes it brighter.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+     *                          imagery tile for which the brightness is required, and it is expected to return
+     *                          the brightness value to use for the tile.  The function is executed for every
+     *                          frame and for every tile, so it must be fast.
+     * @param {Number|Function} [description.contrast=1.0] The contrast of this layer.  1.0 uses the unmodified imagery color.
+     *                          Less than 1.0 reduces the contrast while greater than 1.0 increases it.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+     *                          imagery tile for which the contrast is required, and it is expected to return
+     *                          the contrast value to use for the tile.  The function is executed for every
+     *                          frame and for every tile, so it must be fast.
+     * @param {Number|Function} [description.gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
+     *                          This can either be a simple number or a function with the signature
+     *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+     *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+     *                          imagery tile for which the gamma is required, and it is expected to return
+     *                          the gamma value to use for the tile.  The function is executed for every
+     *                          frame and for every tile, so it must be fast.
      * @param {Boolean} [description.show=true] True if the layer is shown; otherwise, false.
      * @param {Number} [description.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
      *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
@@ -78,11 +106,58 @@ define([
         description = defaultValue(description, {});
 
         /**
-         * The alpha blending value of this layer, from 0.0 to 1.0.
+         * The alpha blending value of this layer, usually from 0.0 to 1.0.
+         * This can either be a simple number or a function with the signature
+         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+         * imagery tile for which the alpha is required, and it is expected to return
+         * the alpha value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
          *
          * @type {Number}
          */
-        this.alpha = defaultValue(description.alpha, 1.0);
+        this.alpha = defaultValue(description.alpha, defaultValue(imageryProvider.defaultAlpha, 1.0));
+
+        /**
+         * The brightness of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0
+         * makes the imagery darker while greater than 1.0 makes it brighter.
+         * This can either be a simple number or a function with the signature
+         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+         * imagery tile for which the brightness is required, and it is expected to return
+         * the brightness value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
+         *
+         * @type {Number}
+         */
+        this.brightness = defaultValue(description.brightness, defaultValue(imageryProvider.defaultBrightness, 1.0));
+
+        /**
+         * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
+         * the contrast while greater than 1.0 increases it.
+         * This can either be a simple number or a function with the signature
+         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+         * imagery tile for which the contrast is required, and it is expected to return
+         * the contrast value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
+         *
+         * @type {Number}
+         */
+        this.contrast = defaultValue(description.contrast, defaultValue(imageryProvider.defaultContrast, 1.0));
+
+        /**
+         * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
+         * This can either be a simple number or a function with the signature
+         * <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
+         * current {@link FrameState}, this layer, and the x, y, and level coordinates of the
+         * imagery tile for which the gamma is required, and it is expected to return
+         * the gamma value to use for the tile.  The function is executed for every
+         * frame and for every tile, so it must be fast.
+         *
+         * @type {Number}
+         */
+        this.gamma = defaultValue(description.gamma, defaultValue(imageryProvider.defaultGamma, 1.0));
 
         /**
          * Determines if this layer is shown.

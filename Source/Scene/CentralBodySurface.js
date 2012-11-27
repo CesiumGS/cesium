@@ -846,6 +846,15 @@ define([
             u_dayTextureAlpha : function() {
                 return this.dayTextureAlpha;
             },
+            u_dayTextureBrightness : function() {
+                return this.dayTextureBrightness;
+            },
+            u_dayTextureContrast : function() {
+                return this.dayTextureContrast;
+            },
+            u_dayTextureOneOverGamma : function() {
+                return this.dayTextureOneOverGamma;
+            },
             u_dayIntensity : function() {
                 return this.dayIntensity;
             },
@@ -864,6 +873,9 @@ define([
             dayTextureTranslationAndScale : [],
             dayTextureTexCoordsExtent : [],
             dayTextureAlpha : [],
+            dayTextureBrightness : [],
+            dayTextureContrast : [],
+            dayTextureOneOverGamma : [],
             dayIntensity : 0.0,
 
             southAndNorthLatitude : new Cartesian2(0.0, 0.0),
@@ -993,19 +1005,6 @@ define([
                     uniformMap.southMercatorYLowAndHighAndOneOverHeight.z = oneOverMercatorHeight;
                     Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
-                    // The first TileImagery's provider select the itensity for the entire tile.
-                    // This needs improvement, but that's part of a bigger lighting overhaul.
-                    var intensity = 0.2;
-                    if (tileImageryCollection.length > 0) {
-                        var firstImagery = tileImageryCollection[0].imagery;
-                        var firstImageryProvider = firstImagery.imageryLayer.getImageryProvider();
-                        if (typeof firstImageryProvider.getIntensity !== 'undefined') {
-                            intensity = firstImageryProvider.getIntensity(firstImagery.x, firstImagery.y, firstImagery.level);
-                        }
-
-                    }
-                    uniformMap.dayIntensity = intensity;
-
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                         var tileImagery = tileImageryCollection[imageryIndex];
                         var imagery = tileImagery.imagery;
@@ -1023,7 +1022,30 @@ define([
                         uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
                         uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
                         uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = tileImagery.textureCoordinateExtent;
-                        uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
+
+                        if (typeof imageryLayer.alpha === 'function') {
+                            uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        } else {
+                            uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
+                        }
+
+                        if (typeof imageryLayer.brightness === 'function') {
+                            uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        } else {
+                            uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness;
+                        }
+
+                        if (typeof imageryLayer.contrast === 'function') {
+                            uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        } else {
+                            uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
+                        }
+
+                        if (typeof imageryLayer.gamma === 'function') {
+                            uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
+                        } else {
+                            uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
+                        }
 
                         ++numberOfDayTextures;
                     }

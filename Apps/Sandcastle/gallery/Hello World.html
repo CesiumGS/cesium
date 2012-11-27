@@ -77,17 +77,8 @@ require([
     var cb = new Cesium.CentralBody(ellipsoid);
     cb.getImageryLayers().addImageryProvider(bing);
 
-    var imageryUrl = '../../../Source/Assets/Imagery/';
-    cb.nightImageSource = imageryUrl + 'land_ocean_ice_lights_2048.jpg';
-    cb.specularMapSource = imageryUrl + 'earthspec1k.jpg';
-    if (scene.getContext().getMaximumTextureSize() > 2048) {
-        cb.cloudsMapSource = imageryUrl + 'earthcloudmaptrans.jpg';
-        cb.bumpMapSource = imageryUrl + 'earthbump1k.jpg';
-    }
-    cb.showSkyAtmosphere = true;
-    cb.showGroundAtmosphere = true;
     primitives.setCentralBody(cb);
-    
+    scene.skyAtmosphere = new Cesium.SkyAtmosphere();
     scene.getCamera().getControllers().addCentralBody();
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
@@ -98,8 +89,6 @@ require([
     ///////////////////////////////////////////////////////////////////////////
 
     scene.setAnimation(function() {
-        scene.setSunPosition(Cesium.computeSunPosition(new Cesium.JulianDate()));
-
         // INSERT CODE HERE to update primitives based on changes to animation time, camera parameters, etc.
     });
 
@@ -130,18 +119,12 @@ require([
     function keydownHandler(e) {
         switch (e.keyCode) {
         case '3'.charCodeAt(0):  // '3' -> 3D globe
-            cb.showSkyAtmosphere = true;
-            cb.showGroundAtmosphere = true;
             transitioner.morphTo3D();
             break;
         case '2'.charCodeAt(0):  // '2' -> Columbus View
-            cb.showSkyAtmosphere = false;
-            cb.showGroundAtmosphere = false;
             transitioner.morphToColumbusView();
             break;
         case '1'.charCodeAt(0):  // '1' -> 2D map
-            cb.showSkyAtmosphere = false;
-            cb.showGroundAtmosphere = false;
             transitioner.morphTo2D();
             break;
         default:

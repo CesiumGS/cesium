@@ -139,6 +139,10 @@ define([
 
         var centralBody = primitives.getCentralBody();
         centralBody.morphTime = morphTime;
+
+        if (typeof scene.skyBox !== 'undefined') {
+            scene.skyBox.morphTime = morphTime;
+        }
     }
 
     //in the future the animations will be more complicated
@@ -163,6 +167,11 @@ define([
         var centralBody = primitives.getCentralBody();
         animation = sceneAnimations.addProperty(centralBody, 'morphTime', start, stop, template);
         transitioner._currentAnimations.push(animation);
+
+        if (typeof scene.skyBox !== 'undefined') {
+            animation = sceneAnimations.addProperty(scene.skyBox, 'morphTime', start, stop, template);
+            transitioner._currentAnimations.push(animation);
+        }
 
         if (typeof onComplete !== 'undefined') {
             template.onComplete = function() {

@@ -4,12 +4,14 @@ define([
     'dojo/on',
     'dojo/ready',
     'dojo/io-query',
+    'Scene/SkyBox',
     'Widgets/Dojo/CesiumViewerWidget'
 ], function(
     dom,
     on,
     ready,
     ioQuery,
+    SkyBox,
     CesiumViewerWidget
 ) {
     "use strict";
