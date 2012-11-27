@@ -207,7 +207,6 @@ define([
             this.dayImageUrl = defaultValue(this.dayImageUrl, require.toUrl(imageryUrl + 'NE2_50M_SR_W_2048.jpg'));
 
             var centralBody = this.centralBody = new CentralBody(ellipsoid);
-            centralBody.showSkyAtmosphere = true;
             centralBody.logoOffset = new Cartesian2(125, 0);
 
             this._configureCentralBodyImagery();

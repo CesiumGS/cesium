@@ -388,7 +388,6 @@ require([
         sceneMenu.addChild(new MenuItem({
             label: '2D',
             onClick: function() {
-                centralBody.showSkyAtmosphere = false;
                 transitioner.morphTo2D();
             }
         }));
@@ -396,7 +395,6 @@ require([
         sceneMenu.addChild(new MenuItem({
             label: 'Columbus View',
             onClick: function() {
-                centralBody.showSkyAtmosphere = false;
                 transitioner.morphToColumbusView();
             }
         }));
@@ -404,7 +402,6 @@ require([
         sceneMenu.addChild(new MenuItem({
             label: '3D',
             onClick: function() {
-                centralBody.showSkyAtmosphere = true;
                 transitioner.morphTo3D();
             }
         }));

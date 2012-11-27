@@ -187,9 +187,9 @@ define([
          * Determines if the sky atmosphere will be shown.
          *
          * @type {Boolean}
-         * @default false
+         * @default true
          */
-        this.showSkyAtmosphere = false;
+        this.showSkyAtmosphere = true;
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -239,6 +239,9 @@ define([
             },
             fScaleOverScaleDepth : function() {
                 return (1.0 / (that._outerRadius - innerRadius)) / rayleighScaleDepth;
+            },
+            u_morphTime : function() {
+                return that.morphTime;
             }
         };
 
@@ -768,7 +771,10 @@ define([
                 colorCommandList.push(this._depthCommand);
             }
 
-            if (this.showSkyAtmosphere) {
+            if (this.showSkyAtmosphere &&
+                ((frameState.mode === SceneMode.SCENE3D) ||
+                 (frameState.mode === SceneMode.MORPHING))) {
+
                 colorCommandList.push(this._skyCommand);
             }
         }

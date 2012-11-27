@@ -77,7 +77,6 @@ require([
     var cb = new Cesium.CentralBody(ellipsoid);
     cb.getImageryLayers().addImageryProvider(bing);
 
-    cb.showSkyAtmosphere = true;
     primitives.setCentralBody(cb);
     
     scene.getCamera().getControllers().addCentralBody();
@@ -120,15 +119,12 @@ require([
     function keydownHandler(e) {
         switch (e.keyCode) {
         case '3'.charCodeAt(0):  // '3' -> 3D globe
-            cb.showSkyAtmosphere = true;
             transitioner.morphTo3D();
             break;
         case '2'.charCodeAt(0):  // '2' -> Columbus View
-            cb.showSkyAtmosphere = false;
             transitioner.morphToColumbusView();
             break;
         case '1'.charCodeAt(0):  // '1' -> 2D map
-            cb.showSkyAtmosphere = false;
             transitioner.morphTo2D();
             break;
         default:

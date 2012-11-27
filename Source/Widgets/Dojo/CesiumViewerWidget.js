@@ -651,7 +651,6 @@ define([
             // This logo is replicated by the imagery selector button, so it's hidden here.
             centralBody.logoOffset = new Cartesian2(-100, -100);
 
-            this.showSkyAtmosphere(true);
             this._configureCentralBodyImagery();
 
             scene.getPrimitives().setCentralBody(centralBody);
@@ -838,7 +837,6 @@ define([
                 view2D.set('checked', true);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', false);
-                widget.showSkyAtmosphere(false);
                 transitioner.morphTo2D();
             });
             on(view3D, 'Click', function() {
@@ -846,13 +844,11 @@ define([
                 view3D.set('checked', true);
                 viewColumbus.set('checked', false);
                 transitioner.morphTo3D();
-                widget.showSkyAtmosphere(true);
             });
             on(viewColumbus, 'Click', function() {
                 view2D.set('checked', false);
                 view3D.set('checked', false);
                 viewColumbus.set('checked', true);
-                widget.showSkyAtmosphere(false);
                 transitioner.morphToColumbusView();
             });
 
