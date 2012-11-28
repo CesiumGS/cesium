@@ -83,7 +83,15 @@
 
     primitives.setCentralBody(cb);
     scene.skyAtmosphere = new Cesium.SkyAtmosphere();
-    scene.getCamera().frustum.near = 1.0;
+    var imageryUrl = '../../../Source/Assets/Textures/';
+    scene.skyBox = new Cesium.SkyBox({
+        positiveX: imageryUrl + 'SkyBox/tycho8_px_80.jpg',
+        negativeX: imageryUrl + 'SkyBox/tycho8_mx_80.jpg',
+        positiveY: imageryUrl + 'SkyBox/tycho8_py_80.jpg',
+        negativeY: imageryUrl + 'SkyBox/tycho8_my_80.jpg',
+        positiveZ: imageryUrl + 'SkyBox/tycho8_pz_80.jpg',
+        negativeZ: imageryUrl + 'SkyBox/tycho8_mz_80.jpg'
+    });    
     scene.getCamera().getControllers().addCentralBody();
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
