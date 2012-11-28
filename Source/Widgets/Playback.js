@@ -388,6 +388,7 @@ define([
         shuttleRingG.appendChild(this.shuttleRingGlow);
 
         this._realtimeMode = false;
+        this._isSystemTimeAvailable = true;
         this._shuttleRingVisible = false;
         this._shuttleRingAngle = 0;
         var shuttleRingDragging = false;
@@ -594,6 +595,16 @@ define([
         } else {
             speedLabel = 'paused';
             tooltip = 'Play';
+        }
+
+        var isSystemTimeAvailable = this.clock.isSystemTimeAvailable();
+        if (this._isSystemTimeAvailable !== isSystemTimeAvailable) {
+            this._isSystemTimeAvailable = isSystemTimeAvailable;
+            if (isSystemTimeAvailable) {
+                this.realtimeSVG.style.display = 'block';
+            } else {
+                this.realtimeSVG.style.display = 'none';
+            }
         }
 
         if (this._lastButtonSpeed !== speedLabel) {

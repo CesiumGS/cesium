@@ -156,11 +156,31 @@ define([
     };
 
     /**
+     * This returns true if {@link ClockStep.SYSTEM_CLOCK_TIME} is a valid mode given
+     * the current {@link ClockRange} setting.  This can change over time, as the system
+     * time passes in and out of range.
+     * @memberof Clock
+     *
+     * @returns {Boolean} value
+     */
+    Clock.prototype.isSystemTimeAvailable = function () {
+        if (this.clockRange === ClockRange.UNBOUNDED) {
+            return true;
+        }
+
+        var startTime = this.startTime;
+        var stopTime = this.stopTime;
+        var currentTime = new JulianDate();
+        return !(currentTime.lessThan(startTime) || currentTime.greaterThan(stopTime));
+    };
+
+    /**
      * This returns true only in {@link ClockRange.CLAMPED} mode after a {@link Clock#tick} or
      * {@link Clock#reverseTick} has reached a clamp point.  It indicates that pause mode
      * should be engaged.
+     * @memberof Clock
      *
-     * @returns {Boolean}
+     * @returns {Boolean} value
      */
     Clock.prototype.isOutOfRange = function () {
         return this._isOutOfRange;

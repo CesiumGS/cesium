@@ -543,6 +543,28 @@ defineSuite([
         expect(clock.isOutOfRange()).toEqual(false);
     });
 
+    it('isSystemTimeAvailable works.', function() {
+        var currentTime = new JulianDate();
+        var start = currentTime.addSeconds(-4800);
+        var stop = currentTime.addSeconds(-3600);
+        var step = ClockStep.SPEED_MULTIPLIER;
+        var range = ClockRange.UNBOUNDED;
+        var clock = new Clock({
+            currentTime : currentTime,
+            clockStep : step,
+            startTime : start,
+            stopTime : stop,
+            clockRange : range
+        });
+        expect(clock.isSystemTimeAvailable()).toEqual(true);
+        clock.clockRange = ClockRange.LOOP;
+        expect(clock.isSystemTimeAvailable()).toEqual(false);
+        clock.clockRange = ClockRange.CLAMPED;
+        expect(clock.isSystemTimeAvailable()).toEqual(false);
+        clock.stopTime = currentTime.addSeconds(4800);
+        expect(clock.isSystemTimeAvailable()).toEqual(true);
+    });
+
     it('throws if start time is after stop time.', function() {
         var start = JulianDate.fromTotalDays(1);
         var stop = JulianDate.fromTotalDays(0);
