@@ -79,8 +79,10 @@ define([
             console.error(error);
         },
 
+        canvasPixelSize : 1,
+
         resize : function() {
-            var width = this.canvas.clientWidth, height = this.canvas.clientHeight;
+            var width = this.canvas.clientWidth / this.canvasPixelSize, height = this.canvas.clientHeight / this.canvasPixelSize;
 
             if (typeof this.scene === 'undefined' || (this.canvas.width === width && this.canvas.height === height)) {
                 return;
@@ -88,7 +90,14 @@ define([
 
             this.canvas.width = width;
             this.canvas.height = height;
-            this.scene.getCamera().frustum.aspectRatio = width / height;
+
+            var frustum = this.scene.getCamera().frustum;
+            if (typeof frustum.aspectRatio !== 'undefined') {
+                frustum.aspectRatio = width / height;
+            } else {
+                frustum.top = frustum.right * (height / width);
+                frustum.bottom = -frustum.top;
+            }
         },
 
         onObjectSelected : undefined,
