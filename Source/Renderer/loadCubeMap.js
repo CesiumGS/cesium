@@ -24,8 +24,8 @@ define([
      *
      * @returns {Promise} a promise that will resolve to the requested {@link CubeMap} when loaded.
      *
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
-     * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
+     * @exception {DeveloperError} context is required.
+     * @exception {DeveloperError} urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      *
      * @example
      * loadCubeMap(context, {
@@ -40,6 +40,9 @@ define([
      * }, function() {
      *     // an error occurred
      * });
+     *
+     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
      */
     var loadCubeMap = function(context, urls, crossOrigin) {
         if (typeof context === 'undefined') {
@@ -53,7 +56,7 @@ define([
             (typeof urls.negativeY === 'undefined') ||
             (typeof urls.positiveZ === 'undefined') ||
             (typeof urls.negativeZ === 'undefined')) {
-            throw new DeveloperError('urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties');
+            throw new DeveloperError('urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
         }
 
         var cubeMap;
@@ -82,7 +85,7 @@ define([
         }
 
         function reject(e) {
-            cubeMap.destroy();
+            cubeMap = cubeMap && cubeMap.destroy();
             deferred.reject(e);
         }
 
