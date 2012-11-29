@@ -256,6 +256,11 @@ define([
                     'transform' : 'translate(16,16) rotate(90) scale(0.85) translate(-16,-16)',
                     'd' : 'm 14.022968,5.3125 0,3.6875 9.201946,6.5 -9.201946,6.5 0,3.6875 L 28.43935,15.5 14.022968,5.3125 z M 4.0202416,25.682 18.504164,15.5 4.0202416,5.318 v 20.364 z'
                 }, {
+                    'id' : 'pathX',
+                    'tagName' : 'path',
+                    'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
+                    'd' : 'M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248z'
+                }, {
                     'id' : 'pathShuttleRing',
                     'tagName' : 'path',
                     'd' : 'M 97.3125 -15 C 43.613935 -13.804403 0.5 24.838076 0.5 72.3125 C 0.5 87.461744 4.9031447 101.70594 12.625 114.125 L 56.1875 114.125 C 43.343916 103.74966 35.3125 88.854983 35.3125 72.3125 C 35.3125 40.964311 64.200208 15.5625 99.875 15.5625 C 135.54981 15.5625 164.46875 40.964311 164.46875 72.3125 C 164.46875 88.855889 156.41577 103.74959 143.5625 114.125 L 187.15625 114.125 C 194.88191 101.70627 199.28125 87.461168 199.28125 72.3125 C 199.28125 24.084514 154.75931 -15 99.875 -15 C 99.017433 -15 98.164858 -15.018978 97.3125 -15 z'
@@ -341,6 +346,23 @@ define([
             'height' : 42
         });
         shuttleRingG.appendChild(shuttleRingBack);
+
+        // Hide shuttle ring
+        var hideShuttleRingSVG = rectButton(2, -12, '#pathX', 'Hide shuttle ring');
+        hideShuttleRingSVG.setAttribute('transform', 'translate(2,-12) scale(0.8)');
+        shuttleRingG.appendChild(hideShuttleRingSVG);
+        hideShuttleRingSVG.addEventListener('click', function () {
+            if (widget._shuttleRingVisible) {
+                shuttleRingDismiss.endElementAt(1);
+                shuttleRingDismiss.beginElementAt(-0.5);  // Hide ring
+                window.setTimeout(function() {
+                    widget._setSizeSmall();
+                    shuttleRingOuterG.style.display = 'none';
+                }, 450);
+                showButtons();
+                widget._shuttleRingVisible = false;
+            }
+        }, true);
 
         // Realtime
         this.realtimeSVG = rectButton(85, 18, '#pathClock', 'Realtime');
@@ -533,16 +555,7 @@ define([
         }
 
         largeButtonG.addEventListener('click', function () {
-            if (widget._shuttleRingVisible) {
-                shuttleRingDismiss.endElementAt(1);
-                shuttleRingDismiss.beginElementAt(-0.5);  // Hide ring
-                window.setTimeout(function() {
-                    widget._setSizeSmall();
-                    shuttleRingOuterG.style.display = 'none';
-                }, 450);
-                showButtons();
-                widget._shuttleRingVisible = false;
-            } else if (widget.animationController.isAnimating()) {
+            if (widget.animationController.isAnimating()) {
                 widget.animationController.pause();
             } else {
                 widget.animationController.unpause();
@@ -649,10 +662,6 @@ define([
                 this._shuttleRingAngle = angle;
                 this._setShuttleRingGlow(angle);
             }
-        }
-
-        if (this._shuttleRingVisible) {
-            tooltip = 'Hide shuttle ring';
         }
 
         if (this._lastButtonTooltip !== tooltip) {
