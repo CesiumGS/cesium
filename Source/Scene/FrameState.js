@@ -16,6 +16,28 @@ define([], function() {
          */
         this.mode = undefined;
 
+        /**
+         * The current morph transition time between 2D/Columbus View and 3D,
+         * with 0.0 being 2D or Columbus View and 1.0 being 3D.
+         *
+         * @type Number
+         */
+        this.morphTime = undefined;
+
+        /**
+         * The current frame number.
+         *
+         * @type Number
+         */
+        this.frameNumber = undefined;
+
+        /**
+         * The scene's current time.
+         *
+         * @type JulianDate
+         */
+        this.time = undefined;
+
         this.scene2D = {
             /**
              * The projection to use in 2D mode.

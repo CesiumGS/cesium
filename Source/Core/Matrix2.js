@@ -136,11 +136,11 @@ define([
      *
      * @example
      * var myMatrix = new Matrix2();
-     * var row1Column0Index = Matrix2.getElementIndex(1, 0);
-     * var row1Column0 = myMatrix[row1Column0Index]
-     * myMatrix[row1Column0Index] = 10.0;
+     * var column1Row0Index = Matrix2.getElementIndex(1, 0);
+     * var column1Row0 = myMatrix[column1Row0Index]
+     * myMatrix[column1Row0Index] = 10.0;
      */
-    Matrix2.getElementIndex = function(row, column) {
+    Matrix2.getElementIndex = function(column, row) {
         if (typeof row !== 'number' || row < 0 || row > 1) {
             throw new DeveloperError('row is required and must be 0 or 1.');
         }

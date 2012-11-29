@@ -160,18 +160,18 @@ define([
         var m22 = -x2 - y2 + z2 + w2;
 
         if (typeof result === 'undefined') {
-            return new Matrix3(m00, m10, m20,
-                               m01, m11, m21,
-                               m02, m12, m22);
+            return new Matrix3(m00, m01, m02,
+                               m10, m11, m12,
+                               m20, m21, m22);
         }
         result[0] = m00;
-        result[1] = m01;
-        result[2] = m02;
-        result[3] = m10;
+        result[1] = m10;
+        result[2] = m20;
+        result[3] = m01;
         result[4] = m11;
-        result[5] = m12;
-        result[6] = m20;
-        result[7] = m21;
+        result[5] = m21;
+        result[6] = m02;
+        result[7] = m12;
         result[8] = m22;
         return result;
     };
@@ -261,11 +261,11 @@ define([
      *
      * @example
      * var myMatrix = new Matrix3();
-     * var row1Column0Index = Matrix3.getElementIndex(1, 0);
-     * var row1Column0 = myMatrix[row1Column0Index]
-     * myMatrix[row1Column0Index] = 10.0;
+     * var column1Row0Index = Matrix3.getElementIndex(1, 0);
+     * var column1Row0 = myMatrix[column1Row0Index]
+     * myMatrix[column1Row0Index] = 10.0;
      */
-    Matrix3.getElementIndex = function(row, column) {
+    Matrix3.getElementIndex = function(column, row) {
         if (typeof row !== 'number' || row < 0 || row > 2) {
             throw new DeveloperError('row is required and must be 0, 1, or 2.');
         }

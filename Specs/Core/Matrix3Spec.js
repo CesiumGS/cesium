@@ -46,7 +46,7 @@ defineSuite([
 
         var tmp = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(sPiOver4);
         var quatnerion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
-        var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
+        var expected = new Matrix3(cPiOver2, sPiOver2, 0.0, -sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
 
         var returnedResult = Matrix3.fromQuaternion(quatnerion);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
@@ -60,7 +60,7 @@ defineSuite([
 
         var tmp = new Cartesian3(0.0, 0.0, 1.0).multiplyByScalar(sPiOver4);
         var quatnerion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
-        var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
+        var expected = new Matrix3(cPiOver2, sPiOver2, 0.0, -sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
         var result = new Matrix3();
         var returnedResult = Matrix3.fromQuaternion(quatnerion, result);
         expect(result).toBe(returnedResult);
@@ -153,7 +153,7 @@ defineSuite([
         var i = 0;
         for ( var col = 0; col < 3; col++) {
             for ( var row = 0; row < 3; row++) {
-                var index = Matrix3.getElementIndex(row, col);
+                var index = Matrix3.getElementIndex(col, row);
                 expect(index).toEqual(i);
                 i++;
             }
@@ -553,15 +553,15 @@ defineSuite([
         var row;
         var col = 0.0;
         expect(function() {
-            Matrix3.getElementIndex(row, col);
+            Matrix3.getElementIndex(col, row);
         }).toThrow();
     });
 
-    it('static getElement throws without col parameter', function() {
+    it('static getElement throws without column parameter', function() {
         var row = 0.0;
         var col;
         expect(function() {
-            Matrix3.getElementIndex(row, col);
+            Matrix3.getElementIndex(col, row);
         }).toThrow();
     });
 
