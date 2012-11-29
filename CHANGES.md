@@ -33,6 +33,7 @@ Beta Releases
 * Added `QuadraticRealPolynomial`, `CubicRealPolynomial`, and `QuarticRealPolynomial` for finding the roots of quadratic, cubic, and quartic polynomials.
 * Added `IntersectionTests.grazingAltitudeLocation` for finding a point on a ray nearest to an ellipsoid.
 * Added `mostOrthogonalAxis` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
+* Changed CesiumViewerWidget default behavior so that zooming to an object now requires a single left-click, rather than a double-click. 
 
 ### b10 - 11/02/2012
 
