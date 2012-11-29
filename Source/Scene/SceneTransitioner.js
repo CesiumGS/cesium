@@ -143,6 +143,10 @@ define([
         if (typeof scene.skyBox !== 'undefined') {
             scene.skyBox.morphTime = morphTime;
         }
+
+        if (typeof scene.skyAtmosphere !== 'undefined') {
+            scene.skyAtmosphere.morphTime = morphTime;
+        }
     }
 
     //in the future the animations will be more complicated
@@ -170,6 +174,11 @@ define([
 
         if (typeof scene.skyBox !== 'undefined') {
             animation = sceneAnimations.addProperty(scene.skyBox, 'morphTime', start, stop, template);
+            transitioner._currentAnimations.push(animation);
+        }
+
+        if (typeof scene.skyAtmosphere !== 'undefined') {
+            animation = sceneAnimations.addProperty(scene.skyAtmosphere, 'morphTime', start, stop, template);
             transitioner._currentAnimations.push(animation);
         }
 

@@ -231,21 +231,22 @@ define([
             var southParallel = p.equalsEpsilon(this.constrainedAxis.negate(), CesiumMath.EPSILON2);
             if ((!northParallel && !southParallel)) {
                 var constrainedAxis = Cartesian3.normalize(this.constrainedAxis);
+
                 var dot = p.dot(constrainedAxis);
                 var angleToAxis = Math.acos(dot);
-                if (angle < 0 && -angle > angleToAxis) {
-                    angle = -angleToAxis;
-                }
-
-                dot = p.dot(constrainedAxis.negate());
-                angleToAxis = Math.acos(dot);
                 if (angle > 0 && angle > angleToAxis) {
                     angle = angleToAxis;
                 }
 
+                dot = p.dot(constrainedAxis.negate());
+                angleToAxis = Math.acos(dot);
+                if (angle < 0 && -angle > angleToAxis) {
+                    angle = -angleToAxis;
+                }
+
                 var tangent = Cartesian3.cross(constrainedAxis, p);
                 this.rotate(tangent, angle);
-            } else if ((northParallel && angle > 0) || (southParallel && angle < 0)) {
+            } else if ((northParallel && angle < 0) || (southParallel && angle > 0)) {
                 this.rotate(camera.right, angle);
             }
         } else {

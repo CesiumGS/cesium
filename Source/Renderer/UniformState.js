@@ -708,7 +708,7 @@ define([
      *
      * @return {Cartesian3} A normalized vector to the moon in eye coordinates at the current scene time.
      *
-     * @see czm_sunDirectionEC
+     * @see czm_moonDirectionEC
      */
     UniformState.prototype.getMoonDirectionEC = function() {
         return this._moonDirectionEC;
