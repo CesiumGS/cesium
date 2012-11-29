@@ -537,6 +537,17 @@ define([
         this.largeButtonTooltip = this._svg('title');
         largeButtonG.appendChild(this.largeButtonTooltip);
 
+        // This shield makes clicks work even while DOM elements underneath are changing.
+        var largeButtonShield = this._svgFromObject({
+            'tagName' : 'rect',
+            'class' : 'playback-blank',
+            'width' : 132,
+            'height' : 68,
+            'rx' : 7,
+            'ry' : 7
+        });
+        largeButtonG.appendChild(largeButtonShield);
+
         topG.appendChild(largeButtonG);
 
         this._lastButtonDate = '';

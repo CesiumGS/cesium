@@ -4,6 +4,10 @@
     font-size: 15px;
     text-anchor: middle;
 }
+.playback-blank {
+    fill: rgba(0, 0, 0, 0.01);  /* This must be clickable, so it can't be 'fill: none'. */
+    stroke: none;
+}
 .playback-rectButton {
     cursor: pointer;
     -moz-user-select: none;
