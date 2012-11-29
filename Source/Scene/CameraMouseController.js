@@ -496,6 +496,10 @@ define([
                 if (rotating) {
                     rotateCV(controller, rotate.getMovement());
                 }
+
+                if (rotate && !rotating && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
+                    maintainInertia(rotate, controller.inertiaSpin, rotateCV, controller, '_lastInertiaTiltMovement');
+                }
             }
 
             if (controller.enableTranslate) {
