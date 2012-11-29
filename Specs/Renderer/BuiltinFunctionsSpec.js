@@ -3,6 +3,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createCamera',
+         'Specs/createFrameState',
          'Core/BoundingRectangle',
          'Core/Math',
          'Core/Matrix4',
@@ -14,6 +15,7 @@ defineSuite([
          createContext,
          destroyContext,
          createCamera,
+         createFrameState,
          BoundingRectangle,
          CesiumMath,
          Matrix4,
@@ -103,7 +105,7 @@ defineSuite([
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.getUniformState().setViewport(vp);
-        context.getUniformState().update(camera);
+        context.getUniformState().update(createFrameState(camera));
 
         var fs =
             'void main() { ' +
@@ -130,7 +132,7 @@ defineSuite([
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.getUniformState().setViewport(vp);
-        context.getUniformState().update(camera);
+        context.getUniformState().update(createFrameState(camera));
 
         var fs =
             'void main() { ' +
@@ -149,7 +151,7 @@ defineSuite([
 
     it('has czm_translateRelativeToEye', function() {
         var camera = createCamera(context, new Cartesian3(1.0, 2.0, 3.0));
-        context.getUniformState().update(camera);
+        context.getUniformState().update(createFrameState(camera));
 
         var p = new Cartesian3(6.0, 5.0, 4.0);
         var encoded = EncodedCartesian3.fromCartesian(p);

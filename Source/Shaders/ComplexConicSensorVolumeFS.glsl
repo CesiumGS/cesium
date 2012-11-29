@@ -41,14 +41,7 @@ vec4 getOuterColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
     
-    vec4 color; 
-    #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
-    #else
-    color = vec4(material.diffuse, material.alpha);
-    #endif
-    
-    return color;        
+    return czm_phong(positionToEyeEC, material);
 }
 
 vec4 getInnerColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
@@ -61,14 +54,7 @@ vec4 getInnerColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
 
-    vec4 color; 
-    #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
-    #else
-    color = vec4(material.diffuse, material.alpha);
-    #endif
-    
-    return color;        
+    return czm_phong(positionToEyeEC, material);        
 }
 
 vec4 getCapColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
@@ -81,14 +67,7 @@ vec4 getCapColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
 
-    vec4 color; 
-    #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
-    #else
-    color = vec4(material.diffuse, material.alpha);
-    #endif
-    
-    return color;        
+    return czm_phong(positionToEyeEC, material);        
 }
 
 vec4 getSilhouetteColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
@@ -101,14 +80,7 @@ vec4 getSilhouetteColor(float sensorRadius, vec3 pointEC, vec3 normalEC)
     //Final
     vec3 positionToEyeEC = normalize(-v_positionEC);
 
-    vec4 color; 
-    #ifdef AFFECTED_BY_LIGHTING    
-    color = czm_lightValuePhong(czm_sunDirectionEC, positionToEyeEC, material);
-    #else
-    color = vec4(material.diffuse, material.alpha);
-    #endif
-    
-    return color;        
+    return czm_phong(positionToEyeEC, material);        
 }
 
 #endif

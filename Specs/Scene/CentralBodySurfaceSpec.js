@@ -248,125 +248,224 @@ defineSuite([
                 });
             });
         });
+    });
 
-        it('renders in 2D geographic', function() {
-            var layerCollection = cb.getImageryLayers();
-            layerCollection.removeAll();
-            layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+    it('renders in 2D geographic', function() {
+        var layerCollection = cb.getImageryLayers();
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-            switchTo2D();
-            frameState.scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
+        switchTo2D();
+        frameState.scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
 
-            updateUntilDone(cb);
+        updateUntilDone(cb);
 
-            runs(function() {
-                expect(render(context, frameState, cb)).toBeGreaterThan(0);
-            });
+        runs(function() {
+            expect(render(context, frameState, cb)).toBeGreaterThan(0);
         });
+    });
 
-        it('renders in 2D web mercator', function() {
-            var layerCollection = cb.getImageryLayers();
-            layerCollection.removeAll();
-            layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+    it('renders in 2D web mercator', function() {
+        var layerCollection = cb.getImageryLayers();
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-            switchTo2D();
-            frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
+        switchTo2D();
+        frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
 
-            updateUntilDone(cb);
+        updateUntilDone(cb);
 
-            runs(function() {
-                expect(render(context, frameState, cb)).toBeGreaterThan(0);
-            });
+        runs(function() {
+            expect(render(context, frameState, cb)).toBeGreaterThan(0);
         });
+    });
 
-        it('renders in Columbus View geographic', function() {
-            var layerCollection = cb.getImageryLayers();
-            layerCollection.removeAll();
-            layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+    it('renders in Columbus View geographic', function() {
+        var layerCollection = cb.getImageryLayers();
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        frameState.scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
+        frameState.camera.viewExtentColumbusView(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
+
+        updateUntilDone(cb);
+
+        runs(function() {
+            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+        });
+    });
+
+    it('renders in Columbus View web mercator', function() {
+        var layerCollection = cb.getImageryLayers();
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
+        frameState.camera.viewExtentColumbusView(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
+
+        updateUntilDone(cb);
+
+        runs(function() {
+            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+        });
+    });
+
+    it('renders in 3D', function() {
+        var layerCollection = cb.getImageryLayers();
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+
+        updateUntilDone(cb);
+
+        runs(function() {
+            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+        });
+    });
+
+    it('renders in 3D and then Columbus View', function() {
+        var layerCollection = cb.getImageryLayers();
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+
+        updateUntilDone(cb);
+
+        runs(function() {
+            expect(render(context, frameState, cb)).toBeGreaterThan(0);
 
             frameState.mode = SceneMode.COLUMBUS_VIEW;
-            frameState.scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
-            frameState.camera.viewExtentColumbusView(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
-
-            updateUntilDone(cb);
-
-            runs(function() {
-                expect(render(context, frameState, cb)).toBeGreaterThan(0);
-            });
-        });
-
-        it('renders in Columbus View web mercator', function() {
-            var layerCollection = cb.getImageryLayers();
-            layerCollection.removeAll();
-            layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
-
-            frameState.mode = SceneMode.COLUMBUS_VIEW;
             frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
             frameState.camera.viewExtentColumbusView(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
-
-            updateUntilDone(cb);
-
-            runs(function() {
-                expect(render(context, frameState, cb)).toBeGreaterThan(0);
-            });
         });
 
-        it('renders in 3D', function() {
-            var layerCollection = cb.getImageryLayers();
-            layerCollection.removeAll();
-            layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+        updateUntilDone(cb);
 
-            frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        runs(function() {
+            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+        });
+    });
 
-            updateUntilDone(cb);
+    it('renders even if imagery root tiles fail to load', function() {
+        var layerCollection = cb.getImageryLayers();
+        layerCollection.removeAll();
 
-            runs(function() {
-                expect(render(context, frameState, cb)).toBeGreaterThan(0);
-            });
+        var providerWithInvalidRootTiles = new WebMapServiceImageryProvider({
+            url : '/invalid',
+            layers : 'invalid'
         });
 
-        it('renders in 3D and then Columbus View', function() {
-            var layerCollection = cb.getImageryLayers();
-            layerCollection.removeAll();
-            layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+        layerCollection.addImageryProvider(providerWithInvalidRootTiles);
 
-            frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-            updateUntilDone(cb);
+        updateUntilDone(cb);
 
-            runs(function() {
-                expect(render(context, frameState, cb)).toBeGreaterThan(0);
-
-                frameState.mode = SceneMode.COLUMBUS_VIEW;
-                frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
-                frameState.camera.viewExtentColumbusView(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
-            });
-
-            updateUntilDone(cb);
-
-            runs(function() {
-                expect(render(context, frameState, cb)).toBeGreaterThan(0);
-            });
+        runs(function() {
+            expect(render(context, frameState, cb)).toBeGreaterThan(0);
         });
+    });
 
-        it('renders even if imagery root tiles fail to load', function() {
-            var layerCollection = cb.getImageryLayers();
-            layerCollection.removeAll();
+    it('passes layer adjustment values as uniforms', function() {
+        var layerCollection = cb.getImageryLayers();
+        layerCollection.removeAll();
+        var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-            var providerWithInvalidRootTiles = new WebMapServiceImageryProvider({
-                url : '/invalid',
-                layers : 'invalid'
-            });
+        layer.alpha = 0.123;
+        layer.brightness = 0.456;
+        layer.contrast = 0.654;
+        layer.gamma = 0.321;
 
-            layerCollection.addImageryProvider(providerWithInvalidRootTiles);
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-            frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        updateUntilDone(cb);
 
-            updateUntilDone(cb);
+        runs(function() {
+            var commandLists = [];
+            expect(render(context, frameState, cb, commandLists)).toBeGreaterThan(0);
 
-            runs(function() {
-                expect(render(context, frameState, cb)).toBeGreaterThan(0);
-            });
+            var tileCommandCount = 0;
+
+            for (var i = 0; i < commandLists.length; ++i) {
+                var commandList = commandLists[i].colorList;
+                var commandListLength = commandList.length;
+                for (var j = 0; j < commandListLength; ++j) {
+                    var command = commandList[j];
+
+                    var uniforms = command.uniformMap;
+                    if (typeof uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha === 'undefined') {
+                        continue;
+                    }
+
+                    ++tileCommandCount;
+
+                    expect(uniforms.u_dayTextureAlpha()).toEqual([0.123]);
+                    expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
+                    expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
+                    expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
+                }
+            }
+
+            expect(tileCommandCount).toBeGreaterThan(0);
+        });
+    });
+
+    it('passes functional layer adjustment values as uniforms', function() {
+        var layerCollection = cb.getImageryLayers();
+        layerCollection.removeAll();
+        var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+
+        function createFunction(value) {
+            return function(functionFrameState, functionLayer, x, y, level) {
+                expect(functionFrameState).toBe(frameState);
+                expect(functionLayer).toBe(layer);
+                expect(typeof x).toBe('number');
+                expect(typeof y).toBe('number');
+                expect(typeof level).toBe('number');
+                return value;
+            };
+        }
+
+        layer.alpha = createFunction(0.123);
+        layer.brightness = createFunction(0.456);
+        layer.contrast = createFunction(0.654);
+        layer.gamma = createFunction(0.321);
+
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+
+        updateUntilDone(cb);
+
+        runs(function() {
+            var commandLists = [];
+            expect(render(context, frameState, cb, commandLists)).toBeGreaterThan(0);
+
+            var tileCommandCount = 0;
+
+            for (var i = 0; i < commandLists.length; ++i) {
+                var commandList = commandLists[i].colorList;
+                var commandListLength = commandList.length;
+                for (var j = 0; j < commandListLength; ++j) {
+                    var command = commandList[j];
+
+                    var uniforms = command.uniformMap;
+                    if (typeof uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha === 'undefined') {
+                        continue;
+                    }
+
+                    ++tileCommandCount;
+
+                    expect(uniforms.u_dayTextureAlpha()).toEqual([0.123]);
+                    expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
+                    expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
+                    expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
+                }
+            }
+
+            expect(tileCommandCount).toBeGreaterThan(0);
         });
     });
 });
