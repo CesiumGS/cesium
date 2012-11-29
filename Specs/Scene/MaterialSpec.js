@@ -5,6 +5,7 @@ defineSuite([
         'Specs/createContext',
         'Specs/destroyContext',
         'Specs/createCamera',
+        'Specs/createFrameState',
         'Specs/frameState',
         'Specs/render',
         'Core/Cartesian3',
@@ -12,13 +13,15 @@ defineSuite([
         'Core/Color',
         'Core/Ellipsoid',
         'Core/Matrix4',
-        'Core/Math'
+        'Core/Math',
+        'Core/JulianDate'
     ], function(
         Material,
         Polygon,
         createContext,
         destroyContext,
         createCamera,
+        createFrameState,
         frameState,
         render,
         Cartesian3,
@@ -26,7 +29,8 @@ defineSuite([
         Color,
         Ellipsoid,
         Matrix4,
-        CesiumMath) {
+        CesiumMath,
+        JulianDate) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -44,7 +48,7 @@ defineSuite([
 
     beforeEach(function() {
         us = context.getUniformState();
-        us.update(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z));
+        us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon = new Polygon();

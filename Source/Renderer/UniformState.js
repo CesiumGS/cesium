@@ -5,20 +5,28 @@ define([
         '../Core/Ellipsoid',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/EncodedCartesian3',
-        '../Core/BoundingRectangle'
+        '../Core/BoundingRectangle',
+        '../Core/Transforms',
+        '../Core/computeSunPosition',
+        '../Scene/SceneMode'
     ], function(
         DeveloperError,
         defaultValue,
         Ellipsoid,
         Matrix3,
         Matrix4,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         EncodedCartesian3,
-        BoundingRectangle) {
+        BoundingRectangle,
+        Transforms,
+        computeSunPosition,
+        SceneMode) {
     "use strict";
 
     /**
@@ -39,8 +47,11 @@ define([
         this._inverseView = Matrix4.IDENTITY.clone();
         this._projection = Matrix4.IDENTITY.clone();
         this._infiniteProjection = Matrix4.IDENTITY.clone();
-        // Arbitrary.  The user will explicitly set this later.
-        this._sunPosition = new Cartesian3(2.0 * Ellipsoid.WGS84.getRadii().x, 0.0, 0.0);
+        this._entireFrustum = new Cartesian2();
+
+        this._frameNumber = 1.0;
+        this._time = undefined;
+        this._temeToPseudoFixed = Matrix3.IDENTITY.clone();
 
         // Derived members
         this._inverseModelDirty = true;
@@ -83,13 +94,9 @@ define([
         this._encodedCameraPositionMC = new EncodedCartesian3();
         this._cameraPosition = new Cartesian3();
 
-        this._sunDirectionECDirty = true;
-        this._sunDirectionEC = new Cartesian3();
-
-        this._sunDirectionWCDirty = true;
         this._sunDirectionWC = new Cartesian3();
-
-        this._frameNumber = 1.0;
+        this._sunDirectionEC = new Cartesian3();
+        this._moonDirectionEC = new Cartesian3();
     };
 
     function setView(uniformState, matrix) {
@@ -105,7 +112,6 @@ define([
         uniformState._modelViewInfiniteProjectionDirty = true;
         uniformState._normalDirty = true;
         uniformState._inverseNormalDirty = true;
-        uniformState._sunDirectionECDirty = true;
     }
 
     function setInverseView(uniformState, matrix) {
@@ -133,6 +139,40 @@ define([
         uniformState._encodedCameraPositionMCDirty = true;
     }
 
+    var sunPositionWC = new Cartesian3();
+    var sunPositionScratch = new Cartesian3();
+
+    function setSunAndMoonDirections(uniformState, frameState) {
+        if (frameState.mode === SceneMode.SCENE3D) {
+            computeSunPosition(frameState.time, sunPositionWC);
+
+            Cartesian3.normalize(sunPositionWC, uniformState._sunDirectionWC);
+            Matrix3.multiplyByVector(uniformState._viewRotation, sunPositionWC, sunPositionScratch);
+            Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
+
+            // Pseudo direction for now just for lighting
+            Cartesian3.negate(uniformState._sunDirectionEC, uniformState._moonDirectionEC);
+        } else {
+            // Made up direction for now just for lighting
+
+            sunPositionWC.x = 1000000.0;   // height
+            sunPositionWC.y = -10000000.0; // x
+            sunPositionWC.z = 0.0;         // y
+
+            Cartesian3.normalize(sunPositionWC, uniformState._sunDirectionWC);
+            Matrix3.multiplyByVector(uniformState._viewRotation, sunPositionWC, sunPositionScratch);
+            Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
+
+            sunPositionWC.x = 1000000.0;   // height
+            sunPositionWC.y = 10000000.0;  // x
+            sunPositionWC.z = 0.0;         // y
+
+            Cartesian3.normalize(sunPositionWC, sunPositionScratch);
+            Matrix3.multiplyByVector(uniformState._viewRotation, sunPositionScratch, sunPositionScratch);
+            Cartesian3.normalize(sunPositionScratch, uniformState._moonDirectionEC);
+        }
+    }
+
     /**
      * Synchronizes the frustum's state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
@@ -144,26 +184,35 @@ define([
      */
     UniformState.prototype.updateFrustum = function(frustum) {
         setProjection(this, frustum.getProjectionMatrix());
-        if (frustum.getInfiniteProjectionMatrix) {
+        if (typeof frustum.getInfiniteProjectionMatrix !== 'undefined') {
             setInfiniteProjection(this, frustum.getInfiniteProjectionMatrix());
         }
     };
 
     /**
-     * Synchronizes the camera's state with the uniform state.  This is called
+     * Synchronizes frame state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
      * are set to the right value.
      *
      * @memberof UniformState
      *
-     * @param {Camera} camera The camera to synchronize with.
+     * @param {FrameState} frameState The frameState to synchronize with.
      */
-    UniformState.prototype.update = function(camera) {
+    UniformState.prototype.update = function(frameState) {
+        var camera = frameState.camera;
+
         setView(this, camera.getViewMatrix());
         setInverseView(this, camera.getInverseViewMatrix());
         setCameraPosition(this, camera.getPositionWC());
+        setSunAndMoonDirections(this, frameState);
 
+        this._entireFrustum.x = camera.frustum.near;
+        this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
+
+        this._frameNumber = frameState.frameNumber;
+        this._time = frameState.time;
+        this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time);
     };
 
     /**
@@ -253,7 +302,6 @@ define([
         this._normalDirty = true;
         this._inverseNormalDirty = true;
         this._encodedCameraPositionMCDirty = true;
-        this._sunDirectionWCDirty = true;
     };
 
     /**
@@ -614,83 +662,56 @@ define([
         return this._inverseNormal;
     };
 
-    var sunPositionScratch = new Cartesian3();
-
-    function cleanSunDirectionEC(uniformState) {
-        if (uniformState._sunDirectionECDirty) {
-            uniformState._sunDirectionECDirty = false;
-
-            Matrix3.multiplyByVector(uniformState.getViewRotation(), uniformState._sunPosition, sunPositionScratch);
-            Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
-        }
-    }
-
     /**
-     * DOC_TBA
+     * Returns the near distance (<code>x</code>) and the far distance (<code>y</code>) of the frustum defined by the camera.
      *
      * @memberof UniformState
      *
-     * @param {Matrix4} sunPosition The position of the sun in the sun's reference frame.
+     * @return {Cartesian2} Returns the near distance and the far distance of the frustum defined by the camera.
      *
-     * @exception {DeveloperError} sunPosition is required.
-     *
-     * @see UniformState#getSunPosition
+     * @see czm_entireFrustum
      */
-    UniformState.prototype.setSunPosition = function(sunPosition) {
-        if (!sunPosition) {
-            throw new DeveloperError('sunPosition is required.');
-        }
-
-        Cartesian3.clone(sunPosition, this._sunPosition);
-        this._sunDirectionECDirty = true;
-        this._sunDirectionWCDirty = true;
+    UniformState.prototype.getEntireFrustum = function() {
+        return this._entireFrustum;
     };
 
     /**
-     * DOC_TBA
+     * Returns a normalized vector to the sun in world coordinates at the current scene time.
      *
      * @memberof UniformState
      *
-     * @see UniformState#setSunPosition
-     */
-    UniformState.prototype.getSunPosition = function() {
-        return this._sunPosition;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @return {Cartesian3} The sun's direction in eye coordinates.
-     *
-     * @see czm_sunDirectionEC
-     * @see UniformState#getSunDirectionEC
-     */
-    UniformState.prototype.getSunDirectionEC = function() {
-        cleanSunDirectionEC(this);
-        return this._sunDirectionEC;
-    };
-
-    function cleanSunDirectionWC(uniformState) {
-        if (uniformState._sunDirectionWCDirty) {
-            uniformState._sunDirectionWCDirty = false;
-            Cartesian3.normalize(uniformState._sunPosition, uniformState._sunDirectionWC);
-        }
-    }
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @return {Cartesian3} A normalized vector from the model's origin to the sun in model coordinates.
+     * @return {Cartesian3} A normalized vector to the sun in world coordinates at the current scene time.
      *
      * @see czm_sunDirectionWC
      */
     UniformState.prototype.getSunDirectionWC = function() {
-        cleanSunDirectionWC(this);
         return this._sunDirectionWC;
+    };
+
+    /**
+     * Returns a normalized vector to the sun in eye coordinates at the current scene time.
+     *
+     * @memberof UniformState
+     *
+     * @return {Cartesian3} A normalized vector to the sun in eye coordinates at the current scene time.
+     *
+     * @see czm_sunDirectionEC
+     */
+    UniformState.prototype.getSunDirectionEC = function() {
+        return this._sunDirectionEC;
+    };
+
+    /**
+     * Returns a normalized vector to the moon in eye coordinates at the current scene time.
+     *
+     * @memberof UniformState
+     *
+     * @return {Cartesian3} A normalized vector to the moon in eye coordinates at the current scene time.
+     *
+     * @see czm_moonDirectionEC
+     */
+    UniformState.prototype.getMoonDirectionEC = function() {
+        return this._moonDirectionEC;
     };
 
     var cameraPositionMC = new Cartesian3();
@@ -733,20 +754,6 @@ define([
     };
 
     /**
-     * Sets the current frame number.
-     *
-     * @memberof UniformState
-     *
-     * @param {number} frameNumber The current frame number.
-     *
-     * @see UniformState#getFrameNumber
-     * @see czm_frameNumber
-     */
-    UniformState.prototype.setFrameNumber = function(frameNumber) {
-        this._frameNumber = frameNumber;
-    };
-
-    /**
      * Gets the current frame number.
      *
      * @memberof UniformState
@@ -755,9 +762,34 @@ define([
      *
      * @see czm_frameNumber
      */
-     UniformState.prototype.getFrameNumber = function() {
-         return this._frameNumber;
-     };
+    UniformState.prototype.getFrameNumber = function() {
+        return this._frameNumber;
+    };
+
+    /**
+     * Gets the scene's current time.
+     *
+     * @memberof UniformState
+     *
+     * @return {JulianDate} The scene's current time.
+     */
+    UniformState.prototype.getTime = function() {
+        return this._time;
+    };
+
+    /**
+     * Returns a 3x3 matrix that transforms from True Equator Mean Equinox (TEME) axes to the
+     * pseudo-fixed axes at the Scene's current time.
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix3} The transform from TEME to pseudo-fixed.
+     *
+     * @see czm_temeToPseudoFixed
+     */
+    UniformState.prototype.getTemeToPseudoFixedMatrix = function() {
+        return this._temeToPseudoFixed;
+    };
 
     UniformState.prototype.getHighResolutionSnapScale = function() {
         return 1.0;
