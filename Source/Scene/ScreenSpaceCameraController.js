@@ -544,8 +544,17 @@ define([
                 if (rotating) {
                     rotateCV(controller, rotate.getMovement());
                 }
+
                 if (pinching) {
                     rotateCV(controller, pinch.getMovement().angleAndHeight);
+                }
+
+                if (rotate && !rotating && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
+                    maintainInertia(rotate, controller.inertiaSpin, rotateCV, controller, '_lastInertiaTiltMovement');
+                }
+
+                if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                    maintainInertia(pinch, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
                 }
             }
 
