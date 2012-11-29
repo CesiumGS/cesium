@@ -121,7 +121,7 @@ define([
             clock.clockStep = ClockStep.SPEED_MULTIPLIER;
             clock.multiplier = 1;
         }
-        this._animating = true;
+        this.unpause();
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
             return left - right;
@@ -151,7 +151,7 @@ define([
             clock.clockStep = ClockStep.SPEED_MULTIPLIER;
             clock.multiplier = 1;
         }
-        this._animating = true;
+        this.unpause();
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
             return left - right;
