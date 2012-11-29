@@ -80,9 +80,19 @@ define([
         var aboveEnd = end.normalize().multiplyByScalar(altitude);
         var afterStart = start.normalize().multiplyByScalar(altitude);
 
-        var axis, angle, rotation;
-        if (start.magnitude() > maxStartAlt && dot > 0) {
-            var middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
+        var axis, angle, rotation, middle;
+        if (end.magnitude() > maxStartAlt && dot > 0.75) {
+            middle = start.subtract(end).multiplyByScalar(0.5).add(end);
+
+            points = [{
+                point : start
+            }, {
+                point : middle
+            }, {
+                point : end
+            }];
+        } else if (start.magnitude() > maxStartAlt && dot > 0) {
+            middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
 
             points = [{
                 point : start
@@ -155,8 +165,7 @@ define([
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
-        var end = ellipsoid.cartographicToCartesian(destination);
-        var path = createPath3D(camera, ellipsoid, end, duration);
+        var path = createPath3D(camera, ellipsoid, destination, duration);
         var orientations = createOrientations3D(camera, path.getControlPoints(), direction, up);
 
         var update = function(value) {
@@ -176,7 +185,7 @@ define([
     function createPathCV(camera, ellipsoid, end, duration) {
         var start = camera.position;
 
-        // get minimum altitude from which the whole ellipsoid is visible
+        // get minimum altitude from which the whole map is visible
         var radius = ellipsoid.getMaximumRadius();
 
         var frustum = camera.frustum;
@@ -185,23 +194,21 @@ define([
         var top = frustum.near * tanTheta;
         var right = frustum.aspectRatio * top;
 
-        var dx = radius * near / right;
-        var dy = radius * near / top;
+        var dx = Math.PI * radius * near / right;
+        var dy = CesiumMath.PI_OVER_TWO * radius * near / top;
         var maxStartAlt = Math.max(dx, dy);
-
-        var dot = start.normalize().dot(end.normalize());
 
         var points;
         var altitude;
         var incrementPercentage;
         if (start.z > maxStartAlt) {
-            altitude = radius + 0.6 * (maxStartAlt - radius);
+            altitude = 0.6 * maxStartAlt;
             incrementPercentage = 0.5;
         } else {
             var tanPhi = frustum.aspectRatio * tanTheta;
             var diff = start.subtract(end);
             altitude = Math.max(Math.abs(diff.y * 0.5) / tanTheta, Math.abs(diff.x * 0.5) / tanPhi);
-            incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
+            incrementPercentage = 0.5;
         }
 
         var aboveEnd = end.clone();
@@ -209,9 +216,19 @@ define([
         var afterStart = start.clone();
         afterStart.z = altitude;
 
-        var axis, angle, rotation;
-        if (start.z > maxStartAlt && dot > 0) {
-            var middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
+        var middle;
+        if (end.z > maxStartAlt) {
+            middle = start.subtract(end).multiplyByScalar(0.5).add(end);
+
+            points = [{
+                point : start
+            }, {
+                point : middle
+            }, {
+                point : end
+            }];
+        } else if (start.z > maxStartAlt) {
+            middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
 
             points = [{
                 point : start
@@ -225,15 +242,15 @@ define([
                 point : start
             }];
 
-            angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
-            axis = afterStart.cross(aboveEnd);
+            var v = afterStart.subtract(aboveEnd);
+            var distance = v.magnitude();
+            Cartesian3.normalize(v, v);
 
-            var increment = incrementPercentage * angle;
-            var startCondition = angle - increment;
+            var increment = incrementPercentage * distance;
+            var startCondition = distance - increment;
             for ( var i = startCondition; i > 0.0; i = i - increment) {
-                rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
                 points.push({
-                    point : rotation.multiplyByVector(aboveEnd)
+                    point : v.multiplyByScalar(i).add(aboveEnd)
                 });
             }
 
@@ -282,11 +299,9 @@ define([
 
     function createUpdateCV(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
-        var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
-        var end = projection.project(destination);
-        var path = createPathCV(camera, ellipsoid, end, duration);
+        var path = createPathCV(camera, ellipsoid, destination, duration);
         var orientations = createOrientationsCV(camera, path.getControlPoints(), direction, up);
 
         var update = function(value) {
@@ -373,11 +388,9 @@ define([
 
     function createUpdate2D(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
-        var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
-        var end = projection.project(destination);
-        var path = createPath2D(camera, ellipsoid, end, duration);
+        var path = createPath2D(camera, ellipsoid, destination, duration);
         var points = path.getControlPoints();
         var orientations = createOrientationsCV(camera, points, Cartesian3.UNIT_Z.negate(), up);
 
@@ -447,6 +460,31 @@ define([
             onUpdate : update,
             onComplete : onComplete
         };
+    };
+
+    CameraFlightPath.createAnimationCartographic = function(frameState, description) {
+        description = defaultValue(description, {});
+        var destination = description.destination;
+
+        if (typeof destination === 'undefined') {
+            throw new DeveloperError('destination is required.');
+        }
+
+        if (typeof frameState === 'undefined') {
+            throw new DeveloperError('frameState is required.');
+        }
+
+        var end;
+        var projection = frameState.scene2D.projection;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            var ellipsoid = projection.getEllipsoid();
+            end = ellipsoid.cartographicToCartesian(destination);
+        } else {
+            end = projection.project(destination);
+        }
+
+        description.destination = end;
+        return this.createAnimation(frameState, description);
     };
 
     return CameraFlightPath;
