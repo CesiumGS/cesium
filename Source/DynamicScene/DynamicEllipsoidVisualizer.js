@@ -224,7 +224,6 @@ define([
             } else {
                 ellipsoidVisualizerIndex = this._ellipsoidCollection.length;
                 ellipsoid = new EllipsoidPrimitive();
-                ellipsoid.affectedByLighting = false;
 
                 this._ellipsoidCollection.push(ellipsoid);
                 this._primitives.add(ellipsoid);

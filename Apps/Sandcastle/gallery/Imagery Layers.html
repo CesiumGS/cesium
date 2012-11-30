@@ -157,7 +157,7 @@ require([
         addBaseLayerOption(
                 'Single Image',
                 new Cesium.SingleTileImageryProvider({
-                    url : require.toUrl('Assets/Imagery/NE2_50M_SR_W_4096.jpg')
+                    url : require.toUrl('Assets/Textures/NE2_50M_SR_W_2048.jpg')
                 }));
 
         // Create the additional layers
@@ -185,6 +185,19 @@ require([
                     },
                     proxy : new Cesium.DefaultProxy('/proxy/')
                 }));
+        addAdditionalLayerOption(
+                'TMS Image',
+                new Cesium.TileMapServiceImageryProvider({
+                    url : '../images/cesium_maptiler/Cesium_Logo_Color',
+                    fileExtension: 'png',
+                    maximumLevel: 4,
+                    credit: 'AGI',
+                    extent: new Cesium.Extent(
+                            Cesium.Math.toRadians(-120.0), 
+                            Cesium.Math.toRadians(20.0), 
+                            Cesium.Math.toRadians(-60.0), 
+                            Cesium.Math.toRadians(40.0))
+                }),0.2);
         addAdditionalLayerOption(
                 'Single image',
                 new Cesium.SingleTileImageryProvider({
@@ -321,8 +334,6 @@ require([
 
     var scene = widget.scene;
     var centralBody = widget.centralBody;
-
-    centralBody.affectedByLighting = false;
 
     imageryLayerCollection = centralBody.getImageryLayers();
 

@@ -312,8 +312,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
-    // Fails on firefox.  Should be fixed soon: https://bugzilla.mozilla.org/show_bug.cgi?id=685156
-    xit('generates mipmaps', function() {
+    it('generates mipmaps', function() {
         texture = context.createTexture2D({
             source : blueImage,
             pixelFormat :PixelFormat.RGBA

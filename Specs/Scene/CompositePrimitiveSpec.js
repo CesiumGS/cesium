@@ -4,6 +4,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/equals',
          'Specs/frameState',
          'Specs/pick',
@@ -23,6 +24,7 @@ defineSuite([
          createContext,
          destroyContext,
          createCamera,
+         createFrameState,
          equals,
          frameState,
          pick,
@@ -62,8 +64,7 @@ defineSuite([
         camera.direction = camera.position.normalize().negate();
 
         us = context.getUniformState();
-        us.update(camera);
-        us.setSunPosition(new Cartesian3(-2.0, 0.0, 0.0));
+        us.update(createFrameState(camera));
     });
 
     afterEach(function() {
