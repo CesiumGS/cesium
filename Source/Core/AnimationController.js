@@ -112,6 +112,20 @@ define([
     };
 
     /**
+     * Begin or resume animating in realtime (Clock matches system time).
+     * @memberof AnimationController
+     */
+    AnimationController.prototype.playRealtime = function() {
+        var clock = this.clock;
+        if (clock.isSystemTimeAvailable()) {
+            clock.clockStep = ClockStep.SYSTEM_CLOCK_TIME;
+            clock.multiplier = 1.0;
+            this.clock.tick(0);
+            this._animating = !this.clock.isOutOfRange();
+        }
+    };
+
+    /**
      * Slow down the speed of animation, so time appears to pass more slowly.
      * @memberof AnimationController
      */

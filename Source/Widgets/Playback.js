@@ -367,7 +367,7 @@ define([
         this.realtimeSVG = rectButton(85, 18, '#playback_pathClock', 'Realtime');
         shuttleRingG.appendChild(this.realtimeSVG);
         this.realtimeSVG.addEventListener('click', function () {
-            widget.clock.clockStep = ClockStep.SYSTEM_CLOCK_TIME;
+            widget.animationController.playRealtime();
         }, true);
 
         var shuttleRingPath = this._svgFromObject({

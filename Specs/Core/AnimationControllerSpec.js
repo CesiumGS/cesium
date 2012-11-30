@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
              'Core/AnimationController',
-             'Core/Clock'
+             'Core/Clock',
+             'Core/ClockStep'
             ], function(
               AnimationController,
-              Clock) {
+              Clock,
+              ClockStep) {
     "use strict";
     /*global it,expect,waitsFor*/
 
@@ -18,7 +20,7 @@ defineSuite([
         expect(function() { return new AnimationController(); }).toThrow();
     });
 
-    it('play, pause, playReverse, reset, and unpause affect isAnimating', function() {
+    it('play, pause, playReverse, playRealtime, reset, and unpause affect isAnimating', function() {
         var clock = new Clock();
         var animationController = new AnimationController(clock);
         expect(animationController.isAnimating()).toEqual(true);
@@ -32,6 +34,11 @@ defineSuite([
         expect(animationController.isAnimating()).toEqual(false);
         animationController.unpause();
         expect(animationController.isAnimating()).toEqual(true);
+        animationController.reset();
+        expect(animationController.isAnimating()).toEqual(false);
+        animationController.playRealtime();
+        expect(animationController.isAnimating()).toEqual(true);
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
     });
 
     it('clock changes only when animating', function() {
@@ -65,6 +72,13 @@ defineSuite([
         speed = clock.multiplier;
         animationController.faster();
         expect(clock.multiplier).toBeLessThan(speed);
+
+        animationController.playRealtime();
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
+        expect(clock.multiplier).toEqual(1);
+        animationController.faster();
+        expect(clock.clockStep).toEqual(ClockStep.SPEED_MULTIPLIER);
+        expect(clock.multiplier).toBeGreaterThan(1);
     });
 
     it('slower makes it go slower', function() {
@@ -83,6 +97,14 @@ defineSuite([
         animationController.slower();
         expect(clock.multiplier).toBeLessThan(0);
         expect(clock.multiplier).toBeGreaterThan(speed);
+
+        animationController.playRealtime();
+        expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_TIME);
+        expect(clock.multiplier).toEqual(1);
+        animationController.slower();
+        expect(clock.clockStep).toEqual(ClockStep.SPEED_MULTIPLIER);
+        expect(clock.multiplier).toBeLessThan(1);
+        expect(clock.multiplier).toBeGreaterThan(0);
     });
 
 });
