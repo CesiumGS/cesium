@@ -4,6 +4,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createCamera',
+         'Specs/createFrameState',
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
@@ -27,6 +28,7 @@ defineSuite([
          createContext,
          destroyContext,
          createCamera,
+         createFrameState,
          frameState,
          pick,
          render,
@@ -68,7 +70,7 @@ defineSuite([
         billboards = new BillboardCollection();
 
         us = context.getUniformState();
-        us.update(createCamera(context));
+        us.update(createFrameState(createCamera(context)));
     });
 
     afterEach(function() {

@@ -126,19 +126,6 @@ define([
         this.modelMatrix = t.modelMatrix || Matrix4.IDENTITY.clone();
 
         /**
-         * <p>
-         * Determines if the sensor is affected by lighting, i.e., if the sensor is bright on the
-         * day side of the globe, and dark on the night side.  When <code>true</code>, the sensor
-         * is affected by lighting; when <code>false</code>, the sensor is uniformly shaded regardless
-         * of the sun position.
-         * </p>
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
-         */
-        this.affectedByLighting = this._affectedByLighting = (typeof t.affectedByLighting !== 'undefined') ? t.affectedByLighting : true;
-
-        /**
          * DOC_TBA
          *
          * @type BufferUsage
@@ -385,13 +372,11 @@ define([
 
         if (pass.color) {
             var materialChanged = typeof this._material === 'undefined' ||
-                this._material !== this.material ||
-                this._affectedByLighting !== this.affectedByLighting;
+                this._material !== this.material;
 
             // Recompile shader when material changes
             if (materialChanged) {
                 this._material = this.material;
-                this._affectedByLighting = this.affectedByLighting;
 
                 var fsSource =
                     '#line 0\n' +
@@ -400,7 +385,6 @@ define([
                     ShadersSensorVolume +
                     '#line 0\n' +
                     this._material.shaderSource +
-                    (this._affectedByLighting ? '#define AFFECTED_BY_LIGHTING 1\n' : '') +
                     '#line 0\n' +
                     CustomSensorVolumeFS;
 

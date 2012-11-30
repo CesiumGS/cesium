@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Adjust brightness, contrast, and gamma of an imagery layer.">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.7.2-src/dojo/dojo.js"></script>
+    <script type="text/javascript">
+    require({
+        baseUrl : '../../..',
+        packages: [
+            { name: 'dojo', location: 'ThirdParty/dojo-release-1.7.2-src/dojo' },
+            { name: 'dijit', location: 'ThirdParty/dojo-release-1.7.2-src/dijit' },
+            { name: 'dojox', location: 'ThirdParty/dojo-release-1.7.2-src/dojox' },
+            { name: 'Assets', location: 'Source/Assets' },
+            { name: 'Core', location: 'Source/Core' },
+            { name: 'DynamicScene', location: 'Source/DynamicScene' },
+            { name: 'Renderer', location: 'Source/Renderer' },
+            { name: 'Scene', location: 'Source/Scene' },
+            { name: 'Shaders', location: 'Source/Shaders' },
+            { name: 'ThirdParty', location: 'Source/ThirdParty' },
+            { name: 'Widgets', location: 'Source/Widgets' },
+            { name: 'Workers', location: 'Source/Workers' }
+        ]
+    });
+    </script>
+    <link rel="Stylesheet" href="../../../ThirdParty/dojo-release-1.7.2-src/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="Stylesheet" href="../../../Source/Widgets/Dojo/CesiumViewerWidget.css" type="text/css">
+</head>
+<body class="claro" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<style>
+body {
+	background: #000;
+	color: #eee;
+	font-family: sans-serif;
+	font-size: 9pt;
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.fullSize {
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	border: none;
+	width: 100%;
+	height: 100%;
+	z-index: -1;
+}
+
+#toolbar {
+	margin: 5px;
+	padding: 2px 5px;
+	position: absolute;
+}
+
+.upArrow {
+	background-image: url("../images/UpArrow.png");
+	background-repeat: no-repeat;
+	width: 16px;
+	height: 16px;
+	text-align: center;
+}
+
+.downArrow {
+	background-image: url("../images/DownArrow.png");
+	background-repeat: no-repeat;
+	width: 16px;
+	height: 16px;
+	text-align: center;
+}
+</style>
+
+	<div id="cesiumContainer" class="fullSize"></div>
+	<div id="toolbar">Loading...</div>
+
+	<script id="cesium_sandcastle_script">
+require([
+    'Source/Cesium',
+    'Widgets/Dojo/CesiumViewerWidget',
+    'dojo/on',
+    'dojo/dom',
+    'dojo/dom-construct',
+    'dijit/form/HorizontalSlider'
+], function(
+    Cesium,
+    CesiumViewerWidget,
+    on,
+    dom,
+    domConstruct,
+    HorizontalSlider)
+{
+    "use strict";
+
+    var imageryLayerCollection;
+    var brightnessSlider;
+    var contrastSlider;
+    var gammaSlider;
+    
+    function createAdjustmentUserInterface() {
+        domConstruct.place(
+                '<table id="layerTable">' +
+                  '<tr><td>Brightness</td><td id="brightnessSlider"></td></tr>' +
+                  '<tr><td>Contrast</td><td id="contrastSlider"></td></tr>' +
+                  '<tr><td>Gamma</td><td id="gammaSlider"></td></tr>' +
+                '</table>', 'toolbar');
+        
+        brightnessSlider = new HorizontalSlider({
+            value: imageryLayerCollection.get(0).brightness,
+            minimum: 0.0,
+            maximum: 3.0,
+            intermediateChanges: true,
+            style: "width:150px;",
+            onChange: function(value) {
+                imageryLayerCollection.get(0).brightness = value;
+            }
+        });
+        brightnessSlider.placeAt('brightnessSlider');
+
+        contrastSlider = new HorizontalSlider({
+            value: imageryLayerCollection.get(0).contrast,
+            minimum: 0.0,
+            maximum: 3.0,
+            intermediateChanges: true,
+            style: "width:150px;",
+            onChange: function(value) {
+                imageryLayerCollection.get(0).contrast = value;
+            }
+        });
+        contrastSlider.placeAt('contrastSlider');
+
+        gammaSlider = new HorizontalSlider({
+            value: imageryLayerCollection.get(0).gamma,
+            minimum: 0.0,
+            maximum: 3.0,
+            intermediateChanges: true,
+            style: "width:150px;",
+            onChange: function(value) {
+                imageryLayerCollection.get(0).gamma = value;
+            }
+        });
+        gammaSlider.placeAt('gammaSlider');
+    }
+    
+    function updateSliders() {
+        if (imageryLayerCollection.getLength() > 0) {
+            var layer = imageryLayerCollection.get(0);
+            brightnessSlider.set('value', layer.brightness);
+            contrastSlider.set('value', layer.contrast);
+            gammaSlider.set('value', layer.gamma);
+        }
+    }
+    
+    var widget = new CesiumViewerWidget();
+    widget.placeAt(dom.byId('cesiumContainer'));
+    widget.startup();
+    dom.byId('toolbar').innerHTML = '';
+
+    var scene = widget.scene;
+    var centralBody = widget.centralBody;
+
+    imageryLayerCollection = centralBody.getImageryLayers();
+
+    createAdjustmentUserInterface();
+    
+    imageryLayerCollection.layerAdded.addEventListener(updateSliders);
+    imageryLayerCollection.layerRemoved.addEventListener(updateSliders);
+    imageryLayerCollection.layerMoved.addEventListener(updateSliders);
+});
+</script>
+</body>
+</html>

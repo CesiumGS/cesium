@@ -52,15 +52,7 @@ define([
      * @exception {DeveloperError} julianDate is required.
      *
      * @example
-     * //Set scene's sun position to always match current real-world time.
-     * function updateAndRender() {
-     *     var now = new JulianDate();
-     *     scene.initializeFrame();
-     *     scene.setSunPosition(computeSunPosition(now));
-     *     scene.render();
-     *     requestAnimationFrame(updateAndRender);
-     * }
-     * updateAndRender();
+     * var sunPosition = computeSunPosition(new JulianDate());
      */
     var computeSunPosition = function(julianDate, result) {
         if (typeof julianDate === 'undefined') {
