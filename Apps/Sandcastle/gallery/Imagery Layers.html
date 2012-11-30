@@ -186,6 +186,19 @@ require([
                     proxy : new Cesium.DefaultProxy('/proxy/')
                 }));
         addAdditionalLayerOption(
+                'TMS Image',
+                new Cesium.TileMapServiceImageryProvider({
+                    url : '../images/cesium_maptiler/Cesium_Logo_Color',
+                    fileExtension: 'png',
+                    maximumLevel: 4,
+                    credit: 'AGI',
+                    extent: new Cesium.Extent(
+                            Cesium.Math.toRadians(-120.0), 
+                            Cesium.Math.toRadians(20.0), 
+                            Cesium.Math.toRadians(-60.0), 
+                            Cesium.Math.toRadians(40.0))
+                }),0.2);
+        addAdditionalLayerOption(
                 'Single image',
                 new Cesium.SingleTileImageryProvider({
                     url : '../images/Cesium_Logo_overlay.png',
