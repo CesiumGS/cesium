@@ -111,18 +111,18 @@ require([
     ///////////////////////////////////////////////////////////////////////////
     // Example mouse & keyboard handlers
 
-    var handler = new Cesium.EventHandler(canvas);
+    var handler = new Cesium.ScreenSpaceEventHandler(canvas);
 
-    handler.setMouseAction(function(movement) {
+    handler.setInputAction(function(movement) {
         // INSERT CODE HERE: Handler for left-click
         // ...
-    }, Cesium.MouseEventType.LEFT_CLICK);
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-    handler.setMouseAction(function (movement) {
+    handler.setInputAction(function (movement) {
         // INSERT CODE HERE: Handler for mouse move
         // Use movement.startPosition, movement.endPosition
         // ...
-    }, Cesium.MouseEventType.MOVE);
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
     // To use this in Sandcastle, you must set focus manually,
     // or click on a toolbar inside the iframe.
