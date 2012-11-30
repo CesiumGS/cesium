@@ -105,7 +105,7 @@ define([
             }];
 
             angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
-            axis = aboveEnd.cross(afterStart);
+            axis = afterStart.cross(aboveEnd);
 
             var increment = incrementPercentage * angle;
             var startCondition = (startAboveMaxAlt) ? angle - increment : angle;

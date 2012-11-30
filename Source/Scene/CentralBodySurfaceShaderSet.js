@@ -48,7 +48,10 @@ define([
                     '   textureCoordinates,\n' +
                     '   u_dayTextureTexCoordsExtent[' + i + '],\n' +
                     '   u_dayTextureTranslationAndScale[' + i + '],\n' +
-                    '   u_dayTextureAlpha[' + i + ']);\n';
+                    '   u_dayTextureAlpha[' + i + '],\n' +
+                    '   u_dayTextureBrightness[' + i + '],\n' +
+                    '   u_dayTextureContrast[' + i + '],\n' +
+                    '   u_dayTextureOneOverGamma[' + i + ']);\n';
             }
 
             fs +=

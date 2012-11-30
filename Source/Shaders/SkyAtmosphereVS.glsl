@@ -36,19 +36,26 @@ attribute vec4 position;
 
 uniform float fCameraHeight;
 uniform float fCameraHeight2;
-uniform vec3 v3InvWavelength;   // 1 / pow(wavelength, 4) for the red, green, and blue channels
 uniform float fOuterRadius;     // The outer (atmosphere) radius
 uniform float fOuterRadius2;    // fOuterRadius^2
 uniform float fInnerRadius;     // The inner (planetary) radius
-uniform float fInnerRadius2;    // fInnerRadius^2
-uniform float fKrESun;          // Kr * ESun
-uniform float fKmESun;          // Km * ESun
-uniform float fKr4PI;           // Kr * 4 * PI
-uniform float fKm4PI;           // Km * 4 * PI
 uniform float fScale;           // 1 / (fOuterRadius - fInnerRadius)
 uniform float fScaleDepth;      // The scale depth (i.e. the altitude at which the atmosphere's average density is found)
 uniform float fScaleOverScaleDepth; // fScale / fScaleDepth
 
+const float Kr = 0.0025;
+const float fKr4PI = Kr * 4.0 * czm_pi;
+const float Km = 0.0015;
+const float fKm4PI = Km * 4.0 * czm_pi;
+const float ESun = 15.0;
+const float fKmESun = Km * ESun;
+const float fKrESun = Kr * ESun;
+const vec3 v3InvWavelength = vec3(
+    5.60204474633241,  // Red = 1.0 / Math.pow(0.650, 4.0)
+    9.473284437923038, // Green = 1.0 / Math.pow(0.570, 4.0)
+    19.643802610477206); // Blue = 1.0 / Math.pow(0.475, 4.0)
+const float rayleighScaleDepth = 0.25;
+          
 const int nSamples = 2;
 const float fSamples = 2.0;
 
@@ -105,7 +112,8 @@ void main(void)
     {
         float fHeight = length(v3SamplePoint);
         float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));
-        float fLightAngle = dot(czm_sunDirectionWC, v3SamplePoint) / fHeight;
+        vec3 lightPosition = normalize(czm_viewerPositionWC); // czm_sunDirectionWC
+        float fLightAngle = dot(lightPosition, v3SamplePoint) / fHeight;
         float fCameraAngle = dot(v3Ray, v3SamplePoint) / fHeight;
         float fScatter = (fStartOffset + fDepth*(scale(fLightAngle) - scale(fCameraAngle)));
         vec3 v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));

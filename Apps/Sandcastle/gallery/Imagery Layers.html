@@ -157,7 +157,7 @@ require([
         addBaseLayerOption(
                 'Single Image',
                 new Cesium.SingleTileImageryProvider({
-                    url : require.toUrl('Assets/Imagery/NE2_50M_SR_W_4096.jpg')
+                    url : require.toUrl('Assets/Textures/NE2_50M_SR_W_2048.jpg')
                 }));
 
         // Create the additional layers
@@ -334,8 +334,6 @@ require([
 
     var scene = widget.scene;
     var centralBody = widget.centralBody;
-
-    centralBody.affectedByLighting = false;
 
     imageryLayerCollection = centralBody.getImageryLayers();
 

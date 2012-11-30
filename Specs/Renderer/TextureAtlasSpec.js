@@ -192,7 +192,7 @@ defineSuite([
             y : (tallGreenCoords.y + tallGreenCoords.height / 2.0)
         }]);
 
-        expect((pixels[0] === 0) || (pixels[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
+        expect(pixels[0]).toEqual(0);
         expect(pixels[1]).toEqual(255);
         expect(pixels[2]).toEqual(0);
         expect(pixels[3]).toEqual(255);
@@ -381,7 +381,7 @@ defineSuite([
             y : (greenCoords.y + greenCoords.height / 2.0)
         }]);
 
-        expect((pixels[0] === 0) || (pixels[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
+        expect(pixels[0]).toEqual(0);
         expect(pixels[1]).toEqual(255);
         expect(pixels[2]).toEqual(0);
         expect(pixels[3]).toEqual(255);
@@ -650,12 +650,12 @@ defineSuite([
             y : (coordinates[1].y + coordinates[1].height / 2.0)
         }]);
 
-        expect((pixels1[0] === 0) || (pixels1[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
+        expect(pixels1[0]).toEqual(0);
         expect(pixels1[1]).toEqual(255);
         expect(pixels1[2]).toEqual(0);
         expect(pixels1[3]).toEqual(255);
 
-        expect((pixels2[0] === 0) || (pixels2[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
+        expect(pixels2[0]).toEqual(0);
         expect(pixels2[1]).toEqual(255);
         expect(pixels2[2]).toEqual(0);
         expect(pixels2[3]).toEqual(255);
@@ -868,7 +868,7 @@ defineSuite([
             y : (coordinates[3].y + coordinates[3].height / 2.0)
         }]);
 
-        expect((pixels[0] === 0) || (pixels[0] === 1)).toEqual(true); // Workaround:  Firefox on Windows
+        expect(pixels[0]).toEqual(0);
         expect(pixels[1]).toEqual(255);
         expect(pixels[2]).toEqual(0);
         expect(pixels[3]).toEqual(255);
