@@ -275,3 +275,10 @@ Copyright (c) by James Hastings-Trew
 http://planetpixelemporium.com/
 
 Copyright Information:  http://planetpixelemporium.com/planets.html
+
+### Sky box images from NASA
+
+http://maps.jpl.nasa.gov/stars.html
+
+Terms of use: http://www.nasa.gov/audience/formedia/features/MP_Photo_Guidelines.html
+

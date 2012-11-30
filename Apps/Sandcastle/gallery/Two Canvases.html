@@ -83,18 +83,14 @@
         var scene = new Cesium.Scene(canvas);
         var primitives = scene.getPrimitives();
 
-        var imageryUrl = '../../../Source/Assets/Imagery/';
+        var imageryUrl = '../../../Source/Assets/Textures/';
         var imageryProvider = new Cesium.SingleTileImageryProvider({
             url : imageryUrl + 'NE2_50M_SR_W_2048.jpg'
         });
 
         var cb = new Cesium.CentralBody(ellipsoid);
         cb.getImageryLayers().addImageryProvider(imageryProvider);
-        cb.nightImageSource = imageryUrl + 'land_ocean_ice_lights_2048.jpg';
-        cb.specularMapSource = imageryUrl + 'earthspec1k.jpg';
 
-        cb.showSkyAtmosphere = (canvas === canvas3D);
-        cb.showGroundAtmosphere = false;
         primitives.setCentralBody(cb);
 
         // Prevent right-click from opening a context menu.
@@ -108,6 +104,8 @@
     var scene3D = createScene(canvas3D);
     var scene2D = createScene(canvas2D);
 
+    scene3D.skyAtmosphere = new Cesium.SkyAtmosphere();
+    
     var transitioner = new Cesium.SceneTransitioner(scene2D);
     transitioner.to2D();
 

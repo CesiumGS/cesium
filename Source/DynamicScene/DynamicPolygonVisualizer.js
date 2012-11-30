@@ -206,7 +206,6 @@ define([
             } else {
                 polygonVisualizerIndex = this._polygonCollection.length;
                 polygon = new Polygon();
-                polygon.affectedByLighting = false;
                 this._polygonCollection.push(polygon);
                 this._primitives.add(polygon);
             }
