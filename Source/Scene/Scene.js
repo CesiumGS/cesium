@@ -252,30 +252,6 @@ define([
         clearPasses(frameState.passes);
     }
 
-    function update(scene, time) {
-        var us = scene.getUniformState();
-        var camera = scene._camera;
-
-        // Destroy released shaders once every 120 frames to avoid thrashing the cache
-        if (scene._shaderFrameCount++ === 120) {
-            scene._shaderFrameCount = 0;
-            scene._context.getShaderCache().destroyReleasedShaderPrograms();
-        }
-
-        scene._animations.update();
-        camera.update();
-
-        var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
-        updateFrameState(scene, frameNumber, time);
-        scene._frameState.passes.color = true;
-        scene._frameState.passes.overlay = true;
-
-        us.update(scene._frameState);
-
-        scene._commandList.length = 0;
-        scene._primitives.update(scene._context, scene._frameState, scene._commandList);
-    }
-
     function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList) {
         frustumCommandsList.length = numFrustums;
         for (var m = 0; m < numFrustums; ++m) {
@@ -460,12 +436,50 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.render = function(time) {
+    Scene.prototype.initializeFrame = function(time) {
         if (typeof time === 'undefined') {
             time = new JulianDate();
         }
 
-        update(this, time);
+        // Destroy released shaders once every 120 frames to avoid thrashing the cache
+        if (this._shaderFrameCount++ === 120) {
+            this._shaderFrameCount = 0;
+            this._context.getShaderCache().destroyReleasedShaderPrograms();
+        }
+
+        this._animations.update();
+
+        var us = this.getUniformState();
+        var frameState = this._frameState;
+
+        this._camera.controller.update(frameState);
+        this._cameraMouseController.update(frameState);
+
+        var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
+        updateFrameState(this, frameNumber, time);
+        frameState.passes.color = true;
+        frameState.passes.overlay = true;
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof Scene
+     */
+    Scene.prototype.render = function() {
+        // Destroy released shaders once every 120 frames to avoid thrashing the cache
+        if (this._shaderFrameCount++ === 120) {
+            this._shaderFrameCount = 0;
+            this._context.getShaderCache().destroyReleasedShaderPrograms();
+        }
+
+        // TODO: shouldn't we do this in initializeFrame?
+        var us = this.getUniformState();
+        var frameState = this._frameState;
+        us.update(frameState);
+
+        this._commandList.length = 0;
+        this._primitives.update(this._context, this._frameState, this._commandList);
+
         createPotentiallyVisibleSet(this, 'colorList');
         executeCommands(this);
         executeOverlayCommands(this);
@@ -562,7 +576,8 @@ define([
         this._pickFramebuffer = this._pickFramebuffer || context.createPickFramebuffer();
         var fb = this._pickFramebuffer.begin();
 
-        updateFrameState(this);
+        // Update with previous frame's number aqnd time, assuming that render is called before picking.
+        updateFrameState(this, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
