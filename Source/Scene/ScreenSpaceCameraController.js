@@ -17,7 +17,7 @@ define([
         '../Core/Ray',
         '../Core/Transforms',
         './AnimationCollection',
-        './CameraEventHandler',
+        './CameraEventAggregator',
         './CameraEventType',
         './CameraColumbusViewMode',
         './SceneMode'
@@ -39,7 +39,7 @@ define([
         Ray,
         Transforms,
         AnimationCollection,
-        CameraEventHandler,
+        CameraEventAggregator,
         CameraEventType,
         CameraColumbusViewMode,
         SceneMode) {
@@ -47,7 +47,7 @@ define([
 
     /**
      * Modifies the camera position and orientation based on mouse input to a canvas.
-     * @alias CameraMouseController
+     * @alias ScreenSpaceCameraController
      * @constructor
      *
      * @param {HTMLCanvasElement} canvas The canvas to listen for events.
@@ -56,7 +56,7 @@ define([
      * @exception {DeveloperError} canvas is required.
      * @exception {DeveloperError} cameraController is required.
      */
-    var CameraMouseController = function(canvas, cameraController) {
+    var ScreenSpaceCameraController = function(canvas, cameraController) {
         if (typeof canvas === 'undefined') {
             throw new DeveloperError('canvas is required.');
         }
@@ -115,6 +115,13 @@ define([
          */
         this.inertiaZoom = 0.8;
         /**
+         * A parameter in the range <code>[0, 1)</code> used to limit the range
+         * of various user inputs to a percentage of the window width/height per animation frame.
+         * This helps keep the camera under control in low-frame-rate situations.
+         * @type Number
+         */
+        this.maximumMovementRatio = 0.1;
+        /**
          * Sets the behavior in Columbus view.
          * @type CameraColumbusViewMode
          */
@@ -129,12 +136,13 @@ define([
         this._cameraController = cameraController;
         this._ellipsoid = Ellipsoid.WGS84;
 
-        this._spinHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
-        this._translateHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG);
-        this._lookHandler = new CameraEventHandler(canvas, CameraEventType.LEFT_DRAG, EventModifier.SHIFT);
-        this._rotateHandler = new CameraEventHandler(canvas, CameraEventType.MIDDLE_DRAG);
-        this._zoomHandler = new CameraEventHandler(canvas, CameraEventType.RIGHT_DRAG);
-        this._zoomWheelHandler = new CameraEventHandler(canvas, CameraEventType.WHEEL);
+        this._spinHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG);
+        this._translateHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG);
+        this._lookHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG, EventModifier.SHIFT);
+        this._rotateHandler = new CameraEventAggregator(canvas, CameraEventType.MIDDLE_DRAG);
+        this._zoomHandler = new CameraEventAggregator(canvas, CameraEventType.RIGHT_DRAG);
+        this._zoomWheelHandler = new CameraEventAggregator(canvas, CameraEventType.WHEEL);
+        this._pinchHandler = new CameraEventAggregator(canvas, CameraEventType.PINCH);
 
         this._lastInertiaSpinMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
@@ -165,7 +173,7 @@ define([
      * as well as how fast to rotate the camera based on the distance to its surface.
      * @returns {Ellipsoid} The ellipsoid.
      */
-    CameraMouseController.prototype.getEllipsoid = function() {
+    ScreenSpaceCameraController.prototype.getEllipsoid = function() {
         return this._ellipsoid;
     };
 
@@ -174,7 +182,7 @@ define([
      * as well as how fast to rotate the camera based on the distance to its surface.
      * @param {Ellipsoid} [ellipsoid=WGS84] The ellipsoid.
      */
-    CameraMouseController.prototype.setEllipsoid = function(ellipsoid) {
+    ScreenSpaceCameraController.prototype.setEllipsoid = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
         var radius = ellipsoid.getMaximumRadius();
         this._ellipsoid = ellipsoid;
@@ -264,6 +272,7 @@ define([
         }
 
         var rangeWindowRatio = diff / object._canvas.clientHeight;
+        rangeWindowRatio = Math.min(rangeWindowRatio, object.maximumMovementRatio);
         var dist = zoomRate * rangeWindowRatio;
 
         if (dist > 0.0 && Math.abs(distanceMeasure - minHeight) < 1.0) {
@@ -325,13 +334,34 @@ define([
         controller._cameraController.twistRight(theta);
     }
 
+    function singleAxisTwist2D(controller, movement) {
+        var rotateRate = controller._rotateFactor * controller._rotateRateRangeAdjustment;
+
+        if (rotateRate > controller._maximumRotateRate) {
+            rotateRate = controller._maximumRotateRate;
+        }
+
+        if (rotateRate < controller._minimumRotateRate) {
+            rotateRate = controller._minimumRotateRate;
+        }
+
+        var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / controller._canvas.clientWidth;
+        phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
+
+        var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 4.0;
+
+        controller._cameraController.twistRight(deltaPhi);
+    }
+
     function update2D(controller) {
         var translate = controller._translateHandler;
         var rightZoom = controller._zoomHandler;
         var wheelZoom = controller._zoomWheelHandler;
+        var pinch = controller._pinchHandler;
         var translating = translate.isMoving() && translate.getMovement();
         var rightZooming = rightZoom.isMoving();
         var wheelZooming = wheelZoom.isMoving();
+        var pinching = pinch.isMoving();
 
         if (translate.isButtonDown() || rightZoom.isButtonDown() || wheelZooming) {
             controller._animationCollection.removeAll();
@@ -352,6 +382,8 @@ define([
                 zoom2D(controller, rightZoom.getMovement());
             } else if (wheelZooming) {
                 zoom2D(controller, wheelZoom.getMovement());
+            } else if (pinching) {
+                zoom2D(controller, pinch.getMovement().distance);
             }
 
             if (!rightZooming && controller.inertiaZoom < 1.0) {
@@ -361,11 +393,19 @@ define([
             if (!wheelZooming && controller.inertiaZoom < 1.0) {
                 maintainInertia(wheelZoom, controller.inertiaZoom, zoom2D, controller, '_lastInertiaWheelZoomMovement');
             }
+
+            if (!pinching && controller.inertiaZoom < 1.0) {
+                maintainInertia(pinch, controller.inertiaZoom, zoom2D, controller, '_lastInertiaZoomMovement');
+            }
         }
 
         if (controller.enableRotate) {
             if (controller._rotateHandler.isMoving()) {
                 twist2D(controller, controller._rotateHandler.getMovement());
+                //singleAxisTwist2D(controller, controller._rotateHandler.getMovement());
+            }
+            if (pinching) {
+                singleAxisTwist2D(controller, pinch.getMovement().angleAndHeight);
             }
         }
 
@@ -453,6 +493,8 @@ define([
         var zoomimg = zoom && zoom.isMoving();
         var wheelZoom = controller._zoomWheelHandler;
         var wheelZooming = wheelZoom.isMoving();
+        var pinch = controller._pinchHandler;
+        var pinching = pinch.isMoving();
         var translate = controller._translateHandler;
         var translating = translate.isMoving() && translate.getMovement();
         var rotate = controller._rotateHandler;
@@ -476,6 +518,8 @@ define([
                     zoom3D(controller, zoom.getMovement());
                 } else if (wheelZooming) {
                     zoom3D(controller, wheelZoom.getMovement());
+                } else if (pinching) {
+                    zoom3D(controller, pinch.getMovement().distance);
                 }
 
                 if (zoom && !zoomimg && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
@@ -485,9 +529,13 @@ define([
                 if (wheelZoom && !wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
                 }
+
+                if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                    maintainInertia(pinch, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
+                }
             }
         } else {
-            var buttonDown = translate.isButtonDown() || zoom.isButtonDown() || wheelZooming || rotate.isButtonDown() || controller._lookHandler.isButtonDown();
+            var buttonDown = translate.isButtonDown() || zoom.isButtonDown() || wheelZooming || pinching || rotate.isButtonDown() || controller._lookHandler.isButtonDown();
             if (buttonDown) {
                 controller._animationCollection.removeAll();
             }
@@ -497,8 +545,16 @@ define([
                     rotateCV(controller, rotate.getMovement());
                 }
 
+                if (pinching) {
+                    rotateCV(controller, pinch.getMovement().angleAndHeight);
+                }
+
                 if (rotate && !rotating && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
                     maintainInertia(rotate, controller.inertiaSpin, rotateCV, controller, '_lastInertiaTiltMovement');
+                }
+
+                if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                    maintainInertia(pinch, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
                 }
             }
 
@@ -517,6 +573,8 @@ define([
                     zoomCV(controller, zoom.getMovement());
                 } else if (wheelZooming) {
                     zoomCV(controller, wheelZoom.getMovement());
+                } else if (pinching) {
+                    zoomCV(controller, pinch.getMovement().distance);
                 }
 
                 if (zoom && !zoomimg && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
@@ -525,6 +583,10 @@ define([
 
                 if (!wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                     maintainInertia(wheelZoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaWheelZoomMovement');
+                }
+
+                if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                    maintainInertia(pinch, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
                 }
             }
 
@@ -578,6 +640,8 @@ define([
 
         var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / controller._canvas.clientWidth;
         var thetaWindowRatio = (movement.endPosition.y - movement.startPosition.y) / controller._canvas.clientHeight;
+        phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
+        thetaWindowRatio = Math.min(thetaWindowRatio, controller.maximumMovementRatio);
 
         var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
         var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
@@ -747,9 +811,11 @@ define([
         var spin = controller._spinHandler;
         var rightZoom = controller._zoomHandler;
         var wheelZoom = controller._zoomWheelHandler;
+        var pinch = controller._pinchHandler;
         var spinning = spin && spin.isMoving();
         var rightZooming = rightZoom && rightZoom.isMoving();
         var wheelZooming = wheelZoom && wheelZoom.isMoving();
+        var pinching = pinch && pinch.isMoving();
         var rotate = controller._rotateHandler;
         var rotating = rotate.isMoving() && rotate.getMovement();
 
@@ -768,9 +834,16 @@ define([
             if (rotating) {
                 tilt3D(controller, rotate.getMovement());
             }
+            if (pinching) {
+                tilt3D(controller, pinch.getMovement().angleAndHeight);
+            }
 
             if (rotate && !rotating && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
                 maintainInertia(rotate, controller.inertiaSpin, tilt3D, controller, '_lastInertiaTiltMovement');
+            }
+
+            if (pinch && !pinch && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
+                maintainInertia(pinch, controller.inertiaSpin, tilt3D, controller, '_lastInertiaTiltMovement');
             }
         }
 
@@ -779,6 +852,8 @@ define([
                 zoom3D(controller, rightZoom.getMovement());
             } else if (wheelZooming) {
                 zoom3D(controller, wheelZoom.getMovement());
+            } else if (pinching) {
+                zoom3D(controller, pinch.getMovement().distance);
             }
 
             if (rightZoom && !rightZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
@@ -787,6 +862,10 @@ define([
 
             if (wheelZoom && !wheelZooming && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
                 maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
+            }
+
+            if (pinch && !pinching && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
+                maintainInertia(pinch, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
             }
         }
 
@@ -802,7 +881,7 @@ define([
     /**
      * @private
      */
-    CameraMouseController.prototype.update = function(frameState) {
+    ScreenSpaceCameraController.prototype.update = function(frameState) {
         var mode = frameState.mode;
         if (mode === SceneMode.SCENE2D) {
             update2D(this);
@@ -821,13 +900,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof CameraMouseController
+     * @memberof ScreenSpaceCameraController
      *
      * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see CameraMouseController#destroy
+     * @see ScreenSpaceCameraController#destroy
      */
-    CameraMouseController.prototype.isDestroyed = function() {
+    ScreenSpaceCameraController.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -838,26 +917,27 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof CameraMouseController
+     * @memberof ScreenSpaceCameraController
      *
      * @return {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CameraMouseController#isDestroyed
+     * @see ScreenSpaceCameraController#isDestroyed
      *
      * @example
      * controller = controller && controller.destroy();
      */
-    CameraMouseController.prototype.destroy = function() {
+    ScreenSpaceCameraController.prototype.destroy = function() {
         this._spinHandler = this._spinHandler && this._spinHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._lookHandler = this._lookHandler && this._lookHandler.destroy();
         this._rotateHandler = this._rotateHandler && this._rotateHandler.destroy();
         this._zoomHandler = this._zoomHandler && this._zoomHandler.destroy();
         this._zoomWheelHandler = this._zoomWheelHandler && this._zoomWheelHandler.destroy();
+        this._pinchHandler = this._pinchHandler && this._pinchHandler.destroy();
         return destroyObject(this);
     };
 
-    return CameraMouseController;
+    return ScreenSpaceCameraController;
 });

@@ -82,7 +82,7 @@ require([
         camera.controller.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
         
         // View in east-north-up frame
-        var controller = scene.getCameraMouseController();
+        var controller = scene.getScreenSpaceCameraController();
         controller.setEllipsoid(Cesium.Ellipsoid.UNIT_SPHERE);
 
         // Zoom in

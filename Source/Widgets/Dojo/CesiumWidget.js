@@ -12,9 +12,9 @@ define([
         '../../Core/BoundingRectangle',
         '../../Core/Ellipsoid',
         '../../Core/computeSunPosition',
-        '../../Core/EventHandler',
+        '../../Core/ScreenSpaceEventHandler',
         '../../Core/FeatureDetection',
-        '../../Core/MouseEventType',
+        '../../Core/ScreenSpaceEventType',
         '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/JulianDate',
@@ -42,9 +42,9 @@ define([
         BoundingRectangle,
         Ellipsoid,
         computeSunPosition,
-        EventHandler,
+        ScreenSpaceEventHandler,
         FeatureDetection,
-        MouseEventType,
+        ScreenSpaceEventType,
         Cartesian2,
         Cartesian3,
         JulianDate,
@@ -231,15 +231,15 @@ define([
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
 
-            var handler = new EventHandler(canvas);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleRightClick'), MouseEventType.RIGHT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), MouseEventType.MOVE);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), MouseEventType.LEFT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), MouseEventType.LEFT_UP);
-            handler.setMouseAction(lang.hitch(this, '_handleWheel'), MouseEventType.WHEEL);
-            handler.setMouseAction(lang.hitch(this, '_handleRightDown'), MouseEventType.RIGHT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleRightUp'), MouseEventType.RIGHT_UP);
+            var handler = new ScreenSpaceEventHandler(canvas);
+            handler.setInputAction(lang.hitch(this, '_handleLeftClick'), ScreenSpaceEventType.LEFT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleRightClick'), ScreenSpaceEventType.RIGHT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleMouseMove'), ScreenSpaceEventType.MOUSE_MOVE);
+            handler.setInputAction(lang.hitch(this, '_handleLeftDown'), ScreenSpaceEventType.LEFT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleLeftUp'), ScreenSpaceEventType.LEFT_UP);
+            handler.setInputAction(lang.hitch(this, '_handleWheel'), ScreenSpaceEventType.WHEEL);
+            handler.setInputAction(lang.hitch(this, '_handleRightDown'), ScreenSpaceEventType.RIGHT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleRightUp'), ScreenSpaceEventType.RIGHT_UP);
 
             if (widget.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {

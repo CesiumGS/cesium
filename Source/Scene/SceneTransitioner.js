@@ -2,8 +2,8 @@
 define([
         '../Core/destroyObject',
         '../Core/Math',
-        '../Core/EventHandler',
-        '../Core/MouseEventType',
+        '../Core/ScreenSpaceEventHandler',
+        '../Core/ScreenSpaceEventType',
         '../Core/Ellipsoid',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -17,8 +17,8 @@ define([
     ], function(
         destroyObject,
         CesiumMath,
-        EventHandler,
-        MouseEventType,
+        ScreenSpaceEventHandler,
+        ScreenSpaceEventType,
         Ellipsoid,
         Cartesian2,
         Cartesian3,
@@ -311,16 +311,16 @@ define([
         var that = this;
 
         if (this.endMorphOnMouseInput) {
-            this._morphHandler = new EventHandler(this._scene.getCanvas());
+            this._morphHandler = new ScreenSpaceEventHandler(this._scene.getCanvas());
 
             var cancelMorph = function() {
                 that._morphCancelled = true;
                 endMorphFunction.call(that);
             };
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.LEFT_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.MIDDLE_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.RIGHT_DOWN);
-            this._morphHandler.setMouseAction(cancelMorph, MouseEventType.WHEEL);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.LEFT_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.MIDDLE_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.RIGHT_DOWN);
+            this._morphHandler.setInputAction(cancelMorph, ScreenSpaceEventType.WHEEL);
         }
     };
 
