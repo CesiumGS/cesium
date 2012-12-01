@@ -27,9 +27,9 @@ define([
         '../../Core/Iso8601',
         '../../Core/Fullscreen',
         '../../Core/computeSunPosition',
-        '../../Core/EventHandler',
+        '../../Core/ScreenSpaceEventHandler',
         '../../Core/FeatureDetection',
-        '../../Core/MouseEventType',
+        '../../Core/ScreenSpaceEventType',
         '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/JulianDate',
@@ -85,9 +85,9 @@ define([
         Iso8601,
         Fullscreen,
         computeSunPosition,
-        EventHandler,
+        ScreenSpaceEventHandler,
         FeatureDetection,
-        MouseEventType,
+        ScreenSpaceEventType,
         Cartesian2,
         Cartesian3,
         JulianDate,
@@ -660,16 +660,16 @@ define([
             var camera = scene.getCamera();
             camera.position = camera.position.multiplyByScalar(1.5);
 
-            var handler = new EventHandler(canvas);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftClick'), MouseEventType.LEFT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleRightClick'), MouseEventType.RIGHT_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftDoubleClick'), MouseEventType.LEFT_DOUBLE_CLICK);
-            handler.setMouseAction(lang.hitch(this, '_handleMouseMove'), MouseEventType.MOVE);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftDown'), MouseEventType.LEFT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleLeftUp'), MouseEventType.LEFT_UP);
-            handler.setMouseAction(lang.hitch(this, '_handleWheel'), MouseEventType.WHEEL);
-            handler.setMouseAction(lang.hitch(this, '_handleRightDown'), MouseEventType.RIGHT_DOWN);
-            handler.setMouseAction(lang.hitch(this, '_handleRightUp'), MouseEventType.RIGHT_UP);
+            var handler = new ScreenSpaceEventHandler(canvas);
+            handler.setInputAction(lang.hitch(this, '_handleLeftClick'), ScreenSpaceEventType.LEFT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleRightClick'), ScreenSpaceEventType.RIGHT_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleLeftDoubleClick'), ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+            handler.setInputAction(lang.hitch(this, '_handleMouseMove'), ScreenSpaceEventType.MOUSE_MOVE);
+            handler.setInputAction(lang.hitch(this, '_handleLeftDown'), ScreenSpaceEventType.LEFT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleLeftUp'), ScreenSpaceEventType.LEFT_UP);
+            handler.setInputAction(lang.hitch(this, '_handleWheel'), ScreenSpaceEventType.WHEEL);
+            handler.setInputAction(lang.hitch(this, '_handleRightDown'), ScreenSpaceEventType.RIGHT_DOWN);
+            handler.setInputAction(lang.hitch(this, '_handleRightUp'), ScreenSpaceEventType.RIGHT_UP);
 
             //////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -901,11 +901,11 @@ define([
             var camera = scene.getCamera();
             camera.controller.constrainedAxis = undefined;
 
-            var mouseHandler = scene.getCameraMouseController();
-            mouseHandler.enableTranslate = true;
-            mouseHandler.enableTilt = true;
-            mouseHandler.setEllipsoid(Ellipsoid.WGS84);
-            mouseHandler.columbusViewMode = CameraColumbusViewMode.FREE;
+            var controller = scene.getScreenSpaceCameraController();
+            controller.enableTranslate = true;
+            controller.enableTilt = true;
+            controller.setEllipsoid(Ellipsoid.WGS84);
+            controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
             if (mode === SceneMode.SCENE2D) {
                 camera.controller.viewExtent(Extent.MAX_VALUE);

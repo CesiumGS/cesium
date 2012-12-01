@@ -6,7 +6,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
      * Specifies how to handle mouse events in columbus view mode.
      *
      * @exports CameraColumbusViewMode
-     * @see CameraMouseController
+     * @see ScreenSpaceCameraController
      */
     var CameraColumbusViewMode = {
         /**
