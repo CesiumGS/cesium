@@ -23,11 +23,12 @@ Beta Releases
 * Improved lighting in Columbus view and on polygons, ellipsoids, and sensors.
 * Fixed atmosphere rendering artifacts and improved Columbus view transition.
 * Fixed jitter artifacts with billboards and polylines.
+* Added `TileMapServiceImageryProvider`.  See the Imagery Layers Sandbox example.
 * Added `Water` material.  See the Materials Sandbox example.
 * Added `SkyBox` to draw stars.  Added `CesiumWidget.showSkyBox` and `CesiumViewerWidget.showSkyBox`.
 * Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
 * Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
-* Added new automatic GLSL uniforms: 'czm_frameNumber', `czm_temeToPseudoFixed, `czm_entireFrustum`, `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
+* Added new automatic GLSL uniforms: `czm_frameNumber`, `czm_temeToPseudoFixed`, `czm_entireFrustum`, `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
 * Added `czm_translateRelativeToEye` and `czm_luminance` GLSL functions.
 * Added `shininess` to `czm_materialInput`.
 * Added `QuadraticRealPolynomial`, `CubicRealPolynomial`, and `QuarticRealPolynomial` for finding the roots of quadratic, cubic, and quartic polynomials.
