@@ -29,6 +29,7 @@ public class ServerTask extends Task {
 	public void execute() throws BuildException {
 		try {
 			Server server = new Server();
+			server.setSendDateHeader(true);
 			SelectChannelConnector connector = new SelectChannelConnector();
 			if (!listenOnAllAddresses) {
 				connector.setHost("localhost");
