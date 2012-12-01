@@ -8,24 +8,34 @@ Beta Releases
 
 * Breaking changes:
    * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
-   * Changed Timeline.makeLabel() to take a julianDate instead of a JavaScript date parameter.
+   * Changed `Timeline.makeLabel` to take a `JulianDate` instead of a JavaScript date parameter.
    * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
    * `positionToEyeEC` in `czm_materialInput` is no longer normalized by default.
    * `FullScreen` and related functions have been renamed to `Fullscreen` to match the W3C standard name.
    * `Fullscreen.isFullscreenEnabled` was incorrectly implemented in certain browsers.  `isFullscreenEnabled` now correctly determines whether the browser will allow an element to go fullscreen.  A new `isFullscreen` function is available to determine if the browser is currently in fullscreen mode.
    * `Fullscreen.getFullScreenChangeEventName` and `Fullscreen.getFullScreenChangeEventName` now return the proper event name, suitable for use with the `addEventListener` API, instead prefixing them with "on".
-   * `Matrix2.getElementIndex`, `Matrix3.getElementIndex`, and `Matrix4.getElementIndex` functions have had their parameters swapped and now take row first and column second.  This is consistent with other class constants, such as Matrix2.COLUMN1ROW2.
+   * Removed `Scene.setSunPosition` and `Scene.getSunPosition`.  The sun position used for lighting is automatically computed based on the scene's time.
+   * Removed a number of rendering options from `CentralBody`, including the ground atmosphere, night texture, specular map, cloud map, cloud shadows, and bump map.  These features weren't really production ready and had a disproportionate cost in terms of shader complexity and compilation time.  They may return in a more polished form in a future release.
+   * Removed `affectedByLighting` property from `Polygon`, `EllipsoidPrimitive`, `RectangularPyramidSensorVolume`, `CustomSensorVolume`, and `ComplexConicSensorVolume`.  
    * Removed `DistanceIntervalMaterial`.  This was not documented.
-* Added `Water` material.  See the Materials Sandbox example.
+   * `Matrix2.getElementIndex`, `Matrix3.getElementIndex`, and `Matrix4.getElementIndex` functions have had their parameters swapped and now take row first and column second.  This is consistent with other class constants, such as Matrix2.COLUMN1ROW2.
+   * Replaced `CentralBody.showSkyAtmosphere` with `Scene.skyAtmosphere` and `SkyAtmosphere`.  This has no impact for those using the Cesium widget.
+* Improved lighting in Columbus view and on polygons, ellipsoids, and sensors.
+* Fixed atmosphere rendering artifacts and improved Columbus view transition.
 * Fixed jitter artifacts with billboards and polylines.
+* Added `TileMapServiceImageryProvider`.  See the Imagery Layers Sandbox example.
+* Added `Water` material.  See the Materials Sandbox example.
+* Added `SkyBox` to draw stars.  Added `CesiumWidget.showSkyBox` and `CesiumViewerWidget.showSkyBox`.
 * Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
 * Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
-* Added new automatic GLSL uniforms: 'czm_frameNumber', `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
-* Added `czm_translateRelativeToEye` GLSL function.
+* Added new automatic GLSL uniforms: `czm_frameNumber`, `czm_temeToPseudoFixed`, `czm_entireFrustum`, `czm_inverseModel`, `czm_modelViewRelativeToEye`, `czm_modelViewProjectionRelativeToEye`, `czm_encodedCameraPositionMCHigh`, and `czm_encodedCameraPositionMCLow`.
+* Added `czm_translateRelativeToEye` and `czm_luminance` GLSL functions.
+* Added `shininess` to `czm_materialInput`.
 * Added `QuadraticRealPolynomial`, `CubicRealPolynomial`, and `QuarticRealPolynomial` for finding the roots of quadratic, cubic, and quartic polynomials.
 * Added `IntersectionTests.grazingAltitudeLocation` for finding a point on a ray nearest to an ellipsoid.
 * Added `mostOrthogonalAxis` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
-* Added `shininess` to `czm_materialInput`.
+* Changed CesiumViewerWidget default behavior so that zooming to an object now requires a single left-click, rather than a double-click. 
+* Updated third-party [Tween.js](https://github.com/sole/tween.js/).
 
 ### b10 - 11/02/2012
 

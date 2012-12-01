@@ -321,7 +321,7 @@ define([
         };
 
         this._zoomAnimation = this._animationCollection.add({
-            easingFunction : Tween.Easing.Exponential.EaseOut,
+            easingFunction : Tween.Easing.Exponential.Out,
             startValue : {
                 time : 0.0
             },
@@ -354,7 +354,7 @@ define([
         };
 
         this._translateAnimation = this._animationCollection.add({
-            easingFunction : Tween.Easing.Exponential.EaseOut,
+            easingFunction : Tween.Easing.Exponential.Out,
             startValue : {
                 time : 0.0
             },

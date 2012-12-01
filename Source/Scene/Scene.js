@@ -17,6 +17,7 @@ define([
         '../Core/IntersectionTests',
         '../Core/Interval',
         '../Core/Matrix4',
+        '../Core/JulianDate',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         './Camera',
@@ -46,6 +47,7 @@ define([
         IntersectionTests,
         Interval,
         Matrix4,
+        JulianDate,
         Context,
         ClearCommand,
         Camera,
@@ -92,6 +94,24 @@ define([
             depth : 1.0,
             stencil : 0.0
         });
+
+        /**
+         * The {@link SkyBox} used to draw the stars.
+         *
+         * @type SkyBox
+         *
+         * @default undefined
+         */
+        this.skyBox = undefined;
+
+        /**
+         * The sky atmosphere drawn around the globe.
+         *
+         * @type SkyAtmosphere
+         *
+         * @default undefined
+         */
+        this.skyAtmosphere = undefined;
 
         /**
          * The current mode of the scene.
@@ -191,22 +211,6 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.setSunPosition = function(sunPosition) {
-        this.getUniformState().setSunPosition(sunPosition);
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getSunPosition = function() {
-        return this.getUniformState().getSunPosition();
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
     Scene.prototype.setAnimation = function(animationCallback) {
         this._animate = animationCallback;
     };
@@ -225,12 +229,15 @@ define([
         passes.overlay = false;
     }
 
-    function updateFrameState(scene) {
+    function updateFrameState(scene, frameNumber, time) {
         var camera = scene._camera;
 
         var frameState = scene._frameState;
         frameState.mode = scene.mode;
+        frameState.morphTime = scene.morphTime;
         frameState.scene2D = scene.scene2D;
+        frameState.frameNumber = frameNumber;
+        frameState.time = time;
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
         frameState.occluder = undefined;
@@ -247,7 +254,7 @@ define([
         clearPasses(frameState.passes);
     }
 
-    function update(scene) {
+    function update(scene, time) {
         var us = scene.getUniformState();
         var camera = scene._camera;
 
@@ -259,16 +266,17 @@ define([
 
         scene._animations.update();
         camera.update();
-        us.update(camera);
-        us.setFrameNumber(CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0));
+
+        var frameNumber = CesiumMath.incrementWrap(us.getFrameNumber(), 15000000.0, 1.0);
+        updateFrameState(scene, frameNumber, time);
+        scene._frameState.passes.color = true;
+        scene._frameState.passes.overlay = true;
+
+        us.update(scene._frameState);
 
         if (scene._animate) {
             scene._animate();
         }
-
-        updateFrameState(scene);
-        scene._frameState.passes.color = true;
-        scene._frameState.passes.overlay = true;
 
         scene._commandList.length = 0;
         scene._primitives.update(scene._context, scene._frameState, scene._commandList);
@@ -400,10 +408,26 @@ define([
     function executeCommands(scene, framebuffer) {
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
-
         var context = scene._context;
         var us = context.getUniformState();
+        var skyBoxCommand = (typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, scene._frameState) : undefined;
+        var skyAtmosphereCommand = (typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, scene._frameState) : undefined;
+
         scene._clearColorCommand.execute(context, framebuffer);
+
+        // Ideally, we would render the sky box and atmosphere last for
+        // early-z, but we would have to draw it in each frustum
+        frustum.near = camera.frustum.near;
+        frustum.far = camera.frustum.far;
+        us.updateFrustum(frustum);
+
+        if (typeof skyBoxCommand !== 'undefined') {
+            skyBoxCommand.execute(context, framebuffer);
+        }
+
+        if (typeof skyAtmosphereCommand !== 'undefined') {
+            skyAtmosphereCommand.execute(context, framebuffer);
+        }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
 
@@ -444,8 +468,12 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.render = function() {
-        update(this);
+    Scene.prototype.render = function(time) {
+        if (typeof time === 'undefined') {
+            time = new JulianDate();
+        }
+
+        update(this, time);
         createPotentiallyVisibleSet(this, 'colorList');
         executeCommands(this);
         executeOverlayCommands(this);
@@ -632,6 +660,8 @@ define([
         this._camera = this._camera && this._camera.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
+        this.skyBox = this.skyBox && this.skyBox.destroy();
+        this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
         this._context = this._context && this._context.destroy();
         return destroyObject(this);
     };

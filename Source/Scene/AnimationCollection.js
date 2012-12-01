@@ -26,7 +26,7 @@ define([
         var t = template || {};
         t.duration = (typeof t.duration === 'undefined') ? 3000 : t.duration;
         t.delayDuration = (typeof t.delayDuration === 'undefined') ? 0 : t.delayDuration;
-        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.EaseNone : t.easingFunction;
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = clone(t.startValue);
         var tween = new Tween.Tween(value);
@@ -79,7 +79,7 @@ define([
         var t = template || {};
         t.duration = (typeof t.duration === 'undefined') ? 3000 : t.duration;
         t.delayDuration = (typeof t.delayDuration === 'undefined') ? 0 : t.delayDuration;
-        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.EaseNone : t.easingFunction;
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = {
             alpha : start
@@ -124,7 +124,7 @@ define([
         var t = template || {};
         t.duration = (typeof t.duration === 'undefined') ? 3000 : t.duration;
         t.delayDuration = (typeof t.delayDuration === 'undefined') ? 0 : t.delayDuration;
-        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.EaseNone : t.easingFunction;
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = {
             value : start
@@ -165,7 +165,7 @@ define([
         var t = template || {};
         t.duration = (typeof t.duration === 'undefined') ? 3000 : t.duration;
         t.delayDuration = (typeof t.delayDuration === 'undefined') ? 0 : t.delayDuration;
-        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.EaseNone : t.easingFunction;
+        t.easingFunction = (typeof t.easingFunction === 'undefined') ? Tween.Easing.Linear.None : t.easingFunction;
 
         var value = {
             offset : material.uniforms.offset
