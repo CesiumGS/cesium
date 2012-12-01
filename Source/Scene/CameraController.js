@@ -1188,7 +1188,7 @@ define([
             };
 
             return {
-                easingFunction : Tween.Easing.Exponential.EaseOut,
+                easingFunction : Tween.Easing.Exponential.Out,
                 startValue : {
                     time : 0.0
                 },
@@ -1226,7 +1226,7 @@ define([
         };
 
         return {
-            easingFunction : Tween.Easing.Exponential.EaseOut,
+            easingFunction : Tween.Easing.Exponential.Out,
             startValue : {
                 time : 0.0
             },
