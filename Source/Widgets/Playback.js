@@ -141,7 +141,7 @@ define([
         // Define the XLink namespace that SVG uses
         svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', this._xlinkNS);
 
-        this._setSizeSmall();
+        this._setSizeBig();
 
         var defs = {
             'tagName' : 'defs',
@@ -258,12 +258,12 @@ define([
                 }, {
                     'id' : 'playback_pathSpeedUp',
                     'tagName' : 'path',
-                    'transform' : 'translate(16,16) rotate(-90) scale(0.85) translate(-16,-16)',
+                    'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
                     'd' : 'm 14.022968,5.3125 0,3.6875 9.201946,6.5 -9.201946,6.5 0,3.6875 L 28.43935,15.5 14.022968,5.3125 z M 4.0202416,25.682 18.504164,15.5 4.0202416,5.318 v 20.364 z'
                 }, {
                     'id' : 'playback_pathSlowDown',
                     'tagName' : 'path',
-                    'transform' : 'translate(16,16) rotate(90) scale(0.85) translate(-16,-16)',
+                    'transform' : 'translate(16,16) rotate(180) scale(0.85) translate(-16,-16)',
                     'd' : 'm 14.022968,5.3125 0,3.6875 9.201946,6.5 -9.201946,6.5 0,3.6875 L 28.43935,15.5 14.022968,5.3125 z M 4.0202416,25.682 18.504164,15.5 4.0202416,5.318 v 20.364 z'
                 }, {
                     'id' : 'playback_pathX',
@@ -324,32 +324,19 @@ define([
         };
 
         var buttonsG = this._svg('g');
-        topG.appendChild(buttonsG);
-
-        // ShowShuttleRing
-        var showShuttleRingSVG = rectButton(5, 63, '#playback_pathShuttleRing', 'Shuttle ring');
-        showShuttleRingSVG.childNodes[2].setAttribute('transform', 'scale(0.12) translate(30,75)');
-        buttonsG.appendChild(showShuttleRingSVG);
-
-        // Reset
-        var resetSVG = rectButton(5, 97, '#playback_pathReset', 'Reset');
-        buttonsG.appendChild(resetSVG);
-        resetSVG.addEventListener('click', function () {
-            widget.animationController.reset();
-        }, true);
-
-        // Speed up
-        var upSVG = rectButton(165, 63, '#playback_pathSpeedUp', 'Faster');
-        buttonsG.appendChild(upSVG);
-        upSVG.addEventListener('click', function () {
-            widget.animationController.faster();
-        }, true);
 
         // Slow down
-        var downSVG = rectButton(165, 97, '#playback_pathSlowDown', 'Slower');
+        var downSVG = rectButton(5, 100, '#playback_pathSlowDown', 'Slower');
         buttonsG.appendChild(downSVG);
         downSVG.addEventListener('click', function () {
             widget.animationController.slower();
+        }, true);
+
+        // Speed up
+        var upSVG = rectButton(165, 100, '#playback_pathSpeedUp', 'Faster');
+        buttonsG.appendChild(upSVG);
+        upSVG.addEventListener('click', function () {
+            widget.animationController.faster();
         }, true);
 
         var shuttleRingOuterG = this._svg('g').set('transform', 'translate(101,120)').set('class', 'playback-shuttleRing');
@@ -364,23 +351,6 @@ define([
             'height' : 42
         });
         shuttleRingG.appendChild(shuttleRingBack);
-
-        // Hide shuttle ring
-        var hideShuttleRingSVG = rectButton(2, -12, '#playback_pathX', 'Hide shuttle ring');
-        hideShuttleRingSVG.setAttribute('transform', 'translate(2,-12) scale(0.8)');
-        shuttleRingG.appendChild(hideShuttleRingSVG);
-        hideShuttleRingSVG.addEventListener('click', function () {
-            if (widget._shuttleRingVisible) {
-                shuttleRingDismiss.endElementAt(1);
-                shuttleRingDismiss.beginElementAt(-0.5);  // Hide ring
-                window.setTimeout(function() {
-                    widget._setSizeSmall();
-                    shuttleRingOuterG.style.display = 'none';
-                }, 450);
-                showButtons();
-                widget._shuttleRingVisible = false;
-            }
-        }, true);
 
         // Realtime
         this.realtimeSVG = rectButton(85, 18, '#playback_pathClock', 'Realtime');
@@ -443,7 +413,7 @@ define([
 
         this._realtimeMode = false;
         this._isSystemTimeAvailable = true;
-        this._shuttleRingVisible = false;
+        //this._shuttleRingVisible = false;
         this._shuttleRingAngle = 0;
         var shuttleRingDragging = false;
 
@@ -513,22 +483,9 @@ define([
         shuttleRingG.appendChild(shuttleRingLabelsG);
         shuttleRingOuterG.appendChild(shuttleRingG);
 
-        var shuttleRingDismiss = this._svgFromObject({
-            'tagName' : 'animateTransform',
-            'attributeName' : 'transform',
-            'attributeType' : 'XML',
-            'type' : 'scale',
-            'values' : '0.4;1;0.4',
-            'calcMode' : 'spline',
-            'keyTimes' : '0;0.5;1',
-            'keySplines' : '0.5 0.5 0.5 1;0.5 0.5 0.5 1',
-            'additive' : 'sum',
-            'begin' : 'indefinite',
-            'dur' : '1.0s',
-            'fill' : 'freeze'
-        });
-        shuttleRingOuterG.appendChild(shuttleRingDismiss);
         topG.appendChild(shuttleRingOuterG);
+
+        topG.appendChild(buttonsG);
 
         var largeButtonG = this._svgFromObject({
             'tagName' : 'g',
@@ -590,15 +547,6 @@ define([
         this._lastButtonSpeed = '';
         this._lastButtonTooltip = '';
 
-        function showButtons() {
-            buttonsG.style.display = 'block';
-        }
-
-        function hideButtons() {
-            buttonsG.style.display = 'none';
-            widget._shuttleRingVisible = true;
-        }
-
         largeButtonG.addEventListener('click', function () {
             if (widget.animationController.isAnimating()) {
                 widget.animationController.pause();
@@ -607,17 +555,8 @@ define([
             }
         }, true);
 
-        showShuttleRingSVG.addEventListener('click', function () {
-            shuttleRingDismiss.beginElementAt(0);  // Show ring
-            shuttleRingDismiss.endElementAt(0.5);
-            shuttleRingOuterG.style.display = 'block';
-            widget._setSizeBig();
-            window.setTimeout(hideButtons, 200);
-        }, true);
-
         svg.appendChild(topG);
         parentNode.appendChild(svg);
-        shuttleRingOuterG.style.display = 'none';
     };
 
     /**
