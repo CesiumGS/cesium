@@ -168,7 +168,7 @@ define([
      * @exception {RuntimeError} The browser supports WebGL, but initialization failed.
      * @exception {DeveloperError} canvas is required.
      */
-    var Context = function(canvas, options) {
+    var Context = function(canvas, webglOptions, options) {
         if (!window.WebGLRenderingContext) {
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
         }
@@ -179,20 +179,40 @@ define([
 
         this._canvas = canvas;
 
-        options = defaultValue(options, {});
-        var glOptions = {
-            alpha : defaultValue(options.alpha, false),                              // WebGL default is true
-            depth : defaultValue(options.depth, true),
-            stencil : defaultValue(options.stencil, true),                           // WebGL default is false
-            antialias : defaultValue(options.antialias, true),
-            premultipliedAlpha : defaultValue(options.premultipliedAlpha, true),     // Doesn't matter since alpha is false
-            preserveDrawingBuffer : defaultValue(options.preserveDrawingBuffer, false)
+// TODO: Expose webglOptions and options through getters?
+        webglOptions = defaultValue(webglOptions, {});
+        webglOptions = {
+            alpha : defaultValue(webglOptions.alpha, false),                              // WebGL default is true
+            depth : defaultValue(webglOptions.depth, true),
+            stencil : defaultValue(webglOptions.stencil, true),                           // WebGL default is false
+            antialias : defaultValue(webglOptions.antialias, true),
+            premultipliedAlpha : defaultValue(webglOptions.premultipliedAlpha, true),     // Doesn't matter since alpha is false
+            preserveDrawingBuffer : defaultValue(webglOptions.preserveDrawingBuffer, false)
         };
 
-        this._originalGLContext = canvas.getContext('webgl', glOptions) || canvas.getContext('experimental-webgl', glOptions);
+        this._originalGLContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions);
 
         if (!this._originalGLContext) {
             throw new RuntimeError('The browser supports WebGL, but initialization failed.');
+        }
+
+        options = defaultValue(options, {});
+        var fragmentShaderFloatPrecision = defaultValue(options.fragmentShaderFloatPrecision, 'highp');
+        if ((fragmentShaderFloatPrecision !== 'highp') &&
+            (fragmentShaderFloatPrecision !== 'mediump') &&
+            (fragmentShaderFloatPrecision !== 'lowp')) {
+            throw new DeveloperError('options.fragmentShaderFloatPrecision must be highp, mediump, or lowp.');
+        }
+
+        if (fragmentShaderFloatPrecision === 'highp') {
+            this._fragmentShaderFloatPrecision =
+                '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' +
+                '  precision highp float; \n' +
+                '#else \n' +
+                '  precision mediump float; \n' +
+                '#endif \n\n';
+        } else {
+            this._fragmentShaderFloatPrecision = 'precision mediump float; \n';
         }
 
         this._id = createGuid();
@@ -1111,7 +1131,7 @@ define([
      * sp = context.createShaderProgram(vs, fs, attributes);            *
      */
     Context.prototype.createShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        return new ShaderProgram(this._gl, this._logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
+        return new ShaderProgram(this._gl, this._logShaderCompilation, this._fragmentShaderFloatPrecision, vertexShaderSource, fragmentShaderSource, attributeLocations);
     };
 
     function createBuffer(gl, bufferTarget, typedArrayOrSizeInBytes, usage) {

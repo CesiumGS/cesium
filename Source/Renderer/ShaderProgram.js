@@ -1704,8 +1704,8 @@ define([
      * @see Context#createShaderProgram
      * @see Context#getShaderCache
      */
-    var ShaderProgram = function(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        var program = createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
+    var ShaderProgram = function(gl, logShaderCompilation, fragmentShaderFloatPrecision, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+        var program = createAndLinkProgram(gl, logShaderCompilation, fragmentShaderFloatPrecision, vertexShaderSource, fragmentShaderSource, attributeLocations);
         var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
         var uniforms = findUniforms(gl, program);
         var partitionedUniforms = partitionUniforms(uniforms.allUniforms);
@@ -1792,15 +1792,6 @@ define([
         }
 
         return modifiedSource;
-    }
-
-    function getFragmentShaderPrecision() {
-        // TODO: Performance?
-        return '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' +
-               '  precision highp float; \n' +
-               '#else \n' +
-               '  precision mediump float; \n' +
-               '#endif \n\n';
     }
 
     function getBuiltinConstants() {
@@ -2039,7 +2030,7 @@ define([
         return definitions;
     };
 
-    function createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+    function createAndLinkProgram(gl, logShaderCompilation, fragmentShaderFloatPrecision, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
         var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
 
@@ -2047,7 +2038,7 @@ define([
                        getShaderDefinitions() +
                        commentOutAutomaticUniforms(vsSourceVersioned.modifiedSource);
         var fsSource = fsSourceVersioned.versionDirective +
-                       getFragmentShaderPrecision() +
+                       fragmentShaderFloatPrecision +
                        getShaderDefinitions() +
                        commentOutAutomaticUniforms(fsSourceVersioned.modifiedSource);
 
