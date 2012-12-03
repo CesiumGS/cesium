@@ -326,38 +326,38 @@ define([
         var buttonsG = this._svg('g');
 
         // Slow down
-        var downSVG = rectButton(5, 100, '#playback_pathSlowDown', 'Slower');
+        var downSVG = rectButton(27, 100, '#playback_pathSlowDown', 'Slower');
         buttonsG.appendChild(downSVG);
         downSVG.addEventListener('click', function () {
             widget.animationController.slower();
         }, true);
 
         // Speed up
-        var upSVG = rectButton(165, 100, '#playback_pathSpeedUp', 'Faster');
+        var upSVG = rectButton(145, 100, '#playback_pathSpeedUp', 'Faster');
         buttonsG.appendChild(upSVG);
         upSVG.addEventListener('click', function () {
             widget.animationController.faster();
+        }, true);
+
+        // Realtime
+        this.realtimeSVG = rectButton(85, 100, '#playback_pathClock', 'Real-time');
+        buttonsG.appendChild(this.realtimeSVG);
+        this.realtimeSVG.addEventListener('click', function () {
+            widget.animationController.playRealtime();
         }, true);
 
         var shuttleRingOuterG = this._svg('g').set('transform', 'translate(101,120)').set('class', 'playback-shuttleRing');
         var shuttleRingG = this._svg('g').set('transform', 'translate(-101,-103)'); // leave y += 17
 
         var shuttleRingBack = this._svgFromObject({
-            'tagName' : 'rect',
+            'tagName' : 'ellipse',
             'class' : 'playback-shuttleRingBack',
-            'x' : 39,
-            'y' : 10,
-            'width' : 121,
-            'height' : 42
+            'cx' : 101,
+            'cy' : 70,
+            'rx' : 70,
+            'ry' : 60
         });
         shuttleRingG.appendChild(shuttleRingBack);
-
-        // Realtime
-        this.realtimeSVG = rectButton(85, 18, '#playback_pathClock', 'Realtime');
-        shuttleRingG.appendChild(this.realtimeSVG);
-        this.realtimeSVG.addEventListener('click', function () {
-            widget.animationController.playRealtime();
-        }, true);
 
         var shuttleRingPath = this._svgFromObject({
             'tagName' : 'use',
@@ -413,7 +413,6 @@ define([
 
         this._realtimeMode = false;
         this._isSystemTimeAvailable = true;
-        //this._shuttleRingVisible = false;
         this._shuttleRingAngle = 0;
         var shuttleRingDragging = false;
 
@@ -456,26 +455,10 @@ define([
             'class' : 'playback-shuttleRingLabels',
             'children' : [
                     {
-                    //    'tagName': 'use',
-                    //    'transform' : 'translate(36,60) scale(-1,1)', // 101 - x
-                    //    'xlink:href' : '#playback_pathFastForward'
-                    //}, {
-                    //    'tagName': 'use',
-                    //    'transform' : 'translate(54,12) scale(-1,1)', // 101 - x
-                    //    'xlink:href' : '#playback_pathPlay'
-                    //}, {
                         'tagName': 'use',
                         'transform' : 'translate(85,-13)', // 101 - 16
                         //'transform' : 'translate(93,-13) scale(0.5)', // 101 - 16 + 8
                         'xlink:href' : '#playback_pathPause'
-                    //}, {
-                    //    'tagName': 'use',
-                    //    'transform' : 'translate(148,12)', // 101 + x
-                    //    'xlink:href' : '#playback_pathPlay'
-                    //}, {
-                    //    'tagName': 'use',
-                    //    'transform' : 'translate(166,60)', // 101 + x
-                    //    'xlink:href' : '#playback_pathFastForward'
                     }
             ]
         });
@@ -485,46 +468,26 @@ define([
 
         topG.appendChild(shuttleRingOuterG);
 
-        topG.appendChild(buttonsG);
-
         var largeButtonG = this._svgFromObject({
             'tagName' : 'g',
             'class' : 'playback-rectButton',
-            'transform' : 'translate(35,62)',
-            'children' : [
-                {
-                    'tagName' : 'rect',
-                    'class' : 'playback-buttonGlow',
-                    'width' : 132,
-                    'height' : 68,
-                    'rx' : 5,
-                    'ry' : 5
-                }, {
-                    'tagName' : 'rect',
-                    'class' : 'playback-buttonMain',
-                    'width' : 132,
-                    'height' : 68,
-                    'rx' : 7,
-                    'ry' : 7
-                }
-            ]
+            'transform' : 'translate(35,54)'
         });
 
         this.largeButtonMode = this._svgFromObject({
             'tagName' : 'use',
             'xlink:href' : '#playback_pathPlay',
-            'x' : 5.666, // (halfWidth 65 / scale 3.0) - halfIcon 16
+            'x' : 5,
             'y' : -4,
-            'transform' : 'scale(3)',
             'class' : 'playback-playbackMode'
         });
         largeButtonG.appendChild(this.largeButtonMode);
 
-        this.largeButtonDate = this._svgText(65, 25, '');
+        this.largeButtonDate = this._svgText(65, 20, '');
         largeButtonG.appendChild(this.largeButtonDate);
-        this.largeButtonTime = this._svgText(65, 43, '');
+        this.largeButtonTime = this._svgText(65, 40, '');
         largeButtonG.appendChild(this.largeButtonTime);
-        this.largeButtonStatus = this._svgText(65, 62, '');
+        this.largeButtonStatus = this._svgText(65, 0, '');
         largeButtonG.appendChild(this.largeButtonStatus);
         this.largeButtonTooltip = this._svg('title');
         largeButtonG.appendChild(this.largeButtonTooltip);
@@ -554,6 +517,8 @@ define([
                 widget.animationController.unpause();
             }
         }, true);
+
+        topG.appendChild(buttonsG);
 
         svg.appendChild(topG);
         parentNode.appendChild(svg);
@@ -586,7 +551,7 @@ define([
             } else {
                 speed = this.clock.multiplier;
                 angle = this._shuttleSpeedtoAngle(speed);
-                speedLabel = 'speed ' + speed + 'x';
+                speedLabel = speed + 'x';
             }
             tooltip = 'Pause';
         } else {
@@ -608,23 +573,23 @@ define([
             this._lastButtonSpeed = speedLabel;
             if (this.animationController.isAnimating()) {
                 if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-                    this.largeButtonMode.setAttribute('transform', 'scale(3)');
+                    this.largeButtonMode.setAttribute('transform', 'scale(1)');
                     this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathClock');
                 } else if (speed < -15000) {
-                    this.largeButtonMode.setAttribute('transform', 'scale(-3,3) translate(-40)');
+                    this.largeButtonMode.setAttribute('transform', 'scale(-1,1) translate(-40)');
                     this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathFastForward');
                 } else if (speed < 0) {
-                    this.largeButtonMode.setAttribute('transform', 'scale(-3,3) translate(-40)');
+                    this.largeButtonMode.setAttribute('transform', 'scale(-1,1) translate(-40)');
                     this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathPlay');
                 } else if (speed < 15000) {
-                    this.largeButtonMode.setAttribute('transform', 'scale(3)');
+                    this.largeButtonMode.setAttribute('transform', 'scale(1)');
                     this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathPlay');
                 } else {
-                    this.largeButtonMode.setAttribute('transform', 'scale(3)');
+                    this.largeButtonMode.setAttribute('transform', 'scale(1)');
                     this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathFastForward');
                 }
             } else {
-                this.largeButtonMode.setAttribute('transform', 'scale(3)');
+                this.largeButtonMode.setAttribute('transform', 'scale(1)');
                 this.largeButtonMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathPause');
             }
             this._updateSvgText(this.largeButtonStatus, speedLabel);

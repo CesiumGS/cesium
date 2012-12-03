@@ -65,8 +65,8 @@
     stroke-width: 2;
 }
 .playback-shuttleRingBack {
-    fill: #222;
-    fill-opacity: 0.8;
+    fill: #151515;
+    fill-opacity: 1;
 }
 .playback-shuttleRing .playback-rectButton .playback-buttonPath {
     fill-opacity: 0.5;
