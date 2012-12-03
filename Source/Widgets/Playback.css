@@ -78,7 +78,11 @@
     fill: #edffff;
     fill-opacity: 0.7;
 }
-.playback-shuttleRingGlow {
-    fill: url(#playback_shuttleRingGlowGradient);
+.playback-shuttleRingSwoosh {
+    fill: url(#playback_shuttleRingSwooshGradient);
+    cursor: pointer;
+}
+.playback-shuttleRingPointer {
+    fill: url(#playback_shuttleRingPointerGradient);
     cursor: pointer;
 }

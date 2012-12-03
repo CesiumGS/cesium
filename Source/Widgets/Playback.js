@@ -116,8 +116,8 @@ define([
         return angle;
     };
 
-    Playback.prototype._setShuttleRingGlow = function (angle) {
-        var glow = this.shuttleRingGlow.childNodes[1].childNodes[0];
+    Playback.prototype._setShuttleRingPointer = function (angle) {
+        var glow = this.shuttleRingPointer.childNodes[1].childNodes[0];
         glow.setAttribute('transform', 'translate(101,80) rotate(' + angle + ') translate(-101,-80)');
     };
 
@@ -132,7 +132,8 @@ define([
             '.playback-buttonSelected .playback-buttonMain { fill: url(#playback_buttonSelected); }\n' +
             '.playback-rectButton:hover .playback-buttonMain { fill: url(#playback_buttonHovered); }\n' +
             '.playback-shuttleRingPath { fill: url(#playback_buttonRadialNormal); }\n' +
-            '.playback-shuttleRingGlow { fill: url(#playback_shuttleRingGlowGradient); }\n';
+            '.playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshGradient); }\n' +
+            '.playback-shuttleRingPointer { fill: url(#playback_shuttleRingPointerGradient); }\n';
         document.head.appendChild(cssStyle);
 
         var svg = this.svgNode = this._svg('svg:svg');
@@ -206,13 +207,23 @@ define([
                         }
                     ]
                 }, {
-                    'id' : 'playback_shuttleRingGlowGradient',
+                    'id' : 'playback_shuttleRingSwooshGradient',
+                    'tagName' : 'linearGradient',
+                    'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
+                    'children' : [
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#8CF', 'stop-opacity' : 0.05 },
+                        { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' : '#8CF', 'stop-opacity' : 0.95 },
+                        { 'tagName' : 'stop', 'offset' : '95%', 'stop-color' : '#8CF', 'stop-opacity' : 0.05 }
+                    ]
+                }, {
+                    'id' : 'playback_shuttleRingPointerGradient',
                     'tagName' : 'linearGradient',
                     'x1' : '0%', 'y1' : '50%', 'x2' : '100%', 'y2' : '50%',
                     'children' : [
-                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#2E2', 'stop-opacity' : 0 },
-                        { 'tagName' : 'stop', 'offset' : '50%', 'stop-color' : '#2E2', 'stop-opacity' : 0.9 },
-                        { 'tagName' : 'stop', 'offset' : '100%', 'stop-color' : '#2E2', 'stop-opacity' : 0 }
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#2E2', 'stop-opacity' : 0.9 },
+                        { 'tagName' : 'stop', 'offset' : '40%', 'stop-color' : '#2E2', 'stop-opacity' : 0.95 },
+                        { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' : '#072', 'stop-opacity' : 0.95 },
+                        { 'tagName' : 'stop', 'offset' : '100%', 'stop-color' : '#072', 'stop-opacity' : 0.9 }
                     ]
                 }, {
                     'id' : 'playback_pathReset',
@@ -263,6 +274,14 @@ define([
                     'id' : 'playback_pathShuttleRing',
                     'tagName' : 'path',
                     'd' : 'M 97.3125 -15 C 43.613935 -13.804403 0.5 24.838076 0.5 72.3125 C 0.5 87.461744 4.9031447 101.70594 12.625 114.125 L 56.1875 114.125 C 43.343916 103.74966 35.3125 88.854983 35.3125 72.3125 C 35.3125 40.964311 64.200208 15.5625 99.875 15.5625 C 135.54981 15.5625 164.46875 40.964311 164.46875 72.3125 C 164.46875 88.855889 156.41577 103.74959 143.5625 114.125 L 187.15625 114.125 C 194.88191 101.70627 199.28125 87.461168 199.28125 72.3125 C 199.28125 24.084514 154.75931 -15 99.875 -15 C 99.017433 -15 98.164858 -15.018978 97.3125 -15 z'
+                }, {
+                    'id' : 'playback_pathPointer',
+                    'tagName' : 'path',
+                    'd' : 'M81,15,81,75,121,75,121,15,101,-5z'
+                }, {
+                    'id' : 'playback_pathSwooshFX',
+                    'tagName' : 'path',
+                    'd' : 'm 85,0 c 0,16.617 -4.813944,35.356 -13.131081,48.4508 h 6.099803 c 8.317138,-13.0948 13.13322,-28.5955 13.13322,-45.2124 0,-46.94483 -38.402714,-85.00262 -85.7743869,-85.00262 -1.0218522,0 -2.0373001,0.0241 -3.0506131,0.0589 45.958443,1.59437 82.723058,35.77285 82.723058,81.70532 z'
                 }
             ]
         };
@@ -377,7 +396,24 @@ define([
         });
         shuttleRingG.appendChild(shuttleRingPath);
 
-        this.shuttleRingGlow = this._svgFromObject({
+        var shuttleRingSwooshG = this._svgFromObject({
+            'tagName' : 'g',
+            'class' : 'playback-shuttleRingSwoosh',
+            'children' : [
+                    {
+                        'tagName': 'use',
+                        'transform' : 'translate(101,75) scale(-1,1)',
+                        'xlink:href' : '#playback_pathSwooshFX'
+                    }, {
+                        'tagName': 'use',
+                        'transform' : 'translate(101,75)',
+                        'xlink:href' : '#playback_pathSwooshFX'
+                    }
+            ]
+        });
+        shuttleRingG.appendChild(shuttleRingSwooshG);
+
+        this.shuttleRingPointer = this._svgFromObject({
             'tagName' : 'g',
             'clip-rule' : 'nonzero',
             'children' : [
@@ -395,18 +431,15 @@ define([
                     'clip-path' : 'url(#playback_clipShuttleRing)',
                     'children' : [
                         {
-                            'tagName' : 'rect',
-                            'class' : 'playback-shuttleRingGlow',
-                            'x' : 81,
-                            'y' : -25,
-                            'width' : 40,
-                            'height' : 100
+                            'tagName' : 'use',
+                            'class' : 'playback-shuttleRingPointer',
+                            'xlink:href' : '#playback_pathPointer'
                         }
                     ]
                 }
             ]
         });
-        shuttleRingG.appendChild(this.shuttleRingGlow);
+        shuttleRingG.appendChild(this.shuttleRingPointer);
 
         this._realtimeMode = false;
         this._isSystemTimeAvailable = true;
@@ -443,8 +476,9 @@ define([
             }
         }
         shuttleRingPath.addEventListener('mousedown', setShuttleRingFromMouse, true);
+        shuttleRingSwooshG.addEventListener('mousedown', setShuttleRingFromMouse, true);
         document.addEventListener('mousemove', setShuttleRingFromMouse, true);
-        this.shuttleRingGlow.addEventListener('mousedown', setShuttleRingFromMouse, true);
+        this.shuttleRingPointer.addEventListener('mousedown', setShuttleRingFromMouse, true);
         document.addEventListener('mouseup', setShuttleRingFromMouse, true);
 
         var shuttleRingLabelsG = this._svgFromObject({
@@ -452,25 +486,26 @@ define([
             'class' : 'playback-shuttleRingLabels',
             'children' : [
                     {
-                        'tagName': 'use',
-                        'transform' : 'translate(36,60) scale(-1,1)', // 101 - x
-                        'xlink:href' : '#playback_pathFastForward'
-                    }, {
-                        'tagName': 'use',
-                        'transform' : 'translate(54,12) scale(-1,1)', // 101 - x
-                        'xlink:href' : '#playback_pathPlay'
-                    }, {
+                    //    'tagName': 'use',
+                    //    'transform' : 'translate(36,60) scale(-1,1)', // 101 - x
+                    //    'xlink:href' : '#playback_pathFastForward'
+                    //}, {
+                    //    'tagName': 'use',
+                    //    'transform' : 'translate(54,12) scale(-1,1)', // 101 - x
+                    //    'xlink:href' : '#playback_pathPlay'
+                    //}, {
                         'tagName': 'use',
                         'transform' : 'translate(85,-13)', // 101 - 16
+                        //'transform' : 'translate(93,-13) scale(0.5)', // 101 - 16 + 8
                         'xlink:href' : '#playback_pathPause'
-                    }, {
-                        'tagName': 'use',
-                        'transform' : 'translate(148,12)', // 101 + x
-                        'xlink:href' : '#playback_pathPlay'
-                    }, {
-                        'tagName': 'use',
-                        'transform' : 'translate(166,60)', // 101 + x
-                        'xlink:href' : '#playback_pathFastForward'
+                    //}, {
+                    //    'tagName': 'use',
+                    //    'transform' : 'translate(148,12)', // 101 + x
+                    //    'xlink:href' : '#playback_pathPlay'
+                    //}, {
+                    //    'tagName': 'use',
+                    //    'transform' : 'translate(166,60)', // 101 + x
+                    //    'xlink:href' : '#playback_pathFastForward'
                     }
             ]
         });
@@ -659,18 +694,18 @@ define([
         if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
             if (!this._realtimeMode) {
                 this._realtimeMode = true;
-                this.shuttleRingGlow.style.display = 'none';
+                this.shuttleRingPointer.style.display = 'none';
                 this.realtimeSVG.set('class', 'playback-rectButton playback-buttonSelected');
             }
         } else {
             if (this._realtimeMode) {
                 this._realtimeMode = false;
-                this.shuttleRingGlow.style.display = 'block';
+                this.shuttleRingPointer.style.display = 'block';
                 this.realtimeSVG.set('class', 'playback-rectButton');
             }
             if (this._shuttleRingAngle !== angle) {
                 this._shuttleRingAngle = angle;
-                this._setShuttleRingGlow(angle);
+                this._setShuttleRingPointer(angle);
             }
         }
 
