@@ -154,7 +154,7 @@ define([
         //for now, all objects morph at the same rate
         var template = {
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut
+            easingFunction : Tween.Easing.Quartic.Out
         };
 
         var primitives = scene.getPrimitives();
@@ -388,7 +388,7 @@ define([
 
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },
@@ -435,7 +435,7 @@ define([
         duration = duration * 0.5;
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },
@@ -514,7 +514,7 @@ define([
         }
 
         var animation = scene.getAnimations().add({
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             duration : partialDuration,
             startValue : {
                 time : startTime
@@ -557,7 +557,7 @@ define([
 
             var animation = scene.getAnimations().add({
                 duration : duration,
-                easingFunction : Tween.Easing.Quartic.EaseOut,
+                easingFunction : Tween.Easing.Quartic.Out,
                 startValue : {
                     time : 0.0
                 },
@@ -601,7 +601,7 @@ define([
 
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },
@@ -660,7 +660,7 @@ define([
 
         var animation = scene.getAnimations().add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.EaseOut,
+            easingFunction : Tween.Easing.Quartic.Out,
             startValue : {
                 time : 0.0
             },
