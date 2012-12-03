@@ -179,17 +179,17 @@ define([
 
         this._canvas = canvas;
 
-        if (typeof options === 'undefined') {
-            options = {};
-        }
-        if (typeof options.stencil === 'undefined') {
-            options.stencil = true;
-        }
-        if (typeof options.alpha === 'undefined') {
-            options.alpha = false;
-        }
+        options = defaultValue(options, {});
+        var glOptions = {
+            alpha : defaultValue(options.alpha, false),                              // WebGL default is true
+            depth : defaultValue(options.depth, true),
+            stencil : defaultValue(options.stencil, true),                           // WebGL default is false
+            antialias : defaultValue(options.antialias, true),
+            premultipliedAlpha : defaultValue(options.premultipliedAlpha, true),     // Doesn't matter since alpha is false
+            preserveDrawingBuffer : defaultValue(options.preserveDrawingBuffer, false)
+        };
 
-        this._originalGLContext = canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options);
+        this._originalGLContext = canvas.getContext('webgl', glOptions) || canvas.getContext('experimental-webgl', glOptions);
 
         if (!this._originalGLContext) {
             throw new RuntimeError('The browser supports WebGL, but initialization failed.');
