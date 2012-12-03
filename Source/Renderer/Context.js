@@ -180,6 +180,8 @@ define([
         this._canvas = canvas;
 
 // TODO: Expose webglOptions and options through getters?
+// TODO: Change textureFilterAnisotropic at runtime?  More fine-grain control - per primitive?
+
         webglOptions = defaultValue(webglOptions, {});
         webglOptions = {
             alpha : defaultValue(webglOptions.alpha, false),                              // WebGL default is true
@@ -198,6 +200,8 @@ define([
 
         options = defaultValue(options, {});
         var fragmentShaderFloatPrecision = defaultValue(options.fragmentShaderFloatPrecision, 'highp');
+        var allowTextureFilterAnisotropic = defaultValue(options.textureFilterAnisotropic, true);
+
         if ((fragmentShaderFloatPrecision !== 'highp') &&
             (fragmentShaderFloatPrecision !== 'mediump') &&
             (fragmentShaderFloatPrecision !== 'lowp')) {
@@ -256,9 +260,12 @@ define([
         // Query and initialize extensions
         this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
         this._depthTexture = gl.getExtension('WEBKIT_WEBGL_depth_texture') || gl.getExtension('MOZ_WEBGL_depth_texture');
-        var textureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
+        var textureFilterAnisotropic = allowTextureFilterAnisotropic ?
+                gl.getExtension('EXT_texture_filter_anisotropic') ||
+                gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') ||
+                gl.getExtension('MOZ_EXT_texture_filter_anisotropic') : undefined;
         this._textureFilterAnisotropic = textureFilterAnisotropic;
-        this._maximumTextureFilterAnisotropy = textureFilterAnisotropic ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
+        this._maximumTextureFilterAnisotropy = (typeof textureFilterAnisotropic !== 'undefined') ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
