@@ -82,7 +82,7 @@
 	<property name="build.minification" value="false" />
 
 	<!-- Inputs -->
-	<property name="version" value="b10" />
+	<property name="version" value="b11" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
