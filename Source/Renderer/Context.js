@@ -167,6 +167,7 @@ define([
      * @exception {RuntimeError} The browser does not support WebGL.  Visit http://get.webgl.org.
      * @exception {RuntimeError} The browser supports WebGL, but initialization failed.
      * @exception {DeveloperError} canvas is required.
+     * @exception {DeveloperError} options.fragmentShaderFloatPrecision must be highp, mediump, or lowp.
      */
     var Context = function(canvas, webglOptions, options) {
         if (!window.WebGLRenderingContext) {

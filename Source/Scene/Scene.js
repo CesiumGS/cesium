@@ -67,8 +67,8 @@ define([
      * @alias Scene
      * @constructor
      */
-    var Scene = function(canvas) {
-        var context = new Context(canvas);
+    var Scene = function(canvas, webglOptions, options) {
+        var context = new Context(canvas, webglOptions, options);
 
         this._frameState = new FrameState();
         this._canvas = canvas;
