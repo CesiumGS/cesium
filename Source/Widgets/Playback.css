@@ -5,7 +5,8 @@
     text-anchor: middle;
 }
 .playback-blank {
-    fill: rgba(0, 0, 0, 0.01);  /* This must be clickable, so it can't be 'fill: none'. */
+    fill: #000;
+    fill-opacity: 0.01;  /* This must be clickable, so it can't be 'fill: none'. */
     stroke: none;
 }
 .playback-rectButton {
@@ -16,13 +17,6 @@
 }
 .playback-rectButton .playback-buttonPath {
     fill: #edffff;
-}
-.playback-rectButton .playback-playbackMode {
-    fill: #edffff;
-    fill-opacity: 0.2;
-}
-.playback-rectButton:hover .playback-playbackMode {
-    fill-opacity: 0.5;
 }
 .playback-rectButton .playback-buttonGlow {
     fill: #fff;
@@ -64,17 +58,13 @@
     stroke: #444;
     stroke-width: 2;
 }
-.playback-shuttleRingLabels {
-    fill: #edffff;
-    fill-opacity: 0.7;
-}
 .playback-shuttleRingSwoosh {
     fill: url(#playback_shuttleRingSwooshGradient);
     cursor: pointer;
 }
 .playback-shuttleRingSwoosh:hover {
     fill: url(#playback_shuttleRingSwooshHovered);
- }
+}
 .playback-shuttleRingPointer {
     fill: url(#playback_shuttleRingPointerGradient);
     cursor: pointer;

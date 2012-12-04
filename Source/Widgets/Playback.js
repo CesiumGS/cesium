@@ -391,7 +391,6 @@ define([
 
         // Pause
         this.pauseSVG = rectButton(84, 1, '#playback_pathPause', 'Pause');
-        //this.pauseSVG.set('transform', 'translate(86, 1) scale(0.875)');  // 28 x 28
         topG.appendChild(this.pauseSVG);
         this.pauseSVG.addEventListener('click', function () {
             if (widget.animationController.isAnimating()) {  // TODO: animationController.togglePause()
@@ -447,20 +446,6 @@ define([
         this.shuttleRingPointer.addEventListener('mousedown', setShuttleRingFromMouse, true);
         document.addEventListener('mouseup', setShuttleRingFromMouse, true);
 
-/*        var shuttleRingLabelsG = this._svgFromObject({
-            'tagName' : 'g',
-            'class' : 'playback-shuttleRingLabels',
-            'children' : [
-                {
-                    'tagName': 'use',
-                    'transform' : 'translate(84,4)',
-                    'xlink:href' : '#playback_pathPause'
-                }
-            ]
-        });
-        shuttleRingLabelsG.addEventListener('mousedown', setShuttleRingFromMouse, true);
-        topG.appendChild(shuttleRingLabelsG);*/
-
         var knobG = this._svgFromObject({
             'tagName' : 'g',
             'transform' : 'translate(100,100)',
@@ -480,15 +465,6 @@ define([
                 }
             ]
         });
-
-        this.knobMode = this._svgFromObject({
-            'tagName' : 'use',
-            'xlink:href' : '#playback_pathPlay',
-            'x' : -16,
-            'y' : -60,
-            'class' : 'playback-playbackMode'
-        });
-        //knobG.appendChild(this.knobMode);
 
         this.knobDate = this._svgText(0, -21, '');
         knobG.appendChild(this.knobDate);
@@ -515,14 +491,6 @@ define([
         this._lastKnobTime = '';
         this._lastKnobSpeed = '';
         this._lastKnobTooltip = '';
-
-        /*knobG.addEventListener('click', function () {
-            if (widget.animationController.isAnimating()) {
-                widget.animationController.pause();
-            } else {
-                widget.animationController.unpause();
-            }
-        }, true);*/
 
         topG.appendChild(buttonsG);
 
@@ -572,29 +540,6 @@ define([
             } else {
                 this.pauseSVG.set('class', 'playback-rectButton playback-buttonSelected');
             }
-            /*
-            if (this.animationController.isAnimating()) {
-                if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-                    this.knobMode.setAttribute('transform', 'scale(1)');
-                    this.knobMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathClock');
-                } else if (speed < -15000) {
-                    this.knobMode.setAttribute('transform', 'scale(-1,1)');
-                    this.knobMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathFastForward');
-                } else if (speed < 0) {
-                    this.knobMode.setAttribute('transform', 'scale(-1,1)');
-                    this.knobMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathPlay');
-                } else if (speed < 15000) {
-                    this.knobMode.setAttribute('transform', 'scale(1)');
-                    this.knobMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathPlay');
-                } else {
-                    this.knobMode.setAttribute('transform', 'scale(1)');
-                    this.knobMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathFastForward');
-                }
-            } else {
-                this.knobMode.setAttribute('transform', 'scale(1)');
-                this.knobMode.setAttributeNS(this._xlinkNS, 'href', '#playback_pathPause');
-            }
-            */
             this._updateSvgText(this.knobStatus, speedLabel);
         }
 
