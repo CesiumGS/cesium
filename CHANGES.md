@@ -4,7 +4,11 @@ Change Log
 Beta Releases
 -------------
 
-### b11 - xx/xx/2012
+### b12 - xx/xx/2013
+
+* Improved support on Nexus 4.
+
+### b11 - 12/03/2012
 
 * Breaking changes:
    * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
@@ -29,7 +33,8 @@ Beta Releases
 * Improved lighting in Columbus view and on polygons, ellipsoids, and sensors.
 * Fixed atmosphere rendering artifacts and improved Columbus view transition.
 * Fixed jitter artifacts with billboards and polylines.
-* Added `Water` material.  See the Materials Sandbox example.
+* Added `TileMapServiceImageryProvider`.  See the Imagery Layers `Sandcastle` example.
+* Added `Water` material.  See the Materials `Sandcastle` example.
 * Added `SkyBox` to draw stars.  Added `CesiumWidget.showSkyBox` and `CesiumViewerWidget.showSkyBox`.
 * Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
 * Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
@@ -40,7 +45,7 @@ Beta Releases
 * Added `IntersectionTests.grazingAltitudeLocation` for finding a point on a ray nearest to an ellipsoid.
 * Added `mostOrthogonalAxis` function to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Changed CesiumViewerWidget default behavior so that zooming to an object now requires a single left-click, rather than a double-click. 
-* Added `TileMapServiceImageryProvider`.  See the Imagery Layers Sandbox example.
+* Updated third-party [Tween.js](https://github.com/sole/tween.js/).
 
 ### b10 - 11/02/2012
 
