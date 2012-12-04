@@ -72,7 +72,20 @@
     fill: url(#playback_shuttleRingSwooshGradient);
     cursor: pointer;
 }
+.playback-shuttleRingSwoosh:hover {
+    fill: url(#playback_shuttleRingSwooshHovered);
+ }
 .playback-shuttleRingPointer {
     fill: url(#playback_shuttleRingPointerGradient);
+    cursor: pointer;
+}
+.playback-knobOuter {
+    fill: url(#playback_knobOuter);
+    cursor: pointer;
+    stroke: #444;
+    stroke-width: 1;
+}
+.playback-knobInner {
+    fill: url(#playback_knobInner);
     cursor: pointer;
 }
