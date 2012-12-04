@@ -2142,8 +2142,9 @@ define([
             var uniformName = activeUniform.name.indexOf(suffix, activeUniform.name.length - suffix.length) !== -1 ?
                     activeUniform.name.slice(0, activeUniform.name.length - 3) : activeUniform.name;
 
-            // Ignore GLSL built-in uniforms returned in Firefox.
-            if (uniformName.indexOf('gl_') !== 0) {
+            // Ignore GLSL built-in uniforms returned in Firefox and additional uniform array elements
+            // returned on Nexus 4 and possibly elsewhere.
+            if (uniformName.indexOf('gl_') !== 0 && uniformName.indexOf('[') < 0) {
                 if (activeUniform.name.indexOf('[') < 0) {
                     // Single uniform
                     var location = gl.getUniformLocation(program, uniformName);
