@@ -337,22 +337,23 @@ define([
 
         var buttonsG = this._svg('g');
 
-        // Slow down
-        var downSVG = rectButton(29, 100, '#playback_pathSlowDown', 'Slower');
-        buttonsG.appendChild(downSVG);
-        downSVG.addEventListener('click', function () {
-            widget.animationController.slower();
+        // Reverse
+        var moreReverseSVG = rectButton(29, 100, '#playback_pathSlowDown', 'Reverse');
+        buttonsG.appendChild(moreReverseSVG);
+        moreReverseSVG.addEventListener('click', function () {
+            widget.animationController.moreReverse();
         }, true);
 
-        // Speed up
-        var upSVG = rectButton(139, 100, '#playback_pathSpeedUp', 'Faster');
-        buttonsG.appendChild(upSVG);
-        upSVG.addEventListener('click', function () {
-            widget.animationController.faster();
+        // Forward
+        var moreForwardSVG = rectButton(139, 100, '#playback_pathSpeedUp', 'Forward');
+        buttonsG.appendChild(moreForwardSVG);
+        moreForwardSVG.addEventListener('click', function () {
+            widget.animationController.moreForward();
         }, true);
 
         // Realtime
         this.realtimeSVG = rectButton(84, 100, '#playback_pathClock', 'Real-time');
+        this.realtimeTooltip = this.realtimeSVG.getElementsByTagName('title')[0];
         buttonsG.appendChild(this.realtimeSVG);
         this.realtimeSVG.addEventListener('click', function () {
             widget.animationController.playRealtime();
@@ -391,6 +392,7 @@ define([
 
         // Pause
         this.pauseSVG = rectButton(84, 1, '#playback_pathPause', 'Pause');
+        this.pauseTooltip = this.pauseSVG.getElementsByTagName('title')[0];
         topG.appendChild(this.pauseSVG);
         this.pauseSVG.addEventListener('click', function () {
             if (widget.animationController.isAnimating()) {  // TODO: animationController.togglePause()
@@ -472,8 +474,6 @@ define([
         knobG.appendChild(this.knobTime);
         this.knobStatus = this._svgText(0, -40, '');
         knobG.appendChild(this.knobStatus);
-        this.knobTooltip = this._svg('title');
-        knobG.appendChild(this.knobTooltip);
 
         // This shield makes clicks work even while DOM elements underneath are changing.
         var knobShield = this._svgFromObject({
@@ -490,7 +490,7 @@ define([
         this._lastKnobDate = '';
         this._lastKnobTime = '';
         this._lastKnobSpeed = '';
-        this._lastKnobTooltip = '';
+        this._lastPauseTooltip = '';
 
         topG.appendChild(buttonsG);
 
@@ -530,7 +530,7 @@ define([
             tooltip = 'Pause';
         } else {
             speedLabel = 'paused';
-            tooltip = 'Play';
+            tooltip = 'Unpause';
         }
 
         if (this._lastKnobSpeed !== speedLabel) {
@@ -543,38 +543,47 @@ define([
             this._updateSvgText(this.knobStatus, speedLabel);
         }
 
-        // TODO: Use playback_buttonDisabled (make CSS class, combine with logic below).
-        var isSystemTimeAvailable = this.clock.isSystemTimeAvailable();
-        if (this._isSystemTimeAvailable !== isSystemTimeAvailable) {
-            this._isSystemTimeAvailable = isSystemTimeAvailable;
-            if (isSystemTimeAvailable) {
-                this.realtimeSVG.style.display = 'block';
-            } else {
-                this.realtimeSVG.style.display = 'none';
-            }
-        }
-
         if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
             if (!this._realtimeMode) {
                 this._realtimeMode = true;
                 this.shuttleRingPointer.style.display = 'none';
                 this.realtimeSVG.set('class', 'playback-rectButton playback-buttonSelected');
+                this.realtimeTooltip.textContent = 'Real-time';
             }
         } else {
+            var setRealtimeStyle = false;
+
             if (this._realtimeMode) {
                 this._realtimeMode = false;
                 this.shuttleRingPointer.style.display = 'block';
-                this.realtimeSVG.set('class', 'playback-rectButton');
+                setRealtimeStyle = true;
             }
+
+            var isSystemTimeAvailable = this.clock.isSystemTimeAvailable();
+            if (this._isSystemTimeAvailable !== isSystemTimeAvailable) {
+                this._isSystemTimeAvailable = isSystemTimeAvailable;
+                setRealtimeStyle = true;
+            }
+
+            if (setRealtimeStyle) {
+                if (!isSystemTimeAvailable) {
+                    this.realtimeSVG.set('class', 'playback-buttonDisabled');
+                    this.realtimeTooltip.textContent = 'Current time not in range.';
+                } else {
+                    this.realtimeSVG.set('class', 'playback-rectButton');
+                    this.realtimeTooltip.textContent = 'Real-time';
+                }
+            }
+
             if (this._shuttleRingAngle !== angle) {
                 this._shuttleRingAngle = angle;
                 this._setShuttleRingPointer(angle);
             }
         }
 
-        if (this._lastKnobTooltip !== tooltip) {
-            this._lastKnobTooltip = tooltip;
-            this.knobTooltip.textContent = tooltip;
+        if (this._lastPauseTooltip !== tooltip) {
+            this._lastPauseTooltip = tooltip;
+            this.pauseTooltip.textContent = tooltip;
         }
     };
 

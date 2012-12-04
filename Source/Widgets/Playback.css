@@ -53,6 +53,21 @@
 .playback-rectButton:active .playback-buttonMain {
     fill: #ABD6FF;
 }
+.playback-buttonDisabled {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.playback-buttonDisabled .playback-buttonMain {
+    fill: url(#playback_buttonDisabled);
+    stroke: #555;
+}
+.playback-buttonDisabled .playback-buttonPath {
+    fill: #818181;
+}
+.playback-buttonDisabled .playback-buttonGlow {
+    display: none;
+}
 .playback-shuttleRingBack {
     fill: url(#playback_buttonRadialNormal);
     stroke: #444;

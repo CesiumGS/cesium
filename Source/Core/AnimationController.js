@@ -186,5 +186,49 @@ define([
         }
     };
 
+    /**
+     * Nudge time in a forward direction (speed up if already going
+     * forward, slow down or pause if going reverse).
+     *
+     * @memberof AnimationController
+     */
+    AnimationController.prototype.moreForward = function() {
+        var clock = this.clock;
+        clock.clockStep = ClockStep.SPEED_MULTIPLIER;
+        if (!this._animating) {
+            clock.multiplier = Math.abs(clock.multiplier);
+            this.clock.tick(0);
+            this._animating = !this.clock.isOutOfRange();
+        } else if (clock.multiplier > 0) {
+            this.faster();
+        } else if (clock.multiplier < -1.001) {
+            this.slower();
+        } else {
+            this.pause();
+        }
+    };
+
+    /**
+     * Nudge time in a forward direction (speed up if already going
+     * forward, slow down or pause if going reverse).
+     *
+     * @memberof AnimationController
+     */
+    AnimationController.prototype.moreReverse = function() {
+        var clock = this.clock;
+        clock.clockStep = ClockStep.SPEED_MULTIPLIER;
+        if (!this._animating) {
+            clock.multiplier = -Math.abs(clock.multiplier);
+            this.clock.tick(0);
+            this._animating = !this.clock.isOutOfRange();
+        } else if (clock.multiplier < 0) {
+            this.faster();
+        } else if (clock.multiplier > 1.001) {
+            this.slower();
+        } else {
+            this.pause();
+        }
+    };
+
     return AnimationController;
 });
