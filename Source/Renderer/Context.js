@@ -410,8 +410,8 @@ define([
     Context.prototype._applyViewport = function(viewport) {
         if (typeof viewport === 'undefined') {
             viewport = scratchViewport;
-            viewport.width = this._canvas.clientWidth;
-            viewport.height = this._canvas.clientHeight;
+            viewport.width = this._canvas.width;
+            viewport.height = this._canvas.height;
         }
 
         this._us.setViewport(viewport);
@@ -1462,8 +1462,8 @@ define([
      * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
      * @param {PixelFormat} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
      * @param {PixelFormat} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
-     * @param {PixelFormat} [width=canvas.clientWidth] The width of the texture in texels.
-     * @param {PixelFormat} [height=canvas.clientHeight] The height of the texture in texels.
+     * @param {PixelFormat} [width=canvas.width] The width of the texture in texels.
+     * @param {PixelFormat} [height=canvas.height] The height of the texture in texels.
      *
      * @return {Texture} A texture with contents from the framebuffer.
      *
@@ -1471,8 +1471,8 @@ define([
      * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to getCanvas().clientWidth.
-     * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to getCanvas().clientHeight.
+     * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to getCanvas().width.
+     * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to getCanvas().height.
      *
      * @see Context#createTexture2D
      * @see Context#createCubeMap
@@ -1486,8 +1486,8 @@ define([
         pixelFormat = pixelFormat || PixelFormat.RGB;
         framebufferXOffset = defaultValue(framebufferXOffset, 0);
         framebufferYOffset = defaultValue(framebufferYOffset, 0);
-        width = defaultValue(width, this._canvas.clientWidth);
-        height = defaultValue(height, this._canvas.clientHeight);
+        width = defaultValue(width, this._canvas.width);
+        height = defaultValue(height, this._canvas.height);
 
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
@@ -1505,12 +1505,12 @@ define([
             throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
         }
 
-        if (framebufferXOffset + width > this._canvas.clientWidth) {
-            throw new DeveloperError('framebufferXOffset + width must be less than or equal to getCanvas().clientWidth');
+        if (framebufferXOffset + width > this._canvas.width) {
+            throw new DeveloperError('framebufferXOffset + width must be less than or equal to getCanvas().width');
         }
 
-        if (framebufferYOffset + height > this._canvas.clientHeight) {
-            throw new DeveloperError('framebufferYOffset + height must be less than or equal to getCanvas().clientHeight.');
+        if (framebufferYOffset + height > this._canvas.height) {
+            throw new DeveloperError('framebufferYOffset + height must be less than or equal to getCanvas().height.');
         }
 
         var gl = this._gl;
@@ -1711,8 +1711,8 @@ define([
      * //////////////////////////////////////////////////////////////////
      *
      * // Example 2. Create a framebuffer with color and depth texture attachments.
-     * var width = context.getCanvas().clientWidth;
-     * var height = context.getCanvas().clientHeight;
+     * var width = context.getCanvas().width;
+     * var height = context.getCanvas().height;
      * var framebuffer = context.createFramebuffer({
      *   colorTexture : context.createTexture2D({
      *     width : width,
@@ -1751,8 +1751,8 @@ define([
     Context.prototype.createRenderbuffer = function(description) {
         description = description || {};
         var format = description.format || RenderbufferFormat.RGBA4;
-        var width = (typeof description.width === 'undefined') ? this._canvas.clientWidth : description.width;
-        var height = (typeof description.height === 'undefined') ? this._canvas.clientHeight : description.height;
+        var width = (typeof description.width === 'undefined') ? this._canvas.width : description.width;
+        var height = (typeof description.height === 'undefined') ? this._canvas.height : description.height;
 
 
         var gl = this._gl;
@@ -2028,8 +2028,8 @@ define([
             }
 
             r.viewport = new BoundingRectangle(viewport.x, viewport.y,
-                    (typeof viewport.width === 'undefined') ? this._canvas.clientWidth : viewport.width,
-                    (typeof viewport.height === 'undefined') ? this._canvas.clientHeight : viewport.height);
+                    (typeof viewport.width === 'undefined') ? this._canvas.width : viewport.width,
+                    (typeof viewport.height === 'undefined') ? this._canvas.height : viewport.height);
         }
 
         return r;
@@ -2414,8 +2414,8 @@ define([
         readState = readState || {};
         var x = Math.max(readState.x || 0, 0);
         var y = Math.max(readState.y || 0, 0);
-        var width = readState.width || this._canvas.clientWidth;
-        var height = readState.height || this._canvas.clientHeight;
+        var width = readState.width || this._canvas.width;
+        var height = readState.height || this._canvas.height;
         var framebuffer = readState.framebuffer || null;
 
         if (width <= 0) {

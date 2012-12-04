@@ -120,7 +120,7 @@ define([
          */
         this.frustum = new PerspectiveFrustum();
         this.frustum.fovy = CesiumMath.toRadians(60.0);
-        this.frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+        this.frustum.aspectRatio = canvas.width / canvas.height;
 
         this._viewMatrix = undefined;
         this._invViewMatrix = undefined;

@@ -255,6 +255,19 @@ define([
         },
 
         /**
+         * You can trade visual quality for performance by setting a larger size for
+         * individual canvas pixels.  Setting a value of 2, 4, or 8 can speed up rendering,
+         * but make the image look blocky.  A value of 0.5 emulates anti-aliasing, improving
+         * quality at the expense of speed.  Call {@link CesiumViewerWidget#resize} after
+         * modifying this value, if the widget has already been constructed.
+         *
+         * @type {Number}
+         * @memberof CesiumViewerWidget.prototype
+         * @default 1
+         */
+        canvasPixelSize : 1,
+
+        /**
          * This function must be called when the widget changes size.  It updates the canvas
          * size, camera aspect ratio, and viewport size.
          *
@@ -263,7 +276,7 @@ define([
          * @see CesiumViewerWidget#resizeWidgetOnWindowResize
          */
         resize : function() {
-            var width = this.canvas.clientWidth, height = this.canvas.clientHeight;
+            var width = this.canvas.clientWidth / this.canvasPixelSize, height = this.canvas.clientHeight / this.canvasPixelSize;
 
             if (typeof this.scene === 'undefined' || (this.canvas.width === width && this.canvas.height === height)) {
                 return;
@@ -942,7 +955,7 @@ define([
 
                 var frustum = new PerspectiveFrustum();
                 frustum.fovy = CesiumMath.toRadians(60.0);
-                frustum.aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
+                frustum.aspectRatio = this.canvas.width / this.canvas.height;
 
                 camera.position = position;
                 camera.direction = direction;

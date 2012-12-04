@@ -29,7 +29,7 @@ define([
      * @example
      * var frustum = new PerspectiveFrustum();
      * frustum.fovy = CesiumMath.PI_OVER_THREE;
-     * frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+     * frustum.aspectRatio = canvas.width / canvas.height;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
      */
@@ -172,8 +172,8 @@ define([
      * // Example 1
      * // Get the width and height of a pixel.
      * var pixelSize = camera.frustum.getPixelSize({
-     *     width : canvas.clientWidth,
-     *     height : canvas.clientHeight
+     *     width : canvas.width,
+     *     height : canvas.height
      * });
      *
      * // Example 2
@@ -185,8 +185,8 @@ define([
      * var toCenterProj = direction.multiplyByScalar(direction.dot(toCenter)); // project vector onto camera direction vector
      * var distance = toCenterProj.magnitude();
      * var pixelSize = camera.frustum.getPixelSize({
-     *     width : canvas.clientWidth,
-     *     height : canvas.clientHeight
+     *     width : canvas.width,
+     *     height : canvas.height
      * }, distance);
      */
     PerspectiveFrustum.prototype.getPixelSize = function(canvasDimensions, distance) {

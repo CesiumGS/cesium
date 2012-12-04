@@ -32,7 +32,7 @@ define([
      * var frustum = new OrthographicFrustum();
      * frustum.right = maxRadii * CesiumMath.PI;
      * frustum.left = -c.frustum.right;
-     * frustum.top = c.frustum.right * (canvas.clientHeight / canvas.clientWidth);
+     * frustum.top = c.frustum.right * (canvas.height / canvas.width);
      * frustum.bottom = -c.frustum.top;
      * frustum.near = 0.01 * maxRadii;
      * frustum.far = 50.0 * maxRadii;
@@ -276,7 +276,7 @@ define([
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
+     * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.width, canvas.height));
      */
     OrthographicFrustum.prototype.getPixelSize = function(canvasDimensions) {
         update(this);

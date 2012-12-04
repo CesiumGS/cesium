@@ -480,17 +480,17 @@ define([
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
-    function getPickOrthographicCullingVolume(scene, windowPosition, width, height) {
+    function getPickOrthographicCullingVolume(scene, canvasPosition, width, height) {
         var canvas = scene._canvas;
         var camera = scene._camera;
         var frustum = camera.frustum;
 
-        var canvasWidth = canvas.clientWidth;
-        var canvasHeight = canvas.clientHeight;
+        var canvasWidth = canvas.width;
+        var canvasHeight = canvas.height;
 
-        var x = (2.0 / canvasWidth) * windowPosition.x - 1.0;
+        var x = (2.0 / canvasWidth) * canvasPosition.x - 1.0;
         x *= (frustum.right - frustum.left) * 0.5;
-        var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
+        var y = (2.0 / canvasHeight) * (canvasHeight - canvasPosition.y) - 1.0;
         y *= (frustum.top - frustum.bottom) * 0.5;
 
         var position = camera.position;
@@ -512,20 +512,20 @@ define([
     }
 
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
-    function getPickPerspectiveCullingVolume(scene, windowPosition, width, height) {
+    function getPickPerspectiveCullingVolume(scene, canvasPosition, width, height) {
         var canvas = scene._canvas;
         var camera = scene._camera;
         var frustum = camera.frustum;
         var near = frustum.near;
 
-        var canvasWidth = canvas.clientWidth;
-        var canvasHeight = canvas.clientHeight;
+        var canvasWidth = canvas.width;
+        var canvasHeight = canvas.height;
 
         var tanPhi = Math.tan(frustum.fovy * 0.5);
         var tanTheta = frustum.aspectRatio * tanPhi;
 
-        var x = (2.0 / canvasWidth) * windowPosition.x - 1.0;
-        var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
+        var x = (2.0 / canvasWidth) * canvasPosition.x - 1.0;
+        var y = (2.0 / canvasHeight) * (canvasHeight - canvasPosition.y) - 1.0;
 
         var xDir = x * near * tanTheta;
         var yDir = y * near * tanPhi;
@@ -545,12 +545,12 @@ define([
         return offCenter.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
     }
 
-    function getPickCullingVolume(scene, windowPosition, width, height) {
+    function getPickCullingVolume(scene, canvasPosition, width, height) {
         if (scene.mode === SceneMode.SCENE2D) {
-            return getPickOrthographicCullingVolume(scene, windowPosition, width, height);
+            return getPickOrthographicCullingVolume(scene, canvasPosition, width, height);
         }
 
-        return getPickPerspectiveCullingVolume(scene, windowPosition, width, height);
+        return getPickPerspectiveCullingVolume(scene, canvasPosition, width, height);
     }
 
     // pick rectangle width and height, assumed odd
@@ -563,15 +563,19 @@ define([
      * @memberof Scene
      */
     Scene.prototype.pick = function(windowPosition) {
+        var canvas = this._canvas;
         var context = this._context;
         var primitives = this._primitives;
         var frameState = this._frameState;
+        var canvasPosition = new Cartesian2(
+            windowPosition.x * canvas.width / canvas.clientWidth,
+            windowPosition.y * canvas.height / canvas.clientHeight);
 
         this._pickFramebuffer = this._pickFramebuffer || context.createPickFramebuffer();
         var fb = this._pickFramebuffer.begin();
 
         updateFrameState(this);
-        frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
+        frameState.cullingVolume = getPickCullingVolume(this, canvasPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
         var commandLists = this._commandList;
@@ -581,8 +585,8 @@ define([
         createPotentiallyVisibleSet(this, 'pickList');
         executeCommands(this, fb);
 
-        scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
-        scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+        scratchRectangle.x = canvasPosition.x - ((rectangleWidth - 1.0) * 0.5);
+        scratchRectangle.y = (this._canvas.height - canvasPosition.y) - ((rectangleHeight - 1.0) * 0.5);
         return this._pickFramebuffer.end(scratchRectangle);
     };
 

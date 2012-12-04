@@ -312,7 +312,7 @@ define([
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
+     * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.width, canvas.height));
      *
      * // Example 2
      * // Get the width and height of a pixel if the near plane was set to 'distance'.
@@ -322,7 +322,7 @@ define([
      * var toCenter = primitive.boundingVolume.center.subtract(position);      // vector from camera to a primitive
      * var toCenterProj = direction.multiplyByScalar(direction.dot(toCenter)); // project vector onto camera direction vector
      * var distance = toCenterProj.magnitude();
-     * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight), distance);
+     * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.width, canvas.height), distance);
      */
     PerspectiveOffCenterFrustum.prototype.getPixelSize = function(canvasDimensions, distance) {
         update(this);
