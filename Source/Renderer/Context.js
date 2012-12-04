@@ -259,12 +259,13 @@ define([
         this._maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
 
         // Query and initialize extensions
-        this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
-        this._depthTexture = gl.getExtension('WEBKIT_WEBGL_depth_texture') || gl.getExtension('MOZ_WEBGL_depth_texture');
+        this._standardDerivatives = gl.getExtension('OES_standard_derivatives') || undefined;
+        this._depthTexture = gl.getExtension('WEBKIT_WEBGL_depth_texture') || gl.getExtension('MOZ_WEBGL_depth_texture') || undefined;
         var textureFilterAnisotropic = allowTextureFilterAnisotropic ?
                 gl.getExtension('EXT_texture_filter_anisotropic') ||
                 gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') ||
-                gl.getExtension('MOZ_EXT_texture_filter_anisotropic') : undefined;
+                gl.getExtension('MOZ_EXT_texture_filter_anisotropic') ||
+                undefined : undefined;
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._maximumTextureFilterAnisotropy = (typeof textureFilterAnisotropic !== 'undefined') ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
