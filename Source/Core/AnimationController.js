@@ -196,7 +196,7 @@ define([
         var clock = this.clock;
         clock.clockStep = ClockStep.SPEED_MULTIPLIER;
         if (!this._animating) {
-            clock.multiplier = Math.abs(clock.multiplier);
+            clock.multiplier = 1.0; // was Math.abs(clock.multiplier);
             this.clock.tick(0);
             this._animating = !this.clock.isOutOfRange();
         } else if (clock.multiplier > 0) {
@@ -218,7 +218,7 @@ define([
         var clock = this.clock;
         clock.clockStep = ClockStep.SPEED_MULTIPLIER;
         if (!this._animating) {
-            clock.multiplier = -Math.abs(clock.multiplier);
+            clock.multiplier = -1.0; // was -Math.abs(clock.multiplier);
             this.clock.tick(0);
             this._animating = !this.clock.isOutOfRange();
         } else if (clock.multiplier < 0) {
