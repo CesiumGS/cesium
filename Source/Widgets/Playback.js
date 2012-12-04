@@ -102,6 +102,7 @@ define([
 
     Playback.prototype._setShuttleRingPointer = function (angle) {
         this.shuttleRingPointer.setAttribute('transform', 'translate(100,100) rotate(' + angle + ')');
+        this.knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     };
 
     Playback.prototype._createNodes = function(parentNode) {
@@ -114,9 +115,8 @@ define([
             '.playback-rectButton .playback-buttonMain { fill: url(#playback_buttonNormal); }\n' +
             '.playback-buttonSelected .playback-buttonMain { fill: url(#playback_buttonSelected); }\n' +
             '.playback-rectButton:hover .playback-buttonMain { fill: url(#playback_buttonHovered); }\n' +
-            '.playback-shuttleRingBack { fill: url(#playback_buttonRadialNormal); }\n' +
-            '.playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshGradient); }\n' +
-            '.playback-shuttleRingSwoosh:hover { fill: url(#playback_shuttleRingSwooshHovered); }\n' +
+            '.playback-shuttleRingG .playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshGradient); }\n' +
+            '.playback-shuttleRingG:hover .playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshHovered); }\n' +
             '.playback-shuttleRingPointer { fill: url(#playback_shuttleRingPointerGradient); }\n' +
             '.playback-knobOuter { fill: url(#playback_knobOuter); }\n' +
             '.playback-knobInner { fill: url(#playback_knobInner); }\n';
@@ -172,17 +172,6 @@ define([
                     'children' : [
                         { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#696969' },
                         { 'tagName' : 'stop', 'offset' : '75%', 'stop-color' : '#333' }
-                    ]
-                }, {
-                    'id' : 'playback_buttonRadialNormal',
-                    'tagName' : 'radialGradient',
-                    'gradientUnits' : 'userSpaceOnUse',
-                    'cx' : 101, 'cy' : 102, 'r' : 102,
-                    'children' : [   // Shift buttonNormal by 100-(y*0.65)
-                        { 'tagName' : 'stop', 'offset' : '47%', 'stop-color' : 'rgb(53,53,53)' },
-                        { 'tagName' : 'stop', 'offset' : '70%', 'stop-color' : 'rgb(46,50,56)' },
-                        { 'tagName' : 'stop', 'offset' : '92%', 'stop-color' : 'rgb(58,62,72)' },  // was 58,68,82
-                        { 'tagName' : 'stop', 'offset' : '100%', 'stop-color' : 'rgb(116,117,119)' }
                     ]
                 }, {
                     'id' : 'playback_blurred',
@@ -289,7 +278,7 @@ define([
                 }, {
                     'id' : 'playback_pathPointer',
                     'tagName' : 'path',
-                    'd' : 'M-15,-65,-15,-55,15,-55,15,-65,0,-85z'
+                    'd' : 'M-15,-65,-15,-55,15,-55,15,-65,0,-95z'
                 }, {
                     'id' : 'playback_pathSwooshFX',
                     'tagName' : 'path',
@@ -361,6 +350,7 @@ define([
 
         var shuttleRingBack = this._svgFromObject({
             'tagName' : 'g',
+            'class' : 'playback-shuttleRingG',
             'children' : [
                 {
                     'tagName' : 'circle',
@@ -379,16 +369,16 @@ define([
             'children' : [
                     {
                         'tagName': 'use',
-                        'transform' : 'translate(100,92) scale(-1,1)',
+                        'transform' : 'translate(100,97) scale(-1,1)',
                         'xlink:href' : '#playback_pathSwooshFX'
                     }, {
                         'tagName': 'use',
-                        'transform' : 'translate(100,92)',
+                        'transform' : 'translate(100,97)',
                         'xlink:href' : '#playback_pathSwooshFX'
                     }
             ]
         });
-        topG.appendChild(shuttleRingSwooshG);
+        shuttleRingBack.appendChild(shuttleRingSwooshG);
 
         // Pause
         this.pauseSVG = rectButton(84, 1, '#playback_pathPause', 'Pause');
@@ -450,38 +440,42 @@ define([
 
         var knobG = this._svgFromObject({
             'tagName' : 'g',
-            'transform' : 'translate(100,100)',
-            'children' : [
-                {
-                    'tagName' : 'circle',
-                    'class' : 'playback-knobOuter',
-                    'cx' : 0,
-                    'cy' : 0,
-                    'r' : 68
-                }, {
-                    'tagName' : 'circle',
-                    'class' : 'playback-knobInner',
-                    'cx' : 0,
-                    'cy' : 0,
-                    'r' : 60
-                }
-            ]
+            'transform' : 'translate(100,100)'
         });
 
-        this.knobDate = this._svgText(0, -21, '');
+        this.knobOuter = this._svgFromObject({
+            'tagName' : 'circle',
+            'class' : 'playback-knobOuter',
+            'cx' : 0,
+            'cy' : 0,
+            'r' : 71
+        });
+        knobG.appendChild(this.knobOuter);
+        this.knobOuter.addEventListener('mousedown', setShuttleRingFromMouse, true);
+
+        var knobInner = this._svgFromObject({
+            'tagName' : 'circle',
+            'class' : 'playback-knobInner',
+            'cx' : 0,
+            'cy' : 0,
+            'r' : 61  // Same size as shield
+        });
+        knobG.appendChild(knobInner);
+
+        this.knobDate = this._svgText(0, -22, '');
         knobG.appendChild(this.knobDate);
         this.knobTime = this._svgText(0, -5, '');
         knobG.appendChild(this.knobTime);
         this.knobStatus = this._svgText(0, -40, '');
         knobG.appendChild(this.knobStatus);
 
-        // This shield makes clicks work even while DOM elements underneath are changing.
+        // This shield catches clicks on the knob itself (even while DOM elements underneath are changing).
         var knobShield = this._svgFromObject({
             'tagName' : 'circle',
             'class' : 'playback-blank',
             'cx' : 0,
             'cy' : 0,
-            'r' : 68
+            'r' : 61  // Same size as knobInner
         });
         knobG.appendChild(knobShield);
 
