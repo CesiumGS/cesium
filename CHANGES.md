@@ -4,6 +4,10 @@ Change Log
 Beta Releases
 -------------
 
+### b12 - xx/xx/2013
+
+* Improved support on Nexus 4.
+
 ### b11 - 12/03/2012
 
 * Breaking changes:
