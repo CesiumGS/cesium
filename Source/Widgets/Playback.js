@@ -327,14 +327,14 @@ define([
         var buttonsG = this._svg('g');
 
         // Reverse
-        var moreReverseSVG = rectButton(29, 100, '#playback_pathSlowDown', 'Reverse');
+        var moreReverseSVG = rectButton(44, 100, '#playback_pathSlowDown', 'Reverse');
         buttonsG.appendChild(moreReverseSVG);
         moreReverseSVG.addEventListener('click', function () {
             widget.animationController.moreReverse();
         }, true);
 
         // Forward
-        var moreForwardSVG = rectButton(139, 100, '#playback_pathSpeedUp', 'Forward');
+        var moreForwardSVG = rectButton(124, 100, '#playback_pathSpeedUp', 'Forward');
         buttonsG.appendChild(moreForwardSVG);
         moreForwardSVG.addEventListener('click', function () {
             widget.animationController.moreForward();
@@ -386,7 +386,7 @@ define([
         topG.appendChild(this.pauseSVG);
         this.pauseSVG.addEventListener('click', function () {
             if (widget.animationController.isAnimating()) {  // TODO: animationController.togglePause()
-                widget.animationController.pause();
+                widget.animationController.pause();          // TODO: Pop out of realtime mode.
             } else {
                 widget.animationController.unpause();
             }
