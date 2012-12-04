@@ -59,20 +59,10 @@
 .playback-rectButton:active .playback-buttonMain {
     fill: #ABD6FF;
 }
-.playback-shuttleRingPath {
+.playback-shuttleRingBack {
     fill: url(#playback_buttonRadialNormal);
     stroke: #444;
     stroke-width: 2;
-}
-.playback-shuttleRingBack {
-    fill: #151515;
-    fill-opacity: 1;
-}
-.playback-shuttleRing .playback-rectButton .playback-buttonPath {
-    fill-opacity: 0.5;
-}
-.playback-shuttleRing .playback-buttonSelected .playback-buttonPath {
-    fill-opacity: 1;
 }
 .playback-shuttleRingLabels {
     fill: #edffff;
