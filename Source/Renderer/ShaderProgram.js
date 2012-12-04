@@ -2159,21 +2159,40 @@ define([
                     }
                 } else {
                     // Uniform array
-                    var locations = [];
-                    var value = [];
-                    for ( var j = 0; j < activeUniform.size; ++j) {
-                        var loc = gl.getUniformLocation(program, uniformName + '[' + j + ']');
+
+                    var uniformArray;
+                    var locations;
+                    var value;
+                    var loc;
+
+                    // On some platforms - Nexus 4 for one - an array of sampler2D ends up being represented
+                    // as separate uniforms, one for each array element.  Check for and handle that case.
+                    var indexOfBracket = uniformName.indexOf('[');
+                    if (indexOfBracket >= 0) {
+                        // We're assuming the array elements show up in numerical order - it seems to be true.
+                        uniformArray = allUniforms[uniformName.slice(0, indexOfBracket)];
+                        locations = uniformArray._getLocations();
+                        value = uniformArray.value;
+                        loc = gl.getUniformLocation(program, uniformName);
                         locations.push(loc);
                         value.push(gl.getUniform(program, loc));
-                    }
-                    var uniformArray = new UniformArray(gl, activeUniform, uniformName, locations, value);
-
-                    allUniforms[uniformName] = uniformArray;
-
-                    if (uniformArray._setSampler) {
-                        samplerUniforms.push(uniformArray);
                     } else {
-                        uniforms.push(uniformArray);
+                        locations = [];
+                        value = [];
+                        for ( var j = 0; j < activeUniform.size; ++j) {
+                            loc = gl.getUniformLocation(program, uniformName + '[' + j + ']');
+                            locations.push(loc);
+                            value.push(gl.getUniform(program, loc));
+                        }
+                        uniformArray = new UniformArray(gl, activeUniform, uniformName, locations, value);
+
+                        allUniforms[uniformName] = uniformArray;
+
+                        if (uniformArray._setSampler) {
+                            samplerUniforms.push(uniformArray);
+                        } else {
+                            uniforms.push(uniformArray);
+                        }
                     }
                 }
             }
