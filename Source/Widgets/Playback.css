@@ -87,6 +87,25 @@
     fill: url(#playback_shuttleRingPointerGradient);
     cursor: pointer;
 }
+.playback-shuttleRingPausePointer {
+    fill: url(#playback_shuttleRingPointerPaused);
+    cursor: pointer;
+}
+.playback-shuttleRingG .playback-shuttleRingReversePointer {
+    fill: #fff;
+    fill-opacity: 0.01;
+    stroke: none;
+    cursor: pointer;
+}
+.playback-shuttleRingG:hover .playback-shuttleRingReversePointer {
+    fill-opacity: 0.1;
+}
+.playback-shuttleRingG:hover .playback-shuttleRingReversePointer:hover, .playback-shuttleRingPausePointer:hover {
+    fill: #8CF;
+    fill-opacity: 1;
+    stroke: #AEF;
+    stroke-width: 1.8;
+}
 .playback-knobOuter {
     fill: url(#playback_knobOuter);
     cursor: pointer;

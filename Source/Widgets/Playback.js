@@ -102,6 +102,7 @@ define([
 
     Playback.prototype._setShuttleRingPointer = function (angle) {
         this.shuttleRingPointer.setAttribute('transform', 'translate(100,100) rotate(' + angle + ')');
+        this.shuttleRingReversePointer.setAttribute('transform', 'translate(100,100) rotate(' + (-angle) + ')');
         this.knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     };
 
@@ -118,6 +119,7 @@ define([
             '.playback-shuttleRingG .playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshGradient); }\n' +
             '.playback-shuttleRingG:hover .playback-shuttleRingSwoosh { fill: url(#playback_shuttleRingSwooshHovered); }\n' +
             '.playback-shuttleRingPointer { fill: url(#playback_shuttleRingPointerGradient); }\n' +
+            '.playback-shuttleRingPausePointer { fill: url(#playback_shuttleRingPointerPaused); }\n' +
             '.playback-knobOuter { fill: url(#playback_knobOuter); }\n' +
             '.playback-knobInner { fill: url(#playback_knobInner); }\n';
         document.head.appendChild(cssStyle);
@@ -207,10 +209,20 @@ define([
                     'tagName' : 'linearGradient',
                     'x1' : '0%', 'y1' : '50%', 'x2' : '100%', 'y2' : '50%',
                     'children' : [
-                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#2E2', 'stop-opacity' : 0.9 },
-                        { 'tagName' : 'stop', 'offset' : '40%', 'stop-color' : '#2E2', 'stop-opacity' : 0.95 },
-                        { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' : '#072', 'stop-opacity' : 0.95 },
-                        { 'tagName' : 'stop', 'offset' : '100%', 'stop-color' : '#072', 'stop-opacity' : 0.9 }
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#2E2' },
+                        { 'tagName' : 'stop', 'offset' : '40%', 'stop-color' : '#2E2' },
+                        { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' : '#072' },
+                        { 'tagName' : 'stop', 'offset' : '100%', 'stop-color' : '#072' }
+                    ]
+                }, {
+                    'id' : 'playback_shuttleRingPointerPaused',
+                    'tagName' : 'linearGradient',
+                    'x1' : '0%', 'y1' : '50%', 'x2' : '100%', 'y2' : '50%',
+                    'children' : [
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#CCC' },
+                        { 'tagName' : 'stop', 'offset' : '40%', 'stop-color' : '#CCC' },
+                        { 'tagName' : 'stop', 'offset' : '60%', 'stop-color' : '#555' },
+                        { 'tagName' : 'stop', 'offset' : '100%', 'stop-color' : '#555' }
                     ]
                 }, {
                     'id' : 'playback_knobOuter',
@@ -341,7 +353,7 @@ define([
         topG.appendChild(moreForwardSVG);
         moreForwardSVG.addEventListener('click', function () {
             widget.animationController.play();
-        }, true);*/
+        }, true);
 
         // Realtime
         this.realtimeSVG = rectButton(4, 4, '#playback_pathClock', 'Real-time');
@@ -349,11 +361,11 @@ define([
         topG.appendChild(this.realtimeSVG);
         this.realtimeSVG.addEventListener('click', function () {
             widget.animationController.playRealtime();
-        }, true);
+        }, true);*/
 
         var buttonsG = this._svg('g');
 
-        // Play Reverse
+/*        // Play Reverse
         this.playReverseSVG = rectButton(64, 100, '#playback_pathPlayReverse', 'Reverse');
         buttonsG.appendChild(this.playReverseSVG);
         this.playReverseSVG.addEventListener('click', function () {
@@ -365,66 +377,77 @@ define([
         buttonsG.appendChild(this.playForwardSVG);
         this.playForwardSVG.addEventListener('click', function () {
             widget.animationController.play();
-        }, true);
+        }, true);*/
 
         // More Reverse
-        var moreReverseSVG = rectButton(24, 100, '#playback_pathSlowDown', 'Reverse');
+        var moreReverseSVG = rectButton(44, 100, '#playback_pathSlowDown', 'Reverse');
         buttonsG.appendChild(moreReverseSVG);
         moreReverseSVG.addEventListener('click', function () {
             widget.animationController.moreReverse();
         }, true);
 
         // More Forward
-        var moreForwardSVG = rectButton(144, 100, '#playback_pathSpeedUp', 'Forward');
+        var moreForwardSVG = rectButton(124, 100, '#playback_pathSpeedUp', 'Forward');
         buttonsG.appendChild(moreForwardSVG);
         moreForwardSVG.addEventListener('click', function () {
             widget.animationController.moreForward();
         }, true);
 
-/*        // Realtime
+        // Realtime
         this.realtimeSVG = rectButton(84, 100, '#playback_pathClock', 'Real-time');
         this.realtimeTooltip = this.realtimeSVG.getElementsByTagName('title')[0];
         buttonsG.appendChild(this.realtimeSVG);
         this.realtimeSVG.addEventListener('click', function () {
             widget.animationController.playRealtime();
-        }, true);*/
+        }, true);
 
-        var shuttleRingBack = this._svgFromObject({
-            'tagName' : 'g',
-            'class' : 'playback-shuttleRingG',
-            'children' : [
-                {
-                    'tagName' : 'circle',
-                    'class' : 'playback-shuttleRingBack',
-                    'cx' : 100,
-                    'cy' : 100,
-                    'r' : 99
-                }
-            ]
+        var shuttleRingBackG = this._svg('g').set('class', 'playback-shuttleRingG');
+        topG.appendChild(shuttleRingBackG);
+
+        var shuttleRingBackPanel = this._svgFromObject({
+            'tagName' : 'circle',
+            'class' : 'playback-shuttleRingBack',
+            'cx' : 100,
+            'cy' : 100,
+            'r' : 99
         });
-        topG.appendChild(shuttleRingBack);
+        shuttleRingBackG.appendChild(shuttleRingBackPanel);
 
         var shuttleRingSwooshG = this._svgFromObject({
             'tagName' : 'g',
             'class' : 'playback-shuttleRingSwoosh',
             'children' : [
-                    {
-                        'tagName': 'use',
-                        'transform' : 'translate(100,97) scale(-1,1)',
-                        'xlink:href' : '#playback_pathSwooshFX'
-                    }, {
-                        'tagName': 'use',
-                        'transform' : 'translate(100,97)',
-                        'xlink:href' : '#playback_pathSwooshFX'
-                    }
+                {
+                    'tagName': 'use',
+                    'transform' : 'translate(100,97) scale(-1,1)',
+                    'xlink:href' : '#playback_pathSwooshFX'
+                }, {
+                    'tagName': 'use',
+                    'transform' : 'translate(100,97)',
+                    'xlink:href' : '#playback_pathSwooshFX'
+                }
             ]
         });
-        shuttleRingBack.appendChild(shuttleRingSwooshG);
+        shuttleRingBackG.appendChild(shuttleRingSwooshG);
+
+        this.shuttleRingReversePointer = this._svgFromObject({
+            'tagName' : 'use',
+            'class' : 'playback-shuttleRingReversePointer',
+            'xlink:href' : '#playback_pathPointer'
+        });
+        shuttleRingBackG.appendChild(this.shuttleRingReversePointer);
+        this.shuttleRingReversePointer.addEventListener('mousedown', function () {
+            if (widget.clock.multiplier > 0) {
+                widget.animationController.playReverse();
+            } else {
+                widget.animationController.play();
+            }
+        }, true);
 
         // Pause
         this.pauseSVG = rectButton(84, 1, '#playback_pathPause', 'Pause');
         this.pauseTooltip = this.pauseSVG.getElementsByTagName('title')[0];
-        topG.appendChild(this.pauseSVG);
+        shuttleRingBackG.appendChild(this.pauseSVG);
         this.pauseSVG.addEventListener('click', function () {
             if (widget.animationController.isAnimating()) {  // TODO: animationController.togglePause()
                 widget.animationController.pause();          // TODO: Pop out of realtime mode.
@@ -438,7 +461,7 @@ define([
             'class' : 'playback-shuttleRingPointer',
             'xlink:href' : '#playback_pathPointer'
         });
-        topG.appendChild(this.shuttleRingPointer);
+        shuttleRingBackG.appendChild(this.shuttleRingPointer);
 
         this._realtimeMode = false;
         this._isSystemTimeAvailable = true;
@@ -473,11 +496,18 @@ define([
                 shuttleRingDragging = false;
             }
         }
-        shuttleRingBack.addEventListener('mousedown', setShuttleRingFromMouse, true);
+        shuttleRingBackPanel.addEventListener('mousedown', setShuttleRingFromMouse, true);
         shuttleRingSwooshG.addEventListener('mousedown', setShuttleRingFromMouse, true);
         document.addEventListener('mousemove', setShuttleRingFromMouse, true);
-        this.shuttleRingPointer.addEventListener('mousedown', setShuttleRingFromMouse, true);
         document.addEventListener('mouseup', setShuttleRingFromMouse, true);
+
+        this.shuttleRingPointer.addEventListener('mousedown', function (e) {
+            if (widget.animationController.isAnimating()) {
+                setShuttleRingFromMouse(e);
+            } else {
+                widget.animationController.unpause();
+            }
+        }, true);
 
         var knobG = this._svgFromObject({
             'tagName' : 'g',
@@ -571,21 +601,25 @@ define([
         if (this._lastKnobSpeed !== speedLabel) {
             this._lastKnobSpeed = speedLabel;
             if (!this.animationController.isAnimating()) {
+                this.shuttleRingPointer.set('class', 'playback-shuttleRingPausePointer');
                 this.pauseSVG.set('class', 'playback-rectButton playback-buttonSelected');
-                this.playForwardSVG.set('class', 'playback-rectButton');
-                this.playReverseSVG.set('class', 'playback-rectButton');
+                //this.playForwardSVG.set('class', 'playback-rectButton');
+                //this.playReverseSVG.set('class', 'playback-rectButton');
             } else if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+                this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
                 this.pauseSVG.set('class', 'playback-rectButton');
-                this.playForwardSVG.set('class', 'playback-rectButton');
-                this.playReverseSVG.set('class', 'playback-rectButton');
+                //this.playForwardSVG.set('class', 'playback-rectButton');
+                //this.playReverseSVG.set('class', 'playback-rectButton');
             } else if (speed > 0) {
+                this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
                 this.pauseSVG.set('class', 'playback-rectButton');
-                this.playForwardSVG.set('class', 'playback-rectButton playback-buttonSelected');
-                this.playReverseSVG.set('class', 'playback-rectButton');
+                //this.playForwardSVG.set('class', 'playback-rectButton playback-buttonSelected');
+                //this.playReverseSVG.set('class', 'playback-rectButton');
             } else {
+                this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
                 this.pauseSVG.set('class', 'playback-rectButton');
-                this.playForwardSVG.set('class', 'playback-rectButton');
-                this.playReverseSVG.set('class', 'playback-rectButton playback-buttonSelected');
+                //this.playForwardSVG.set('class', 'playback-rectButton');
+                //this.playReverseSVG.set('class', 'playback-rectButton playback-buttonSelected');
             }
             this._updateSvgText(this.knobStatus, speedLabel);
         }
