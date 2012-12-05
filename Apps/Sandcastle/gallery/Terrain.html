@@ -76,10 +76,10 @@ body {
 <script id="cesium_sandcastle_script">
 require([
     'Source/Cesium', 'Widgets/Dojo/CesiumViewerWidget',
-    'dojo/on', 'dojo/dom', 'dojo/io-query'
+    'dojo/on', 'dojo/dom', 'Shaders/CentralBodyOcean', 'dojo/io-query'
 ], function(
     Cesium, CesiumViewerWidget,
-    on, dom, ioQuery)
+    on, dom, CentralBodyOcean, ioQuery)
 {
     "use strict";
 
@@ -139,19 +139,21 @@ require([
             break;
         case 'V'.charCodeAt(0):
             var camera = scene.getCamera();
-            console.log('position: ' + camera.getPositionWC() + ' direction: ' + camera.getDirectionWC() + ' up: ' + camera.getUpWC());
+        	console.log('var position = new Cesium.Cartesian3' + camera.getPositionWC() + ';');
+        	console.log('var direction = new Cesium.Cartesian3' + camera.getDirectionWC() + ';');
+        	console.log('var up = new Cesium.Cartesian3' + camera.getUpWC() + ';');
             break;
         case 'L'.charCodeAt(0):
-            var position = new Cesium.Cartesian3(-2444822.7410362503, -4495391.442027786, 3800016.0770029235);
-            var direction = new Cesium.Cartesian3(0.2306406390807245, 0.8212545213405562, 0.5218677100397503);
-            var up = new Cesium.Cartesian3(-0.31881470184216937, -0.44294118336776583, 0.8379500545772692);
-            var camera = scene.getCamera();
+            var position = new Cesium.Cartesian3(1235514.4818091553, -4996224.532789806, 3894637.0982041876);
+            var direction = new Cesium.Cartesian3(-0.19142739361697755, 0.7741020071546907, -0.6034249211725352);
+            var up = new Cesium.Cartesian3(-0.022861502949612936, 0.6111110780404753, 0.791214637111247);
+        	var camera = scene.getCamera();
             camera.lookAt(position, position.add(direction), up);
             break;
         case 'C'.charCodeAt(0):
-            var position = new Cesium.Cartesian3(-2444319.744271441, -4490462.305656268, 3800605.179680734);
-            var direction = new Cesium.Cartesian3(0.3079076572929976, 0.5183187255969877, 0.7978336751954334);
-            var up = new Cesium.Cartesian3(-0.38141711164833125, -0.7009912978668698, 0.6026045031832784);
+            var position = new Cesium.Cartesian3(-2154047.1693888847, -5129769.958774299, 3112753.0357638514);
+            var direction = new Cesium.Cartesian3(-0.6303093658511963, -0.09320311457302291, -0.7707290592381483);
+            var up = new Cesium.Cartesian3(-0.36365569382280133, -0.8416695313076181, 0.3991828358266927);
             var camera = scene.getCamera();
             camera.lookAt(position, position.add(direction), up);
             break;
@@ -178,10 +180,29 @@ require([
     cb = scene.getPrimitives().getCentralBody();
 
     var terrainProvider = new Cesium.CesiumTerrainProvider({
-        url : 'http://cesium.cloudapp.net/terrain'
+        url : 'http://108.16.61.27/terrain'
     });
+    
+    /*var terrainProvider = new Cesium.TileMapServiceTerrainProvider({
+        url : 'http://cesium.agi.com/terrain'
+    });*/    
 
     cb._surface._terrainProvider = terrainProvider;
+    
+    cb.oceanMaterial = new Cesium.Material({
+        context : scene.getContext(),
+        fabric : {
+            uniforms : {
+                normalMap: require.toUrl('Assets/Textures/waterNormalsSmall.jpg'),
+                frequency: 500000.0,
+                animationSpeed: 0.006,
+                amplitude: 1.0,
+                specularIntensity : 0.5,
+                fadeFactor : 1.0
+            },
+            source : CentralBodyOcean
+        }
+    });
 
     /*var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
         url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',

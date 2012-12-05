@@ -11,10 +11,10 @@ uniform float amplitude;
 uniform float specularIntensity;
 uniform float fadeFactor;
 
-vec4 getNoise(vec2 uv, float time, float angleInRadians) {
+vec4 getNoise(vec2 uv, float time) {
 
-    float cosAngle = cos(angleInRadians);
-    float sinAngle = sin(angleInRadians);
+    float cosAngle = 1.0; // cos(angleInRadians);
+    float sinAngle = 0.0; // sin(angleInRadians);
     
     // time dependent sampling directions
     vec2 s0 = vec2(1.0/17.0, 0.0);
@@ -46,52 +46,34 @@ vec4 getNoise(vec2 uv, float time, float angleInRadians) {
     return ((noise / 4.0) - 0.5) * 2.0;
 }
 
-czm_material czm_getSurfaceMaterial(czm_materialInput materialInput, vec3 baseColor, vec3 blendColor, float mask)
+vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec3 imageryColor, float specularMapValue)
 {
-    czm_material material = czm_getDefaultMaterial(materialInput);
-
     float time = czm_frameNumber * animationSpeed;
     
-    // fade is a function of the distance from the fragment and the frequency of the waves
-    float fade = max(1.0, (length(materialInput.positionToEyeEC) / 10000000000.0) * frequency * fadeFactor);
-            
-    float specularMapValue = mask;
+    vec3 positionToEyeEC = -positionEyeCoordinates;
+    float positionToEyeECLength = length(positionToEyeEC);
+    vec3 normalizedpositionToEyeEC = normalize(positionToEyeEC);
     
-    // note: not using directional motion at this time, just set the angle to 0.0;
-    vec4 noise = getNoise(materialInput.st * frequency, time, 0.0);
+    // fade is a function of the distance from the fragment and the frequency of the waves
+    float fade = max(1.0, (positionToEyeECLength / 10000000000.0) * frequency * fadeFactor);
+            
+    vec4 noise = getNoise(textureCoordinates * frequency, time);
     vec3 normalTangentSpace = noise.xyz * vec3(1.0, 1.0, (1.0 / amplitude));
     
     // fade out the normal perturbation as we move further from the water surface
     normalTangentSpace.xy /= fade;
-        
-    // attempt to fade out the normal perturbation as we approach non water areas (low specular map value)
-    //normalTangentSpace = mix(vec3(0.0, 0.0, 50.0), normalTangentSpace, specularMapValue);
-    
     normalTangentSpace = normalize(normalTangentSpace);
     
     // get ratios for alignment of the new normal vector with a vector perpendicular to the tangent plane
     float tsPerturbationRatio = clamp(dot(normalTangentSpace, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
     
-    // fade out water effect as specular map value decreases
-    material.alpha = 1.0; //specularMapValue;
+    czm_material material;
     
-    // base color is a blend of the water and non-water color based on the value from the specular map
-    // may need a uniform blend factor to better control this
-    material.diffuse = mix(blendColor.rgb, baseColor.rgb, specularMapValue);
-    
-    // diffuse highlights are based on how perturbed the normal is
-    material.diffuse += vec3(mix(0.0, 0.2 * tsPerturbationRatio, specularMapValue));
-    
-    material.normal = normalize(materialInput.tangentToEyeMatrix * normalTangentSpace);
-    
+    material.emission = imageryColor;
+    material.diffuse = vec3(mix(0.0, 0.2 * tsPerturbationRatio, specularMapValue));
+    material.normal = enuToEye * normalTangentSpace;
     material.specular = mix(0.0, specularIntensity, specularMapValue);
     material.shininess = 10.0;
     
-    return material;
-}
-
-czm_material czm_getMaterial(czm_materialInput materialInput)
-{
-    float waterMask = texture2D(specularMap, materialInput.st).r;
-    return czm_getSurfaceMaterial(materialInput, baseWaterColor.rgb, blendColor.rgb, waterMask); 
+    return czm_phong(normalizedpositionToEyeEC, material);
 }

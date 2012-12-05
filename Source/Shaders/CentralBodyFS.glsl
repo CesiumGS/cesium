@@ -11,9 +11,13 @@ uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 #endif
 
+#ifdef SHOW_REFLECTIVE_OCEAN
+uniform sampler2D u_waterMask;
+uniform vec4 u_waterMaskTranslationAndScale;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
-
 varying vec2 v_textureCoordinates;
 
 vec3 sampleAndBlend(
@@ -74,7 +78,7 @@ void main()
     // coordinates strictly in the 0-1 range.
     vec3 initialColor = vec3(0.0, 0.0, 0.5);
     vec3 startDayColor = computeDayColor(initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
-    
+
 #ifdef SHOW_TILE_BOUNDARIES
     if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
         v_textureCoordinates.y < (1.0/256.0) || v_textureCoordinates.y > (255.0/256.0))
@@ -83,5 +87,36 @@ void main()
     }
 #endif
 
-    gl_FragColor = vec4(startDayColor, 1.0);
+    vec4 color = vec4(startDayColor, 1.0);
+
+#ifdef SHOW_REFLECTIVE_OCEAN
+    vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
+    vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
+    vec2 waterMaskTextureCoordinates = v_textureCoordinates * waterMaskScale + waterMaskTranslation;
+
+    float mask = texture2D(u_waterMask, waterMaskTextureCoordinates).r;
+
+    if (mask > 0.0)
+    {
+        vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
+        vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
+#ifdef SHOW_OCEAN_WAVES
+        mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
+        color = computeWaterColor(v_positionEC, czm_ellipsoidWgs84TextureCoordinates(normalMC), enuToEye, startDayColor, mask);
+#else
+	    czm_material material;
+
+	    material.emission = startDayColor;
+	    material.diffuse = vec3(0.1);
+	    material.normal = normalEC;
+	    material.specular = mix(0.0, 1.0, mask);
+	    material.shininess = 10.0;
+
+	    color = czm_phong(normalize(v_positionEC), material);
+#endif
+    }
+#endif
+
+    
+    gl_FragColor = color;
 }

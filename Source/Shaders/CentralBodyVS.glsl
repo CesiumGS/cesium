@@ -1,5 +1,6 @@
 attribute vec3 position3D;
 attribute vec2 textureCoordinates;
+attribute float waterMask;
 
 uniform float u_morphTime;
 
@@ -15,6 +16,7 @@ varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 
 varying vec2 v_textureCoordinates;
+varying float v_waterMask;
 
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position3DWC);
@@ -85,4 +87,5 @@ void main()
     v_positionEC = (czm_modelView * vec4(position3DWC, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
     v_textureCoordinates = textureCoordinates;
+    v_waterMask = waterMask;
 }

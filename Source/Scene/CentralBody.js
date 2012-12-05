@@ -187,6 +187,8 @@ define([
                 return that.morphTime;
             }
         };
+
+        this.oceanMaterial = undefined;
     };
 
     var attributeIndices = {
@@ -592,7 +594,11 @@ define([
                  CentralBodyVS + '\n' +
                  getPositionMode + '\n' +
                  get2DYPositionFraction;
-            this._surfaceShaderSet.baseFragmentShaderString = CentralBodyFS;
+            this._surfaceShaderSet.baseFragmentShaderString =
+                (this._surface._terrainProvider.hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
+                (typeof this.oceanMaterial !== 'undefined' ? '#define SHOW_OCEAN_WAVES\n' + this.oceanMaterial.shaderSource : '') +
+                '#line 0\n' +
+                CentralBodyFS;
             this._surfaceShaderSet.invalidateShaders();
 
             var poleShaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.release();
@@ -629,10 +635,15 @@ define([
                 }
             }
 
+            var drawUniforms = this._drawUniforms;
+            if (typeof this.oceanMaterial !== 'undefined') {
+                drawUniforms = combine([this._drawUniforms, this.oceanMaterial._uniforms]);
+            }
+
             this._surface.update(context,
                     frameState,
                     colorCommandList,
-                    this._drawUniforms,
+                    drawUniforms,
                     this._surfaceShaderSet,
                     this._rsColor,
                     this._mode,

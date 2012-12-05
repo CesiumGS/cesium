@@ -11,10 +11,16 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Extent',
         '../Core/Occluder',
         '../Core/TaskProcessor',
+        '../Renderer/PixelDatatype',
+        '../Renderer/PixelFormat',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
         './Projections',
         './TileState',
         './TerrainProvider',
@@ -33,10 +39,16 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         Cartographic,
         Extent,
         Occluder,
         TaskProcessor,
+        PixelDatatype,
+        PixelFormat,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
         Projections,
         TileState,
         TerrainProvider,
@@ -86,6 +98,7 @@ define([
         this._proxy = description.proxy;
 
         this.ready = true;
+        this.hasWaterMask = true;
     }
 
     /**
@@ -156,24 +169,47 @@ define([
                 url = this._proxy.getURL(url);
             }
 
+            var that = this;
             when(loadArrayBuffer(url), function(buffer) {
-                tile.geometry = buffer;
-                tile.state = TileState.RECEIVED;
+
+                var geometry = new Float32Array(buffer, 0, that.heightmapWidth * that.heightmapWidth);
+                tile.transientData = {
+                        geometry : geometry,
+                        waterMask : new Uint8Array(buffer, geometry.byteLength + 1, 256 * 256)
+                };
+
+                tile.childTileBits = new Uint8Array(buffer, geometry.byteLength, 1)[0];
+                tile.waterMaskTranslationAndScale.x = 0.0;
+                tile.waterMaskTranslationAndScale.y = 0.0;
+                tile.waterMaskTranslationAndScale.z = 1.0;
+                tile.waterMaskTranslationAndScale.w = 1.0;
+
                 --requestsInFlight;
+                tile.state = TileState.RECEIVED;
             }, function(e) {
                 /*global console*/
                 // This shouldn't happen in the absence of network problems.  Log it and then use 0 heights.
-                // TODO: retry?
+                // TODO: retry?  use parent heights and water mask?
                 console.error('failed to load tile geometry: ' + e);
-                tile.geometry = new Float32Array(65 * 65).buffer;
-                tile.state = TileState.RECEIVED;
+
+                tile.transientData = {
+                        geometry : new Float32Array(65 * 65),
+                        waterMask : new Uint8Array(1)
+                };
+
+                tile.childTileBits = 0;
+                tile.waterMaskTranslationAndScale.x = 0.0;
+                tile.waterMaskTranslationAndScale.y = 0.0;
+                tile.waterMaskTranslationAndScale.z = 1.0;
+                tile.waterMaskTranslationAndScale.w = 1.0;
                 --requestsInFlight;
+                tile.state = TileState.RECEIVED;
             });
         } else {
             // Find the nearest ancestor with data.
             var levelDifference = 1;
             var sourceTile = parent;
-            while (typeof sourceTile.geometry === 'undefined') {
+            while (typeof sourceTile.transientData === 'undefined' || typeof sourceTile.transientData.geometry === 'undefined') {
                 sourceTile = sourceTile.parent;
                 ++levelDifference;
             }
@@ -208,10 +244,14 @@ define([
             var topInteger = topPostIndex | 0;
             var bottomInteger = bottomPostIndex | 0;
 
-            var sourceHeights = new Float32Array(sourceTile.geometry, 0, (sourceTile.geometry.byteLength - 1) / 4);
+            var sourceHeights = sourceTile.transientData.geometry;
+            //var sourceWaterMask = new Uint8Array(sourceTile.waterMask);
 
             var buffer;
             var heights;
+
+            //var waterMaskBuffer;
+            //var waterMask;
 
             // We can support the following level differences without interpolating:
             // 1 - 33x33 posts
@@ -265,11 +305,32 @@ define([
                 }
             }
 
-            // Missing tiles do not have any children.
-            var childBitsArray = new Uint8Array(buffer, buffer.byteLength - 1, 1);
-            childBitsArray[0] = 0;
+            tile.transientData = {
+                    geometry : heights,
+                    waterMask : undefined
+            };
 
-            tile.geometry = buffer;
+            tile.childTileBits = 0; // Missing tiles do not have any children.
+
+            // Use the source tile's water mask texture.
+            tile.waterMaskTexture = sourceTile.waterMaskTexture;
+            if (typeof tile.waterMaskTexture === 'undefined') {
+                console.log('bad');
+            }
+
+            // Compute the water mask translation and scale
+            var sourceTileExtent = sourceTile.extent;
+            var tileExtent = tile.extent;
+            var tileWidth = tileExtent.east - tileExtent.west;
+            var tileHeight = tileExtent.north - tileExtent.south;
+
+            var scaleX = tileWidth / (sourceTileExtent.east - sourceTileExtent.west);
+            var scaleY = tileHeight / (sourceTileExtent.north - sourceTileExtent.south);
+            tile.waterMaskTranslationAndScale.x = scaleX * (tileExtent.west - sourceTileExtent.west) / tileWidth;
+            tile.waterMaskTranslationAndScale.y = scaleY * (tileExtent.south - sourceTileExtent.south) / tileHeight;
+            tile.waterMaskTranslationAndScale.z = scaleX;
+            tile.waterMaskTranslationAndScale.w = scaleY;
+
             tile.state = TileState.RECEIVED;
         }
 
@@ -299,12 +360,10 @@ define([
      * @param {Tile} tile The tile to transform geometry for.
      */
     CesiumTerrainProvider.prototype.transformGeometry = function(context, tile) {
-        var pixels = new Float32Array(tile.geometry, 0, (tile.geometry.byteLength - 1) / 4);
+        var pixels = tile.transientData.geometry;
         var width = Math.sqrt(pixels.length) | 0;
         var height = width;
-
-        var childTileBits = new Uint8Array(tile.geometry, width * height * 4, 1);
-        tile.childTileBits = childTileBits[0];
+        var waterMask = tile.transientData.waterMask;
 
         var tilingScheme = this.tilingScheme;
         var ellipsoid = tilingScheme.getEllipsoid();
@@ -312,11 +371,34 @@ define([
 
         tile.center = ellipsoid.cartographicToCartesian(tile.extent.getCenter());
 
+        if (typeof tile.waterMaskTexture === 'undefined') {
+            var waterMaskSize = Math.sqrt(waterMask.length);
+
+            tile.waterMaskTexture = context.createTexture2D({
+                pixelFormat : PixelFormat.LUMINANCE,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                source : {
+                    width : waterMaskSize,
+                    height : waterMaskSize,
+                    arrayBufferView : waterMask
+                }
+            });
+            tile.waterMaskTexture.setSampler({
+                wrapS : TextureWrap.CLAMP,
+                wrapT : TextureWrap.CLAMP,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
+            });
+        }
+
         // If data is not available for any of this tile's children, keep the
         // raw geometry around because the no-data children will use it.
         var transfer = [];
         if (tile.childTileBits === 15 || pixels.length !== this.heightmapWidth * this.heightmapWidth) {
             transfer.push(pixels.buffer);
+
+            // TODO: remove this.  It's only here to help track down an intermittent bug.
+            tile.transferredBuffer = true;
         }
 
         var verticesPromise = taskProcessor.scheduleTask({
@@ -331,7 +413,8 @@ define([
             radiiSquared : ellipsoid.getRadiiSquared(),
             oneOverCentralBodySemimajorAxis : ellipsoid.getOneOverRadii().x,
             skirtHeight : Math.min(this.getLevelMaximumGeometricError(tile.level) * 10.0, 1000.0),
-            isGeographic : true
+            isGeographic : true /*,
+            waterMask : waterMask */
         }, transfer);
 
         if (typeof verticesPromise === 'undefined') {
@@ -343,13 +426,14 @@ define([
         var that = this;
         when(verticesPromise, function(result) {
             if (tile.childTileBits === 15 || pixels.length !== that.heightmapWidth * that.heightmapWidth) {
-                tile.geometry = undefined;
+                tile.transientData = undefined;
             }
             tile.transformedGeometry = {
                 vertices : result.vertices,
                 statistics : result.statistics,
                 indices : TerrainProvider.getRegularGridIndices(width + 2, height + 2)
             };
+
             tile.state = TileState.TRANSFORMED;
         }, function(e) {
             /*global console*/

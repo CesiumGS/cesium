@@ -313,6 +313,7 @@ define([
         debug.texturesRendered = 0;
         debug.tilesWaitingForChildren = 0;
 
+        surface._tileLoadQueue.clear();
         surface._tileLoadQueue.markInsertionPoint();
         surface._tileReplacementQueue.markStartOfRenderFrame();
 
@@ -864,6 +865,12 @@ define([
             u_southMercatorYLowAndHighAndOneOverHeight : function() {
                return this.southMercatorYLowAndHighAndOneOverHeight;
             },
+            u_waterMask : function() {
+                return this.waterMask;
+            },
+            u_waterMaskTranslationAndScale : function() {
+                return this.waterMaskTranslationAndScale;
+            },
 
             center3D : undefined,
             modifiedModelView : new Matrix4(),
@@ -879,7 +886,10 @@ define([
             dayIntensity : 0.0,
 
             southAndNorthLatitude : new Cartesian2(0.0, 0.0),
-            southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(0.0, 0.0, 0.0)
+            southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(0.0, 0.0, 0.0),
+
+            waterMask : undefined,
+            waterMaskTranslationAndScale : new Cartesian4(0.0, 0.0, 0.0, 0.0)
         };
     }
 
@@ -1053,6 +1063,8 @@ define([
                     // trim texture array to the used length so we don't end up using old textures
                     // which might get destroyed eventually
                     uniformMap.dayTextures.length = numberOfDayTextures;
+                    uniformMap.waterMask = tile.waterMaskTexture;
+                    Cartesian4.clone(tile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
                     colorCommandList.push(command);
 
@@ -1082,7 +1094,7 @@ define([
         }
 
         // trim command list to the number actually needed
-        tileCommands.length = Math.max(0, tileCommandIndex);
+        tileCommands.length = Math.max(0, tileCommandIndex + 1);
     }
 
     return CentralBodySurface;
