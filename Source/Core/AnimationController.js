@@ -73,7 +73,12 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.pause = function() {
+        var clock = this.clock;
         this._animating = false;
+        if (clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+            clock.clockStep = ClockStep.SPEED_MULTIPLIER;
+            clock.multiplier = 1;
+        }
     };
 
     /**
@@ -196,15 +201,13 @@ define([
         var clock = this.clock;
         clock.clockStep = ClockStep.SPEED_MULTIPLIER;
         if (!this._animating) {
-            clock.multiplier = 1.0; // was Math.abs(clock.multiplier);
+            clock.multiplier = Math.abs(clock.multiplier);
             this.clock.tick(0);
             this._animating = !this.clock.isOutOfRange();
         } else if (clock.multiplier > 0) {
             this.faster();
-        } else if (clock.multiplier < -1.001) {
-            this.slower();
         } else {
-            this.pause();
+            this.slower();
         }
     };
 
@@ -218,15 +221,13 @@ define([
         var clock = this.clock;
         clock.clockStep = ClockStep.SPEED_MULTIPLIER;
         if (!this._animating) {
-            clock.multiplier = -1.0; // was -Math.abs(clock.multiplier);
+            clock.multiplier = -Math.abs(clock.multiplier);
             this.clock.tick(0);
             this._animating = !this.clock.isOutOfRange();
         } else if (clock.multiplier < 0) {
             this.faster();
-        } else if (clock.multiplier > 1.001) {
-            this.slower();
         } else {
-            this.pause();
+            this.slower();
         }
     };
 

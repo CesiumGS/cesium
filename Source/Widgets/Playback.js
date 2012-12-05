@@ -246,6 +246,11 @@ define([
                     'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
                     'd' : 'M6.684,25.682L24.316,15.5L6.684,5.318V25.682z'
                 }, {
+                    'id' : 'playback_pathPlayReverse',
+                    'tagName' : 'path',
+                    'transform' : 'translate(16,16) scale(-0.85,0.85) translate(-16,-16)',
+                    'd' : 'M6.684,25.682L24.316,15.5L6.684,5.318V25.682z'
+                }, {
                     'id' : 'playback_pathLoop',
                     'tagName' : 'path',
                     'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
@@ -324,29 +329,65 @@ define([
             return widget._svgFromObject(button);
         };
 
+/*        // Reverse
+        var moreReverseSVG = rectButton(4, 4, '#playback_pathPlayReverse', 'Reverse');
+        topG.appendChild(moreReverseSVG);
+        moreReverseSVG.addEventListener('click', function () {
+            widget.animationController.playReverse();
+        }, true);
+
+        // Forward
+        var moreForwardSVG = rectButton(164, 4, '#playback_pathPlay', 'Forward');
+        topG.appendChild(moreForwardSVG);
+        moreForwardSVG.addEventListener('click', function () {
+            widget.animationController.play();
+        }, true);*/
+
+        // Realtime
+        this.realtimeSVG = rectButton(4, 4, '#playback_pathClock', 'Real-time');
+        this.realtimeTooltip = this.realtimeSVG.getElementsByTagName('title')[0];
+        topG.appendChild(this.realtimeSVG);
+        this.realtimeSVG.addEventListener('click', function () {
+            widget.animationController.playRealtime();
+        }, true);
+
         var buttonsG = this._svg('g');
 
-        // Reverse
-        var moreReverseSVG = rectButton(44, 100, '#playback_pathSlowDown', 'Reverse');
+        // Play Reverse
+        this.playReverseSVG = rectButton(64, 100, '#playback_pathPlayReverse', 'Reverse');
+        buttonsG.appendChild(this.playReverseSVG);
+        this.playReverseSVG.addEventListener('click', function () {
+            widget.animationController.playReverse();
+        }, true);
+
+        // Play Forward
+        this.playForwardSVG = rectButton(104, 100, '#playback_pathPlay', 'Forward');
+        buttonsG.appendChild(this.playForwardSVG);
+        this.playForwardSVG.addEventListener('click', function () {
+            widget.animationController.play();
+        }, true);
+
+        // More Reverse
+        var moreReverseSVG = rectButton(24, 100, '#playback_pathSlowDown', 'Reverse');
         buttonsG.appendChild(moreReverseSVG);
         moreReverseSVG.addEventListener('click', function () {
             widget.animationController.moreReverse();
         }, true);
 
-        // Forward
-        var moreForwardSVG = rectButton(124, 100, '#playback_pathSpeedUp', 'Forward');
+        // More Forward
+        var moreForwardSVG = rectButton(144, 100, '#playback_pathSpeedUp', 'Forward');
         buttonsG.appendChild(moreForwardSVG);
         moreForwardSVG.addEventListener('click', function () {
             widget.animationController.moreForward();
         }, true);
 
-        // Realtime
+/*        // Realtime
         this.realtimeSVG = rectButton(84, 100, '#playback_pathClock', 'Real-time');
         this.realtimeTooltip = this.realtimeSVG.getElementsByTagName('title')[0];
         buttonsG.appendChild(this.realtimeSVG);
         this.realtimeSVG.addEventListener('click', function () {
             widget.animationController.playRealtime();
-        }, true);
+        }, true);*/
 
         var shuttleRingBack = this._svgFromObject({
             'tagName' : 'g',
@@ -512,13 +553,13 @@ define([
             this._updateSvgText(this.knobTime, currentTimeLabel);
         }
 
-        var speed = 0, angle = 0, tooltip, speedLabel;
+        var speed = this.clock.multiplier;
+        var angle = this._shuttleSpeedtoAngle(speed);
+        var tooltip, speedLabel;
         if (this.animationController.isAnimating()) {
             if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
                 speedLabel = 'real-time';
             } else {
-                speed = this.clock.multiplier;
-                angle = this._shuttleSpeedtoAngle(speed);
                 speedLabel = speed + 'x';
             }
             tooltip = 'Pause';
@@ -529,10 +570,22 @@ define([
 
         if (this._lastKnobSpeed !== speedLabel) {
             this._lastKnobSpeed = speedLabel;
-            if (this.animationController.isAnimating()) {
-                this.pauseSVG.set('class', 'playback-rectButton');
-            } else {
+            if (!this.animationController.isAnimating()) {
                 this.pauseSVG.set('class', 'playback-rectButton playback-buttonSelected');
+                this.playForwardSVG.set('class', 'playback-rectButton');
+                this.playReverseSVG.set('class', 'playback-rectButton');
+            } else if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+                this.pauseSVG.set('class', 'playback-rectButton');
+                this.playForwardSVG.set('class', 'playback-rectButton');
+                this.playReverseSVG.set('class', 'playback-rectButton');
+            } else if (speed > 0) {
+                this.pauseSVG.set('class', 'playback-rectButton');
+                this.playForwardSVG.set('class', 'playback-rectButton playback-buttonSelected');
+                this.playReverseSVG.set('class', 'playback-rectButton');
+            } else {
+                this.pauseSVG.set('class', 'playback-rectButton');
+                this.playForwardSVG.set('class', 'playback-rectButton');
+                this.playReverseSVG.set('class', 'playback-rectButton playback-buttonSelected');
             }
             this._updateSvgText(this.knobStatus, speedLabel);
         }
@@ -540,16 +593,16 @@ define([
         if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
             if (!this._realtimeMode) {
                 this._realtimeMode = true;
-                this.shuttleRingPointer.style.display = 'none';
+                //this.shuttleRingPointer.style.display = 'none';
                 this.realtimeSVG.set('class', 'playback-rectButton playback-buttonSelected');
-                this.realtimeTooltip.textContent = 'Real-time';
+                this.realtimeTooltip.textContent = 'Today (real-time)';
             }
         } else {
             var setRealtimeStyle = false;
 
             if (this._realtimeMode) {
                 this._realtimeMode = false;
-                this.shuttleRingPointer.style.display = 'block';
+                //this.shuttleRingPointer.style.display = 'block';
                 setRealtimeStyle = true;
             }
 
@@ -565,14 +618,14 @@ define([
                     this.realtimeTooltip.textContent = 'Current time not in range.';
                 } else {
                     this.realtimeSVG.set('class', 'playback-rectButton');
-                    this.realtimeTooltip.textContent = 'Real-time';
+                    this.realtimeTooltip.textContent = 'Today (real-time)';
                 }
             }
+        }
 
-            if (this._shuttleRingAngle !== angle) {
-                this._shuttleRingAngle = angle;
-                this._setShuttleRingPointer(angle);
-            }
+        if (this._shuttleRingAngle !== angle) {
+            this._shuttleRingAngle = angle;
+            this._setShuttleRingPointer(angle);
         }
 
         if (this._lastPauseTooltip !== tooltip) {
