@@ -697,8 +697,8 @@ define([
                 this.highlightMaterial.uniforms.color = this.highlightColor;
             }
 
-            if (typeof this.onObjectLeftDoubleClickSelected === 'undefined') {
-                this.onObjectLeftDoubleClickSelected = function(selectedObject) {
+            if (typeof this.onObjectSelected === 'undefined') {
+                this.onObjectSelected = function(selectedObject) {
                     if (typeof selectedObject !== 'undefined' && typeof selectedObject.dynamicObject !== 'undefined') {
                         this.centerCameraOnPick(selectedObject);
                     }

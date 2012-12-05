@@ -125,10 +125,7 @@ define([
         camera.right = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
         camera.direction = Cartesian3.fromCartesian4(invTransform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
 
-        var yDiff = movement.startPosition.y - movement.endPosition.y;
-        if (!camera.position.normalize().equalsEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON2) || yDiff > 0) {
-            this.spindleController._rotate(movement);
-        }
+        this.spindleController._rotate(movement);
 
         position = camera.position;
         up = camera.up;
