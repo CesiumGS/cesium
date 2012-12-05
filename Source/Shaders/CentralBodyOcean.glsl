@@ -52,7 +52,9 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     
     vec3 positionToEyeEC = -positionEyeCoordinates;
     float positionToEyeECLength = length(positionToEyeEC);
-    vec3 normalizedpositionToEyeEC = normalize(positionToEyeEC);
+
+    // The double normalize below works around a bug in Firefox on Android devices.
+    vec3 normalizedpositionToEyeEC = normalize(normalize(positionToEyeEC));
     
     // fade is a function of the distance from the fragment and the frequency of the waves
     float fade = max(1.0, (positionToEyeECLength / 10000000000.0) * frequency * fadeFactor);

@@ -112,7 +112,8 @@ void main()
 	    material.specular = mix(0.0, 1.0, mask);
 	    material.shininess = 10.0;
 
-	    color = czm_phong(normalize(v_positionEC), material);
+        // The double normalize below works around a bug in Firefox on Android devices.
+	    color = czm_phong(normalize(normalize(v_positionEC)), material);
 #endif
     }
 #endif
