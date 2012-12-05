@@ -91,7 +91,7 @@
     fill: url(#playback_shuttleRingPointerPaused);
     cursor: pointer;
 }
-.playback-shuttleRingG .playback-shuttleRingReversePointer {
+/* .playback-shuttleRingG .playback-shuttleRingReversePointer {
     fill: #fff;
     fill-opacity: 0.01;
     stroke: none;
@@ -105,7 +105,7 @@
     fill-opacity: 1;
     stroke: #AEF;
     stroke-width: 1.8;
-}
+}*/
 .playback-knobOuter {
     fill: url(#playback_knobOuter);
     cursor: pointer;

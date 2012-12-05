@@ -86,6 +86,10 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.unpause = function() {
+        var clock = this.clock;
+        if (clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
+            clock.clockStep = ClockStep.SPEED_MULTIPLIER;
+        }
         this.clock.tick(0);
         this._animating = !this.clock.isOutOfRange();
     };
@@ -99,8 +103,7 @@ define([
         if (clock.multiplier < 0) {
             clock.multiplier = -clock.multiplier;
         }
-        this.clock.tick(0);
-        this._animating = !this.clock.isOutOfRange();
+        this.unpause();
     };
 
     /**
@@ -112,8 +115,7 @@ define([
         if (clock.multiplier > 0) {
             clock.multiplier = -clock.multiplier;
         }
-        this.clock.tick(0);
-        this._animating = !this.clock.isOutOfRange();
+        this.unpause();
     };
 
     /**
@@ -136,10 +138,6 @@ define([
      */
     AnimationController.prototype.slower = function() {
         var clock = this.clock;
-        if (clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-            clock.clockStep = ClockStep.SPEED_MULTIPLIER;
-            clock.multiplier = 1;
-        }
         this.unpause();
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
@@ -166,10 +164,6 @@ define([
      */
     AnimationController.prototype.faster = function() {
         var clock = this.clock;
-        if (clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-            clock.clockStep = ClockStep.SPEED_MULTIPLIER;
-            clock.multiplier = 1;
-        }
         this.unpause();
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
@@ -199,12 +193,9 @@ define([
      */
     AnimationController.prototype.moreForward = function() {
         var clock = this.clock;
-        clock.clockStep = ClockStep.SPEED_MULTIPLIER;
-        if (!this._animating) {
-            clock.multiplier = Math.abs(clock.multiplier);
-            this.clock.tick(0);
-            this._animating = !this.clock.isOutOfRange();
-        } else if (clock.multiplier > 0) {
+        this.unpause();
+
+        if (clock.multiplier > 0) {
             this.faster();
         } else {
             this.slower();
@@ -219,12 +210,9 @@ define([
      */
     AnimationController.prototype.moreReverse = function() {
         var clock = this.clock;
-        clock.clockStep = ClockStep.SPEED_MULTIPLIER;
-        if (!this._animating) {
-            clock.multiplier = -Math.abs(clock.multiplier);
-            this.clock.tick(0);
-            this._animating = !this.clock.isOutOfRange();
-        } else if (clock.multiplier < 0) {
+        this.unpause();
+
+        if (clock.multiplier < 0) {
             this.faster();
         } else {
             this.slower();
