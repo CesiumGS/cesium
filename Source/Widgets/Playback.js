@@ -102,7 +102,7 @@ define([
 
     Playback.prototype._setShuttleRingPointer = function (angle) {
         this.shuttleRingPointer.setAttribute('transform', 'translate(100,100) rotate(' + angle + ')');
-        this.shuttleRingReversePointer.setAttribute('transform', 'translate(100,100) rotate(' + (-angle) + ')');
+        //this.shuttleRingReversePointer.setAttribute('transform', 'translate(100,100) rotate(' + (-angle) + ')');
         this.knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     };
 
@@ -341,43 +341,21 @@ define([
             return widget._svgFromObject(button);
         };
 
-/*        // Reverse
-        var moreReverseSVG = rectButton(4, 4, '#playback_pathPlayReverse', 'Reverse');
-        topG.appendChild(moreReverseSVG);
-        moreReverseSVG.addEventListener('click', function () {
-            widget.animationController.playReverse();
-        }, true);
-
-        // Forward
-        var moreForwardSVG = rectButton(164, 4, '#playback_pathPlay', 'Forward');
-        topG.appendChild(moreForwardSVG);
-        moreForwardSVG.addEventListener('click', function () {
-            widget.animationController.play();
-        }, true);
-
-        // Realtime
-        this.realtimeSVG = rectButton(4, 4, '#playback_pathClock', 'Real-time');
-        this.realtimeTooltip = this.realtimeSVG.getElementsByTagName('title')[0];
-        topG.appendChild(this.realtimeSVG);
-        this.realtimeSVG.addEventListener('click', function () {
-            widget.animationController.playRealtime();
-        }, true);*/
-
-        var buttonsG = this._svg('g');
-
-/*        // Play Reverse
-        this.playReverseSVG = rectButton(64, 100, '#playback_pathPlayReverse', 'Reverse');
-        buttonsG.appendChild(this.playReverseSVG);
+        // Play Reverse
+        this.playReverseSVG = rectButton(4, 4, '#playback_pathPlayReverse', 'Play Reverse');
+        topG.appendChild(this.playReverseSVG);
         this.playReverseSVG.addEventListener('click', function () {
             widget.animationController.playReverse();
         }, true);
 
         // Play Forward
-        this.playForwardSVG = rectButton(104, 100, '#playback_pathPlay', 'Forward');
-        buttonsG.appendChild(this.playForwardSVG);
+        this.playForwardSVG = rectButton(164, 4, '#playback_pathPlay', 'Play Forward');
+        topG.appendChild(this.playForwardSVG);
         this.playForwardSVG.addEventListener('click', function () {
             widget.animationController.play();
-        }, true);*/
+        }, true);
+
+        var buttonsG = this._svg('g');
 
         // More Reverse
         var moreReverseSVG = rectButton(44, 100, '#playback_pathSlowDown', 'Reverse');
@@ -392,6 +370,20 @@ define([
         moreForwardSVG.addEventListener('click', function () {
             widget.animationController.moreForward();
         }, true);
+
+/*        // Play Reverse
+        this.playReverseSVG = rectButton(44, 1, '#playback_pathPlayReverse', 'Play Reverse');
+        buttonsG.appendChild(this.playReverseSVG);
+        this.playReverseSVG.addEventListener('click', function () {
+            widget.animationController.playReverse();
+        }, true);
+
+        // Play Forward
+        this.playForwardSVG = rectButton(124, 1, '#playback_pathPlay', 'Play Forward');
+        buttonsG.appendChild(this.playForwardSVG);
+        this.playForwardSVG.addEventListener('click', function () {
+            widget.animationController.play();
+        }, true);*/
 
         // Realtime
         this.realtimeSVG = rectButton(84, 100, '#playback_pathClock', 'Real-time');
@@ -430,7 +422,7 @@ define([
         });
         shuttleRingBackG.appendChild(shuttleRingSwooshG);
 
-        this.shuttleRingReversePointer = this._svgFromObject({
+/*        this.shuttleRingReversePointer = this._svgFromObject({
             'tagName' : 'use',
             'class' : 'playback-shuttleRingReversePointer',
             'xlink:href' : '#playback_pathPointer'
@@ -442,7 +434,7 @@ define([
             } else {
                 widget.animationController.play();
             }
-        }, true);
+        }, true);*/
 
         // Pause
         this.pauseSVG = rectButton(84, 1, '#playback_pathPause', 'Pause');
@@ -603,21 +595,29 @@ define([
             if (!this.animationController.isAnimating()) {
                 this.shuttleRingPointer.set('class', 'playback-shuttleRingPausePointer');
                 this.pauseSVG.set('class', 'playback-rectButton playback-buttonSelected');
+                this.playForwardSVG.style.display = 'block';
+                this.playReverseSVG.style.display = 'block';
                 //this.playForwardSVG.set('class', 'playback-rectButton');
                 //this.playReverseSVG.set('class', 'playback-rectButton');
             } else if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
                 this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
                 this.pauseSVG.set('class', 'playback-rectButton');
+                this.playForwardSVG.style.display = 'none';
+                this.playReverseSVG.style.display = 'none';
                 //this.playForwardSVG.set('class', 'playback-rectButton');
                 //this.playReverseSVG.set('class', 'playback-rectButton');
             } else if (speed > 0) {
                 this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
                 this.pauseSVG.set('class', 'playback-rectButton');
+                this.playForwardSVG.style.display = 'none';
+                this.playReverseSVG.style.display = 'block';
                 //this.playForwardSVG.set('class', 'playback-rectButton playback-buttonSelected');
                 //this.playReverseSVG.set('class', 'playback-rectButton');
             } else {
                 this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
                 this.pauseSVG.set('class', 'playback-rectButton');
+                this.playForwardSVG.style.display = 'block';
+                this.playReverseSVG.style.display = 'none';
                 //this.playForwardSVG.set('class', 'playback-rectButton');
                 //this.playReverseSVG.set('class', 'playback-rectButton playback-buttonSelected');
             }
