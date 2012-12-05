@@ -16,7 +16,7 @@ define([
             arrayHeight += 2;
         }
 
-        var vertices = new Float32Array(arrayWidth * arrayHeight * 6);
+        var vertices = new Float32Array(arrayWidth * arrayHeight * 5);
         transferableObjects.push(vertices.buffer);
 
         parameters.vertices = vertices;
