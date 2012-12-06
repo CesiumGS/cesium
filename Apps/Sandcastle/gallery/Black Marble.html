@@ -91,7 +91,7 @@ require([
     var centralBody = widget.centralBody;
 
     var imageryLayerCollection = centralBody.getImageryLayers();
-    imageryLayerCollection.remove(0);
+    imageryLayerCollection.removeAll();
     imageryLayerCollection.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
         url : 'http://cesium.agi.com/blackmarble',
         maximumLevel : 8
