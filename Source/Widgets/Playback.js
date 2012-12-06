@@ -427,7 +427,7 @@ define([
             widget.animationController.moreForward();
         }, true);*/
 
-        // More Reverse
+/*        // More Reverse
         var moreReverseSVG = wingButton(44, 2, -1, 'Reverse');
         buttonsG.appendChild(moreReverseSVG);
         moreReverseSVG.addEventListener('click', function () {
@@ -439,7 +439,7 @@ define([
         buttonsG.appendChild(moreForwardSVG);
         moreForwardSVG.addEventListener('click', function () {
             widget.animationController.moreForward();
-        }, true);
+        }, true);*/
 
         // Play Reverse
         this.playReverseSVG = rectButton(44, 100, '#playback_pathPlayReverse', 'Play Reverse');
@@ -518,7 +518,6 @@ define([
 
         function setShuttleRingFromMouse(e) {
             if (e.type === 'mousedown' || (shuttleRingDragging && e.type === 'mousemove')) {
-                shuttleRingDragging = true;
                 widget.clock.clockStep = ClockStep.SPEED_MULTIPLIER;
                 var rect = svg.getBoundingClientRect();
                 var x = e.clientX - 100 - rect.left;
@@ -528,8 +527,19 @@ define([
                     angle -= 360;
                 }
                 var speed = widget._shuttleAngletoSpeed(angle);
-                if (speed !== 0) {
-                    widget.clock.multiplier = speed;
+                if (shuttleRingDragging || (
+                        // check if speed and multiplier have the same +/- sign
+                        ((speed < 0) === (widget.clock.multiplier < 0)) &&
+                        // and they're close on a log scale
+                        Math.abs(Math.log(Math.abs(speed)) - Math.log(Math.abs(widget.clock.multiplier))) < 2.5)) {
+                    shuttleRingDragging = true;
+                    if (speed !== 0) {
+                        widget.clock.multiplier = speed;
+                    }
+                } else if (speed < widget.clock.multiplier) {
+                    widget.animationController.moreReverse();
+                } else if (speed > widget.clock.multiplier) {
+                    widget.animationController.moreForward();
                 }
                 e.preventDefault();
                 e.stopPropagation();
