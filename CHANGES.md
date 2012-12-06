@@ -4,10 +4,16 @@ Change Log
 Beta Releases
 -------------
 
-### b11 - xx/xx/2012
+### b12 - xx/xx/2013
+
+* Improved support on Nexus 4.
+* Added Sandbox example using NASA's new [Black Marble](http://www.nasa.gov/mission_pages/NPP/news/earth-at-night.html) night imagery.
+
+
+### b11 - 12/03/2012
 
 * Breaking changes:
-   * Widget render loop now started by default.  Startup code changed, see Sandcastle examples.
+   * Widget render loop now started by default.  Startup code changed, see `Sandcastle` examples.
    * Changed `Timeline.makeLabel` to take a `JulianDate` instead of a JavaScript date parameter.
    * Default Earth imagery has been moved to a new package `Assets`.  Images used by `Sandcastle` examples have been moved to the Sandcastle folder, and images used by the Dojo widgets are now self-contained in the `Widgets` package.
    * `positionToEyeEC` in `czm_materialInput` is no longer normalized by default.
@@ -23,8 +29,8 @@ Beta Releases
 * Improved lighting in Columbus view and on polygons, ellipsoids, and sensors.
 * Fixed atmosphere rendering artifacts and improved Columbus view transition.
 * Fixed jitter artifacts with billboards and polylines.
-* Added `TileMapServiceImageryProvider`.  See the Imagery Layers Sandbox example.
-* Added `Water` material.  See the Materials Sandbox example.
+* Added `TileMapServiceImageryProvider`.  See the Imagery Layers `Sandcastle` example.
+* Added `Water` material.  See the Materials `Sandcastle` example.
 * Added `SkyBox` to draw stars.  Added `CesiumWidget.showSkyBox` and `CesiumViewerWidget.showSkyBox`.
 * Added new `Matrix4` functions: `Matrix4.multiplyByTranslation`, `multiplyByPoint`, and `Matrix4.fromScale`. Added `Matrix3.fromScale`.
 * Added `EncodedCartesian3`, which is used to eliminate jitter when drawing primitives.
