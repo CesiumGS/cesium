@@ -93,8 +93,8 @@ require([
     var imageryLayerCollection = centralBody.getImageryLayers();
     imageryLayerCollection.remove(0);
     imageryLayerCollection.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
-        url : 'http://108.16.61.27/blackmarble',
-        maximumLevel : 6
+        url : 'http://cesium.agi.com/blackmarble',
+        maximumLevel : 8
     }));
     
     dom.byId('toolbar').innerHTML = '';
