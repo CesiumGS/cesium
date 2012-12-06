@@ -27,8 +27,9 @@ define([
         }
     };
 
-    var typicalMultipliers = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0, 1800.0, 3600.0, 7200.0, 14400.0, 21600.0,
-                              43200.0, 86400.0];
+    var typicalMultipliers = [0.000001, 0.000002, 0.000005, 0.00001, 0.00002, 0.00005, 0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005,
+                              0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 15.0, 30.0, 60.0, 120.0, 300.0, 600.0, 900.0,
+                              1800.0, 3600.0, 7200.0, 14400.0, 21600.0, 43200.0, 86400.0, 172800.0, 345600.0, 604800.0];
 
     /**
      * Test if the AnimationController is playing or paused.
@@ -149,12 +150,12 @@ define([
         }
         index--;
 
-        if (index === -1) {
-            clock.multiplier *= 0.5;
-        } else if (clock.multiplier >= 0) {
-            clock.multiplier = typicalMultipliers[index];
-        } else {
-            clock.multiplier = -typicalMultipliers[index];
+        if (index >= 0) {
+            if (clock.multiplier >= 0) {
+                clock.multiplier = typicalMultipliers[index];
+            } else {
+                clock.multiplier = -typicalMultipliers[index];
+            }
         }
     };
 
@@ -176,12 +177,12 @@ define([
             index++;
         }
 
-        if (index === typicalMultipliers.length) {
-            clock.multiplier *= 2.0;
-        } else if (clock.multiplier >= 0) {
-            clock.multiplier = typicalMultipliers[index];
-        } else {
-            clock.multiplier = -typicalMultipliers[index];
+        if (index < typicalMultipliers.length) {
+            if (clock.multiplier >= 0) {
+                clock.multiplier = typicalMultipliers[index];
+            } else {
+                clock.multiplier = -typicalMultipliers[index];
+            }
         }
     };
 

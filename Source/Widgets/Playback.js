@@ -84,7 +84,7 @@ define([
             return 0;
         }
         angle = Math.max(Math.min(angle, this._maxShuttleAngle), -this._maxShuttleAngle);
-        var speed = Math.round(Math.exp(((Math.abs(angle) - 5) * 0.15)));
+        var speed = Math.round(Math.exp(((Math.abs(angle) - 15) * 0.15)));
         if (angle < 0) {
             speed *= -1.0;
         }
@@ -92,7 +92,7 @@ define([
     };
 
     Playback.prototype._shuttleSpeedtoAngle = function (speed) {
-        var angle = Math.log(Math.abs(speed)) / 0.15 + 5;
+        var angle = Math.log(Math.abs(speed)) / 0.15 + 15;
         angle = Math.max(Math.min(angle, this._maxShuttleAngle), 0);
         if (speed < 0) {
             angle *= -1.0;
