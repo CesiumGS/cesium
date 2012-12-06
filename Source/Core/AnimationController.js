@@ -141,7 +141,7 @@ define([
      *
      * @memberof AnimationController
      * @param {Number} speed A speed to use for the search.
-     * @returns {Number} typicalSpeed A typical speed close to the supplied speed.
+     * @returns {Number} typicalSpeed - A typical speed close to the supplied speed.
      */
     AnimationController.prototype.getTypicalSpeed = function(speed) {
         var index = binarySearch(typicalMultipliers, Math.abs(speed), function(left, right) {

@@ -235,11 +235,12 @@ define([
                     this.clockStep = ClockStep.SPEED_MULTIPLIER;
                 }
             } else {
-                while (currentTime.lessThan(startTime)) {
-                    currentTime = stopTime.addSeconds(startTime.getSecondsDifference(currentTime));
-                }
                 while (currentTime.greaterThan(stopTime)) {
                     currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
+                }
+                if (currentTime.lessThan(startTime)) {
+                    currentTime = startTime;
+                    this._isOutOfRange = true;
                 }
             }
         }

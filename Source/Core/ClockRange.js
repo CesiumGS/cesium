@@ -27,8 +27,10 @@ define([
         CLAMPED : new Enumeration(1, 'CLAMPED'),
 
         /**
-         * When {@link Clock#startTime} or {@link Clock#stopTime} is reached,
-         * {@link Clock#tick} will advance {@link Clock#currentTime} to the opposite end of the interval.
+         * When {@link Clock#stopTime} is reached, {@link Clock#tick} will loop
+         * {@link Clock#currentTime} back to the {@link Clock#startTime}.
+         * Note that this is a one-way loop, animating backwards will pause
+         * at the start time.
          */
         LOOP : new Enumeration(1, 'LOOP')
     };
