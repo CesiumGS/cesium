@@ -282,7 +282,7 @@ define([
                 }, {
                     'id' : 'playback_pathClock',
                     'tagName' : 'path',
-                    'transform' : 'translate(16,16) scale(0.85) translate(-16,-15)',
+                    'transform' : 'translate(16,16) scale(0.85) translate(-16,-15.5)',
                     'd' : 'M15.5,2.374C8.251,2.375,2.376,8.251,2.374,15.5C2.376,22.748,8.251,28.623,15.5,28.627c7.249-0.004,13.124-5.879,13.125-13.127C28.624,8.251,22.749,2.375,15.5,2.374zM15.5,25.623C9.909,25.615,5.385,21.09,5.375,15.5C5.385,9.909,9.909,5.384,15.5,5.374c5.59,0.01,10.115,4.535,10.124,10.125C25.615,21.09,21.091,25.615,15.5,25.623zM8.625,15.5c-0.001-0.552-0.448-0.999-1.001-1c-0.553,0-1,0.448-1,1c0,0.553,0.449,1,1,1C8.176,16.5,8.624,16.053,8.625,15.5zM8.179,18.572c-0.478,0.277-0.642,0.889-0.365,1.367c0.275,0.479,0.889,0.641,1.365,0.365c0.479-0.275,0.643-0.887,0.367-1.367C9.27,18.461,8.658,18.297,8.179,18.572zM9.18,10.696c-0.479-0.276-1.09-0.112-1.366,0.366s-0.111,1.09,0.365,1.366c0.479,0.276,1.09,0.113,1.367-0.366C9.821,11.584,9.657,10.973,9.18,10.696zM22.822,12.428c0.478-0.275,0.643-0.888,0.366-1.366c-0.275-0.478-0.89-0.642-1.366-0.366c-0.479,0.278-0.642,0.89-0.366,1.367C21.732,12.54,22.344,12.705,22.822,12.428zM12.062,21.455c-0.478-0.275-1.089-0.111-1.366,0.367c-0.275,0.479-0.111,1.09,0.366,1.365c0.478,0.277,1.091,0.111,1.365-0.365C12.704,22.344,12.54,21.732,12.062,21.455zM12.062,9.545c0.479-0.276,0.642-0.888,0.366-1.366c-0.276-0.478-0.888-0.642-1.366-0.366s-0.642,0.888-0.366,1.366C10.973,9.658,11.584,9.822,12.062,9.545zM22.823,18.572c-0.48-0.275-1.092-0.111-1.367,0.365c-0.275,0.479-0.112,1.092,0.367,1.367c0.477,0.275,1.089,0.113,1.365-0.365C23.464,19.461,23.3,18.848,22.823,18.572zM19.938,7.813c-0.477-0.276-1.091-0.111-1.365,0.366c-0.275,0.48-0.111,1.091,0.366,1.367s1.089,0.112,1.366-0.366C20.581,8.702,20.418,8.089,19.938,7.813zM23.378,14.5c-0.554,0.002-1.001,0.45-1.001,1c0.001,0.552,0.448,1,1.001,1c0.551,0,1-0.447,1-1C24.378,14.949,23.929,14.5,23.378,14.5zM15.501,6.624c-0.552,0-1,0.448-1,1l-0.466,7.343l-3.004,1.96c-0.478,0.277-0.642,0.889-0.365,1.365c0.275,0.479,0.889,0.643,1.365,0.367l3.305-1.676C15.39,16.99,15.444,17,15.501,17c0.828,0,1.5-0.671,1.5-1.5l-0.5-7.876C16.501,7.072,16.053,6.624,15.501,6.624zM15.501,22.377c-0.552,0-1,0.447-1,1s0.448,1,1,1s1-0.447,1-1S16.053,22.377,15.501,22.377zM18.939,21.455c-0.479,0.277-0.643,0.889-0.366,1.367c0.275,0.477,0.888,0.643,1.366,0.365c0.478-0.275,0.642-0.889,0.366-1.365C20.028,21.344,19.417,21.18,18.939,21.455z'
                 }, {
                     'id' : 'playback_pathSpeedUp',
@@ -297,11 +297,7 @@ define([
                 }, {
                     'id' : 'playback_pathWingButton',
                     'tagName' : 'path',
-                    'd' : 'm 5.71875,0.4995004 c -2.88752,0 -5.21875,2.331235 -5.21875,5.21875 l 0,8.4999996 C 11.61483,21.563803 21.16311,31.087686 28.53125,42.187 l 8.46875,0 c 2.88752,0 5.21875,-2.299985 5.21875,-5.1875 l 0,-31.2812496 c 0,-2.887515 -2.33123,-5.21875 -5.21875,-5.21875 l -31.28125,0 z'
-                }, {
-                    'id' : 'playback_pathWingIcon',
-                    'tagName' : 'path',
-                    'd' : 'm 24.325352,4.3866433 -12.46875,9.3125007 12.875,4.21875 -0.40625,-13.5312507 z m 4.59375,6.3437507 -2.21875,1.65625 0.25,8.53125 -8.125,-2.65625 -2.40625,1.78125 12.875,4.25 -0.375,-13.5625 z m 4.96875,6.53125 -2.21875,1.65625 0.25,8.53125 -8.125,-2.65625 -2.40625,1.78125 12.875,4.25 -0.375,-13.5625 z'
+                    'd' : 'm 4.5,0.5 c -2.216,0 -4,1.784 -4,4 l 0,24 c 0,2.216 1.784,4 4,4 l 13.71875,0 C 22.478584,27.272785 27.273681,22.511272 32.5,18.25 l 0,-13.75 c 0,-2.216 -1.784,-4 -4,-4 l -24,0 z'
                 }, {
                     'id' : 'playback_pathX',
                     'tagName' : 'path',
@@ -365,17 +361,14 @@ define([
                     {
                         'tagName' : 'use',
                         'class' : 'playback-buttonGlow',
-                        'transform' : 'translate(42.719,0) scale(-1,1)',
                         'xlink:href' : '#playback_pathWingButton'
                     }, {
                         'tagName' : 'use',
                         'class' : 'playback-buttonMain',
-                        'transform' : 'translate(42.719,0) scale(-1,1)',
                         'xlink:href' : '#playback_pathWingButton'
                     }, {
                         'tagName': 'use',
                         'class' : 'playback-buttonPath',
-                        //'xlink:href' : '#playback_pathWingIcon',
                         'xlink:href' : path
                     }, {
                         'tagName': 'title',
@@ -445,7 +438,7 @@ define([
         }, true);*/
 
         // Realtime
-        this.realtimeSVG = wingButton(2, 2, '#playback_pathClock', 'Real-time');
+        this.realtimeSVG = wingButton(3, 4, '#playback_pathClock', 'Real-time');
         this.realtimeTooltip = this.realtimeSVG.getElementsByTagName('title')[0];
         buttonsG.appendChild(this.realtimeSVG);
         this.realtimeSVG.addEventListener('click', function () {
@@ -453,21 +446,21 @@ define([
         }, true);
 
         // Play Reverse
-        this.playReverseSVG = rectButton(44, 100, '#playback_pathPlayReverse', 'Play Reverse');
+        this.playReverseSVG = rectButton(44, 99, '#playback_pathPlayReverse', 'Play Reverse');
         buttonsG.appendChild(this.playReverseSVG);
         this.playReverseSVG.addEventListener('click', function () {
             widget.animationController.playReverse();
         }, true);
 
         // Play Forward
-        this.playForwardSVG = rectButton(124, 100, '#playback_pathPlay', 'Play Forward');
+        this.playForwardSVG = rectButton(124, 99, '#playback_pathPlay', 'Play Forward');
         buttonsG.appendChild(this.playForwardSVG);
         this.playForwardSVG.addEventListener('click', function () {
             widget.animationController.play();
         }, true);
 
         // Pause
-        this.pauseSVG = rectButton(84, 100, '#playback_pathPause', 'Pause');
+        this.pauseSVG = rectButton(84, 99, '#playback_pathPause', 'Pause');
         this.pauseTooltip = this.pauseSVG.getElementsByTagName('title')[0];
         buttonsG.appendChild(this.pauseSVG);
         this.pauseSVG.addEventListener('click', function () {
@@ -590,11 +583,11 @@ define([
         });
         knobG.appendChild(knobInner);
 
-        this.knobDate = this._svgText(0, -22, '');
+        this.knobDate = this._svgText(0, -24, '');
         knobG.appendChild(this.knobDate);
-        this.knobTime = this._svgText(0, -5, '');
+        this.knobTime = this._svgText(0, -7, '');
         knobG.appendChild(this.knobTime);
-        this.knobStatus = this._svgText(0, -40, '');
+        this.knobStatus = this._svgText(0, -41, '');
         knobG.appendChild(this.knobStatus);
 
         // This shield catches clicks on the knob itself (even while DOM elements underneath are changing).
@@ -646,7 +639,7 @@ define([
         var tooltip, speedLabel;
         if (this.animationController.isAnimating()) {
             if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-                speedLabel = 'real-time';
+                speedLabel = 'Today';
             } else {
                 speedLabel = speed + 'x';
             }

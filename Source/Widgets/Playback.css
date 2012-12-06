@@ -27,7 +27,7 @@
 .playback-rectButton .playback-buttonMain {
     fill: url(#playback_buttonNormal);
     stroke: #444;
-    stroke-width: 1;
+    stroke-width: 1.2;
 }
 .playback-buttonSelected .playback-buttonGlow {
     display: block;
