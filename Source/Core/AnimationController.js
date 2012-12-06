@@ -69,13 +69,8 @@ define([
         return currentTime;
     };
 
-    /**
-     * Stop animating, and hold on the current time.
-     * @memberof AnimationController
-     */
-    AnimationController.prototype.pause = function() {
+    AnimationController.prototype._cancelRealtime = function() {
         var clock = this.clock;
-        this._animating = false;
         if (clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
             clock.clockStep = ClockStep.SPEED_MULTIPLIER;
             clock.multiplier = 1;
@@ -83,14 +78,20 @@ define([
     };
 
     /**
+     * Stop animating, and hold on the current time.
+     * @memberof AnimationController
+     */
+    AnimationController.prototype.pause = function() {
+        this._animating = false;
+        this._cancelRealtime();
+    };
+
+    /**
      * Begin or resume animating in the most recent direction or mode.
      * @memberof AnimationController
      */
     AnimationController.prototype.unpause = function() {
-        var clock = this.clock;
-        if (clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
-            clock.clockStep = ClockStep.SPEED_MULTIPLIER;
-        }
+        this._cancelRealtime();
         this.clock.tick(0);
         this._animating = !this.clock.isOutOfRange();
     };
@@ -101,6 +102,7 @@ define([
      */
     AnimationController.prototype.play = function() {
         var clock = this.clock;
+        this._cancelRealtime();
         if (clock.multiplier < 0) {
             clock.multiplier = -clock.multiplier;
         }
@@ -113,6 +115,7 @@ define([
      */
     AnimationController.prototype.playReverse = function() {
         var clock = this.clock;
+        this._cancelRealtime();
         if (clock.multiplier > 0) {
             clock.multiplier = -clock.multiplier;
         }
@@ -134,12 +137,35 @@ define([
     };
 
     /**
+     * Get a typical animation speed closest to the supplied speed.
+     *
+     * @memberof AnimationController
+     * @param {Number} speed A speed to use for the search.
+     * @returns {Number} typicalSpeed A typical speed close to the supplied speed.
+     */
+    AnimationController.prototype.getTypicalSpeed = function(speed) {
+        var index = binarySearch(typicalMultipliers, Math.abs(speed), function(left, right) {
+            return left - right;
+        });
+
+        if (index < 0) {
+            index = ~index;
+        }
+        index--;
+
+        if (index < 0) {
+            index = 0;
+        }
+        return typicalMultipliers[index];
+    };
+
+    /**
      * Slow down the speed of animation, so time appears to pass more slowly.
      * @memberof AnimationController
      */
     AnimationController.prototype.slower = function() {
+        this._cancelRealtime();
         var clock = this.clock;
-        this.unpause();
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
             return left - right;
@@ -164,8 +190,8 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.faster = function() {
+        this._cancelRealtime();
         var clock = this.clock;
-        this.unpause();
         var multiplier = clock.multiplier > 0 ? clock.multiplier : -clock.multiplier;
         var index = binarySearch(typicalMultipliers, multiplier, function(left, right) {
             return left - right;
@@ -193,8 +219,8 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.moreForward = function() {
+        this._cancelRealtime();
         var clock = this.clock;
-        this.unpause();
 
         if (clock.multiplier > 0) {
             this.faster();
@@ -210,8 +236,8 @@ define([
      * @memberof AnimationController
      */
     AnimationController.prototype.moreReverse = function() {
+        this._cancelRealtime();
         var clock = this.clock;
-        this.unpause();
 
         if (clock.multiplier < 0) {
             this.faster();

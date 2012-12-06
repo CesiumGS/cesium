@@ -84,7 +84,15 @@ define([
             return 0;
         }
         angle = Math.max(Math.min(angle, this._maxShuttleAngle), -this._maxShuttleAngle);
-        var speed = Math.round(Math.exp(((Math.abs(angle) - 15) * 0.15)));
+        var speed = Math.exp(((Math.abs(angle) - 15) * 0.15));
+        if (speed > 10) {
+            var scale = Math.pow(10, Math.floor((Math.log(speed) / Math.LN10) + 0.0001) - 1);
+            speed = Math.round(Math.round(speed / scale) * scale);
+        } else if (speed > 0.8) {
+            speed = Math.round(speed);
+        } else {
+            speed = this.animationController.getTypicalSpeed(speed);
+        }
         if (angle < 0) {
             speed *= -1.0;
         }
@@ -102,7 +110,6 @@ define([
 
     Playback.prototype._setShuttleRingPointer = function (angle) {
         this.shuttleRingPointer.setAttribute('transform', 'translate(100,100) rotate(' + angle + ')');
-        //this.shuttleRingReversePointer.setAttribute('transform', 'translate(100,100) rotate(' + (-angle) + ')');
         this.knobOuter.setAttribute('transform', 'rotate(' + angle + ')');
     };
 
@@ -453,20 +460,12 @@ define([
         this.pauseTooltip = this.pauseSVG.getElementsByTagName('title')[0];
         buttonsG.appendChild(this.pauseSVG);
         this.pauseSVG.addEventListener('click', function () {
-            if (widget.animationController.isAnimating()) {  // TODO: animationController.togglePause()
-                widget.animationController.pause();          // TODO: Pop out of realtime mode.
+            if (widget.animationController.isAnimating()) {
+                widget.animationController.pause();
             } else {
                 widget.animationController.unpause();
             }
         }, true);
-
-/*        // Realtime
-        this.realtimeSVG = rectButton(84, 100, '#playback_pathClock', 'Real-time');
-        this.realtimeTooltip = this.realtimeSVG.getElementsByTagName('title')[0];
-        buttonsG.appendChild(this.realtimeSVG);
-        this.realtimeSVG.addEventListener('click', function () {
-            widget.animationController.playRealtime();
-        }, true);*/
 
         var shuttleRingBackG = this._svg('g').set('class', 'playback-shuttleRingG');
         topG.appendChild(shuttleRingBackG);
@@ -496,32 +495,6 @@ define([
             ]
         });
         shuttleRingBackG.appendChild(shuttleRingSwooshG);
-
-/*        this.shuttleRingReversePointer = this._svgFromObject({
-            'tagName' : 'use',
-            'class' : 'playback-shuttleRingReversePointer',
-            'xlink:href' : '#playback_pathPointer'
-        });
-        shuttleRingBackG.appendChild(this.shuttleRingReversePointer);
-        this.shuttleRingReversePointer.addEventListener('mousedown', function () {
-            if (widget.clock.multiplier > 0) {
-                widget.animationController.playReverse();
-            } else {
-                widget.animationController.play();
-            }
-        }, true);
-
-        // Pause
-        this.pauseSVG = rectButton(84, 1, '#playback_pathPause', 'Pause');
-        this.pauseTooltip = this.pauseSVG.getElementsByTagName('title')[0];
-        shuttleRingBackG.appendChild(this.pauseSVG);
-        this.pauseSVG.addEventListener('click', function () {
-            if (widget.animationController.isAnimating()) {  // TODO: animationController.togglePause()
-                widget.animationController.pause();          // TODO: Pop out of realtime mode.
-            } else {
-                widget.animationController.unpause();
-            }
-        }, true);*/
 
         this.shuttleRingPointer = this._svgFromObject({
             'tagName' : 'use',
@@ -557,13 +530,6 @@ define([
                 var speed = widget._shuttleAngletoSpeed(angle);
                 if (speed !== 0) {
                     widget.clock.multiplier = speed;
-                    if (!widget.animationController.isAnimating()) {
-                        widget.animationController.unpause();
-                    }
-                } else {
-                    if (widget.animationController.isAnimating()) {
-                        widget.animationController.pause();
-                    }
                 }
                 e.preventDefault();
                 e.stopPropagation();
@@ -575,14 +541,7 @@ define([
         shuttleRingSwooshG.addEventListener('mousedown', setShuttleRingFromMouse, true);
         document.addEventListener('mousemove', setShuttleRingFromMouse, true);
         document.addEventListener('mouseup', setShuttleRingFromMouse, true);
-
-        this.shuttleRingPointer.addEventListener('mousedown', function (e) {
-            //if (widget.animationController.isAnimating()) {
-                setShuttleRingFromMouse(e);
-            //} else {
-            //    widget.animationController.unpause();
-            //}
-        }, true);
+        this.shuttleRingPointer.addEventListener('mousedown', setShuttleRingFromMouse, true);
 
         var knobG = this._svgFromObject({
             'tagName' : 'g',
@@ -631,6 +590,7 @@ define([
         this._lastKnobTime = '';
         this._lastKnobSpeed = '';
         this._lastPauseTooltip = '';
+        this._wasAnimating = false;
 
         topG.appendChild(buttonsG);
 
@@ -669,38 +629,32 @@ define([
             }
             tooltip = 'Pause';
         } else {
-            speedLabel = 'paused';
+            speedLabel = speed + 'x';
             tooltip = 'Unpause';
         }
 
-        if (this._lastKnobSpeed !== speedLabel) {
+        var isAnimating = this.animationController.isAnimating();
+        if (this._lastKnobSpeed !== speedLabel || this._wasAnimating !== isAnimating) {
             this._lastKnobSpeed = speedLabel;
-            if (!this.animationController.isAnimating()) {
+            this._wasAnimating = isAnimating;
+            if (!isAnimating) {
                 this.shuttleRingPointer.set('class', 'playback-shuttleRingPausePointer');
                 this.pauseSVG.set('class', 'playback-rectButton playback-buttonSelected');
-                //this.playForwardSVG.style.display = 'block';
-                //this.playReverseSVG.style.display = 'block';
                 this.playForwardSVG.set('class', 'playback-rectButton');
                 this.playReverseSVG.set('class', 'playback-rectButton');
             } else if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
                 this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
                 this.pauseSVG.set('class', 'playback-rectButton');
-                //this.playForwardSVG.style.display = 'none';
-                //this.playReverseSVG.style.display = 'none';
                 this.playForwardSVG.set('class', 'playback-rectButton');
                 this.playReverseSVG.set('class', 'playback-rectButton');
             } else if (speed > 0) {
                 this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
                 this.pauseSVG.set('class', 'playback-rectButton');
-                //this.playForwardSVG.style.display = 'none';
-                //this.playReverseSVG.style.display = 'block';
                 this.playForwardSVG.set('class', 'playback-rectButton playback-buttonSelected');
                 this.playReverseSVG.set('class', 'playback-rectButton');
             } else {
                 this.shuttleRingPointer.set('class', 'playback-shuttleRingPointer');
                 this.pauseSVG.set('class', 'playback-rectButton');
-                //this.playForwardSVG.style.display = 'block';
-                //this.playReverseSVG.style.display = 'none';
                 this.playForwardSVG.set('class', 'playback-rectButton');
                 this.playReverseSVG.set('class', 'playback-rectButton playback-buttonSelected');
             }
@@ -710,7 +664,6 @@ define([
         if (this.clock.clockStep === ClockStep.SYSTEM_CLOCK_TIME) {
             if (!this._realtimeMode) {
                 this._realtimeMode = true;
-                //this.shuttleRingPointer.style.display = 'none';
                 this.realtimeSVG.set('class', 'playback-rectButton playback-buttonSelected');
                 this.realtimeTooltip.textContent = 'Today (real-time)';
             }
@@ -719,7 +672,6 @@ define([
 
             if (this._realtimeMode) {
                 this._realtimeMode = false;
-                //this.shuttleRingPointer.style.display = 'block';
                 setRealtimeStyle = true;
             }
 
