@@ -527,11 +527,7 @@ define([
                     angle -= 360;
                 }
                 var speed = widget._shuttleAngletoSpeed(angle);
-                if (shuttleRingDragging || (
-                        // check if speed and multiplier have the same +/- sign
-                        ((speed < 0) === (widget.clock.multiplier < 0)) &&
-                        // and they're close on a log scale
-                        Math.abs(Math.log(Math.abs(speed)) - Math.log(Math.abs(widget.clock.multiplier))) < 2.5)) {
+                if (shuttleRingDragging || (Math.abs(widget._shuttleRingAngle - angle) < 15)) {
                     shuttleRingDragging = true;
                     if (speed !== 0) {
                         widget.clock.multiplier = speed;

@@ -226,6 +226,9 @@ define([
             this.faster();
         } else {
             this.slower();
+            if (clock.multiplier > -0.0008) {
+                clock.multiplier = 0.001;
+            }
         }
     };
 
@@ -243,6 +246,9 @@ define([
             this.faster();
         } else {
             this.slower();
+            if (clock.multiplier < 0.0008) {
+                clock.multiplier = -0.001;
+            }
         }
     };
 
