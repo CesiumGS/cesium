@@ -288,6 +288,14 @@ define([
                     'transform' : 'translate(16,16) rotate(180) scale(0.85) translate(-16,-16)',
                     'd' : 'm 14.022968,5.3125 0,3.6875 9.201946,6.5 -9.201946,6.5 0,3.6875 L 28.43935,15.5 14.022968,5.3125 z M 4.0202416,25.682 18.504164,15.5 4.0202416,5.318 v 20.364 z'
                 }, {
+                    'id' : 'playback_pathWingButton',
+                    'tagName' : 'path',
+                    'd' : 'm 5.71875,0.4995004 c -2.88752,0 -5.21875,2.331235 -5.21875,5.21875 l 0,8.4999996 C 11.61483,21.563803 21.16311,31.087686 28.53125,42.187 l 8.46875,0 c 2.88752,0 5.21875,-2.299985 5.21875,-5.1875 l 0,-31.2812496 c 0,-2.887515 -2.33123,-5.21875 -5.21875,-5.21875 l -31.28125,0 z'
+                }, {
+                    'id' : 'playback_pathWingIcon',
+                    'tagName' : 'path',
+                    'd' : 'm 24.325352,4.3866433 -12.46875,9.3125007 12.875,4.21875 -0.40625,-13.5312507 z m 4.59375,6.3437507 -2.21875,1.65625 0.25,8.53125 -8.125,-2.65625 -2.40625,1.78125 12.875,4.25 -0.375,-13.5625 z m 4.96875,6.53125 -2.21875,1.65625 0.25,8.53125 -8.125,-2.65625 -2.40625,1.78125 12.875,4.25 -0.375,-13.5625 z'
+                }, {
                     'id' : 'playback_pathX',
                     'tagName' : 'path',
                     'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
@@ -341,7 +349,34 @@ define([
             return widget._svgFromObject(button);
         };
 
-        // More Reverse
+        var wingButton = function (x, y, direction, tooltip) {
+            var button = {
+                'tagName' : 'g',
+                'class' : 'playback-rectButton',
+                'transform' : 'translate(' + x + ',' + y + ')' + ((direction < 0) ? ' scale(-1,1)' : ''),
+                'children' : [
+                    {
+                        'tagName' : 'use',
+                        'class' : 'playback-buttonGlow',
+                        'xlink:href' : '#playback_pathWingButton'
+                    }, {
+                        'tagName' : 'use',
+                        'class' : 'playback-buttonMain',
+                        'xlink:href' : '#playback_pathWingButton'
+                    }, {
+                        'tagName': 'use',
+                        'class' : 'playback-buttonPath',
+                        'xlink:href' : '#playback_pathWingIcon'
+                    }, {
+                        'tagName': 'title',
+                        'textContent' : tooltip
+                    }
+                ]
+            };
+            return widget._svgFromObject(button);
+        };
+
+/*        // More Reverse
         var moreReverseSVG = rectButton(4, 4, '#playback_pathSlowDown', 'Reverse');
         topG.appendChild(moreReverseSVG);
         moreReverseSVG.addEventListener('click', function () {
@@ -353,7 +388,7 @@ define([
         topG.appendChild(moreForwardSVG);
         moreForwardSVG.addEventListener('click', function () {
             widget.animationController.moreForward();
-        }, true);
+        }, true);*/
 
 /*        // Play Reverse
         this.playReverseSVG = rectButton(4, 4, '#playback_pathPlayReverse', 'Play Reverse');
@@ -384,6 +419,20 @@ define([
         moreForwardSVG.addEventListener('click', function () {
             widget.animationController.moreForward();
         }, true);*/
+
+        // More Reverse
+        var moreReverseSVG = wingButton(44, 2, -1, 'Reverse');
+        buttonsG.appendChild(moreReverseSVG);
+        moreReverseSVG.addEventListener('click', function () {
+            widget.animationController.moreReverse();
+        }, true);
+
+        // More Forward
+        var moreForwardSVG = wingButton(156, 2, 1, 'Forward');
+        buttonsG.appendChild(moreForwardSVG);
+        moreForwardSVG.addEventListener('click', function () {
+            widget.animationController.moreForward();
+        }, true);
 
         // Play Reverse
         this.playReverseSVG = rectButton(44, 100, '#playback_pathPlayReverse', 'Play Reverse');
