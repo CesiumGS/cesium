@@ -198,8 +198,8 @@ define([
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
-                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#8AC', 'stop-opacity' : 0.05 },
-                        { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' : '#8AC', 'stop-opacity' : 0.95 },
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#8AC', 'stop-opacity' : 0.2 },
+                        { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' : '#8AC', 'stop-opacity' : 0.85 },
                         { 'tagName' : 'stop', 'offset' : '95%', 'stop-color' : '#8AC', 'stop-opacity' : 0.05 }
                     ]
                 }, {
@@ -207,8 +207,8 @@ define([
                     'tagName' : 'linearGradient',
                     'x1' : '50%', 'y1' : '0%', 'x2' : '50%', 'y2' : '100%',
                     'children' : [
-                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#AEF', 'stop-opacity' : 0.05 },
-                        { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' : '#AEF', 'stop-opacity' : 0.95 },
+                        { 'tagName' : 'stop', 'offset' : '0%', 'stop-color' : '#AEF', 'stop-opacity' : 0.2 },
+                        { 'tagName' : 'stop', 'offset' : '85%', 'stop-color' : '#AEF', 'stop-opacity' : 0.85 },
                         { 'tagName' : 'stop', 'offset' : '95%', 'stop-color' : '#AEF', 'stop-opacity' : 0.05 }
                     ]
                 }, {
@@ -356,24 +356,27 @@ define([
             return widget._svgFromObject(button);
         };
 
-        var wingButton = function (x, y, direction, tooltip) {
+        var wingButton = function (x, y, path, tooltip) {
             var button = {
                 'tagName' : 'g',
                 'class' : 'playback-rectButton',
-                'transform' : 'translate(' + x + ',' + y + ')' + ((direction < 0) ? ' scale(-1,1)' : ''),
+                'transform' : 'translate(' + x + ',' + y + ')',
                 'children' : [
                     {
                         'tagName' : 'use',
                         'class' : 'playback-buttonGlow',
+                        'transform' : 'translate(42.719,0) scale(-1,1)',
                         'xlink:href' : '#playback_pathWingButton'
                     }, {
                         'tagName' : 'use',
                         'class' : 'playback-buttonMain',
+                        'transform' : 'translate(42.719,0) scale(-1,1)',
                         'xlink:href' : '#playback_pathWingButton'
                     }, {
                         'tagName': 'use',
                         'class' : 'playback-buttonPath',
-                        'xlink:href' : '#playback_pathWingIcon'
+                        //'xlink:href' : '#playback_pathWingIcon',
+                        'xlink:href' : path
                     }, {
                         'tagName': 'title',
                         'textContent' : tooltip
@@ -441,6 +444,14 @@ define([
             widget.animationController.moreForward();
         }, true);*/
 
+        // Realtime
+        this.realtimeSVG = wingButton(2, 2, '#playback_pathClock', 'Real-time');
+        this.realtimeTooltip = this.realtimeSVG.getElementsByTagName('title')[0];
+        buttonsG.appendChild(this.realtimeSVG);
+        this.realtimeSVG.addEventListener('click', function () {
+            widget.animationController.playRealtime();
+        }, true);
+
         // Play Reverse
         this.playReverseSVG = rectButton(44, 100, '#playback_pathPlayReverse', 'Play Reverse');
         buttonsG.appendChild(this.playReverseSVG);
@@ -484,13 +495,19 @@ define([
             'class' : 'playback-shuttleRingSwoosh',
             'children' : [
                 {
-                    'tagName': 'use',
+                    'tagName' : 'use',
                     'transform' : 'translate(100,97) scale(-1,1)',
                     'xlink:href' : '#playback_pathSwooshFX'
                 }, {
-                    'tagName': 'use',
+                    'tagName' : 'use',
                     'transform' : 'translate(100,97)',
                     'xlink:href' : '#playback_pathSwooshFX'
+                }, {
+                    'tagName' : 'line',
+                    'x1' : 100,
+                    'y1' : 8,
+                    'x2' : 100,
+                    'y2' : 22
                 }
             ]
         });
@@ -503,13 +520,13 @@ define([
         });
         shuttleRingBackG.appendChild(this.shuttleRingPointer);
 
-        // Realtime
+/*        // Realtime
         this.realtimeSVG = rectButton(84, 1, '#playback_pathClock', 'Real-time');
         this.realtimeTooltip = this.realtimeSVG.getElementsByTagName('title')[0];
         shuttleRingBackG.appendChild(this.realtimeSVG);
         this.realtimeSVG.addEventListener('click', function () {
             widget.animationController.playRealtime();
-        }, true);
+        }, true);*/
 
         this._realtimeMode = false;
         this._isSystemTimeAvailable = true;

@@ -80,6 +80,12 @@
 .playback-shuttleRingG .playback-shuttleRingSwoosh {
     fill: url(#playback_shuttleRingSwooshGradient);
 }
+.playback-shuttleRingSwoosh line {
+    stroke: #8AC;
+    stroke-width: 3;
+    stroke-opacity: 0.2;
+    stroke-linecap: round;
+}
 .playback-shuttleRingG:hover .playback-shuttleRingSwoosh {
     fill: url(#playback_shuttleRingSwooshHovered);
 }
