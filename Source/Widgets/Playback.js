@@ -275,34 +275,14 @@ define([
                     'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
                     'd' : 'M24.249,15.499c-0.009,4.832-3.918,8.741-8.75,8.75c-2.515,0-4.768-1.064-6.365-2.763l2.068-1.442l-7.901-3.703l0.744,8.694l2.193-1.529c2.244,2.594,5.562,4.242,9.26,4.242c6.767,0,12.249-5.482,12.249-12.249H24.249zM15.499,6.75c2.516,0,4.769,1.065,6.367,2.764l-2.068,1.443l7.901,3.701l-0.746-8.693l-2.192,1.529c-2.245-2.594-5.562-4.245-9.262-4.245C8.734,3.25,3.25,8.734,3.249,15.499H6.75C6.758,10.668,10.668,6.758,15.499,6.75z'
                 }, {
-                    'id' : 'playback_pathFastForward',
-                    'tagName' : 'path',
-                    'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
-                    'd' : 'M25.5,15.5,15.2,9.552,15.2,15.153,5.5,9.552,5.5,21.447,15.2,15.847,15.2,21.447z'
-                }, {
                     'id' : 'playback_pathClock',
                     'tagName' : 'path',
                     'transform' : 'translate(16,16) scale(0.85) translate(-16,-15.5)',
                     'd' : 'M15.5,2.374C8.251,2.375,2.376,8.251,2.374,15.5C2.376,22.748,8.251,28.623,15.5,28.627c7.249-0.004,13.124-5.879,13.125-13.127C28.624,8.251,22.749,2.375,15.5,2.374zM15.5,25.623C9.909,25.615,5.385,21.09,5.375,15.5C5.385,9.909,9.909,5.384,15.5,5.374c5.59,0.01,10.115,4.535,10.124,10.125C25.615,21.09,21.091,25.615,15.5,25.623zM8.625,15.5c-0.001-0.552-0.448-0.999-1.001-1c-0.553,0-1,0.448-1,1c0,0.553,0.449,1,1,1C8.176,16.5,8.624,16.053,8.625,15.5zM8.179,18.572c-0.478,0.277-0.642,0.889-0.365,1.367c0.275,0.479,0.889,0.641,1.365,0.365c0.479-0.275,0.643-0.887,0.367-1.367C9.27,18.461,8.658,18.297,8.179,18.572zM9.18,10.696c-0.479-0.276-1.09-0.112-1.366,0.366s-0.111,1.09,0.365,1.366c0.479,0.276,1.09,0.113,1.367-0.366C9.821,11.584,9.657,10.973,9.18,10.696zM22.822,12.428c0.478-0.275,0.643-0.888,0.366-1.366c-0.275-0.478-0.89-0.642-1.366-0.366c-0.479,0.278-0.642,0.89-0.366,1.367C21.732,12.54,22.344,12.705,22.822,12.428zM12.062,21.455c-0.478-0.275-1.089-0.111-1.366,0.367c-0.275,0.479-0.111,1.09,0.366,1.365c0.478,0.277,1.091,0.111,1.365-0.365C12.704,22.344,12.54,21.732,12.062,21.455zM12.062,9.545c0.479-0.276,0.642-0.888,0.366-1.366c-0.276-0.478-0.888-0.642-1.366-0.366s-0.642,0.888-0.366,1.366C10.973,9.658,11.584,9.822,12.062,9.545zM22.823,18.572c-0.48-0.275-1.092-0.111-1.367,0.365c-0.275,0.479-0.112,1.092,0.367,1.367c0.477,0.275,1.089,0.113,1.365-0.365C23.464,19.461,23.3,18.848,22.823,18.572zM19.938,7.813c-0.477-0.276-1.091-0.111-1.365,0.366c-0.275,0.48-0.111,1.091,0.366,1.367s1.089,0.112,1.366-0.366C20.581,8.702,20.418,8.089,19.938,7.813zM23.378,14.5c-0.554,0.002-1.001,0.45-1.001,1c0.001,0.552,0.448,1,1.001,1c0.551,0,1-0.447,1-1C24.378,14.949,23.929,14.5,23.378,14.5zM15.501,6.624c-0.552,0-1,0.448-1,1l-0.466,7.343l-3.004,1.96c-0.478,0.277-0.642,0.889-0.365,1.365c0.275,0.479,0.889,0.643,1.365,0.367l3.305-1.676C15.39,16.99,15.444,17,15.501,17c0.828,0,1.5-0.671,1.5-1.5l-0.5-7.876C16.501,7.072,16.053,6.624,15.501,6.624zM15.501,22.377c-0.552,0-1,0.447-1,1s0.448,1,1,1s1-0.447,1-1S16.053,22.377,15.501,22.377zM18.939,21.455c-0.479,0.277-0.643,0.889-0.366,1.367c0.275,0.477,0.888,0.643,1.366,0.365c0.478-0.275,0.642-0.889,0.366-1.365C20.028,21.344,19.417,21.18,18.939,21.455z'
                 }, {
-                    'id' : 'playback_pathSpeedUp',
-                    'tagName' : 'path',
-                    'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
-                    'd' : 'm 14.022968,5.3125 0,3.6875 9.201946,6.5 -9.201946,6.5 0,3.6875 L 28.43935,15.5 14.022968,5.3125 z M 4.0202416,25.682 18.504164,15.5 4.0202416,5.318 v 20.364 z'
-                }, {
-                    'id' : 'playback_pathSlowDown',
-                    'tagName' : 'path',
-                    'transform' : 'translate(16,16) rotate(180) scale(0.85) translate(-16,-16)',
-                    'd' : 'm 14.022968,5.3125 0,3.6875 9.201946,6.5 -9.201946,6.5 0,3.6875 L 28.43935,15.5 14.022968,5.3125 z M 4.0202416,25.682 18.504164,15.5 4.0202416,5.318 v 20.364 z'
-                }, {
                     'id' : 'playback_pathWingButton',
                     'tagName' : 'path',
                     'd' : 'm 4.5,0.5 c -2.216,0 -4,1.784 -4,4 l 0,24 c 0,2.216 1.784,4 4,4 l 13.71875,0 C 22.478584,27.272785 27.273681,22.511272 32.5,18.25 l 0,-13.75 c 0,-2.216 -1.784,-4 -4,-4 l -24,0 z'
-                }, {
-                    'id' : 'playback_pathX',
-                    'tagName' : 'path',
-                    'transform' : 'translate(16,16) scale(0.85) translate(-16,-16)',
-                    'd' : 'M24.778,21.419 19.276,15.917 24.777,10.415 21.949,7.585 16.447,13.087 10.945,7.585 8.117,10.415 13.618,15.917 8.116,21.419 10.946,24.248 16.447,18.746 21.948,24.248z'
                 }, {
                     'id' : 'playback_pathPointer',
                     'tagName' : 'path',
@@ -379,63 +359,7 @@ define([
             return widget._svgFromObject(button);
         };
 
-/*        // More Reverse
-        var moreReverseSVG = rectButton(4, 4, '#playback_pathSlowDown', 'Reverse');
-        topG.appendChild(moreReverseSVG);
-        moreReverseSVG.addEventListener('click', function () {
-            widget.animationController.moreReverse();
-        }, true);
-
-        // More Forward
-        var moreForwardSVG = rectButton(164, 4, '#playback_pathSpeedUp', 'Forward');
-        topG.appendChild(moreForwardSVG);
-        moreForwardSVG.addEventListener('click', function () {
-            widget.animationController.moreForward();
-        }, true);*/
-
-/*        // Play Reverse
-        this.playReverseSVG = rectButton(4, 4, '#playback_pathPlayReverse', 'Play Reverse');
-        topG.appendChild(this.playReverseSVG);
-        this.playReverseSVG.addEventListener('click', function () {
-            widget.animationController.playReverse();
-        }, true);
-
-        // Play Forward
-        this.playForwardSVG = rectButton(164, 4, '#playback_pathPlay', 'Play Forward');
-        topG.appendChild(this.playForwardSVG);
-        this.playForwardSVG.addEventListener('click', function () {
-            widget.animationController.play();
-        }, true);*/
-
         var buttonsG = this._svg('g');
-
-/*        // More Reverse
-        var moreReverseSVG = rectButton(44, 100, '#playback_pathSlowDown', 'Reverse');
-        buttonsG.appendChild(moreReverseSVG);
-        moreReverseSVG.addEventListener('click', function () {
-            widget.animationController.moreReverse();
-        }, true);
-
-        // More Forward
-        var moreForwardSVG = rectButton(124, 100, '#playback_pathSpeedUp', 'Forward');
-        buttonsG.appendChild(moreForwardSVG);
-        moreForwardSVG.addEventListener('click', function () {
-            widget.animationController.moreForward();
-        }, true);*/
-
-/*        // More Reverse
-        var moreReverseSVG = wingButton(44, 2, -1, 'Reverse');
-        buttonsG.appendChild(moreReverseSVG);
-        moreReverseSVG.addEventListener('click', function () {
-            widget.animationController.moreReverse();
-        }, true);
-
-        // More Forward
-        var moreForwardSVG = wingButton(156, 2, 1, 'Forward');
-        buttonsG.appendChild(moreForwardSVG);
-        moreForwardSVG.addEventListener('click', function () {
-            widget.animationController.moreForward();
-        }, true);*/
 
         // Realtime
         this.realtimeSVG = wingButton(3, 4, '#playback_pathClock', 'Real-time');
@@ -512,14 +436,6 @@ define([
             'xlink:href' : '#playback_pathPointer'
         });
         shuttleRingBackG.appendChild(this.shuttleRingPointer);
-
-/*        // Realtime
-        this.realtimeSVG = rectButton(84, 1, '#playback_pathClock', 'Real-time');
-        this.realtimeTooltip = this.realtimeSVG.getElementsByTagName('title')[0];
-        shuttleRingBackG.appendChild(this.realtimeSVG);
-        this.realtimeSVG.addEventListener('click', function () {
-            widget.animationController.playRealtime();
-        }, true);*/
 
         this._realtimeMode = false;
         this._isSystemTimeAvailable = true;
