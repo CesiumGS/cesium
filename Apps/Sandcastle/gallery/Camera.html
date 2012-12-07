@@ -75,7 +75,7 @@ require([
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego);    // For highlighting in Sandcastle.
         var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
-        var flight = Cesium.CameraFlightPath.createAnimation(scene.getFrameState(), {
+        var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
             destination : destination
         });
         scene.getAnimations().add(flight);
@@ -85,7 +85,7 @@ require([
         Sandcastle.declare(flyToMyLocation);    // For highlighting in Sandcastle.
         function fly(position) {
             var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
-            var flight = Cesium.CameraFlightPath.createAnimation(scene.getFrameState(), {
+            var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
                 destination : destination
             });
             scene.getAnimations().add(flight);        
@@ -146,6 +146,7 @@ require([
     var widget = new CesiumWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
     widget.startup();
+    
     dom.byId('toolbar').innerHTML = '';
 
     createButtons(widget.scene);

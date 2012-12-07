@@ -12,6 +12,8 @@ define([
         '../Core/OrientationInterpolator',
         '../Core/Quaternion',
         '../Core/Ray',
+        '../Scene/PerspectiveFrustum',
+        '../Scene/PerspectiveOffCenterFrustum',
         '../Scene/SceneMode',
         '../ThirdParty/Tween'
     ], function(
@@ -27,6 +29,8 @@ define([
         OrientationInterpolator,
         Quaternion,
         Ray,
+        PerspectiveFrustum,
+        PerspectiveOffCenterFrustum,
         SceneMode,
         Tween) {
     "use strict";
@@ -43,21 +47,31 @@ define([
         return Quaternion.fromRotationMatrix(viewMat);
     }
 
-    function createPath3D(camera, ellipsoid, end, duration) {
-        var start = camera.position;
+    function getAltitude(frustum, dx, dy) {
+        var near;
+        var top;
+        var right;
+        if (frustum instanceof PerspectiveFrustum) {
+            var tanTheta = Math.tan(0.5 * frustum.fovy);
+            near = frustum.near;
+            top = frustum.near * tanTheta;
+            right = frustum.aspectRatio * top;
+            return Math.max(dx * near / right, dy * near / top);
+        } else if (frustum instanceof PerspectiveOffCenterFrustum) {
+            near = frustum.near;
+            top = frustum.top;
+            right = frustum.right;
+            return Math.max(dx * near / right, dy * near / top);
+        }
 
+        return Math.max(dx, dy);
+    }
+
+    function createPath3D(camera, ellipsoid, start, end, duration) {
         // get minimum altitude from which the whole ellipsoid is visible
         var radius = ellipsoid.getMaximumRadius();
-
         var frustum = camera.frustum;
-        var near = frustum.near;
-        var tanTheta = Math.tan(0.5 * frustum.fovy);
-        var top = frustum.near * tanTheta;
-        var right = frustum.aspectRatio * top;
-
-        var dx = radius * near / right;
-        var dy = radius * near / top;
-        var maxStartAlt = Math.max(dx, dy);
+        var maxStartAlt = getAltitude(frustum, radius, radius);
 
         var dot = start.normalize().dot(end.normalize());
 
@@ -68,12 +82,11 @@ define([
             altitude = radius + 0.6 * (maxStartAlt - radius);
             incrementPercentage = 0.35;
         } else {
-            var tanPhi = frustum.aspectRatio * tanTheta;
             var diff = start.subtract(end);
             altitude = diff.multiplyByScalar(0.5).add(end).magnitude();
             var verticalDistance = camera.up.multiplyByScalar(diff.dot(camera.up)).magnitude();
             var horizontalDistance = camera.right.multiplyByScalar(diff.dot(camera.right)).magnitude();
-            altitude += Math.max(verticalDistance / tanTheta, horizontalDistance / tanPhi);
+            altitude += getAltitude(frustum, verticalDistance, horizontalDistance);
             incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
         }
 
@@ -165,7 +178,7 @@ define([
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
-        var path = createPath3D(camera, ellipsoid, destination, duration);
+        var path = createPath3D(camera, ellipsoid, camera.position, destination, duration);
         var orientations = createOrientations3D(camera, path.getControlPoints(), direction, up);
 
         var update = function(value) {
@@ -182,33 +195,20 @@ define([
         return update;
     }
 
-    function createPathCV(camera, ellipsoid, end, duration) {
-        var start = camera.position;
-
+    function createPath2D(camera, ellipsoid, start, end, duration) {
         // get minimum altitude from which the whole map is visible
         var radius = ellipsoid.getMaximumRadius();
-
         var frustum = camera.frustum;
-        var near = frustum.near;
-        var tanTheta = Math.tan(0.5 * frustum.fovy);
-        var top = frustum.near * tanTheta;
-        var right = frustum.aspectRatio * top;
-
-        var dx = Math.PI * radius * near / right;
-        var dy = CesiumMath.PI_OVER_TWO * radius * near / top;
-        var maxStartAlt = Math.max(dx, dy);
+        var maxStartAlt = getAltitude(frustum, Math.PI * radius,  CesiumMath.PI_OVER_TWO * radius);
 
         var points;
         var altitude;
-        var incrementPercentage;
+        var incrementPercentage = 0.5;
         if (start.z > maxStartAlt) {
             altitude = 0.6 * maxStartAlt;
-            incrementPercentage = 0.5;
         } else {
-            var tanPhi = frustum.aspectRatio * tanTheta;
             var diff = start.subtract(end);
-            altitude = Math.max(Math.abs(diff.y * 0.5) / tanTheta, Math.abs(diff.x * 0.5) / tanPhi);
-            incrementPercentage = 0.5;
+            altitude = getAltitude(frustum, Math.abs(diff.y), Math.abs(diff.x));
         }
 
         var aboveEnd = end.clone();
@@ -267,7 +267,7 @@ define([
         return new HermiteSpline(points);
     }
 
-    function createOrientationsCV(camera, points, endDirection, endUp) {
+    function createOrientations2D(camera, points, endDirection, endUp) {
         points[0].orientation = createQuaternion(camera.direction, camera.up);
 
         var point;
@@ -301,8 +301,8 @@ define([
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
-        var path = createPathCV(camera, ellipsoid, destination, duration);
-        var orientations = createOrientationsCV(camera, path.getControlPoints(), direction, up);
+        var path = createPath2D(camera, ellipsoid, camera.position.clone(), destination, duration);
+        var orientations = createOrientations2D(camera, path.getControlPoints(), direction, up);
 
         var update = function(value) {
             var time = value.time;
@@ -318,81 +318,16 @@ define([
         return update;
     }
 
-    function createPath2D(camera, ellipsoid, end, duration) {
-        var start = camera.position.clone();
-        start.z = camera.frustum.right - camera.frustum.left;
-
-        // get minimum altitude from which the whole ellipsoid is visible
-        var radius = ellipsoid.getMaximumRadius();
-        var maxStartAlt = radius * CesiumMath.TWO_PI;
-
-        var dot = start.normalize().dot(end.normalize());
-
-        var points;
-        var altitude;
-        var incrementPercentage;
-        if (start.z > maxStartAlt) {
-            altitude = radius + 0.6 * (maxStartAlt - radius);
-            incrementPercentage = 0.5;
-        } else {
-            var diff = start.subtract(end);
-            altitude = Math.max(Math.abs(diff.y), Math.abs(diff.x));
-            incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
-        }
-
-        var aboveEnd = end.clone();
-        aboveEnd.z = altitude;
-        var afterStart = start.clone();
-        afterStart.z = altitude;
-
-        var axis, angle, rotation;
-        if (start.z > maxStartAlt && dot > 0) {
-            var middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
-
-            points = [{
-                point : start
-            }, {
-                point : middle
-            }, {
-                point : end
-            }];
-        } else {
-            points = [{
-                point : start
-            }];
-
-            angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
-            axis = afterStart.cross(aboveEnd);
-
-            var increment = incrementPercentage * angle;
-            var startCondition = angle - increment;
-            for ( var i = startCondition; i > 0.0; i = i - increment) {
-                rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
-                points.push({
-                    point : rotation.multiplyByVector(aboveEnd)
-                });
-            }
-
-            points.push({
-                point : end
-            });
-        }
-
-        var scalar = duration / (points.length - 1);
-        for ( var k = 0; k < points.length; ++k) {
-            points[k].time = k * scalar;
-        }
-
-        return new HermiteSpline(points);
-    }
-
     function createUpdate2D(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
-        var path = createPath2D(camera, ellipsoid, destination, duration);
+        var start = camera.position.clone();
+        start.z = camera.frustum.right - camera.frustum.left;
+
+        var path = createPath2D(camera, ellipsoid, start, destination, duration);
         var points = path.getControlPoints();
-        var orientations = createOrientationsCV(camera, points, Cartesian3.UNIT_Z.negate(), up);
+        var orientations = createOrientations2D(camera, points, Cartesian3.UNIT_Z.negate(), up);
 
         var height = camera.position.z;
 
