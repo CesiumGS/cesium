@@ -99,7 +99,7 @@ void main()
     if (mask > 0.0)
     {
         vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
-        vec3 normalEC = normalize(czm_normal * normalMC);                                           // normalized surface normal in eye coordiantes
+        vec3 normalEC = normalize(czm_normal3D * normalMC);                                           // normalized surface normal in eye coordiantes
 #ifdef SHOW_OCEAN_WAVES
         mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
         color = computeWaterColor(v_positionEC, czm_ellipsoidWgs84TextureCoordinates(normalMC), enuToEye, startDayColor, mask);

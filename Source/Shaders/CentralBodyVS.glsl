@@ -82,7 +82,7 @@ void main()
 
     gl_Position = getPosition(position3DWC);
     
-    v_positionEC = (czm_modelView * vec4(position3DWC, 1.0)).xyz;
+    v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
     v_textureCoordinates = textureCoordinates;
 }

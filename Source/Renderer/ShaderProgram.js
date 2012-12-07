@@ -275,6 +275,49 @@ define([
         },
 
         /**
+         * An automatic GLSL uniform representing a 4x4 view transformation matrix that
+         * transforms 3D world coordinates to eye coordinates.  In 3D mode, this is identical to
+         * {@link ShaderProgram#czm_view}, but in 2D and Columbus View it represents the view matrix
+         * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
+         * 2D and Columbus View in the same way that 3D is lit.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_view3D</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_view3D
+         * @glslUniform
+         *
+         * @see UniformState#getView3D
+         * @see czm_view
+         * @see czm_viewRotation3D
+         * @see czm_modelView3D
+         * @see czm_viewProjection
+         * @see czm_modelViewProjection
+         * @see czm_inverseView3D
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_view3D;
+         *
+         * // Example
+         * vec4 eyePosition3D = czm_view3D * worldPosition3D;
+         */
+        czm_view3D : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getView3D();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform representing a 3x3 view rotation matrix that
          * transforms vectors in world coordinates to eye coordinates.
          * <br /><br />
@@ -308,6 +351,47 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getViewRotation();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 3x3 view rotation matrix that
+         * transforms vectors in 3D world coordinates to 3D eye coordinates.  In 3D mode, this is identical to
+         * {@link ShaderProgram#czm_viewRotation}, but in 2D and Columbus View it represents the view matrix
+         * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
+         * 2D and Columbus View in the same way that 3D is lit.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_viewRotation</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_viewRotation3D
+         * @glslUniform
+         *
+         * @see UniformState#getViewRotation3D
+         * @see czm_viewRotation
+         * @see czm_view3D
+         * @see czm_inverseView3D
+         * @see czm_inverseViewRotation3D
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat3 czm_viewRotation3D;
+         *
+         * // Example
+         * vec3 eyeVector = czm_viewRotation3D * worldVector;
+         */
+        czm_viewRotation3D : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getViewRotation3D();
             }
         },
 
@@ -348,6 +432,46 @@ define([
         },
 
         /**
+         * An automatic GLSL uniform representing a 4x4 transformation matrix that
+         * transforms from eye coordinates to world coordinates.  In 3D mode, this is identical to
+         * {@link ShaderProgram#czm_inverseView}, but in 2D and Columbus View it represents the inverse view matrix
+         * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
+         * 2D and Columbus View in the same way that 3D is lit.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_inverseView</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_inverseView3D
+         * @glslUniform
+         *
+         * @see UniformState#getInverseView3D
+         * @see czm_inverseView
+         * @see czm_view3D
+         * @see czm_inverseNormal3D
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_inverseView3D;
+         *
+         * // Example
+         * vec4 worldPosition = czm_inverseView3D * eyePosition;
+         */
+        czm_inverseView3D : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseView3D();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that
          * transforms vectors from eye coordinates to world coordinates.
          * <br /><br />
@@ -371,6 +495,47 @@ define([
          * vec4 worldVector = czm_inverseViewRotation * eyeVector;
          */
         czm_inverseViewRotation : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseViewRotation();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 3x3 rotation matrix that
+         * transforms vectors from eye coordinates to world coordinates.  In 3D mode, this is identical to
+         * {@link ShaderProgram#czm_inverseViewRotation}, but in 2D and Columbus View it represents the inverse view matrix
+         * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
+         * 2D and Columbus View in the same way that 3D is lit.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_inverseViewRotation</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_inverseViewRotation3D
+         * @glslUniform
+         *
+         * @see UniformState#getInverseView3D
+         * @see czm_inverseViewRotation
+         * @see czm_view3D
+         * @see czm_viewRotation3D
+         * @see czm_inverseViewRotation3D
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat3 czm_inverseViewRotation;
+         *
+         * // Example
+         * vec4 worldVector = czm_inverseViewRotation * eyeVector;
+         */
+        czm_inverseViewRotation3D : {
             getSize : function() {
                 return 1;
             },
@@ -543,6 +708,54 @@ define([
 
         /**
          * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
+         * transforms model coordinates to eye coordinates.  In 3D mode, this is identical to
+         * {@link ShaderProgram#czm_modelView}, but in 2D and Columbus View it represents the model-view matrix
+         * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
+         * 2D and Columbus View in the same way that 3D is lit.
+         * <br /><br />
+         * Positions should be transformed to eye coordinates using <code>czm_modelView3D</code> and
+         * normals should be transformed using {@link czm_normal3D}.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_modelView3D</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_modelView3D
+         * @glslUniform
+         *
+         * @see UniformState#getModelView3D
+         * @see czm_modelView3D
+         * @see czm_model
+         * @see czm_view3D
+         * @see czm_modelViewProjection
+         * @see czm_normal3D
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_modelView3D;
+         *
+         * // Example
+         * vec4 eyePosition = czm_modelView3D * modelPosition;
+         *
+         * // The above is equivalent to, but more efficient than:
+         * vec4 eyePosition = czm_view3D * czm_model * modelPosition;
+         */
+        czm_modelView3D : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getModelView3D();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
          * transforms model coordinates, relative to the eye, to eye coordinates.  This is used
          * in conjunction with {@link czm_translateRelativeToEye}.
          * <br /><br />
@@ -617,6 +830,45 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getInverseModelView();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 4x4 transformation matrix that
+         * transforms from eye coordinates to model coordinates.  In 3D mode, this is identical to
+         * {@link ShaderProgram#czm_inverseModelView}, but in 2D and Columbus View it represents the inverse model-view matrix
+         * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
+         * 2D and Columbus View in the same way that 3D is lit.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_inverseModelView3D</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_inverseModelView3D
+         * @glslUniform
+         *
+         * @see UniformState#getInverseModelView
+         * @see czm_inverseModelView
+         * @see czm_modelView3D
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat4 czm_inverseModelView3D;
+         *
+         * // Example
+         * vec4 modelPosition = czm_inverseModelView3D * eyePosition;
+         */
+        czm_inverseModelView3D : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX4;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseModelView3D();
             }
         },
 
@@ -835,6 +1087,50 @@ define([
 
         /**
          * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
+         * transforms normal vectors in model coordinates to eye coordinates.
+         * In 3D mode, this is identical to
+         * {@link ShaderProgram#czm_normal}, but in 2D and Columbus View it represents the normal transformation
+         * matrix as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
+         * 2D and Columbus View in the same way that 3D is lit.
+         * <br /><br />
+         * Positions should be transformed to eye coordinates using {@link czm_modelView3D} and
+         * normals should be transformed using <code>czm_normal3D</code>.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_normal3D</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_normal3D
+         * @glslUniform
+         *
+         * @see UniformState#getNormal3D
+         * @see czm_normal
+         * @see czm_inverseNormal3D
+         * @see czm_modelView3D
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat3 czm_normal3D;
+         *
+         * // Example
+         * vec3 eyeNormal = czm_normal3D * normal;
+         */
+        czm_normal3D : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getNormal3D();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
          * transforms normal vectors in eye coordinates to model coordinates.  This is
          * in the opposite transform provided by {@link czm_normal}.
          * <br /><br />
@@ -868,6 +1164,49 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getInverseNormal();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
+         * transforms normal vectors in eye coordinates to model coordinates.  This is
+         * in the opposite transform provided by {@link czm_normal}.
+         * In 3D mode, this is identical to
+         * {@link ShaderProgram#czm_inverseNormal}, but in 2D and Columbus View it represents the inverse normal transformation
+         * matrix as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
+         * 2D and Columbus View in the same way that 3D is lit.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_inverseNormal3D</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_inverseNormal3D
+         * @glslUniform
+         *
+         * @see UniformState#getInverseNormal3D
+         * @see czm_inverseNormal
+         * @see czm_normal3D
+         * @see czm_modelView3D
+         * @see czm_inverseView3D
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat3 czm_inverseNormal3D;
+         *
+         * // Example
+         * vec3 normalMC = czm_inverseNormal3D * normalEC;
+         */
+        czm_inverseNormal3D : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getInverseNormal3D();
             }
         },
 

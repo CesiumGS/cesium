@@ -8,6 +8,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/EncodedCartesian3',
         '../Core/BoundingRectangle',
         '../Core/Transforms',
@@ -22,6 +23,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         EncodedCartesian3,
         BoundingRectangle,
         Transforms,
@@ -54,11 +56,23 @@ define([
         this._temeToPseudoFixed = Matrix3.IDENTITY.clone();
 
         // Derived members
+        this._view3DDirty = true;
+        this._view3D = new Matrix4();
+
+        this._inverseView3DDirty = true;
+        this._inverseView3D = new Matrix4();
+
         this._inverseModelDirty = true;
         this._inverseModel = new Matrix4();
 
         this._viewRotation = new Matrix3();
         this._inverseViewRotation = new Matrix3();
+
+        this._viewRotation3DDirty = true;
+        this._viewRotation3D = new Matrix3();
+
+        this._inverseViewRotation3DDirty = true;
+        this._inverseViewRotation3D = new Matrix3();
 
         this._inverseProjectionDirty = true;
         this._inverseProjection = new Matrix4();
@@ -66,11 +80,17 @@ define([
         this._modelViewDirty = true;
         this._modelView = new Matrix4();
 
+        this._modelView3DDirty = true;
+        this._modelView3D = new Matrix4();
+
         this._modelViewRelativeToEyeDirty = true;
         this._modelViewRelativeToEye = new Matrix4();
 
         this._inverseModelViewDirty = true;
         this._inverseModelView = new Matrix4();
+
+        this._inverseModelView3DDirty = true;
+        this._inverseModelView3D = new Matrix4();
 
         this._viewProjectionDirty = true;
         this._viewProjection = new Matrix4();
@@ -87,8 +107,14 @@ define([
         this._normalDirty = true;
         this._normal = new Matrix3();
 
+        this._normal3DDirty = true;
+        this._normal3D = new Matrix3();
+
         this._inverseNormalDirty = true;
         this._inverseNormal = new Matrix3();
+
+        this._inverseNormal3DDirty = true;
+        this._inverseNormal3D = new Matrix3();
 
         this._encodedCameraPositionMCDirty = true;
         this._encodedCameraPositionMC = new EncodedCartesian3();
@@ -97,21 +123,33 @@ define([
         this._sunDirectionWC = new Cartesian3();
         this._sunDirectionEC = new Cartesian3();
         this._moonDirectionEC = new Cartesian3();
+
+        this._mode = undefined;
+        this._mapProjection = undefined;
+        this._cameraDirection = new Cartesian3();
+        this._cameraRight = new Cartesian3();
+        this._cameraUp = new Cartesian3();
     };
 
     function setView(uniformState, matrix) {
         Matrix4.clone(matrix, uniformState._view);
         Matrix4.getRotation(matrix, uniformState._viewRotation);
 
+        uniformState._viewRotation3DDirty = true;
+        uniformState._inverseViewRotation3DDirty = true;
         uniformState._modelViewDirty = true;
+        uniformState._modelView3DDirty = true;
         uniformState._modelViewRelativeToEyeDirty = true;
         uniformState._inverseModelViewDirty = true;
+        uniformState._inverseModelView3DDirty = true;
         uniformState._viewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
         uniformState._modelViewProjectionRelativeToEyeDirty = true;
         uniformState._modelViewInfiniteProjectionDirty = true;
         uniformState._normalDirty = true;
         uniformState._inverseNormalDirty = true;
+        uniformState._normal3DDirty = true;
+        uniformState._inverseNormal3DDirty = true;
     }
 
     function setInverseView(uniformState, matrix) {
@@ -134,8 +172,11 @@ define([
         uniformState._modelViewInfiniteProjectionDirty = true;
     }
 
-    function setCameraPosition(uniformState, position) {
+    function setCameraPosition(uniformState, position, direction, right, up) {
         Cartesian3.clone(position, uniformState._cameraPosition);
+        Cartesian3.clone(direction, uniformState._cameraDirection);
+        Cartesian3.clone(right, uniformState._cameraRight);
+        Cartesian3.clone(up, uniformState._cameraUp);
         uniformState._encodedCameraPositionMCDirty = true;
     }
 
@@ -203,7 +244,7 @@ define([
 
         setView(this, camera.getViewMatrix());
         setInverseView(this, camera.getInverseViewMatrix());
-        setCameraPosition(this, camera.getPositionWC());
+        setCameraPosition(this, camera.getPositionWC(), camera.getDirectionWC(), camera.getRightWC(), camera.getUpWC());
         setSunAndMoonDirections(this, frameState);
 
         this._entireFrustum.x = camera.frustum.near;
@@ -213,6 +254,8 @@ define([
         this._frameNumber = frameState.frameNumber;
         this._time = frameState.time;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time);
+        this._mode = frameState.mode;
+        this._mapProjection = frameState.scene2D.projection;
     };
 
     /**
@@ -292,6 +335,8 @@ define([
     UniformState.prototype.setModel = function(matrix) {
         Matrix4.clone(matrix, this._model);
 
+        this._view3DDirty = true;
+        this._inverseView3DDirty = true;
         this._inverseModelDirty = true;
         this._modelViewDirty = true;
         this._modelViewRelativeToEyeDirty = true;
@@ -353,6 +398,30 @@ define([
     };
 
     /**
+     * Gets the 3D view matrix.  In 3D mode, this is identical to {@link UniformState#getView},
+     * but in 2D and Columbus View it is a synthetic matrix based on the equivalent position
+     * of the camera in the 3D world.
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix4} The 3D view matrix.
+     *
+     * @see czm_view3D
+     */
+    UniformState.prototype.getView3D = function() {
+        if (this._view3DDirty) {
+            if (this._mode === SceneMode.SCENE3D) {
+                Matrix4.clone(this._view, this._view3D);
+            } else {
+                // TODO: don't hardcode WGS84
+                view2Dto3D(this._cameraPosition, this._cameraDirection, this._cameraRight, this._cameraUp, Ellipsoid.WGS84, this._mapProjection, this._view3D);
+            }
+            this._view3DDirty = false;
+        }
+        return this._view3D;
+    };
+
+    /**
      * Returns the 3x3 rotation matrix of the current view matrix ({@link UniformState#getView}).
      *
      * @memberof UniformState
@@ -365,6 +434,28 @@ define([
     UniformState.prototype.getViewRotation = function() {
         return this._viewRotation;
     };
+
+    // _viewRotation3DDirty
+
+    /**
+     * Returns the 3x3 rotation matrix of the current 3D view matrix ({@link UniformState#getView3D}).
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix3} The 3x3 rotation matrix of the current 3D view matrix.
+     *
+     * @see UniformState#getView3D
+     * @see czm_viewRotation3D
+     */
+    UniformState.prototype.getViewRotation3D = function() {
+        if (this._viewRotation3DDirty) {
+            var view3D = this.getView3D();
+            Matrix4.getRotation(view3D, this._viewRotation3D);
+            this._viewRotation3DDirty = false;
+        }
+        return this._viewRotation;
+    };
+
 
     /**
      * Returns the 4x4 inverse-view matrix that transforms from eye to world coordinates.
@@ -380,6 +471,23 @@ define([
     };
 
     /**
+     * Returns the 4x4 inverse-view matrix that transforms from 3D eye to world coordinates.
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix4} The 4x4 inverse-view matrix that transforms from 3D eye to world coordinates.
+     *
+     * @see czm_inverseView3D
+     */
+    UniformState.prototype.getInverseView3D = function() {
+        if (this._inverseView3DDirty) {
+            Matrix4.inverseTransformation(this.getView3D(), this._inverseView3D);
+            this._inverseView3DDirty = false;
+        }
+        return this._inverseView3D;
+    };
+
+    /**
      * Returns the 3x3 rotation matrix of the current inverse-view matrix ({@link UniformState#getInverseView}).
      *
      * @memberof UniformState
@@ -391,6 +499,25 @@ define([
      */
     UniformState.prototype.getInverseViewRotation = function() {
         return this._inverseViewRotation;
+    };
+
+    /**
+     * Returns the 3x3 rotation matrix of the current 3D inverse-view matrix ({@link UniformState#getInverseView3D}).
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix3} The 3x3 rotation matrix of the current 3D inverse-view matrix.
+     *
+     * @see UniformState#getInverseView3D
+     * @see czm_inverseViewRotation3D
+     */
+    UniformState.prototype.getInverseViewRotation3D = function() {
+        if (this._inverseViewRotation3DDirty) {
+            var inverseView3D = this.getInverseView3D();
+            Matrix4.getRotation(inverseView3D, this._inverseViewRotation3D);
+            this._inverseViewRotation3DDirty = false;
+        }
+        return this._inverseViewRotation3D;
     };
 
     /**
@@ -466,6 +593,28 @@ define([
         return this._modelView;
     };
 
+    function cleanModelView3D(uniformState) {
+        if (uniformState._modelView3DDirty) {
+            uniformState._modelView3DDirty = false;
+
+            Matrix4.multiply(uniformState.getView3D(), uniformState._model, uniformState._modelView3D);
+        }
+    }
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix4} DOC_TBA.
+     *
+     * @see czm_modelView3D
+     */
+    UniformState.prototype.getModelView3D = function() {
+        cleanModelView3D(this);
+        return this._modelView3D;
+    };
+
     function cleanModelViewRelativeToEye(uniformState) {
         if (uniformState._modelViewRelativeToEyeDirty) {
             uniformState._modelViewRelativeToEyeDirty = false;
@@ -525,6 +674,28 @@ define([
     UniformState.prototype.getInverseModelView = function() {
         cleanInverseModelView(this);
         return this._inverseModelView;
+    };
+
+    function cleanInverseModelView3D(uniformState) {
+        if (uniformState._inverseModelView3DDirty) {
+            uniformState._inverseModelView3DDirty = false;
+
+            Matrix4.inverse(uniformState.getModelView3D(), uniformState._inverseModelView3D);
+        }
+    }
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix4} DOC_TBA.
+     *
+     * @see czm_inverseModelView3D
+     */
+    UniformState.prototype.getInverseModelView3D = function() {
+        cleanInverseModelView3D(this);
+        return this._inverseModelView3D;
     };
 
     function cleanViewProjection(uniformState) {
@@ -640,6 +811,29 @@ define([
         return this._normal;
     };
 
+    function cleanNormal3D(uniformState) {
+        if (uniformState._normal3DDirty) {
+            uniformState._normal3DDirty = false;
+
+            Matrix4.transpose(uniformState.getInverseModelView3D(), normalScratch);
+            Matrix4.getRotation(normalScratch, uniformState._normal3D);
+        }
+    }
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix3} DOC_TBA.
+     *
+     * @see czm_normal3D
+     */
+    UniformState.prototype.getNormal3D = function() {
+        cleanNormal3D(this);
+        return this._normal3D;
+    };
+
     function cleanInverseNormal(uniformState) {
         if (uniformState._inverseNormalDirty) {
             uniformState._inverseNormalDirty = false;
@@ -660,6 +854,28 @@ define([
     UniformState.prototype.getInverseNormal = function() {
         cleanInverseNormal(this);
         return this._inverseNormal;
+    };
+
+    function cleanInverseNormal3D(uniformState) {
+        if (uniformState._inverseNormal3DDirty) {
+            uniformState._inverseNormal3DDirty = false;
+
+            Matrix4.getRotation(uniformState.getInverseModelView3D(), uniformState._inverseNormal3D);
+        }
+    }
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix3} DOC_TBA.
+     *
+     * @see czm_inverseNormal3D
+     */
+    UniformState.prototype.getInverseNormal3D = function() {
+        cleanInverseNormal3D(this);
+        return this._inverseNormal3D;
     };
 
     /**
@@ -794,6 +1010,32 @@ define([
     UniformState.prototype.getHighResolutionSnapScale = function() {
         return 1.0;
     };
+
+    var view2Dto3DCartographicScratch = new Cartographic(0.0, 0.0, 0.0);
+    var view2Dto3DCartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
+    var view2Dto3DMatrix4Scratch = new Matrix4();
+    var view2Dto3DCartesian4Scratch = new Cartesian4();
+    var view2Dto3DRightScratch = new Cartesian3();
+    var view2Dto3DUpScratch = new Cartesian3();
+
+    function view2Dto3D(position2D, direction2D, right2D, up2D, ellipsoid, projection, result) {
+        var r = new Cartesian3(right2D.y, right2D.z, right2D.x);
+        var u = new Cartesian3(up2D.y, up2D.z, up2D.x);
+        var d = new Cartesian3(direction2D.y, direction2D.z, direction2D.x);
+        var e = Cartesian3.ZERO;
+
+        var enuToEye = new Matrix4( r.x,  r.y,  r.z, -r.dot(e),
+                                    u.x,  u.y,  u.z, -u.dot(e),
+                                   -d.x, -d.y, -d.z,  d.dot(e),
+                                    0.0,  0.0,  0.0,      1.0);
+
+        var cartographic = projection.unproject(new Cartesian3(position2D.y, position2D.z, position2D.x), view2Dto3DCartographicScratch);
+        var position3D = ellipsoid.cartographicToCartesian(cartographic, view2Dto3DCartesian3Scratch);
+
+        var fixedToEnu = Transforms.eastNorthUpToFixedFrame(position3D, ellipsoid, view2Dto3DMatrix4Scratch).inverseTransformation();
+
+        return Matrix4.multiply(enuToEye, fixedToEnu, result);
+    }
 
     return UniformState;
 });
