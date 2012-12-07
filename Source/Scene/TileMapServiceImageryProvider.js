@@ -28,9 +28,14 @@ define([
      * @param {String} [description.url='.'] Path to image tiles on server.
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {String} [description.credit='AGI'] A string crediting the data source, which is displayed on the canvas.
+     * @param {String} [description.credit=''] A string crediting the data source, which is displayed on the canvas.
      * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent, in radians, covered by the image.
+     * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the ellipsoidal
+     * surface is broken into tiles.  If this parameter is not provided, a {@link WebMercatorTilingScheme}
+     * is used.
+     * @param {Number} [description.tileWidth=256] Pixel width of image tiles.
+     * @param {Number} [description.tileHeight=256] Pixel height of image tiles.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -43,11 +48,10 @@ define([
      *
      * @example
      * // TileMapService tile provider
-     * var osm = new TileMapServiceImageryProvider({
+     * var tms = new TileMapServiceImageryProvider({
      *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
      *    fileExtension: 'png',
      *    maximumLevel: 4,
-     *    credit: 'AGI',
      *    extent: new Cesium.Extent(
      *        Cesium.Math.toRadians(-120.0),
      *        Cesium.Math.toRadians(20.0),
@@ -73,10 +77,10 @@ define([
         this._proxy = description.proxy;
         this._tileDiscardPolicy = description.tileDiscardPolicy;
 
-        this._tilingScheme = new WebMercatorTilingScheme(); // spherical mercator
+        this._tilingScheme = defaultValue(description.tilingScheme, new WebMercatorTilingScheme() );
 
-        this._tileWidth = 256;
-        this._tileHeight = 256;
+        this._tileWidth = defaultValue(description.tileWidth,256);
+        this._tileHeight = defaultValue(description.tileHeight,256);
 
         this._maximumLevel = defaultValue(description.maximumLevel, 18);
 
@@ -86,14 +90,15 @@ define([
 
         this._ready = true;
 
-        var credit = defaultValue(description.credit, 'AGI');
+        var credit = defaultValue(description.credit, '');
         this._logo = writeTextToCanvas(credit, {
             font : '12px sans-serif'
         });
     };
 
     function buildImageUrl(imageryProvider, x, y, level) {
-        var url = imageryProvider._url + level + '/' + x + '/' + (Math.pow(2,level)-y-1) + '.' + imageryProvider._fileExtension;
+        var yTiles = imageryProvider._tilingScheme.getNumberOfYTilesAtLevel(level);
+        var url = imageryProvider._url + level + '/' + x + '/' + (yTiles - y - 1) + '.' + imageryProvider._fileExtension;
 
         var proxy = imageryProvider._proxy;
         if (typeof proxy !== 'undefined') {
