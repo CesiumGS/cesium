@@ -14,6 +14,8 @@ Beta Releases
    * Renamed all `*MouseAction` to `*InputAction` (including get, set, remove, etc).
    * Removed `Camera2DController`, `CameraCentralBodyController`, `CameraColumbusViewController`, `CameraFlightController`, `CameraFreeLookController`, `CameraSpindleController`, and `CameraControllerCollection`. Common ways to modify the camera are through the `CameraController` object of the `Camera` and will work in all scene modes. The default camera handler is the 'ScreenSpaceCameraController` object on the `Scene`.
 * Improved support on Nexus 4.
+* Added Sandbox example using NASA's new [Black Marble](http://www.nasa.gov/mission_pages/NPP/news/earth-at-night.html) night imagery.
+
 
 ### b11 - 12/03/2012
 
