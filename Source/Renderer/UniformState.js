@@ -184,16 +184,16 @@ define([
     var sunPositionScratch = new Cartesian3();
 
     function setSunAndMoonDirections(uniformState, frameState) {
-        if (frameState.mode === SceneMode.SCENE3D) {
+        //if (frameState.mode === SceneMode.SCENE3D) {
             computeSunPosition(frameState.time, sunPositionWC);
 
             Cartesian3.normalize(sunPositionWC, uniformState._sunDirectionWC);
-            Matrix3.multiplyByVector(uniformState._viewRotation, sunPositionWC, sunPositionScratch);
+            Matrix3.multiplyByVector(uniformState.getViewRotation3D(), sunPositionWC, sunPositionScratch);
             Cartesian3.normalize(sunPositionScratch, uniformState._sunDirectionEC);
 
             // Pseudo direction for now just for lighting
             Cartesian3.negate(uniformState._sunDirectionEC, uniformState._moonDirectionEC);
-        } else {
+        /*} else {
             // Made up direction for now just for lighting
 
             sunPositionWC.x = 1000000.0;   // height
@@ -211,7 +211,7 @@ define([
             Cartesian3.normalize(sunPositionWC, sunPositionScratch);
             Matrix3.multiplyByVector(uniformState._viewRotation, sunPositionScratch, sunPositionScratch);
             Cartesian3.normalize(sunPositionScratch, uniformState._moonDirectionEC);
-        }
+        }*/
     }
 
     /**
@@ -240,6 +240,9 @@ define([
      * @param {FrameState} frameState The frameState to synchronize with.
      */
     UniformState.prototype.update = function(frameState) {
+        this._mode = frameState.mode;
+        this._mapProjection = frameState.scene2D.projection;
+
         var camera = frameState.camera;
 
         setView(this, camera.getViewMatrix());
@@ -254,8 +257,6 @@ define([
         this._frameNumber = frameState.frameNumber;
         this._time = frameState.time;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time);
-        this._mode = frameState.mode;
-        this._mapProjection = frameState.scene2D.projection;
     };
 
     /**
@@ -1014,27 +1015,51 @@ define([
     var view2Dto3DCartographicScratch = new Cartographic(0.0, 0.0, 0.0);
     var view2Dto3DCartesian3Scratch = new Cartesian3(0.0, 0.0, 0.0);
     var view2Dto3DMatrix4Scratch = new Matrix4();
-    var view2Dto3DCartesian4Scratch = new Cartesian4();
-    var view2Dto3DRightScratch = new Cartesian3();
-    var view2Dto3DUpScratch = new Cartesian3();
 
     function view2Dto3D(position2D, direction2D, right2D, up2D, ellipsoid, projection, result) {
-        var r = new Cartesian3(right2D.y, right2D.z, right2D.x);
-        var u = new Cartesian3(up2D.y, up2D.z, up2D.x);
-        var d = new Cartesian3(direction2D.y, direction2D.z, direction2D.x);
-        var e = Cartesian3.ZERO;
+        // The camera position and directions are expressed in the 2D coordinate system where the Y axis is to the East,
+        // the Z axis is to the North, and the X axis is out of the map.  Express them instead in the ENU axes where
+        // X is to the East, Y is to the North, and Z is out of the local horizontal plane.
+        var p = new Cartesian3(position2D.y, position2D.z, position2D.x);
+        var r = new Cartesian4(right2D.y, right2D.z, right2D.x, 0.0);
+        var u = new Cartesian4(up2D.y, up2D.z, up2D.x, 0.0);
+        var d = new Cartesian4(direction2D.y, direction2D.z, direction2D.x, 0.0);
 
-        var enuToEye = new Matrix4( r.x,  r.y,  r.z, -r.dot(e),
-                                    u.x,  u.y,  u.z, -u.dot(e),
-                                   -d.x, -d.y, -d.z,  d.dot(e),
-                                    0.0,  0.0,  0.0,      1.0);
-
-        var cartographic = projection.unproject(new Cartesian3(position2D.y, position2D.z, position2D.x), view2Dto3DCartographicScratch);
+        // Compute the equivalent camera position in the real (3D) world.
+        var cartographic = projection.unproject(p, view2Dto3DCartographicScratch);
         var position3D = ellipsoid.cartographicToCartesian(cartographic, view2Dto3DCartesian3Scratch);
 
-        var fixedToEnu = Transforms.eastNorthUpToFixedFrame(position3D, ellipsoid, view2Dto3DMatrix4Scratch).inverseTransformation();
+        // Compute the rotation from the local ENU at the camera position to the fixed axes.
+        var enuToFixed = Transforms.eastNorthUpToFixedFrame(position3D, ellipsoid, view2Dto3DMatrix4Scratch);
 
-        return Matrix4.multiply(enuToEye, fixedToEnu, result);
+        // Transform each camera direction to the fixed axes.
+        enuToFixed.multiplyByVector(r, r);
+        enuToFixed.multiplyByVector(u, u);
+        enuToFixed.multiplyByVector(d, d);
+
+        // Compute the view matrix based on the new fixed-frame camera position and directions.
+        if (typeof result === 'undefined') {
+            result = new Matrix4();
+        }
+
+        result[0] = r.x;
+        result[1] = u.x;
+        result[2] = -d.x;
+        result[3] = 0.0;
+        result[4] = r.y;
+        result[5] = u.y;
+        result[6] = -d.y;
+        result[7] = 0.0;
+        result[8] = r.z;
+        result[9] = u.z;
+        result[10] = -d.z;
+        result[11] = 0.0;
+        result[12] = -Cartesian3.fromCartesian4(r).dot(position3D);
+        result[13] = -Cartesian3.fromCartesian4(u).dot(position3D);
+        result[14] = Cartesian3.fromCartesian4(d).dot(position3D);
+        result[15] = 1.0;
+
+        return result;
     }
 
     return UniformState;
