@@ -1057,8 +1057,8 @@ define([
          * @function
          * @memberof CesiumViewerWidget.prototype
          */
-        initializeFrame : function() {
-            this.scene.initializeFrame();
+        initializeFrame : function(currentTime) {
+            this.scene.initializeFrame(currentTime);
         },
 
         /**
@@ -1095,8 +1095,8 @@ define([
          * @memberof CesiumViewerWidget.prototype
          * @param {JulianDate} currentTime - The date and time in the scene of the frame to be rendered
          */
-        render : function(currentTime) {
-            this.scene.render(currentTime);
+        render : function() {
+            this.scene.render();
         },
 
         _configureCentralBodyImagery : function() {
@@ -1165,9 +1165,9 @@ define([
          * var animationController = widget.animationController;
          * function updateAndRender() {
          *     var currentTime = animationController.update();
-         *     widget.initializeFrame();
+         *     widget.initializeFrame(currentTime);
          *     widget.update(currentTime);
-         *     widget.render(currentTime);
+         *     widget.render();
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1178,12 +1178,12 @@ define([
          *
          * function updateAndRender() {
          *     var currentTime = animationController.update();
-         *     widget1.initializeFrame();
-         *     widget2.initializeFrame();
+         *     widget1.initializeFrame(currentTime);
+         *     widget2.initializeFrame(currentTime);
          *     widget1.update(currentTime);
          *     widget2.update(currentTime);
-         *     widget1.render(currentTime);
-         *     widget2.render(currentTime);
+         *     widget1.render();
+         *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1194,12 +1194,12 @@ define([
          * function updateAndRender() {
          *     var time1 = widget1.animationController.update();
          *     var time2 = widget2.animationController.update();
-         *     widget1.initializeFrame();
-         *     widget2.initializeFrame();
+         *     widget1.initializeFrame(time1);
+         *     widget2.initializeFrame(time2);
          *     widget1.update(time1);
          *     widget2.update(time2);
-         *     widget1.render(time1);
-         *     widget2.render(time2);
+         *     widget1.render();
+         *     widget2.render();
          *     requestAnimationFrame(updateAndRender);
          * }
          * requestAnimationFrame(updateAndRender);
@@ -1210,9 +1210,9 @@ define([
 
             function updateAndRender() {
                 var currentTime = animationController.update();
-                widget.initializeFrame();
+                widget.initializeFrame(currentTime);
                 widget.update(currentTime);
-                widget.render(currentTime);
+                widget.render();
                 requestAnimationFrame(updateAndRender);
             }
 
