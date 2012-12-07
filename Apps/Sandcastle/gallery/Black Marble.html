@@ -86,6 +86,7 @@ require([
     });
     widget.placeAt(dom.byId('cesiumContainer'));
     widget.startup();
+    widget.showSkyAtmosphere(false);
 
     var scene = widget.scene;
     var centralBody = widget.centralBody;
