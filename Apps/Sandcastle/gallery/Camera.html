@@ -71,29 +71,29 @@ require([
     on, dom, ToggleButton)
 {
     "use strict";
-
+    
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego);    // For highlighting in Sandcastle.
-        scene.getCamera().getControllers().addFlight({
-            destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-                Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0)),
-            duration: 3.0
+        var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
+        var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
+            destination : destination
         });
+        scene.getAnimations().add(flight);
     }
     
     function flyToMyLocation(scene) {
         Sandcastle.declare(flyToMyLocation);    // For highlighting in Sandcastle.
         function fly(position) {
-            scene.getCamera().getControllers().addFlight({
-                destination: Cesium.Ellipsoid.WGS84.cartographicToCartesian(
-                    Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 10000.0)),
-                duration: 3.0
+            var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
+            var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
+                destination : destination
             });
+            scene.getAnimations().add(flight);        
         }
         
         navigator.geolocation.getCurrentPosition(fly);
     }
-    
+
     function viewAnExtent(scene) {
         Sandcastle.declare(viewAnExtent);   // For highlighting in Sandcastle.
         var west = Cesium.Math.toRadians(-77.0);
@@ -102,7 +102,7 @@ require([
         var north = Cesium.Math.toRadians(42.0);
         
         var extent = new Cesium.Extent(west, south, east, north);
-        scene.viewExtent(extent, Cesium.Ellipsoid.WGS84);
+        scene.getCamera().controller.viewExtent(extent, Cesium.Ellipsoid.WGS84);
         
         // Show the extent.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
@@ -125,7 +125,7 @@ require([
                 Sandcastle.highlight(flyToSanDiego);
             }
         }).placeAt('toolbar');
-        
+
         new ToggleButton({
             label: "Fly to My Location",
             onClick: function() {
@@ -133,7 +133,7 @@ require([
                 Sandcastle.highlight(flyToMyLocation);
             }
         }).placeAt('toolbar');
-
+        
         new ToggleButton({
             label: "View an Extent",
             onClick: function() {
@@ -146,6 +146,7 @@ require([
     var widget = new CesiumWidget();
     widget.placeAt(dom.byId('cesiumContainer'));
     widget.startup();
+    
     dom.byId('toolbar').innerHTML = '';
 
     createButtons(widget.scene);

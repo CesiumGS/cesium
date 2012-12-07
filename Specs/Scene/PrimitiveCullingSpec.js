@@ -3,6 +3,7 @@ defineSuite([
          'Scene/CompositePrimitive',
          'Specs/createContext',
          'Specs/destroyContext',
+         'Specs/createFrameState',
          'Specs/frameState',
          'Specs/render',
          'Core/BoundingSphere',
@@ -27,6 +28,7 @@ defineSuite([
          CompositePrimitive,
          createContext,
          destroyContext,
+         createFrameState,
          frameState,
          render,
          BoundingSphere,
@@ -76,14 +78,12 @@ defineSuite([
         camera.frustum.aspectRatio = 1.0;
 
         us = context.getUniformState();
-        us.update(camera);
-        us.setSunPosition(new Cartesian3(-2.0, 0.0, 0.0));
+        us.update(createFrameState(camera));
     });
 
     afterEach(function() {
         primitives = primitives && primitives.destroy();
         us = undefined;
-        camera = camera && camera.destroy();
     });
 
     function verifyNoDraw() {

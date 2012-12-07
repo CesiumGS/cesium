@@ -872,7 +872,42 @@ define([
         },
 
         /**
-         * An automatic GLSL uniform representing the direction of the sun in eye coordinates.
+         * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
+         * of the frustum defined by the camera.  This is the largest possible frustum, not an individual
+         * frustum used for mult-frustum rendering.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_entireFrustum</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_entireFrustum
+         * @glslUniform
+         *
+         * @see UniformState#getEntireFrustum
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec2 czm_entireFrustum;
+         *
+         * // Example
+         * float frustumLength = czm_entireFrustum.y - czm_entireFrustum.x;
+         */
+        czm_entireFrustum : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR2;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getEntireFrustum();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the normalized direction to the sun in eye coordinates.
          * This is commonly used for directional lighting computations.
          * <br /><br />
          * Like all automatic uniforms, <code>czm_sunDirectionEC</code> does not need to be explicitly declared.
@@ -883,6 +918,7 @@ define([
          * @glslUniform
          *
          * @see UniformState#getSunDirectionEC
+         * @see czm_moonDirectionEC
          * @see czm_sunDirectionWC
          *
          * @example
@@ -907,8 +943,8 @@ define([
         },
 
         /**
-         * An automatic GLSL uniform representing a normalized vector from the origin
-         * in world coordinates to the sun.  This is commonly used for lighting computations.
+         * An automatic GLSL uniform representing the normalized direction to the sun in world coordinates.
+         * This is commonly used for directional lighting computations.
          * <br /><br />
          * Like all automatic uniforms, <code>czm_sunDirectionWC</code> does not need to be explicitly declared.
          * However, it can be explicitly declared when a shader is also used by other applications such
@@ -935,6 +971,41 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getSunDirectionWC();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the normalized direction to the moon in eye coordinates.
+         * This is commonly used for directional lighting computations.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_moonDirectionEC</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_moonDirectionEC
+         * @glslUniform
+         *
+         * @see UniformState#getMoonDirectionEC
+         * @see czm_sunDirectionEC
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3 czm_moonDirectionEC;
+         *
+         * // Example
+         * float diffuse = max(dot(czm_moonDirectionEC, normalEC), 0.0);
+         */
+        czm_moonDirectionEC : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getMoonDirectionEC();
             }
         },
 
@@ -1060,6 +1131,41 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getFrameNumber();
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
+         * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_temeToPseudoFixed</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_temeToPseudoFixed
+         * @glslUniform
+         *
+         * @see UniformState#getTemeToPseudoFixedMatrix
+         * @see Transforms.computeTemeToPseudoFixedMatrix
+         *
+         * @example
+         * // GLSL declaration
+         * uniform mat3 czm_temeToPseudoFixed;
+         *
+         * // Example
+         * vec3 pseudoFixed = czm_temeToPseudoFixed * teme;
+         */
+        czm_temeToPseudoFixed : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_MATRIX3;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getTemeToPseudoFixedMatrix();
             }
         }
     };
@@ -2053,21 +2159,40 @@ define([
                     }
                 } else {
                     // Uniform array
-                    var locations = [];
-                    var value = [];
-                    for ( var j = 0; j < activeUniform.size; ++j) {
-                        var loc = gl.getUniformLocation(program, uniformName + '[' + j + ']');
+
+                    var uniformArray;
+                    var locations;
+                    var value;
+                    var loc;
+
+                    // On some platforms - Nexus 4 for one - an array of sampler2D ends up being represented
+                    // as separate uniforms, one for each array element.  Check for and handle that case.
+                    var indexOfBracket = uniformName.indexOf('[');
+                    if (indexOfBracket >= 0) {
+                        // We're assuming the array elements show up in numerical order - it seems to be true.
+                        uniformArray = allUniforms[uniformName.slice(0, indexOfBracket)];
+                        locations = uniformArray._getLocations();
+                        value = uniformArray.value;
+                        loc = gl.getUniformLocation(program, uniformName);
                         locations.push(loc);
                         value.push(gl.getUniform(program, loc));
-                    }
-                    var uniformArray = new UniformArray(gl, activeUniform, uniformName, locations, value);
-
-                    allUniforms[uniformName] = uniformArray;
-
-                    if (uniformArray._setSampler) {
-                        samplerUniforms.push(uniformArray);
                     } else {
-                        uniforms.push(uniformArray);
+                        locations = [];
+                        value = [];
+                        for ( var j = 0; j < activeUniform.size; ++j) {
+                            loc = gl.getUniformLocation(program, uniformName + '[' + j + ']');
+                            locations.push(loc);
+                            value.push(gl.getUniform(program, loc));
+                        }
+                        uniformArray = new UniformArray(gl, activeUniform, uniformName, locations, value);
+
+                        allUniforms[uniformName] = uniformArray;
+
+                        if (uniformArray._setSampler) {
+                            samplerUniforms.push(uniformArray);
+                        } else {
+                            uniforms.push(uniformArray);
+                        }
                     }
                 }
             }
