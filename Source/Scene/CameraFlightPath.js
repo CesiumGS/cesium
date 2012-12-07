@@ -35,6 +35,10 @@ define([
         Tween) {
     "use strict";
 
+    /**
+     * Creates animations for camera flights.
+     * @exports CameraFlightPath
+     */
     var CameraFlightPath = {
     };
 
@@ -357,6 +361,26 @@ define([
         return update;
     }
 
+    /**
+     * Creates an animation to fly the camera from it's current position to a position given by a Cartesian. All arguments should
+     * be in the current camera reference frame.
+     *
+     * @param {FrameState} frameState The current frame state.
+     * @param {Cartesian3} description.destination The final position of the camera.
+     * @param {Cartesian3} [description.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
+     * @param {Cartesian3} [description.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
+     * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
+     * @param {Function} [onComplete] The function to execute when the animation has completed.
+     *
+     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
+     *
+     * @exception {DeveloperError} frameState is required.
+     * @exception {DeveloperError} description.destination is required.
+     *
+     * @see Scene#getFrameState
+     * @see Scene#getAnimationCollection
+     * @see CameraFlightPath#createAnimationCartographic
+     */
     CameraFlightPath.createAnimation = function(frameState, description) {
         description = defaultValue(description, {});
         var destination = description.destination;
@@ -397,6 +421,26 @@ define([
         };
     };
 
+    /**
+     * Creates an animation to fly the camera from it's current position to a position given by a Cartographic. Keep in mind that the animation
+     * will happen in the camera's current reference frame.
+     *
+     * @param {FrameState} frameState The current frame state.
+     * @param {Cartesian3} description.destination The final position of the camera.
+     * @param {Cartesian3} [description.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
+     * @param {Cartesian3} [description.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
+     * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
+     * @param {Function} [onComplete] The function to execute when the animation has completed.
+     *
+     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
+     *
+     * @exception {DeveloperError} frameState is required.
+     * @exception {DeveloperError} description.destination is required.
+     *
+     * @see Scene#getFrameState
+     * @see Scene#getAnimationCollection
+     * @see CameraFlightPath#createAnimationCartographic
+     */
     CameraFlightPath.createAnimationCartographic = function(frameState, description) {
         description = defaultValue(description, {});
         var destination = description.destination;
