@@ -363,7 +363,7 @@ define([
 
     ScreenSpaceEventHandler.prototype._handleTouchEnd = function(event) {
         var numberOfTouches = event.touches.length;
-        var numberOfTargetTouches = event.targetTouches.length;
+        var numberOfChangedTouches = event.changedTouches.length;
         var modifier = this._getModifier(event);
         var action, clickAction;
 
@@ -372,8 +372,8 @@ define([
             action = this.getInputAction(ScreenSpaceEventType.LEFT_UP, modifier);
             clickAction = this.getInputAction(ScreenSpaceEventType.LEFT_CLICK, modifier);
 
-            if (numberOfTargetTouches > 0) {
-                var pos = this._getPosition(event.targetTouches[0]);
+            if (numberOfChangedTouches > 0) {
+                var pos = this._getPosition(event.changedTouches[0]);
 
                 var xDiff = this._lastMouseX - pos.x;
                 var yDiff = this._lastMouseY - pos.y;
