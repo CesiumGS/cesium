@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/destroyObject',
         '../Core/Math',
         '../Core/Ellipsoid',
         '../Core/Cartesian3',
@@ -12,7 +11,6 @@ define([
         './PerspectiveFrustum'
     ], function(
         DeveloperError,
-        destroyObject,
         CesiumMath,
         Ellipsoid,
         Cartesian3,

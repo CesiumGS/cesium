@@ -125,6 +125,9 @@ define([
 
             angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
             axis = afterStart.cross(aboveEnd);
+            if (axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+                axis = Cartesian3.UNIT_Z;
+            }
 
             var increment = incrementPercentage * angle;
             var startCondition = angle - increment;
@@ -409,7 +412,7 @@ define([
 
         return {
             duration : duration,
-            easingFunction : Tween.Easing.Sinusoidal.EaseInOut,
+            easingFunction : Tween.Easing.Sinusoidal.InOut,
             startValue : {
                 time : 0.0
             },
